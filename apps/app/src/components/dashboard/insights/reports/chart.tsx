@@ -27,12 +27,12 @@ export function Legend({ kind, report, words }: { kind: Dimension; report: Repor
         return null;
     }
     return (
-        <ul className="text-muted-foreground m-0 flex list-none flex-wrap gap-x-3.5 gap-y-1 p-0 text-xs">
+        <ul className="text-muted-foreground text-app-caption m-0 flex list-none flex-wrap gap-x-3.5 gap-y-1 p-0">
             {report.rows.map(({ label }) => (
                 <li className="flex items-center gap-1.5" key={label.id}>
                     <span
                         aria-hidden
-                        className="size-2 shrink-0 rounded-[2px]"
+                        className="size-2 shrink-0 rounded-xs"
                         style={{ background: label.color ?? "currentColor" }}
                     />
                     {words.rowName(label, kind)}
@@ -180,7 +180,7 @@ export function Chart({ fixedWidth, grouping, kind, label, report, words }: Char
             </svg>
             {hover && hovered !== null ? (
                 <div
-                    className="bg-popover text-popover-foreground border-border pointer-events-none absolute top-2 z-10 w-max min-w-40 rounded-lg border p-2.5 text-xs shadow-lg"
+                    className="bg-popover text-popover-foreground border-border rounded-app-sm text-app-caption pointer-events-none absolute top-2 z-10 w-max min-w-40 border p-2.5 shadow-lg"
                     style={{
                         left: Math.min(Math.max(LEFT + hovered * slot + slot / 2, 90), Math.max(width - 90, 90)),
                         transform: "translateX(-50%)",

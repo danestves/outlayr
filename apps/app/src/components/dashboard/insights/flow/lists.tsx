@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { viewTransition } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import { onwardSearch, Card } from "../parts";
@@ -26,24 +27,24 @@ interface ListProps {
 }
 
 const ROW =
-    "border-border flex h-[50px] shrink-0 flex-col justify-center border-t px-5 py-[9px] outline-none first:border-t-0 transition-colors duration-150";
+    "border-border flex h-12.5 shrink-0 flex-col justify-center border-t px-5 py-2.25 outline-none first:border-t-0 transition-colors duration-150";
 const HOT = "bg-foreground/[0.04]";
 
 function Row({ active, onActive, row }: { active: boolean; onActive: ListProps["onActive"]; row: ListRow }) {
     const percent = row.share === null ? "" : `${Math.round(row.share * 100)}%`;
     const body = (
         <>
-            <span className="flex items-center gap-2.5 text-[13px] font-medium">
-                <span aria-hidden className="size-2.5 shrink-0 rounded-[3px]" style={{ background: row.color }} />
+            <span className="text-app-label flex items-center gap-2.5 font-medium">
+                <span aria-hidden className="size-2.5 shrink-0 rounded-xs" style={{ background: row.color }} />
                 <span className="min-w-0 truncate">{row.name}</span>
                 <span className={cn("dash-figure ml-auto font-medium", row.tone === "income" && "text-app-income")}>
                     {row.amount}
                 </span>
-                <span className="dash-figure text-muted-foreground w-[34px] text-right text-xs font-normal">
+                <span className="dash-figure text-muted-foreground text-app-caption w-8.5 text-right font-normal">
                     {percent}
                 </span>
             </span>
-            <span aria-hidden className="bg-border mt-[7px] ml-5 block h-1 overflow-hidden rounded-full">
+            <span aria-hidden className="bg-border mt-1.75 ml-5 block h-1 overflow-hidden rounded-full">
                 <span
                     className="block h-full rounded-full"
                     style={{ background: row.color, width: `${(row.share ?? 0) * 100}%` }}
@@ -66,6 +67,7 @@ function Row({ active, onActive, row }: { active: boolean; onActive: ListProps["
     }
     return (
         <Link
+            viewTransition={viewTransition("push-left")}
             className={cn(ROW, "focus-visible:bg-foreground/[0.04]", active && HOT)}
             search={onwardSearch("/insights/cash-flow", row.categoryId)}
             to="/insights/cash-flow"
@@ -80,7 +82,7 @@ function Row({ active, onActive, row }: { active: boolean; onActive: ListProps["
 export function FlowList({ active, className, onActive, padded = false, rows, subtitle, title }: ListProps) {
     return (
         <Card
-            action={<span className="text-muted-foreground text-[13px]">{subtitle}</span>}
+            action={<span className="text-muted-foreground text-app-label">{subtitle}</span>}
             className={className}
             panelClassName={cn("flex flex-col", padded && "pb-1.5")}
             title={title}

@@ -13,6 +13,7 @@ import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committe
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { periodKeyOf } from "@/lib/dashboard-series-period";
 import { useTagBooks } from "@/lib/ledger-db";
+import { viewTransition } from "@/lib/motion";
 
 import { InsightsBar } from "../bar";
 import { ReportCard, reportFigures } from "./card";
@@ -297,7 +298,12 @@ export function ReportsScreen() {
     const active = saved.find((each) => each.id === search.report);
     const dirty = active !== undefined && !sameDefinition(active.definition, definition);
 
-    const patch = (next: ReportsPatch) => navigate({ replace: true, search: (prev) => ({ ...prev, ...next }) });
+    const patch = (next: ReportsPatch) =>
+        navigate({
+            replace: true,
+            search: (prev) => ({ ...prev, ...next }),
+            viewTransition: viewTransition("dissolve"),
+        });
     const build = (next: Definition, reportId?: string) => {
         setFilters({ accounts: next.accounts });
         return patch({ ...searchOf(next), report: reportId, view: undefined });
@@ -482,7 +488,7 @@ export function ReportsScreen() {
                     {library ? (
                         main
                     ) : (
-                        <div className="grid flex-1 grid-cols-1 gap-4 xl:min-h-[808px] xl:grid-cols-[232px_minmax(0,1fr)]">
+                        <div className="grid flex-1 grid-cols-1 gap-4 xl:min-h-202 xl:grid-cols-[232px_minmax(0,1fr)]">
                             <SavedList
                                 actions={actions}
                                 activeId={active?.id}

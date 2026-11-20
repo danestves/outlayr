@@ -7,7 +7,7 @@ import { useIntlayer } from "react-intlayer";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { MerchantTile } from "@/components/ledger/tiles";
 
-import { Change, FIGURE, Flat, Swatch, Track } from "../parts";
+import { Change, FIGURE, Flat, Pill, Swatch, toneOf, Track } from "../parts";
 import type { BreakdownRow, Dimension, Metric } from "./model";
 import { CELL, CELL_BASE, HEAD, HEAD_BASE, NUM, Row, Table } from "./parts";
 
@@ -15,10 +15,10 @@ const SHOWN_ROWS = 6;
 export const UNTAGGED_ID = "untagged";
 const PERCENT = 100;
 const ROW_HEIGHT = {
-    category: "h-[34px]",
-    merchant: "h-[37px]",
-    subcategory: "h-[34px]",
-    tag: "h-[46px]",
+    category: "h-8.5",
+    merchant: "h-9.25",
+    subcategory: "h-8.5",
+    tag: "h-11.5",
 } as const satisfies Record<Dimension, string>;
 
 const HEAD_HEIGHT = { category: "h-8", merchant: "h-8", subcategory: "h-8", tag: "h-10" } as const satisfies Record<
@@ -80,28 +80,21 @@ function Delta({
                     {format.delta(row.delta)}
                 </span>
             )}
-            {fresh ? <Flat>{table.fresh}</Flat> : <Pill delta={row.percent ?? 0} metric={metric} whole={!total} />}
+            {fresh ? (
+                <Flat>{table.fresh}</Flat>
+            ) : (
+                <ChangePill delta={row.percent ?? 0} metric={metric} whole={!total} />
+            )}
         </>
     );
 }
 
-const toneOf = (delta: number, metric: Metric) => {
-    if (delta === 0) {
-        return "flat";
-    }
-    return delta > 0 === (goodFor(metric) === "up") ? "good" : "poor";
-};
-
-function Pill({ delta, metric, whole }: { delta: number | null; metric: Metric; whole: boolean }) {
+function ChangePill({ delta, metric, whole }: { delta: number | null; metric: Metric; whole: boolean }) {
     if (delta === null) {
         return null;
     }
     const percent = whole ? Math.round(delta * PERCENT) : Math.round(delta * PERCENT * 10) / 10;
-    return (
-        <span className="dash-trend" data-tone={toneOf(percent, metric)}>
-            {`${percent > 0 ? "+" : ""}${percent}%`}
-        </span>
-    );
+    return <Pill tone={toneOf(percent, goodFor(metric))}>{`${percent > 0 ? "+" : ""}${percent}%`}</Pill>;
 }
 
 /** The rows a collapsed table leaves out, read as one. */
@@ -312,7 +305,7 @@ export function GroupTable({
                             </td>
                             {merchants ? (
                                 <td className={cell}>
-                                    <span className="border-border inline-flex h-6 items-center gap-1.5 rounded-md border px-2 align-middle text-xs leading-none font-medium whitespace-nowrap">
+                                    <span className="border-border rounded-app-xs text-app-caption inline-flex h-6 items-center gap-1.5 border px-2 align-middle leading-none font-medium whitespace-nowrap">
                                         <span
                                             aria-hidden
                                             className="size-1.5 rounded-full"
@@ -399,7 +392,7 @@ export function GroupTable({
 }
 
 const COMPARE_COLUMNS = [323, 229, 229, 209, 170] as const;
-const CELL_ROW = `h-[46px] ${CELL_BASE}`;
+const CELL_ROW = `h-11.5 ${CELL_BASE}`;
 
 interface CompareTableProps {
     baseLabel: string;
@@ -429,11 +422,11 @@ export function CompareTable({ baseLabel, baseTotal, currentLabel, format, metri
             </colgroup>
             <thead>
                 <Row>
-                    <th className={`${HEAD} h-[39px] text-left`}>{table.category}</th>
-                    <th className={`${HEAD} h-[39px] text-right`}>{baseLabel}</th>
-                    <th className={`${HEAD} h-[39px] text-right`}>{currentLabel}</th>
-                    <th className={`${HEAD} h-[39px] text-right`}>{table.change}</th>
-                    <th className={`${HEAD} h-[39px] text-right`}>{table.percent}</th>
+                    <th className={`${HEAD} h-9.75 text-left`}>{table.category}</th>
+                    <th className={`${HEAD} h-9.75 text-right`}>{baseLabel}</th>
+                    <th className={`${HEAD} h-9.75 text-right`}>{currentLabel}</th>
+                    <th className={`${HEAD} h-9.75 text-right`}>{table.change}</th>
+                    <th className={`${HEAD} h-9.75 text-right`}>{table.percent}</th>
                 </Row>
             </thead>
             <tbody>

@@ -36,7 +36,7 @@ function useHeadline({ closed, comparison, flow }: InsightsModel) {
     return { amount: values.amount, sentence: sentence() };
 }
 
-const HEADLINE = "mt-3 text-[22px] leading-7 font-medium tracking-[-0.02em] text-balance";
+const HEADLINE = "text-app-figure mt-3 font-medium tracking-tight text-balance";
 const CLAUSE = ", ";
 
 // Each clause wraps as its own block, so the line breaks at the comma before it breaks inside a clause.
@@ -47,7 +47,7 @@ function Headline({ model }: { model: InsightsModel }) {
         return <h2 className={HEADLINE}>{sentence}</h2>;
     }
     const [lead, ...verdict] = after.split(CLAUSE);
-    const figure = <span className="tracking-[-0.05em] tabular-nums">{amount}</span>;
+    const figure = <span className="tracking-tighter tabular-nums">{amount}</span>;
     if (verdict.length === 0) {
         return (
             <h2 className={HEADLINE}>
@@ -81,7 +81,7 @@ export function InsightsScreen({ model }: { model: InsightsModel }) {
                 <AccountsChip quiet={quiet} />
             </div>
             {ledger.rows.length === 0 ? (
-                <p className="text-muted-foreground py-4 text-sm">{add.hint}</p>
+                <p className="text-muted-foreground text-app-body py-4">{add.hint}</p>
             ) : (
                 <>
                     <Headline model={model} />

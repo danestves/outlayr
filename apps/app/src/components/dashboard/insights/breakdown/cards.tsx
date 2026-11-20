@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { MerchantTile } from "@/components/ledger/tiles";
+import { viewTransition } from "@/lib/motion";
 
 import { Card, FIGURE, Track, onwardSearch } from "../parts";
 import type { Onward } from "../parts";
@@ -44,25 +45,25 @@ export function TopMerchants({ format, onOpen, rows }: TopMerchantsProps) {
         >
             {rows.map((row) => (
                 <button
-                    className="hover:bg-app-hover focus-visible:ring-ring -mx-2 flex h-[54px] items-center gap-3 rounded-md px-2 text-left text-[13px] font-medium outline-none focus-visible:ring-2"
+                    className="hover:bg-app-hover focus-visible:ring-ring rounded-app-xs text-app-label -mx-2 flex h-13.5 items-center gap-3 px-2 text-left font-medium outline-none focus-visible:ring-2"
                     key={row.id}
                     onClick={() => onOpen(row)}
                     type="button"
                 >
-                    <span className="flex w-[170px] shrink-0 items-center gap-2.5">
+                    <span className="flex w-42.5 shrink-0 items-center gap-2.5">
                         <MerchantTile name={row.name} size="md" />
                         <span className="truncate">{row.name}</span>
                     </span>
-                    <span aria-hidden className="bg-muted block h-5 min-w-0 flex-1 overflow-hidden rounded-[5px]">
+                    <span aria-hidden className="bg-muted block h-5 min-w-0 flex-1 overflow-hidden rounded-sm">
                         <span
-                            className="block h-full rounded-[5px]"
+                            className="block h-full rounded-sm"
                             style={{
                                 background: row.color,
                                 width: `${max > 0 ? (Math.abs(row.amount) / max) * 100 : 0}%`,
                             }}
                         />
                     </span>
-                    <span className={`${FIGURE} w-[90px] shrink-0 text-right text-sm font-normal`}>
+                    <span className={`${FIGURE} text-app-body w-22.5 shrink-0 text-right font-normal`}>
                         {format(row.amount)}
                     </span>
                 </button>
@@ -134,7 +135,7 @@ export function TagDonut({ of, onSelect, parts, tagged }: DonutProps) {
                     />
                 ))}
                 <text
-                    className={`${FIGURE} text-[22px] font-semibold`}
+                    className={`${FIGURE} text-app-figure font-semibold`}
                     fill="var(--color-foreground)"
                     style={{ textAnchor: "middle" }}
                     x={DONUT / 2}
@@ -201,7 +202,7 @@ export function TagWeeks({ color, compact, label, rangeOf, weeks, whole }: TagWe
                         <g key={tick}>
                             <path d={`M${WEEK_GUTTER} ${yOf(tick)}H${width}`} stroke="var(--color-border)" />
                             <text
-                                className={`${FIGURE} text-[11px]`}
+                                className={`${FIGURE} text-app-micro`}
                                 fill="var(--color-muted-foreground)"
                                 x={0}
                                 y={yOf(tick) + 4}
@@ -230,7 +231,7 @@ export function TagWeeks({ color, compact, label, rangeOf, weeks, whole }: TagWe
                                     y={y}
                                 />
                                 <text
-                                    className={`${FIGURE} text-xs`}
+                                    className={`${FIGURE} text-app-caption`}
                                     fill="var(--color-foreground)"
                                     style={{ textAnchor: "middle" }}
                                     x={x + bar / 2}
@@ -239,7 +240,7 @@ export function TagWeeks({ color, compact, label, rangeOf, weeks, whole }: TagWe
                                     {whole(week.value)}
                                 </text>
                                 <text
-                                    className={`${FIGURE} text-[11px]`}
+                                    className={`${FIGURE} text-app-micro`}
                                     fill="var(--color-muted-foreground)"
                                     style={{ textAnchor: "middle" }}
                                     x={x + bar / 2}
@@ -297,7 +298,7 @@ export function CompareChart({ baseLabel, compact, whole, currentLabel, format, 
                                 stroke="var(--color-border)"
                             />
                             <text
-                                className={`${FIGURE} text-[11px]`}
+                                className={`${FIGURE} text-app-micro`}
                                 fill="var(--color-muted-foreground)"
                                 x={0}
                                 y={floor - heightOf(tick) + 4}
@@ -332,7 +333,7 @@ export function CompareChart({ baseLabel, compact, whole, currentLabel, format, 
                                     y={floor - heightOf(row.amount)}
                                 />
                                 <text
-                                    className={`${FIGURE} text-[11px]`}
+                                    className={`${FIGURE} text-app-micro`}
                                     fill="var(--color-muted-foreground)"
                                     style={{ textAnchor: "middle" }}
                                     x={x - bar / 2 - PAIR_GAP / 2}
@@ -341,7 +342,7 @@ export function CompareChart({ baseLabel, compact, whole, currentLabel, format, 
                                     {whole(row.base)}
                                 </text>
                                 <text
-                                    className={`${FIGURE} text-[11px]`}
+                                    className={`${FIGURE} text-app-micro`}
                                     fill="var(--color-foreground)"
                                     style={{ textAnchor: "middle" }}
                                     x={x + bar / 2 + PAIR_GAP / 2}
@@ -396,13 +397,14 @@ export function SubcategoriesCard({
     const max = Math.max(...rows.map((row) => row.amount), 0);
     return (
         <Card
-            className="lg:h-[358px] [&>[data-slot=frame-footer]]:mt-auto"
+            className="lg:h-89.5 [&>[data-slot=frame-footer]]:mt-auto"
             footer={
                 <>
                     <span className="flex-1" />
                     <OpenButton
                         render={
                             <Link
+                                viewTransition={viewTransition("push-left")}
                                 params={{ categoryId }}
                                 search={(prev) => ({ accounts: prev.accounts })}
                                 to="/settings/categories/$categoryId"
@@ -413,19 +415,19 @@ export function SubcategoriesCard({
                     </OpenButton>
                 </>
             }
-            panelClassName="flex-[0_0_auto] p-0"
+            panelClassName="flex-none p-0"
             title={cards.subcategories}
         >
             {rows.map((row) => (
                 <div className="border-border border-t px-5 py-3" key={row.id}>
-                    <div className="flex text-[13px] leading-5 font-medium">
+                    <div className="text-app-label flex leading-5 font-medium">
                         <span className="min-w-0 truncate">{row.name}</span>
                         <span className={`${FIGURE} ml-auto font-medium`}>{format(row.amount)}</span>
                         <span className={`${FIGURE} text-muted-foreground w-11 text-right font-normal`}>
                             {`${Math.round(row.share * PERCENT)}%`}
                         </span>
                     </div>
-                    <Track className="bg-muted mt-[7px] h-1.5!" color={color} max={max} value={row.amount} />
+                    <Track className="bg-muted mt-1.75 h-1.5!" color={color} max={max} value={row.amount} />
                 </div>
             ))}
         </Card>
@@ -448,11 +450,19 @@ export function EntriesCard({ accountName, action, categoryId, dateOf, flows, fo
     return (
         <Card
             action={
-                <OpenButton render={<Link search={onwardSearch(action.to, categoryId)} to={action.to} />}>
+                <OpenButton
+                    render={
+                        <Link
+                            viewTransition={viewTransition("push-left")}
+                            search={onwardSearch(action.to, categoryId)}
+                            to={action.to}
+                        />
+                    }
+                >
                     {action.label}
                 </OpenButton>
             }
-            className="lg:h-[358px]"
+            className="lg:h-89.5"
             panelClassName="p-0"
             title={cards.entries}
         >
@@ -476,8 +486,9 @@ export function EntriesCard({ accountName, action, categoryId, dateOf, flows, fo
                         const merchant = row.note || subName(row);
                         return (
                             <Row className="hover:bg-app-hover relative transition-colors" key={row.id}>
-                                <td className={`${CELL_BASE} h-[39px]`}>
+                                <td className={`${CELL_BASE} h-9.75`}>
                                     <Link
+                                        viewTransition={viewTransition("push-left")}
                                         className="focus-visible:ring-ring flex items-center gap-2.5 rounded-sm font-medium outline-none after:absolute after:inset-0 focus-visible:ring-2"
                                         search={(prev) => ({ accounts: prev.accounts, entry: row.id })}
                                         to="/transactions"

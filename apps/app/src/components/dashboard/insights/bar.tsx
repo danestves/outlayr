@@ -1,6 +1,6 @@
 import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Tabs } from "panelui-web/tabs";
 import { createContext, use, useState } from "react";
@@ -12,6 +12,7 @@ import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { periodKeyIn, periodKindOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 import type { Period, PeriodKind } from "@/lib/dashboard-series-period";
+import { viewTransition } from "@/lib/motion";
 
 import { useInsightsFormat } from "./format";
 
@@ -26,33 +27,40 @@ const TABS = [
 
 const KINDS = ["week", "month", "year"] as const satisfies readonly PeriodKind[];
 
-const TAB =
-    "text-muted-foreground hover:text-foreground data-[status=active]:text-foreground relative flex h-[63px] shrink-0 items-center px-3 text-sm font-medium outline-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-t-xs focus-visible:after:bg-ring data-[status=active]:after:bg-foreground";
-
-const SLOT = "ml-auto flex min-h-[63px] items-center gap-2";
+const SLOT = "ml-auto flex min-h-15.75 items-center gap-2";
 
 function BarFrame({ children, slotRef }: { children?: ReactNode; slotRef?: Ref<HTMLDivElement> }) {
     const { nav } = useIntlayer("dashboard");
     const { sections, tabs } = useIntlayer("dashboard-insights-bar");
+    const pathname = useLocation({ select: (location) => location.pathname });
+    const active = TABS.findLast(({ to }) => pathname === to || pathname.startsWith(`${to}/`))?.id ?? "overview";
     return (
         <header className="border-border -mx-4 flex min-h-16 flex-wrap items-center gap-x-5 border-b px-4 sm:-mx-6 sm:px-6">
-            <h1 className="text-lg leading-6 font-semibold tracking-[-0.02em] max-md:hidden">{nav.insights}</h1>
-            <nav
-                aria-label={sections.value}
-                className="flex min-w-0 [scrollbar-width:none] gap-1 overflow-x-auto max-md:order-last max-md:-mx-3 max-md:w-full"
-            >
-                {TABS.map(({ id, to }) => (
-                    <Link
-                        activeOptions={{ exact: id === "overview", includeSearch: false }}
-                        className={TAB}
-                        key={id}
-                        search={(prev) => ({ accounts: prev.accounts, period: prev.period })}
-                        to={to}
-                    >
-                        {tabs[id]}
-                    </Link>
-                ))}
-            </nav>
+            <h1 className="text-app-heading font-semibold max-md:hidden">{nav.insights}</h1>
+            <Tabs className="min-w-0 max-md:order-last max-md:-mx-3 max-md:w-full" value={active} variant="underline">
+                <Tabs.List
+                    aria-label={sections.value}
+                    className="h-15.75 [scrollbar-width:none] overflow-x-auto"
+                    render={<nav />}
+                >
+                    {TABS.map(({ id, to }) => (
+                        <Tabs.Trigger
+                            key={id}
+                            nativeButton={false}
+                            render={
+                                <Link
+                                    search={(prev) => ({ accounts: prev.accounts, period: prev.period })}
+                                    to={to}
+                                    viewTransition={viewTransition("dissolve")}
+                                />
+                            }
+                            value={id}
+                        >
+                            {tabs[id]}
+                        </Tabs.Trigger>
+                    ))}
+                </Tabs.List>
+            </Tabs>
             {slotRef ? <div className={SLOT} inert ref={slotRef} /> : null}
             {children ? <div className={SLOT}>{children}</div> : null}
         </header>
@@ -105,7 +113,7 @@ export function PeriodStepper({ span }: { span: Period }) {
             >
                 <Glyph icon={ArrowLeft01Icon} size={16} />
             </Button>
-            <span className="dash-figure text-[13px] font-medium whitespace-nowrap">{fmt.spanName(span)}</span>
+            <span className="dash-figure text-app-label font-medium whitespace-nowrap">{fmt.spanName(span)}</span>
             <Button
                 aria-label={next.value}
                 disabled={span.key >= current}

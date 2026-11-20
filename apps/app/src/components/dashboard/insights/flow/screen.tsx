@@ -1,4 +1,5 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import FlowConnectionIcon from "@hugeicons/core-free-icons/FlowConnectionIcon";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { useContext, useMemo, useState } from "react";
@@ -6,12 +7,14 @@ import { useIntlayer } from "react-intlayer";
 
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useCategoryName } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { categoryBudgets } from "@/lib/dashboard-series";
 import type { CategoryBudget } from "@/lib/dashboard-series";
 import { periodKindOf } from "@/lib/dashboard-series-period";
 import { LedgerSettingsContext } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { InsightsBar, PeriodControls } from "../bar";
 import { OTHER_COLOR } from "../flow";
@@ -23,7 +26,6 @@ import { FlowList } from "./lists";
 import type { ListRow } from "./lists";
 import { flowMap } from "./model";
 import type { FlowEdge, FlowMap } from "./model";
-import { QuietFlow } from "./quiet";
 import { Sankey } from "./sankey";
 import type { ChartNode, ChartTip } from "./sankey";
 import { Strip } from "./strip";
@@ -32,7 +34,7 @@ import type { Cell } from "./strip";
 const PERCENT = 100;
 const percent = (share: number) => `${Math.round(share * PERCENT)}%`;
 const HUB_COLOR = "var(--color-muted-foreground)";
-const CHART_ROW = "xl:h-[752px]";
+const CHART_ROW = "xl:h-188";
 
 type Fmt = ReturnType<typeof useInsightsFormat>;
 
@@ -187,18 +189,18 @@ function Quiet({ spanName }: { spanName: string }) {
     const copy = useIntlayer("dashboard-insights-flow");
     const { open } = useAccountFlows();
     return (
-        <Card className="mt-4 xl:h-[752px]" panelClassName="p-0" title={copy.chart}>
-            <div className="dash-empty relative isolate min-h-[560px] justify-start pt-[368px] xl:min-h-[698px]">
-                <QuietFlow />
-                <b className="text-[15px] font-semibold">{copy.empty.title}</b>
-                <p className="text-muted-foreground mb-2.5 max-w-80 text-[13px]">
-                    {copy.empty.line({ span: spanName })}
-                </p>
-                <Button onClick={() => open({ kind: "entry" })}>
-                    <Glyph icon={Add01Icon} size={16} />
-                    {copy.empty.add}
-                </Button>
-            </div>
+        <Card className="mt-4 xl:h-188" panelClassName="p-0" title={copy.chart}>
+            <Empty
+                action={
+                    <Button onClick={() => open({ kind: "entry" })}>
+                        <Glyph icon={Add01Icon} size={16} />
+                        {copy.empty.add}
+                    </Button>
+                }
+                icon={FlowConnectionIcon}
+                line={copy.empty.line({ span: spanName })}
+                title={copy.empty.title}
+            />
         </Card>
     );
 }
@@ -241,13 +243,13 @@ function Flow() {
                 <div className={`mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_344px] ${CHART_ROW}`}>
                     <Card
                         action={
-                            <span className="dash-figure text-muted-foreground text-[13px] font-normal">
+                            <span className="dash-figure text-muted-foreground text-app-label font-normal">
                                 {(map.deficit ? copy.ofOut : copy.ofIn)({
                                     amount: fmt.amount(map.deficit ? map.spent : map.income),
                                 })}
                             </span>
                         }
-                        className="min-h-[560px]"
+                        className="min-h-140"
                         panelClassName="relative overflow-hidden p-0"
                         title={copy.chart}
                     >
@@ -262,6 +264,7 @@ function Flow() {
                                 navigate({
                                     search: onwardSearch("/insights/cash-flow", node.categoryId ?? undefined),
                                     to: "/insights/cash-flow",
+                                    viewTransition: viewTransition("push-left"),
                                 })
                             }
                             sources={nodes.sources}

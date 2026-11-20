@@ -1,4 +1,5 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import Analytics01Icon from "@hugeicons/core-free-icons/Analytics01Icon";
 import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import Share01Icon from "@hugeicons/core-free-icons/Share01Icon";
@@ -9,6 +10,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useCategoryName } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
@@ -18,8 +20,8 @@ import { InsightsBar } from "../bar";
 import { Strip } from "../breakdown/parts";
 import type { StripFigure } from "../breakdown/parts";
 import { useInsightsFormat } from "../format";
-import { Card } from "../parts";
-import { BudgetsButton, CAUGHT_ICONS, Caught, DaysLogged, Movers, RecapGhost, WhereItWent } from "./cards";
+import { Card, Pill, toneOf } from "../parts";
+import { BudgetsButton, CAUGHT_ICONS, Caught, DaysLogged, Movers, WhereItWent } from "./cards";
 import type { CaughtLine, RecapFormat } from "./cards";
 import { proCostIfWorth, recapOf } from "./model";
 import { ShareDialog } from "./share";
@@ -39,13 +41,6 @@ function useClosedMonth() {
     return { atEnd: key >= latest, atStart: month.from <= earliest, month, step };
 }
 
-const toneOfChange = (percent: number) => {
-    if (percent === 0) {
-        return "flat";
-    }
-    return percent < 0 ? "good" : "poor";
-};
-
 type Copy = ReturnType<typeof useIntlayer<"dashboard-insights-recap">>;
 
 function daysFoot(copy: Copy, empty: boolean, missing: number) {
@@ -63,12 +58,7 @@ function daysFoot(copy: Copy, empty: boolean, missing: number) {
 
 function WholePill({ delta }: { delta: number }) {
     const percent = Math.round(delta * PERCENT);
-    const tone = toneOfChange(percent);
-    return (
-        <span className="dash-trend" data-tone={tone}>
-            {`${percent > 0 ? "+" : ""}${percent}%`}
-        </span>
-    );
+    return <Pill tone={toneOf(percent, "down")}>{`${percent > 0 ? "+" : ""}${percent}%`}</Pill>;
 }
 
 function useFormat(): RecapFormat {
@@ -104,7 +94,7 @@ function MonthControls({ month, onShare, empty }: { empty: boolean; month: Perio
                 >
                     <Glyph icon={ArrowLeft01Icon} size={16} />
                 </Button>
-                <span className="dash-figure text-[13px] font-medium whitespace-nowrap">{fmt.spanName(month)}</span>
+                <span className="dash-figure text-app-label font-medium whitespace-nowrap">{fmt.spanName(month)}</span>
                 <Button
                     aria-label={copy.month.next.value}
                     disabled={stepper.atEnd}
@@ -115,12 +105,7 @@ function MonthControls({ month, onShare, empty }: { empty: boolean; month: Perio
                     <Glyph icon={ArrowRight01Icon} size={16} />
                 </Button>
             </div>
-            <Button
-                className="ml-2"
-                disabled={empty}
-                onClick={onShare}
-                style={{ background: "var(--color-app-tint)", color: "#fff" }}
-            >
+            <Button className="ml-2" disabled={empty} onClick={onShare}>
                 <Glyph icon={Share01Icon} size={16} />
                 {copy.share({ month: fmt.spanShort(month) })}
             </Button>
@@ -253,17 +238,17 @@ export function RecapScreen() {
                 <Strip figures={figures} />
                 {empty ? (
                     <Card panelClassName="p-0">
-                        <div className="dash-empty relative isolate min-h-[420px] justify-end pb-[209px] lg:min-h-[734px]">
-                            <RecapGhost />
-                            <p className="text-[15px] font-semibold">
-                                {copy.empty.title({ month: fmt.spanShort(month) })}
-                            </p>
-                            <p className="text-muted-foreground w-[320px] max-w-none text-[13px]">{copy.empty.line}</p>
-                            <Button className="mt-2.5" onClick={() => open({ kind: "entry" })}>
-                                <Glyph icon={Add01Icon} size={16} />
-                                {copy.empty.add}
-                            </Button>
-                        </div>
+                        <Empty
+                            action={
+                                <Button onClick={() => open({ kind: "entry" })}>
+                                    <Glyph icon={Add01Icon} size={16} />
+                                    {copy.empty.add}
+                                </Button>
+                            }
+                            icon={Analytics01Icon}
+                            line={copy.empty.line}
+                            title={copy.empty.title({ month: fmt.spanShort(month) })}
+                        />
                     </Card>
                 ) : (
                     <>

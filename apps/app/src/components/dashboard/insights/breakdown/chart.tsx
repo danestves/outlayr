@@ -15,7 +15,7 @@ const BAR_SHARE = 0.62;
 const MIN_SEGMENT = 2;
 const SEGMENT_RADIUS = 2.5;
 const BREAK_FROM_TOP = 14;
-const TICK = `${FIGURE} text-[11px]`;
+const TICK = `${FIGURE} text-app-micro`;
 
 interface TipProps {
     children: ReactNode;
@@ -29,7 +29,7 @@ export function Tip({ children, left, top, width }: TipProps) {
     const flip = left > width * 0.6;
     return (
         <div
-            className="bg-popover text-popover-foreground border-border pointer-events-none absolute z-10 w-max max-w-64 rounded-lg border px-3 py-2 text-xs shadow-md"
+            className="bg-popover text-popover-foreground border-border rounded-app-sm text-app-caption pointer-events-none absolute z-10 w-max max-w-64 border px-3 py-2 shadow-md"
             style={{ left, top, transform: `translate(${flip ? "calc(-100% - 12px)" : "12px"}, 0)` }}
         >
             {children}

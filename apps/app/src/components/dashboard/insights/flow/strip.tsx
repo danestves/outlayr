@@ -38,8 +38,8 @@ export function Strip({ aside, cells, dense = false }: { aside?: ReactNode; cell
                     <Kpi.Title>{cell.label}</Kpi.Title>
                     <Kpi.Value
                         className={cn(
-                            "dash-figure flex items-center gap-2 font-semibold tracking-[-0.04em]",
-                            dense ? "mt-0.5 text-[22px] leading-[30px]" : "mt-1 text-2xl leading-8",
+                            "dash-figure text-app-figure flex items-center gap-2 font-semibold",
+                            dense ? "mt-0.5" : "mt-1",
                             cell.tone && TONES[cell.tone]
                         )}
                     >
@@ -47,14 +47,14 @@ export function Strip({ aside, cells, dense = false }: { aside?: ReactNode; cell
                         {cell.badge}
                     </Kpi.Value>
                     {cell.note === undefined ? null : (
-                        <span className="text-muted-foreground mt-0.5 block truncate text-xs leading-4">
+                        <span className="text-muted-foreground text-app-caption mt-0.5 block truncate leading-4">
                             {cell.note}
                         </span>
                     )}
                 </Kpi>
             ))}
             {aside === undefined ? null : (
-                <div className="flex min-w-0 items-center text-[13px] leading-[18px]">{aside}</div>
+                <div className="text-app-label flex min-w-0 items-center leading-4.5">{aside}</div>
             )}
         </Kpi.Group>
     );

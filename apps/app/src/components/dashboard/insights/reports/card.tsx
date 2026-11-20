@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { Pill } from "../parts";
+import type { Tone } from "../parts";
 import { Chart, Legend } from "./chart";
 import type { Definition, Report } from "./model";
 import { Pivot } from "./pivot";
@@ -7,7 +9,13 @@ import type { Reading } from "./reading";
 
 const FIGURES_PER_ROW = 2;
 const COLUMNS = ["", "sm:grid-cols-1", "sm:grid-cols-2", "sm:grid-cols-3"] as const;
-const RISE_TONES = { average: "flat", count: "flat", income: "good", net: "flat", spending: "poor" } as const;
+const RISE_TONES = {
+    average: "flat",
+    count: "flat",
+    income: "good",
+    net: "flat",
+    spending: "bad",
+} as const satisfies Record<Definition["measure"], Tone>;
 
 /** The part of a definition that decides how a report reads, which is all a shared copy keeps. */
 export type Arrangement = Pick<Definition, "columns" | "measure" | "rows">;
@@ -18,8 +26,8 @@ export interface Figure {
 }
 
 /** The raised tray every report surface sits in: a header on the tray, the content on a panel set into it. */
-export const TRAY = "bg-muted border-border flex min-w-0 flex-col overflow-hidden rounded-3xl border";
-export const PANEL = "bg-card border-border rounded-t-2xl border-t";
+export const TRAY = "bg-muted border-border flex min-w-0 flex-col overflow-hidden rounded-app-3xl border";
+export const PANEL = "bg-card border-border rounded-t-app-xl border-t";
 
 function Strip({ figures }: { figures: readonly Figure[] }) {
     return (
@@ -33,8 +41,8 @@ function Strip({ figures }: { figures: readonly Figure[] }) {
                     }`}
                     key={index}
                 >
-                    <div className="text-muted-foreground text-sm leading-5 font-medium">{figure.label}</div>
-                    <div className="dash-figure mt-0.5 flex h-[30px] items-center gap-2 truncate text-[22px] leading-[30px] font-semibold tracking-[-0.04em]">
+                    <div className="text-muted-foreground text-app-body font-medium">{figure.label}</div>
+                    <div className="dash-figure text-app-figure mt-0.5 flex h-8 items-center gap-2 truncate font-semibold">
                         {figure.value}
                     </div>
                 </div>
@@ -61,9 +69,9 @@ export function riseFigure({ definition, report, words }: Omit<FiguresInput, "em
         value: report.rise ? (
             <span className="flex items-center gap-2">
                 {words.rowName(report.rise.label, definition.rows)}
-                <span className="dash-trend" data-tone={RISE_TONES[definition.measure]}>
+                <Pill tone={RISE_TONES[definition.measure]}>
                     {`+${words.measureValue(definition.measure, report.rise.delta)}`}
-                </span>
+                </Pill>
             </span>
         ) : (
             "–"

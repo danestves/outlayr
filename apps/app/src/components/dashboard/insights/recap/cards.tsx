@@ -9,8 +9,9 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { viewTransition } from "@/lib/motion";
 
-import { Card, FIGURE, Swatch } from "../parts";
+import { Card, FIGURE, Pill, Swatch, toneOf } from "../parts";
 import type { CategoryRow, Recap } from "./model";
 
 const PERCENT = 100;
@@ -23,18 +24,11 @@ export interface RecapFormat {
     weekday: (day: number) => string;
 }
 
-const toneOf = (delta: number) => {
-    if (delta === 0) {
-        return "flat";
-    }
-    return delta < 0 ? "good" : "poor";
-};
-
-const HEADING = "text-muted-foreground h-10 px-3 text-xs leading-4 font-medium first:ps-4 last:pe-4";
-const BODY = "h-[46px] border-border border-t px-3 text-sm leading-5 first:ps-4 last:pe-4";
+const HEADING = "text-muted-foreground h-10 px-3 text-app-caption font-medium first:ps-4 last:pe-4";
+const BODY = "h-11.5 border-border border-t px-3 text-app-body first:ps-4 last:pe-4";
 const MONO = "dash-figure whitespace-nowrap text-right font-normal";
-const SHARE_COLUMN = "w-[214px]";
-const MUTED_FIGURE = "text-muted-foreground text-[13px] leading-[17px]";
+const SHARE_COLUMN = "w-53.5";
+const MUTED_FIGURE = "text-muted-foreground text-app-label leading-4.25";
 
 export function WhereItWent({ format, recap, versus }: { format: RecapFormat; recap: Recap; versus: string }) {
     const { where } = useIntlayer("dashboard-insights-recap");
@@ -50,7 +44,7 @@ export function WhereItWent({ format, recap, versus }: { format: RecapFormat; re
             title={where.title}
         >
             <div className="overflow-x-auto">
-                <table className="w-full min-w-[640px] border-collapse">
+                <table className="w-full min-w-160 border-collapse">
                     <thead>
                         <tr>
                             <th className={`${HEADING} text-left`}>{where.category}</th>
@@ -64,7 +58,7 @@ export function WhereItWent({ format, recap, versus }: { format: RecapFormat; re
                         {recap.rows.map((row) => (
                             <tr key={row.id}>
                                 <td className={`${BODY} font-medium`}>
-                                    <span className="inline-flex items-center gap-[9px]">
+                                    <span className="inline-flex items-center gap-2.25">
                                         <Swatch color={row.color} />
                                         {format.categoryName(row)}
                                     </span>
@@ -72,7 +66,7 @@ export function WhereItWent({ format, recap, versus }: { format: RecapFormat; re
                                 <td aria-hidden className={`${BODY} ${SHARE_COLUMN}`}>
                                     <span
                                         aria-hidden
-                                        className="block h-2 w-[190px] overflow-hidden rounded-full"
+                                        className="block h-2 w-47.5 overflow-hidden rounded-full"
                                         style={{ background: `color-mix(in oklab, ${row.color} 18%, transparent)` }}
                                     >
                                         <i
@@ -86,9 +80,9 @@ export function WhereItWent({ format, recap, versus }: { format: RecapFormat; re
                                 </td>
                                 <td className={`${BODY} ${MONO}`}>{format.amount(row.amount)}</td>
                                 <td className={`${BODY} text-right`}>
-                                    <span className="dash-trend" data-tone={toneOf(row.delta)}>
+                                    <Pill tone={toneOf(row.delta, "down")}>
                                         {row.delta === 0 ? "0" : format.signed(row.delta)}
-                                    </span>
+                                    </Pill>
                                 </td>
                             </tr>
                         ))}
@@ -112,12 +106,12 @@ export function Movers({ format, recap, versus }: { format: RecapFormat; recap: 
                     const tone = down ? "var(--color-app-income)" : "var(--color-app-spend)";
                     return (
                         <li
-                            className="border-border grid h-[47px] grid-cols-[96px_1fr_58px] items-center gap-2 border-t px-5 text-[13px] first:border-t-0"
+                            className="border-border text-app-label grid h-11.75 grid-cols-[96px_1fr_58px] items-center gap-2 border-t px-5 first:border-t-0"
                             key={row.id}
                         >
                             <span className="truncate font-medium">{format.categoryName(row)}</span>
                             <span aria-hidden className="relative h-2">
-                                <span className="bg-app-strong absolute inset-y-[-6px] left-1/2 w-px" />
+                                <span className="bg-app-strong absolute -inset-y-1.5 left-1/2 w-px" />
                                 {width === 0 ? null : (
                                     <span
                                         className="absolute inset-y-0 rounded-full"
@@ -159,7 +153,7 @@ export function DaysLogged({ format, recap }: { format: RecapFormat; recap: Reca
             <div className="grid grid-cols-7 gap-1">
                 {WEEKDAYS.map((day) => (
                     <span
-                        className={`${FIGURE} text-muted-foreground flex h-[18px] items-center justify-center text-[11px] leading-4 font-normal`}
+                        className={`${FIGURE} text-muted-foreground text-app-micro flex h-4.5 items-center justify-center leading-4 font-normal`}
                         key={day}
                     >
                         {format.weekday(day)}
@@ -170,7 +164,7 @@ export function DaysLogged({ format, recap }: { format: RecapFormat; recap: Reca
                 ))}
                 {recap.days.map(({ day, logged: done }) => (
                     <span
-                        className={`${FIGURE} flex h-[39px] items-center justify-center rounded-lg text-[11px] leading-4 font-normal ${
+                        className={`${FIGURE} rounded-app-sm text-app-micro flex h-9.75 items-center justify-center leading-4 font-normal ${
                             done ? "text-foreground" : "bg-muted text-muted-foreground"
                         }`}
                         key={day}
@@ -202,26 +196,26 @@ export function Caught({ lines }: { lines: readonly CaughtLine[] }) {
     return (
         <Card className="xl:col-span-2" panelClassName="p-0" title={caught.title}>
             {lines.length === 0 ? (
-                <p className="text-muted-foreground p-6 text-[13px]">{caught.none}</p>
+                <p className="text-muted-foreground text-app-label p-6">{caught.none}</p>
             ) : (
                 <ul>
                     {lines.map((line) => (
                         <li
-                            className="border-border flex h-[75px] items-center gap-3 border-t px-5 first:border-t-0"
+                            className="border-border flex h-18.75 items-center gap-3 border-t px-5 first:border-t-0"
                             key={line.key}
                         >
-                            <span className="bg-muted text-muted-foreground flex size-[26px] shrink-0 items-center justify-center rounded-lg">
+                            <span className="bg-muted text-muted-foreground rounded-app-sm flex size-6.5 shrink-0 items-center justify-center">
                                 <Glyph icon={line.icon} size={14} />
                             </span>
-                            <span className="min-w-0 flex-1 text-sm leading-5 font-medium">
+                            <span className="text-app-body min-w-0 flex-1 font-medium">
                                 {line.title}
-                                <small className="text-muted-foreground block truncate text-xs leading-4 font-normal">
+                                <small className="text-muted-foreground text-app-caption block truncate font-normal">
                                     {line.line}
                                 </small>
                             </span>
                             {line.value ? (
                                 <span
-                                    className={`${FIGURE} text-[15px] leading-5 font-medium`}
+                                    className={`${FIGURE} text-app-title leading-5 font-medium`}
                                     style={{ color: "var(--color-app-income)" }}
                                 >
                                     {line.value}
@@ -240,7 +234,12 @@ export type { CaughtLine };
 
 export function BudgetsButton({ children }: { children: ReactNode }) {
     return (
-        <Button className="h-8 px-3" render={<Link to="/settings/categories" />} size="sm" variant="outline">
+        <Button
+            className="h-8 px-3"
+            render={<Link viewTransition={viewTransition("push-left")} to="/settings/categories" />}
+            size="sm"
+            variant="outline"
+        >
             {children}
             <Glyph icon={ArrowUpRight01Icon} size={16} />
         </Button>
@@ -253,29 +252,3 @@ export const CAUGHT_ICONS = {
     pro: CheckmarkBadge01Icon,
     under: SecurityCheckIcon,
 };
-
-const GHOST = "border-app-ghost rounded-full border";
-
-/** Outlines of the table and the calendar, behind the words of an empty month. */
-export function RecapGhost() {
-    return (
-        <div aria-hidden className="pointer-events-none absolute inset-x-5 top-4 -z-10 flex gap-16 max-lg:hidden">
-            <div className="flex flex-1 flex-col gap-3">
-                {[80, 52, 40, 28, 36, 24].map((width) => (
-                    <div className="flex flex-col gap-1.5" key={width}>
-                        <div className="flex justify-between">
-                            <span className={`${GHOST} h-2.5`} style={{ width: `${width}px` }} />
-                            <span className={`${GHOST} h-2.5 w-20`} />
-                        </div>
-                        <span className={`${GHOST} h-2.5 w-full`} />
-                    </div>
-                ))}
-            </div>
-            <div className="grid grid-cols-6 content-start gap-2.5 pt-1">
-                {Array.from({ length: 30 }, (_, index) => (
-                    <span className="border-app-ghost size-[35px] rounded-md border" key={index} />
-                ))}
-            </div>
-        </div>
-    );
-}

@@ -11,16 +11,16 @@ import { useIntlayer } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { LogoMark } from "@/components/logo-mark";
+import { DialogContent } from "@/components/ui/dialog-content";
 
-import { CARD_SIZES, SIZE_NAMES, logoSource, renderCard } from "./card";
+import { CARD_SIZES, SIZE_NAMES, renderCard } from "./card";
 import type { CardInput, CardSize } from "./card";
 import type { RecapFormat } from "./cards";
 import type { Recap } from "./model";
 
 const PERCENT = 100;
 const COPIED_MS = 2000;
-const FALLBACK_COLOR = "#a39d8f";
-const LOGO = logoSource(renderToStaticMarkup(<LogoMark />));
+const LOGO = renderToStaticMarkup(<LogoMark />);
 
 interface ShareDialogProps {
     format: RecapFormat;
@@ -57,7 +57,7 @@ function useCardInput(
         return {
             categories: recap.rows.map((row) => ({
                 amount: amounts ? format.amount(row.amount) : null,
-                color: row.color === "" ? FALLBACK_COLOR : row.color,
+                color: row.color === "" ? null : row.color,
                 fraction: row.share,
                 name: format.categoryName(row),
                 percent: `${Math.round(row.share * PERCENT)}%`,
@@ -149,12 +149,12 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
 
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open}>
-            <Dialog.Content className="app-shell sm:max-w-[680px]">
+            <DialogContent className="sm:max-w-170" size="lg">
                 <Dialog.Header>
                     <Dialog.Title>{dialog.title}</Dialog.Title>
                 </Dialog.Header>
                 <Dialog.Body className="grid gap-5 sm:grid-cols-[340px_1fr]">
-                    <div className="flex h-[452px] items-center justify-center">
+                    <div className="flex h-113 items-center justify-center">
                         {made === null ? null : (
                             <img
                                 alt={dialog.preview.value}
@@ -167,14 +167,14 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
                     </div>
                     <div className="flex flex-col">
                         <div className="border-border flex min-h-14 items-center justify-between gap-3 border-y">
-                            <label className="flex flex-col text-sm" htmlFor="recap-amounts">
+                            <label className="text-app-body flex flex-col" htmlFor="recap-amounts">
                                 <span>{dialog.amounts}</span>
-                                <span className="text-muted-foreground text-xs">{dialog.amountsHint}</span>
+                                <span className="text-muted-foreground text-app-caption">{dialog.amountsHint}</span>
                             </label>
                             <Switch checked={amounts} id="recap-amounts" onCheckedChange={setAmounts} />
                         </div>
                         <div className="border-border flex min-h-14 items-center justify-between gap-3 border-b">
-                            <span className="text-sm">{dialog.size}</span>
+                            <span className="text-app-body">{dialog.size}</span>
                             <Tabs onValueChange={(next: CardSize) => setSize(next)} value={size} variant="segmented">
                                 <Tabs.List aria-label={dialog.size.value}>
                                     {SIZE_NAMES.map((name) => (
@@ -185,9 +185,9 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
                                 </Tabs.List>
                             </Tabs>
                         </div>
-                        <p className="text-muted-foreground mt-[14px] text-[13px] leading-5">{dialog.note}</p>
+                        <p className="text-muted-foreground text-app-label mt-3.5 leading-5">{dialog.note}</p>
                         {failed ? (
-                            <p className="text-destructive pt-3 text-[13px]" role="alert">
+                            <p className="text-destructive text-app-label pt-3" role="alert">
                                 {dialog.failed}
                             </p>
                         ) : null}
@@ -209,7 +209,7 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
                         {dialog.download}
                     </Button>
                 </Dialog.Footer>
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }

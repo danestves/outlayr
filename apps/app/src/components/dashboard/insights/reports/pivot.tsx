@@ -8,12 +8,12 @@ const HEAT_RANGE = 44;
 const SMALL_CHANGE = 0.005;
 const PERCENT = 100;
 
-const HEAD = "bg-card text-muted-foreground h-10 px-3.5 text-xs font-medium first:ps-5 last:pe-3.5";
+const HEAD = "bg-card text-muted-foreground h-10 px-3.5 text-app-caption font-medium first:ps-5 last:pe-3.5";
 // Under a phone width the table scrolls sideways, so the column that stays put gets an edge.
-const PINNED = "sticky left-0 max-sm:shadow-[inset_-1px_0_var(--color-border)]";
+const PINNED = "sticky left-0 max-sm:border-e";
 // The total's first cell stays put while the rest scrolls under it, so it needs a fill nothing shows through.
-const TOTAL_FILL = "bg-[color-mix(in_oklab,var(--color-foreground)_3%,var(--color-card))]";
-const CELL = "dash-figure h-10 px-3.5 py-0 text-sm tracking-[-0.02em] whitespace-nowrap first:ps-5 last:pe-3.5";
+const TOTAL_FILL = "bg-app-band";
+const CELL = "dash-figure h-10 px-3.5 py-0 text-app-body whitespace-nowrap first:ps-5 last:pe-3.5";
 
 function heat(color: string | null, value: number, low: number, high: number) {
     if (color === null || high === low) {
@@ -107,7 +107,7 @@ export function Pivot({ averages, grouping, kind, report, words }: PivotProps) {
                 {rows.map((row) => (
                     <Table.Row className="hover:bg-muted/40" key={row.label.id}>
                         <Table.Cell className={`${CELL} bg-card ${PINNED} font-sans font-medium tracking-normal`}>
-                            <span className="flex items-center gap-[9px]">
+                            <span className="flex items-center gap-2.25">
                                 <span
                                     aria-hidden
                                     className="size-2 shrink-0 rounded-full"

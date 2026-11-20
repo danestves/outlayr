@@ -12,8 +12,8 @@ import { axisOf } from "./model";
 import type { PacePoint } from "./model";
 
 const TINT = "var(--color-app-tint)";
-const USUAL = "#7c7a6c";
-const AXIS = `${FIGURE} text-[11px]`;
+const USUAL = "var(--color-app-muted)";
+const AXIS = `${FIGURE} text-app-micro`;
 const WEEK_DAYS = 7;
 const MONTH_DAYS = 31;
 const MONTH_KEY_LENGTH = 7;
@@ -60,7 +60,7 @@ function Frame({ end, format, last, rules, tag, ticks, top, total }: FrameProps)
             ))}
             {rules.map((value) => (
                 <span
-                    className={`${AXIS} text-muted-foreground absolute -left-7 leading-[14px]`}
+                    className={`${AXIS} text-muted-foreground absolute -left-7 leading-3.5`}
                     key={value}
                     style={{ top: yAt(value, top, HALF_LABEL) }}
                 >
@@ -69,7 +69,7 @@ function Frame({ end, format, last, rules, tag, ticks, top, total }: FrameProps)
             ))}
             {ticks.map(({ index, label }) => (
                 <span
-                    className={`${AXIS} text-muted-foreground absolute -bottom-[3px] -translate-x-1/2 whitespace-nowrap`}
+                    className={`${AXIS} text-muted-foreground absolute -bottom-0.75 -translate-x-1/2 whitespace-nowrap`}
                     key={index}
                     style={{ left: xAt(index, total) }}
                 >
@@ -78,7 +78,7 @@ function Frame({ end, format, last, rules, tag, ticks, top, total }: FrameProps)
             ))}
             {tag && end !== null && last !== -1 ? (
                 <span
-                    className={`${FIGURE} bg-foreground text-background absolute z-10 flex h-6 min-w-[104px] -translate-x-full items-center justify-center rounded-md px-2 text-xs font-semibold whitespace-nowrap`}
+                    className={`${FIGURE} bg-foreground text-background rounded-app-xs text-app-caption absolute z-10 flex h-6 min-w-26 -translate-x-full items-center justify-center px-2 font-semibold whitespace-nowrap`}
                     style={{ left: xAt(last, total), top: yAt(end, top, TAG_RISE) }}
                 >
                     {tag}
@@ -166,7 +166,7 @@ function Key({ children, dashed = false }: { children: ReactNode; dashed?: boole
     return (
         <span className="flex items-center gap-1.5">
             {dashed ? (
-                <span aria-hidden className="w-3 border-t-2 border-dashed" style={{ borderColor: USUAL }} />
+                <span aria-hidden className="border-app-muted w-3 border-t-2 border-dashed" />
             ) : (
                 <span aria-hidden className="h-0.5 w-3 rounded-sm" style={{ background: TINT }} />
             )}
@@ -189,7 +189,7 @@ function PaceBones({ aspectRatio }: { aspectRatio: number }) {
         <Bones className="relative" style={{ aspectRatio }}>
             {BONE_RULES.map((top) => (
                 <span className="border-border absolute inset-x-0 block border-t" key={top} style={{ top }}>
-                    <SkeletonBox className="absolute -top-[5px] -left-9" height={10} radius={3} width={20} />
+                    <SkeletonBox className="absolute -top-1.25 -left-9" height={10} radius={3} width={20} />
                 </span>
             ))}
         </Bones>
@@ -203,11 +203,11 @@ export function PaceCard({ className = "", headline, line, usualShown, ...chart 
         <Tray className={className}>
             <div className="flex items-start gap-3 px-5 pt-4">
                 <div className="min-w-0">
-                    <h2 className="text-xl leading-7 font-semibold tracking-[-0.02em]">{headline}</h2>
+                    <h2 className="text-app-heading font-semibold">{headline}</h2>
                     <p className={NOTE}>{line}</p>
                 </div>
                 {usualShown && !sampled ? (
-                    <div className="text-muted-foreground ml-auto flex shrink-0 gap-3.5 pt-2 text-xs">
+                    <div className="text-muted-foreground text-app-caption ml-auto flex shrink-0 gap-3.5 pt-2">
                         <Key>{chart.names.spent}</Key>
                         <Key dashed>{chart.names.usual}</Key>
                     </div>
