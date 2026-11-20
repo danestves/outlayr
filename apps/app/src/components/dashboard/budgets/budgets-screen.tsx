@@ -22,8 +22,11 @@ import { AccountsBar, DataTable, INCOME, MUTED, SPEND } from "@/components/dashb
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { KpiBand, KpiCell, Trend } from "@/components/dashboard/accounts/parts";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useCategoryName, useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { MenuContent } from "@/components/ui/menu-content";
+import { viewTransition } from "@/lib/motion";
 
 import { BudgetFlowsProvider } from "./budget-flows";
 import { useBudgetFlows } from "./flow-context";
@@ -36,7 +39,6 @@ import {
     ChartLegend,
     Diamond,
     Dot,
-    Ghost,
     MonthStepper,
     PaceChart,
     PaceGauge,
@@ -74,7 +76,7 @@ function NewBudgetMenu() {
                 <Glyph icon={Add01Icon} size={16} />
                 {copy.newBudget}
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
+            <MenuContent align="end" className="w-60" sideOffset={4}>
                 <Menu.Item onClick={() => open({ categoryId: null, kind: "new" })}>
                     <Glyph icon={Tag01Icon} size={16} />
                     {copy.menu.category}
@@ -85,7 +87,7 @@ function NewBudgetMenu() {
                     <Glyph icon={PieChartIcon} size={16} />
                     {copy.menu.overall}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -93,7 +95,11 @@ function NewBudgetMenu() {
 export function PlanButton() {
     const copy = useIntlayer("dashboard-budgets");
     return (
-        <Button nativeButton={false} render={<Link search={(prev) => prev} to="/budgets/plan" />} variant="outline">
+        <Button
+            nativeButton={false}
+            render={<Link search={(prev) => prev} to="/budgets/plan" viewTransition={viewTransition("push-left")} />}
+            variant="outline"
+        >
             <Glyph icon={Calendar03Icon} className="text-muted-foreground" size={16} />
             {copy.plan}
         </Button>
@@ -231,19 +237,19 @@ function PaceCard({ model, pace }: { model: BudgetsOverview; pace: Pace }) {
                     marker={marker}
                     spent={spent}
                 />
-                <div className="dash-figure text-muted-foreground mt-2 flex items-baseline justify-between text-[13px]">
+                <div className="dash-figure text-muted-foreground text-app-label mt-2 flex items-baseline justify-between">
                     <span>{whole(0)}</span>
                     <span>{whole(Math.max(spent, limit))}</span>
                 </div>
-                <div className="mt-2.5 flex items-baseline justify-between text-sm">
-                    <span className="text-muted-foreground flex items-center gap-2 text-[13px]">
+                <div className="text-app-body mt-2.5 flex items-baseline justify-between">
+                    <span className="text-muted-foreground text-app-label flex items-center gap-2">
                         <Diamond />
                         {running ? copy.evenToday : copy.limit}
                     </span>
                     <span className="dash-figure">{whole(marker)}</span>
                 </div>
             </Frame.Panel>
-            <Frame.Footer className="text-muted-foreground text-[13px]">{footer}</Frame.Footer>
+            <Frame.Footer className="text-muted-foreground text-app-label!">{footer}</Frame.Footer>
         </Frame>
     );
 }
@@ -289,8 +295,8 @@ function Spark({ color, values }: { color: string; values: readonly number[] }) 
     );
 }
 
-const NAME = "flex min-w-0 items-center gap-[9px] text-sm font-medium";
-const FIGURE = "dash-figure text-[13px]";
+const NAME = "flex min-w-0 items-center gap-2.25 text-app-body font-medium";
+const FIGURE = "dash-figure text-app-label!";
 
 function CategoryName({ categoryId, color, name }: { categoryId: string | null; color: string; name: ReactNode }) {
     if (categoryId === null) {
@@ -307,6 +313,7 @@ function CategoryName({ categoryId, color, name }: { categoryId: string | null; 
             params={{ categoryId }}
             search={(prev) => prev}
             to="/budgets/$categoryId"
+            viewTransition={viewTransition("push-left")}
         >
             <Dot color={color} />
             <span className="truncate">{name}</span>
@@ -326,10 +333,10 @@ function LineRow({ line, model }: { line: BudgetLine; model: BudgetsOverview }) 
     }
     return (
         <Table.Row>
-            <Table.Cell className="max-w-[240px]">
+            <Table.Cell className="max-w-60">
                 <CategoryName categoryId={line.categoryId} color={line.color} name={name} />
             </Table.Cell>
-            <Table.Cell className={ahead ? "w-[330px]" : "w-[230px]"}>
+            <Table.Cell className={ahead ? "w-82.5" : "w-57.5"}>
                 <UsedBar color={line.color} limit={standing.effectiveLimit} spent={standing.spent} />
             </Table.Cell>
             <Table.Cell className={FIGURE}>{money(standing.spent)}</Table.Cell>
@@ -356,14 +363,16 @@ function AddLimit({ categoryId }: { categoryId: string }) {
     const copy = useIntlayer("dashboard-budgets");
     const { open } = useBudgetFlows();
     return (
-        <button
-            className="text-app-tint inline-flex items-center gap-1 text-[13px] font-medium hover:underline"
+        <Button
+            className="text-app-tint h-auto gap-1 p-0"
             onClick={() => open({ categoryId, kind: "new" })}
+            size="sm"
             type="button"
+            variant="link"
         >
             <Glyph icon={Add01Icon} size={14} />
-            {copy.addLimit}
-        </button>
+            <span className="text-app-label">{copy.addLimit}</span>
+        </Button>
     );
 }
 
@@ -379,13 +388,14 @@ function OpenMenu({ line }: { line: OpenLine }) {
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" alignOffset={-4} className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
+            <MenuContent align="end" alignOffset={-4} className="w-60" sideOffset={4}>
                 <Menu.Item
                     onClick={() =>
                         navigate({
                             params: { categoryId: line.categoryId },
                             search: (prev) => prev,
                             to: "/budgets/$categoryId",
+                            viewTransition: viewTransition("push-left"),
                         })
                     }
                 >
@@ -396,7 +406,7 @@ function OpenMenu({ line }: { line: OpenLine }) {
                     <Glyph icon={Add01Icon} size={16} />
                     {copy.addLimit}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -407,7 +417,7 @@ function OpenRow({ line, model }: { line: OpenLine; model: BudgetsOverview }) {
     const categoryName = useCategoryName();
     return (
         <Table.Row>
-            <Table.Cell className="max-w-[240px]">
+            <Table.Cell className="max-w-60">
                 <CategoryName
                     categoryId={line.categoryId}
                     color={line.color}
@@ -416,7 +426,7 @@ function OpenRow({ line, model }: { line: OpenLine; model: BudgetsOverview }) {
             </Table.Cell>
             <Table.Cell>
                 {model.phase === "closed" ? (
-                    <span className="text-muted-foreground text-[13px]">{copy.status.noLimit}</span>
+                    <span className="text-muted-foreground text-app-label">{copy.status.noLimit}</span>
                 ) : (
                     <AddLimit categoryId={line.categoryId} />
                 )}
@@ -441,7 +451,7 @@ function OpenRow({ line, model }: { line: OpenLine; model: BudgetsOverview }) {
 
 function Footnote({ label, value }: { label: ReactNode; value: string }) {
     return (
-        <span className="text-muted-foreground me-2 text-[13px] whitespace-nowrap">
+        <span className="text-muted-foreground text-app-label me-2 whitespace-nowrap">
             {label}
             <span className="dash-figure text-foreground ms-1.5 font-medium">{value}</span>
         </span>
@@ -482,8 +492,8 @@ function BudgetTable({ model }: { model: BudgetsOverview }) {
                 </DataTable>
             </Frame.Panel>
             <Frame.Footer className="flex flex-wrap items-center gap-2">
-                <span className="text-muted-foreground text-[13px]">{footer.withLimit}</span>
-                <span className="dash-figure text-[13px] font-medium">
+                <span className="text-muted-foreground text-app-label">{footer.withLimit}</span>
+                <span className="dash-figure text-app-label font-medium">
                     {footer.of({ limit: money(limit), spent: money(spent) })}
                 </span>
                 {ahead ? null : (
@@ -505,23 +515,14 @@ function AheadCard({ model }: { model: BudgetsOverview }) {
     const names = useMonthNames();
     return (
         <Frame className="my-4 min-w-0 flex-1">
-            <Frame.Panel className="flex flex-1 flex-col items-center justify-center gap-1.5 divide-y-0 px-6 py-10 text-center">
-                <span className="bg-app-fill text-muted-foreground mb-2 flex size-11 items-center justify-center rounded-[14px]">
-                    <Glyph icon={Calendar03Icon} size={20} />
-                </span>
-                <b className="text-[15px] font-semibold">{ahead.title({ month: names.month(model.period.key) })}</b>
-                <p className="text-muted-foreground max-w-[320px] text-[13px]">{ahead.line}</p>
+            <Frame.Panel className="flex flex-1 flex-col divide-y-0">
+                <Empty
+                    icon={Calendar03Icon}
+                    line={ahead.line}
+                    title={ahead.title({ month: names.month(model.period.key) })}
+                />
             </Frame.Panel>
         </Frame>
-    );
-}
-
-function EmptyLine({ children, title }: { children?: ReactNode; title: ReactNode }) {
-    return (
-        <>
-            <b className="text-[15px] leading-[22px] font-semibold">{title}</b>
-            <p className="text-muted-foreground mb-2.5 max-w-[320px] text-[13px] leading-5">{children}</p>
-        </>
     );
 }
 
@@ -545,20 +546,25 @@ function NoBudgets({ model }: { model: BudgetsOverview }) {
     return (
         <>
             <Frame className="mb-4 min-w-0">
-                <Frame.Panel className="relative isolate flex flex-col items-center gap-1.5 divide-y-0 overflow-hidden px-6 pt-[172px] pb-7 text-center">
-                    <Ghost height={160} name="budgets" />
-                    <EmptyLine title={copy.noBudgets.title}>{line}</EmptyLine>
-                    <Button onClick={() => open({ categoryId: null, kind: "new" })}>
-                        <Glyph icon={Add01Icon} size={16} />
-                        {copy.newBudget}
-                    </Button>
+                <Frame.Panel className="flex flex-col divide-y-0">
+                    <Empty
+                        action={
+                            <Button onClick={() => open({ categoryId: null, kind: "new" })}>
+                                <Glyph icon={Add01Icon} size={16} />
+                                {copy.newBudget}
+                            </Button>
+                        }
+                        icon={PieChartIcon}
+                        line={line}
+                        title={copy.noBudgets.title}
+                    />
                 </Frame.Panel>
             </Frame>
             {model.open.length > 0 ? (
                 <Frame className="mb-5 min-w-0 flex-1">
                     <CardHead
                         aside={
-                            <span className="dash-figure text-muted-foreground text-[13px]">
+                            <span className="dash-figure text-muted-foreground text-app-label">
                                 {money(model.totals.total)}
                             </span>
                         }
@@ -579,14 +585,14 @@ function NoBudgets({ model }: { model: BudgetsOverview }) {
                         >
                             {model.open.map((each) => (
                                 <Table.Row key={each.categoryId}>
-                                    <Table.Cell className="max-w-[240px]">
+                                    <Table.Cell className="max-w-60">
                                         <CategoryName
                                             categoryId={each.categoryId}
                                             color={each.color}
                                             name={categoryName({ id: each.categoryId, name: each.name })}
                                         />
                                     </Table.Cell>
-                                    <Table.Cell className="w-[260px]">
+                                    <Table.Cell className="w-65">
                                         <UsedBar color={each.color} limit={1} spent={each.share} />
                                     </Table.Cell>
                                     <Table.Cell className={FIGURE}>{money(each.spent)}</Table.Cell>
@@ -611,13 +617,18 @@ function NoData() {
     const { open } = useAccountFlows();
     return (
         <Frame className="mb-5 min-w-0 flex-1">
-            <Frame.Panel className="relative isolate flex min-h-[874px] flex-1 flex-col items-center gap-1.5 divide-y-0 overflow-hidden px-6 pt-[460px] text-center">
-                <Ghost height={874} name="page" />
-                <EmptyLine title={copy.title}>{copy.line}</EmptyLine>
-                <Button onClick={() => open({ kind: "entry" })}>
-                    <Glyph icon={Add01Icon} size={16} />
-                    {copy.add}
-                </Button>
+            <Frame.Panel className="flex flex-1 flex-col divide-y-0">
+                <Empty
+                    action={
+                        <Button onClick={() => open({ kind: "entry" })}>
+                            <Glyph icon={Add01Icon} size={16} />
+                            {copy.add}
+                        </Button>
+                    }
+                    icon={Wallet01Icon}
+                    line={copy.line}
+                    title={copy.title}
+                />
             </Frame.Panel>
         </Frame>
     );
@@ -655,7 +666,9 @@ function BudgetsBody() {
                 <PlanButton />
                 {hasBudgets ? <NewBudgetMenu /> : null}
             </AccountsBar>
-            {body}
+            <div className="flex flex-1 flex-col" data-motion="dissolve" key={period.key}>
+                {body}
+            </div>
         </main>
     );
 }

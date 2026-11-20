@@ -1,5 +1,6 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
+import Invoice03Icon from "@hugeicons/core-free-icons/Invoice03Icon";
 import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
 import { entryLook } from "@outlayr/money/ledger-log";
@@ -18,14 +19,17 @@ import { AccountsBar, Cell, DataTable } from "@/components/dashboard/accounts/ac
 import { useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { KpiBand, KpiCell, Trend } from "@/components/dashboard/accounts/parts";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useCategoryName, useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { LookTile, MerchantTile } from "@/components/ledger/tiles";
+import { MenuContent } from "@/components/ui/menu-content";
 import { editedBudget } from "@/lib/budget-writes";
 import type { LedgerRow } from "@/lib/dashboard-series-ledger";
 import { daysBetween } from "@/lib/ledger";
 import { ledgerBooks } from "@/lib/ledger-db";
+import { viewTransition } from "@/lib/motion";
 
 import { cadenceOf, useWindowNames } from "./budget-dialogs";
 import { BudgetFlowsProvider } from "./budget-flows";
@@ -37,7 +41,6 @@ import {
     BudgetMenuItems,
     CardHead,
     Dot,
-    Ghost,
     HistoryBars,
     MonthStepper,
     PaceChart,
@@ -71,9 +74,9 @@ function DetailMenu({ line, name }: { line: BudgetLine; name: string }) {
             >
                 <Glyph icon={MoreVerticalIcon} size={16} />
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
+            <MenuContent align="end" className="w-60" sideOffset={4}>
                 <BudgetMenuItems line={line} />
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -91,7 +94,13 @@ function DetailBar({ detail }: { detail: BudgetDetail }) {
                             aria-label={copy.back.value}
                             className={BACK}
                             nativeButton={false}
-                            render={<Link search={(prev) => prev} to="/budgets" />}
+                            render={
+                                <Link
+                                    search={(prev) => prev}
+                                    to="/budgets"
+                                    viewTransition={viewTransition("push-left", { back: true })}
+                                />
+                            }
                             size="icon"
                             variant="outline"
                         >
@@ -99,7 +108,12 @@ function DetailBar({ detail }: { detail: BudgetDetail }) {
                         </Button>
                     }
                     parent={
-                        <Link className={PARENT} search={(prev) => prev} to="/budgets">
+                        <Link
+                            className={PARENT}
+                            search={(prev) => prev}
+                            to="/budgets"
+                            viewTransition={viewTransition("push-left", { back: true })}
+                        >
                             {copy.title}
                         </Link>
                     }
@@ -172,7 +186,7 @@ function LimitKpis({ detail, line }: { detail: BudgetDetail; line: BudgetLine })
     }
     return (
         <KpiBand>
-            <KpiCell color={TINT} label={kpi.spent} tone="text-[22px]/8" value={money(spent)}>
+            <KpiCell color={TINT} label={kpi.spent} value={money(spent)}>
                 <span className="flex min-w-0 items-center gap-2">
                     <Trend goodWhenUp={false} value={ratio > 1 ? 1 : 0}>
                         {percent(ratio)}
@@ -180,18 +194,18 @@ function LimitKpis({ detail, line }: { detail: BudgetDetail; line: BudgetLine })
                     {quiet(kpi.ofLimit)}
                 </span>
             </KpiCell>
-            <KpiCell color={TINT} label={kpi.limit} tone="text-[22px]/8" value={money(limit)}>
+            <KpiCell color={TINT} label={kpi.limit} value={money(limit)}>
                 {quiet(kpi.cadence[cadenceOf(line.budget.type)])}
             </KpiCell>
             <KpiCell
                 color={TINT}
                 label={over ? kpi.over : kpi.left}
-                tone={`${leftTone} text-[22px]/8`}
+                tone={leftTone}
                 value={money(Math.abs(limit - spent))}
             >
                 {standing}
             </KpiCell>
-            <KpiCell color={TINT} label={kpi.typical} tone="text-[22px]/8" value={money(detail.typical.amount ?? 0)}>
+            <KpiCell color={TINT} label={kpi.typical} value={money(detail.typical.amount ?? 0)}>
                 {typicalNote(detail)}
             </KpiCell>
         </KpiBand>
@@ -252,7 +266,7 @@ function PaceCard({ detail, line }: { detail: BudgetDetail; line: BudgetLine }) 
     return (
         <Frame className="min-w-0">
             <CardHead
-                aside={note ? <span className="text-muted-foreground text-[13px]">{note}</span> : null}
+                aside={note ? <span className="text-muted-foreground text-app-label">{note}</span> : null}
                 title={pace.chart}
             />
             <Frame.Panel className="px-4 pt-4 pb-3">
@@ -294,13 +308,12 @@ function TransactionsCard({ detail }: { detail: BudgetDetail }) {
     return (
         <Frame className="min-w-0 flex-1">
             <CardHead
-                aside={<span className="dash-figure text-muted-foreground text-[13px]">{detail.rows.length}</span>}
+                aside={<span className="dash-figure text-muted-foreground text-app-label">{detail.rows.length}</span>}
                 title={copy.detail.transactions}
             />
             {detail.rows.length === 0 ? (
-                <Frame.Panel className="relative isolate flex min-h-[348px] flex-1 flex-col items-center divide-y-0 overflow-hidden px-6 pt-[300px] pb-7 text-center">
-                    <Ghost height={348} name="spending" width={846} />
-                    <p className="text-muted-foreground text-[13px] leading-5">{copy.detail.noSpending}</p>
+                <Frame.Panel className="flex flex-1 flex-col divide-y-0">
+                    <Empty icon={Invoice03Icon} title={copy.detail.noSpending} />
                 </Frame.Panel>
             ) : (
                 <Frame.Panel className="flex-1 p-0">
@@ -316,12 +329,12 @@ function TransactionsCard({ detail }: { detail: BudgetDetail }) {
                                 <Table.Row className="hover:bg-app-hover relative transition-colors" key={row.id}>
                                     <Cell>
                                         <Link
-                                            className="focus-visible:ring-ring flex min-w-0 items-center gap-[9px] rounded-sm text-sm font-medium outline-none after:absolute after:inset-0 focus-visible:ring-2"
+                                            className="focus-visible:ring-ring text-app-body flex min-w-0 items-center gap-2.25 rounded-sm font-medium outline-none after:absolute after:inset-0 focus-visible:ring-2"
                                             search={(prev) => ({ accounts: prev.accounts, entry: row.id })}
                                             to="/transactions"
                                         >
                                             {tiled ? <EntryTile row={row} /> : null}
-                                            <span className="max-w-[160px] truncate sm:max-w-[280px]">{merchant}</span>
+                                            <span className="max-w-40 truncate sm:max-w-70">{merchant}</span>
                                         </Link>
                                     </Cell>
                                     <Cell className="text-muted-foreground">
@@ -343,7 +356,7 @@ function TransactionsCard({ detail }: { detail: BudgetDetail }) {
 
 function Fact({ children, label }: { children: ReactNode; label: ReactNode }) {
     return (
-        <div className="flex h-[42px] items-center justify-between gap-3 border-t px-4 text-[13px]">
+        <div className="text-app-label flex h-10.5 items-center justify-between gap-3 border-t px-4">
             <span className="text-muted-foreground">{label}</span>
             {children}
         </div>
@@ -404,7 +417,9 @@ function BudgetCard({ detail, line }: { detail: BudgetDetail; line: BudgetLine }
                     />
                 </Fact>
                 {detail.phase === "closed" ? (
-                    <p className="text-muted-foreground border-t pt-2.5 pb-1.5 text-xs">{copy.detail.closedNote}</p>
+                    <p className="text-muted-foreground text-app-caption border-t pt-2.5 pb-1.5">
+                        {copy.detail.closedNote}
+                    </p>
                 ) : (
                     <Fact label={copy.detail.name}>
                         <span className="truncate">{line.customName ?? name}</span>
@@ -440,7 +455,7 @@ function HistoryCard({ detail }: { detail: BudgetDetail }) {
             <CardHead
                 aside={
                     line ? (
-                        <span className="text-muted-foreground text-[13px]">
+                        <span className="text-muted-foreground text-app-label">
                             {copy.detail.overCount({ count: over, total: detail.history.length })}
                         </span>
                     ) : null
@@ -499,9 +514,14 @@ function NotFound() {
     return (
         <main className="min-w-0 px-4 pb-5 sm:px-6">
             <AccountsBar title={copy.title} />
-            <p className="text-muted-foreground py-6 text-sm">
+            <p className="text-muted-foreground text-app-body py-6">
                 {copy.detail.notFound}{" "}
-                <Link className="text-foreground underline" search={(prev) => prev} to="/budgets">
+                <Link
+                    className="text-foreground underline"
+                    search={(prev) => prev}
+                    to="/budgets"
+                    viewTransition={viewTransition("push-left", { back: true })}
+                >
                     {copy.back}
                 </Link>
             </p>
@@ -520,7 +540,11 @@ function DetailPage({ categoryId }: { categoryId: string }) {
     return (
         <main className="@container flex min-h-full min-w-0 flex-col px-4 pb-5 sm:px-6">
             <DetailBar detail={detail} />
-            <div className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_296px]">
+            <div
+                className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_296px]"
+                data-motion="dissolve"
+                key={period.key}
+            >
                 <div className="flex min-w-0 flex-col gap-4">
                     {line ? <LimitKpis detail={detail} line={line} /> : <OpenKpis detail={detail} />}
                     {line ? <PaceCard detail={detail} line={line} /> : null}

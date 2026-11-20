@@ -20,6 +20,7 @@ import { useGoalMoney } from "@/components/dashboard/goals/parts";
 import { useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useBox } from "@/components/dashboard/insights/use-box";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { MenuContent } from "@/components/ui/menu-content";
 import { periodKeyOf, periodKindOf, periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 
 import { useBudgetFlows } from "./flow-context";
@@ -29,19 +30,19 @@ import type { BudgetLine, LineStatus } from "./model";
 const GAUGE_UNMEASURED = { height: 0, width: 366 };
 const PACE_UNMEASURED = { height: 0, width: 694 };
 
-export const BADGE = "h-[22px] rounded-md px-2 text-xs font-medium normal-nums";
+export const BADGE = "h-5.5 rounded-md px-2 text-xs font-medium normal-nums";
 export const TINT = "var(--color-app-tint)";
 export const BAD = "var(--color-app-spend)";
 export const OK = "var(--color-app-income)";
 const TRACK = "var(--color-app-strong)";
 const INK = "var(--color-app-ink)";
 const GROUND = "var(--color-app-bg)";
-const TICK = "dash-figure text-[11px]";
+const TICK = "dash-figure text-app-micro";
 const MUTED_FILL = "var(--color-muted-foreground)";
 const GRID = "var(--color-border)";
 
 export const quiet = (children: ReactNode) => (
-    <span className="text-muted-foreground min-w-0 truncate text-[13px] leading-5">{children}</span>
+    <span className="text-muted-foreground text-app-label min-w-0 truncate">{children}</span>
 );
 
 export function useMonthNames() {
@@ -105,7 +106,7 @@ export function Stepper({
 }) {
     const arrow = "text-muted-foreground hover:text-foreground size-7 rounded-md disabled:opacity-40";
     return (
-        <span className="bg-foreground/[0.03] inline-flex h-9 items-center gap-0.5 rounded-lg border px-1 text-sm font-medium whitespace-nowrap">
+        <span className="bg-app-hover rounded-app-sm text-app-body inline-flex h-9 items-center gap-0.5 border px-1 font-medium whitespace-nowrap">
             <Button
                 aria-label={previous}
                 className={arrow}
@@ -204,7 +205,7 @@ export function UsedBar({ color, limit, spent }: { color: string; limit: number;
     return (
         <span
             aria-hidden
-            className="flex h-2 w-full max-w-[210px] gap-0.5 overflow-hidden rounded-full"
+            className="flex h-2 w-full max-w-52.5 gap-0.5 overflow-hidden rounded-full"
             style={{ background: `color-mix(in oklab, ${color} 22%, transparent)` }}
         >
             <i className="block h-full rounded-full" style={{ background: color, width: `${share * 100}%` }} />
@@ -253,7 +254,7 @@ export function PaceGauge({
     const markerX = (marker / top) * span;
     const pillX = Math.max(Math.min(spentAt * span, width - PILL_WIDTH / 2), PILL_WIDTH / 2) - PILL_WIDTH / 2;
     return (
-        <figure aria-label={label} className="h-[112px]" ref={ref}>
+        <figure aria-label={label} className="h-28" ref={ref}>
             {width > 0 ? (
                 <svg aria-hidden className="block overflow-visible" height={GAUGE_HEIGHT} width={width}>
                     {bars.map((bar) => (
@@ -280,9 +281,9 @@ export function PaceGauge({
                     <g transform={`translate(${pillX} 0)`}>
                         <rect fill={INK} height={24} rx={6} width={PILL_WIDTH} />
                         <text
-                            className="dash-figure"
+                            className="dash-figure text-app-caption font-semibold"
                             fill={GROUND}
-                            style={{ fontSize: 12, fontWeight: 600, textAnchor: "middle" }}
+                            style={{ textAnchor: "middle" }}
                             x={PILL_WIDTH / 2}
                             y={16.5}
                         >
@@ -295,7 +296,7 @@ export function PaceGauge({
     );
 }
 
-export const Diamond = () => <i aria-hidden className="bg-app-ink block size-[7px] rotate-45 rounded-[1px]" />;
+export const Diamond = () => <i aria-hidden className="bg-app-ink block size-1.75 rotate-45 rounded-xs" />;
 
 const CHART_LEFT = 44;
 const LAST_TICKS = 4;
@@ -419,7 +420,7 @@ export function PaceChart({
 export function ChartLegend() {
     const { pace } = useIntlayer("dashboard-budgets");
     return (
-        <span className="text-muted-foreground flex items-center gap-3.5 text-[13px]">
+        <span className="text-muted-foreground text-app-label flex items-center gap-3.5">
             <span className="flex items-center gap-1.5">
                 <i aria-hidden className="bg-app-tint block h-0.5 w-3.5" />
                 {pace.spent}
@@ -454,7 +455,7 @@ export function HistoryBars({
             <div aria-hidden className="relative flex items-end gap-2" style={{ height }}>
                 {bars.map((bar, index) => (
                     <i
-                        className="block flex-1 rounded-t-[3px]"
+                        className="block flex-1 rounded-t-xs"
                         key={bar.key}
                         style={{
                             background: index === selected ? color : `color-mix(in oklab, ${color} 30%, transparent)`,
@@ -464,17 +465,14 @@ export function HistoryBars({
                 ))}
                 {limitLine && limit !== null && limit > 0 ? (
                     <i
-                        className="border-app-ink absolute inset-x-0 block border-t-[1.5px]"
+                        className="border-app-ink absolute inset-x-0 block border-t-2"
                         style={{ top: `${(1 - limit / top) * 100}%` }}
                     />
                 ) : null}
             </div>
             <div className="mt-1.5 flex gap-2">
                 {bars.map((bar) => (
-                    <span
-                        className="dash-figure text-muted-foreground flex-1 text-center text-[11px] leading-4"
-                        key={bar.key}
-                    >
+                    <span className="dash-figure text-muted-foreground text-app-micro flex-1 text-center" key={bar.key}>
                         {bar.label}
                     </span>
                 ))}
@@ -493,9 +491,9 @@ export function BudgetMenu({ line }: { line: BudgetLine }) {
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" alignOffset={-4} className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
+            <MenuContent align="end" alignOffset={-4} className="w-60" sideOffset={4}>
                 <BudgetMenuItems line={line} />
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -518,42 +516,6 @@ export function BudgetMenuItems({ line }: { line: BudgetLine }) {
     );
 }
 
-/** A ghost drawn for the light and dark grounds, laid under an empty state. */
-export function Ghost({
-    className = "",
-    height,
-    name,
-    width = 1158,
-}: {
-    className?: string;
-    height: number;
-    name: "budgets" | "month" | "page" | "spending" | "year";
-    width?: number;
-}) {
-    const image = `pointer-events-none absolute top-0 left-0 -z-10 w-full max-w-none select-none ${className}`;
-    const size = { height, minWidth: width };
-    return (
-        <>
-            <img
-                alt=""
-                className={`light-only ${image}`}
-                height={height}
-                src={`/art/budgets/${name}.svg`}
-                style={size}
-                width={width}
-            />
-            <img
-                alt=""
-                className={`dark-only ${image}`}
-                height={height}
-                src={`/art/budgets/${name}-dark.svg`}
-                style={size}
-                width={width}
-            />
-        </>
-    );
-}
-
 export function useMoney() {
     const { ledger } = useDashboard();
     const money = useGoalMoney();
@@ -572,9 +534,7 @@ export function Note({
     tone?: string;
 }) {
     return (
-        <p
-            className={`text-muted-foreground flex items-start gap-2 border-t py-[9px] text-[13px] leading-5 last:pb-0 ${tone}`}
-        >
+        <p className={`text-muted-foreground text-app-label flex items-start gap-2 border-t py-2.25 last:pb-0 ${tone}`}>
             <Glyph icon={icon} className={`mt-0.5 flex-none ${iconTone}`} size={15} />
             <span className="min-w-0">{children}</span>
         </p>

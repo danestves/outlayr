@@ -173,6 +173,20 @@ From the canvas page `Web · Accounts`, under `components/dashboard/accounts`:
 - **Empty:** the list and an account with no transactions use the dashboard's one-icon `Empty`. The frames' ghost rows are not drawn.
 - **Loading:** `accounts-pending.tsx` draws the real screen over the sampled ledger inside a static skullet skeleton.
 
+## Budgets
+
+From the canvas page `Web · Budgets`, under `components/dashboard/budgets`:
+
+- **Amounts:** the limit dialog, the plan editor and the trim dialog use MoneyField, locked to the ledger's currency. A limit stored in another currency opens at its converted value, rounded to the ledger's decimals.
+- **Motion:** a category name, Open, Plan and a plan month push left, and every way back (the back button, the crumb, deleting the overall limit from its page) reverses. The month and year steppers dissolve the body under the bar.
+- **Menus:** 240 wide, the guide's floor, where the frames draw them near 200.
+- **Dialogs:** the limit, delete and trim dialogs are `md` (448). The year plan editor is `lg` (576), where it was a hand-set 560.
+- **Confirms:** deleting a limit stays a Dialog with an undo toast, as the guide draws it.
+- **Empty:** no data, no budgets yet, a month not started, an empty plan month or year and a period with no spending use the dashboard's one-icon `Empty`. No budgets yet still names the person's top three categories. The frames' ghost art is not drawn and its SVGs are gone.
+- **Charts:** app SVGs. The used bar for a closed plan month reads `--color-app-ghost`, where it was a hand-set hex. SVG text keeps `style={{ textAnchor }}`: the JSX prop renders as a lowercase `textanchor` attribute the browser ignores, which clipped the axis labels and the pace pill.
+- **Loading:** `budgets-pending.tsx` draws the real screen over the sampled ledger inside a static skullet skeleton.
+- **Raw controls:** the plan month's category name and the plan chart's per-month focus targets stay raw buttons: a Button part would add hover chrome and padding the frames do not draw.
+
 ## Primitives
 
 | Part         | Use                                                    | Notes                                                                                                   |
@@ -197,7 +211,7 @@ The shell is on the primitives: the account menu and the period menu use `MenuCo
 These still use `AmountInput` (`components/dashboard/accounts/fields.tsx`) or a bare `inputMode="decimal"` input. Each one moves in its screen's phase:
 
 - `AmountInput`: `recurring/dialogs.tsx` (2), `recurring/schedule-form.tsx`
-- Bare decimal inputs: `debts/fields.tsx`, `debts/debt-dialogs.tsx`, `budgets/budget-dialogs.tsx`, `onboarding/first-entry.tsx`, `import/money-manager/overview.tsx`, `import/file-done.tsx`, `settings/plan.tsx`
+- Bare decimal inputs: `debts/fields.tsx`, `debts/debt-dialogs.tsx`, `onboarding/first-entry.tsx`, `import/money-manager/overview.tsx`, `import/file-done.tsx`, `settings/plan.tsx`
 - Not amount entry, so they stay as they are: `transactions/filter-row.tsx` (the amount filter) and `settings/currency-converter.tsx` (a converter, closer to Exchange). The transfer flow already uses Exchange.
 
 ## Off contract

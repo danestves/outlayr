@@ -2,6 +2,8 @@ import { Dialog } from "panelui-web/dialog";
 import { useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
+import { DialogContent } from "@/components/ui/dialog-content";
+
 import { BudgetDialogs } from "./budget-dialogs";
 import { BudgetFlowsContext } from "./flow-context";
 import type { BudgetFlow } from "./flow-context";
@@ -23,12 +25,9 @@ export function BudgetFlowsProvider({ children }: { children: ReactNode }) {
         <BudgetFlowsContext value={value}>
             {children}
             <Dialog onOpenChange={(next) => next || setFlow(null)} open={open}>
-                <Dialog.Content
-                    className={`app-shell ph-no-capture ${wide ? "sm:max-w-[560px]" : "sm:max-w-[448px]"}`}
-                    size="md"
-                >
+                <DialogContent size={wide ? "lg" : "md"}>
                     {flow ? <BudgetDialogs flow={flow} onClose={() => setFlow(null)} onSwitch={setFlow} /> : null}
-                </Dialog.Content>
+                </DialogContent>
             </Dialog>
         </BudgetFlowsContext>
     );

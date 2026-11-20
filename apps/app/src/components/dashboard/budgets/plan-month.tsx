@@ -19,18 +19,21 @@ import { useIntlayer } from "react-intlayer";
 import { AccountsBar, DataTable } from "@/components/dashboard/accounts/accounts-screen";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { KpiBand, KpiCell, Trend } from "@/components/dashboard/accounts/parts";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useBox } from "@/components/dashboard/insights/use-box";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { MenuContent } from "@/components/ui/menu-content";
 import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
 import { isPeriodKey, periodKeyOf, periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
 import { addDays, daysBetween } from "@/lib/ledger";
+import { viewTransition } from "@/lib/motion";
 
 import { BudgetFlowsProvider } from "./budget-flows";
 import { useBudgetFlows } from "./flow-context";
 import { MONTHS_AHEAD } from "./model";
-import { BADGE, Ghost, OK, Stepper, TINT, quiet, useMoney, useMonthNames } from "./parts";
+import { BADGE, OK, Stepper, TINT, quiet, useMoney, useMonthNames } from "./parts";
 import { monthKeyOf, UNCATEGORIZED_IN, useYearPlan } from "./plan-model";
 import type { PlanCategoryMeta, YearPlan } from "./plan-model";
 import { PlanUsed, usePlanName } from "./plan-parts";
@@ -42,8 +45,8 @@ const PERCENT = 100;
 const HALF = 0.5;
 const MUTED = "var(--color-muted-foreground)";
 const STRONG = "var(--color-app-strong)";
-const FIGURE = "dash-figure text-[13px]";
-const NAME = "flex min-w-0 items-center gap-[9px] text-sm font-medium";
+const FIGURE = "dash-figure text-app-label!";
+const NAME = "flex min-w-0 items-center gap-2.25 text-app-body font-medium";
 const CHART_HEIGHT = 250;
 const CHART_LEFT = 44;
 const TICKS = [1, 8, 15, 22] as const;
@@ -83,7 +86,13 @@ function MonthBar({ view }: { view: MonthView }) {
                             aria-label={copy.back.value}
                             className={BACK}
                             nativeButton={false}
-                            render={<Link search={(prev) => ({ ...prev, period: yearSearch })} to="/budgets/plan" />}
+                            render={
+                                <Link
+                                    search={(prev) => ({ ...prev, period: yearSearch })}
+                                    to="/budgets/plan"
+                                    viewTransition={viewTransition("push-left", { back: true })}
+                                />
+                            }
                             size="icon"
                             variant="outline"
                         >
@@ -95,6 +104,7 @@ function MonthBar({ view }: { view: MonthView }) {
                             className={PARENT}
                             search={(prev) => ({ ...prev, period: yearSearch })}
                             to="/budgets/plan"
+                            viewTransition={viewTransition("push-left", { back: true })}
                         >
                             {copy.title}
                         </Link>
@@ -119,6 +129,7 @@ function MonthBar({ view }: { view: MonthView }) {
                         params: { month: shiftPeriodKey(view.period.key, steps) },
                         search: (prev) => prev,
                         to: "/budgets/plan/$month",
+                        viewTransition: viewTransition("dissolve"),
                     })
                 }
                 previous={previous.value}
@@ -200,7 +211,7 @@ function CardHead({ aside, title }: { aside?: ReactNode; title: ReactNode }) {
                 {title}
             </Frame.Title>
             {aside ? (
-                <Frame.Action className="dash-figure text-muted-foreground row-span-1 self-center justify-self-end text-[13px]">
+                <Frame.Action className="dash-figure text-muted-foreground text-app-label! row-span-1 self-center justify-self-end">
                     {aside}
                 </Frame.Action>
             ) : null}
@@ -210,14 +221,15 @@ function CardHead({ aside, title }: { aside?: ReactNode; title: ReactNode }) {
 
 function AddRow({ children, onClick }: { children: ReactNode; onClick: () => void }) {
     return (
-        <button
-            className="text-app-tint hover:bg-foreground/[0.02] flex h-11 w-full items-center gap-1.5 border-t px-5 text-[13px] font-medium"
+        <Button
+            className="text-app-tint h-11 w-full justify-start gap-1.5 rounded-none border-t px-5"
             onClick={onClick}
             type="button"
+            variant="ghost"
         >
             <Glyph icon={Add01Icon} size={16} />
-            {children}
-        </button>
+            <span className="text-app-label">{children}</span>
+        </Button>
     );
 }
 
@@ -240,7 +252,7 @@ function RowMenu({ entry, meta, view }: { entry: CategoryMonth; meta: PlanCatego
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell ph-no-capture w-[240px]" sideOffset={4}>
+            <MenuContent align="end" className="w-60" sideOffset={4}>
                 <Menu.Item
                     onClick={() =>
                         open({ categoryId: meta.id, income: meta.income, kind: "plan", month: view.month.key })
@@ -255,7 +267,7 @@ function RowMenu({ entry, meta, view }: { entry: CategoryMonth; meta: PlanCatego
                         {menu.trim}
                     </Menu.Item>
                 ) : null}
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -355,11 +367,11 @@ function OutCard({ view }: { view: MonthView }) {
                         const typical = plan.projection.typical.get(entry.categoryId);
                         return (
                             <Table.Row key={entry.categoryId}>
-                                <Table.Cell className="max-w-[220px]">
+                                <Table.Cell className="max-w-55">
                                     <EntryName meta={meta} view={view} />
                                 </Table.Cell>
                                 {status === "ahead" ? null : (
-                                    <Table.Cell className={status === "closed" ? "w-[190px]" : "w-[170px]"}>
+                                    <Table.Cell className={status === "closed" ? "w-47.5" : "w-42.5"}>
                                         <PlanUsed color={color} planned={entry.planned} spent={entry.actual} />
                                     </Table.Cell>
                                 )}
@@ -402,7 +414,7 @@ function OutCard({ view }: { view: MonthView }) {
                     </AddRow>
                 ) : null}
                 {status === "closed" ? (
-                    <p className="text-muted-foreground flex h-11 items-center gap-1.5 border-t px-5 text-[13px] font-medium">
+                    <p className="text-muted-foreground text-app-label flex h-11 items-center gap-1.5 border-t px-5 font-medium">
                         <Glyph icon={SquareLock02Icon} size={16} />
                         {copy.lockedNote}
                     </p>
@@ -448,9 +460,9 @@ function SpentChart({ view }: { view: MonthView }) {
     const ticks = [...TICKS.filter((tick) => tick < period.days), period.days];
     return (
         <>
-            <div className="flex h-[52px] items-center gap-2 border-t px-5">
-                <b className="text-muted-foreground text-sm font-medium">{copy.spentAgainst}</b>
-                <span className="dash-figure text-muted-foreground ms-auto text-[13px]">{money(month.in)}</span>
+            <div className="flex h-13 items-center gap-2 border-t px-5">
+                <b className="text-muted-foreground text-app-body font-medium">{copy.spentAgainst}</b>
+                <span className="dash-figure text-muted-foreground text-app-label ms-auto">{money(month.in)}</span>
             </div>
             <div className="px-5 pb-3">
                 <figure aria-label={copy.spentAgainst.value} ref={ref}>
@@ -460,9 +472,9 @@ function SpentChart({ view }: { view: MonthView }) {
                                 <g key={value}>
                                     <line stroke={STRONG} x1={CHART_LEFT} x2={width} y1={y(value)} y2={y(value)} />
                                     <text
-                                        className="dash-figure"
+                                        className="dash-figure text-app-micro"
                                         fill={MUTED}
-                                        style={{ fontSize: 11, textAnchor: "end" }}
+                                        style={{ textAnchor: "end" }}
                                         x={36}
                                         y={y(value) + 4}
                                     >
@@ -489,10 +501,10 @@ function SpentChart({ view }: { view: MonthView }) {
                                 const day = addDays(period.from, tick - 1);
                                 return (
                                     <text
-                                        className="dash-figure"
+                                        className="dash-figure text-app-micro"
                                         fill={MUTED}
                                         key={tick}
-                                        style={{ fontSize: 11, textAnchor: anchor }}
+                                        style={{ textAnchor: anchor }}
                                         x={x(tick - 1)}
                                         y={CHART_HEIGHT - 4}
                                     >
@@ -545,7 +557,7 @@ function InCard({ view }: { view: MonthView }) {
                             const arrived = arrivals.get(entry.categoryId);
                             return (
                                 <Table.Row key={entry.categoryId}>
-                                    <Table.Cell className="max-w-[180px]">
+                                    <Table.Cell className="max-w-45">
                                         <EntryName meta={plan.categories.get(entry.categoryId)} view={view} />
                                     </Table.Cell>
                                     <Table.Cell className={FIGURE}>{money(entry.actual)}</Table.Cell>
@@ -557,7 +569,7 @@ function InCard({ view }: { view: MonthView }) {
                         })}
                     </DataTable>
                 ) : (
-                    <p className="text-muted-foreground px-5 pb-4 text-[13px]">{copy.noIncome}</p>
+                    <p className="text-muted-foreground text-app-label px-5 pb-4">{copy.noIncome}</p>
                 )}
                 {month.status === "current" ? (
                     <AddRow onClick={() => open({ categoryId: null, income: true, kind: "plan", month: month.key })}>
@@ -590,7 +602,7 @@ function SetAsideCard({ view }: { view: MonthView }) {
                                 : `${names.short(goal.targetDay)} ${goal.targetDay.slice(0, 4)}`;
                         return (
                             <Table.Row key={goalId}>
-                                <Table.Cell className="max-w-[180px]">
+                                <Table.Cell className="max-w-45">
                                     <span className={NAME}>
                                         <Glyph
                                             icon={Flag02Icon}
@@ -624,8 +636,8 @@ function WhereCard({ view }: { view: MonthView }) {
     const base = Math.max(month.in, spent + month.setAside, 1);
     const line = (label: ReactNode, value: number, last = false) => (
         <div className={`flex h-10 items-center justify-between ${last ? "" : "border-b"}`}>
-            <span className="text-muted-foreground text-[13px]">{label}</span>
-            <span className={`dash-figure text-sm ${value < 0 ? "text-app-spend" : ""}`}>{money(value)}</span>
+            <span className="text-muted-foreground text-app-label">{label}</span>
+            <span className={`dash-figure text-app-body ${value < 0 ? "text-app-spend" : ""}`}>{money(value)}</span>
         </div>
     );
     return (
@@ -662,25 +674,27 @@ function EmptyMonth({ view }: { view: MonthView }) {
     const { key } = view.month;
     return (
         <Frame className="mt-4 mb-5 min-w-0 flex-1">
-            <Frame.Panel className="relative isolate flex min-h-[744px] flex-1 flex-col items-center gap-1.5 divide-y-0 overflow-hidden px-6 pt-[392px] text-center">
-                <Ghost height={744} name="month" />
-                <b className="text-[15px] leading-[22px] font-semibold">
-                    {empty.monthTitle({ month: names.month(view.period.key) })}
-                </b>
-                <p className="text-muted-foreground mb-2.5 max-w-[320px] text-[13px] leading-5">{empty.monthLine}</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                    <Button
-                        onClick={() => open({ categoryId: null, income: false, kind: "plan", month: key })}
-                        variant="outline"
-                    >
-                        <Glyph icon={Add01Icon} size={16} />
-                        {copy.addCategory}
-                    </Button>
-                    <Button onClick={() => open({ categoryId: null, income: true, kind: "plan", month: key })}>
-                        <Glyph icon={Add01Icon} size={16} />
-                        {copy.addIncome}
-                    </Button>
-                </div>
+            <Frame.Panel className="flex flex-1 flex-col divide-y-0">
+                <Empty
+                    action={
+                        <>
+                            <Button
+                                onClick={() => open({ categoryId: null, income: false, kind: "plan", month: key })}
+                                variant="outline"
+                            >
+                                <Glyph icon={Add01Icon} size={16} />
+                                {copy.addCategory}
+                            </Button>
+                            <Button onClick={() => open({ categoryId: null, income: true, kind: "plan", month: key })}>
+                                <Glyph icon={Add01Icon} size={16} />
+                                {copy.addIncome}
+                            </Button>
+                        </>
+                    }
+                    icon={Calendar03Icon}
+                    line={empty.monthLine}
+                    title={empty.monthTitle({ month: names.month(view.period.key) })}
+                />
             </Frame.Panel>
         </Frame>
     );
