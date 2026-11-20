@@ -149,16 +149,16 @@ function Calendar({ firstWeekday, today }: { firstWeekday: number; today: string
     return (
         <SettingsCard
             action={
-                <span className="text-muted-foreground font-mono text-[13px]">
+                <span className="text-app-muted text-app-label font-mono">
                     {time.weekNumber({ week: isoWeek(today) })}
                 </span>
             }
             title={<span className="capitalize">{title}</span>}
         >
-            <div className="grid grid-cols-7 gap-1 p-3 text-center font-mono text-[13px]">
+            <div className="text-app-label grid grid-cols-7 gap-1 p-3 text-center font-mono">
                 {weekdayOrder(firstWeekday).map((day) => (
                     <span
-                        className="text-muted-foreground flex h-8 items-center justify-center font-sans text-xs"
+                        className="text-app-muted text-app-caption flex h-8 items-center justify-center font-sans"
                         key={day}
                     >
                         {weekday.format(new Date(`${day}T12:00:00Z`))}
@@ -170,13 +170,13 @@ function Calendar({ firstWeekday, today }: { firstWeekday: number; today: string
                     }
                     const isToday = cell.day === today;
                     const inWeek = week.has(cell.day);
-                    const weekTint = inWeek ? "bg-primary/15" : "";
+                    const weekTint = inWeek ? "bg-app-tint/15" : "";
                     return (
                         <span
                             aria-current={isToday ? "date" : undefined}
-                            className={`flex h-9 items-center justify-center rounded-lg ${
-                                isToday ? "bg-primary text-primary-foreground" : weekTint
-                            } ${cell.inMonth || inWeek ? "" : "text-muted-foreground"}`}
+                            className={`rounded-app-sm flex h-9 items-center justify-center ${
+                                isToday ? "bg-app-tint text-app-on-tint" : weekTint
+                            } ${cell.inMonth || inWeek ? "" : "text-app-muted"}`}
                             key={cell.day}
                         >
                             {Number(cell.day.slice(8))}

@@ -139,7 +139,7 @@ export function Sync() {
                         <SettingsCard
                             action={
                                 showProgress ? (
-                                    <span className="dash-figure text-muted-foreground text-[13px]">
+                                    <span className="dash-figure text-app-muted text-app-label">
                                         {copy.progress({ done: peak - waiting, total: peak })}
                                     </span>
                                 ) : null
@@ -147,10 +147,10 @@ export function Sync() {
                             title={copy.replication}
                         >
                             {showProgress ? (
-                                <div className="border-b px-4 py-4">
+                                <div className="border-app-rule border-b px-4 py-4">
                                     <span className="bg-app-fill block h-1.5 overflow-hidden rounded-full">
                                         <span
-                                            className="bg-primary block h-full rounded-full"
+                                            className="bg-app-tint block h-full rounded-full"
                                             style={{ width: `${((peak - waiting) / peak) * 100}%` }}
                                         />
                                     </span>

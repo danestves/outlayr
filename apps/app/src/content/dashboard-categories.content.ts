@@ -63,6 +63,13 @@ const dashboardCategories = {
             fr: "Pas encore de catégories",
             pt: "Ainda não há categorias",
         }),
+        emptyLine: t({
+            en: "Add one, or start from a suggestion below.",
+            de: "Füge eine hinzu oder starte mit einem Vorschlag unten.",
+            es: "Agrega una o empieza con una sugerencia de abajo.",
+            fr: "Ajoutez-en une ou partez d'une suggestion ci-dessous.",
+            pt: "Adicione uma ou comece por uma sugestão abaixo.",
+        }),
         open: t({ en: "Open", de: "Öffnen", es: "Abrir", fr: "Ouvrir", pt: "Abrir" }),
         edit: t({ en: "Edit", de: "Bearbeiten", es: "Editar", fr: "Modifier", pt: "Editar" }),
         addSubcategory: t({

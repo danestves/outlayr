@@ -398,6 +398,15 @@ const dashboardSettings = {
                 pt: "Você não poderá entrar com ele até vinculá-lo de novo.",
             }),
             save: t({ en: "Save", de: "Speichern", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+            saving: t({ en: "Saving…", de: "Speichern…", es: "Guardando…", fr: "Enregistrement…", pt: "Salvando…" }),
+            sending: t({ en: "Sending…", de: "Senden…", es: "Enviando…", fr: "Envoi…", pt: "Enviando…" }),
+            confirming: t({
+                en: "Confirming…",
+                de: "Bestätigen…",
+                es: "Confirmando…",
+                fr: "Confirmation…",
+                pt: "Confirmando…",
+            }),
             cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
             sendCode: t({
                 en: "Send code",

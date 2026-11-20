@@ -6,12 +6,12 @@ import { Alert } from "panelui-web/alert";
 import { Button } from "panelui-web/button";
 import { Checkbox } from "panelui-web/checkbox";
 import { Dialog } from "panelui-web/dialog";
-import { Field } from "panelui-web/field";
-import { Input } from "panelui-web/input";
 import { useId, useState } from "react";
 import type { FormEvent } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { DialogContent } from "@/components/ui/dialog-content";
+import { TextField } from "@/components/ui/text-field";
 import { convexClient } from "@/lib/convex";
 
 import packageJson from "../../../../../../native/package.json";
@@ -81,7 +81,7 @@ function SuggestForm({ onClose }: { onClose: () => void }) {
                 <Dialog.Title>{copy.sent}</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body>
-                <p className="text-muted-foreground text-sm leading-5">
+                <p className="text-app-muted text-app-body">
                     {
                         copy.echo({
                             tail: sent.reason ? copy.echoTail({ reason: sent.reason }).value : "",
@@ -101,19 +101,13 @@ function SuggestForm({ onClose }: { onClose: () => void }) {
             </Dialog.Header>
             <Dialog.Body>
                 <form className="flex flex-col gap-4" id={formId} onSubmit={submit}>
-                    <Field>
-                        <Field.Label>{copy.wish}</Field.Label>
-                        <Input autoFocus maxLength={MAX_TEXT} name="wish" required />
-                    </Field>
-                    <Field>
-                        <Field.Label>{copy.reason}</Field.Label>
-                        <Input maxLength={MAX_TEXT} name="reason" />
-                    </Field>
-                    <label className="flex items-center gap-2 text-[13px] font-medium">
+                    <TextField autoFocus label={copy.wish} maxLength={MAX_TEXT} name="wish" required />
+                    <TextField label={copy.reason} maxLength={MAX_TEXT} name="reason" />
+                    <label className="text-app-label flex items-center gap-2 font-medium">
                         <Checkbox checked={notify} onCheckedChange={setNotify} />
                         {copy.notify}
                     </label>
-                    <p className="text-muted-foreground text-[13px] leading-[18px]">{copy.privacy}</p>
+                    <p className="text-app-muted text-app-label">{copy.privacy}</p>
                     {failure ? (
                         <Alert tone="destructive" variant="plain">
                             <Alert.Description>{failure}</Alert.Description>
@@ -123,8 +117,8 @@ function SuggestForm({ onClose }: { onClose: () => void }) {
             </Dialog.Body>
             <Dialog.Footer>
                 <Dialog.Close render={<Button variant="secondary" />}>{copy.cancel}</Dialog.Close>
-                <Button form={formId} loading={busy} type="submit">
-                    {copy.send}
+                <Button aria-busy={busy} disabled={busy} form={formId} type="submit">
+                    {busy ? copy.sending : copy.send}
                 </Button>
             </Dialog.Footer>
         </>
@@ -134,9 +128,9 @@ function SuggestForm({ onClose }: { onClose: () => void }) {
 function SuggestDialog({ onClose, open }: { onClose: () => void; open: boolean }) {
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open}>
-            <Dialog.Content className="app-shell">
+            <DialogContent>
                 <SuggestForm onClose={onClose} />
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }

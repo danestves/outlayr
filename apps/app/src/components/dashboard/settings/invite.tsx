@@ -1,5 +1,6 @@
 import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import Share01Icon from "@hugeicons/core-free-icons/Share01Icon";
+import UserAdd01Icon from "@hugeicons/core-free-icons/UserAdd01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { RedeemStatus, ReferralOverview } from "@outlayr/backend/confect/referrals.spec";
 import { api } from "@outlayr/backend/convex/_generated/api";
@@ -27,6 +28,8 @@ import type { FormEvent, ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
+import { Empty } from "@/components/dashboard/home/empty";
+import { DialogContent } from "@/components/ui/dialog-content";
 import { referralsQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 
@@ -90,8 +93,8 @@ function CopyRow({ label, mono }: { label: ReactNode; mono: string }) {
     };
     return (
         <Row
-            hint={<span className="text-foreground font-mono text-[13px] break-all select-all">{mono}</span>}
-            label={<span className="text-muted-foreground font-normal">{label}</span>}
+            hint={<span className="text-app-ink text-app-label font-mono break-all select-all">{mono}</span>}
+            label={<span className="text-app-muted font-normal">{label}</span>}
         >
             <Button onClick={write} size="sm" variant="outline">
                 <HugeiconsIcon icon={Copy01Icon} size={16} />
@@ -140,12 +143,12 @@ function ClaimBody({
                 <Dialog.Description>{copy.claim.startsNow}</Dialog.Description>
             </Dialog.Header>
             <Dialog.Body>
-                <p className="text-muted-foreground text-sm leading-5">{shared}</p>
+                <p className="text-app-muted text-app-body">{shared}</p>
             </Dialog.Body>
             <Dialog.Footer>
                 <Dialog.Close render={<Button variant="secondary" />}>{copy.claim.notNow}</Dialog.Close>
-                <Button loading={busy} onClick={claim}>
-                    {copy.claim.confirm}
+                <Button aria-busy={busy} disabled={busy} onClick={claim}>
+                    {busy ? copy.claim.claiming : copy.claim.confirm}
                 </Button>
             </Dialog.Footer>
         </>
@@ -165,11 +168,11 @@ function ClaimDialog({
 }) {
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open}>
-            <Dialog.Content className="app-shell">
+            <DialogContent>
                 {claim ? (
                     <ClaimBody code={claim.code} name={claim.name} onClose={onClose} onRefused={onRefused} />
                 ) : null}
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }
@@ -223,8 +226,8 @@ function EnterCode() {
                             spellCheck={false}
                             value={typed}
                         />
-                        <Button loading={busy} size="sm" type="submit" variant="outline">
-                            {copy.apply}
+                        <Button aria-busy={busy} disabled={busy} size="sm" type="submit" variant="outline">
+                            {busy ? copy.checking : copy.apply}
                         </Button>
                     </div>
                     {problem ? <Field.Error match>{problem}</Field.Error> : null}
@@ -283,35 +286,22 @@ function FriendsCard({
     const count = friends.length;
     return (
         <SettingsCard
-            action={count ? <span className="dash-figure text-muted-foreground text-[13px]">{count}</span> : null}
+            action={count ? <span className="dash-figure text-app-muted text-app-label">{count}</span> : null}
             title={copy.friends}
         >
             {count === 0 ? (
                 <Skeleton loading={loading}>
-                    <div aria-hidden className="divide-y">
-                        {["head", "row"].map((row) => (
-                            <div className="flex items-center justify-between gap-3 px-4 py-3" key={row}>
-                                <span className="flex w-1/3 items-center gap-2">
-                                    {row === "row" ? (
-                                        <span className="border-border size-[26px] rounded-lg border" />
-                                    ) : null}
-                                    <span className="border-border h-2 w-16 rounded-full border" />
-                                </span>
-                                <span className="border-border h-2 w-16 rounded-full border" />
-                                <span className="border-border h-2 w-12 rounded-full border" />
-                            </div>
-                        ))}
-                    </div>
-                    <div className="flex flex-col items-center px-5 pt-6 pb-8 text-center">
-                        <b className="text-sm font-semibold">{copy.emptyTitle}</b>
-                        <p className="text-muted-foreground mt-1 text-[13px] leading-5">
-                            {paid ? copy.emptyBodyPaid : copy.emptyBody({ days: REFERRAL_DAYS_TO_EARN })}
-                        </p>
-                        <Button className="mt-4" onClick={onShare}>
-                            <HugeiconsIcon icon={Share01Icon} size={16} />
-                            {copy.share}
-                        </Button>
-                    </div>
+                    <Empty
+                        action={
+                            <Button onClick={onShare}>
+                                <HugeiconsIcon icon={Share01Icon} size={16} />
+                                {copy.share}
+                            </Button>
+                        }
+                        icon={UserAdd01Icon}
+                        line={paid ? copy.emptyBodyPaid : copy.emptyBody({ days: REFERRAL_DAYS_TO_EARN })}
+                        title={copy.emptyTitle}
+                    />
                 </Skeleton>
             ) : (
                 <Table aria-label={copy.friends.value} framed maxHeight="none">
@@ -330,10 +320,10 @@ function FriendsCard({
                                     <Table.Cell>
                                         <span className="flex items-center gap-2.5 font-medium">
                                             <Avatar name={name} size="sm" />
-                                            <span className="max-w-[120px] truncate">{name}</span>
+                                            <span className="max-w-30 truncate">{name}</span>
                                         </span>
                                     </Table.Cell>
-                                    <Table.Cell className="text-muted-foreground">{progressOf(friend)}</Table.Cell>
+                                    <Table.Cell className="text-app-muted">{progressOf(friend)}</Table.Cell>
                                     <Table.Cell align="end">
                                         <Badge dot variant={friend.status === "rewarded" ? "success" : "outline"}>
                                             {copy.status[friend.status]}
@@ -351,8 +341,8 @@ function FriendsCard({
 
 function LandedLine({ label, value }: { label: ReactNode; value: ReactNode }) {
     return (
-        <div className="border-border flex items-center justify-between gap-4 border-t py-3 text-sm">
-            <span className="text-muted-foreground">{label}</span>
+        <div className="border-app-rule text-app-body flex items-center justify-between gap-4 border-t py-3">
+            <span className="text-app-muted">{label}</span>
             <span className="dash-figure font-medium">{value}</span>
         </div>
     );
@@ -387,7 +377,7 @@ function RewardLanded({ onShare, overview }: { onShare: () => void; overview: Re
     const banked = overview.bankedMonths > 0 || until === null;
     return (
         <Dialog onOpenChange={(open) => open || dismiss()} open={shown.at > seenAt}>
-            <Dialog.Content className="app-shell">
+            <DialogContent>
                 <Dialog.Header>
                     <Dialog.Title>{who}</Dialog.Title>
                     <Dialog.Description>
@@ -424,7 +414,7 @@ function RewardLanded({ onShare, overview }: { onShare: () => void; overview: Re
                         {copy.landed.another}
                     </Button>
                 </Dialog.Footer>
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }
@@ -492,7 +482,7 @@ export function Invite() {
                             note={
                                 <span className="bg-app-fill mt-1.5 block h-1 overflow-hidden rounded-full">
                                     <span
-                                        className="bg-primary block h-full rounded-full"
+                                        className="bg-app-tint block h-full rounded-full"
                                         style={{ width: `${Math.min(100, (earned / REFERRAL_YEARLY_CAP) * 100)}%` }}
                                     />
                                 </span>
@@ -511,7 +501,7 @@ export function Invite() {
                     <div className="flex min-w-0 flex-col gap-4">
                         <SettingsCard
                             footer={
-                                <span className="text-muted-foreground text-[13px]">
+                                <span className="text-app-muted text-app-label">
                                     {referralsEarnOnPayment(now)
                                         ? copy.footnotePaid({ cap: REFERRAL_YEARLY_CAP })
                                         : copy.footnote({ cap: REFERRAL_YEARLY_CAP, days: REFERRAL_DAYS_TO_EARN })}

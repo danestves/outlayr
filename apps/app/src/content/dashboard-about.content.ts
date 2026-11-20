@@ -112,6 +112,7 @@ const dashboardAbout = {
             pt: "Enviado com a versão do app, o aparelho e o idioma. Nunca seus lançamentos.",
         }),
         send: t({ en: "Send", de: "Senden", es: "Enviar", fr: "Envoyer", pt: "Enviar" }),
+        sending: t({ en: "Sending…", de: "Senden…", es: "Enviando…", fr: "Envoi…", pt: "Enviando…" }),
         sent: t({
             en: "Sent. Thanks.",
             de: "Gesendet. Danke.",

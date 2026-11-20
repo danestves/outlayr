@@ -58,7 +58,7 @@ function ReorderRow({
                 <HugeiconsIcon icon={DragDropVerticalIcon} size={16} />
             </Button>
             <LookTile look={row} />
-            <span className="min-w-0 truncate text-[13px] font-medium">{row.name}</span>
+            <span className="text-app-label min-w-0 truncate font-medium">{row.name}</span>
         </div>
     );
 }

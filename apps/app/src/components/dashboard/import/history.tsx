@@ -20,6 +20,8 @@ import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { KpiBand } from "@/components/dashboard/accounts/parts";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
+import { IconButton } from "@/components/ui/icon-button";
+import { MenuContent } from "@/components/ui/menu-content";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { Card, Line, NOTE, SourceTile } from "./parts";
@@ -27,9 +29,9 @@ import { undoable } from "./store";
 import type { ImportRecord, ImportSource, ImportStore } from "./store";
 import { UndoDialog, useImportAccount } from "./undo";
 
-export const HEAD = "h-10 px-3 text-xs leading-4 font-medium first:ps-4 last:pe-4";
-export const CELL = "h-[51px] px-3 py-0 align-middle text-[13px] first:ps-4 last:pe-4";
-const FIGURE = "dash-figure text-sm whitespace-nowrap";
+export const HEAD = "h-10 px-3 text-app-caption! leading-4 font-medium first:ps-4 last:pe-4";
+export const CELL = "h-[51px] px-3 py-0 align-middle text-app-label! first:ps-4 last:pe-4";
+const FIGURE = "dash-figure text-app-body! whitespace-nowrap";
 const MS_PER_DAY = 86_400_000;
 const RECENT_DAYS = 30;
 
@@ -85,7 +87,10 @@ export function NetFigure({ record }: { record: ImportRecord }) {
 export function StatusBadge({ undone }: { undone: boolean }) {
     const { status } = useIntlayer("dashboard-import");
     return (
-        <Badge className="h-6 gap-1.5 rounded-md px-2 text-xs font-medium" variant={undone ? "outline" : "success"}>
+        <Badge
+            className="rounded-app-xs text-app-caption! h-6 gap-1.5 px-2 font-medium"
+            variant={undone ? "outline" : "success"}
+        >
             <i className="size-1.5 rounded-full bg-current" />
             {undone ? status.undone : status.imported}
         </Badge>
@@ -122,17 +127,15 @@ function RowMenu({ record, store }: { record: ImportRecord; store: ImportStore }
         <Menu>
             <Menu.Trigger
                 render={
-                    <Button aria-label={home.seeEntries.value} className="ms-auto" size="icon-sm" variant="ghost" />
+                    <IconButton className="ms-auto" icon={MoreVerticalIcon} label={home.seeEntries.value} size="sm" />
                 }
-            >
-                <Glyph icon={MoreVerticalIcon} size={16} />
-            </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell">
+            />
+            <MenuContent align="end" className="w-60">
                 {record.undoneAt === null ? <Menu.Item onClick={() => see(record)}>{home.seeEntries}</Menu.Item> : null}
                 <Menu.Item onClick={() => store.forget(record.id)} variant="destructive">
                     {home.forget}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -238,7 +241,7 @@ export function LastImportCard({ record, rich }: { record: ImportRecord; rich: b
         <Card
             action={
                 rich ? null : (
-                    <span className="dash-figure text-muted-foreground text-[13px]">{day.short(record.at)}</span>
+                    <span className="dash-figure text-muted-foreground text-app-label">{day.short(record.at)}</span>
                 )
             }
             title={home.lastImport}
@@ -246,8 +249,8 @@ export function LastImportCard({ record, rich }: { record: ImportRecord; rich: b
             <div className="flex min-w-0 items-center gap-3 px-4 py-3">
                 <SourceTile source={record.source} />
                 <div className="min-w-0">
-                    <b className="block truncate text-sm leading-5 font-medium">{record.name}</b>
-                    <small className="text-muted-foreground block truncate text-xs leading-4">
+                    <b className="text-app-body block truncate leading-5 font-medium">{record.name}</b>
+                    <small className="text-muted-foreground text-app-caption block truncate leading-4">
                         {rich
                             ? day.long(record.at)
                             : home.entriesInto({
@@ -278,7 +281,7 @@ export function LastImportCard({ record, rich }: { record: ImportRecord; rich: b
                         {offBy === null ? null : (
                             <Line label={history.balanceCheck}>
                                 <Badge
-                                    className="h-6 gap-1.5 rounded-md px-2 text-xs font-medium"
+                                    className="rounded-app-xs text-app-caption! h-6 gap-1.5 px-2 font-medium"
                                     variant={Math.abs(offBy) < 0.005 ? "success" : "warning"}
                                 >
                                     <i className="size-1.5 rounded-full bg-current" />
@@ -308,7 +311,9 @@ export function LastImportCard({ record, rich }: { record: ImportRecord; rich: b
                         }
                     />
                 ) : null}
-                {rich ? <p className="text-muted-foreground mt-1 text-[13px] leading-5">{history.onlyLast}</p> : null}
+                {rich ? (
+                    <p className="text-muted-foreground text-app-label mt-1 leading-5">{history.onlyLast}</p>
+                ) : null}
             </div>
         </Card>
     );
@@ -320,9 +325,7 @@ function ImportKpi({ label, value }: { label: ReactNode; value: string }) {
             <Kpi.Header>
                 <Kpi.Title>{label}</Kpi.Title>
             </Kpi.Header>
-            <Kpi.Value className="dash-figure mt-2 mb-0.5 truncate leading-7 font-semibold tracking-[-0.04em]">
-                {value}
-            </Kpi.Value>
+            <Kpi.Value className="dash-figure mt-2 mb-0.5 truncate leading-7 font-semibold">{value}</Kpi.Value>
         </Kpi>
     );
 }
@@ -380,13 +383,13 @@ function FilterChip({
                 <Glyph className="text-muted-foreground" icon={icon} size={14} />
                 {children}
             </Menu.Trigger>
-            <Menu.Content className="app-shell max-h-80 overflow-y-auto">
+            <MenuContent className="max-h-80 w-60 overflow-y-auto">
                 {options.map((option) => (
                     <Menu.CheckboxItem checked={option.on} key={option.value} onCheckedChange={option.pick}>
                         {option.label}
                     </Menu.CheckboxItem>
                 ))}
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -480,7 +483,7 @@ export function HistoryTable({ records, store }: { records: readonly ImportRecor
             ) : (
                 <ImportTable
                     footer={
-                        <p className="text-muted-foreground px-4 py-3 text-[13px]">
+                        <p className="text-muted-foreground text-app-label px-4 py-3">
                             {shown.length === 1 ? history.one : history.count({ count: shown.length.toLocaleString() })}
                         </p>
                     }

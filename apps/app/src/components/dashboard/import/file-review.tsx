@@ -81,7 +81,7 @@ export function FileSummary({
             />
             {accountColumn ? null : (
                 <div className="flex flex-col gap-2 px-4 pt-1 pb-4">
-                    <span className="text-muted-foreground text-[13px]">{match.intoAccount}</span>
+                    <span className="text-muted-foreground text-app-label">{match.intoAccount}</span>
                     {store ? (
                         <AccountPick
                             extra={[{ label: match.none.value, value: NONE }]}
@@ -183,7 +183,7 @@ function Mapped({ draft, fields }: { draft: Draft; fields: readonly Target[] }) 
         return null;
     }
     return (
-        <small className="dash-figure text-muted-foreground flex items-center gap-1 text-[10px] leading-3 font-normal">
+        <small className="dash-figure text-muted-foreground text-app-micro flex items-center gap-1 leading-3 font-normal">
             <Glyph icon={ArrowRight02Icon} size={10} />
             {name}
         </small>
@@ -195,7 +195,7 @@ function Segment({ forced, onForce }: { forced: boolean; onForce: (forced: boole
     const option = (on: boolean, label: ReactNode) => (
         <button
             aria-pressed={forced === on}
-            className={`h-6 rounded-md px-2 text-xs font-medium transition-colors ${forced === on ? "bg-app-fill text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
+            className={`rounded-app-xs text-app-caption h-6 px-2 font-medium transition-colors ${forced === on ? "bg-app-fill text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
             onClick={(event) => {
                 event.stopPropagation();
                 onForce(on);
@@ -206,7 +206,7 @@ function Segment({ forced, onForce }: { forced: boolean; onForce: (forced: boole
         </button>
     );
     return (
-        <span className="bg-background/60 inline-flex gap-0.5 rounded-lg border p-0.5">
+        <span className="bg-background/60 rounded-app-sm inline-flex gap-0.5 border p-0.5">
             {option(false, review.skip)}
             {option(true, review.importAnyway)}
         </span>
@@ -266,7 +266,7 @@ function SideBySide({ row }: { row: ModelRow & { duplicate: NonNullable<ModelRow
     ];
     return (
         <div className="border-t">
-            <div className="flex h-11 items-center gap-3 px-4 text-[13px]">
+            <div className="text-app-label flex h-11 items-center gap-3 px-4">
                 <b className="font-medium">
                     {row.name}, {day(row.at)}
                 </b>
@@ -284,9 +284,11 @@ function SideBySide({ row }: { row: ModelRow & { duplicate: NonNullable<ModelRow
                 <Table.Body>
                     {lines.map((line, index) => (
                         <Table.Row key={index}>
-                            <Table.Cell className={`${ROW} text-muted-foreground text-[13px]`}>{line.label}</Table.Cell>
-                            <Table.Cell className={`${ROW} dash-figure text-sm`}>{line.mine}</Table.Cell>
-                            <Table.Cell className={`${ROW} dash-figure text-sm`}>{line.theirs}</Table.Cell>
+                            <Table.Cell className={`${ROW} text-muted-foreground text-app-label!`}>
+                                {line.label}
+                            </Table.Cell>
+                            <Table.Cell className={`${ROW} dash-figure text-app-body!`}>{line.mine}</Table.Cell>
+                            <Table.Cell className={`${ROW} dash-figure text-app-body!`}>{line.theirs}</Table.Cell>
                             <Table.Cell align="end" className={ROW}>
                                 {line.same ? (
                                     <Glyph className="text-app-income ms-auto" icon={Tick02Icon} size={16} />
@@ -344,16 +346,16 @@ function Duplicates({ draft, model, store }: { draft: Draft; model: FileModel; s
                                         onCheckedChange={(checked) => force(row.index, checked)}
                                     />
                                 </Table.Cell>
-                                <Table.Cell className={`${ROW} dash-figure text-sm whitespace-nowrap`}>
+                                <Table.Cell className={`${ROW} dash-figure text-app-body! whitespace-nowrap`}>
                                     {day(row.at)}
                                 </Table.Cell>
                                 <Table.Cell className={`${ROW} max-w-0`}>
-                                    <b className="block truncate text-sm leading-4 font-medium">{row.name}</b>
-                                    <small className="dash-figure text-muted-foreground block truncate text-xs leading-4">
+                                    <b className="text-app-body block truncate leading-4 font-medium">{row.name}</b>
+                                    <small className="dash-figure text-muted-foreground text-app-caption block truncate leading-4">
                                         {row.label}
                                     </small>
                                 </Table.Cell>
-                                <Table.Cell className={`${ROW} text-muted-foreground text-sm max-lg:hidden`}>
+                                <Table.Cell className={`${ROW} text-muted-foreground text-app-body! max-lg:hidden`}>
                                     {[
                                         ledger.books.transactions.find((entry) => entry.localId === row.duplicate.id)
                                             ?.note || row.name,
@@ -368,7 +370,7 @@ function Duplicates({ draft, model, store }: { draft: Draft; model: FileModel; s
                                 </Table.Cell>
                                 <Table.Cell
                                     align="end"
-                                    className={`${ROW} dash-figure text-sm whitespace-nowrap ${row.income ? "text-app-income" : ""}`}
+                                    className={`${ROW} dash-figure text-app-body! whitespace-nowrap ${row.income ? "text-app-income" : ""}`}
                                 >
                                     {money(row.income ? row.amount : -row.amount, row.currency, "always")}
                                 </Table.Cell>
@@ -378,7 +380,7 @@ function Duplicates({ draft, model, store }: { draft: Draft; model: FileModel; s
                 </Table>
                 {focused ? <SideBySide row={focused} /> : null}
             </Frame.Panel>
-            <Frame.Footer className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
+            <Frame.Footer className="text-app-label! flex flex-wrap items-center justify-between gap-2">
                 <span className="text-muted-foreground">{review.matchRule}</span>
                 <span className="text-muted-foreground">
                     {review.skippedTotal({ amount: money(net(skipped), ledger.currency, "always") })}
@@ -480,12 +482,14 @@ function Rows({
                                             onCheckedChange={(checked) => tick(row, checked)}
                                         />
                                     </Table.Cell>
-                                    <Table.Cell className={`${ROW} dash-figure text-sm whitespace-nowrap ${tone}`}>
+                                    <Table.Cell
+                                        className={`${ROW} dash-figure text-app-body! whitespace-nowrap ${tone}`}
+                                    >
                                         {day(row.at)}
                                     </Table.Cell>
                                     <Table.Cell className={`${ROW} max-w-0 ${tone}`}>
-                                        <b className="block truncate text-sm leading-4 font-medium">{row.name}</b>
-                                        <small className="dash-figure text-muted-foreground block truncate text-xs leading-4">
+                                        <b className="text-app-body block truncate leading-4 font-medium">{row.name}</b>
+                                        <small className="dash-figure text-muted-foreground text-app-caption block truncate leading-4">
                                             {row.label}
                                         </small>
                                     </Table.Cell>
@@ -507,7 +511,7 @@ function Rows({
                                     </Table.Cell>
                                     <Table.Cell className={`${ROW} max-lg:hidden ${dim ? "opacity-60" : ""}`}>
                                         <Badge
-                                            className="h-6 gap-1.5 rounded-md px-2 text-xs font-medium"
+                                            className="rounded-app-xs text-app-caption! h-6 gap-1.5 px-2 font-medium"
                                             variant={duplicate ? "warning" : "success"}
                                         >
                                             <i className="size-1.5 rounded-full bg-current" />
@@ -516,7 +520,7 @@ function Rows({
                                     </Table.Cell>
                                     <Table.Cell
                                         align="end"
-                                        className={`${ROW} dash-figure text-sm whitespace-nowrap ${dim ? "text-muted-foreground/70 line-through" : ""} ${row.income && !dim ? "text-app-income" : ""}`}
+                                        className={`${ROW} dash-figure text-app-body! whitespace-nowrap ${dim ? "text-muted-foreground/70 line-through" : ""} ${row.income && !dim ? "text-app-income" : ""}`}
                                     >
                                         {money(row.income ? row.amount : -row.amount, row.currency, "always")}
                                     </Table.Cell>
@@ -526,7 +530,7 @@ function Rows({
                     </Table.Body>
                 </Table>
             </Frame.Panel>
-            <Frame.Footer className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
+            <Frame.Footer className="text-app-label! flex flex-wrap items-center justify-between gap-2">
                 <Pager
                     label={review.showing({ shown: shown.length, total: visible.length })}
                     onNext={() => setPage(current + 1)}
@@ -590,7 +594,7 @@ export function ReviewStep({
             <Columns rail={<ReviewRail draft={draft} model={model} store={store} />}>
                 <Frame className="min-w-0">
                     {restored ? (
-                        <div className="flex min-h-13 flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2 text-[13px]">
+                        <div className="text-app-label flex min-h-13 flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2">
                             <Glyph className="flex-none" icon={RefreshIcon} size={16} />
                             <b className="font-medium">{review.pickingUp}</b>
                             <span className="text-muted-foreground">{review.keptNote}</span>
@@ -625,11 +629,13 @@ export function ReviewStep({
                             </Tabs.List>
                         </Tabs>
                     </Frame.Header>
-                    {filter === "duplicates" ? (
-                        <Duplicates draft={draft} model={model} store={store} />
-                    ) : (
-                        <Rows draft={draft} filter={filter} key={filter} model={model} store={store} />
-                    )}
+                    <div className="flex flex-1 flex-col" data-motion="dissolve" key={filter}>
+                        {filter === "duplicates" ? (
+                            <Duplicates draft={draft} model={model} store={store} />
+                        ) : (
+                            <Rows draft={draft} filter={filter} model={model} store={store} />
+                        )}
+                    </div>
                 </Frame>
             </Columns>
         </ImportPage>

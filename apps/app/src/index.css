@@ -424,32 +424,6 @@ html:has([role="dialog"][data-swipe-direction]) body::after {
         background: color-mix(in oklab, var(--color-app-income) 16%, transparent);
         color: var(--color-app-income);
     }
-
-    .dash-gl {
-        display: inline-block;
-        height: 9px;
-        border: 1px solid var(--color-app-ghost);
-        border-radius: 5px;
-    }
-
-    .dash-gx {
-        flex: none;
-        width: 26px;
-        height: 26px;
-        border: 1px solid var(--color-app-ghost);
-        border-radius: 8px;
-    }
-
-    .dash-empty {
-        display: flex;
-        flex: 1;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 40px 24px;
-        text-align: center;
-    }
 }
 
 /* Outside the layer: panelui's Badge utilities would otherwise win over the frame's size. */

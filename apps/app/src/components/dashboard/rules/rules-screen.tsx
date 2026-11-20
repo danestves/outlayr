@@ -1,7 +1,7 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import InformationCircleIcon from "@hugeicons/core-free-icons/InformationCircleIcon";
+import MagicWand01Icon from "@hugeicons/core-free-icons/MagicWand01Icon";
 import PlayIcon from "@hugeicons/core-free-icons/PlayIcon";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
 import { Kpi } from "panelui-web/kpi";
@@ -25,8 +25,10 @@ import {
 } from "@/lib/rules";
 import type { ConflictChoice, Rule } from "@/lib/rules";
 
+import { AccountsBar } from "../accounts/accounts-screen";
+import { Glyph } from "../accounts/glyph";
 import { KpiBand } from "../accounts/parts";
-import { QuietTable } from "../home/setup";
+import { Empty } from "../home/empty";
 import { ConflictList } from "./conflicts";
 import type { ConflictChoices } from "./conflicts";
 import { useRuleWrites, useRulesData } from "./data";
@@ -49,9 +51,7 @@ function Figure({ children, label, tone = "" }: { children: ReactNode; label: Re
             <Kpi.Header>
                 <Kpi.Title>{label}</Kpi.Title>
             </Kpi.Header>
-            <Kpi.Value className={`dash-figure mt-1 truncate leading-8 font-semibold tracking-[-0.04em] ${tone}`}>
-                {children}
-            </Kpi.Value>
+            <Kpi.Value className={`dash-figure mt-1 truncate font-semibold ${tone}`}>{children}</Kpi.Value>
         </Kpi>
     );
 }
@@ -174,8 +174,8 @@ export function RulesScreen({ data, search, setSearch, writes }: ScreenProps) {
                     </Tabs.Trigger>
                 ))}
                 {tab === "all" ? (
-                    <span className="text-muted-foreground ml-auto flex items-center gap-1.5 self-center pe-1 text-[13px] whitespace-nowrap max-md:hidden">
-                        <HugeiconsIcon icon={InformationCircleIcon} size={14} />
+                    <span className="text-muted-foreground text-app-label ml-auto flex items-center gap-1.5 self-center pe-1 whitespace-nowrap max-md:hidden">
+                        <Glyph icon={InformationCircleIcon} size={14} />
                         {copy.firstMatch}
                     </span>
                 ) : null}
@@ -215,12 +215,11 @@ export function RulesScreen({ data, search, setSearch, writes }: ScreenProps) {
 
     return (
         <main className="@container flex h-[calc(100dvh-52px-env(safe-area-inset-top))] min-w-0 flex-col px-4 pb-5 sm:px-6 lg:h-dvh">
-            <div className="flex min-h-16 flex-wrap items-center gap-2 py-3">
-                <h1 className="mr-auto text-lg leading-6 font-semibold tracking-[-0.02em]">{copy.title}</h1>
+            <AccountsBar title={copy.title}>
                 {fresh ? null : (
                     <>
                         <Button disabled={active === 0} onClick={() => setRunning("all")} variant="outline">
-                            <HugeiconsIcon icon={PlayIcon} size={16} />
+                            <Glyph icon={PlayIcon} size={16} />
                             <span className="max-sm:hidden">{copy.runPast}</span>
                         </Button>
                         {tab === "conflicts" && conflicts.length > 0 ? (
@@ -229,19 +228,19 @@ export function RulesScreen({ data, search, setSearch, writes }: ScreenProps) {
                             </Button>
                         ) : (
                             <Button onClick={create}>
-                                <HugeiconsIcon icon={Add01Icon} size={17} />
+                                <Glyph icon={Add01Icon} size={16} />
                                 {copy.create}
                             </Button>
                         )}
                     </>
                 )}
-            </div>
+            </AccountsBar>
             <div className="flex min-h-0 flex-1 flex-col gap-4">
                 {fresh ? null : (
                     <KpiBand>
                         <Figure label={copy.kpi.active}>
                             {active}
-                            <span className="text-muted-foreground text-[15px] font-normal tracking-normal">
+                            <span className="text-muted-foreground text-app-title font-normal">
                                 {" "}
                                 {copy.kpi.ofTotal({ count: String(rules.length) })}
                             </span>
@@ -254,28 +253,33 @@ export function RulesScreen({ data, search, setSearch, writes }: ScreenProps) {
                     </KpiBand>
                 )}
                 <Frame className="flex min-h-0 min-w-0 flex-1 flex-col" variant="plain">
-                    <Frame.Panel className="min-h-0 flex-1 rounded-2xl">
+                    <Frame.Panel className="rounded-app-xl min-h-0 flex-1">
                         {fresh ? null : <div className="border-border border-b">{tabs}</div>}
-                        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+                        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto" data-motion="dissolve" key={tab}>
                             {fresh ? (
-                                <div className="dash-empty relative isolate h-full min-h-[299px]">
-                                    <QuietTable />
-                                    <b className="text-[15px] font-semibold">{copy.empty.title}</b>
-                                    <p className="text-muted-foreground max-w-sm text-[13px]">{copy.empty.line}</p>
-                                    <div className="mt-3 flex flex-wrap justify-center gap-2">
-                                        {suggestions.length > 0 ? (
-                                            <Button onClick={() => setSearch({ tab: "suggested" })} variant="outline">
-                                                {suggestions.length === 1
-                                                    ? copy.empty.seeOne
-                                                    : copy.empty.see({ count: String(suggestions.length) })}
+                                <Empty
+                                    action={
+                                        <>
+                                            {suggestions.length > 0 ? (
+                                                <Button
+                                                    onClick={() => setSearch({ tab: "suggested" })}
+                                                    variant="outline"
+                                                >
+                                                    {suggestions.length === 1
+                                                        ? copy.empty.seeOne
+                                                        : copy.empty.see({ count: String(suggestions.length) })}
+                                                </Button>
+                                            ) : null}
+                                            <Button onClick={create}>
+                                                <Glyph icon={Add01Icon} size={16} />
+                                                {copy.create}
                                             </Button>
-                                        ) : null}
-                                        <Button onClick={create}>
-                                            <HugeiconsIcon icon={Add01Icon} size={17} />
-                                            {copy.create}
-                                        </Button>
-                                    </div>
-                                </div>
+                                        </>
+                                    }
+                                    icon={MagicWand01Icon}
+                                    line={copy.empty.line}
+                                    title={copy.empty.title}
+                                />
                             ) : null}
                             {!fresh && tab === "all" ? (
                                 <RuleList
@@ -313,7 +317,7 @@ export function RulesScreen({ data, search, setSearch, writes }: ScreenProps) {
                             ) : null}
                             {fresh || foot === null ? null : (
                                 <div
-                                    className={`text-muted-foreground flex flex-wrap items-center gap-2 py-3 ps-4 pe-6 text-[13px] ${tab === "all" ? "" : "mt-auto"} ${tab === "conflicts" ? "border-border bg-background/30 border-t" : ""}`}
+                                    className={`text-muted-foreground text-app-label flex flex-wrap items-center gap-2 py-3 ps-4 pe-6 ${tab === "all" ? "" : "mt-auto"} ${tab === "conflicts" ? "border-border bg-app-hover border-t" : ""}`}
                                 >
                                     {foot}
                                 </div>

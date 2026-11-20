@@ -92,7 +92,7 @@ export function UndoDialog({ record, trigger }: { record: ImportRecord; trigger:
             <AlertDialog.Trigger render={trigger} />
             <AlertDialog.Content className="app-shell max-w-[422px]" tone="destructive">
                 <AlertDialog.Title>{undoDialog.title}</AlertDialog.Title>
-                <AlertDialog.Description className="text-[13px] leading-5">
+                <AlertDialog.Description className="text-app-label! leading-5">
                     {done.changeMindText}
                 </AlertDialog.Description>
                 <div className="border-t">

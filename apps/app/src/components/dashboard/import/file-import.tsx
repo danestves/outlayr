@@ -6,6 +6,7 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { allowAi, hasAiConsent, useAiConsent } from "@/lib/ai-consent";
 import { scrubLabel } from "@/lib/import-file";
 import { metaFlag, useMeta } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { askSuggestions, MAX_ASKED } from "./ai";
 import type { AiAnswer } from "./ai";
@@ -235,7 +236,7 @@ export function FileImport({ kind }: { kind: Kind }) {
     const cancel = () => {
         reset();
         store?.clear();
-        return navigate({ to: "/import" });
+        return navigate({ to: "/import", viewTransition: viewTransition("push-left", { back: true }) });
     };
 
     if (finished) {

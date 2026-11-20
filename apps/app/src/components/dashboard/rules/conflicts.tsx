@@ -1,3 +1,4 @@
+import CheckmarkCircle02Icon from "@hugeicons/core-free-icons/CheckmarkCircle02Icon";
 import { Badge } from "panelui-web/badge";
 import { Radio, RadioGroup } from "panelui-web/radio-group";
 import { Table } from "panelui-web/table";
@@ -8,7 +9,7 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 import { categoryOf, skipConditionOf, tagsOf } from "@/lib/rules";
 import type { Conflict, ConflictChoice } from "@/lib/rules";
 
-import { QuietTable } from "../home/setup";
+import { Empty } from "../home/empty";
 import type { RulesData } from "./data";
 import { CategoryBadge, FIGURE, HEAD, LIT, NOTE, TagMarks, useCategoryLook, useShortDay } from "./parts";
 
@@ -35,7 +36,7 @@ function Option({
         >
             <Radio className="mt-0.5" id={id} value={choice} />
             <span className="flex min-w-0 flex-col">
-                <b className="text-sm leading-5 font-medium">{title}</b>
+                <b className="text-app-body font-medium">{title}</b>
                 <span className={NOTE}>{line}</span>
             </span>
         </label>
@@ -74,8 +75,8 @@ function ConflictBlock({
     const names = { first: first.name, second: second.name };
     return (
         <section>
-            <div className="bg-foreground/[0.03] flex min-h-12 flex-wrap items-center gap-2 px-4 py-2">
-                <b className="text-muted-foreground text-sm font-normal">
+            <div className="bg-app-hover flex min-h-12 flex-wrap items-center gap-2 px-4 py-2">
+                <b className="text-muted-foreground text-app-body font-normal">
                     {entries.length === 1 ? conflicts.bothOne(names) : conflicts.both({ ...names, count })}
                 </b>
                 <Badge className="ml-auto" dot variant="warning">
@@ -102,14 +103,16 @@ function ConflictBlock({
                 <Table.Body>
                     {entries.map((entry) => (
                         <Table.Row className="hover:bg-transparent" key={entry.id}>
-                            <Table.Cell className={`${CELL} ${FIGURE} text-muted-foreground text-sm`}>
-                                {shortDay(entry.day)}
+                            <Table.Cell className={`${CELL} ${FIGURE} text-muted-foreground`}>
+                                <span className="text-app-body">{shortDay(entry.day)}</span>
                             </Table.Cell>
-                            <Table.Cell className={`${CELL} ${FIGURE} max-w-64 truncate text-sm`}>
-                                {entry.details || entry.note}
+                            <Table.Cell className={`${CELL} ${FIGURE} max-w-64 truncate`}>
+                                <span className="text-app-body">{entry.details || entry.note}</span>
                             </Table.Cell>
-                            <Table.Cell align="end" className={`${CELL} ${FIGURE} text-sm`}>
-                                {money(entry.income ? entry.amount : -entry.amount, entry.currency)}
+                            <Table.Cell align="end" className={`${CELL} ${FIGURE}`}>
+                                <span className="text-app-body">
+                                    {money(entry.income ? entry.amount : -entry.amount, entry.currency)}
+                                </span>
                             </Table.Cell>
                             <Table.Cell className={CELL}>
                                 <div className="flex items-center gap-1.5">
@@ -202,13 +205,7 @@ export function ConflictList({
 }) {
     const { conflicts } = useIntlayer("dashboard-rules");
     if (data.conflicts.length === 0) {
-        return (
-            <div className="dash-empty relative isolate min-h-[299px] justify-end pt-0 pb-7">
-                <QuietTable />
-                <b className="text-[15px] font-semibold">{conflicts.emptyTitle}</b>
-                <p className="text-muted-foreground max-w-sm text-[13px]">{conflicts.emptyLine}</p>
-            </div>
-        );
+        return <Empty icon={CheckmarkCircle02Icon} line={conflicts.emptyLine} title={conflicts.emptyTitle} />;
     }
     return data.conflicts.map((conflict) => (
         <ConflictBlock

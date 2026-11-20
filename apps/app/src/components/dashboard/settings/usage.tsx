@@ -43,13 +43,11 @@ export function Stat({
             <Kpi.Header>
                 <Kpi.Title>{label}</Kpi.Title>
             </Kpi.Header>
-            <Kpi.Value className="dash-figure text-2xl leading-8 font-semibold tracking-[-0.04em]">
+            <Kpi.Value className="dash-figure font-semibold">
                 {value}
-                {unit ? (
-                    <span className="text-muted-foreground ml-1.5 text-sm font-medium tracking-normal">{unit}</span>
-                ) : null}
+                {unit ? <span className="text-app-muted text-app-body ml-1.5 font-medium">{unit}</span> : null}
             </Kpi.Value>
-            <p className="text-muted-foreground text-[13px] leading-5">{note}</p>
+            <p className="text-app-muted text-app-label">{note}</p>
         </Kpi>
     );
 }
@@ -153,7 +151,7 @@ export function Usage() {
                                                         </span>
                                                         <span className="bg-app-fill h-1 w-24 overflow-hidden rounded-full max-sm:hidden">
                                                             <span
-                                                                className="bg-primary block h-full rounded-full"
+                                                                className="bg-app-tint block h-full rounded-full"
                                                                 style={{
                                                                     width: `${(projection.left / projection.capacity) * 100}%`,
                                                                 }}
@@ -161,7 +159,7 @@ export function Usage() {
                                                         </span>
                                                     </span>
                                                 </Table.Cell>
-                                                <Table.Cell align="end" className="dash-figure text-muted-foreground">
+                                                <Table.Cell align="end" className="dash-figure text-app-muted">
                                                     {projection.fullAt === null
                                                         ? text.full
                                                         : formatWait(projection.fullAt - now)}

@@ -58,7 +58,7 @@ function Step({ done, failed, label, value }: { done: boolean; failed: boolean; 
         tone = "text-app-income";
     }
     return (
-        <div className="flex min-h-9 items-center gap-2 border-b text-[13px] last:border-0">
+        <div className="text-app-label flex min-h-9 items-center gap-2 border-b last:border-0">
             <Glyph className={`flex-none ${tone}`} icon={icon} size={16} />
             <span className="text-muted-foreground min-w-0 truncate">{label}</span>
             <span className="dash-figure ml-auto whitespace-nowrap">{value}</span>
@@ -109,7 +109,7 @@ function OtherReasons({ reason }: { reason: AiRefusal }) {
         <Card title={resolve.otherReasons}>
             <div className="mx-4 mt-4 border-t">
                 {OTHER_REASONS.filter((key) => key !== current).map((key) => (
-                    <div className="flex min-h-9 items-center gap-3 border-b text-[13px] last:border-0" key={key}>
+                    <div className="text-app-label flex min-h-9 items-center gap-3 border-b last:border-0" key={key}>
                         <span className="text-muted-foreground">{resolve.reason[key]}</span>
                         <span className="ml-auto text-end">{resolve.reason[`${key}Hint`]}</span>
                     </div>
@@ -155,7 +155,7 @@ function FileAccounts({ draft, model, store }: { draft: Draft; model: FileModel;
             <div className="flex flex-col gap-4 p-4">
                 {model.accounts.map((account) => (
                     <div className="flex flex-col gap-2" key={account.value}>
-                        <span className="text-muted-foreground truncate text-[13px]">
+                        <span className="text-muted-foreground text-app-label truncate">
                             {account.value},{" "}
                             {account.count === 1 ? resolve.oneRow : resolve.rowsCount({ count: account.count })}
                         </span>
@@ -311,10 +311,13 @@ export function ResolveStep({
                             <Table.Body>
                                 {visible.slice(0, shown).map((group) => (
                                     <Table.Row key={group.key}>
-                                        <Table.Cell className={`${ROW} dash-figure max-w-0 truncate text-[13px]`}>
+                                        <Table.Cell className={`${ROW} dash-figure text-app-label! max-w-0 truncate`}>
                                             {group.label}
                                         </Table.Cell>
-                                        <Table.Cell align="end" className={`${ROW} text-muted-foreground text-sm`}>
+                                        <Table.Cell
+                                            align="end"
+                                            className={`${ROW} text-muted-foreground text-app-body!`}
+                                        >
                                             {group.rows}
                                         </Table.Cell>
                                         <Table.Cell className={ROW}>
@@ -331,7 +334,7 @@ export function ResolveStep({
                                         </Table.Cell>
                                         <Table.Cell
                                             align="end"
-                                            className={`${ROW} text-muted-foreground text-sm whitespace-nowrap`}
+                                            className={`${ROW} text-muted-foreground text-app-body! whitespace-nowrap`}
                                         >
                                             <FoundBy found={group.found} />
                                         </Table.Cell>
@@ -340,7 +343,7 @@ export function ResolveStep({
                             </Table.Body>
                         </Table>
                     </Frame.Panel>
-                    <Frame.Footer className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
+                    <Frame.Footer className="text-app-label! flex flex-wrap items-center justify-between gap-2">
                         <span className="text-muted-foreground">
                             {resolve.showing({ shown: Math.min(shown, visible.length), total: model.groups.length })}
                         </span>

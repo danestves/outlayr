@@ -21,7 +21,8 @@ import type { ImportSource } from "./store";
 export const STEPS = ["upload", "match", "review", "done"] as const;
 export type Step = (typeof STEPS)[number];
 
-const STEP_CHIP = "dash-figure flex size-5 flex-none items-center justify-center rounded-full text-[11px] font-medium";
+const STEP_CHIP =
+    "dash-figure flex size-5 flex-none items-center justify-center rounded-full text-app-micro font-medium";
 
 function chipTone(on: boolean, done: boolean) {
     if (on) {
@@ -40,10 +41,10 @@ export function Stepper({ step }: { step: Step }) {
                 const on = index === current;
                 return (
                     <li className="flex items-center gap-2" key={name}>
-                        {index === 0 ? null : <span aria-hidden className="bg-border h-px w-[22px]" />}
+                        {index === 0 ? null : <span aria-hidden className="bg-border h-px w-5.5" />}
                         <span
                             aria-current={on ? "step" : undefined}
-                            className={`flex items-center gap-[7px] text-[13px] font-medium whitespace-nowrap ${on ? "text-foreground" : "text-muted-foreground"}`}
+                            className={`text-app-label flex items-center gap-1.75 font-medium whitespace-nowrap ${on ? "text-foreground" : "text-muted-foreground"}`}
                         >
                             <span className={`${STEP_CHIP} ${chipTone(on, done)}`}>
                                 {done ? <Glyph icon={Tick02Icon} size={12} strokeWidth={2} /> : index + 1}
@@ -61,7 +62,7 @@ export function ImportBar({ children, step }: { children?: ReactNode; step?: Ste
     const { title } = useIntlayer("dashboard-import");
     return (
         <div className="flex min-h-16 flex-wrap items-center gap-x-6 gap-y-2 py-3">
-            <h1 className="text-lg leading-6 font-semibold tracking-[-0.02em]">{title}</h1>
+            <h1 className="text-app-heading leading-6 font-semibold">{title}</h1>
             {step ? <Stepper step={step} /> : null}
             <div className="ml-auto flex items-center gap-2">{children}</div>
         </div>
@@ -110,7 +111,7 @@ export function Card({
             </Frame.Header>
             {children ? <Frame.Panel className="relative flex flex-1 flex-col">{children}</Frame.Panel> : null}
             {footer ? (
-                <Frame.Footer className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
+                <Frame.Footer className="text-app-label! flex flex-wrap items-center justify-between gap-2">
                     {footer}
                 </Frame.Footer>
             ) : null}
@@ -128,7 +129,7 @@ export const SOURCE_ICON: Record<ImportSource, IconSvgElement> = {
 export function SourceTile({ size = "md", source }: { size?: "md" | "sm"; source: ImportSource }) {
     return (
         <span
-            className={`bg-app-fill flex flex-none items-center justify-center ${size === "sm" ? "size-6 rounded-md" : "size-10 rounded-[10px]"} ${source === "pdf" ? "text-primary" : "text-muted-foreground"}`}
+            className={`bg-app-fill flex flex-none items-center justify-center ${size === "sm" ? "rounded-app-xs size-6" : "rounded-app-md size-10"} ${source === "pdf" ? "text-primary" : "text-muted-foreground"}`}
         >
             <Glyph icon={SOURCE_ICON[source]} size={size === "sm" ? 13 : 18} />
         </span>
@@ -154,15 +155,15 @@ export function FileHead({
     source: ImportSource;
 }) {
     return (
-        <div className="flex min-w-0 items-center gap-3 px-5 pb-[18px]">
+        <div className="flex min-w-0 items-center gap-3 px-5 pb-4.5">
             <span
-                className={`bg-app-fill flex h-12 w-10 flex-none items-center justify-center rounded-lg ${tileTone(bad, source)}`}
+                className={`bg-app-fill rounded-app-sm flex h-12 w-10 flex-none items-center justify-center ${tileTone(bad, source)}`}
             >
                 <Glyph icon={bad ? File01Icon : SOURCE_ICON[source]} size={20} />
             </span>
             <div className="min-w-0">
-                <b className="block truncate text-sm leading-5 font-medium">{name}</b>
-                <small className="text-muted-foreground block truncate text-xs leading-4">{note}</small>
+                <b className="text-app-body block truncate leading-5 font-medium">{name}</b>
+                <small className="text-muted-foreground text-app-caption block truncate leading-4">{note}</small>
             </div>
         </div>
     );
@@ -189,8 +190,8 @@ export function FileStats({
         <dl className={`mx-4 grid grid-cols-3 border-t ${className}`}>
             {cells.map(([label, value], index) => (
                 <div className="min-w-0 border-s ps-3 pt-3 first:border-s-0 first:ps-0" key={index}>
-                    <dt className="text-muted-foreground text-xs leading-4">{label}</dt>
-                    <dd className="dash-figure mt-0.5 truncate text-sm font-medium">{value}</dd>
+                    <dt className="text-muted-foreground text-app-caption leading-4">{label}</dt>
+                    <dd className="dash-figure text-app-body mt-0.5 truncate font-medium">{value}</dd>
                 </div>
             ))}
         </dl>
@@ -209,14 +210,14 @@ export function Line({
     tone?: string;
 }) {
     return (
-        <div className="flex min-h-9 items-center gap-3 border-b px-4 text-[13px] last:border-0">
+        <div className="text-app-label flex min-h-9 items-center gap-3 border-b px-4 last:border-0">
             <span className="text-muted-foreground min-w-0 truncate">{label}</span>
             <span className={`${plain ? "" : "dash-figure "}ml-auto whitespace-nowrap ${tone}`}>{children}</span>
         </div>
     );
 }
 
-export const NOTE = "text-muted-foreground px-4 py-3 text-[13px] leading-5";
+export const NOTE = "text-muted-foreground px-4 py-3 text-app-label leading-5";
 
 const WORKS_WITH = ["CSV", "PDF", "Money Manager", "Notion"] as const;
 
@@ -227,7 +228,7 @@ export function WorksWith({ children }: { children?: ReactNode }) {
             <div className="flex flex-wrap gap-1.5 px-4 pt-4">
                 {WORKS_WITH.map((name) => (
                     <span
-                        className="dash-figure inline-flex h-6 items-center rounded-md border px-2 text-xs font-medium"
+                        className="dash-figure rounded-app-xs text-app-caption inline-flex h-6 items-center border px-2 font-medium"
                         key={name}
                     >
                         {name}
@@ -258,7 +259,7 @@ export function Banner({
 }) {
     return (
         <output
-            className={`mx-5 my-4 flex gap-2.5 rounded-[10px] border p-3 text-[13px] leading-[18px] ${action ? "items-center" : "items-start"} ${BANNER[tone]}`}
+            className={`rounded-app-md text-app-label mx-5 my-4 flex gap-2.5 border p-3 leading-4.5 ${action ? "items-center" : "items-start"} ${BANNER[tone]}`}
         >
             <Glyph
                 className={action ? "flex-none" : "mt-px flex-none"}
@@ -363,14 +364,14 @@ export function DropTile({
         shown = File01Icon;
     }
     return (
-        <span className={`mb-3 flex size-11 items-center justify-center rounded-[14px] ${tone}`}>
+        <span className={`rounded-app-lg mb-3 flex size-11 items-center justify-center ${tone}`}>
             <Glyph icon={shown} size={20} />
         </span>
     );
 }
 
 export const DROPZONE =
-    "flex flex-col items-center justify-center rounded-xl border border-dashed border-app-strong px-4 text-center transition-colors";
+    "flex flex-col items-center justify-center rounded-app-lg border border-dashed border-app-strong px-4 text-center transition-colors";
 
 const KILO = 1024;
 

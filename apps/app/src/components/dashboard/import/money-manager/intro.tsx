@@ -23,7 +23,7 @@ export function Intro({ onCancel, onFile }: { onCancel: () => void; onFile: (fil
                             <ul className="divide-border divide-y">
                                 {intro.items.map((item, index) => (
                                     <li
-                                        className="text-muted-foreground flex min-h-9 items-center justify-between gap-3 px-4 text-[13px]"
+                                        className="text-muted-foreground text-app-label flex min-h-9 items-center justify-between gap-3 px-4"
                                         key={index}
                                     >
                                         {item}
@@ -33,7 +33,7 @@ export function Intro({ onCancel, onFile }: { onCancel: () => void; onFile: (fil
                             </ul>
                         </Card>
                         <Card title={intro.nothingFinal}>
-                            <p className="text-muted-foreground px-4 py-3 text-[13px] leading-5">
+                            <p className="text-muted-foreground text-app-label px-4 py-3 leading-5">
                                 {intro.nothingFinalBody}
                             </p>
                         </Card>
@@ -43,8 +43,8 @@ export function Intro({ onCancel, onFile }: { onCancel: () => void; onFile: (fil
                 <Card title={intro.backupTitle}>
                     <ol className="divide-border divide-y">
                         {intro.steps.map((step, index) => (
-                            <li className="flex min-h-14 items-center gap-3 px-4 text-sm font-medium" key={index}>
-                                <span className="bg-app-fill dash-figure flex size-8 flex-none items-center justify-center rounded-lg border text-xs font-medium">
+                            <li className="text-app-body flex min-h-14 items-center gap-3 px-4 font-medium" key={index}>
+                                <span className="bg-app-fill dash-figure rounded-app-sm text-app-caption flex size-8 flex-none items-center justify-center border font-medium">
                                     {index + 1}
                                 </span>
                                 {step}
@@ -56,8 +56,8 @@ export function Intro({ onCancel, onFile }: { onCancel: () => void; onFile: (fil
                             <div className="p-5" {...drop.props}>
                                 <div className={`${DROPZONE} h-84 ${drop.over ? "bg-app-fill" : ""}`}>
                                     <DropTile />
-                                    <b className="text-sm font-semibold">{intro.drop}</b>
-                                    <small className="text-muted-foreground mt-1.5 mb-4 text-[13px]">
+                                    <b className="text-app-body font-semibold">{intro.drop}</b>
+                                    <small className="text-muted-foreground text-app-label mt-1.5 mb-4">
                                         {intro.dropHint}
                                     </small>
                                     <Button onClick={open}>{intro.choose}</Button>
@@ -79,7 +79,7 @@ export function Reading({ name, onCancel, size }: { name: string; onCancel: () =
             <Columns
                 rail={
                     <Card title={reading.next}>
-                        <p className="text-muted-foreground px-4 py-3 text-[13px] leading-5">{reading.nextBody}</p>
+                        <p className="text-muted-foreground text-app-label px-4 py-3 leading-5">{reading.nextBody}</p>
                     </Card>
                 }
             >
@@ -134,7 +134,7 @@ export function WrongFile({
                                         { hint: wrong.newerBody, label: wrong.newer },
                                     ].map(({ hint, label }) => (
                                         <li
-                                            className="flex min-h-9 items-center justify-between gap-3 px-4 py-1.5 text-[13px]"
+                                            className="text-app-label flex min-h-9 items-center justify-between gap-3 px-4 py-1.5"
                                             key={label.value}
                                         >
                                             <span className="text-muted-foreground flex-none">{label}</span>
@@ -151,8 +151,8 @@ export function WrongFile({
                     <div className="p-5">
                         <div className={`${DROPZONE} h-105`}>
                             <DropTile bad />
-                            <b className="text-sm font-semibold">{copy.title}</b>
-                            <small className="text-muted-foreground mt-1.5 mb-4 max-w-sm text-[13px] leading-5">
+                            <b className="text-app-body font-semibold">{copy.title}</b>
+                            <small className="text-muted-foreground text-app-label mt-1.5 mb-4 max-w-sm leading-5">
                                 {copy.body}
                             </small>
                             <FilePicker accept={ACCEPT} onFile={onFile}>

@@ -158,14 +158,18 @@ export function ImportingStep({ draft, model }: { draft: Draft; model: FileModel
     return (
         <ImportPage>
             <ImportBar step="review">
-                <Button disabled>{importing.button}</Button>
+                <Button aria-busy disabled>
+                    {importing.button}
+                </Button>
             </ImportBar>
             <Columns rail={<ReviewRail draft={draft} model={model} store={null} />}>
                 <Frame className="min-w-0">
                     <Frame.Header className="min-h-16">
                         <Frame.Title as="h2" className="flex flex-wrap items-baseline gap-x-2">
                             <b className="font-semibold">{importing.title({ count: rows.length.toLocaleString() })}</b>
-                            <span className="text-muted-foreground text-[13px] font-normal">{importing.keepOpen}</span>
+                            <span className="text-muted-foreground text-app-label font-normal">
+                                {importing.keepOpen}
+                            </span>
                         </Frame.Title>
                     </Frame.Header>
                     <Frame.Panel className="flex flex-1 flex-col">
@@ -186,17 +190,21 @@ export function ImportingStep({ draft, model }: { draft: Draft; model: FileModel
                                     const found = row.category.kind === "existing" ? look(row.category.id) : null;
                                     return (
                                         <Table.Row key={row.index}>
-                                            <Table.Cell className={`${ROW} dash-figure text-muted-foreground text-sm`}>
+                                            <Table.Cell
+                                                className={`${ROW} dash-figure text-muted-foreground text-app-body!`}
+                                            >
                                                 {day(row.at)}
                                             </Table.Cell>
-                                            <Table.Cell className={`${ROW} max-w-0 truncate text-sm font-medium`}>
+                                            <Table.Cell
+                                                className={`${ROW} text-app-body! max-w-0 truncate font-medium`}
+                                            >
                                                 {row.name}
                                             </Table.Cell>
                                             <Table.Cell className={ROW}>
                                                 {row.category.kind === "none" ? (
                                                     <CategoryShown id={null} />
                                                 ) : (
-                                                    <span className="inline-flex h-6 items-center gap-1.5 rounded-md border px-2 text-xs font-medium">
+                                                    <span className="rounded-app-xs text-app-caption inline-flex h-6 items-center gap-1.5 border px-2 font-medium">
                                                         <i
                                                             className="border-muted-foreground size-1.5 rounded-full border-dashed"
                                                             style={
@@ -210,11 +218,11 @@ export function ImportingStep({ draft, model }: { draft: Draft; model: FileModel
                                                 )}
                                             </Table.Cell>
                                             <Table.Cell className={ROW}>
-                                                <i className="dash-gl inline-block w-10" />
+                                                <span className="text-muted-foreground">–</span>
                                             </Table.Cell>
                                             <Table.Cell
                                                 align="end"
-                                                className={`${ROW} dash-figure text-sm whitespace-nowrap`}
+                                                className={`${ROW} dash-figure text-app-body! whitespace-nowrap`}
                                             >
                                                 {money(row.income ? row.amount : -row.amount, row.currency, "always")}
                                             </Table.Cell>
@@ -246,10 +254,8 @@ function DoneKpi({
             <Kpi.Header>
                 <Kpi.Title>{label}</Kpi.Title>
             </Kpi.Header>
-            <Kpi.Value className={`dash-figure mt-2 truncate leading-7 font-semibold tracking-[-0.04em] ${tone}`}>
-                {value}
-            </Kpi.Value>
-            <Kpi.Footer className="text-muted-foreground mt-1 -mb-0.5 h-5 text-xs">{children}</Kpi.Footer>
+            <Kpi.Value className={`dash-figure mt-2 truncate leading-7 font-semibold ${tone}`}>{value}</Kpi.Value>
+            <Kpi.Footer className="text-muted-foreground text-app-caption! mt-1 -mb-0.5 h-5">{children}</Kpi.Footer>
         </Kpi>
     );
 }
@@ -276,7 +282,7 @@ function WhereItWent({ record }: { record: ImportRecord }) {
     return (
         <Card
             action={
-                <span className="dash-figure text-muted-foreground text-[13px]">
+                <span className="dash-figure text-muted-foreground text-app-label">
                     {money(-out, record.currency, "always")}
                 </span>
             }
@@ -314,7 +320,7 @@ function WhereItWent({ record }: { record: ImportRecord }) {
                                 <Table.Cell className={ROW}>
                                     <CategoryShown id={group.id} />
                                 </Table.Cell>
-                                <Table.Cell align="end" className={`${ROW} text-muted-foreground text-sm`}>
+                                <Table.Cell align="end" className={`${ROW} text-muted-foreground text-app-body!`}>
                                     {group.count}
                                 </Table.Cell>
                                 <Table.Cell className={`${ROW} w-[300px] max-md:hidden`}>
@@ -329,7 +335,10 @@ function WhereItWent({ record }: { record: ImportRecord }) {
                                         />
                                     </span>
                                 </Table.Cell>
-                                <Table.Cell align="end" className={`${ROW} dash-figure text-sm whitespace-nowrap`}>
+                                <Table.Cell
+                                    align="end"
+                                    className={`${ROW} dash-figure text-app-body! whitespace-nowrap`}
+                                >
                                     {money(-group.amount, record.currency, "always")}
                                 </Table.Cell>
                             </Table.Row>
@@ -381,15 +390,17 @@ function FaultyRows({
                         const fix = fixes[row.index] ?? NO_FIX;
                         return (
                             <Table.Row key={row.index}>
-                                <Table.Cell className={`${ROW} dash-figure text-muted-foreground h-[60px] text-sm`}>
+                                <Table.Cell
+                                    className={`${ROW} dash-figure text-muted-foreground text-app-body! h-[60px]`}
+                                >
                                     {row.dateText || "–"}
                                 </Table.Cell>
                                 <Table.Cell className={`${ROW} max-w-0`}>
-                                    <b className="block truncate text-sm leading-4 font-medium">{row.label}</b>
+                                    <b className="text-app-body block truncate leading-4 font-medium">{row.label}</b>
                                 </Table.Cell>
                                 <Table.Cell className={ROW}>
                                     <Badge
-                                        className="h-6 gap-1.5 rounded-md px-2 text-xs font-medium"
+                                        className="rounded-app-xs text-app-caption! h-6 gap-1.5 px-2 font-medium"
                                         variant="destructive"
                                     >
                                         <i className="size-1.5 rounded-full bg-current" />
@@ -418,7 +429,10 @@ function FaultyRows({
                                         />
                                     )}
                                 </Table.Cell>
-                                <Table.Cell align="end" className={`${ROW} dash-figure text-sm whitespace-nowrap`}>
+                                <Table.Cell
+                                    align="end"
+                                    className={`${ROW} dash-figure text-app-body! whitespace-nowrap`}
+                                >
                                     {row.amount === null
                                         ? "–"
                                         : money(row.income ? row.amount : -row.amount, record.currency, "always")}
@@ -429,7 +443,7 @@ function FaultyRows({
                 </Table.Body>
             </Table>
             <div className="border-t">
-                <b className="flex h-11 items-center px-4 text-[13px] font-medium">
+                <b className="text-app-label flex h-11 items-center px-4 font-medium">
                     {done.otherAreIn({ count: record.entryIds.length.toLocaleString() })}
                 </b>
                 <p className={`${NOTE} border-t pt-3 pb-3`}>{done.retryNote}</p>
@@ -601,7 +615,7 @@ export function DoneStep({ finished, onAnother }: { finished: Finished; onAnothe
                                 value={
                                     <span className="flex items-baseline gap-2">
                                         {money(record.in, record.currency, "always")}
-                                        <span className="text-muted-foreground text-lg">
+                                        <span className="text-muted-foreground text-app-heading">
                                             {money(-record.out, record.currency, "always")}
                                         </span>
                                     </span>

@@ -5,6 +5,7 @@ import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { DialogContent } from "@/components/ui/dialog-content";
 import { categoryOf, runOf } from "@/lib/rules";
 import type { Change, Rule } from "@/lib/rules";
 
@@ -15,9 +16,7 @@ import { useCategoryLook } from "./parts";
 function Shell({ children, onClose, size }: { children: ReactNode; onClose: () => void; size: "md" | "sm" }) {
     return (
         <Dialog onOpenChange={(open) => (open ? undefined : onClose())} open>
-            <Dialog.Content className="app-shell ph-no-capture" size={size}>
-                {children}
-            </Dialog.Content>
+            <DialogContent size={size}>{children}</DialogContent>
         </Dialog>
     );
 }
@@ -61,7 +60,7 @@ function RunBody({
                     <Fact label={category === null ? run.change : run.changeTo({ category })}>{count}</Fact>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                    <label className="text-sm font-medium" htmlFor={switchId}>
+                    <label className="text-app-body font-medium" htmlFor={switchId}>
                         {run.skip}
                     </label>
                     <Switch checked={keepFilled} id={switchId} onCheckedChange={setKeepFilled} />

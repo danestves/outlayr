@@ -158,7 +158,7 @@ export function Notifications() {
                     <Skeleton loading={loading || config === undefined}>
                         <SettingsCard
                             footer={
-                                <span className="text-muted-foreground">
+                                <span className="text-app-muted">
                                     {on && available
                                         ? copy.next({ time: <span className="font-mono">{time(minute)}</span> })
                                         : copy.none}
@@ -196,7 +196,7 @@ export function Notifications() {
                                 <Row label={copy.custom} leading={<Radio value="custom" />}>
                                     <Input
                                         aria-label={copy.custom.value}
-                                        className="w-[132px]"
+                                        className="w-33"
                                         disabled={!(on && available && slot === "custom")}
                                         onChange={(event) => {
                                             if (event.target.value) {

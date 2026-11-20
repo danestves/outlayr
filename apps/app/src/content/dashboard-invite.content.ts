@@ -109,6 +109,13 @@ const dashboardInvite = {
             pt: "8 letras e números",
         }),
         apply: t({ en: "Apply", de: "Anwenden", es: "Aplicar", fr: "Appliquer", pt: "Aplicar" }),
+        checking: t({
+            en: "Checking…",
+            de: "Wird geprüft…",
+            es: "Comprobando…",
+            fr: "Vérification…",
+            pt: "Verificando…",
+        }),
         wrongCode: t({
             en: "Codes are 8 letters and numbers.",
             de: "Codes bestehen aus 8 Buchstaben und Zahlen.",
@@ -319,6 +326,13 @@ const dashboardInvite = {
                 es: "Reclamar mes",
                 fr: "Activer le mois",
                 pt: "Resgatar mês",
+            }),
+            claiming: t({
+                en: "Claiming…",
+                de: "Wird eingelöst…",
+                es: "Reclamando…",
+                fr: "Activation…",
+                pt: "Resgatando…",
             }),
             claimed: t({
                 en: "A month of Pro is yours",

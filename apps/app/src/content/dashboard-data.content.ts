@@ -441,6 +441,13 @@ const dashboardData = {
                 fr: "Toutes les opérations, modèles récurrents, virements, budgets et photos seront supprimés sur tous vos appareils synchronisés. Vos comptes, catégories, objectifs d'épargne, étiquettes et réglages sont conservés. Cette action est irréversible.",
                 pt: "Todos os lançamentos, modelos recorrentes, transferências, orçamentos e fotos serão apagados em todos os dispositivos sincronizados. Suas contas, categorias, metas de economia, tags e ajustes são mantidos. Isso não pode ser desfeito.",
             }),
+            erasing: t({
+                en: "Erasing…",
+                de: "Wird gelöscht…",
+                es: "Borrando…",
+                fr: "Effacement…",
+                pt: "Apagando…",
+            }),
             word: t({ en: "ERASE", de: "LÖSCHEN", es: "BORRAR", fr: "EFFACER", pt: "APAGAR" }),
             typeBefore: t({ en: "Type", de: "Tippe", es: "Escribe", fr: "Saisissez", pt: "Digite" }),
             typeAfter: t({

@@ -1,5 +1,4 @@
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { wallNoon } from "@outlayr/money/ledger-zone";
 import { Button } from "panelui-web/button";
 import { Sheet } from "panelui-web/sheet";
@@ -10,10 +9,12 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
+import { SheetContent } from "@/components/ui/sheet-content";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { ruleProblems, runOf, saved } from "@/lib/rules";
 import type { Change, Rule, Run, Suggestion } from "@/lib/rules";
 
+import { Glyph } from "../accounts/glyph";
 import { useWide } from "../insights/use-wide";
 import { ruleNotices, useRuleWrites } from "./data";
 import type { RulesData } from "./data";
@@ -136,11 +137,11 @@ function Body({
                 </Tabs>
             ) : null}
             {testing ? (
-                <div className="flex min-h-0 flex-1 flex-col pt-3">
+                <div className="flex min-h-0 flex-1 flex-col pt-3" data-motion="dissolve">
                     <RuleTest data={data} onBack={() => view(false)} rule={rule} run={run} />
                 </div>
             ) : (
-                <Sheet.Body className="pt-1">
+                <Sheet.Body className="pt-1" data-motion="dissolve">
                     <RuleForm
                         draft={draft}
                         onChange={setDraft}
@@ -201,12 +202,12 @@ function Body({
                         onClick={() => onDelete(existing)}
                         variant="ghost"
                     >
-                        <HugeiconsIcon icon={Delete02Icon} size={16} />
+                        <Glyph icon={Delete02Icon} size={16} />
                         {sheet.delete}
                     </Button>
                 ) : null}
                 {tried && problems.count > 0 && !testing ? (
-                    <span className="text-destructive mr-auto text-[13px]">{fixes}</span>
+                    <span className="text-destructive text-app-label mr-auto">{fixes}</span>
                 ) : null}
                 <Button onClick={onClose} variant="ghost">
                     {existing && testing ? close : cancel}
@@ -240,13 +241,9 @@ export function RuleSheet({ target, testing, ...props }: RuleSheetProps) {
             open={target !== null}
             side={wide ? "right" : "bottom"}
         >
-            <Sheet.Content
-                className={`app-shell ph-no-capture ${wide ? width : ""}`}
-                showGrabber={false}
-                size={wide ? "auto" : "full"}
-            >
+            <SheetContent className={wide ? width : undefined} showGrabber={false} size={wide ? "auto" : "full"}>
                 {shown ? <Body key={shown.key} target={shown} testing={testing} {...props} /> : null}
-            </Sheet.Content>
+            </SheetContent>
         </Sheet>
     );
 }

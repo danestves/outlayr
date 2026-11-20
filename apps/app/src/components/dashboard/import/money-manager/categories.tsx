@@ -117,7 +117,7 @@ export function Categories({ draft, onBack, onChoices }: Props) {
                     ) : null}
                 </Tabs.List>
             </Tabs>
-            <span className="text-muted-foreground text-[13px]">{copy.use}</span>
+            <span className="text-muted-foreground text-app-label">{copy.use}</span>
             <Tabs
                 onValueChange={(value) => switchMode(value === "keep" ? "keep" : "match")}
                 value={choices.categoryMode}
@@ -158,7 +158,7 @@ export function Categories({ draft, onBack, onChoices }: Props) {
                         </Table.Row>
                     ))}
                 </DataTable>
-                <p className="text-muted-foreground flex justify-between gap-4 px-4 py-3 text-[13px] leading-5">
+                <p className="text-muted-foreground text-app-label flex justify-between gap-4 px-4 py-3 leading-5">
                     <span>{copy.note}</span>
                     <span className="dash-figure flex-none">
                         {copy.count.value

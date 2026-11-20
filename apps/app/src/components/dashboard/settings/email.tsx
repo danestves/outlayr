@@ -53,11 +53,7 @@ export function Email() {
                         <SettingsCard title={copy.alwaysSent}>
                             {kinds.map(({ key, label }) => (
                                 <Row key={key} label={label}>
-                                    <HugeiconsIcon
-                                        className="text-muted-foreground"
-                                        icon={SquareLock02Icon}
-                                        size={16}
-                                    />
+                                    <HugeiconsIcon className="text-app-muted" icon={SquareLock02Icon} size={16} />
                                 </Row>
                             ))}
                         </SettingsCard>

@@ -17,6 +17,7 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
 import { LookTile } from "@/components/ledger/tiles";
+import { DialogContent } from "@/components/ui/dialog-content";
 import { liveCategories } from "@/lib/category-writes";
 
 import { Choice, Swatches } from "../parts";
@@ -140,7 +141,7 @@ const EMOJI = [
     "❓",
 ];
 const NO_PARENT = "none";
-const SYMBOL_GRID = "grid max-h-[300px] grid-cols-[repeat(auto-fill,minmax(44px,1fr))] gap-1 overflow-y-auto p-1";
+const SYMBOL_GRID = "grid max-h-75 grid-cols-[repeat(auto-fill,minmax(44px,1fr))] gap-1 overflow-y-auto p-1";
 const SYMBOL_CELL = "[&_[data-slot=choice-cards-check]]:hidden";
 
 export type EditorTarget = { doc: Category } | { income: boolean; parentId: string | null };
@@ -236,7 +237,9 @@ function SymbolPicker({
                                   onClick={closeOnPointer}
                                   value={emoji}
                               >
-                                  <ChoiceCards.Media className="text-xl">{emoji}</ChoiceCards.Media>
+                                  <ChoiceCards.Media>
+                                      <span className="text-app-heading">{emoji}</span>
+                                  </ChoiceCards.Media>
                               </ChoiceCards.Item>
                           ))}
                 </ChoiceCards>
@@ -263,9 +266,9 @@ function SymbolPicker({
 function SymbolDialog({ open, ...picker }: { open: boolean } & ComponentProps<typeof SymbolPicker>) {
     return (
         <Dialog onOpenChange={(next) => next || picker.onClose()} open={open}>
-            <Dialog.Content className="app-shell" size="lg">
+            <DialogContent size="lg">
                 <SymbolPicker {...picker} />
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }
@@ -275,13 +278,13 @@ function SymbolButton({ color, onClick, symbol }: { color: string; onClick: () =
     return (
         <Button
             aria-label={copy.symbol.value}
-            className="size-16 shrink-0 rounded-2xl border-dashed text-[28px] leading-none"
+            className="rounded-app-xl size-16 shrink-0 border-dashed"
             onClick={onClick}
             size="icon-lg"
             type="button"
             variant="outline"
         >
-            {symbol.emoji ?? null}
+            {symbol.emoji ? <span className="text-app-figure leading-none">{symbol.emoji}</span> : null}
             {symbol.icon ? <LookTile look={{ ...symbol, color }} size="lg" /> : null}
             {symbol.emoji || symbol.icon ? null : <HugeiconsIcon icon={PlusSignIcon} size={22} />}
         </Button>
@@ -312,7 +315,7 @@ function ParentField({
                 <Select.Trigger className="w-full">
                     <Select.Value />
                 </Select.Trigger>
-                <Select.Content className="app-shell">
+                <Select.Content className="app-shell z-60">
                     <Select.Item value={NO_PARENT}>{copy.none}</Select.Item>
                     {parents.map((row) => (
                         <Select.Item key={row.localId} value={row.localId}>
@@ -492,7 +495,7 @@ function CategoryEditorBody({ onClose, target }: { onClose: () => void; target: 
                         <ParentField onChange={setParentId} parents={parents} value={parentId} />
                     )}
                     {parent ? (
-                        <p className="text-muted-foreground text-[13px]">
+                        <p className="text-muted-foreground text-app-label">
                             {copy.inheritsColor({ parent: parent.name ?? "" })}
                         </p>
                     ) : null}
@@ -542,9 +545,7 @@ export function CategoryEditor({
 }) {
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open}>
-            <Dialog.Content className="app-shell">
-                {target ? <CategoryEditorBody onClose={onClose} target={target} /> : null}
-            </Dialog.Content>
+            <DialogContent>{target ? <CategoryEditorBody onClose={onClose} target={target} /> : null}</DialogContent>
         </Dialog>
     );
 }

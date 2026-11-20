@@ -5,6 +5,7 @@ import Idea01Icon from "@hugeicons/core-free-icons/Idea01Icon";
 import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import PencilEdit02Icon from "@hugeicons/core-free-icons/PencilEdit02Icon";
 import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
+import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { suggestionsNotAdded } from "@outlayr/money/category-rules";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -19,12 +20,15 @@ import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { Empty } from "@/components/dashboard/home/empty";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
+import { MenuContent } from "@/components/ui/menu-content";
 import { liveCategories } from "@/lib/category-writes";
 import { categoryBudgets } from "@/lib/dashboard-series";
 import { metaFlag, useDisplayFormat, useMeta } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { SectionHead, SettingsCard, useSaveSettings } from "../parts";
 import { CategoryEditor } from "./editor";
@@ -37,6 +41,7 @@ import { useCategoryWrites } from "./write";
 
 const CELL = "whitespace-nowrap";
 const FIGURE = `${CELL} dash-figure text-muted-foreground`;
+const PUSH = viewTransition("push-left");
 const PHONE_COLUMNS = "max-sm:[&_tr>*:nth-child(2)]:hidden max-sm:[&_tr>*:nth-child(4)]:hidden";
 
 function RowActions({ onEdit, onSubcategory, row }: { onEdit: () => void; onSubcategory?: () => void; row: Category }) {
@@ -51,10 +56,14 @@ function RowActions({ onEdit, onSubcategory, row }: { onEdit: () => void; onSubc
             >
                 <HugeiconsIcon icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
+            <MenuContent align="end" className="w-60" sideOffset={4}>
                 <Menu.Item
                     onClick={() =>
-                        navigate({ params: { categoryId: row.localId }, to: "/settings/categories/$categoryId" })
+                        navigate({
+                            params: { categoryId: row.localId },
+                            to: "/settings/categories/$categoryId",
+                            viewTransition: PUSH,
+                        })
                     }
                 >
                     <HugeiconsIcon icon={ArrowUpRight01Icon} size={16} />
@@ -75,7 +84,7 @@ function RowActions({ onEdit, onSubcategory, row }: { onEdit: () => void; onSubc
                     <HugeiconsIcon icon={Delete02Icon} size={16} />
                     {copy.delete}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -85,7 +94,7 @@ function TabbedCard({ children, footer, tabs }: { children: ReactNode; footer?: 
         <Frame className="min-w-0">
             <Frame.Header>{tabs}</Frame.Header>
             <Frame.Panel>{children}</Frame.Panel>
-            {footer ? <Frame.Footer className="flex-wrap text-sm">{footer}</Frame.Footer> : null}
+            {footer ? <Frame.Footer className="text-app-label flex-wrap">{footer}</Frame.Footer> : null}
         </Frame>
     );
 }
@@ -182,8 +191,8 @@ export function Categories() {
                 <Table.Cell align="end" className={FIGURE}>
                     {line?.entries ?? 0}
                 </Table.Cell>
-                <Table.Cell align="end" className={`${CELL} dash-figure text-sm font-medium`}>
-                    {money(line?.spent ?? 0, ledger.currency)}
+                <Table.Cell align="end" className={`${CELL} dash-figure font-medium`}>
+                    <span className="text-app-body">{money(line?.spent ?? 0, ledger.currency)}</span>
                 </Table.Cell>
                 <Table.Cell align="end" className={FIGURE}>
                     {budget ? money(budget.limit, ledger.currency) : null}
@@ -237,71 +246,92 @@ export function Categories() {
                     }
                     tabs={tabs}
                 >
-                    {tree.length === 0 ? (
-                        <p className="text-muted-foreground px-5 py-8 text-center text-sm">{copy.emptyTitle}</p>
-                    ) : (
-                        <Table framed aria-label={copy.title.value} containerClassName={PHONE_COLUMNS} maxHeight="none">
-                            <Table.Header className="in-data-[sticky]:bg-card">
-                                <Table.Row>
-                                    <Table.Head>{copy.category}</Table.Head>
-                                    <Table.Head align="end">{copy.entries}</Table.Head>
-                                    <Table.Head align="end">{date.month(period.key)}</Table.Head>
-                                    <Table.Head align="end">{copy.budget}</Table.Head>
-                                    <Table.Head align="end">{copy.left}</Table.Head>
-                                    <Table.Head className="w-10" />
-                                </Table.Row>
-                            </Table.Header>
-                            <Table.Body>
-                                {tree.flatMap((node) => [
-                                    <Table.Row key={node.localId}>
-                                        <Table.Cell className={CELL}>
-                                            <Link
-                                                className="flex min-w-0 items-center gap-2.5 font-medium"
-                                                params={{ categoryId: node.localId }}
-                                                to="/settings/categories/$categoryId"
-                                            >
-                                                <LookTile look={node} size="lg" />
-                                                <span className="truncate">{node.name}</span>
-                                            </Link>
-                                        </Table.Cell>
-                                        {lineCells(node)}
-                                        <Table.Cell align="end" className={CELL}>
-                                            <RowActions
-                                                onEdit={() => edit({ doc: node })}
-                                                onSubcategory={() =>
-                                                    edit({ income: node.income, parentId: node.localId })
-                                                }
-                                                row={node}
-                                            />
-                                        </Table.Cell>
-                                    </Table.Row>,
-                                    ...node.children.map((child) => (
-                                        <Table.Row key={child.localId}>
+                    <div data-motion="dissolve" key={income ? "income" : "expense"}>
+                        {tree.length === 0 ? (
+                            <Empty
+                                action={
+                                    <Button onClick={() => edit({ income, parentId: null })}>
+                                        <HugeiconsIcon icon={PlusSignIcon} size={16} />
+                                        {copy.newCategory}
+                                    </Button>
+                                }
+                                icon={Tag01Icon}
+                                line={copy.emptyLine}
+                                title={copy.emptyTitle}
+                            />
+                        ) : (
+                            <Table
+                                framed
+                                aria-label={copy.title.value}
+                                containerClassName={PHONE_COLUMNS}
+                                maxHeight="none"
+                            >
+                                <Table.Header className="in-data-[sticky]:bg-card">
+                                    <Table.Row>
+                                        <Table.Head>{copy.category}</Table.Head>
+                                        <Table.Head align="end">{copy.entries}</Table.Head>
+                                        <Table.Head align="end">{date.month(period.key)}</Table.Head>
+                                        <Table.Head align="end">{copy.budget}</Table.Head>
+                                        <Table.Head align="end">{copy.left}</Table.Head>
+                                        <Table.Head className="w-10" />
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
+                                    {tree.flatMap((node) => [
+                                        <Table.Row key={node.localId}>
                                             <Table.Cell className={CELL}>
                                                 <Link
-                                                    className="before:border-border relative flex min-w-0 items-center gap-2.5 pl-8 before:absolute before:top-[-9px] before:left-3.5 before:h-[22px] before:w-3.5 before:rounded-bl-md before:border-b before:border-l"
-                                                    params={{ categoryId: child.localId }}
+                                                    className="flex min-w-0 items-center gap-2.5 font-medium"
+                                                    params={{ categoryId: node.localId }}
                                                     to="/settings/categories/$categoryId"
+                                                    viewTransition={PUSH}
                                                 >
-                                                    <LookTile look={child} />
-                                                    <span className="truncate">{child.name}</span>
+                                                    <LookTile look={node} size="lg" />
+                                                    <span className="truncate">{node.name}</span>
                                                 </Link>
                                             </Table.Cell>
-                                            {lineCells(child)}
+                                            {lineCells(node)}
                                             <Table.Cell align="end" className={CELL}>
-                                                <RowActions onEdit={() => edit({ doc: child })} row={child} />
+                                                <RowActions
+                                                    onEdit={() => edit({ doc: node })}
+                                                    onSubcategory={() =>
+                                                        edit({ income: node.income, parentId: node.localId })
+                                                    }
+                                                    row={node}
+                                                />
                                             </Table.Cell>
-                                        </Table.Row>
-                                    )),
-                                ])}
-                            </Table.Body>
-                        </Table>
-                    )}
+                                        </Table.Row>,
+                                        ...node.children.map((child) => (
+                                            <Table.Row key={child.localId}>
+                                                <Table.Cell className={CELL}>
+                                                    <Link
+                                                        className="before:border-border relative flex min-w-0 items-center gap-2.5 pl-8 before:absolute before:top-[-9px] before:left-3.5 before:h-[22px] before:w-3.5 before:rounded-bl-md before:border-b before:border-l"
+                                                        params={{ categoryId: child.localId }}
+                                                        to="/settings/categories/$categoryId"
+                                                        viewTransition={PUSH}
+                                                    >
+                                                        <LookTile look={child} />
+                                                        <span className="truncate">{child.name}</span>
+                                                    </Link>
+                                                </Table.Cell>
+                                                {lineCells(child)}
+                                                <Table.Cell align="end" className={CELL}>
+                                                    <RowActions onEdit={() => edit({ doc: child })} row={child} />
+                                                </Table.Cell>
+                                            </Table.Row>
+                                        )),
+                                    ])}
+                                </Table.Body>
+                            </Table>
+                        )}
+                    </div>
                 </TabbedCard>
                 {showSuggestions && suggestions.length > 0 && !atExpenseCap ? (
                     <SettingsCard
                         action={
-                            <span className="dash-figure text-muted-foreground text-[13px]">{suggestions.length}</span>
+                            <span className="dash-figure text-muted-foreground text-app-label">
+                                {suggestions.length}
+                            </span>
                         }
                         title={copy.suggested}
                     >

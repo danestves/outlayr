@@ -12,21 +12,22 @@ import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Alert } from "panelui-web/alert";
-import { AlertDialog } from "panelui-web/alert-dialog";
 import { Avatar } from "panelui-web/avatar";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
-import { Field } from "panelui-web/field";
-import { Input } from "panelui-web/input";
 import { Table } from "panelui-web/table";
 import { useToast } from "panelui-web/toast";
 import { useId, useState } from "react";
-import type { ComponentProps, FormEvent, ReactNode } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
 import { signOut } from "@/components/dashboard/shell/account-menu";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DialogContent } from "@/components/ui/dialog-content";
+import { TextField as LabeledInput } from "@/components/ui/text-field";
+import type { TextFieldProps } from "@/components/ui/text-field";
 import { convexDeletionSteps, deletionProvider, runDeletion, storedDeletion } from "@/lib/account-deletion";
 import { accountsQuery, limitsQuery, planQuery, sessionsQuery, useProfile } from "@/lib/account-state";
 import { authClient } from "@/lib/auth-client";
@@ -59,25 +60,22 @@ function useDateText() {
         }).format(new Date(value));
 }
 
-function TextField({ label, ...input }: { label: ReactNode } & ComponentProps<typeof Input>) {
-    return (
-        <Field>
-            <Field.Label>{label}</Field.Label>
-            <Input className="max-sm:text-base" {...input} />
-        </Field>
-    );
+function TextField(props: TextFieldProps) {
+    return <LabeledInput className="max-sm:text-base" {...props} />;
 }
 
 function FormBody({
     children,
     description,
     onSubmit,
+    pending,
     submit,
     title,
 }: {
     children: ReactNode;
     description?: ReactNode;
     onSubmit: (data: FormData) => Promise<void>;
+    pending: ReactNode;
     submit: ReactNode;
     title: ReactNode;
 }) {
@@ -115,8 +113,8 @@ function FormBody({
             </Dialog.Body>
             <Dialog.Footer>
                 <Dialog.Close render={<Button variant="secondary" />}>{account.cancel}</Dialog.Close>
-                <Button form={formId} loading={busy} type="submit">
-                    {submit}
+                <Button aria-busy={busy} disabled={busy} form={formId} type="submit">
+                    {busy ? pending : submit}
                 </Button>
             </Dialog.Footer>
         </>
@@ -126,7 +124,7 @@ function FormBody({
 function FormShell({ children, onClose, open }: { children: ReactNode; onClose: () => void; open: boolean }) {
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open}>
-            <Dialog.Content className="app-shell">{children}</Dialog.Content>
+            <DialogContent>{children}</DialogContent>
         </Dialog>
     );
 }
@@ -141,6 +139,7 @@ function NameBody({ name, onClose }: { name: string; onClose: () => void }) {
                 await succeed(authClient.updateUser({ name: text(data, "name") }));
                 onClose();
             }}
+            pending={account.saving}
             submit={account.save}
             title={account.nameTitle}
         >
@@ -160,6 +159,7 @@ function EmailBody({ onClose }: { onClose: () => void }) {
                     await succeed(authClient.emailOtp.requestEmailChange({ newEmail: address }));
                     setNewEmail(address);
                 }}
+                pending={account.sending}
                 submit={account.sendCode}
                 title={account.emailTitle}
             >
@@ -176,6 +176,7 @@ function EmailBody({ onClose }: { onClose: () => void }) {
                 authClient.$store.notify("$sessionSignal");
                 onClose();
             }}
+            pending={account.confirming}
             submit={account.confirm}
             title={account.emailTitle}
         >
@@ -204,6 +205,7 @@ function ChangePasswordBody({ onClose }: { onClose: () => void }) {
                 );
                 onClose();
             }}
+            pending={account.saving}
             submit={account.save}
             title={account.passwordTitle}
         >
@@ -238,10 +240,11 @@ function AddPasswordBody({ email }: { email: string }) {
                     await succeed(authClient.emailOtp.requestPasswordReset({ email }));
                     setSent(true);
                 }}
+                pending={account.sending}
                 submit={account.sendCode}
                 title={account.addPasswordTitle}
             >
-                <p className="text-sm">{email}</p>
+                <p className="text-app-body">{email}</p>
             </FormBody>
         );
     }
@@ -259,6 +262,7 @@ function AddPasswordBody({ email }: { email: string }) {
                 );
                 await signOut();
             }}
+            pending={account.saving}
             submit={account.save}
             title={account.addPasswordTitle}
         >
@@ -294,7 +298,7 @@ type OpenDialog = "addPassword" | "email" | "name" | "password" | null;
 
 export function Tile({ children }: { children: ReactNode }) {
     return (
-        <span className="bg-app-fill text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
+        <span className="bg-app-fill text-app-muted rounded-app-sm flex size-8 shrink-0 items-center justify-center">
             {children}
         </span>
     );
@@ -340,7 +344,7 @@ function Profile({ onOpen }: { onOpen: (dialog: OpenDialog) => void }) {
                     </Button>
                 </Row>
             </Skeleton>
-            <Skeleton className="border-border border-t" loading={!tierKnown}>
+            <Skeleton className="border-app-rule border-t" loading={!tierKnown}>
                 <Row
                     hint={renews ? account.renews({ date: renews }) : tier}
                     label={account.plan}
@@ -376,6 +380,7 @@ function ProviderRow({
     const client = useQueryClient();
     const toast = useToast();
     const dateText = useDateText();
+    const [unlinking, setUnlinking] = useState(false);
     return (
         <Row
             hint={linked ? `${account.linkedOn.value} ${dateText(linked.linkedAt)}` : account.notLinked}
@@ -387,34 +392,28 @@ function ProviderRow({
             }
         >
             {linked ? (
-                <AlertDialog>
-                    <AlertDialog.Trigger
-                        render={
-                            <Button disabled={lastMethod} size="sm" variant="outline">
-                                {account.unlink}
-                            </Button>
-                        }
+                <>
+                    <Button disabled={lastMethod} onClick={() => setUnlinking(true)} size="sm" variant="outline">
+                        {account.unlink}
+                    </Button>
+                    <ConfirmDialog
+                        action={account.unlink}
+                        body={account.unlinkBody}
+                        cancel={account.cancel}
+                        onAction={async () => {
+                            try {
+                                await succeed(authClient.unlinkAccount({ accountId: linked.id }));
+                                await client.invalidateQueries({ queryKey: accountsQuery.queryKey });
+                            } catch {
+                                toast.add({ title: account.failed.value, type: "destructive" });
+                            }
+                        }}
+                        onOpenChange={setUnlinking}
+                        open={unlinking}
+                        title={account.unlinkTitle}
+                        tone="destructive"
                     />
-                    <AlertDialog.Content className="app-shell" tone="destructive">
-                        <AlertDialog.Title>{account.unlinkTitle}</AlertDialog.Title>
-                        <AlertDialog.Description>{account.unlinkBody}</AlertDialog.Description>
-                        <AlertDialog.Footer>
-                            <AlertDialog.Cancel>{account.cancel}</AlertDialog.Cancel>
-                            <AlertDialog.Action
-                                onClick={async () => {
-                                    try {
-                                        await succeed(authClient.unlinkAccount({ accountId: linked.id }));
-                                        await client.invalidateQueries({ queryKey: accountsQuery.queryKey });
-                                    } catch {
-                                        toast.add({ title: account.failed.value, type: "destructive" });
-                                    }
-                                }}
-                            >
-                                {account.unlink}
-                            </AlertDialog.Action>
-                        </AlertDialog.Footer>
-                    </AlertDialog.Content>
-                </AlertDialog>
+                </>
             ) : (
                 <Button
                     onClick={async () => {
@@ -445,7 +444,7 @@ function Methods({ onOpen }: { onOpen: (dialog: OpenDialog) => void }) {
         <Skeleton loading={data === undefined}>
             <SettingsCard
                 action={
-                    <span className="text-muted-foreground font-mono text-[13px]">
+                    <span className="text-app-muted text-app-label font-mono">
                         {account.of({ count: signIns.length, total: 3 })}
                     </span>
                 }
@@ -531,14 +530,14 @@ function Sessions() {
         <Skeleton loading={loading}>
             <SettingsCard
                 action={
-                    <span className="text-muted-foreground font-mono text-[13px]">
+                    <span className="text-app-muted text-app-label font-mono">
                         {sessions.length} {account.active}
                     </span>
                 }
                 footer={
                     others.length > 0 ? (
                         <div className="flex items-center justify-between gap-3 max-sm:flex-wrap">
-                            <span className="text-muted-foreground text-[13px]">{account.ledgerStays}</span>
+                            <span className="text-app-muted text-app-label">{account.ledgerStays}</span>
                             <Button
                                 onClick={() => revoked(authClient.revokeOtherSessions())}
                                 size="sm"
@@ -574,7 +573,7 @@ function Sessions() {
                                             <span className="truncate">{deviceLabel(item.userAgent, copy)}</span>
                                         </span>
                                     </Table.Cell>
-                                    <Table.Cell className="text-muted-foreground whitespace-nowrap">
+                                    <Table.Cell className="text-app-muted whitespace-nowrap">
                                         {isCurrent ? (
                                             <Badge dot variant="success">
                                                 {account.thisBrowser}
@@ -617,6 +616,7 @@ function DeleteCard() {
     const toast = useToast();
     const userId = useProfile()?.id;
     const [, noteFailure] = useState(0);
+    const [confirming, setConfirming] = useState(false);
     const resumable = userId !== undefined && storedDeletion(userId) !== null;
     const remove = async () => {
         if (userId === undefined) {
@@ -635,28 +635,25 @@ function DeleteCard() {
     return (
         <SettingsCard title={account.deleteTitle}>
             <Row hint={resumable ? account.deleteResume : account.deleteHint} label={account.deleteAccount}>
-                <AlertDialog>
-                    <AlertDialog.Trigger
-                        render={
-                            <Button
-                                className="text-destructive"
-                                disabled={accounts === undefined}
-                                size="sm"
-                                variant="outline"
-                            >
-                                {resumable ? account.deleteFinish : account.deleteTitle}
-                            </Button>
-                        }
-                    />
-                    <AlertDialog.Content className="app-shell" tone="destructive">
-                        <AlertDialog.Title>{account.deleteConfirmTitle}</AlertDialog.Title>
-                        <AlertDialog.Description>{account.deleteConfirmBody}</AlertDialog.Description>
-                        <AlertDialog.Footer>
-                            <AlertDialog.Cancel>{account.cancel}</AlertDialog.Cancel>
-                            <AlertDialog.Action onClick={remove}>{account.deleteAccount}</AlertDialog.Action>
-                        </AlertDialog.Footer>
-                    </AlertDialog.Content>
-                </AlertDialog>
+                <Button
+                    className="text-app-spend"
+                    disabled={accounts === undefined}
+                    onClick={() => setConfirming(true)}
+                    size="sm"
+                    variant="outline"
+                >
+                    {resumable ? account.deleteFinish : account.deleteTitle}
+                </Button>
+                <ConfirmDialog
+                    action={account.deleteAccount}
+                    body={account.deleteConfirmBody}
+                    cancel={account.cancel}
+                    onAction={remove}
+                    onOpenChange={setConfirming}
+                    open={confirming}
+                    title={account.deleteConfirmTitle}
+                    tone="destructive"
+                />
             </Row>
         </SettingsCard>
     );
@@ -676,7 +673,7 @@ export function Account() {
         <>
             <SectionHead
                 action={
-                    <Button onClick={signOut} size="sm" variant="outline">
+                    <Button onClick={signOut} variant="outline">
                         <HugeiconsIcon icon={Logout03Icon} size={16} />
                         {account.signOut}
                     </Button>

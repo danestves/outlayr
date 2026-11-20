@@ -1,4 +1,5 @@
 import AlertCircleIcon from "@hugeicons/core-free-icons/AlertCircleIcon";
+import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import Download04Icon from "@hugeicons/core-free-icons/Download04Icon";
 import FolderOpenIcon from "@hugeicons/core-free-icons/FolderOpenIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -6,7 +7,6 @@ import { transactionsToCsv } from "@outlayr/money/transaction-csv";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouteContext, useSearch } from "@tanstack/react-router";
 import { Alert } from "panelui-web/alert";
-import { AlertDialog } from "panelui-web/alert-dialog";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Chip } from "panelui-web/chip";
@@ -22,10 +22,13 @@ import type { DragEvent, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
+import { Empty } from "@/components/dashboard/home/empty";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { MerchantTile } from "@/components/ledger/tiles";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DialogContent } from "@/components/ui/dialog-content";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { pushRows } from "@/lib/ledger-write";
 
@@ -55,7 +58,6 @@ const CELL = "whitespace-nowrap";
 const WIDE = "max-md:hidden";
 const TWO_UP = "grid items-start gap-4 lg:grid-cols-2";
 const nowMs = () => Date.now();
-const GHOST_ROWS = ["a", "b", "c", "d", "e", "f"];
 const PLACEHOLDER_ROWS: readonly PulledRow[] = ["a", "b", "c"].map((localId) => ({
     deletedAt: 0,
     fields: { amount: 10_000, date: 0, income: false, note: "Placeholder" },
@@ -71,7 +73,7 @@ const useLiveEntries = () => {
 };
 
 const FileTile = () => (
-    <span className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-lg">
+    <span className="bg-muted text-muted-foreground rounded-app-sm flex size-7 shrink-0 items-center justify-center">
         <HugeiconsIcon icon={FolderOpenIcon} size={16} />
     </span>
 );
@@ -164,7 +166,7 @@ function ExportTab() {
                     <SettingsCard
                         action={
                             csv.first === undefined || csv.last === undefined ? null : (
-                                <span className="dash-figure text-muted-foreground text-[13px]">
+                                <span className="dash-figure text-muted-foreground text-app-label">
                                     {date.day(localDay(csv.first))} - {date.day(localDay(csv.last))}
                                 </span>
                             )
@@ -223,7 +225,7 @@ function ExportTab() {
                                 </span>
                             }
                         >
-                            <Button disabled={busy} onClick={save} size="sm">
+                            <Button aria-busy={busy} disabled={busy} onClick={save} size="sm">
                                 <HugeiconsIcon icon={Download04Icon} size={16} />
                                 {busy ? copy.preparing : exportLabel}
                             </Button>
@@ -234,12 +236,14 @@ function ExportTab() {
             {isArchive ? null : (
                 <div className="flex min-w-0 flex-col gap-4">
                     <SettingsCard
-                        action={<span className="dash-figure text-muted-foreground text-[13px]">{header?.length}</span>}
+                        action={
+                            <span className="dash-figure text-muted-foreground text-app-label">{header?.length}</span>
+                        }
                         title={copy.columns}
                     >
                         {header?.map((name, index) => (
                             <Row key={name} label={name}>
-                                <span className="dash-figure text-muted-foreground max-w-[50%] truncate text-[13px]">
+                                <span className="dash-figure text-muted-foreground text-app-label max-w-1/2 truncate">
                                     {sample?.[index]}
                                 </span>
                             </Row>
@@ -247,7 +251,7 @@ function ExportTab() {
                     </SettingsCard>
                     <SettingsCard title={copy.notInFile}>
                         {[copy.leftNotes, copy.leftPhotos, copy.leftLooks, copy.leftSchedules].map((line) => (
-                            <p className="text-muted-foreground px-4 py-2.5 text-[13px]" key={line.value}>
+                            <p className="text-muted-foreground text-app-label px-4 py-2.5" key={line.value}>
                                 {line}
                             </p>
                         ))}
@@ -331,26 +335,26 @@ function RestoreTab({ onExport }: { onExport: () => void }) {
     ] as const;
     const restoreFooter = badName ? (
         <div className="flex w-full flex-wrap items-center justify-between gap-2">
-            <span className="dash-figure text-muted-foreground truncate text-[13px]">{badName}</span>
+            <span className="dash-figure text-muted-foreground text-app-label truncate">{badName}</span>
             <Button onClick={() => input.current?.click()} size="sm" variant="outline">
                 {copy.another}
             </Button>
         </div>
     ) : (
-        restoring && <span className="text-muted-foreground text-[13px]">{copy.keepOpen}</span>
+        restoring && <span className="text-muted-foreground text-app-label">{copy.keepOpen}</span>
     );
     const ledgerStatus = badName ? copy.notChanged : copy.replaced;
     return (
         <div className={TWO_UP}>
             <SettingsCard footer={restoreFooter} title={copy.title}>
-                <p className="text-muted-foreground px-4 py-3 text-[13px] leading-5">{copy.intro}</p>
+                <p className="text-muted-foreground text-app-label px-4 py-3">{copy.intro}</p>
                 {chooser}
                 {badName ? (
                     <Row
                         hint={copy.badBody}
                         label={copy.badTitle}
                         leading={
-                            <span className="bg-destructive/10 text-destructive flex size-7 shrink-0 items-center justify-center rounded-lg">
+                            <span className="bg-destructive/10 text-destructive rounded-app-sm flex size-7 shrink-0 items-center justify-center">
                                 <HugeiconsIcon icon={AlertCircleIcon} size={16} />
                             </span>
                         }
@@ -360,7 +364,12 @@ function RestoreTab({ onExport }: { onExport: () => void }) {
                     <Row
                         hint={
                             <>
-                                <span className="block font-mono">{picked?.name}</span>
+                                <span className="flex items-baseline justify-between gap-2">
+                                    <span className="min-w-0 truncate font-mono">{picked?.name}</span>
+                                    <span className="dash-figure">
+                                        {progress.done} / {progress.total}
+                                    </span>
+                                </span>
                                 {/* PanelUI has no progress part. */}
                                 <span className="bg-muted mt-1.5 block h-1 overflow-hidden rounded-full">
                                     <span
@@ -388,13 +397,13 @@ function RestoreTab({ onExport }: { onExport: () => void }) {
                 {badName || picked || restoring ? null : (
                     // PanelUI has no file drop target.
                     <div
-                        className="border-border m-4 flex flex-col items-center gap-1 rounded-xl border border-dashed px-4 py-8 text-center"
+                        className="border-border rounded-app-lg m-4 flex flex-col items-center gap-1 border border-dashed px-4 py-8 text-center"
                         onDragOver={(event) => event.preventDefault()}
                         onDrop={onDrop}
                     >
                         <HugeiconsIcon className="text-muted-foreground mb-1" icon={FolderOpenIcon} size={20} />
-                        <b className="text-sm font-medium">{copy.action}</b>
-                        <span className="text-muted-foreground mb-3 text-[13px]">{copy.drop}</span>
+                        <b className="text-app-body font-medium">{copy.action}</b>
+                        <span className="text-muted-foreground text-app-label mb-3">{copy.drop}</span>
                         <Button onClick={() => input.current?.click()} size="sm">
                             {copy.choose}
                         </Button>
@@ -403,14 +412,14 @@ function RestoreTab({ onExport }: { onExport: () => void }) {
             </SettingsCard>
             <SettingsCard
                 action={
-                    <span className="dash-figure text-muted-foreground text-[13px]">
+                    <span className="dash-figure text-muted-foreground text-app-label">
                         {restoring ? copy.beingReplaced : ledgerStatus}
                     </span>
                 }
                 footer={
                     restoring || badName ? null : (
                         <div className="flex w-full flex-wrap items-center justify-between gap-2">
-                            <span className="text-muted-foreground text-[13px]">{copy.exportFirst}</span>
+                            <span className="text-muted-foreground text-app-label">{copy.exportFirst}</span>
                             <Button onClick={onExport} size="sm" variant="outline">
                                 <HugeiconsIcon icon={Download04Icon} size={16} />
                                 {exportLabel}
@@ -422,22 +431,20 @@ function RestoreTab({ onExport }: { onExport: () => void }) {
             >
                 {counts.map(([label, count]) => (
                     <Row key={label.value} label={label}>
-                        <span className="dash-figure text-sm">{count}</span>
+                        <span className="dash-figure text-app-body">{count}</span>
                     </Row>
                 ))}
             </SettingsCard>
-            <AlertDialog onOpenChange={setConfirming} open={confirming}>
-                <AlertDialog.Content className="app-shell" tone="destructive">
-                    <AlertDialog.Title>{copy.confirmTitle}</AlertDialog.Title>
-                    <AlertDialog.Description>
-                        {copy.confirmBody({ count: picked ? archiveRowCount(picked.document) : 0 })}
-                    </AlertDialog.Description>
-                    <AlertDialog.Footer>
-                        <AlertDialog.Cancel>{copy.cancel}</AlertDialog.Cancel>
-                        <AlertDialog.Action onClick={replace}>{copy.replace}</AlertDialog.Action>
-                    </AlertDialog.Footer>
-                </AlertDialog.Content>
-            </AlertDialog>
+            <ConfirmDialog
+                action={copy.replace}
+                body={copy.confirmBody({ count: picked ? archiveRowCount(picked.document) : 0 })}
+                cancel={copy.cancel}
+                onAction={replace}
+                onOpenChange={setConfirming}
+                open={confirming}
+                title={copy.confirmTitle}
+                tone="destructive"
+            />
         </div>
     );
 }
@@ -484,32 +491,16 @@ function DeletedTab() {
         <SettingsCard
             action={
                 list.length === 0 ? null : (
-                    <span className="dash-figure text-muted-foreground text-[13px]">{list.length}</span>
+                    <span className="dash-figure text-muted-foreground text-app-label">{list.length}</span>
                 )
             }
-            footer={list.length > 0 ? <span className="text-muted-foreground text-[13px]">{copy.footer}</span> : null}
+            footer={
+                list.length > 0 ? <span className="text-muted-foreground text-app-label">{copy.footer}</span> : null
+            }
             title={copy.title}
         >
             {list.length === 0 && !loading ? (
-                <div>
-                    <div aria-hidden className="divide-y mask-b-from-40%">
-                        {GHOST_ROWS.map((row) => (
-                            <div className="flex items-center gap-3 px-4 py-2" key={row}>
-                                <span className="border-border size-5 rounded-md border" />
-                                <span className="bg-muted h-1.5 w-14 rounded-full" />
-                                <span className="border-border ms-auto h-4 w-16 rounded-md border" />
-                                <span className="bg-muted h-1.5 w-12 rounded-full" />
-                                <span className="bg-muted h-1.5 w-12 rounded-full" />
-                            </div>
-                        ))}
-                    </div>
-                    <div className="px-5 pt-4 pb-10 text-center">
-                        <b className="text-sm font-semibold">{copy.emptyTitle}</b>
-                        <p className="text-muted-foreground mx-auto mt-1 max-w-[300px] text-[13px] leading-5">
-                            {copy.emptyBody}
-                        </p>
-                    </div>
-                </div>
+                <Empty icon={Delete02Icon} line={copy.emptyBody} title={copy.emptyTitle} />
             ) : (
                 <Skeleton loading={loading}>
                     <Table aria-label={copy.title.value} framed maxHeight="none">
@@ -534,7 +525,7 @@ function DeletedTab() {
                                 );
                                 return (
                                     <Table.Row key={row.localId}>
-                                        <Table.Cell className={`${CELL} max-w-[220px] font-medium`}>
+                                        <Table.Cell className={`${CELL} max-w-56 font-medium`}>
                                             <span className="flex min-w-0 items-center gap-2.5">
                                                 <MerchantTile name={note} />
                                                 <span className="truncate">{note}</span>
@@ -548,7 +539,7 @@ function DeletedTab() {
                                             ) : null}
                                         </Table.Cell>
                                         <Table.Cell
-                                            className={`${CELL} ${WIDE} text-muted-foreground max-w-[180px] truncate`}
+                                            className={`${CELL} ${WIDE} text-muted-foreground max-w-44 truncate`}
                                         >
                                             {ledger.accounts.get(String(row.fields.accountId))?.name}
                                         </Table.Cell>
@@ -558,8 +549,10 @@ function DeletedTab() {
                                         <Table.Cell className={`${CELL} ${WIDE} dash-figure text-muted-foreground`}>
                                             {date.day(localDay(row.deletedAt ?? 0))}
                                         </Table.Cell>
-                                        <Table.Cell align="end" className={`${CELL} dash-figure text-sm font-medium`}>
-                                            {row.fields.income ? amount : `-${amount}`}
+                                        <Table.Cell align="end" className={`${CELL} dash-figure font-medium`}>
+                                            <span className="text-app-body">
+                                                {row.fields.income ? amount : `-${amount}`}
+                                            </span>
                                         </Table.Cell>
                                         <Table.Cell align="end" className={CELL}>
                                             {loading ? null : (
@@ -652,8 +645,14 @@ function EraseBody({
                 <Dialog.Close disabled={busy} render={<Button variant="secondary" />}>
                     {restoreCopy.cancel}
                 </Dialog.Close>
-                <Button disabled={typed !== word || busy} form={formId} type="submit" variant="destructive">
-                    {copy.confirmAction({ count })}
+                <Button
+                    aria-busy={busy}
+                    disabled={typed !== word || busy}
+                    form={formId}
+                    type="submit"
+                    variant="destructive"
+                >
+                    {busy ? copy.erasing : copy.confirmAction({ count })}
                 </Button>
             </Dialog.Footer>
         </>
@@ -675,9 +674,9 @@ function EraseDialog({
 }) {
     return (
         <Dialog onOpenChange={(next) => next || busy || onClose()} open={open}>
-            <Dialog.Content className="app-shell">
+            <DialogContent>
                 {scope ? <EraseBody busy={busy} onBusy={onBusy} onClose={onClose} scope={scope} /> : null}
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }
@@ -697,11 +696,11 @@ function EraseTab({ onExport }: { onExport: () => void }) {
         <div className={TWO_UP}>
             <SettingsCard
                 action={
-                    <span className="dash-figure text-muted-foreground text-[13px]">
+                    <span className="dash-figure text-muted-foreground text-app-label">
                         {count} {copy.logged}
                     </span>
                 }
-                footer={<span className="text-muted-foreground text-[13px]">{copy.footer}</span>}
+                footer={<span className="text-muted-foreground text-app-label">{copy.footer}</span>}
                 title={copy.title}
             >
                 <Row hint={copy.transactionsOnlyHint} label={copy.transactionsOnly}>
@@ -768,7 +767,7 @@ export function DataSettings() {
                     </Tabs.List>
                 </div>
             </Tabs>
-            <div className="pt-4 pb-5">
+            <div className="pt-4 pb-5" data-motion="dissolve" key={tab}>
                 {tab === "export" ? <ExportTab /> : null}
                 {tab === "restore" ? <RestoreTab onExport={() => open("export")} /> : null}
                 {tab === "deleted" ? <DeletedTab /> : null}

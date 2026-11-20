@@ -35,21 +35,21 @@ const GPL_LINK = "https://www.gnu.org/licenses/gpl-3.0.html";
 
 function Tile({ children }: { children: ReactNode }) {
     return (
-        <span className="bg-app-fill text-muted-foreground flex size-[26px] shrink-0 items-center justify-center rounded-lg">
+        <span className="bg-app-fill text-app-muted rounded-app-sm flex size-6.5 shrink-0 items-center justify-center">
             {children}
         </span>
     );
 }
 
 const ROW =
-    "border-border hover:bg-accent/40 flex min-h-12 w-full items-center gap-2.5 border-t px-4 text-left text-sm font-medium first:border-t-0";
+    "border-app-rule hover:bg-app-hover text-app-body flex min-h-12 w-full items-center gap-2.5 border-t px-4 text-left font-medium first:border-t-0";
 
 function ExternalRow({ href, icon, label }: { href: string; icon: ReactNode; label: ReactNode }) {
     return (
         <a className={ROW} href={href} rel="noreferrer" target="_blank">
             <Tile>{icon}</Tile>
             <span className="min-w-0 flex-1 truncate">{label}</span>
-            <HugeiconsIcon icon={LinkSquare02Icon} className="text-muted-foreground size-4" />
+            <HugeiconsIcon icon={LinkSquare02Icon} className="text-app-muted size-4" />
         </a>
     );
 }
@@ -59,7 +59,7 @@ function ActionRow({ icon, label, onClick }: { icon: ReactNode; label: ReactNode
         <button className={ROW} onClick={onClick} type="button">
             <Tile>{icon}</Tile>
             <span className="min-w-0 flex-1 truncate">{label}</span>
-            <HugeiconsIcon icon={ArrowRight01Icon} className="text-muted-foreground size-[18px]" />
+            <HugeiconsIcon icon={ArrowRight01Icon} className="text-app-muted size-4.5" />
         </button>
     );
 }
@@ -80,14 +80,14 @@ function AboutTabView({ onLicenses }: { onLicenses: () => void }) {
             <div className="flex min-w-0 flex-col gap-4">
                 <SettingsCard
                     action={
-                        <span className="text-muted-foreground font-mono text-[13px]">
+                        <span className="text-app-muted text-app-label font-mono">
                             {copy.version({ version: packageJson.version })}
                         </span>
                     }
                     title="Outlayr"
                 >
-                    <p className="text-muted-foreground px-4 py-3 text-[13px] leading-5">{copy.intro}</p>
-                    <div className="border-border border-t">
+                    <p className="text-app-muted text-app-label px-4 py-3">{copy.intro}</p>
+                    <div className="border-app-rule border-t">
                         <ActionRow
                             icon={<HugeiconsIcon icon={Share01Icon} size={15} />}
                             label={copy.share}
@@ -101,7 +101,7 @@ function AboutTabView({ onLicenses }: { onLicenses: () => void }) {
                     </div>
                 </SettingsCard>
                 <SettingsCard title={copy.licence}>
-                    <div className="text-muted-foreground flex flex-col gap-2.5 px-4 py-3 text-[13px] leading-5">
+                    <div className="text-app-muted text-app-label flex flex-col gap-2.5 px-4 py-3">
                         <p>{copy.fork}</p>
                         <p>{copy.copyright}</p>
                         <p>{copy.warranty}</p>
@@ -184,7 +184,7 @@ export function AboutSettings() {
                     <Tabs.Trigger value="lab">{copy.featureLab}</Tabs.Trigger>
                 </Tabs.List>
             </Tabs>
-            <div className="pt-4">
+            <div className="pt-4" data-motion="dissolve" key={tab}>
                 {tab === "about" ? <AboutTabView onLicenses={() => open("licenses")} /> : null}
                 {tab === "licenses" ? (
                     <Suspense fallback={null}>

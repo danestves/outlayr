@@ -1,4 +1,5 @@
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
+import Note01Icon from "@hugeicons/core-free-icons/Note01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { useNavigate } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
@@ -11,6 +12,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { Pick } from "@/components/dashboard/transactions/entry-form";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
@@ -24,19 +26,10 @@ import { AccountPick, NONE, useEntryDay } from "./file-parts";
 import { HEAD } from "./history";
 import { Banner, Card, Columns, FileHead, FileStats, ImportBar, ImportPage, NOTE } from "./parts";
 
-const ROW = "h-[61px] px-3 py-0 align-middle text-[13px] first:ps-4 last:pe-4";
+const ROW = "h-[61px] px-3 py-0 align-middle text-app-label! first:ps-4 last:pe-4";
 const PREVIEW_ROWS = 3;
 const SAMPLE = 3;
 const MONTHS_IN_YEAR = 12;
-
-const SKELETON_WIDTHS = [
-    [40, 60, 40, 60],
-    [60, 100, 40, 60],
-    [60, 90, 50, 80],
-    [80, 120, 40, 60],
-    [50, 100, 40, 70],
-    [40, 80, 40, 60],
-] as const;
 
 const NEEDS = ["date", "label", "amount"] as const;
 
@@ -72,7 +65,7 @@ function DateChoice({
     return (
         <Card
             action={
-                <Badge className="h-6 gap-1.5 rounded-md px-2 text-xs font-medium" variant="warning">
+                <Badge className="rounded-app-xs text-app-caption! h-6 gap-1.5 px-2 font-medium" variant="warning">
                     <i className="size-1.5 rounded-full bg-current" />
                     {match.needsChoice}
                 </Badge>
@@ -94,10 +87,10 @@ function DateChoice({
                 value={picked}
             >
                 {(["monthFirst", "dayFirst"] as const).map((order) => (
-                    <RadioGroup.Card className="py-[11px]" key={order} value={order}>
+                    <RadioGroup.Card className="py-2.75" key={order} value={order}>
                         <RadioGroup.CardBody>
                             <RadioGroup.CardTitle>{match[order]}</RadioGroup.CardTitle>
-                            <RadioGroup.CardDescription className="dash-figure text-xs leading-4">
+                            <RadioGroup.CardDescription className="dash-figure text-app-caption! leading-4">
                                 {formatLabel(options[order])}
                             </RadioGroup.CardDescription>
                         </RadioGroup.CardBody>
@@ -127,25 +120,25 @@ function DateChoice({
                         const dayAt = dayOf.get(row.index);
                         return (
                             <Table.Row key={row.index}>
-                                <Table.Cell className="dash-figure text-muted-foreground h-[45px] px-3 py-0 text-[13px] first:ps-4">
+                                <Table.Cell className="dash-figure text-muted-foreground text-app-label! h-[45px] px-3 py-0 first:ps-4">
                                     {row.dateText}
                                 </Table.Cell>
-                                <Table.Cell className="h-[45px] px-3 py-0 text-[13px] font-medium">
+                                <Table.Cell className="text-app-label! h-[45px] px-3 py-0 font-medium">
                                     {tidyLabel(row.label)}
                                 </Table.Cell>
                                 <Table.Cell
-                                    className={`dash-figure h-[45px] px-3 py-0 text-[13px] ${picked === "monthFirst" ? "" : "text-muted-foreground"}`}
+                                    className={`dash-figure text-app-label! h-[45px] px-3 py-0 ${picked === "monthFirst" ? "" : "text-muted-foreground"}`}
                                 >
                                     {day(row.at)}
                                 </Table.Cell>
                                 <Table.Cell
-                                    className={`dash-figure h-[45px] px-3 py-0 text-[13px] ${picked === "dayFirst" ? "" : "text-muted-foreground"}`}
+                                    className={`dash-figure text-app-label! h-[45px] px-3 py-0 ${picked === "dayFirst" ? "" : "text-muted-foreground"}`}
                                 >
                                     {dayAt === undefined ? "–" : day(dayAt)}
                                 </Table.Cell>
                                 <Table.Cell
                                     align="end"
-                                    className={`dash-figure h-[45px] px-3 py-0 text-sm last:pe-4 ${row.income ? "text-app-income" : ""}`}
+                                    className={`dash-figure text-app-body! h-[45px] px-3 py-0 last:pe-4 ${row.income ? "text-app-income" : ""}`}
                                 >
                                     {money(
                                         row.income ? row.amount : -row.amount,
@@ -174,7 +167,7 @@ function Preview({ draft, file, format }: { draft: Draft; file: CsvFile; format:
             <Frame.Header>
                 <Frame.Title as="h2">{match.preview}</Frame.Title>
                 {ready ? (
-                    <Frame.Action className="text-muted-foreground justify-self-end text-[13px]">
+                    <Frame.Action className="text-muted-foreground text-app-label! justify-self-end">
                         {match.previewCount({ shown: Math.min(PREVIEW_ROWS, rows.length), total: file.rows.length })}
                     </Frame.Action>
                 ) : null}
@@ -194,15 +187,15 @@ function Preview({ draft, file, format }: { draft: Draft; file: CsvFile; format:
                         <Table.Body>
                             {rows.slice(0, PREVIEW_ROWS).map((row) => (
                                 <Table.Row key={row.index}>
-                                    <Table.Cell className="dash-figure text-muted-foreground h-[45px] px-3 py-0 text-sm first:ps-4">
+                                    <Table.Cell className="dash-figure text-muted-foreground text-app-body! h-[45px] px-3 py-0 first:ps-4">
                                         {day(row.at)}
                                     </Table.Cell>
-                                    <Table.Cell className="h-[45px] px-3 py-0 text-sm">
+                                    <Table.Cell className="text-app-body! h-[45px] px-3 py-0">
                                         {tidyLabel(row.label)}
                                     </Table.Cell>
                                     <Table.Cell
                                         align="end"
-                                        className={`dash-figure h-[45px] px-3 py-0 text-sm last:pe-4 ${row.income ? "text-app-income" : ""}`}
+                                        className={`dash-figure text-app-body! h-[45px] px-3 py-0 last:pe-4 ${row.income ? "text-app-income" : ""}`}
                                     >
                                         {money(
                                             row.income ? row.amount : -row.amount,
@@ -215,29 +208,7 @@ function Preview({ draft, file, format }: { draft: Draft; file: CsvFile; format:
                         </Table.Body>
                     </Table>
                 ) : (
-                    <div className="relative flex flex-1 flex-col">
-                        <div
-                            aria-hidden
-                            className="absolute inset-0 overflow-hidden"
-                            style={{ maskImage: "linear-gradient(to bottom, #000 55%, transparent)" }}
-                        >
-                            {SKELETON_WIDTHS.map((widths, row) => (
-                                <div className="grid h-[42px] grid-cols-4 items-center border-b px-4" key={row}>
-                                    {widths.map((width, cell) => (
-                                        <i
-                                            className={`bg-app-fill h-2 rounded-full ${cell === widths.length - 1 ? "justify-self-end" : ""}`}
-                                            key={cell}
-                                            style={{ width }}
-                                        />
-                                    ))}
-                                </div>
-                            ))}
-                        </div>
-                        <div className="relative mt-auto flex flex-col items-center px-4 py-10 text-center">
-                            <b className="text-sm font-semibold">{match.noPreview}</b>
-                            <p className="text-muted-foreground mt-1 text-[13px]">{match.noPreviewHint}</p>
-                        </div>
-                    </div>
+                    <Empty icon={Note01Icon} line={match.noPreviewHint} title={match.noPreview} />
                 )}
             </Frame.Panel>
         </>
@@ -378,7 +349,7 @@ export function MatchStep({
                             <Card title={match.needed}>
                                 <div className="pt-4 pb-2 [&>div:not(:first-child)]:border-t">
                                     {NEEDS.map((need) => (
-                                        <div className="flex min-h-9 items-center gap-3 px-4 text-[13px]" key={need}>
+                                        <div className="text-app-label flex min-h-9 items-center gap-3 px-4" key={need}>
                                             <span className="text-muted-foreground">{match.need[need]}</span>
                                             <Glyph
                                                 className={`ms-auto ${needs.includes(need) ? "text-destructive" : "text-app-income"}`}
@@ -396,11 +367,11 @@ export function MatchStep({
                                         <div className="p-4">
                                             {accounts.length === 0 ? (
                                                 <>
-                                                    <p className="text-muted-foreground text-[13px] leading-5">
+                                                    <p className="text-muted-foreground text-app-label leading-5">
                                                         {match.noAccountNote}
                                                     </p>
                                                     <button
-                                                        className="text-primary mt-1 cursor-pointer text-[13px] leading-5 font-medium hover:underline"
+                                                        className="text-primary text-app-label mt-1 cursor-pointer leading-5 font-medium hover:underline"
                                                         onClick={() => navigate({ to: "/accounts" })}
                                                         type="button"
                                                     >
@@ -436,10 +407,10 @@ export function MatchStep({
                 <Frame className="min-w-0 flex-1">
                     <Frame.Header>
                         <Frame.Title as="h2">{match.title}</Frame.Title>
-                        <Frame.Action className="justify-self-end text-[13px]">
+                        <Frame.Action className="text-app-label! justify-self-end">
                             {needs.length > 0 ? (
                                 <Badge
-                                    className="h-6 gap-1.5 rounded-md px-2 text-xs font-medium"
+                                    className="rounded-app-xs text-app-caption! h-6 gap-1.5 px-2 font-medium"
                                     variant="destructive"
                                 >
                                     <i className="size-1.5 rounded-full bg-current" />
@@ -478,7 +449,9 @@ export function MatchStep({
                                     const bad = column === dateColumn && unreadable;
                                     return (
                                         <Table.Row key={`${name}-${column}`}>
-                                            <Table.Cell className={`${ROW} text-sm font-medium`}>{name}</Table.Cell>
+                                            <Table.Cell className={`${ROW} text-app-body! font-medium`}>
+                                                {name}
+                                            </Table.Cell>
                                             <Table.Cell
                                                 className={`${ROW} dash-figure text-muted-foreground max-w-0 truncate max-md:hidden`}
                                             >

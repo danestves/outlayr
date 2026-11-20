@@ -1,7 +1,5 @@
 import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Link, useRouteContext } from "@tanstack/react-router";
-import { Button } from "panelui-web/button";
 import { ChoiceCards } from "panelui-web/choice-cards";
 import { Frame } from "panelui-web/frame";
 import { Label } from "panelui-web/label";
@@ -12,22 +10,20 @@ import { useId } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { IconButton } from "@/components/ui/icon-button";
 import { writeSettings } from "@/lib/ledger-settings";
 
 export function SectionHead({ action, title }: { action?: ReactNode; title: ReactNode }) {
     const { title: settings } = useIntlayer("dashboard-settings");
     return (
         <div className="flex min-h-16 items-center gap-2 max-lg:min-h-12">
-            <Button
-                aria-label={settings.value}
+            <IconButton
                 className="-ml-2.5 lg:hidden"
+                icon={ArrowLeft01Icon}
+                label={settings.value}
                 render={<Link to="/settings" />}
-                size="icon"
-                variant="ghost"
-            >
-                <HugeiconsIcon icon={ArrowLeft01Icon} size={22} />
-            </Button>
-            <h1 className="mr-auto shrink-0 text-lg font-semibold tracking-[-0.02em]">{title}</h1>
+            />
+            <h1 className="text-app-heading mr-auto shrink-0 font-semibold">{title}</h1>
             {action}
         </div>
     );
@@ -70,13 +66,13 @@ export function Row({
     labelFor?: string;
 }) {
     return (
-        <div className="border-border flex items-center gap-3 border-t px-4 py-3 first:border-t-0 max-sm:flex-wrap max-sm:gap-y-2">
+        <div className="border-app-rule min-h-app-row flex items-center gap-3 border-t px-4 py-2 first:border-t-0 max-sm:flex-wrap max-sm:gap-y-2">
             {leading}
             <div className="min-w-0 flex-1">
-                <Label className="block text-sm leading-5 font-medium" htmlFor={labelFor}>
+                <Label className="block" htmlFor={labelFor}>
                     {label}
                 </Label>
-                {hint ? <p className="text-muted-foreground text-sm leading-5">{hint}</p> : null}
+                {hint ? <p className="text-app-body text-app-muted">{hint}</p> : null}
             </div>
             {children}
         </div>

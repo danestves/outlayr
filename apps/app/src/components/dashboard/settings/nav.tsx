@@ -52,18 +52,18 @@ export function SettingsNav({ list = false }: { list?: boolean }) {
                             activeProps={{ "data-on": "" }}
                             className={
                                 list
-                                    ? "border-border flex h-12 items-center gap-3 border-b text-[15px]"
-                                    : "group text-muted-foreground hover:text-foreground data-on:bg-accent data-on:text-foreground flex h-[34px] items-center gap-2.5 rounded-[10px] px-2.5 text-[13px] font-medium"
+                                    ? "border-app-rule text-app-title flex h-12 items-center gap-3 border-b"
+                                    : "group text-app-muted hover:text-app-ink data-on:bg-app-fill data-on:text-app-ink text-app-label rounded-app-md flex h-8.5 items-center gap-2.5 px-2.5 font-medium"
                             }
                             to={to}
                         >
                             <HugeiconsIcon
                                 icon={Icon}
-                                className="text-muted-foreground group-data-on:text-primary size-4 shrink-0"
+                                className="text-app-muted group-data-on:text-app-tint size-4 shrink-0"
                             />
                             <span className="min-w-0 flex-1 truncate">{sections[key]}</span>
                             {list ? (
-                                <HugeiconsIcon icon={ArrowRight01Icon} className="text-muted-foreground size-[18px]" />
+                                <HugeiconsIcon icon={ArrowRight01Icon} className="text-app-muted size-4.5" />
                             ) : null}
                         </Link>
                     );

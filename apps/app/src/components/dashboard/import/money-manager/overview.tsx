@@ -70,11 +70,11 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                     <>
                         <Card title={overview.comingOver}>
                             <div className="px-4 py-3">
-                                <b className="dash-figure block text-2xl leading-8 font-semibold">
+                                <b className="dash-figure text-app-figure block leading-8 font-semibold">
                                     {fill(overview.entries.value, { n: count.toLocaleString() })}
                                 </b>
                                 {analysis.firstDay && analysis.lastDay ? (
-                                    <small className="text-muted-foreground text-xs leading-4">
+                                    <small className="text-muted-foreground text-app-caption leading-4">
                                         {fill(overview.range.value, {
                                             from: monthYear(analysis.firstDay),
                                             to: monthYear(analysis.lastDay),
@@ -84,14 +84,14 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                                 <ul className="mt-3 flex h-20 items-end gap-2">
                                     {analysis.perYear.map((year) => (
                                         <li
-                                            className="flex h-full min-w-0 flex-1 flex-col gap-1.5 text-xs"
+                                            className="text-app-caption flex h-full min-w-0 flex-1 flex-col gap-1.5"
                                             key={year.year}
                                             title={year.count.toLocaleString()}
                                         >
                                             <span className="flex min-h-0 flex-1 items-end">
                                                 <span
                                                     aria-hidden
-                                                    className="bg-primary w-full rounded-sm"
+                                                    className="bg-primary rounded-app-xs w-full"
                                                     style={{
                                                         height: `${Math.max(BAR_MIN, (year.count / peak) * 100)}%`,
                                                     }}
@@ -109,7 +109,9 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                             <ValueRow label={overview.reminders} value={analysis.reminderCount} />
                         </Card>
                         <Card title={overview.undo}>
-                            <p className="text-muted-foreground px-4 py-3 text-sm leading-5">{overview.undoBody}</p>
+                            <p className="text-muted-foreground text-app-body px-4 py-3 leading-5">
+                                {overview.undoBody}
+                            </p>
                         </Card>
                     </>
                 }
@@ -117,7 +119,7 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                 {needsCount > 0 ? (
                     <Card
                         action={
-                            <span className="dash-figure flex items-center gap-1.5 text-xs">
+                            <span className="dash-figure text-app-caption flex items-center gap-1.5">
                                 <span aria-hidden className="bg-app-tint size-1.5 rounded-full" />
                                 {needsCount}
                             </span>
