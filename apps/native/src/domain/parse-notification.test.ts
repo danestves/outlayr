@@ -158,6 +158,28 @@ describe("parseNotification", () => {
         ).toBeNull();
     });
 
+    it("drops a reminder of a payment due, on device and before the AI read", () => {
+        for (const text of [
+            "Equipo Cashea\nMañana vencen tus pagos ⏰\nPuedes pagar desde la app.\nPaga hoy y duplica tus puntos\nQueremos recordarte que mañana vencen algunos de tus pagos.\nSi los haces hoy, duplicarás tus puntos, mantendrás tu línea de compra activa, y evitas el cargo por atraso de $4.",
+            "Tu cuota de $25,00 vence mañana",
+            "Your payment of $50.00 is due tomorrow. Pay today to avoid a late fee.",
+            "Recordatorio de pago: tu factura de Bs. 320,00 está por vencer",
+        ]) {
+            expect(parseNotification(text)).toBeNull();
+            expect(hasChargeAmount(text)).toBe(false);
+            expect(NOTIFICATION_PATTERNS.declined.test(text)).toBe(true);
+        }
+    });
+
+    it("keeps a purchase that mentions its next due date or a security reminder", () => {
+        expect(
+            parseNotification("Compraste $100,00 en Farmatodo. Tu próxima cuota de $25,00 vence el 15/12.")
+        ).toMatchObject({ amount: 100, merchant: "Farmatodo" });
+        expect(
+            parseNotification("Compra por Bs. 500,00 en FARMATODO. Te recordamos que nunca te pediremos tu clave.")
+        ).toMatchObject({ amount: 500, merchant: "FARMATODO" });
+    });
+
     it("reads Venezuelan bank notices in each bank's own number format", () => {
         expect(
             parseNotification(
