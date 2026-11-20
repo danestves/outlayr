@@ -556,7 +556,7 @@ export function PurchaseForm({
                     </div>
                     <Field invalid={attempted && price <= 0}>
                         <MoneyField
-                            className={attempted && price <= 0 ? "border-destructive" : undefined}
+                            className={attempted && price <= 0 ? "border-destructive max-w-none" : "max-w-none"}
                             codes={[currency]}
                             label={purchase.total}
                             onValueChange={(next) => setTotalAmount(next.amount)}
@@ -566,6 +566,7 @@ export function PurchaseForm({
                     </Field>
                     <div className="grid grid-cols-2 gap-3">
                         <MoneyField
+                            className="max-w-none"
                             codes={[currency]}
                             label={purchase.upfront}
                             onValueChange={(next) => setUpfrontAmount(next.amount)}
@@ -573,7 +574,7 @@ export function PurchaseForm({
                         />
                         <Field invalid={plan.over > 0} onBlur={() => eachAmount === null && setEachAmount(undefined)}>
                             <MoneyField
-                                className={plan.over > 0 ? "border-destructive" : undefined}
+                                className={plan.over > 0 ? "border-destructive max-w-none" : "max-w-none"}
                                 codes={[currency]}
                                 label={purchase.each}
                                 onValueChange={(next) =>

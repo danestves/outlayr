@@ -27,7 +27,7 @@ export function SignedMoney({
     const { flows } = useIntlayer("dashboard-accounts");
     return (
         <MoneyField
-            className={className}
+            className={`max-w-none ${className ?? ""}`}
             codes={[currency]}
             detail={
                 <label className="text-app-caption flex items-center gap-2">

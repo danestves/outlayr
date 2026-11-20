@@ -91,12 +91,10 @@ function Rows({ onMove, rows }: { onMove: (id: string, to: number) => void; rows
                         <span className="text-muted-foreground text-app-caption w-4.5 shrink-0 text-end font-mono tabular-nums">
                             {index + 1}
                         </span>
-                        <AccountTile account={row.look} size="lg" />
+                        <AccountTile account={row.look} size="logo" />
                         <div className="min-w-0 flex-1">
                             <b className="text-app-body block truncate font-medium">{row.name}</b>
-                            <small className="text-muted-foreground block truncate text-sm leading-5">
-                                {row.currency}
-                            </small>
+                            <small className="text-muted-foreground text-app-body block truncate">{row.currency}</small>
                         </div>
                         <span className="font-mono text-sm font-medium whitespace-nowrap tabular-nums">
                             {money(row.balance, row.currency)}

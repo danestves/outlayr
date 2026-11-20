@@ -391,6 +391,7 @@ export function AccountForm({
                             <form.Field name="limit">
                                 {(field) => (
                                     <MoneyField
+                                        className="max-w-none"
                                         codes={[currency]}
                                         label={flows.creditLimit}
                                         onValueChange={(next) => field.handleChange(next.amount)}
