@@ -19,7 +19,7 @@ import { SettingsCard } from "@/components/dashboard/settings/parts";
 
 import { HEADLINE, Plate, QUIET, Solo, Tile } from "./chrome";
 
-const SOURCE = "min-h-[65px] gap-3";
+const SOURCE = "min-h-16 gap-3";
 
 function Source({
     hint,
@@ -71,7 +71,7 @@ export function ImportSources({ onMoneyManager, onSkip }: { onMoneyManager: () =
     const { sources } = useIntlayer("dashboard-onboarding");
     const [suggesting, setSuggesting] = useState(false);
     return (
-        <Solo width="max-w-[880px]">
+        <Solo width="max-w-220">
             <div className="mb-4 flex flex-wrap items-center gap-3">
                 <h1 className={`mr-auto ${HEADLINE}`}>{sources.title}</h1>
                 <Button onClick={onSkip} variant="outline">
@@ -110,7 +110,7 @@ export function MoneyManagerSteps({ onBack }: { onBack: () => void }) {
     const { moneyManager } = useIntlayer("dashboard-onboarding");
     const steps = [moneyManager.one, moneyManager.two, moneyManager.three];
     return (
-        <Solo width="max-w-[560px]">
+        <Solo width="max-w-140">
             <SettingsCard
                 footer={
                     <>

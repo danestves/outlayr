@@ -14,3 +14,12 @@ export function LogoMark({ className }: { className?: string }) {
         </svg>
     );
 }
+
+export function Brand({ className = "" }: { className?: string }) {
+    return (
+        <div className={`text-app-title flex items-center gap-2 font-semibold ${className}`}>
+            <LogoMark className="text-app-tint size-6 shrink-0" />
+            Outlayr
+        </div>
+    );
+}

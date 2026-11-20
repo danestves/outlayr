@@ -1,16 +1,30 @@
+import AlertCircleIcon from "@hugeicons/core-free-icons/AlertCircleIcon";
+import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
+import ViewIcon from "@hugeicons/core-free-icons/ViewIcon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import { Badge } from "panelui-web/badge";
+import { Button } from "panelui-web/button";
+import { Frame } from "panelui-web/frame";
 import { useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 
+import { ArtCard, BrandPage, Centered, SessionEmail } from "@/components/brand-page";
+import { SettingsCard } from "@/components/dashboard/settings/parts";
+import { TextField } from "@/components/ui/text-field";
 import { authClient } from "@/lib/auth-client";
 import { authorize, findAuthRequest, getAuthRequest, redirectHost, scopeTitle } from "@/lib/consent";
 import type { AuthRequest } from "@/lib/consent";
 
-import { ErrorLine, Field, LINE_PILL, Screen, SOLID_PILL } from "./parts";
+const SCOPE_ICONS = new Map([
+    ["ledger:read", ViewIcon],
+    ["ledger:write", PencilEdit01Icon],
+]);
 
 const decodeMessage = Schema.decodeUnknownOption(Schema.String);
 
@@ -28,10 +42,11 @@ function failure(cause: unknown): string {
 }
 
 export function ConnectFlow({ requestId }: { requestId: string | undefined }) {
-    if (requestId === undefined) {
-        return <FindRequest />;
-    }
-    return <Consent requestId={requestId} />;
+    return (
+        <BrandPage actions={<SessionEmail />}>
+            <Centered>{requestId === undefined ? <FindRequest /> : <Consent requestId={requestId} />}</Centered>
+        </BrandPage>
+    );
 }
 
 function FindRequest() {
@@ -60,21 +75,31 @@ function FindRequest() {
     };
 
     return (
-        <Screen title="Connect an agent">
-            <form onSubmit={submit}>
-                <Field
-                    autoCapitalize="characters"
-                    autoComplete="off"
-                    label="Code from your agent"
-                    onChange={(event) => setCode(event.target.value)}
-                    value={code}
-                />
-                <ErrorLine message={error} />
-                <button className={SOLID_PILL} disabled={busy || !code.trim()} type="submit">
-                    Continue
-                </button>
-            </form>
-        </Screen>
+        <form onSubmit={submit}>
+            <SettingsCard
+                footer={
+                    <div className="flex w-full justify-end">
+                        <Button aria-busy={busy} disabled={busy || !code.trim()} type="submit">
+                            {busy ? "Checking…" : "Continue"}
+                        </Button>
+                    </div>
+                }
+                title="Connect an agent"
+            >
+                <div className="p-4">
+                    <TextField
+                        autoCapitalize="characters"
+                        autoComplete="off"
+                        autoFocus
+                        className="font-mono"
+                        error={error}
+                        label="Code from your agent"
+                        onChange={(event) => setCode(event.target.value)}
+                        value={code}
+                    />
+                </div>
+            </SettingsCard>
+        </form>
     );
 }
 
@@ -82,37 +107,62 @@ function Consent({ requestId }: { requestId: string }) {
     const request = useQuery(getAuthRequest, { requestId });
     const [done, setDone] = useState(false);
     if (request === undefined) {
-        return <Screen />;
+        return <ConsentBones />;
     }
     if (request === null || (request.status !== "pending" && !done)) {
         return (
-            <Screen>
-                <p className="text-app-muted text-sm">This request has expired or was already used.</p>
-            </Screen>
+            <ArtCard
+                action={<Button render={<a aria-label="Enter a code" href="/connect" />}>Enter a code</Button>}
+                body="This request has expired or was already used."
+                title="Connect request closed"
+            />
         );
     }
     return <Decision done={done} onDone={() => setDone(true)} request={request} requestId={requestId} />;
 }
 
-function Unverified() {
+const BONE = "bg-app-fill rounded-app-xs block";
+
+function ConsentBones() {
     return (
-        <span className="text-app-muted ring-app-rule ml-2 inline-block rounded-md px-1.5 py-0.5 align-middle text-[11px] font-normal ring-1 ring-inset">
-            unverified
-        </span>
+        <Frame aria-hidden="true">
+            <Frame.Header>
+                <span className={`${BONE} h-4 w-40`} />
+            </Frame.Header>
+            <Frame.Panel>
+                <div className="flex flex-col gap-2 p-4">
+                    <span className={`${BONE} h-3 w-44`} />
+                    <span className={`${BONE} h-8 w-52`} />
+                </div>
+                {[0, 1].map((row) => (
+                    <div className="border-border flex flex-col gap-2 border-t p-4" key={row}>
+                        <span className={`${BONE} h-3 w-24`} />
+                        <span className={`${BONE} h-3 w-64`} />
+                    </div>
+                ))}
+            </Frame.Panel>
+            <Frame.Footer>
+                <span className="h-app-control block" />
+            </Frame.Footer>
+        </Frame>
     );
 }
 
 function ScopeRows({ scopes }: { scopes: AuthRequest["scopes"] }) {
-    return (
-        <ul className="border-app-rule divide-app-rule mb-4 divide-y border-y text-left">
-            {scopes.map((scope) => (
-                <li className="flex flex-col py-3" key={scope.name}>
-                    <b className="text-[15px] font-medium">{scopeTitle(scope.name)}</b>
-                    <span className="text-app-muted text-[13px]">{scope.description}</span>
-                </li>
-            ))}
-        </ul>
-    );
+    return scopes.map((scope) => {
+        const icon = SCOPE_ICONS.get(scope.name);
+        return (
+            <Frame.Row className="border-border border-t" key={scope.name}>
+                <Frame.Media className="text-muted-foreground size-5">
+                    {icon ? <HugeiconsIcon icon={icon} size={16} /> : null}
+                </Frame.Media>
+                <Frame.Content>
+                    <p className="text-app-body font-medium">{scopeTitle(scope.name)}</p>
+                    <p className="text-muted-foreground text-app-label">{scope.description}</p>
+                </Frame.Content>
+            </Frame.Row>
+        );
+    });
 }
 
 function Decision({
@@ -128,14 +178,14 @@ function Decision({
 }) {
     const decide = useAction(authorize);
     const email = authClient.useSession().data?.user.email;
-    const [busy, setBusy] = useState(false);
+    const [busy, setBusy] = useState<"approve" | "deny" | null>(null);
     const [error, setError] = useState<string | null>(null);
     const device = request.kind === "device";
     const clientName = request.clientName ?? "an agent";
 
     const answer = (approve: boolean) => {
         setError(null);
-        setBusy(true);
+        setBusy(approve ? "approve" : "deny");
         Effect.runFork(
             Effect.gen(function* answerProgram() {
                 const { redirectUrl } = yield* connectRequest(() =>
@@ -155,57 +205,87 @@ function Decision({
                     ConnectFailure: (failed) =>
                         Effect.sync(() => {
                             setError(failure(failed.cause));
-                            setBusy(false);
+                            setBusy(null);
                         }),
                 })
             )
         );
     };
 
-    let intro: ReactNode;
+    let intro: ReactNode = null;
     if (device) {
         intro = (
-            <>
-                <p className="text-app-muted -mt-3 mb-3 text-sm">Make sure your agent shows this code</p>
-                <p className="mb-6 font-mono text-[32px] font-semibold tracking-[0.12em]">{request.userCode}</p>
-            </>
+            <div className="px-4 pt-3 pb-4">
+                <p className="text-muted-foreground text-app-label">Make sure your agent shows this code</p>
+                <p className="text-app-figure mt-1 font-mono font-semibold tracking-widest">{request.userCode}</p>
+            </div>
         );
     } else if (request.redirectUri) {
         intro = (
-            <p className="text-app-muted -mt-3 mb-5 text-sm">{redirectHost(request.redirectUri)} will be able to:</p>
+            <p className="text-muted-foreground text-app-label px-4 py-3">
+                {redirectHost(request.redirectUri)} will be able to:
+            </p>
         );
     }
+    const approveLabel = device ? "Approve" : "Allow";
+    const approvingLabel = device ? "Approving…" : "Allowing…";
 
     return (
-        <Screen
+        <SettingsCard
+            action={
+                done ? (
+                    <Badge dot variant="success">
+                        Approved
+                    </Badge>
+                ) : null
+            }
+            footer={
+                done ? (
+                    <p className="text-app-body flex items-center gap-2">
+                        <HugeiconsIcon className="text-app-income" icon={Tick02Icon} size={16} />
+                        Done. Go back to your agent.
+                    </p>
+                ) : (
+                    <div className="flex w-full items-center gap-2">
+                        {email ? (
+                            <span className="text-muted-foreground ph-no-capture text-app-label mr-auto truncate">
+                                Signed in as {email}
+                            </span>
+                        ) : (
+                            <span className="mr-auto" />
+                        )}
+                        <Button
+                            aria-busy={busy === "deny"}
+                            disabled={busy !== null}
+                            onClick={() => answer(false)}
+                            variant="ghost"
+                        >
+                            Deny
+                        </Button>
+                        <Button aria-busy={busy === "approve"} disabled={busy !== null} onClick={() => answer(true)}>
+                            {busy === "approve" ? approvingLabel : approveLabel}
+                        </Button>
+                    </div>
+                )
+            }
             title={
-                <>
+                <span className="flex items-center gap-2">
                     Connect {clientName}
-                    <Unverified />
-                </>
+                    {done ? null : <Badge variant="outline">unverified</Badge>}
+                </span>
             }
         >
-            {intro}
+            {done ? null : intro}
             <ScopeRows scopes={request.scopes} />
-            {email ? <p className="text-app-muted mb-4 text-xs">Signed in as {email}.</p> : null}
-            <ErrorLine message={error} />
-            {done ? (
-                <p className="text-sm">Done. Go back to your agent.</p>
-            ) : (
-                <>
-                    <button
-                        className={`${SOLID_PILL} mb-2.5`}
-                        disabled={busy}
-                        onClick={() => answer(true)}
-                        type="button"
-                    >
-                        {device ? "Approve" : "Allow"}
-                    </button>
-                    <button className={LINE_PILL} disabled={busy} onClick={() => answer(false)} type="button">
-                        Deny
-                    </button>
-                </>
-            )}
-        </Screen>
+            {error ? (
+                <p
+                    className="text-destructive text-app-label border-border flex items-center gap-2 border-t px-4 py-3"
+                    role="alert"
+                >
+                    <HugeiconsIcon className="shrink-0" icon={AlertCircleIcon} size={16} />
+                    {error}
+                </p>
+            ) : null}
+        </SettingsCard>
     );
 }

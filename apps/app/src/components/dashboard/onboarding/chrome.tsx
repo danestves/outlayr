@@ -5,15 +5,15 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { LogoMark } from "@/components/logo-mark";
+import { Brand } from "@/components/logo-mark";
 import { ONBOARDING_STEPS, stepIndex } from "@/lib/onboarding";
 import type { OnboardingScreen, OnboardingStep } from "@/lib/onboarding";
 
-export const HEADLINE = "text-2xl leading-8 font-semibold tracking-[-0.02em]";
-export const QUIET = "text-muted-foreground text-[13px] leading-5";
+export const HEADLINE = "text-app-figure font-semibold tracking-tight";
+export const QUIET = "text-muted-foreground text-app-label";
 export const FIELD =
-    "border-input bg-background dark:bg-input/30 focus-visible:border-ring focus-visible:ring-ring/30 flex h-9 w-full items-center gap-2 rounded-lg border px-3 text-sm shadow-xs outline-none transition-[border-color,box-shadow] duration-150 focus-visible:ring-[3px]";
-export const FIELD_OPEN = "data-popup-open:border-ring data-popup-open:ring-ring/30 data-popup-open:ring-[3px]";
+    "border-input bg-background dark:bg-input/30 focus-visible:border-ring focus-visible:ring-ring/30 h-app-control rounded-app-sm text-app-body flex w-full items-center gap-2 border px-3 shadow-xs outline-none transition duration-150 focus-visible:ring-3";
+export const FIELD_OPEN = "data-popup-open:border-ring data-popup-open:ring-ring/30 data-popup-open:ring-3";
 
 const RAIL_KEY = {
     "auto-log": "autoLog",
@@ -21,15 +21,6 @@ const RAIL_KEY = {
     "first-entry": "firstEntry",
     rhythm: "rhythm",
 } as const satisfies Record<OnboardingStep, string>;
-
-export function Brand({ className = "" }: { className?: string }) {
-    return (
-        <div className={`flex items-center gap-[9px] text-[15px] font-semibold ${className}`}>
-            <LogoMark className="text-app-tint size-6 shrink-0" />
-            Outlayr
-        </div>
-    );
-}
 
 function TopBar({ step }: { step: number | null }) {
     const { stepOf } = useIntlayer("dashboard-onboarding");
@@ -43,7 +34,7 @@ function TopBar({ step }: { step: number | null }) {
     );
 }
 
-const RAIL_ITEM = "mb-0.5 flex h-9 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-left font-medium";
+const RAIL_ITEM = "h-app-control rounded-app-md mb-0.5 flex w-full items-center gap-2.5 px-2.5 text-left font-medium";
 
 function StepRail({ current, onPick }: { current: OnboardingScreen; onPick: (step: OnboardingStep) => void }) {
     const { rail, railLabel } = useIntlayer("dashboard-onboarding");
@@ -57,7 +48,7 @@ function StepRail({ current, onPick }: { current: OnboardingScreen; onPick: (ste
                         return (
                             <li key={step}>
                                 <button
-                                    className={`${RAIL_ITEM} text-muted-foreground hover:bg-app-fill/60 hover:text-foreground focus-visible:ring-ring/30 outline-none focus-visible:ring-[3px]`}
+                                    className={`${RAIL_ITEM} text-muted-foreground hover:bg-app-fill/60 hover:text-foreground focus-visible:ring-ring/30 outline-none focus-visible:ring-3`}
                                     onClick={() => onPick(step)}
                                     type="button"
                                 >
@@ -132,7 +123,7 @@ export function Staged({
 export function Plate({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
         <section
-            className={`border-border bg-card flex min-w-0 flex-col overflow-hidden rounded-3xl border shadow-xs ${className}`}
+            className={`border-border bg-card rounded-app-3xl flex min-w-0 flex-col overflow-hidden border shadow-xs ${className}`}
         >
             {children}
         </section>
@@ -154,7 +145,7 @@ export function PlateFoot({ children }: { children: ReactNode }) {
 
 export function Tile({ children }: { children: ReactNode }) {
     return (
-        <span className="bg-app-fill text-muted-foreground flex size-[26px] shrink-0 items-center justify-center rounded-lg">
+        <span className="bg-app-fill text-muted-foreground rounded-app-sm flex size-6.5 shrink-0 items-center justify-center">
             {children}
         </span>
     );

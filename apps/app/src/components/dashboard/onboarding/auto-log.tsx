@@ -17,7 +17,7 @@ import { Plate, PlateFoot, PlateHead, QUIET, Staged, Tile, focusOnMount } from "
 function Way({ hint, icon, title }: { hint: ReactNode; icon: IconSvgElement; title: ReactNode }) {
     const { autoLog } = useIntlayer("dashboard-onboarding");
     return (
-        <li className="border-border flex min-h-[66px] items-center gap-3 border-t px-4 py-2.5">
+        <li className="border-border flex min-h-16.5 items-center gap-3 border-t px-4 py-2.5">
             <Tile>
                 <HugeiconsIcon icon={icon} size={14} />
             </Tile>

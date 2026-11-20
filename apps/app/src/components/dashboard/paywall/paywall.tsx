@@ -1,7 +1,12 @@
 import AlertCircleIcon from "@hugeicons/core-free-icons/AlertCircleIcon";
+import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import Clock01Icon from "@hugeicons/core-free-icons/Clock01Icon";
+import DashboardSquare01Icon from "@hugeicons/core-free-icons/DashboardSquare01Icon";
+import Exchange01Icon from "@hugeicons/core-free-icons/Exchange01Icon";
+import FlashIcon from "@hugeicons/core-free-icons/FlashIcon";
 import Infinity01Icon from "@hugeicons/core-free-icons/Infinity01Icon";
+import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
@@ -22,11 +27,10 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { BrandPage, SessionEmail } from "@/components/brand-page";
 import { SettingsCard } from "@/components/dashboard/settings/parts";
 import { signOut } from "@/components/dashboard/shell/account-menu";
-import { LogoMark } from "@/components/logo-mark";
 import { SiteLink } from "@/components/site-link";
-import { authClient } from "@/lib/auth-client";
 import { CHECKOUT_CONFIRMED, HELD_STATES, startCheckout } from "@/lib/billing";
 import { convexClient } from "@/lib/convex";
 import { paywallPrices } from "@/lib/paywall-prices";
@@ -52,11 +56,11 @@ const TABLE = [
     { free: null, key: "merchantLookup", pro: "check" },
 ] as const;
 const COMES_BACK = [
-    ["ledger", "ledgerHint"],
-    ["sync", "syncHint"],
-    ["logs", "logsHint"],
-    ["currencies", "currenciesHint"],
-    ["installments", "installmentsHint"],
+    ["ledger", "ledgerHint", DashboardSquare01Icon],
+    ["sync", "syncHint", RefreshIcon],
+    ["logs", "logsHint", FlashIcon],
+    ["currencies", "currenciesHint", Exchange01Icon],
+    ["installments", "installmentsHint", Calendar03Icon],
 ] as const;
 const ART = {
     locked: { dark: "/paywall-locked.svg", height: 304, light: "/paywall-locked-light.svg" },
@@ -78,31 +82,11 @@ const useDate = () => {
     return (ms: number) => new Date(ms).toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
 };
 
-function Page({ actions, children }: { actions: ReactNode; children: ReactNode }) {
-    return (
-        <div className="app-shell bg-background text-foreground flex min-h-dvh flex-col">
-            <header className="border-border flex h-16 shrink-0 items-center gap-3 border-b px-6 max-sm:px-4">
-                <span className="mr-auto flex items-center gap-[9px] text-[15px] font-semibold">
-                    <LogoMark className="text-app-tint size-6" />
-                    Outlayr
-                </span>
-                {actions}
-            </header>
-            {children}
-        </div>
-    );
-}
-
-function Email() {
-    const { data: session } = authClient.useSession();
-    return <span className="text-muted-foreground ph-no-capture truncate text-[13px]">{session?.user.email}</span>;
-}
-
 function AccountActions() {
     const copy = useIntlayer("paywall");
     return (
         <>
-            <Email />
+            <SessionEmail />
             <Button onClick={signOut} variant="outline">
                 {copy.signOut}
             </Button>
@@ -127,10 +111,10 @@ function Compare() {
                 <Table.Header>
                     <Table.Row>
                         <Table.Head aria-hidden="true" />
-                        <Table.Head align="end" className="w-[88px]">
+                        <Table.Head align="end" className="w-22">
                             {copy.free}
                         </Table.Head>
-                        <Table.Head align="end" className="w-[88px]">
+                        <Table.Head align="end" className="w-22">
                             {copy.pro}
                         </Table.Head>
                     </Table.Row>
@@ -174,11 +158,14 @@ function ComesBack() {
     const copy = useIntlayer("paywall");
     return (
         <SettingsCard title={copy.comesBack}>
-            {COMES_BACK.map(([title, hint]) => (
-                <Frame.Row className="px-4 py-3" key={title}>
+            {COMES_BACK.map(([title, hint, icon]) => (
+                <Frame.Row key={title}>
+                    <Frame.Media className="bg-app-fill text-muted-foreground rounded-app-sm size-7">
+                        <HugeiconsIcon icon={icon} size={16} />
+                    </Frame.Media>
                     <Frame.Content>
-                        <Frame.Title className="text-sm font-medium">{copy.back[title]}</Frame.Title>
-                        <Frame.Description className="text-[13px]">{copy.back[hint]}</Frame.Description>
+                        <p className="text-app-body font-medium">{copy.back[title]}</p>
+                        <p className="text-muted-foreground text-app-label">{copy.back[hint]}</p>
                     </Frame.Content>
                 </Frame.Row>
             ))}
@@ -189,7 +176,7 @@ function ComesBack() {
 // PanelUI's Timeline is a media track editor, not a dated list of what happens next.
 function Timeline({ rows }: { rows: readonly (readonly [ReactNode, ReactNode])[] }) {
     return (
-        <ol className="border-border mt-5 border-t text-[13px]">
+        <ol className="border-border text-app-label mt-5 border-t">
             {rows.map(([when, what], index) => (
                 <li className="border-border flex h-10 items-center gap-2.5 border-b" key={index}>
                     <span className={`size-2 shrink-0 rounded-full ${index === 0 ? "bg-primary" : "bg-app-strong"}`} />
@@ -207,7 +194,7 @@ function Notice({ icon = "warning", text }: { icon?: "time" | "warning"; text: R
             <Alert.Icon className="text-muted-foreground">
                 <HugeiconsIcon icon={icon === "time" ? Clock01Icon : AlertCircleIcon} size={16} strokeWidth={2} />
             </Alert.Icon>
-            <Alert.Description className="text-foreground text-[13px]">{text}</Alert.Description>
+            <Alert.Description className="text-foreground">{text}</Alert.Description>
         </Alert>
     );
 }
@@ -215,7 +202,7 @@ function Notice({ icon = "warning", text }: { icon?: "time" | "warning"; text: R
 function Links({ onRestore, restoring = false }: { onRestore?: () => void; restoring?: boolean }) {
     const copy = useIntlayer("paywall");
     return (
-        <div className="text-muted-foreground mt-4 flex justify-center gap-4 text-xs">
+        <div className="text-muted-foreground text-app-caption mt-4 flex justify-center gap-4">
             {onRestore ? (
                 <button
                     className={`hover:text-foreground disabled:cursor-default ${restoring ? "text-foreground" : ""}`}
@@ -239,7 +226,7 @@ function Links({ onRestore, restoring = false }: { onRestore?: () => void; resto
 function Panel({ art, children }: { art?: keyof typeof ART; children: ReactNode }) {
     const image = art ? ART[art] : null;
     return (
-        <Card className="relative isolate flex min-h-[480px] flex-col overflow-hidden rounded-3xl px-5 pt-[21px] pb-[22px]">
+        <Card className="relative isolate flex min-h-120 flex-col overflow-hidden rounded-3xl px-5 py-5">
             {image ? (
                 <>
                     <img
@@ -266,11 +253,11 @@ function Panel({ art, children }: { art?: keyof typeof ART; children: ReactNode 
 function Price({ amount, sub, unit }: { amount: ReactNode; sub: ReactNode; unit: ReactNode }) {
     return (
         <>
-            <p className="text-[32px] leading-10 font-semibold tracking-[-0.02em] tabular-nums">
+            <p className="text-app-figure font-semibold tabular-nums">
                 {amount}
-                <small className="text-muted-foreground ml-1.5 text-sm font-normal tracking-normal">{unit}</small>
+                <small className="text-muted-foreground text-app-body ml-1.5 font-normal tracking-normal">{unit}</small>
             </p>
-            <p className="text-muted-foreground mt-[7px] text-[13px]">{sub}</p>
+            <p className="text-muted-foreground text-app-label mt-2">{sub}</p>
         </>
     );
 }
@@ -335,7 +322,7 @@ function Offer({
                     ))}
                 </Tabs.List>
             </Tabs>
-            <div className="mb-[9px] flex h-[22px] gap-1.5">
+            <div className="mb-2 flex h-6 items-center gap-1.5">
                 {plan === "annual" ? (
                     <>
                         {trial ? <Badge variant="success">{copy.bestValue}</Badge> : null}
@@ -399,7 +386,7 @@ function Offer({
             ) : null}
             {needsAccount ? (
                 <>
-                    <p className="text-muted-foreground mt-auto mb-3 pt-5 text-[13px]">{copy.needsAccount}</p>
+                    <p className="text-muted-foreground text-app-label mt-auto mb-3 pt-5">{copy.needsAccount}</p>
                     <Button className="w-full" render={<a aria-label={copy.signIn.value} href="/login" />}>
                         {copy.signIn}
                     </Button>
@@ -416,9 +403,9 @@ function Offer({
                     {notice ? null : (
                         <>
                             {note ? (
-                                <p className="text-muted-foreground mt-2.5 text-center text-[13px]">{note}</p>
+                                <p className="text-muted-foreground text-app-label mt-2.5 text-center">{note}</p>
                             ) : null}
-                            <p className="text-muted-foreground mt-1 text-center text-xs">{copy.checkoutBy}</p>
+                            <p className="text-muted-foreground text-app-caption mt-1 text-center">{copy.checkoutBy}</p>
                         </>
                     )}
                     <Links onRestore={onRestore} restoring={restoring} />
@@ -432,9 +419,9 @@ function Loading({ onRestore, restoring }: { onRestore: () => void; restoring: b
     const copy = useIntlayer("paywall");
     return (
         <Panel>
-            <div aria-hidden="true" className="bg-app-fill mb-5 h-[38px] rounded-[10px]" />
-            <div aria-hidden="true" className="bg-app-fill mb-3 h-[30px] w-[150px] rounded-md" />
-            <output className="text-muted-foreground block text-[13px]">{copy.loadingPlans}</output>
+            <div aria-hidden="true" className="bg-app-fill rounded-app-md h-app-control mb-5" />
+            <div aria-hidden="true" className="bg-app-fill rounded-app-xs mb-3 h-8 w-38" />
+            <output className="text-muted-foreground text-app-label block">{copy.loadingPlans}</output>
             <Button className="mt-auto w-full" disabled>
                 {copy.startTrial}
             </Button>
@@ -527,9 +514,9 @@ function AlreadyPro({ plan, unconfirmedAtStart }: { plan: BillingPlan; unconfirm
             : null,
     ].filter((row) => row !== null);
     return (
-        <Page actions={<Email />}>
+        <BrandPage actions={<SessionEmail />}>
             <main className="flex flex-1 items-center justify-center px-6 py-10 max-sm:px-4">
-                <div className="w-full max-w-[560px]">
+                <div className="w-full max-w-140">
                     <SettingsCard
                         action={
                             <Badge dot variant={unconfirmed ? "warning" : "success"}>
@@ -556,7 +543,7 @@ function AlreadyPro({ plan, unconfirmedAtStart }: { plan: BillingPlan; unconfirm
                         title={copy.proName}
                     >
                         {rows.map(([label, value]) => (
-                            <Frame.Row className="h-11 px-4 text-[13px]" key={label.value}>
+                            <Frame.Row className="h-app-row text-app-label" key={label.value}>
                                 <Frame.Content className="text-muted-foreground">{label}</Frame.Content>
                                 <Frame.Actions>{value}</Frame.Actions>
                             </Frame.Row>
@@ -566,15 +553,13 @@ function AlreadyPro({ plan, unconfirmedAtStart }: { plan: BillingPlan; unconfirm
                                 <Alert.Icon>
                                     <HugeiconsIcon icon={Clock01Icon} size={16} strokeWidth={2} />
                                 </Alert.Icon>
-                                <Alert.Description className="text-[13px]">
-                                    {copy.alreadyNotConfirmed}
-                                </Alert.Description>
+                                <Alert.Description>{copy.alreadyNotConfirmed}</Alert.Description>
                             </Alert>
                         ) : null}
                     </SettingsCard>
                 </div>
             </main>
-        </Page>
+        </BrandPage>
     );
 }
 
@@ -592,20 +577,18 @@ function Layout({
     title: ReactNode;
 }) {
     return (
-        <Page actions={actions}>
-            <main className="mx-auto flex w-full max-w-[1248px] flex-1 flex-col justify-center gap-[23px] px-6 py-10 max-sm:px-4 max-sm:py-6">
+        <BrandPage actions={actions}>
+            <main className="px-app-gutter mx-auto flex w-full max-w-312 flex-1 flex-col justify-center gap-6 py-10 max-sm:px-4 max-sm:py-6">
                 <div>
-                    <h1 className="mb-1 text-[28px] leading-9 font-semibold tracking-[-0.02em] max-sm:text-2xl">
-                        {title}
-                    </h1>
-                    <p className="text-muted-foreground text-sm">{sub}</p>
+                    <h1 className="text-app-figure mb-1 font-semibold tracking-tight">{title}</h1>
+                    <p className="text-muted-foreground text-app-body">{sub}</p>
                 </div>
                 <div className="grid grid-cols-[minmax(0,1fr)_440px] gap-4 max-lg:grid-cols-1">
                     <div className="max-lg:order-2">{left}</div>
                     {right}
                 </div>
             </main>
-        </Page>
+        </BrandPage>
     );
 }
 

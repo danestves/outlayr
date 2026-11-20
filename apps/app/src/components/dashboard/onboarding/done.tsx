@@ -12,7 +12,7 @@ import type { HeardFrom } from "./heard-from";
 function Fact({ figure = true, label, value }: { figure?: boolean; label: ReactNode; value: ReactNode }) {
     return (
         <div className="border-border flex min-h-11 items-center justify-between gap-3 border-t px-4">
-            <dt className="text-muted-foreground text-[13px]">{label}</dt>
+            <dt className="text-muted-foreground text-app-label">{label}</dt>
             <dd className={figure ? "dash-figure" : undefined}>{value}</dd>
         </div>
     );
@@ -44,7 +44,7 @@ export function Done({
     return (
         <Staged current="done" layout="justify-center md:grid-cols-[560px]" onPick={onStep}>
             <Plate>
-                <div className="px-5 pt-5 pb-[22px]">
+                <div className="p-5">
                     <h1 className={HEADLINE}>{done.title}</h1>
                 </div>
                 <dl>

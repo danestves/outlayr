@@ -13,12 +13,13 @@ import {
 } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { ConvexError } from "convex/values";
+import { Button } from "panelui-web/button";
 import { Toast, useToast } from "panelui-web/toast";
 import { Suspense, lazy, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { Muted, SOLID_PILL, Screen } from "@/components/account/parts";
+import { ArtCard, BrandPage, Centered, SessionEmail } from "@/components/brand-page";
 import { AccountFlowsProvider } from "@/components/dashboard/accounts/flows";
 import { DashboardPending } from "@/components/dashboard/pending";
 import { CommandPalette } from "@/components/dashboard/shell/command-palette";
@@ -300,11 +301,14 @@ function NotSynced({ error }: ErrorComponentProps) {
         );
     }
     return (
-        <Screen title={copy.title}>
-            <Muted>{copy.body}</Muted>
-            <button className={SOLID_PILL} onClick={startOver} type="button">
-                {copy.retry}
-            </button>
-        </Screen>
+        <BrandPage actions={<SessionEmail />}>
+            <Centered>
+                <ArtCard
+                    action={<Button onClick={startOver}>{copy.retry}</Button>}
+                    body={copy.body}
+                    title={copy.title}
+                />
+            </Centered>
+        </BrandPage>
     );
 }
