@@ -31,8 +31,8 @@ catalogs:
       specifier: 1.7.16
       version: 1.7.16
     convex:
-      specifier: ^1.50.0
-      version: 1.50.0
+      specifier: ^1.51.0
+      version: 1.51.0
     dotenv:
       specifier: ^18.0.9
       version: 18.0.9
@@ -79,7 +79,7 @@ patchedDependencies:
   '@intlayer/engine@9.7.0': f5b4cd64abb48bd275710fb4178b2d6cdb5403a55ad1b3ff10f9e8450b4d0b00
   '@tanstack/ai-mcp@1.0.0': e5fa7bd1f3aa01b044a3bf9e6201d44bd03017dbd27760ea872acee006d3c5cc
   '@tanstack/redact@0.2.0': ff0f2979b5131a44d30f05531ed37234452b7981857c6757560fcded51b19914
-  convex@1.50.0: 46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82
+  convex@1.51.0: 46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82
   expo-router@58.0.31: f800049d8b393f24d729a6644c92d03194cf809fe208596a8114d1c24925d2fb
   expo-widgets@58.0.28: af9e65ae1716bcff0d91b240558134589ecbe355258c0b509ec01a7ee5f22be3
   lru-cache@11.5.3: e8e3c1f1fe60a81e844dadb33f38e643021f6b544737936de71c1a8ad3d36347
@@ -130,10 +130,10 @@ importers:
         version: 1.9.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@convex-dev/better-auth':
         specifier: 'catalog:'
-        version: 0.13.0(@standard-schema/spec@1.1.0)(better-auth@1.7.16(770dc9788a0eeb76ec9dcbe2bee6937e))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
+        version: 0.13.0(@standard-schema/spec@1.1.0)(better-auth@1.7.16(770dc9788a0eeb76ec9dcbe2bee6937e))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
       '@convex-dev/react-query':
         specifier: 0.1.0
-        version: 0.1.0(@tanstack/react-query@5.105.3(@types/react@19.3.0)(react@19.3.1))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))
+        version: 0.1.0(@tanstack/react-query@5.105.3(@types/react@19.3.0)(react@19.3.1))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))
       '@fontsource-variable/geist':
         specifier: ^5.3.0
         version: 5.3.0
@@ -163,7 +163,7 @@ importers:
         version: 4.3.3(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))
       '@tanstack/convex-db-collection':
         specifier: 1.0.0-rc.1.5
-        version: 1.0.0-rc.1.5(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(typescript@6.0.3)
+        version: 1.0.0-rc.1.5(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(typescript@6.0.3)
       '@tanstack/react-db':
         specifier: 1.0.0-rc.1.5
         version: 1.0.0-rc.1.5(react@19.3.1)(typescript@6.0.3)
@@ -193,7 +193,7 @@ importers:
         version: 2.1.1
       convex:
         specifier: 'catalog:'
-        version: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+        version: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
       effect:
         specifier: 'catalog:'
         version: 4.1.4
@@ -324,10 +324,10 @@ importers:
         version: 1.7.16(@better-auth/core@1.7.16(@better-auth/utils@0.5.1)(@better-fetch/fetch@1.3.3)(@opentelemetry/api@1.9.1)(better-call@1.4.5(zod@4.6.7))(jose@6.2.13)(kysely@0.29.4)(nanostores@1.4.1))(better-auth@1.7.16(4e55c5c6d809cc7f022c4cf1d483abf0))(expo-constants@58.0.16)(expo-linking@58.0.17)(expo-network@58.0.5(expo@58.0.25)(react@19.3.0))(expo-secure-store@58.0.3(expo@58.0.25))(expo-web-browser@58.0.8(expo@58.0.25)(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)))
       '@convex-dev/agent':
         specifier: 'catalog:'
-        version: 0.7.9(@ai-sdk/provider-utils@5.0.70(zod@4.6.7))(@ai-sdk/provider@4.0.34)(ai@7.0.155(zod@4.6.7))(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(zod@4.6.7))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)
+        version: 0.7.9(@ai-sdk/provider-utils@5.0.70(zod@4.6.7))(@ai-sdk/provider@4.0.34)(ai@7.0.155(zod@4.6.7))(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(zod@4.6.7))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)
       '@convex-dev/better-auth':
         specifier: 'catalog:'
-        version: 0.13.0(@standard-schema/spec@1.1.0)(better-auth@1.7.16(4e55c5c6d809cc7f022c4cf1d483abf0))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)
+        version: 0.13.0(@standard-schema/spec@1.1.0)(better-auth@1.7.16(4e55c5c6d809cc7f022c4cf1d483abf0))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.1.4(effect@4.1.4)(react@19.3.0)(scheduler@0.28.0)
@@ -378,7 +378,7 @@ importers:
         version: 1.7.16(4e55c5c6d809cc7f022c4cf1d483abf0)
       convex:
         specifier: 'catalog:'
-        version: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0)
+        version: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0)
       dotenv:
         specifier: 'catalog:'
         version: 18.0.9
@@ -786,7 +786,7 @@ importers:
         version: 1.169.4(@types/react@19.3.0)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(esbuild@0.25.12)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(rolldown@1.2.10)(supports-color@8.1.1)(webpack@5.105.0(esbuild@0.25.12)(lightningcss@1.33.0)(postcss@8.5.32))
       convex:
         specifier: 'catalog:'
-        version: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+        version: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
       effect:
         specifier: 'catalog:'
         version: 4.1.4
@@ -892,28 +892,28 @@ importers:
         version: 1.7.16(@better-auth/core@1.7.16(@better-auth/utils@0.5.1)(@better-fetch/fetch@1.3.3)(@opentelemetry/api@1.9.1)(better-call@1.4.5(zod@4.6.7))(jose@6.2.13)(kysely@0.29.4)(nanostores@1.4.1))(better-auth@1.7.16(770dc9788a0eeb76ec9dcbe2bee6937e))(expo-constants@58.0.16)(expo-linking@58.0.17)(expo-network@58.0.5(expo@58.0.25)(react@19.3.1))(expo-secure-store@58.0.3(expo@58.0.25))(expo-web-browser@58.0.8(expo@58.0.25)(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1)))
       '@confect/core':
         specifier: 'catalog:'
-        version: 10.6.0(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)
+        version: 10.6.0(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)
       '@confect/server':
         specifier: 'catalog:'
-        version: 10.6.0(@confect/core@10.6.0(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@effect/platform-node@4.1.4(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1)))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)
+        version: 10.6.0(@confect/core@10.6.0(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@effect/platform-node@4.1.4(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1)))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)
       '@convex-dev/agent':
         specifier: 'catalog:'
-        version: 0.7.9(@ai-sdk/provider-utils@5.0.70(zod@4.6.7))(@ai-sdk/provider@4.0.34)(ai@7.0.155(zod@4.6.7))(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)
+        version: 0.7.9(@ai-sdk/provider-utils@5.0.70(zod@4.6.7))(@ai-sdk/provider@4.0.34)(ai@7.0.155(zod@4.6.7))(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)
       '@convex-dev/better-auth':
         specifier: 'catalog:'
-        version: 0.13.0(@standard-schema/spec@1.1.0)(better-auth@1.7.16(770dc9788a0eeb76ec9dcbe2bee6937e))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
+        version: 0.13.0(@standard-schema/spec@1.1.0)(better-auth@1.7.16(770dc9788a0eeb76ec9dcbe2bee6937e))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
       '@convex-dev/mcp':
         specifier: 0.1.0-alpha.7
-        version: 0.1.0-alpha.7(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+        version: 0.1.0-alpha.7(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
       '@convex-dev/r2':
         specifier: ^0.10.4
-        version: 0.10.4(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
+        version: 0.10.4(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
       '@convex-dev/rate-limiter':
         specifier: ^0.4.3
-        version: 0.4.3(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+        version: 0.4.3(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
       '@convex-dev/workpool':
         specifier: ^0.4.16
-        version: 0.4.16(@standard-schema/spec@1.1.0)(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+        version: 0.4.16(@standard-schema/spec@1.1.0)(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
       '@outlayr/email':
         specifier: workspace:*
         version: link:../email
@@ -931,10 +931,10 @@ importers:
         version: 1.7.16(770dc9788a0eeb76ec9dcbe2bee6937e)
       convex:
         specifier: 'catalog:'
-        version: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+        version: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
       convex-revenuecat:
         specifier: ^0.3.2
-        version: 0.3.2(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+        version: 0.3.2(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
       effect:
         specifier: 'catalog:'
         version: 4.1.4
@@ -950,7 +950,7 @@ importers:
     devDependencies:
       '@confect/cli':
         specifier: 'catalog:'
-        version: 10.6.0(@confect/core@10.6.0(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@confect/server@10.6.0(@confect/core@10.6.0(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@effect/platform-node@4.1.4(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1)))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1))
+        version: 10.6.0(@confect/core@10.6.0(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@confect/server@10.6.0(@confect/core@10.6.0(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@effect/platform-node@4.1.4(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1)))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1))
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
@@ -962,7 +962,7 @@ importers:
         version: 26.6.5
       convex-test:
         specifier: ^0.0.71
-        version: 0.0.71(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))
+        version: 0.0.71(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))
       react:
         specifier: 19.3.1
         version: 19.3.1
@@ -7122,8 +7122,8 @@ packages:
     peerDependencies:
       convex: ^1.43.0
 
-  convex@1.50.0:
-    resolution: {integrity: sha512-WzzCad5hyzU4zzW0ChyUGB3Mil4LgRYMYii9cyQtC24WQnfaRgkZB0IKyhIIgRm1a2IXiGJoZnVYYSfttiap3Q==}
+  convex@1.51.0:
+    resolution: {integrity: sha512-Y5gS+JmT2JBq76S3CrQDrdL/Ijs4ZRKsvz3cu5EmHf/QxW18QrHunb5j9WC6lAbWbWc/gvmqpa5lvXzLXFQVJA==}
     engines: {node: '>=22.0.0', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
@@ -13489,10 +13489,10 @@ snapshots:
     dependencies:
       zod: 4.6.7
 
-  '@confect/cli@10.6.0(@confect/core@10.6.0(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@confect/server@10.6.0(@confect/core@10.6.0(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@effect/platform-node@4.1.4(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1)))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1))':
+  '@confect/cli@10.6.0(@confect/core@10.6.0(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@confect/server@10.6.0(@confect/core@10.6.0(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@effect/platform-node@4.1.4(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1)))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1))':
     dependencies:
-      '@confect/core': 10.6.0(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)
-      '@confect/server': 10.6.0(@confect/core@10.6.0(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@effect/platform-node@4.1.4(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1)))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)
+      '@confect/core': 10.6.0(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)
+      '@confect/server': 10.6.0(@confect/core@10.6.0(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@effect/platform-node@4.1.4(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1)))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)
       '@effect/platform-node': 4.1.4(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1))
       bundle-require: 5.1.0(esbuild@0.28.2)
       code-block-writer: 13.0.3
@@ -13505,17 +13505,17 @@ snapshots:
       - redis
       - utf-8-validate
 
-  '@confect/core@10.6.0(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)':
+  '@confect/core@10.6.0(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)':
     dependencies:
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
       effect: 4.1.4
 
-  '@confect/server@10.6.0(@confect/core@10.6.0(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@effect/platform-node@4.1.4(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1)))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)':
+  '@confect/server@10.6.0(@confect/core@10.6.0(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4))(@effect/platform-node@4.1.4(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1)))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)':
     dependencies:
-      '@confect/core': 10.6.0(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)
+      '@confect/core': 10.6.0(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(effect@4.1.4)
       '@effect/ai-openai-compat': 4.1.0(effect@4.1.4)
       '@effect/ai-openrouter': 4.1.0(effect@4.1.4)
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
       effect: 4.1.4
     optionalDependencies:
       '@effect/platform-node': 4.1.4(effect@4.1.4)(redis@6.3.0(@opentelemetry/api@1.9.1))
@@ -13565,36 +13565,36 @@ snapshots:
       '@content-collections/integrations': 0.5.0(@content-collections/core@0.15.3(typescript@6.0.3))
       vite: '@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)'
 
-  '@convex-dev/action-retrier@0.3.1(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))':
+  '@convex-dev/action-retrier@0.3.1(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))':
     dependencies:
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
 
-  '@convex-dev/agent@0.7.9(@ai-sdk/provider-utils@5.0.70(zod@4.6.7))(@ai-sdk/provider@4.0.34)(ai@7.0.155(zod@4.6.7))(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(zod@4.6.7))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)':
+  '@convex-dev/agent@0.7.9(@ai-sdk/provider-utils@5.0.70(zod@4.6.7))(@ai-sdk/provider@4.0.34)(ai@7.0.155(zod@4.6.7))(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(zod@4.6.7))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)':
     dependencies:
       '@ai-sdk/provider': 4.0.34
       '@ai-sdk/provider-utils': 5.0.70(zod@4.6.7)
       ai: 7.0.155(zod@4.6.7)
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0)
-      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(zod@4.6.7)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0)
+      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(zod@4.6.7)
     optionalDependencies:
       '@ungap/structured-clone': 1.4.0
       react: 19.3.0
 
-  '@convex-dev/agent@0.7.9(@ai-sdk/provider-utils@5.0.70(zod@4.6.7))(@ai-sdk/provider@4.0.34)(ai@7.0.155(zod@4.6.7))(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)':
+  '@convex-dev/agent@0.7.9(@ai-sdk/provider-utils@5.0.70(zod@4.6.7))(@ai-sdk/provider@4.0.34)(ai@7.0.155(zod@4.6.7))(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@ai-sdk/provider': 4.0.34
       '@ai-sdk/provider-utils': 5.0.70(zod@4.6.7)
       ai: 7.0.155(zod@4.6.7)
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
-      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
     optionalDependencies:
       '@ungap/structured-clone': 1.4.0
       react: 19.3.1
 
-  '@convex-dev/batch-worker@0.3.5(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)':
+  '@convex-dev/batch-worker@0.3.5(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)':
     dependencies:
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
-      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
     transitivePeerDependencies:
       - '@standard-schema/spec'
       - hono
@@ -13602,10 +13602,10 @@ snapshots:
       - typescript
       - zod
 
-  '@convex-dev/batch-worker@0.3.6(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)':
+  '@convex-dev/batch-worker@0.3.6(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)':
     dependencies:
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
-      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
     transitivePeerDependencies:
       - '@standard-schema/spec'
       - hono
@@ -13613,13 +13613,13 @@ snapshots:
       - typescript
       - zod
 
-  '@convex-dev/better-auth@0.13.0(@standard-schema/spec@1.1.0)(better-auth@1.7.16(4e55c5c6d809cc7f022c4cf1d483abf0))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)':
+  '@convex-dev/better-auth@0.13.0(@standard-schema/spec@1.1.0)(better-auth@1.7.16(4e55c5c6d809cc7f022c4cf1d483abf0))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)':
     dependencies:
       '@better-fetch/fetch': 1.3.3
       better-auth: 1.7.16(4e55c5c6d809cc7f022c4cf1d483abf0)
       common-tags: 1.8.2
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0)
-      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(zod@4.6.7)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0)
+      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(zod@4.6.7)
       jose: 6.2.13
       react: 19.3.0
       semver: 7.8.5
@@ -13630,13 +13630,13 @@ snapshots:
       - hono
       - typescript
 
-  '@convex-dev/better-auth@0.13.0(@standard-schema/spec@1.1.0)(better-auth@1.7.16(770dc9788a0eeb76ec9dcbe2bee6937e))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)':
+  '@convex-dev/better-auth@0.13.0(@standard-schema/spec@1.1.0)(better-auth@1.7.16(770dc9788a0eeb76ec9dcbe2bee6937e))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)':
     dependencies:
       '@better-fetch/fetch': 1.3.3
       better-auth: 1.7.16(770dc9788a0eeb76ec9dcbe2bee6937e)
       common-tags: 1.8.2
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
-      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
       jose: 6.2.13
       react: 19.3.1
       semver: 7.8.5
@@ -13647,10 +13647,10 @@ snapshots:
       - hono
       - typescript
 
-  '@convex-dev/mcp@0.1.0-alpha.7(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)':
+  '@convex-dev/mcp@0.1.0-alpha.7(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)':
     dependencies:
-      '@convex-dev/rate-limiter': 0.4.3(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      '@convex-dev/rate-limiter': 0.4.3(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
     transitivePeerDependencies:
       - '@standard-schema/spec'
       - hono
@@ -13658,13 +13658,13 @@ snapshots:
       - typescript
       - zod
 
-  '@convex-dev/r2@0.10.4(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)':
+  '@convex-dev/r2@0.10.4(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)':
     dependencies:
       '@aws-sdk/client-s3': 3.1158.0
       '@aws-sdk/s3-request-presigner': 3.1158.0
-      '@convex-dev/action-retrier': 0.3.1(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
-      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+      '@convex-dev/action-retrier': 0.3.1(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
       file-type: 21.3.4(supports-color@8.1.1)
       uuid: 14.0.3
     optionalDependencies:
@@ -13677,10 +13677,10 @@ snapshots:
       - typescript
       - zod
 
-  '@convex-dev/rate-limiter@0.4.3(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)':
+  '@convex-dev/rate-limiter@0.4.3(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)':
     dependencies:
-      '@convex-dev/batch-worker': 0.3.5(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      '@convex-dev/batch-worker': 0.3.5(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
     optionalDependencies:
       react: 19.3.1
     transitivePeerDependencies:
@@ -13689,16 +13689,16 @@ snapshots:
       - typescript
       - zod
 
-  '@convex-dev/react-query@0.1.0(@tanstack/react-query@5.105.3(@types/react@19.3.0)(react@19.3.1))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))':
+  '@convex-dev/react-query@0.1.0(@tanstack/react-query@5.105.3(@types/react@19.3.0)(react@19.3.1))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))':
     dependencies:
       '@tanstack/react-query': 5.105.3(@types/react@19.3.0)(react@19.3.1)
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
 
-  '@convex-dev/workpool@0.4.16(@standard-schema/spec@1.1.0)(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)':
+  '@convex-dev/workpool@0.4.16(@standard-schema/spec@1.1.0)(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7))(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)':
     dependencies:
-      '@convex-dev/batch-worker': 0.3.6(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
-      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+      '@convex-dev/batch-worker': 0.3.6(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex-helpers: 0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
     transitivePeerDependencies:
       - '@standard-schema/spec'
       - hono
@@ -18029,12 +18029,12 @@ snapshots:
       react-native: 0.88.1(@babel/core@8.0.6)(@react-native/metro-config@0.88.1(@babel/core@8.0.6)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1)
       react-native-svg: 15.16.0(react-native@0.88.1(@babel/core@8.0.6)(@react-native/metro-config@0.88.1(@babel/core@8.0.6)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(react@19.3.1)
 
-  '@tanstack/convex-db-collection@1.0.0-rc.1.5(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(typescript@6.0.3)':
+  '@tanstack/convex-db-collection@1.0.0-rc.1.5(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(typescript@6.0.3)':
     dependencies:
       '@standard-schema/spec': 1.1.0
       '@tanstack/db': 1.0.0-rc.1.5(typescript@6.0.3)
       '@tanstack/offline-transactions': 1.2.1(@tanstack/db@1.0.0-rc.1.5(typescript@6.0.3))(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
       typescript: 6.0.3
     transitivePeerDependencies:
       - '@react-native-community/netinfo'
@@ -20052,37 +20052,37 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7):
+  convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7):
     dependencies:
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
     optionalDependencies:
       '@standard-schema/spec': 1.1.0
       react: 19.3.1
       typescript: 6.0.3
       zod: 4.6.7
 
-  convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(zod@4.6.7):
+  convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(zod@4.6.7):
     dependencies:
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0)
     optionalDependencies:
       '@standard-schema/spec': 1.1.0
       react: 19.3.0
       typescript: 6.0.3
       zod: 4.6.7
 
-  convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7):
+  convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7):
     dependencies:
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
     optionalDependencies:
       '@standard-schema/spec': 1.1.0
       react: 19.3.1
       typescript: 6.0.3
       zod: 4.6.7
 
-  convex-revenuecat@0.3.2(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7):
+  convex-revenuecat@0.3.2(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7):
     dependencies:
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
-      convex-helpers: 0.1.123(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex-helpers: 0.1.123(@standard-schema/spec@1.1.0)(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
     transitivePeerDependencies:
       - '@standard-schema/spec'
       - hono
@@ -20090,11 +20090,11 @@ snapshots:
       - typescript
       - zod
 
-  convex-test@0.0.71(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)):
+  convex-test@0.0.71(convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)):
     dependencies:
-      convex: 1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
+      convex: 1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1)
 
-  convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0):
+  convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.0):
     dependencies:
       esbuild: 0.27.0
       prettier: 3.9.10
@@ -20105,7 +20105,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1):
+  convex@1.51.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1):
     dependencies:
       esbuild: 0.27.0
       prettier: 3.9.10
