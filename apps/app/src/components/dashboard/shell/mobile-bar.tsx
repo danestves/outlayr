@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useOpenFlow } from "@/components/dashboard/accounts/flows";
+import { IconButton } from "@/components/ui/icon-button";
 
 import { AccountSheet } from "./account-menu";
 
@@ -47,15 +48,13 @@ export function MobileBar() {
                 <HugeiconsIcon icon={SidebarLeftIcon} strokeWidth={2} />
             </NavRail.Trigger>
             <h1 className="min-w-0 truncate text-[17px] font-semibold">{title}</h1>
-            <Button
+            <IconButton
                 aria-disabled
-                aria-label={nav.search.value}
                 className="text-muted-foreground ml-auto"
-                size="icon-lg"
-                variant="ghost"
-            >
-                <HugeiconsIcon icon={Search01Icon} strokeWidth={2} />
-            </Button>
+                icon={Search01Icon}
+                label={nav.search.value}
+                size="lg"
+            />
             <AccountSheet />
         </header>
     );

@@ -19,6 +19,8 @@ import { useIntlayer } from "react-intlayer";
 import * as Skullet from "skullet";
 
 import { SiteLink } from "@/components/site-link";
+import { MenuContent } from "@/components/ui/menu-content";
+import { SheetContent } from "@/components/ui/sheet-content";
 import { useProfile } from "@/lib/account-state";
 import { authClient } from "@/lib/auth-client";
 import { announceSessionChange } from "@/lib/session";
@@ -100,7 +102,7 @@ export function UserMenu({ collapsed }: { collapsed: boolean }) {
                 {collapsed ? null : (
                     <>
                         <span className="min-w-0 flex-1">
-                            <b className="flex min-h-[18px] items-center gap-1.5 text-[13px] leading-[18px] font-medium">
+                            <b className="text-app-label flex min-h-[18px] items-center gap-1.5 font-medium">
                                 <VerifiedName name={name} />
                             </b>
                             <small className="text-muted-foreground block min-h-4 truncate text-xs leading-4">
@@ -116,7 +118,7 @@ export function UserMenu({ collapsed }: { collapsed: boolean }) {
                     </>
                 )}
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell ph-no-capture w-[300px]" side="right" sideOffset={25}>
+            <MenuContent align="end" className="w-[300px]" side="right" sideOffset={25}>
                 <DarkModeItem />
                 {LINKS.map((link) => (
                     <Fragment key={link.key}>
@@ -131,10 +133,10 @@ export function UserMenu({ collapsed }: { collapsed: boolean }) {
                     <HugeiconsIcon icon={Logout03Icon} strokeWidth={2} />
                     {account.signOut}
                 </Menu.Item>
-                <div className="text-muted-foreground p-2 text-[13px] leading-[18px]">
+                <div className="text-muted-foreground text-app-label p-2">
                     {account.plan} · <SiteLink to="/terms">{account.terms}</SiteLink>
                 </div>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -152,7 +154,7 @@ export function AccountSheet() {
             >
                 <Avatar className={AVATAR_INITIALS} name={name} style={avatarStyle(32)} />
             </Sheet.Trigger>
-            <Sheet.Content className="app-shell ph-no-capture">
+            <SheetContent>
                 <Sheet.Header className="flex-row items-center gap-3">
                     <Avatar className={AVATAR_INITIALS} name={name} style={avatarStyle(40)} />
                     <span className="min-w-0">
@@ -190,7 +192,7 @@ export function AccountSheet() {
                         {account.plan} · <SiteLink to="/terms">{account.terms}</SiteLink>
                     </span>
                 </Sheet.Footer>
-            </Sheet.Content>
+            </SheetContent>
         </Sheet>
     );
 }

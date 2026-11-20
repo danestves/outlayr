@@ -16,6 +16,7 @@
 @source "../node_modules/panelui-web/dist/components/chip/index.js";
 @source "../node_modules/panelui-web/dist/components/choice-cards/index.js";
 @source "../node_modules/panelui-web/dist/components/command/index.js";
+@source "../node_modules/panelui-web/dist/components/currency-input/index.js";
 @source "../node_modules/panelui-web/dist/components/day-grid/index.js";
 @source "../node_modules/panelui-web/dist/components/dialog/index.js";
 @source "../node_modules/panelui-web/dist/components/exchange/index.js";
@@ -120,16 +121,12 @@
     --color-input: var(--color-app-rule);
     --color-ring: var(--color-app-tint);
     --color-success: var(--color-app-income);
-    --color-info: #2f6d99;
-    --color-warning: #fdcc41;
+    --color-info: var(--color-app-info);
+    --color-warning: var(--color-app-warning-fill);
 }
 
 .app-shell,
 [data-slot="toast-viewport"] {
-    --color-app-on-tint: #ffffff;
-    --color-app-scrim: #17150f59;
-    --color-app-shadow-far: #1c191738;
-    --color-app-shadow-near: #1c19171f;
     --color-background: var(--color-app-bg);
     --color-foreground: var(--color-app-ink);
     --color-border: var(--color-app-rule);
@@ -148,7 +145,7 @@
     --destructive: var(--color-app-spend);
     --success: var(--color-success);
     --info: var(--color-info);
-    --warning: var(--color-app-warn);
+    --warning: var(--color-app-warning-fill);
     --chart-1: var(--color-app-ink);
     --chart-2: color-mix(in oklab, var(--color-app-ink) 30%, var(--color-app-bg));
     color: var(--color-app-ink);
@@ -177,11 +174,7 @@ html:has([role="dialog"][data-swipe-direction]) body::after {
     z-index: 40;
     height: 8px;
     pointer-events: none;
-    background: color-mix(in srgb, var(--color-app-bg), #000 28%);
-}
-
-html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
-    background: color-mix(in srgb, var(--color-app-bg), #000 50%);
+    background: color-mix(in srgb, var(--color-app-bg), #000 calc(var(--opacity-app-sheet-dim) * 100%));
 }
 
 /* A dialog stays mounted through its exit, and a second click on Save in that moment must not submit twice. */
@@ -199,27 +192,6 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
     [data-slot="toast-viewport"] * {
         border-color: var(--color-border);
     }
-}
-
-/* The web redesign's dark surfaces are the site's, not the phone's, so the shell re-points app-* here only. */
-:root[data-theme="dark"] :is(.app-shell, [data-slot="toast-viewport"]) {
-    --color-app-bg: #131209;
-    --color-app-group: #1c1b13;
-    --color-app-ink: #fafaf9;
-    --color-app-muted: #a8a29e;
-    --color-app-rule: #2e2d24;
-    --color-app-fill: #26251b;
-    --color-app-tint: #e2643f;
-    --color-app-on-tint: #17150f;
-    --color-app-strong: #3a392e;
-    --color-app-ghost: #4a4839;
-    --color-app-float: #26251b;
-    --color-app-warn: #e0b04f;
-    --color-app-hover: #ffffff08;
-    --color-app-scrim: #0009;
-    --color-app-shadow-far: #000c;
-    --color-app-shadow-near: #0006;
-    --warning: var(--color-warning);
 }
 
 /* The part tints 10% in light and 16% in dark; the frames use 16% in both. */
@@ -252,7 +224,7 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
         white-space: nowrap;
         background: var(--color-app-tint);
         color: var(--color-app-on-tint);
-        box-shadow: inset 0 1px 0 #ffffff33;
+        box-shadow: var(--shadow-app-tint);
     }
 
     .dash-mobile-bar {
@@ -338,7 +310,7 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
     .dash-seg[data-on="true"] {
         background: var(--color-app-float);
         color: var(--color-app-ink);
-        box-shadow: 0 1px 2px var(--color-app-shadow-near);
+        box-shadow: var(--shadow-app-segment);
     }
 
     .dash-swatch {
@@ -420,9 +392,7 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
         border-radius: 16px;
         border: 1px solid var(--color-app-strong);
         background: var(--color-app-float);
-        box-shadow:
-            0 16px 32px -12px var(--color-app-shadow-far),
-            0 4px 12px var(--color-app-shadow-near);
+        box-shadow: var(--shadow-app-popover);
     }
 
     .dash-menu-rule {
@@ -613,9 +583,7 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
     border: 1px solid var(--color-app-strong);
     border-radius: 16px;
     background: var(--color-app-fill);
-    box-shadow:
-        0 16px 32px -12px var(--color-app-shadow-far),
-        0 4px 12px var(--color-app-shadow-near);
+    box-shadow: var(--shadow-app-popover);
     font-size: 14px;
     line-height: 20px;
     outline: none;
@@ -693,4 +661,124 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
         margin-bottom: var(--keyboard-inset, 0px);
         max-height: calc(100dvh - 1rem - var(--keyboard-inset, 0px));
     }
+}
+
+/* One-shot, never looping: web-app-v2 forbids motion that keeps repainting. */
+@keyframes app-push-in {
+    from {
+        translate: 100% 0;
+    }
+}
+
+@keyframes app-push-out {
+    to {
+        translate: -100% 0;
+    }
+}
+
+@keyframes app-push-back-in {
+    from {
+        translate: -100% 0;
+    }
+}
+
+@keyframes app-push-back-out {
+    to {
+        translate: 100% 0;
+    }
+}
+
+@keyframes app-slide-up {
+    from {
+        translate: 0 100%;
+    }
+}
+
+@keyframes app-slide-down {
+    to {
+        translate: 0 100%;
+    }
+}
+
+@keyframes app-dissolve-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes app-dissolve-out {
+    to {
+        opacity: 0;
+    }
+}
+
+[data-motion="push-left"] {
+    animation: app-push-in var(--duration-app-push) var(--ease-app-slide) both;
+}
+
+[data-motion="push-left"][data-back] {
+    animation-name: app-push-back-in;
+}
+
+[data-motion="slide-up"] {
+    animation: app-slide-up var(--duration-app-slide) var(--ease-app-slide) both;
+}
+
+[data-motion="slide-down"] {
+    animation: app-slide-down var(--duration-app-slide) var(--ease-app-slide) both;
+}
+
+[data-motion="dissolve"] {
+    animation: app-dissolve-in var(--duration-app-dissolve) var(--ease-app-dissolve) both;
+}
+
+[data-motion="instant"] {
+    animation: none;
+    transition: none;
+}
+
+html:active-view-transition-type(push-left, dissolve) [data-scroll-restoration-id="dashboard-content"] {
+    view-transition-name: app-content;
+}
+
+html:active-view-transition-type(push-left, dissolve)::view-transition-old(root),
+html:active-view-transition-type(push-left, dissolve)::view-transition-new(root) {
+    animation: none;
+}
+
+html:active-view-transition-type(push-left, dissolve)::view-transition-group(app-content) {
+    overflow: clip;
+}
+
+/* Also covers browsers without typed view transitions, which fall back to the UA crossfade. */
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none;
+    }
+}
+
+html:active-view-transition-type(push-left)::view-transition-old(app-content) {
+    animation: app-push-out var(--duration-app-push) var(--ease-app-slide) both;
+}
+
+html:active-view-transition-type(push-left)::view-transition-new(app-content) {
+    animation: app-push-in var(--duration-app-push) var(--ease-app-slide) both;
+}
+
+html:active-view-transition-type(push-left):active-view-transition-type(back)::view-transition-old(app-content) {
+    animation-name: app-push-back-out;
+}
+
+html:active-view-transition-type(push-left):active-view-transition-type(back)::view-transition-new(app-content) {
+    animation-name: app-push-back-in;
+}
+
+html:active-view-transition-type(dissolve)::view-transition-old(app-content) {
+    animation: app-dissolve-out var(--duration-app-dissolve) var(--ease-app-dissolve) both;
+}
+
+html:active-view-transition-type(dissolve)::view-transition-new(app-content) {
+    animation: app-dissolve-in var(--duration-app-dissolve) var(--ease-app-dissolve) both;
 }
