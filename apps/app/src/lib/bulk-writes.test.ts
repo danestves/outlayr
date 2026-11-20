@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { bulkEdited, toAccount, toCategory, toDay } from "./bulk-writes";
+import { bulkEdited, entryEdit, toAccount, toAmount, toCategory, toDay } from "./bulk-writes";
 import type { BulkChange } from "./bulk-writes";
 import { prepareLedger } from "./dashboard-series-ledger";
 import type { LedgerBooks } from "./ledger-books";
@@ -137,5 +137,29 @@ describe("bulkEdited", () => {
         expect(fields.get("date")).toBe(Date.parse("2026-10-21T02:30:45.500Z"));
         expect(fields.get("day")).toBe(Date.parse("2026-10-20T04:00:00Z"));
         expect(fields.get("month")).toBe(Date.parse("2026-10-01T04:00:00Z"));
+    });
+});
+
+describe("entryEdit", () => {
+    const edit = (transactions: unknown[], id: string, text: string) =>
+        entryEdit(ledgerWith(transactions), id, toAmount(text), () => "fee note", NOW);
+
+    it("rewrites the amount in the entry's own currency and recharges a percentage fee", () => {
+        const fee = entry("fee", { amount: 3, amountUsd: 3, categoryId: null, feeForId: "a", feeRate: 0.03 });
+        const result = edit([entry("a"), fee], "a", "1,240.00");
+        const rows = "rows" in result ? result.rows : [];
+        expect(fieldsOf(rows, "a").get("amount")).toBe(1240);
+        expect(fieldsOf(rows, "a").get("currency")).toBe("USD");
+        expect(fieldsOf(rows, "fee").get("amount")).toBe(37.2);
+    });
+
+    it("refuses an empty or zero amount with the drawer's reason", () => {
+        expect(edit([entry("a")], "a", "0")).toStrictEqual({ refusal: "amount" });
+        expect(edit([entry("a")], "a", "")).toStrictEqual({ refusal: "amount" });
+    });
+
+    it("locks a card fee and a transfer leg", () => {
+        expect(edit([entry("a"), entry("card", { feeForId: "a" })], "card", "5")).toStrictEqual({ refusal: "locked" });
+        expect(edit([entry("wire", { transferId: "t" })], "wire", "5")).toStrictEqual({ refusal: "locked" });
     });
 });

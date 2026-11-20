@@ -1,6 +1,6 @@
 import type { Ledger } from "./dashboard-series-ledger";
 import { baseOf, draftOf, editedEntry, entryProblem, isFinanced } from "./entry-writes";
-import type { EntryValues } from "./entry-writes";
+import type { EntryProblem, EntryValues } from "./entry-writes";
 import type { CommitRow } from "./ledger-committer";
 
 const MINUTE_MS = 60_000;
@@ -23,11 +23,50 @@ export const toDay =
     (day: string): BulkChange =>
     ({ dateText }) => ({ dateText: `${day}${dateText.slice(day.length)}` });
 
+/** `text` is typed in the entry's own currency; income or expense decides the sign, so it carries none. */
+export const toAmount =
+    (text: string): BulkChange =>
+    () => ({ amountText: text });
+
+/** Why one entry refused a change: a single-entry rule, or an entry these writes never touch. */
+export type EditRefusal = EntryProblem | "locked" | "skipped";
+
+/** The live entry the drawer's rules let a change rewrite: not a transfer leg, a card fee or a financed entry. */
+export function editableDoc(books: Ledger["books"], id: string) {
+    const doc = books.transactions.find((row) => row.localId === id && row.deletedAt === null);
+    return doc && doc.feeForId == null && doc.transferId == null && !isFinanced(books, doc) ? doc : undefined;
+}
+
 /**
- * The rows that apply one change to many entries, each through the single-entry rules, so a fee, frozen USD and a
- * schedule move as they do in the drawer. Transfers, card fees, financed entries and anything those rules refuse stay
- * as they are and count as skipped.
+ * The rows that apply one change to one entry through the single-entry rules, so a fee, frozen USD and a schedule
+ * move as they do in the drawer. Transfers, card fees and financed entries are locked.
  */
+export function entryEdit(
+    ledger: Ledger,
+    id: string,
+    change: BulkChange,
+    feeNoteOf: (values: EntryValues) => string,
+    at = Date.now()
+): { refusal: EditRefusal } | { rows: CommitRow[] } {
+    const doc = editableDoc(ledger.books, id);
+    if (!doc) {
+        return { refusal: "locked" };
+    }
+    const base = baseOf(ledger, doc);
+    const patch = change(base.start);
+    if (!patch) {
+        return { refusal: "skipped" };
+    }
+    const values = { ...base.start, ...patch };
+    const planned = draftOf(ledger, values, base, "");
+    // The form's text stops at the minute, and entries logged in the same minute order by what is under it.
+    const moved = values.dateText === base.start.dateText ? 0 : doc.date % MINUTE_MS;
+    const draft = { ...planned, date: planned.date + moved, feeNote: feeNoteOf(values) };
+    const problem = entryProblem(ledger, draft, doc, at);
+    return problem === null ? { rows: editedEntry(ledger, doc, draft, at) } : { refusal: problem };
+}
+
+/** {@link entryEdit} over many entries. Anything refused stays as it is and counts as skipped. */
 export function bulkEdited(
     ledger: Ledger,
     ids: Iterable<string>,
@@ -35,26 +74,13 @@ export function bulkEdited(
     feeNoteOf: (values: EntryValues) => string,
     at = Date.now()
 ) {
-    const { books } = ledger;
     const rows: CommitRow[] = [];
     let count = 0;
     let skipped = 0;
     for (const id of ids) {
-        const doc = books.transactions.find((row) => row.localId === id && row.deletedAt === null);
-        const editable = doc && doc.feeForId == null && doc.transferId == null && !isFinanced(books, doc);
-        const base = editable ? baseOf(ledger, doc) : null;
-        const patch = base && change(base.start);
-        if (!doc || !base || !patch) {
-            skipped += 1;
-            continue;
-        }
-        const values = { ...base.start, ...patch };
-        const planned = draftOf(ledger, values, base, "");
-        // The form's text stops at the minute, and entries logged in the same minute order by what is under it.
-        const moved = values.dateText === base.start.dateText ? 0 : doc.date % MINUTE_MS;
-        const draft = { ...planned, date: planned.date + moved, feeNote: feeNoteOf(values) };
-        if (entryProblem(ledger, draft, doc, at) === null) {
-            rows.push(...editedEntry(ledger, doc, draft, at));
+        const edit = entryEdit(ledger, id, change, feeNoteOf, at);
+        if ("rows" in edit) {
+            rows.push(...edit.rows);
             count += 1;
         } else {
             skipped += 1;

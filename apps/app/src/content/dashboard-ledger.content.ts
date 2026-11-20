@@ -132,6 +132,39 @@ const dashboardLedger = {
                 pt: "Nada está esperando revisão.",
             }),
         },
+        exporting: {
+            cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
+            csv: t({ en: "CSV", de: "CSV", es: "CSV", fr: "CSV", pt: "CSV" }),
+            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            format: t({ en: "Format", de: "Format", es: "Formato", fr: "Format", pt: "Formato" }),
+            include: t({ en: "Include", de: "Enthalten", es: "Incluir", fr: "Inclure", pt: "Incluir" }),
+            net: t({ en: "Net", de: "Saldo", es: "Neto", fr: "Net", pt: "Líquido" }),
+            submitMany: insert(
+                t({
+                    en: "Export {{count}} entries",
+                    de: "{{count}} Einträge exportieren",
+                    es: "Exportar {{count}} movimientos",
+                    fr: "Exporter {{count}} opérations",
+                    pt: "Exportar {{count}} lançamentos",
+                })
+            ),
+            submitOne: t({
+                en: "Export 1 entry",
+                de: "1 Eintrag exportieren",
+                es: "Exportar 1 movimiento",
+                fr: "Exporter 1 opération",
+                pt: "Exportar 1 lançamento",
+            }),
+            tagsAndNotes: t({
+                en: "Tags and notes",
+                de: "Tags und Notizen",
+                es: "Etiquetas y notas",
+                fr: "Tags et notes",
+                pt: "Tags e notas",
+            }),
+            title: t({ en: "Export", de: "Exportieren", es: "Exportar", fr: "Exporter", pt: "Exportar" }),
+            view: t({ en: "View", de: "Ansicht", es: "Vista", fr: "Vue", pt: "Visualização" }),
+        },
         filters: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
             allTime: t({
@@ -264,6 +297,50 @@ const dashboardLedger = {
             ),
             spent: t({ en: "Spent", de: "Ausgegeben", es: "Gastado", fr: "Dépensé", pt: "Gasto" }),
             total: t({ en: "Total", de: "Summe", es: "Total", fr: "Total", pt: "Total" }),
+        },
+        inline: {
+            amountSaved: t({
+                en: "Amount updated",
+                de: "Betrag geändert",
+                es: "Monto actualizado",
+                fr: "Montant modifié",
+                pt: "Valor atualizado",
+            }),
+            editAmount: insert(
+                t({
+                    en: "Amount of {{name}}",
+                    de: "Betrag von {{name}}",
+                    es: "Monto de {{name}}",
+                    fr: "Montant de {{name}}",
+                    pt: "Valor de {{name}}",
+                })
+            ),
+            editTags: insert(
+                t({
+                    en: "Tags of {{name}}",
+                    de: "Tags von {{name}}",
+                    es: "Etiquetas de {{name}}",
+                    fr: "Tags de {{name}}",
+                    pt: "Tags de {{name}}",
+                })
+            ),
+            tagTooLong: insert(
+                t({
+                    en: "Keep each tag to {{limit}} characters",
+                    de: "Höchstens {{limit}} Zeichen pro Tag",
+                    es: "Máximo {{limit}} caracteres por etiqueta",
+                    fr: "{{limit}} caractères au plus par tag",
+                    pt: "No máximo {{limit}} caracteres por tag",
+                })
+            ),
+            tagsPlaceholder: t({ en: "#tag", de: "#tag", es: "#etiqueta", fr: "#tag", pt: "#tag" }),
+            tagsSaved: t({
+                en: "Tags updated",
+                de: "Tags geändert",
+                es: "Etiquetas actualizadas",
+                fr: "Tags modifiés",
+                pt: "Tags atualizadas",
+            }),
         },
         kpi: {
             fees: t({ en: "Fees", de: "Gebühren", es: "Comisiones", fr: "Frais", pt: "Tarifas" }),

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vite-plus/test";
 import type { LedgerBooks } from "@/lib/ledger-books";
 
 import { prepareLedger } from "../../../lib/dashboard-series-ledger";
-import type { LedgerRow } from "../../../lib/dashboard-series-ledger";
+import type { LedgerRow, LedgerTransfer } from "../../../lib/dashboard-series-ledger";
 import type { FoldedRow } from "../home/rows";
 import { csvOf, exportLines, installmentTags, linesOf, queryRows, rangeOf, rowOf, tally, transferMoves } from "./model";
 import type { LedgerQuery } from "./model";
@@ -221,6 +221,24 @@ describe("exportLines", () => {
             ["2026-11-05", "wire fee", "uncategorized", "chase", "Fee", -25, "USD", -25],
             ["2026-11-06", "amazon", "food", "chase", "Expense", -100, "USD", -100],
             ["2026-11-06", "foreign fee", "uncategorized", "chase", "Fee", -3, "USD", -3],
+        ]);
+    });
+
+    it("ends every line, transfers and fees included, with the extra columns", () => {
+        const names = {
+            account: (id: string | null) => id ?? "",
+            category: (row: LedgerRow) => row.topId,
+            currency: (row: LedgerRow) => ({ amount: row.original, currency: "USD" }),
+            extra: (row: LedgerRow | LedgerTransfer) => ["fromId" in row ? "moved" : row.note],
+            kind: { expense: "Expense", fee: "Fee", income: "Income", transfer: "Transfer" },
+            merchant: (row: LedgerRow) => row.note,
+        };
+        const lines = exportLines(ledger, queryRows(ledger, query({ max: 600, min: 100 }), textOf), names);
+        expect(lines.map((line) => line.slice(8))).toStrictEqual([
+            ["moved"],
+            ["wire fee"],
+            ["amazon"],
+            ["foreign fee"],
         ]);
     });
 
