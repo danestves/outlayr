@@ -448,15 +448,15 @@ function Stuck({
     icon,
     onRestore,
     onRetry,
-    restoring,
+    restoring = false,
     retrying,
     text,
 }: {
     art?: keyof typeof ART;
     icon?: "time" | "warning";
-    onRestore: () => void;
+    onRestore?: () => void;
     onRetry: () => void;
-    restoring: boolean;
+    restoring?: boolean;
     retrying: boolean;
     text: ReactNode;
 }) {
@@ -611,6 +611,7 @@ function Layout({
 
 export function Paywall() {
     const copy = useIntlayer("paywall");
+    const planCopy = useIntlayer("plan");
     const format = useDate();
     const { session } = useRouteContext({ from: "/_account/_app" });
     const { checkout, restore: restored } = useSearch({ from: "/_account/_app" });
@@ -718,6 +719,11 @@ export function Paywall() {
                 retrying={plan.isFetching}
                 text={restoreMessage ?? copy.plansUnavailable}
             />
+        );
+    }
+    if (plan.data.state === "unbilled") {
+        return frame(
+            <Stuck onRetry={() => window.location.reload()} retrying={false} text={planCopy.unbilled.footer} />
         );
     }
     if (HELD_STATES.has(plan.data.state) && !confirming) {

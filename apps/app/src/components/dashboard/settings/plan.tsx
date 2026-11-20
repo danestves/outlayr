@@ -193,6 +193,34 @@ function Term({ plan }: { plan: Held }) {
     ) : null;
     const noCharge = <Fact label={copy.nextCharge}>{copy.none}</Fact>;
 
+    if (plan.state === "granted") {
+        return (
+            <SettingsCard
+                action={
+                    <Badge dot variant="success">
+                        {copy.granted.badge}
+                    </Badge>
+                }
+                title={copy.pro}
+            >
+                <Fact label={copy.plan}>{copy.granted.plan}</Fact>
+                <Fact label={copy.granted.givenBy}>{copy.granted.admin}</Fact>
+                <Fact label={copy.granted.lasts}>{copy.granted.whileListed}</Fact>
+            </SettingsCard>
+        );
+    }
+    if (plan.state === "unbilled") {
+        return (
+            <SettingsCard
+                action={<Badge variant="outline">{copy.unbilled.badge}</Badge>}
+                footer={<Footer>{copy.unbilled.footer}</Footer>}
+                title={copy.pro}
+            >
+                <Fact label={copy.plan}>{copy.none}</Fact>
+                <Fact label={copy.unbilled.billing}>{copy.unbilled.off}</Fact>
+            </SettingsCard>
+        );
+    }
     if (plan.state === "lifetime") {
         return (
             <SettingsCard
@@ -528,6 +556,24 @@ function Payments({ plan }: { plan: Held }) {
     );
 }
 
+function Aside({ plan }: { plan: Held }) {
+    if (plan.state === "unbilled") {
+        return null;
+    }
+    if (plan.state === "granted") {
+        return <AlsoGives />;
+    }
+    if (isManagedStore(plan.store)) {
+        return <StoreManaged lifetime={plan.state === "lifetime"} store={plan.store} />;
+    }
+    return (
+        <>
+            <AlsoGives />
+            <Payments plan={plan} />
+        </>
+    );
+}
+
 export function Plan() {
     const copy = useIntlayer("plan");
     const { title: settings } = useIntlayer("dashboard-settings");
@@ -564,14 +610,7 @@ export function Plan() {
                             <Usage endsSoon={held.state === "ends"} />
                         </div>
                         <div className="flex flex-col gap-4">
-                            {isManagedStore(held.store) ? (
-                                <StoreManaged lifetime={held.state === "lifetime"} store={held.store} />
-                            ) : (
-                                <>
-                                    <AlsoGives />
-                                    <Payments plan={held} />
-                                </>
-                            )}
+                            <Aside plan={held} />
                         </div>
                     </div>
                 </Skeleton>
