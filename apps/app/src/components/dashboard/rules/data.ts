@@ -56,9 +56,9 @@ export function useRulesData(): RulesData {
 
 export type RuleWrites = ReturnType<typeof useRuleWrites>;
 
-export function useRuleWrites() {
+export function useRuleWrites(surface: ToastSurface = ruleNotices) {
     const db = useLedgerDb();
-    const committer = useLedgerCommitter(ruleNotices);
+    const committer = useLedgerCommitter(surface);
     const { toast } = useIntlayer("dashboard-rules");
     const { form } = useIntlayer("dashboard-transactions");
     const update = (change: (book: RuleBook) => RuleBook) => {
