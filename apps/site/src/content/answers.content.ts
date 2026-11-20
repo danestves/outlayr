@@ -5683,14 +5683,33 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Seven expense tracker apps compared for Argentina and Mexico: pesos and dollars, cuotas, cash, and price. Outlayr is ours.",
-                        es: "Compara 7 apps para controlar gastos en Argentina y México: pesos y dólares, cuotas, efectivo y precio. Outlayr es nuestra.",
+                        en: "Seven expense trackers for Mexico and Argentina: price, pesos and dollars, cuotas, cash, and small business fit. Outlayr is ours.",
+                        es: "Siete apps de gastos para México y Argentina: precio, pesos y dólares, cuotas, efectivo y uso en pyme. Outlayr es nuestra.",
                     }),
                     title: t({
-                        en: "Best Expense Tracker Apps in Argentina and Mexico (2026)",
-                        es: "Mejores apps para controlar gastos en Argentina y México (2026)",
+                        en: "Best Expense Management Software in Mexico (2026): 7 Apps",
+                        es: "Software de gestión de gastos en México (2026): 7 apps",
                     }),
                 },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "None of the seven is invoicing software. In Mexico a factura (CFDI) comes from the SAT's portal or a facturación service, not from an expense tracker. What these seven do is the other half: what left the account, in which currency, and on which day, so your accountant has the whole picture.",
+                                es: "Ninguna de las siete es un software de facturación. En México la factura (CFDI) sale del portal del SAT o de un servicio de facturación, no de una app de gastos. Lo que hacen las siete es la otra mitad: qué salió de la cuenta, en qué moneda y qué día, para que tu contador tenga el panorama completo.",
+                            }),
+                            t({
+                                en: "For a small business in Mexico, Mobills fits if you carry credit cards with a limit to watch, Outlayr if you pay in pesos and dollars and want the rate of the day kept on every entry, and Finy if most of your money moves through Mercado Pago. Check three things before you choose: it takes MXN, it exports to CSV or Excel, and it keeps the receipt image.",
+                                es: "Para una pyme en México, Mobills sirve si cargas tarjetas de crédito con límite que vigilar, Outlayr si pagas en pesos y dólares y quieres la tasa del día guardada en cada registro, y Finy si la mayor parte de tu dinero se mueve por Mercado Pago. Revisa tres cosas antes de elegir: que acepte MXN, que exporte a CSV o Excel y que guarde la imagen del recibo.",
+                            }),
+                        ],
+                        id: "small-business-mexico",
+                        title: t({
+                            en: "Expense management software for a small business in Mexico",
+                            es: "Software de gestión de gastos para una pyme en México",
+                        }),
+                    },
+                ],
                 picked: [
                     t({
                         en: "Each app here has a Spanish description in the App Store for Argentina and Mexico, and each fits a different need, from logging in two taps to spending in pesos and dollars or splitting a purchase into cuotas. They are in alphabetical order, not ranked.",
