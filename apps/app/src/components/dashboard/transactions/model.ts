@@ -1,5 +1,5 @@
 import { UNCATEGORIZED_ID, round, startOfDay } from "../../../lib/dashboard-series-ledger";
-import type { Ledger, LedgerRow } from "../../../lib/dashboard-series-ledger";
+import type { Ledger, LedgerRow, LedgerTransfer } from "../../../lib/dashboard-series-ledger";
 import { periodOf, shiftPeriodKey } from "../../../lib/dashboard-series-period";
 import { figureOf, foldFees, viewRows } from "../home/rows";
 import type { FoldedRow, TransactionSort } from "../home/rows";
@@ -228,6 +228,8 @@ export interface CsvNames {
     currency: (row: LedgerRow) => { amount: number; currency: string };
     kind: { expense: string; fee: string; income: string; transfer: string };
     merchant: (row: LedgerRow) => string;
+    /** Columns after the fixed ones, the same count on every line. */
+    extra?: (row: LedgerRow | LedgerTransfer) => readonly string[];
 }
 
 /**
@@ -247,6 +249,7 @@ export function exportLines(ledger: Pick<Ledger, "currency">, rows: readonly Fol
             sign * own.amount,
             own.currency,
             round(ledger, sign * row.amount),
+            ...(names.extra?.(row) ?? []),
         ];
     };
     return rows
@@ -263,6 +266,7 @@ export function exportLines(ledger: Pick<Ledger, "currency">, rows: readonly Fol
                         -row.sent,
                         row.sentCurrency,
                         -row.amount,
+                        ...(names.extra?.(row) ?? []),
                     ],
                     ...row.fees.map((fee) => entry(fee, names.kind.fee)),
                 ];

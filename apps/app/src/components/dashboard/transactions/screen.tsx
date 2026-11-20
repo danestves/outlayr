@@ -21,12 +21,17 @@ import { QuietTable } from "../home/setup";
 import { BulkBar } from "./bulk-bar";
 import { useLayout } from "./columns";
 import { EntrySheet } from "./entry-sheet";
+import { ExportDialog } from "./export-dialog";
+import type { ExportOptions } from "./export-dialog";
 import { FilterRow, useAmountLabel } from "./filter-row";
 import type { PickOption } from "./filter-row";
+import { InlineCell, amountDraft, useInlineWrites } from "./inline-edit";
+import type { Editing, InlineField } from "./inline-edit";
 import { LedgerTable } from "./ledger-table";
 import { NO_TAG, csvOf, exportLines, inTab, pageOf, queryRows, tabCounts, tally } from "./model";
 import type { Tab } from "./model";
 import { PageBar } from "./page-bar";
+import { usePeriodChoice } from "./period-chip";
 import { CategoryPicker, RowMenu, useRowWrites } from "./row-actions";
 import { appliedPatch, useSavedViews, viewParams } from "./saved-views";
 import type { SavedView } from "./saved-views";
@@ -37,7 +42,7 @@ import { useLedgerList } from "./use-ledger-list";
 import type { ListParams } from "./use-ledger-list";
 import { ViewDialogs } from "./view-dialogs";
 import type { ViewDialog } from "./view-dialogs";
-import { ViewTabs } from "./view-tabs";
+import { ViewTabs, useTabNames } from "./view-tabs";
 
 const PAGE_SIZE = 15;
 const TYPING = "input, textarea, select, [contenteditable=true], [role=listbox], [role=menu], [role=dialog]";
@@ -112,6 +117,8 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const layout = useLayout();
     const saved = useSavedViews();
     const writes = useRowWrites();
+    const inline = useInlineWrites();
+    const tabNames = useTabNames();
     const deleteEntries = useDeleteEntries();
     const view = saved.views.find((each) => each.id === search.view) ?? null;
     const transfers = query.tab === "transfers";
@@ -141,8 +148,27 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const filterKey = JSON.stringify([query, filters.accounts, filters.categories]);
     const [paging, setPaging] = useState({ key: filterKey, page: 0 });
     const page = pageOf(rows.length, paging.key === filterKey ? paging.page : 0, PAGE_SIZE);
-    const shown = rows.slice(page.first, page.last);
+    // An edit can move a row out of this page under the active sort, so the page keeps its rows until it changes.
+    const pinKey = `${filterKey}#${page.page}#${ledger.rows.length + ledger.transfers.length}`;
+    const [pinned, setPinned] = useState<{ ids: readonly string[]; key: string } | null>(null);
+    const [editingAt, setEditing] = useState<Editing | null>(null);
+    const holding = pinned?.key === pinKey;
+    const editing = holding ? editingAt : null;
+    const shown = useMemo(() => {
+        if (!holding) {
+            return rows.slice(page.first, page.last);
+        }
+        const byId = new Map(rows.map((row) => [row.id, row]));
+        return pinned.ids.flatMap((id) => byId.get(id) ?? []);
+    }, [holding, page.first, page.last, pinned, rows]);
     const goTo = (next: number) => setPaging({ key: filterKey, page: next });
+    const startEdit = (field: InlineField, id: string) => {
+        setPinned({ ids: shown.map((row) => row.id), key: pinKey });
+        setEditing({ field, id });
+    };
+    const isEditing = (field: InlineField, id: string) => editing?.field === field && editing.id === id;
+    const [exporting, setExporting] = useState(false);
+    const period = usePeriodChoice(query);
 
     const [pickedIds, setPickedIds] = useState<ReadonlySet<string>>(new Set());
     const picked = useMemo(() => rows.filter((row) => pickedIds.has(row.id)), [pickedIds, rows]);
@@ -290,7 +316,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
         return chips;
     }, [amountLabel, filters.accounts, filters.categories, list, query, words.filters.noTag.value]);
 
-    const exportCsv = (listed: readonly FoldedRow[]) => {
+    const exportCsv = (listed: readonly FoldedRow[], { tagsAndNotes }: ExportOptions) => {
         const header = [
             legacy.csv.date.value,
             legacy.csv.merchant.value,
@@ -300,6 +326,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
             legacy.csv.amount.value,
             legacy.csv.currency.value,
             legacy.csv.inMain({ currency: ledger.currency }).value,
+            ...(tagsAndNotes ? [legacy.csv.tags.value, legacy.csv.notes.value] : []),
         ];
         const exported = exportLines(ledger, listed, {
             account: list.names.account,
@@ -314,6 +341,18 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                 income: legacy.kind.income.value,
                 transfer: legacy.kind.transfer.value,
             },
+            extra: tagsAndNotes
+                ? (row) =>
+                      "fromId" in row
+                          ? ["", list.transferNote(row.id)]
+                          : [
+                                list
+                                    .tagsOf(row.id)
+                                    .map((tag) => `#${tag.name}`)
+                                    .join(" "),
+                                list.catalog.transaction(row.id)?.details ?? "",
+                            ]
+                : undefined,
             merchant: list.names.merchant,
         });
         download(`${legacy.exportFile.value}-${ledger.today}.csv`, csvOf([header, ...exported]));
@@ -483,7 +522,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
 
     return (
         <main className="flex min-h-dvh min-w-0 flex-col gap-4 px-4 pb-6 sm:px-6">
-            <PageBar onExport={() => exportCsv(rows)} setup={fresh} transfers={transfers} />
+            <PageBar onExport={() => setExporting(true)} setup={fresh} transfers={transfers} />
             {fresh ? (
                 <section className="rounded-app-xl bg-card relative isolate flex min-h-80 flex-col items-center justify-end gap-1 overflow-hidden border px-4 pb-8 text-center">
                     <QuietTable />
@@ -551,6 +590,48 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                                 empty()
                             ) : (
                                 <LedgerTable
+                                    renderAmount={(row, content) => {
+                                        const draft = amountDraft(ledger, row);
+                                        if (draft === null) {
+                                            return content;
+                                        }
+                                        return (
+                                            <InlineCell
+                                                addon={draft.currency === ledger.currency ? null : draft.currency}
+                                                align="end"
+                                                editing={isEditing("amount", row.id)}
+                                                initial={draft.text}
+                                                label={
+                                                    words.inline.editAmount({ name: list.names.merchant(row) }).value
+                                                }
+                                                numeric
+                                                onCommit={(text) => inline.amount(row, text)}
+                                                onEnd={() => setEditing(null)}
+                                                onStart={() => startEdit("amount", row.id)}
+                                            >
+                                                {content}
+                                            </InlineCell>
+                                        );
+                                    }}
+                                    renderTags={(row, content) => (
+                                        <InlineCell
+                                            addon={null}
+                                            align="start"
+                                            editing={isEditing("tags", row.id)}
+                                            initial={list
+                                                .tagsOf(row.id)
+                                                .map((tag) => `#${tag.name}`)
+                                                .join(" ")}
+                                            label={words.inline.editTags({ name: list.names.merchant(row) }).value}
+                                            numeric={false}
+                                            onCommit={(text) => inline.tags(row, text)}
+                                            onEnd={() => setEditing(null)}
+                                            onStart={() => startEdit("tags", row.id)}
+                                            placeholder={words.inline.tagsPlaceholder.value}
+                                        >
+                                            {content}
+                                        </InlineCell>
+                                    )}
                                     renderCategory={(row, content) => (
                                         <CategoryPicker row={row} writes={writes}>
                                             {content}
@@ -669,6 +750,20 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                         .then((id) => setSearch({ view: id }));
                 }}
                 views={saved.views}
+            />
+            <ExportDialog
+                onClose={() => setExporting(false)}
+                onExport={(options) => exportCsv(rows, options)}
+                open={exporting}
+                summary={{
+                    entries: rows.length,
+                    filters: [
+                        ...applied.map((chip) => chip.label),
+                        ...(query.q.trim() === "" ? [] : [`"${query.q.trim()}"`]),
+                    ],
+                    net: cash(totals.in - totals.out, "always"),
+                    view: `${view?.name ?? tabNames[query.tab]}, ${period.label}`,
+                }}
             />
             <EntrySheet
                 onClose={() => setSearch({ entry: null })}

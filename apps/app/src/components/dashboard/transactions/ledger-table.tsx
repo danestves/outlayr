@@ -48,7 +48,9 @@ export interface TablePicking {
 }
 
 interface LedgerTableProps {
+    renderAmount: (row: LedgerRow, content: ReactNode) => ReactNode;
     renderCategory: (row: LedgerRow, content: ReactNode) => ReactNode;
+    renderTags: (row: LedgerRow, content: ReactNode) => ReactNode;
     label: string;
     layout: LayoutControls;
     list: LedgerList;
@@ -61,7 +63,9 @@ interface LedgerTableProps {
 }
 
 export function LedgerTable({
+    renderAmount,
     renderCategory,
+    renderTags,
     label,
     layout,
     list,
@@ -185,7 +189,8 @@ export function LedgerTable({
             );
         const cells: Record<Column, ReactNode> = {
             account: <span className="truncate">{list.names.account(row.accountId)}</span>,
-            amount: (
+            amount: renderAmount(
+                row,
                 <span className={row.income ? "text-app-income" : undefined}>
                     {money(
                         row.income ? figure.amount : -figure.amount,
@@ -224,7 +229,8 @@ export function LedgerTable({
             ),
             notes: <span className={MUTED}>{raw?.details ?? ""}</span>,
             paidVia: <span className={MUTED}>{raw?.paidVia ?? ""}</span>,
-            tags: (
+            tags: renderTags(
+                row,
                 <span className="text-muted-foreground flex min-w-0 gap-1.5 truncate">
                     {list.tagsOf(row.id).map((tag) => (
                         <span key={tag.localId}>#{tag.name}</span>

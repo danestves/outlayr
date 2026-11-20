@@ -145,3 +145,54 @@ export function appliedRun(
     const links = linkRows(tags.links, changes, at);
     return { moved, rows: [...rows, ...links], tagged: links.length };
 }
+
+/** Names typed as `#trip #home` or `trip, home`; a name may hold spaces. Repeats collapse case-insensitively. */
+export function tagNamesOf(text: string): { names: string[] } | { problem: "tooLong" } {
+    const typed = text
+        .split(/[#,]/u)
+        .map((part) => part.trim().replaceAll(/\s+/gu, " "))
+        .filter((part) => part !== "");
+    if (typed.some((name) => name.length > TAG_NAME_LIMIT)) {
+        return { problem: "tooLong" };
+    }
+    const seen = new Map<string, string>();
+    for (const name of typed) {
+        if (!seen.has(tagKey(name))) {
+            seen.set(tagKey(name), name);
+        }
+    }
+    return { names: [...seen.values()] };
+}
+
+/** The rows that leave an entry tagged with exactly these names, creating the tags nobody has yet. */
+export function retagged(books: TagBooks, entryId: string, names: readonly string[], at: number): CommitRow[] {
+    const live = liveTags(books);
+    const created: CommitRow[] = [];
+    const wanted = new Set(
+        names.map((name) => {
+            const known = findTag(live, name);
+            if (known) {
+                return known.localId;
+            }
+            const id = crypto.randomUUID();
+            created.push(createdTag(id, name, at));
+            return id;
+        })
+    );
+    const shown = new Set(live.map((tag) => tag.localId));
+    const linked = books.links.filter((link) => link.transactionId === entryId && link.deletedAt === null);
+    const kept = new Set(linked.map((link) => link.tagId));
+    // A link to a deleted tag is not on screen, so leaving it out of the text never meant removing it.
+    const retired = linked
+        .filter((link) => shown.has(link.tagId) && !wanted.has(link.tagId))
+        .map((link): CommitRow => ({
+            deletedAt: Math.max(at, (link.restoredAt ?? 0) + 1),
+            fields: { tagId: link.tagId, transactionId: entryId },
+            localId: link.localId,
+            restoredAt: link.restoredAt ?? null,
+            table: "transactionTags",
+            updatedAt: Math.max(at, link.updatedAt + 1),
+        }));
+    const added = [...wanted].filter((id) => !kept.has(id));
+    return [...created, ...linkRows(books.links, [{ entry: { id: entryId }, tagIds: added }], at), ...retired];
+}

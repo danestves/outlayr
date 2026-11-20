@@ -84,6 +84,8 @@ const dashboardTransactions = {
                 })
             ),
             merchant: t({ en: "Merchant", de: "Händler", es: "Comercio", fr: "Commerçant", pt: "Estabelecimento" }),
+            notes: t({ en: "Notes", de: "Notizen", es: "Notas", fr: "Notes", pt: "Notas" }),
+            tags: t({ en: "Tags", de: "Tags", es: "Etiquetas", fr: "Tags", pt: "Tags" }),
             type: t({ en: "Type", de: "Typ", es: "Tipo", fr: "Type", pt: "Tipo" }),
         },
         deleted: {

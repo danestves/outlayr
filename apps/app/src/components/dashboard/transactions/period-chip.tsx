@@ -52,32 +52,20 @@ interface PeriodChipProps {
     setSearch: (patch: SearchPatch) => void;
 }
 
-export function PeriodChip({ query, setSearch }: PeriodChipProps) {
+/** The page's period as the chip names it, with the range and preset behind the name. */
+export function usePeriodChoice(query: PageQuery) {
     const dashboard = useDashboard();
     const { filters, ledger } = dashboard;
     const { filters: copy } = useIntlayer("dashboard");
     const { filters: words } = useIntlayer("dashboard-ledger");
     const monthTitle = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
     const rangeTitle = useRangeTitle();
-    const [open, setOpen] = useState(false);
     const range = useMemo(
         () => rangeOf({ custom: query.custom, key: filters.period.key, span: query.span }, ledger.firstDayOfMonth),
         [filters.period.key, ledger.firstDayOfMonth, query.custom, query.span]
     );
     const custom = query.custom.from !== undefined || query.custom.to !== undefined;
     const choice: RangeChoice | null = choiceOf(query, custom ? range : null, dashboard);
-    const scoped = useMemo<Dashboard>(() => {
-        const days = range ?? { from: ledger.today, to: ledger.today };
-        return {
-            ...dashboard,
-            filters: {
-                ...filters,
-                choice,
-                range: periodOf(customKeyOf(days.from, days.to), ledger.firstDayOfMonth),
-            },
-            setFilters: (patch) => setSearch(patchOf(patch, dashboard)),
-        };
-    }, [choice, dashboard, filters, ledger.firstDayOfMonth, ledger.today, range, setSearch]);
     const label = () => {
         switch (choice) {
             case null: {
@@ -100,11 +88,31 @@ export function PeriodChip({ query, setSearch }: PeriodChipProps) {
             }
         }
     };
+    return { choice, label: label(), range };
+}
+
+export function PeriodChip({ query, setSearch }: PeriodChipProps) {
+    const dashboard = useDashboard();
+    const { filters, ledger } = dashboard;
+    const { choice, label, range } = usePeriodChoice(query);
+    const [open, setOpen] = useState(false);
+    const scoped = useMemo<Dashboard>(() => {
+        const days = range ?? { from: ledger.today, to: ledger.today };
+        return {
+            ...dashboard,
+            filters: {
+                ...filters,
+                choice,
+                range: periodOf(customKeyOf(days.from, days.to), ledger.firstDayOfMonth),
+            },
+            setFilters: (patch) => setSearch(patchOf(patch, dashboard)),
+        };
+    }, [choice, dashboard, filters, ledger.firstDayOfMonth, ledger.today, range, setSearch]);
     return (
         <Menu onOpenChange={setOpen} open={open}>
             <Menu.Trigger render={<Chip className={`${CHIP} shrink-0`} data-pressed="" pressed size="lg" />}>
                 <HugeiconsIcon icon={Calendar03Icon} strokeWidth={1.5} />
-                {label()}
+                {label}
                 <HugeiconsIcon className="-me-1" icon={ArrowDown01Icon} strokeWidth={2} />
             </Menu.Trigger>
             <MenuContent align="start" sideOffset={8}>
