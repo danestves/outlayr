@@ -7,6 +7,7 @@ import Link01Icon from "@hugeicons/core-free-icons/Link01Icon";
 import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { accountLook } from "@outlayr/money/ledger-log";
+import { Link } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Menu } from "panelui-web/menu";
 import { Sheet } from "panelui-web/sheet";
@@ -46,7 +47,7 @@ function Line({ children, label, onPress }: { children: ReactNode; label: ReactN
             ) : null}
         </>
     );
-    const line = "border-border flex min-h-11 w-full items-center gap-3 border-b py-2 text-sm";
+    const line = "border-border text-app-body flex min-h-11 w-full items-center gap-3 border-b py-2";
     return onPress ? (
         <button className={line} onClick={onPress} type="button">
             {body}
@@ -57,9 +58,7 @@ function Line({ children, label, onPress }: { children: ReactNode; label: ReactN
 }
 
 function Kbd({ children }: { children: ReactNode }) {
-    return (
-        <kbd className="bg-muted dash-figure rounded px-1.5 py-0.5 text-[11px] leading-4 font-medium">{children}</kbd>
-    );
+    return <kbd className="bg-muted text-app-micro rounded-app-xs px-1.5 py-0.5 font-mono font-medium">{children}</kbd>;
 }
 
 /** The sheet's frame: title, the stepper and more menu beside the close button, then the body and its foot. */
@@ -114,7 +113,7 @@ function Chrome({
             <Sheet.Body className="pt-2">{body}</Sheet.Body>
             {foot ? <Sheet.Footer>{foot}</Sheet.Footer> : null}
             {wide ? (
-                <Sheet.Footer className="text-muted-foreground border-border flex-row flex-wrap items-center gap-x-3 gap-y-1 border-t py-3 text-xs pointer-coarse:hidden">
+                <Sheet.Footer className="text-muted-foreground border-border text-app-caption flex-row flex-wrap items-center gap-x-3 gap-y-1 border-t py-3 pointer-coarse:hidden">
                     <span className="flex items-center gap-1">
                         <Kbd>J</Kbd>
                         <Kbd>K</Kbd>
@@ -152,7 +151,7 @@ function MoreMenu({ id, onDelete, onLogAgain }: { id: string; onDelete: () => vo
             <Menu.Trigger aria-label={detail.more.value} render={<Button size="icon-sm" variant="ghost" />}>
                 <HugeiconsIcon icon={MoreVerticalIcon} size={18} />
             </Menu.Trigger>
-            <Menu.Content className="app-shell ph-no-capture z-[60]" sideOffset={6}>
+            <Menu.Content className="app-shell ph-no-capture z-60 transition-none" sideOffset={6}>
                 <Menu.Item onClick={copyLink}>
                     <HugeiconsIcon icon={Link01Icon} size={15} />
                     {detail.copyLink}
@@ -309,15 +308,17 @@ function ReadTop({
             <div className="flex items-center gap-3">
                 {standsAlone ? <FeeTile /> : <MerchantTile imageUrl={imageUrl} name={merchant} size="xl" />}
                 <span className="min-w-0">
-                    <span className="block truncate text-[15px] font-semibold">{merchant}</span>
-                    <span className="text-muted-foreground block truncate text-[13px]">{when}</span>
+                    <span className="text-app-title block truncate font-semibold">{merchant}</span>
+                    <span className="text-muted-foreground text-app-label block truncate">{when}</span>
                 </span>
             </div>
-            <div className={`dash-figure mt-4 text-3xl font-semibold ${row.income ? "text-app-income" : ""}`}>
+            <div
+                className={`text-app-figure mt-4 font-mono font-semibold tabular-nums ${row.income ? "text-app-income" : ""}`}
+            >
                 {total}
             </div>
             {feeTotal > 0 ? (
-                <div className="dash-figure text-muted-foreground mt-1 text-xs">
+                <div className="text-muted-foreground text-app-caption mt-1 font-mono tabular-nums">
                     {detail.feeOf({
                         amount: money(figureOf(ledger, row).amount - feeTotal, ledger.currency),
                         fee: money(feeTotal, ledger.currency),
@@ -331,7 +332,9 @@ function ReadTop({
 function InstallmentLine({ installmentId, rowId }: { installmentId: string | null | undefined; rowId: string }) {
     const { ledger } = useDashboard();
     const { detail, installmentOf } = useIntlayer("dashboard-transactions");
+    const { drawer } = useIntlayer("dashboard-ledger");
     const tag = installmentId ? installmentTags(ledger.books).get(installmentId) : undefined;
+    const planId = ledger.books.installments.find((row) => row.localId === installmentId)?.planId;
     const planned = ledger.books.installmentPlans.some(
         (plan) => plan.deletedAt === null && plan.transactionId === rowId
     );
@@ -341,6 +344,11 @@ function InstallmentLine({ installmentId, rowId }: { installmentId: string | nul
                 {tag ? installmentOf({ at: String(tag.at), of: String(tag.of) }) : null}
                 {!tag && !planned ? detail.off : null}
             </span>
+            {planId ? (
+                <Link className="text-app-tint font-medium" params={{ planId }} to="/installments/$planId">
+                    {drawer.openPlan}
+                </Link>
+            ) : null}
         </Line>
     );
 }
@@ -367,6 +375,7 @@ function ReadEntry({
     const { ledger } = useDashboard();
     const { transactions: copy } = useIntlayer("dashboard-home");
     const words = useIntlayer("dashboard-transactions");
+    const { drawer } = useIntlayer("dashboard-ledger");
     const { bulk, detail, form } = words;
     const categoryName = useCategoryName();
     const { money } = useDisplayFormat();
@@ -414,7 +423,7 @@ function ReadEntry({
                 </Line>
                 {foreign && raw ? (
                     <Line label={detail.charged}>
-                        <span className="dash-figure">{money(raw.amount, foreign)}</span>
+                        <span className="font-mono tabular-nums">{money(raw.amount, foreign)}</span>
                     </Line>
                 ) : null}
                 <Line label={form.repeat} onPress={onEdit}>
@@ -422,6 +431,15 @@ function ReadEntry({
                         {Object.entries(repeatNames).find(([type]) => Number(type) === repeat)?.[1] ?? repeatNames[0]}
                     </span>
                 </Line>
+                {repeat > 0 ? (
+                    <Link
+                        className="border-border text-app-body text-app-tint flex min-h-11 items-center justify-end border-b py-2 font-medium"
+                        search={{ item: row.id, tab: "all" }}
+                        to="/recurring"
+                    >
+                        {drawer.openRecurring}
+                    </Link>
+                ) : null}
                 <InstallmentLine installmentId={raw?.installmentId} rowId={row.id} />
                 {raw?.details?.trim() ? (
                     <Line label={detail.note}>
@@ -447,7 +465,7 @@ function ReadEntry({
                         {detail.edit}
                     </Button>
                 ) : (
-                    <p className="text-muted-foreground text-[13px]">{detail.editOnPhone}</p>
+                    <p className="text-muted-foreground text-app-label">{detail.editOnPhone}</p>
                 )}
             </div>
         </>
@@ -617,17 +635,17 @@ function TransferBody({ onDelete, row }: { onDelete: () => void; row: Extract<Fo
     };
     return (
         <TransferEditor doc={doc} key={doc.localId} onDelete={onDelete}>
-            <div className="text-muted-foreground mt-6 mb-1 text-xs font-medium">{detail.moves}</div>
+            <div className="text-muted-foreground text-app-caption mt-6 mb-1 font-medium">{detail.moves}</div>
             <div className="border-border border-t">
                 <Line label={side(row.fromId)}>
-                    <span className="dash-figure">{money(-moves.sent, row.sentCurrency, "always")}</span>
+                    <span className="font-mono tabular-nums">{money(-moves.sent, row.sentCurrency, "always")}</span>
                 </Line>
                 <Line label={side(row.toId)}>
-                    <span className="dash-figure">{money(row.arrived, row.arrivedCurrency, "always")}</span>
+                    <span className="font-mono tabular-nums">{money(row.arrived, row.arrivedCurrency, "always")}</span>
                 </Line>
                 {moves.apart.map((fee) => (
                     <Line key={fee.id} label={detail.fee}>
-                        <span className="dash-figure">{money(-fee.amount, ledger.currency, "always")}</span>
+                        <span className="font-mono tabular-nums">{money(-fee.amount, ledger.currency, "always")}</span>
                     </Line>
                 ))}
             </div>

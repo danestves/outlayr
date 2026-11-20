@@ -1,55 +1,61 @@
-import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
-import ArrowUpDownIcon from "@hugeicons/core-free-icons/ArrowUpDownIcon";
+import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
+import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
-import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
-import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
-import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { placed } from "@outlayr/money/ledger-log";
 import { Button } from "panelui-web/button";
-import { Input } from "panelui-web/input";
-import { Menu } from "panelui-web/menu";
-import { Tabs } from "panelui-web/tabs";
-import { Toolbar } from "panelui-web/toolbar";
+import { Chip } from "panelui-web/chip";
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
-import type { LedgerRow } from "@/lib/dashboard-series-ledger";
+import { IconButton } from "@/components/ui/icon-button";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { photoSrc } from "@/lib/photo-src";
 
-import { CardFrame } from "../home/card-frame";
-import { useCatalog } from "../home/catalog";
-import { titled } from "../home/format";
-import type { FoldedRow, TransactionSort } from "../home/rows";
+import { useDateFormat } from "../home/format";
+import type { FoldedRow } from "../home/rows";
 import { QuietTable } from "../home/setup";
-import { BulkActions } from "./bulk-actions";
+import { BulkBar } from "./bulk-bar";
+import { useLayout } from "./columns";
 import { EntrySheet } from "./entry-sheet";
+import { FilterRow, useAmountLabel } from "./filter-row";
+import type { PickOption } from "./filter-row";
 import { LedgerTable } from "./ledger-table";
-import { ENTRY_TYPES, csvOf, exportLines, linesOf, queryRows, rangeOf, tally } from "./model";
-import { pageQueryOf } from "./search";
-import type { PageSearch, SearchPatch } from "./search";
-import { FilterBar } from "./toolbar";
+import { NO_TAG, csvOf, exportLines, inTab, pageOf, queryRows, tabCounts, tally } from "./model";
+import type { Tab } from "./model";
+import { PageBar } from "./page-bar";
+import { CategoryPicker, RowMenu, useRowWrites } from "./row-actions";
+import { appliedPatch, useSavedViews, viewParams } from "./saved-views";
+import type { SavedView } from "./saved-views";
+import { merchantParam, pageQueryOf, patched } from "./search";
+import type { PageQuery, PageSearch, SearchPatch } from "./search";
 import { useDeleteEntries } from "./use-delete";
+import { useLedgerList } from "./use-ledger-list";
+import type { ListParams } from "./use-ledger-list";
+import { ViewDialogs } from "./view-dialogs";
+import type { ViewDialog } from "./view-dialogs";
+import { ViewTabs } from "./view-tabs";
 
-// Toolbar sizes its buttons for an icon; these carry their label too.
-const BULK_ACTION = "text-foreground gap-1.5 px-2.5 text-[13px] font-medium whitespace-nowrap";
-const TABS = ["all", "expenses", "income", "transfers"] as const;
-const SORTS = ["newest", "oldest", "largest"] as const satisfies readonly TransactionSort[];
-const TYPING = "input, textarea, select, [contenteditable=true], [role=listbox], [role=menu], .dash-po";
+const PAGE_SIZE = 15;
+const TYPING = "input, textarea, select, [contenteditable=true], [role=listbox], [role=menu], [role=dialog]";
+const DAY_MS = 86_400_000;
 
 const CLEARED: SearchPatch = {
     accounts: null,
     category: null,
     from: null,
     max: null,
+    merchant: null,
     min: null,
+    period: null,
     q: null,
     span: null,
+    tags: null,
     to: null,
-    type: null,
+    view: null,
 };
 
 function download(name: string, body: string) {
@@ -61,6 +67,30 @@ function download(name: string, body: string) {
     URL.revokeObjectURL(url);
 }
 
+const daysIn = (from: string, to: string) => Math.round((Date.parse(to) - Date.parse(from)) / DAY_MS) + 1;
+
+const listParamsOf = (query: PageQuery, accounts: readonly string[], categories: readonly string[]): ListParams => ({
+    accounts,
+    categories,
+    custom: query.custom,
+    max: query.max,
+    merchants: query.merchants,
+    min: query.min,
+    q: query.q,
+    sort: query.sort,
+    span: query.span,
+    tags: query.tags,
+});
+
+function Figure({ children, label, tone = "" }: { children: ReactNode; label: ReactNode; tone?: string }) {
+    return (
+        <span className="whitespace-nowrap">
+            <span className="text-muted-foreground">{label} </span>
+            <span className={`font-mono font-medium tabular-nums ${tone}`}>{children}</span>
+        </span>
+    );
+}
+
 interface TransactionsScreenProps {
     search: PageSearch;
     setSearch: (patch: SearchPatch, options?: { replace?: boolean }) => void;
@@ -68,86 +98,87 @@ interface TransactionsScreenProps {
 
 export function TransactionsScreen({ search, setSearch }: TransactionsScreenProps) {
     const { filters, ledger } = useDashboard();
-    const { transactions: home, uncategorized } = useIntlayer("dashboard-home");
-    const words = useIntlayer("dashboard-transactions");
+    const words = useIntlayer("dashboard-ledger");
+    const legacy = useIntlayer("dashboard-transactions");
     const { add } = useIntlayer("dashboard");
     const { open } = useAccountFlows();
     const { locale } = useLocale();
     const { money } = useDisplayFormat();
-    const catalog = useCatalog(ledger);
+    const date = useDateFormat();
+    const amountLabel = useAmountLabel();
     const searchField = useRef<HTMLInputElement>(null);
     const query = useMemo(() => pageQueryOf(search), [search]);
-    const range = useMemo(
-        () => rangeOf({ custom: query.custom, key: filters.period.key, span: query.span }, ledger.firstDayOfMonth),
-        [filters.period.key, ledger.firstDayOfMonth, query.custom, query.span]
+    const list = useLedgerList();
+    const layout = useLayout();
+    const saved = useSavedViews();
+    const writes = useRowWrites();
+    const deleteEntries = useDeleteEntries();
+    const view = saved.views.find((each) => each.id === search.view) ?? null;
+    const transfers = query.tab === "transfers";
+
+    const all = useMemo(
+        () => list.rows(listParamsOf(query, filters.accounts, filters.categories)),
+        [filters.accounts, filters.categories, list, query]
     );
-    const names = useMemo(() => {
-        const account = (id: string | null) => (id === null ? "" : (ledger.accounts.get(id)?.name ?? ""));
-        const books = new Map(ledger.books.categories.map((row) => [row.localId, row]));
-        const category = (id: string | null) => {
-            if (id === null || id === UNCATEGORIZED_ID) {
-                return id === null ? "" : uncategorized.value;
-            }
-            const found = ledger.categories.get(id) ?? books.get(id);
-            return found?.name ? titled(found.name, locale) : "";
-        };
-        const merchant = (row: LedgerRow) => row.note.trim() || category(row.topId);
-        return { account, category, merchant };
-    }, [ledger, locale, uncategorized.value]);
-    const transferNotes = useMemo(
-        () => new Map(ledger.books.transfers.map((move) => [move.localId, move.note])),
-        [ledger.books.transfers]
+    const counts = useMemo(() => tabCounts(all, list.review), [all, list.review]);
+    const rows = useMemo(() => all.filter((row) => inTab(query.tab, row, list.review)), [all, list.review, query.tab]);
+    const viewCounts = useMemo(
+        () =>
+            new Map(
+                saved.views.map((each) => {
+                    const scoped = pageQueryOf(patched({}, appliedPatch(each)));
+                    const accounts = each.params.accounts?.split(",") ?? [];
+                    const categories = each.params.category?.split(",") ?? [];
+                    const matched = list
+                        .rows(listParamsOf(scoped, accounts, categories))
+                        .filter((row) => inTab(scoped.tab, row, list.review));
+                    return [each.id, matched.length];
+                })
+            ),
+        [list, saved.views]
     );
-    const text = useMemo(
-        () => (row: FoldedRow) =>
-            "fromId" in row
-                ? `${names.account(row.fromId)} ${names.account(row.toId)} ${transferNotes.get(row.id) ?? ""}`
-                : [
-                      names.merchant(row),
-                      names.category(row.topId),
-                      names.category(row.categoryId),
-                      names.account(row.accountId),
-                      catalog.transaction(row.id)?.details ?? "",
-                  ].join(" "),
-        [catalog, names, transferNotes]
-    );
-    const rows = useMemo(
-        () => queryRows(ledger, { ...query, accounts: filters.accounts, categories: filters.categories, range }, text),
-        [filters.accounts, filters.categories, ledger, query, range, text]
-    );
-    const lines = useMemo(() => linesOf(ledger, rows, query.sort !== "largest"), [ledger, query.sort, rows]);
-    const totals = useMemo(() => tally(ledger, rows), [ledger, rows]);
+
+    const filterKey = JSON.stringify([query, filters.accounts, filters.categories]);
+    const [paging, setPaging] = useState({ key: filterKey, page: 0 });
+    const page = pageOf(rows.length, paging.key === filterKey ? paging.page : 0, PAGE_SIZE);
+    const shown = rows.slice(page.first, page.last);
+    const goTo = (next: number) => setPaging({ key: filterKey, page: next });
+
+    const [pickedIds, setPickedIds] = useState<ReadonlySet<string>>(new Set());
+    const picked = useMemo(() => rows.filter((row) => pickedIds.has(row.id)), [pickedIds, rows]);
+    const clearPicked = () => setPickedIds(new Set());
+    const [dialog, setDialog] = useState<ViewDialog | null>(null);
+
     const selectedIndex = search.entry === undefined ? -1 : rows.findIndex((row) => row.id === search.entry);
     const selected = useMemo(() => {
         if (search.entry === undefined) {
             return null;
         }
         // A link from home can name an entry outside these filters; it still opens.
-        const listed = rows[selectedIndex];
         return (
-            listed ??
+            rows[selectedIndex] ??
             queryRows(
                 ledger,
-                { ...query, accounts: [], categories: [], max: null, min: null, q: "", range: null, type: undefined },
-                text
+                {
+                    accounts: [],
+                    categories: [],
+                    max: null,
+                    min: null,
+                    q: "",
+                    range: null,
+                    sort: "newest",
+                    type: undefined,
+                },
+                list.text
             ).find((row) => row.id === search.entry) ??
             null
         );
-    }, [ledger, query, rows, search.entry, selectedIndex, text]);
+    }, [ledger, list.text, rows, search.entry, selectedIndex]);
     const step = (by: 1 | -1) => {
         const next = rows[selectedIndex === -1 ? 0 : selectedIndex + by];
         if (next) {
             setSearch({ entry: next.id }, { replace: true });
         }
-    };
-    const [pickedIds, setPickedIds] = useState<ReadonlySet<string>>(new Set());
-    const picked = useMemo(() => rows.filter((row) => pickedIds.has(row.id)), [pickedIds, rows]);
-    const pickedTotals = useMemo(() => tally(ledger, picked), [ledger, picked]);
-    const deleteEntries = useDeleteEntries();
-    const clearPicked = () => setPickedIds(new Set());
-    const deletePicked = () => {
-        deleteEntries(picked.map((row) => row.id));
-        clearPicked();
     };
     const onEscape = useEffectEvent(() => {
         if (selected === null) {
@@ -182,243 +213,463 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
         document.addEventListener("keydown", onKey);
         return () => document.removeEventListener("keydown", onKey);
     }, []);
-    const fresh = ledger.rows.length === 0 && ledger.transfers.length === 0;
-    const filtered =
-        filters.accounts.length > 0 ||
-        filters.categories.length > 0 ||
-        query.min !== null ||
-        query.max !== null ||
-        query.type !== undefined;
-    const tab = query.type ?? "all";
+
+    const filtering = (patch: SearchPatch, options?: { replace?: boolean }) =>
+        setSearch({ ...patch, view: null }, options);
+    const onTab = (tab: Tab) => setSearch({ type: tab === "all" ? null : tab, view: null });
+    const onView = (each: SavedView) => {
+        if (each.layout) {
+            layout.apply(each.layout);
+        }
+        setSearch(appliedPatch(each));
+    };
+
+    const tagOptions = useMemo((): PickOption[] => {
+        const uses = new Map<string, number>();
+        let untagged = 0;
+        for (const row of all) {
+            const tags = list.tagsOf(row.id);
+            untagged += tags.length === 0 ? 1 : 0;
+            for (const tag of tags) {
+                uses.set(tag.localId, (uses.get(tag.localId) ?? 0) + 1);
+            }
+        }
+        return [
+            ...list.tags.map((tag) => ({ count: uses.get(tag.localId) ?? 0, id: tag.localId, name: tag.name })),
+            { count: untagged, id: NO_TAG, name: words.filters.noTag.value },
+        ];
+    }, [all, list, words.filters.noTag.value]);
+    const merchantOptions = useMemo((): PickOption[] => {
+        const seen = new Map<string, PickOption>();
+        for (const row of all) {
+            if (!("fromId" in row) && row.feeFor === null) {
+                const name = list.names.merchant(row);
+                const known = seen.get(name);
+                seen.set(name, {
+                    count: (known?.count ?? 0) + 1,
+                    id: name,
+                    imageUrl: known?.imageUrl ?? photoSrc(list.catalog.transaction(row.id)?.imageKey),
+                    name,
+                });
+            }
+        }
+        return [...seen.values()].toSorted((left, right) => right.count - left.count);
+    }, [all, list]);
+
+    const applied = useMemo(() => {
+        const chips: { key: string; label: string; patch: SearchPatch }[] = [];
+        for (const id of filters.accounts) {
+            const rest = filters.accounts.filter((each) => each !== id);
+            chips.push({ key: `a${id}`, label: list.names.account(id), patch: { accounts: rest.join(",") || null } });
+        }
+        for (const id of filters.categories) {
+            const rest = filters.categories.filter((each) => each !== id);
+            chips.push({ key: `c${id}`, label: list.names.category(id), patch: { category: rest.join(",") || null } });
+        }
+        for (const id of query.tags) {
+            const name =
+                id === NO_TAG
+                    ? words.filters.noTag.value
+                    : `#${list.tags.find((tag) => tag.localId === id)?.name ?? ""}`;
+            chips.push({
+                key: `t${id}`,
+                label: name,
+                patch: { tags: query.tags.filter((each) => each !== id).join(",") || null },
+            });
+        }
+        for (const name of query.merchants) {
+            chips.push({
+                key: `m${name}`,
+                label: name,
+                patch: { merchant: merchantParam(query.merchants.filter((each) => each !== name)) },
+            });
+        }
+        if (query.min !== null || query.max !== null) {
+            chips.push({ key: "amount", label: amountLabel(query), patch: { max: null, min: null } });
+        }
+        return chips;
+    }, [amountLabel, filters.accounts, filters.categories, list, query, words.filters.noTag.value]);
+
     const exportCsv = (listed: readonly FoldedRow[]) => {
         const header = [
-            words.csv.date.value,
-            words.csv.merchant.value,
-            words.csv.category.value,
-            words.csv.account.value,
-            words.csv.type.value,
-            words.csv.amount.value,
-            words.csv.currency.value,
-            words.csv.inMain({ currency: ledger.currency }).value,
+            legacy.csv.date.value,
+            legacy.csv.merchant.value,
+            legacy.csv.category.value,
+            legacy.csv.account.value,
+            legacy.csv.type.value,
+            legacy.csv.amount.value,
+            legacy.csv.currency.value,
+            legacy.csv.inMain({ currency: ledger.currency }).value,
         ];
         const exported = exportLines(ledger, listed, {
-            account: names.account,
-            category: (row) => (row.feeFor === null ? names.category(row.topId) : ""),
+            account: list.names.account,
+            category: (row) => (row.feeFor === null ? list.names.category(row.topId) : ""),
             currency: (row) => {
-                const raw = catalog.transaction(row.id);
+                const raw = list.catalog.transaction(row.id);
                 return raw ? placed(raw, ledger.currency, null) : { amount: row.original, currency: ledger.currency };
             },
             kind: {
-                expense: words.kind.expense.value,
-                fee: words.kind.fee.value,
-                income: words.kind.income.value,
-                transfer: words.kind.transfer.value,
+                expense: legacy.kind.expense.value,
+                fee: legacy.kind.fee.value,
+                income: legacy.kind.income.value,
+                transfer: legacy.kind.transfer.value,
             },
-            merchant: names.merchant,
+            merchant: list.names.merchant,
         });
-        const span = range === null ? "all" : `${range.from}_${range.to}`;
-        download(`${words.exportFile.value}-${span}.csv`, csvOf([header, ...exported]));
+        download(`${legacy.exportFile.value}-${ledger.today}.csv`, csvOf([header, ...exported]));
     };
-    const noMatch = (
-        <div className="flex flex-col items-center gap-1 px-4 py-14 text-center">
-            <b className="text-[15px] font-semibold">
-                {query.q.trim() === "" ? words.noMatch.filters : words.noMatch.query({ query: query.q.trim() })}
-            </b>
-            <div className="mt-2.5 flex gap-2">
-                {range !== null && query.q.trim() !== "" ? (
-                    <Button
-                        onClick={() => setSearch({ from: null, span: "all", to: null })}
-                        size="sm"
-                        variant="outline"
-                    >
-                        {words.noMatch.searchAll}
-                    </Button>
-                ) : null}
-                {filtered || query.q.trim() !== "" ? (
-                    <Button onClick={() => setSearch(CLEARED)} size="sm" variant="outline">
-                        {words.clearFilters}
-                    </Button>
-                ) : null}
-            </div>
-        </div>
-    );
-    const sortMenu = (
-        <Menu>
-            <Menu.Trigger
-                aria-label={home.sort.label.value}
-                render={<Button className="text-muted-foreground size-5" size="icon-sm" variant="ghost" />}
-            >
-                <HugeiconsIcon icon={ArrowUpDownIcon} size={13} />
-            </Menu.Trigger>
-            <Menu.Content className="app-shell ph-no-capture" sideOffset={8}>
-                <Menu.RadioGroup value={query.sort}>
-                    {SORTS.map((sort) => (
-                        <Menu.RadioItem
-                            closeOnClick
-                            key={sort}
-                            onClick={() => setSearch({ sort: sort === "newest" ? null : sort })}
-                            value={sort}
-                        >
-                            {home.sort[sort]}
-                        </Menu.RadioItem>
-                    ))}
-                </Menu.RadioGroup>
-            </Menu.Content>
-        </Menu>
-    );
-    const header = (
-        <div className="flex items-center justify-end gap-2 max-sm:flex-wrap">
-            <Input.Group className="w-[300px] max-w-full shrink max-sm:w-[calc(100vw-72px)]" size="sm">
-                <Input.Addon>
-                    <HugeiconsIcon icon={Search01Icon} size={14} />
-                </Input.Addon>
-                <Input
-                    aria-label={words.search.value}
-                    onChange={(event) => setSearch({ q: event.target.value }, { replace: true })}
-                    onKeyDown={(event) => {
-                        if (event.key === "Escape") {
-                            event.currentTarget.blur();
-                        }
-                    }}
-                    placeholder={words.search.value}
-                    ref={searchField}
-                    type="search"
-                    value={query.q}
-                />
-                <Input.Addon align="end" className="pointer-coarse:hidden">
-                    <kbd className="text-[11px] leading-4">/</kbd>
-                </Input.Addon>
-            </Input.Group>
-            <div className="flex items-center gap-2 max-sm:hidden">
-                <Tabs
-                    onValueChange={(value) => setSearch({ type: ENTRY_TYPES.find((type) => type === value) ?? null })}
-                    value={tab}
-                >
-                    <Tabs.List>
-                        {TABS.map((each) => (
-                            <Tabs.Trigger key={each} value={each}>
-                                {
-                                    {
-                                        all: home.all,
-                                        expenses: home.expenses,
-                                        income: home.incomeTab,
-                                        transfers: words.transfers,
-                                    }[each]
-                                }
-                            </Tabs.Trigger>
-                        ))}
-                    </Tabs.List>
-                </Tabs>
-            </div>
-        </div>
-    );
-    const count = (value: number) => value.toLocaleString(locale);
-    return (
-        <main className="@container flex h-[calc(100dvh-52px-env(safe-area-inset-top))] min-w-0 flex-col px-4 pb-5 sm:px-6 lg:h-dvh">
-            <FilterBar onExport={() => exportCsv(rows)} query={query} setSearch={setSearch} setup={fresh} />
-            <CardFrame
-                action={fresh ? undefined : header}
-                className="min-h-0 flex-1 max-sm:[&_[data-slot=frame-title]]:hidden"
-                footer={
-                    fresh || rows.length === 0 ? undefined : (
-                        <span className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
-                            <span className="max-sm:order-last max-sm:ml-auto">
-                                <span className="text-muted-foreground max-sm:hidden">{home.entries} </span>
-                                <span className="dash-figure max-sm:text-muted-foreground font-medium max-sm:font-normal">
-                                    {count(totals.count)}
-                                </span>
-                            </span>
-                            <span className="ml-auto max-sm:hidden">
-                                <span className="text-muted-foreground">{words.footer.in} </span>
-                                <span className="dash-figure text-app-income font-medium">
-                                    {money(totals.in, ledger.currency, "always")}
-                                </span>
-                            </span>
-                            <span className="max-sm:hidden">
-                                <span className="text-muted-foreground">{words.footer.out} </span>
-                                <span className="dash-figure font-medium">
-                                    {money(-totals.out, ledger.currency, "always")}
-                                </span>
-                            </span>
-                            <span>
-                                <span className="text-muted-foreground">{words.footer.net} </span>
-                                <span className="dash-figure font-medium">
-                                    {money(totals.in - totals.out, ledger.currency, "always")}
-                                </span>
-                            </span>
+
+    const fresh = ledger.rows.length === 0 && ledger.transfers.length === 0;
+    const narrowedByFilter = applied.length > 0 || query.q.trim() !== "";
+    const totals = tally(ledger, rows);
+    const cash = (value: number, sign: "always" | "auto" = "auto") => money(value, ledger.currency, sign);
+    const moves = rows.flatMap((row) => ("fromId" in row ? [row] : []));
+    const moved = moves.reduce((sum, move) => sum + move.amount, 0);
+    const fees = moves.reduce((sum, move) => sum + move.fees.reduce((each, fee) => each + fee.amount, 0), 0);
+    const spanDays = () => {
+        const days = rows.map((row) => row.day).toSorted();
+        const from = days[0] ?? ledger.today;
+        return daysIn(from, ledger.today);
+    };
+    const footerFigures = (): ReactNode => {
+        if (transfers) {
+            return (
+                <>
+                    <Figure label={words.footer.moved}>{cash(moved)}</Figure>
+                    <Figure label={words.footer.fees}>{cash(fees)}</Figure>
+                </>
+            );
+        }
+        if (view !== null || narrowedByFilter) {
+            const net = totals.in - totals.out;
+            return (
+                <>
+                    <Figure label={words.footer.average}>{cash(Math.abs(net) / Math.max(1, totals.count))}</Figure>
+                    <Figure label={words.footer.total}>{cash(net, "always")}</Figure>
+                </>
+            );
+        }
+        switch (query.tab) {
+            case "expenses": {
+                return (
+                    <>
+                        <span className="text-muted-foreground font-mono tabular-nums">
+                            {words.footer.perDay({ amount: cash(totals.out / Math.max(1, spanDays())) })}
                         </span>
-                    )
-                }
-                panelClassName="@container min-h-0 overflow-x-clip overflow-y-auto [overflow-anchor:none]"
-                stackAction
-                title={home.title}
-            >
-                {fresh ? (
-                    <div className="dash-empty relative isolate min-h-[299px] justify-end pt-0 pb-7">
-                        <QuietTable />
-                        <b className="text-[15px] font-semibold">{words.empty.title}</b>
-                        <p className="text-muted-foreground text-[13px]">{words.empty.line}</p>
-                        <Button className="mt-3" onClick={() => open({ kind: "entry" })}>
-                            <HugeiconsIcon icon={Add01Icon} size={17} />
-                            {add.entry}
-                        </Button>
-                    </div>
-                ) : (
-                    <LedgerTable
-                        empty={noMatch}
-                        label={home.title.value}
-                        lines={lines}
-                        onOpen={(row) => setSearch({ entry: row.id })}
-                        picking={{
-                            all: rows.length > 0 && picked.length === rows.length,
-                            ids: pickedIds,
-                            onPick: (id) =>
-                                setPickedIds((current) => {
-                                    const next = new Set(current);
-                                    if (!next.delete(id)) {
-                                        next.add(id);
-                                    }
-                                    return next;
-                                }),
-                            onPickAll: () =>
-                                setPickedIds(new Set(picked.length === rows.length ? [] : rows.map((row) => row.id))),
-                            some: picked.length > 0,
-                        }}
-                        selected={selected?.id ?? null}
-                        sort={sortMenu}
-                    />
-                )}
-                {picked.length > 0 ? (
-                    <div className="sticky bottom-3 z-[2] hidden h-0 items-end justify-center @2xl:flex">
-                        <Toolbar aria-label={words.bulk.selected({ count: String(picked.length) }).value}>
-                            <span className="ps-2.5 pe-1 text-[13px] font-medium whitespace-nowrap">
-                                {words.bulk.selected({ count: String(picked.length) })}
+                        <Figure label={words.footer.spent}>{cash(totals.out)}</Figure>
+                    </>
+                );
+            }
+            case "income": {
+                return (
+                    <Figure label={words.footer.in} tone="text-app-income">
+                        {cash(totals.in, "always")}
+                    </Figure>
+                );
+            }
+            case "review": {
+                const days = rows.map((row) => row.day).toSorted();
+                return (
+                    <>
+                        {days.length > 0 ? (
+                            <span className="text-muted-foreground font-mono tabular-nums">
+                                {words.transferName({ from: date.day(days[0] ?? ""), to: date.day(days.at(-1) ?? "") })}
                             </span>
-                            <span className="dash-figure text-muted-foreground pe-1 text-[13px] whitespace-nowrap">
-                                {money(pickedTotals.in - pickedTotals.out, ledger.currency, "always")}
-                            </span>
-                            <Toolbar.Separator />
-                            <BulkActions
-                                className={BULK_ACTION}
-                                ids={picked.map((row) => row.id)}
-                                kinds={picked.flatMap((row) => ("income" in row ? [row.income] : []))}
-                            />
-                            <Toolbar.Button className={BULK_ACTION} onClick={() => exportCsv(picked)}>
-                                <HugeiconsIcon icon={Download01Icon} size={14} />
-                                {words.export}
-                            </Toolbar.Button>
-                            <Toolbar.Button className={BULK_ACTION} onClick={deletePicked}>
-                                <HugeiconsIcon icon={Delete02Icon} size={14} />
-                                {words.bulk.delete}
-                            </Toolbar.Button>
-                            <Toolbar.Separator />
-                            <Toolbar.Button label={words.bulk.clear.value} onClick={clearPicked}>
-                                <HugeiconsIcon icon={Cancel01Icon} size={16} />
-                            </Toolbar.Button>
-                        </Toolbar>
-                    </div>
+                        ) : null}
+                        <Figure label={words.footer.total}>{cash(totals.in - totals.out, "always")}</Figure>
+                    </>
+                );
+            }
+            case "uncategorized": {
+                return <Figure label={words.footer.total}>{cash(totals.in - totals.out, "always")}</Figure>;
+            }
+            default: {
+                return (
+                    <>
+                        <Figure label={words.footer.in} tone="text-app-income">
+                            {cash(totals.in, "always")}
+                        </Figure>
+                        <Figure label={words.footer.out}>{cash(-totals.out, "always")}</Figure>
+                        <Figure label={words.footer.net}>{cash(totals.in - totals.out, "always")}</Figure>
+                    </>
+                );
+            }
+        }
+    };
+
+    const kpis = () => {
+        const routes = new Map<string, { count: number; from: string; to: string }>();
+        const net = new Map<string, number>();
+        for (const move of moves) {
+            const key = `${move.fromId}>${move.toId}`;
+            const known = routes.get(key);
+            routes.set(key, { count: (known?.count ?? 0) + 1, from: move.fromId, to: move.toId });
+            net.set(move.toId, (net.get(move.toId) ?? 0) + move.amount);
+            net.set(move.fromId, (net.get(move.fromId) ?? 0) - move.amount);
+        }
+        const [top] = [...routes.values()].toSorted((left, right) => right.count - left.count);
+        const [into] = [...net.entries()].toSorted((left, right) => right[1] - left[1]);
+        const cell = "flex min-w-0 flex-col gap-1 px-4 py-3";
+        const label = "text-muted-foreground text-app-label";
+        const value = "text-app-title truncate font-mono font-semibold tabular-nums";
+        return (
+            <div className="rounded-app-xl bg-card grid grid-cols-2 divide-x border md:grid-cols-4">
+                <div className={cell}>
+                    <span className={label}>{words.kpi.moved}</span>
+                    <span className={value}>{cash(moved)}</span>
+                </div>
+                <div className={cell}>
+                    <span className={label}>{words.kpi.route}</span>
+                    <span className="text-app-title truncate font-semibold">
+                        {top
+                            ? words.transferName({ from: list.names.account(top.from), to: list.names.account(top.to) })
+                            : "-"}
+                    </span>
+                </div>
+                <div className={cell}>
+                    <span className={label}>
+                        {into ? words.kpi.netInto({ account: list.names.account(into[0]) }) : words.kpi.moved}
+                    </span>
+                    <span className={value}>{into ? cash(into[1], "always") : "-"}</span>
+                </div>
+                <div className={cell}>
+                    <span className={label}>{words.kpi.fees}</span>
+                    <span className={value}>{cash(fees)}</span>
+                </div>
+            </div>
+        );
+    };
+
+    const empty = (): ReactNode => {
+        if (query.tab === "review" && !narrowedByFilter) {
+            return (
+                <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
+                    <b className="text-app-title font-semibold">{words.empty.reviewTitle}</b>
+                    <p className="text-muted-foreground text-app-label">{words.empty.reviewLine}</p>
+                </div>
+            );
+        }
+        return (
+            <div className="flex flex-col items-center gap-1 px-4 py-16 text-center">
+                <b className="text-app-title font-semibold">{words.empty.noResults}</b>
+                <p className="text-muted-foreground text-app-label">{words.empty.noResultsLine}</p>
+                {narrowedByFilter ? (
+                    <Button className="mt-3" onClick={() => setSearch(CLEARED)} size="sm" variant="outline">
+                        {words.empty.clearAll}
+                    </Button>
                 ) : null}
-            </CardFrame>
+            </div>
+        );
+    };
+
+    const pickAll = () => {
+        const ids = shown.map((row) => row.id);
+        const every = ids.every((id) => pickedIds.has(id));
+        setPickedIds((current) => {
+            const next = new Set(current);
+            for (const id of ids) {
+                if (every) {
+                    next.delete(id);
+                } else {
+                    next.add(id);
+                }
+            }
+            return next;
+        });
+    };
+    const pageAll = shown.length > 0 && shown.every((row) => pickedIds.has(row.id));
+    const reviewIds = rows.flatMap((row) => (list.review.has(row.id) ? [row.id] : []));
+    const count = (value: number) => value.toLocaleString(locale);
+
+    return (
+        <main className="flex min-h-dvh min-w-0 flex-col gap-4 px-4 pb-6 sm:px-6">
+            <PageBar onExport={() => exportCsv(rows)} setup={fresh} transfers={transfers} />
+            {fresh ? (
+                <section className="rounded-app-xl bg-card relative isolate flex min-h-80 flex-col items-center justify-end gap-1 overflow-hidden border px-4 pb-8 text-center">
+                    <QuietTable />
+                    <b className="text-app-title font-semibold">{legacy.empty.title}</b>
+                    <p className="text-muted-foreground text-app-label">{legacy.empty.line}</p>
+                    <Button className="mt-3" onClick={() => open({ kind: "entry" })}>
+                        {add.entry}
+                    </Button>
+                </section>
+            ) : (
+                <>
+                    {transfers ? kpis() : null}
+                    <section className="rounded-app-xl bg-card flex min-w-0 flex-col overflow-hidden border">
+                        <ViewTabs
+                            counts={counts}
+                            onSave={() => setDialog({ filters: applied.map((chip) => chip.label), kind: "save" })}
+                            onTab={onTab}
+                            onView={onView}
+                            onViewAction={(each, action) => {
+                                if (action === "duplicate") {
+                                    void saved.duplicate(each, words.views.copyName({ name: each.name }).value);
+                                } else if (action === "left") {
+                                    void saved.move(each.id, -1);
+                                } else {
+                                    setDialog({ kind: action, view: each });
+                                }
+                            }}
+                            tab={query.tab}
+                            view={view}
+                            viewCounts={viewCounts}
+                            views={saved.views}
+                        />
+                        <FilterRow
+                            layout={layout}
+                            merchants={merchantOptions}
+                            onMarkAll={
+                                query.tab === "review" && reviewIds.length > 0 ? () => writes.reviewed(reviewIds) : null
+                            }
+                            query={query}
+                            searchField={searchField}
+                            setSearch={filtering}
+                            tags={tagOptions}
+                            transfers={transfers}
+                        />
+                        {applied.length > 0 ? (
+                            <div className="flex flex-wrap items-center gap-2 px-3 pb-2.5">
+                                {applied.map((chip) => (
+                                    <Chip
+                                        key={chip.key}
+                                        onRemove={() => filtering(chip.patch)}
+                                        removeLabel={chip.label}
+                                        size="lg"
+                                    >
+                                        {chip.label}
+                                    </Chip>
+                                ))}
+                                <Button onClick={() => filtering(CLEARED)} size="sm" variant="ghost">
+                                    <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+                                    {words.filters.clearAll}
+                                </Button>
+                            </div>
+                        ) : null}
+                        <div className="border-t" data-motion="dissolve" key={view?.id ?? query.tab}>
+                            {rows.length === 0 ? (
+                                empty()
+                            ) : (
+                                <LedgerTable
+                                    renderCategory={(row, content) => (
+                                        <CategoryPicker row={row} writes={writes}>
+                                            {content}
+                                        </CategoryPicker>
+                                    )}
+                                    label={words.page.title.value}
+                                    layout={layout}
+                                    list={list}
+                                    onOpen={(row) => setSearch({ entry: row.id })}
+                                    picking={{
+                                        all: pageAll,
+                                        ids: pickedIds,
+                                        onPick: (id) =>
+                                            setPickedIds((current) => {
+                                                const next = new Set(current);
+                                                if (!next.delete(id)) {
+                                                    next.add(id);
+                                                }
+                                                return next;
+                                            }),
+                                        onPickAll: pickAll,
+                                        some: shown.some((row) => pickedIds.has(row.id)),
+                                    }}
+                                    renderMenu={(row) => (
+                                        <RowMenu
+                                            name={list.names.merchant(row)}
+                                            onDelete={() => deleteEntries([row.id])}
+                                            onOpen={() => setSearch({ entry: row.id })}
+                                            reviewing={list.review.has(row.id)}
+                                            row={row}
+                                            writes={writes}
+                                        />
+                                    )}
+                                    rows={shown}
+                                    selected={selected?.id ?? null}
+                                    transfers={transfers}
+                                />
+                            )}
+                        </div>
+                        {rows.length === 0 ? null : (
+                            <footer className="text-app-label flex min-h-12 flex-wrap items-center gap-x-4 gap-y-1 border-t px-3 py-2">
+                                <span className="text-muted-foreground font-mono tabular-nums">
+                                    {words.footer.range({
+                                        first: count(page.first + 1),
+                                        last: count(page.last),
+                                        total: count(rows.length),
+                                    })}
+                                </span>
+                                {page.pages > 1 ? (
+                                    <span className="flex items-center gap-1">
+                                        <IconButton
+                                            disabled={page.page === 0}
+                                            icon={ArrowLeft01Icon}
+                                            label={words.footer.previous.value}
+                                            onClick={() => goTo(page.page - 1)}
+                                            size="sm"
+                                            variant="ghost"
+                                        />
+                                        <IconButton
+                                            disabled={page.page === page.pages - 1}
+                                            icon={ArrowRight01Icon}
+                                            label={words.footer.next.value}
+                                            onClick={() => goTo(page.page + 1)}
+                                            size="sm"
+                                            variant="ghost"
+                                        />
+                                    </span>
+                                ) : null}
+                                <span className="ms-auto flex flex-wrap items-center gap-x-4 gap-y-1">
+                                    {footerFigures()}
+                                </span>
+                            </footer>
+                        )}
+                    </section>
+                </>
+            )}
+            {picked.length > 0 ? (
+                <BulkBar
+                    list={list}
+                    onClear={clearPicked}
+                    onDelete={() => {
+                        deleteEntries(picked.map((row) => row.id));
+                        clearPicked();
+                    }}
+                    picked={picked}
+                />
+            ) : null}
+            <ViewDialogs
+                dialog={dialog}
+                entries={(each) => viewCounts.get(each.id) ?? 0}
+                onClose={() => setDialog(null)}
+                onDelete={(each) => {
+                    setDialog(null);
+                    void saved.remove(each.id);
+                    if (view?.id === each.id) {
+                        setSearch({ view: null });
+                    }
+                }}
+                onRename={(each, name) => {
+                    setDialog(null);
+                    void saved.rename(each.id, name);
+                }}
+                onSave={(name, keepSort) => {
+                    setDialog(null);
+                    void saved
+                        .save({
+                            ...(keepSort && { layout: layout.layout }),
+                            name,
+                            params: viewParams({
+                                ...search,
+                                accounts: filters.accounts.join(",") || undefined,
+                                category: filters.categories.join(",") || undefined,
+                            }),
+                            sort: keepSort ? (search.sort ?? null) : null,
+                        })
+                        .then((id) => setSearch({ view: id }));
+                }}
+                views={saved.views}
+            />
             <EntrySheet
                 onClose={() => setSearch({ entry: null })}
                 onDelete={(row) => {

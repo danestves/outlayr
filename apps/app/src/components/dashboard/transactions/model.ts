@@ -1,4 +1,4 @@
-import { round, startOfDay } from "../../../lib/dashboard-series-ledger";
+import { UNCATEGORIZED_ID, round, startOfDay } from "../../../lib/dashboard-series-ledger";
 import type { Ledger, LedgerRow } from "../../../lib/dashboard-series-ledger";
 import { periodOf, shiftPeriodKey } from "../../../lib/dashboard-series-period";
 import { figureOf, foldFees, viewRows } from "../home/rows";
@@ -6,6 +6,14 @@ import type { FoldedRow, TransactionSort } from "../home/rows";
 
 export const ENTRY_TYPES = ["expenses", "income", "transfers"] as const;
 export type EntryType = (typeof ENTRY_TYPES)[number];
+
+export const TABS = ["all", "expenses", "income", "transfers", "review", "uncategorized"] as const;
+export type Tab = (typeof TABS)[number];
+
+export const SORTS = ["newest", "oldest", "largest", "smallest", "merchant", "category"] as const;
+export type Sort = (typeof SORTS)[number];
+
+export const NO_TAG = "none";
 
 export const SPANS = ["quarter", "year", "all"] as const;
 export type Span = (typeof SPANS)[number];
@@ -294,4 +302,132 @@ export function transferMoves(
         apart: move.fees.filter((fee) => !joins(fee)),
         sent: move.fees.filter(joins).reduce((sum, fee) => round({ currency }, sum + fee.amount), move.sent),
     };
+}
+
+export interface Narrowing {
+    merchantOf: (row: FoldedRow) => string;
+    merchants: readonly string[];
+    tagged: ReadonlySet<string> | null;
+}
+
+export function inTab(tab: Tab, row: FoldedRow, review: ReadonlySet<string>) {
+    switch (tab) {
+        case "expenses": {
+            return "income" in row && !row.income;
+        }
+        case "income": {
+            return "income" in row && row.income;
+        }
+        case "transfers": {
+            return "fromId" in row;
+        }
+        case "review": {
+            return review.has(row.id);
+        }
+        case "uncategorized": {
+            return "income" in row && row.feeFor === null && row.topId === UNCATEGORIZED_ID;
+        }
+        default: {
+            return true;
+        }
+    }
+}
+
+export function narrowed(rows: readonly FoldedRow[], { merchantOf, merchants, tagged }: Narrowing) {
+    const names = new Set(merchants.map((name) => name.toLocaleLowerCase()));
+    return rows.filter(
+        (row) =>
+            (tagged === null || tagged.has(row.id)) &&
+            (names.size === 0 || names.has(merchantOf(row).toLocaleLowerCase()))
+    );
+}
+
+export function tabCounts(rows: readonly FoldedRow[], review: ReadonlySet<string>) {
+    const counts: Record<Tab, number> = { all: 0, expenses: 0, income: 0, review: 0, transfers: 0, uncategorized: 0 };
+    for (const row of rows) {
+        for (const tab of TABS) {
+            if (inTab(tab, row, review)) {
+                counts[tab] += 1;
+            }
+        }
+    }
+    return counts;
+}
+
+export function taggedIds(
+    links: readonly { deletedAt: number | null; tagId: string; transactionId: string }[],
+    liveTagIds: ReadonlySet<string>,
+    picked: readonly string[],
+    ids: readonly string[]
+): ReadonlySet<string> | null {
+    if (picked.length === 0) {
+        return null;
+    }
+    const wanted = new Set(picked);
+    const tagged = new Set<string>();
+    const anyTag = new Set<string>();
+    for (const link of links) {
+        if (link.deletedAt !== null || !liveTagIds.has(link.tagId)) {
+            continue;
+        }
+        anyTag.add(link.transactionId);
+        if (wanted.has(link.tagId)) {
+            tagged.add(link.transactionId);
+        }
+    }
+    if (wanted.has(NO_TAG)) {
+        for (const id of ids) {
+            if (!anyTag.has(id)) {
+                tagged.add(id);
+            }
+        }
+    }
+    return tagged;
+}
+
+export interface SortKeys {
+    category: (row: FoldedRow) => string;
+    merchant: (row: FoldedRow) => string;
+}
+
+export function sortedRows(
+    ledger: Pick<Ledger, "currency">,
+    rows: readonly FoldedRow[],
+    sort: Sort,
+    keys: SortKeys,
+    locale: string
+): readonly FoldedRow[] {
+    const byText = (key: (row: FoldedRow) => string) => {
+        const collator = new Intl.Collator(locale, { sensitivity: "base" });
+        return rows.toSorted((a, b) => collator.compare(key(a), key(b)) || b.at - a.at);
+    };
+    switch (sort) {
+        case "smallest": {
+            return rows.toSorted((a, b) => figureOf(ledger, a).amount - figureOf(ledger, b).amount || b.at - a.at);
+        }
+        case "merchant": {
+            return byText(keys.merchant);
+        }
+        case "category": {
+            return byText(keys.category);
+        }
+        default: {
+            return rows;
+        }
+    }
+}
+
+export const querySort = (sort: Sort): TransactionSort => (sort === "oldest" || sort === "largest" ? sort : "newest");
+
+export interface Page {
+    first: number;
+    last: number;
+    page: number;
+    pages: number;
+}
+
+export function pageOf(count: number, page: number, size: number): Page {
+    const pages = Math.max(1, Math.ceil(count / size));
+    const current = Math.min(Math.max(page, 0), pages - 1);
+    return { first: current * size, last: Math.min(count, (current + 1) * size), page: current, pages };
 }
