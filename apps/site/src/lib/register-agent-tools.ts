@@ -1,3 +1,4 @@
+import { analyticsStarted } from "@outlayr/shared/analytics";
 import type { Locale } from "@outlayr/shared/i18n";
 import type { JsonObject } from "effect/Schema";
 import { defaultLocale, getLocaleFromPath } from "intlayer";
@@ -17,22 +18,26 @@ export function registerAgentTools(router: Router) {
     if (!modelContext) {
         return;
     }
-    registerCalculators(modelContext);
     let locale = getLocaleFromPath(window.location.pathname) ?? defaultLocale;
     let controller = registerTools(modelContext, router, locale);
+    const reregister = () => {
+        controller.abort();
+        controller = registerTools(modelContext, router, locale);
+    };
     router.subscribe("onResolved", ({ toLocation }) => {
         const next = getLocaleFromPath(toLocation.pathname) ?? defaultLocale;
         if (next !== locale) {
-            controller.abort();
             locale = next;
-            controller = registerTools(modelContext, router, locale);
+            reregister();
         }
     });
+    void analyticsStarted.then(reregister);
 }
 
 function registerTools(modelContext: ModelContext, router: Router, locale: Locale) {
     const controller = new AbortController();
     const options = { signal: controller.signal };
+    registerCalculators(modelContext, options);
     void modelContext.registerTool(
         {
             annotations: { readOnlyHint: true },
@@ -94,15 +99,18 @@ function registerTools(modelContext: ModelContext, router: Router, locale: Local
     return controller;
 }
 
-function registerCalculators(modelContext: ModelContext) {
+function registerCalculators(modelContext: ModelContext, options: { signal: AbortSignal }) {
     for (const spec of CALCULATOR_SPECS) {
-        void modelContext.registerTool({
-            ...spec,
-            annotations: { readOnlyHint: true },
-            execute: async (input: JsonObject) => {
-                const { runCalculator } = await loadCalculatorTools();
-                return runCalculator(spec.name, input);
+        void modelContext.registerTool(
+            {
+                ...spec,
+                annotations: { readOnlyHint: true },
+                execute: async (input: JsonObject) => {
+                    const { runCalculator } = await loadCalculatorTools();
+                    return runCalculator(spec.name, input);
+                },
             },
-        });
+            options
+        );
     }
 }

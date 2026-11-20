@@ -14,7 +14,7 @@ intro: "This policy explains what Outlayr collects, where it goes, how long it s
 - The app sends usage analytics and crash reports to PostHog: which screens you open, which features you use, and errors. Never amounts, merchants, notes, or names. It starts off if your device’s region is in the EEA or UK, and on everywhere else. Change it in **Settings › Share analytics**. Our server also tells PostHog the size, cost, and speed of each request to Anthropic, never what it contained, and links it to your account only while Share analytics is on.
 - This website uses PostHog too, with a cookie. If you’re in the EEA or UK, it asks first. Change your answer in the footer under **Cookies**.
 - With Outlayr Pro you can connect Notion to import expenses from your Notion databases. We keep Notion’s access key encrypted on our servers so you can import again, until you disconnect Notion or delete your account. What we read from Notion passes through our server to your device and isn’t stored.
-- You can connect an AI assistant such as Claude to your account. Once you approve it, it can read what your devices synced, and with Outlayr Pro add entries. What it reads is handled under that assistant’s privacy policy.
+- You can connect an AI assistant such as Claude to your account. Once you approve it, it can read what your devices synced, and with Outlayr Pro add entries. What it reads is handled under that assistant’s privacy policy. Our server tells PostHog which tool it used and how long it took, never what it read.
 - If you invite friends, each one sees your first name on your invite, and you see their first name, whether they bought Pro, and when. Never what they logged or what they paid.
 - No ads and no tracking across other companies’ apps. We don’t sell your personal information or share it for advertising.
 - You can delete your account and everything synced to it from the app at any time: **Settings › Account › Delete account**.
@@ -57,11 +57,12 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Install ID, app version, errors | Update checks | Expo | Expo’s policy |
 | Screens, features used, errors, install ID, device model | App use | PostHog | Until account deletion, or PostHog’s policy if you never sign in |
 | Feature, model, tokens, cost, speed, and errors of each AI request | Suggestions, notification reading, voice, scans, imports | PostHog | With Share analytics on, until account deletion. Otherwise PostHog’s policy |
-| Pages, clicks, scrolling, errors, page speed, visit recordings | Website visits | PostHog | PostHog’s policy |
+| Pages, clicks, scrolling, errors, page speed, visit recordings, tools an AI agent uses on the site | Website visits | PostHog | PostHog’s policy |
 | Browser push address and keys, time zone, language, reminder time | Daily reminder on the web, if you turn it on | Our servers, your browser’s push service (such as Google, Apple, Mozilla, or Microsoft) | Until you turn it off or delete your account |
 | A report you share: its name, the names of its rows and columns, and their totals, or percentages if you hide amounts | Share link on a report, if you turn it on | Our servers, anyone with the link | Until you turn the link off, it expires, or you delete your account |
 | Entries, balances, budgets, upcoming charges | AI assistant you approve | The assistant’s company | Their policies |
 | Assistant name and address, your approval, access keys | AI assistant you approve | Our servers | Until account deletion |
+| Tool name, timing, and failure of each assistant request, connection ID | AI assistant you approve | PostHog | PostHog’s policy |
 | Your emails | You write | Our inbox | As long as needed |
 
 ## What stays on your device
@@ -240,6 +241,8 @@ Once approved, the assistant can read what your devices last synced: entries, ca
 
 What the assistant reads, and what you tell it, goes to the company that runs it and is handled under that company's privacy policy. We don't send it anywhere else.
 
+Each time the assistant uses one of Outlayr's tools, such as reading balances or adding an entry, our server tells PostHog which tool it was, how long it took, and whether it failed, with a random ID for that connection so its calls stay together. The record never includes what the assistant asked for or what it read, and never carries your account ID.
+
 To keep the connection working, we store the assistant's name and web address, your approval and what it may do, when it last used its access, and its access keys, which we keep only as a one-way hash. Access keys last one hour, and the assistant renews them while you stay connected. A renewal key that goes unused for 30 days expires. An assistant connected from a link gets a one-hour key it can't renew. If you remove Outlayr from the assistant, its access expires within 30 days. Deleting your account removes it at once, and you can write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com) to have it removed sooner.
 
 ## Outlayr Pro
@@ -287,13 +290,13 @@ These companies help run Outlayr. Each receives only what its job needs.
 - **[Stripe](https://stripe.com/privacy)** processes purchases on the web, and its Link service sells them. It receives your name, email, account ID, the plan you chose, and the payment details and billing address you enter at checkout.
 - **[Expo](https://expo.dev/privacy)** delivers app updates. It receives a random install ID, the app version, your IP address, and update error messages.
 - **Your browser’s push service**, run by your browser’s maker such as Google, Apple, Mozilla, or Microsoft, delivers the daily web reminder if you turn it on. It receives your browser’s push address and an encrypted message it can’t read.
-- **[PostHog](https://posthog.com/privacy)** provides usage analytics and crash reports, from servers in the United States. It receives the events described in [What the app sends even without an account](#what-the-app-sends-even-without-an-account), a random install ID, and your account ID once you sign in, plus the [records of AI requests](#records-of-ai-requests) our server sends. It also receives this website’s analytics, described in [This website](#this-website).
+- **[PostHog](https://posthog.com/privacy)** provides usage analytics and crash reports, from servers in the United States. It receives the events described in [What the app sends even without an account](#what-the-app-sends-even-without-an-account), a random install ID, and your account ID once you sign in, plus the [records of AI requests](#records-of-ai-requests) and [AI assistant tool calls](#ai-assistants) our server sends. It also receives this website’s analytics, described in [This website](#this-website).
 
 Open Exchange Rates, CotizaVE, and Binance publish the exchange rates our server reads. They receive nothing about you.
 
 ## No ads or tracking
 
-Outlayr contains no advertising software. Its only analytics are the PostHog events described [above](#what-the-app-sends-even-without-an-account) and the [records of AI requests](#records-of-ai-requests), which we use to fix crashes, learn which features to improve, and keep AI costs in check. Outlayr doesn’t use your device’s advertising identifier and doesn’t track you across other companies’ apps or websites.
+Outlayr contains no advertising software. Its only analytics are the PostHog events described [above](#what-the-app-sends-even-without-an-account), the [records of AI requests](#records-of-ai-requests), and the [AI assistant tool calls](#ai-assistants), which we use to fix crashes, learn which features to improve, and keep AI costs in check. Outlayr doesn’t use your device’s advertising identifier and doesn’t track you across other companies’ apps or websites.
 
 We publish totals from these events, our servers, RevenueCat, and GitHub on [tryoutlayr.com/open](https://tryoutlayr.com/open), such as how many installs opened the app this week, how many entries were saved, and from how many countries. They are counts across everyone, never anything about one person.
 
@@ -301,7 +304,7 @@ We don’t sell your personal information, share it for targeted advertising, or
 
 ## This website
 
-This website uses PostHog to learn how people use it. As you browse, it sends the pages you view and the page that sent you, clicks, how far you scroll, how fast pages load, errors, and a recording of the visit (clicks, scrolling, and what was on screen, with anything you type hidden). If you answer the question at the end of setting up your ledger here, it also sends where you heard about Outlayr, and the few words you type if you pick Something else. When you import data into your ledger here, it sends the kind of import and how many rows it brought in, rounded to a range such as 10 to 99. Each event carries your browser, operating system, language, time zone, and screen size. Events reach PostHog through relay.tryoutlayr.com, and PostHog discards your IP address. They are never linked to your Outlayr account.
+This website uses PostHog to learn how people use it. As you browse, it sends the pages you view and the page that sent you, clicks, how far you scroll, how fast pages load, errors, and a recording of the visit (clicks, scrolling, and what was on screen, with anything you type hidden). If you answer the question at the end of setting up your ledger here, it also sends where you heard about Outlayr, and the few words you type if you pick Something else. When you import data into your ledger here, it sends the kind of import and how many rows it brought in, rounded to a range such as 10 to 99. If an AI agent in your browser uses one of the site’s tools, such as a calculator, it sends which tool, how long it took, whether it failed and its error message, the reason the agent gave for using it, and its AI model if the agent says. It doesn’t send the tool’s answer. Each event carries your browser, operating system, language, time zone, and screen size. Events reach PostHog through relay.tryoutlayr.com, and PostHog discards your IP address. They are never linked to your Outlayr account.
 
 If you sign in on this site, to connect an AI assistant or to open your ledger, it keeps your session in cookies so you stay signed in. Those cookies are needed for sign-in and aren't used for analytics.
 
@@ -311,7 +314,7 @@ From your ledger on this site you can share a report with a link. When you turn 
 
 To recognize you on later visits, PostHog keeps a random ID in a cookie and your browser’s storage. If you’re in the EEA or UK, or your browser sends Global Privacy Control, the site asks before setting it and records nothing until you answer. Elsewhere it’s set on your first visit. Change your answer at any time in the footer under **Cookies**. Your answer is kept in your browser.
 
-If you decline, the site still counts your visit without a cookie. PostHog turns your IP address and browser into a code that changes every day, so it can’t recognize you on a later day, and the visit isn’t recorded.
+If you decline, the site still counts your visit without a cookie. PostHog turns your IP address and browser into a code that changes every day, so it can’t recognize you on a later day, and the visit isn’t recorded. Tools an AI agent uses on the site are still sent, with that code.
 
 The site’s fonts, images, and video are served from the site itself. The company that hosts it may keep standard request logs, such as your IP address, browser user agent, the page requested, and the time, to deliver and protect the site. Links to other sites, such as the App Store, lead to services with their own policies.
 
@@ -325,7 +328,7 @@ If you’re in the European Economic Area or the United Kingdom, we rely on thes
 | The welcome and Pro notes, and notice of changes to this policy or our Terms | Contract: they’re part of the account and subscription you asked for. |
 | Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, PDF statements, notification text, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
 | Merchant suggestions, notification reading, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster and more accurate to file. Suggestions, notification reading, and web lookups reach Anthropic only once you allow it, and turning off Smart fill is how you object. |
-| Sessions, usage limits, error logs, update checks, and records of AI requests not linked to you | Legitimate interests: keeping Outlayr secure, working, and free of abuse. |
+| Sessions, usage limits, error logs, update checks, AI assistant tool calls, and records of AI requests not linked to you | Legitimate interests: keeping Outlayr secure, working, and free of abuse. |
 | Usage analytics, crash reports, and records of AI requests linked to your account | Your consent. Share analytics starts off when your device’s region is in the EEA or UK. Turning it on gives consent, and turning it off withdraws it. |
 | Website analytics | Your consent for the cookie and visit recordings, asked on your first visit. Declining withdraws it. A declined visit is still counted without a cookie, under our legitimate interest in knowing how many people visit. |
 | Camera, microphone, photos, biometric lock, notifications, and notification access | Your permission, given when your device asks and withdrawn in its settings. |
@@ -347,7 +350,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Usage counters that enforce limits on scans, voice entries, suggestions, and notification reading hold counts only, keyed to your account ID, and are deleted with your account.
 - Invite records (your code, who invited whom, first names, whether the friend bought Pro, and months earned or waiting) are deleted with the account they belong to. An invite that earned a month loses the friend’s name when the friend’s account is deleted, and stays until the inviter’s account is deleted.
 - Items in the shared merchant list aren’t linked to anyone. They’re refreshed after 30 or 90 days.
-- Analytics events linked to your account are deleted with it. PostHog erases them in a later batch, so they can remain for a while after the app reports the deletion finished. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry a random ID instead of your account ID, plus the conversation ID for voice entry, and are kept the same way.
+- Analytics events linked to your account are deleted with it. PostHog erases them in a later batch, so they can remain for a while after the app reports the deletion finished. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry a random ID instead of your account ID, plus the conversation ID for voice entry, and are kept the same way, as are AI assistant tool calls, which carry a connection ID instead.
 - Website events carry a random browser ID, or a code that changes daily if you declined cookies, and are kept under PostHog’s retention policy.
 - The copy of a report you share is deleted when you turn its link off, within a day of the link expiring, when you delete the report on this site, or when you delete your account.
 - Our providers, including Anthropic, ElevenLabs, Apple, Google, and Expo, and Notion if you connect it, keep the data they receive under their own retention policies.

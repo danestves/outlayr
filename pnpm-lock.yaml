@@ -957,6 +957,9 @@ importers:
       '@outlayr/money':
         specifier: workspace:*
         version: link:../money
+      '@posthog/mcp':
+        specifier: 1.6.0
+        version: 1.6.0(@modelcontextprotocol/server@2.4.0)(posthog-node@6.0.4(@opentelemetry/api@1.9.1)(@react-email/render@2.2.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(rxjs@7.8.2))
       better-auth:
         specifier: 'catalog:'
         version: 1.7.16(770dc9788a0eeb76ec9dcbe2bee6937e)
@@ -972,6 +975,9 @@ importers:
       jose:
         specifier: ^6.2.13
         version: 6.2.13
+      posthog-node:
+        specifier: 6.0.4
+        version: 6.0.4(@opentelemetry/api@1.9.1)(@react-email/render@2.2.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(rxjs@7.8.2)
       unpdf:
         specifier: 1.9.1
         version: 1.9.1
@@ -4369,11 +4375,30 @@ packages:
   '@posthog/core@1.67.3':
     resolution: {integrity: sha512-BAVJB+ADAjFNBVZKCRbMi5+WMJaSFHHIEId0/ebvAwhOVIMmK4mVrktGGjx9zJBHLe82JdQVVRhpaOwLgoBMgA==}
 
+  '@posthog/core@1.69.1':
+    resolution: {integrity: sha512-36hlJRZlVh5d+yBOmqObT162SrqNes9yY4x4wLDXVSu5Dzdt19KNxQ136cd37+U0yABZVx7ehjtWslyn1iG+0Q==}
+
+  '@posthog/mcp@1.6.0':
+    resolution: {integrity: sha512-3bwMcPQ9SXsTzEs+rI1ftqaFqOBIxkKV5E8PtE/cYl3TYRdfLxcJUIrak1DQscH7ZgiVRqxYvTH01bXwMxsNIw==}
+    engines: {node: ^20.20.0 || >=22.22.0}
+    peerDependencies:
+      '@modelcontextprotocol/sdk': '>=1.26.0'
+      '@modelcontextprotocol/server': '>=2.0.0'
+      posthog-node: ^5.0.0 || ^6.0.0
+    peerDependenciesMeta:
+      '@modelcontextprotocol/sdk':
+        optional: true
+      '@modelcontextprotocol/server':
+        optional: true
+
   '@posthog/types@1.419.0':
     resolution: {integrity: sha512-XX7zRYt/vK8AzaD6V+oDquAzacZf5exJv971dja9En8Qf6g84Qvc3rpT0w6hDYYLWrjaSSkdjFfvvoXI0ouJDg==}
 
   '@posthog/types@1.425.0':
     resolution: {integrity: sha512-VaAlT5cl2wQ8mRkC3agp32YqI1HCZyeDE9qc5cziXgtbqK8kGeodhqZpJgSIPz0wAl3yRtKN4yOL+d7wxDRPww==}
+
+  '@posthog/types@1.425.1':
+    resolution: {integrity: sha512-mh7jyQ5lN+XCeOnMdYkBEFtO/G0TxeLOKTWNH6E6OZjxS4nVM0Tb2xQt+FG5DCFM9qzL2HmuX6A793TwlJVDvw==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -10500,6 +10525,21 @@ packages:
       '@types/react':
         optional: true
       react:
+        optional: true
+
+  posthog-node@6.0.4:
+    resolution: {integrity: sha512-jl3NX7LNWu5il7Rqmpoj/tUGLLEyUw4d7ym3lgZ5VHcSz35UK4SPoKTR9S+RAVBxGBRo6mzUPYyk/ZLCyuFNcQ==}
+    engines: {node: ^20.20.0 || >=22.22.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.2.0
+      '@react-email/render': ^2.1.0
+      rxjs: ^7.0.0
+    peerDependenciesMeta:
+      '@opentelemetry/api':
+        optional: true
+      '@react-email/render':
+        optional: true
+      rxjs:
         optional: true
 
   posthog-react-native@4.86.0:
@@ -16742,9 +16782,22 @@ snapshots:
     dependencies:
       '@posthog/types': 1.425.0
 
+  '@posthog/core@1.69.1':
+    dependencies:
+      '@posthog/types': 1.425.1
+
+  '@posthog/mcp@1.6.0(@modelcontextprotocol/server@2.4.0)(posthog-node@6.0.4(@opentelemetry/api@1.9.1)(@react-email/render@2.2.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(rxjs@7.8.2))':
+    dependencies:
+      '@posthog/core': 1.69.1
+      posthog-node: 6.0.4(@opentelemetry/api@1.9.1)(@react-email/render@2.2.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(rxjs@7.8.2)
+    optionalDependencies:
+      '@modelcontextprotocol/server': 2.4.0
+
   '@posthog/types@1.419.0': {}
 
   '@posthog/types@1.425.0': {}
+
+  '@posthog/types@1.425.1': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -24802,6 +24855,14 @@ snapshots:
       react: 19.3.1
     transitivePeerDependencies:
       - preact-render-to-string
+
+  posthog-node@6.0.4(@opentelemetry/api@1.9.1)(@react-email/render@2.2.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(rxjs@7.8.2):
+    dependencies:
+      '@posthog/core': 1.69.1
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.1
+      '@react-email/render': 2.2.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      rxjs: 7.8.2
 
   posthog-react-native@4.86.0(5808a20b3a88bee5557f96fe03b383a1):
     dependencies:

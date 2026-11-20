@@ -62,6 +62,11 @@ const ASK_FIRST = new Set([
 let posthog: PostHog | null = null;
 let starting = false;
 const listeners = new Set<() => void>();
+let markStarted: (() => void) | undefined;
+/** Resolves once posthog-js has started. It only captures WebMCP tools registered after that. */
+export const analyticsStarted = new Promise<void>((resolve) => {
+    markStarted = resolve;
+});
 
 function notify() {
     for (const listener of listeners) {
@@ -99,6 +104,7 @@ export const startAnalytics = Effect.fn("Analytics.start")(function* startAnalyt
         api_host: "https://relay.tryoutlayr.com",
         before_send: dropNoiseExceptions,
         capture_exceptions: true,
+        capture_webmcp: true,
         cookieless_mode: "on_reject",
         defaults: "2026-08-30",
         disable_conversations: true,
@@ -114,6 +120,7 @@ export const startAnalytics = Effect.fn("Analytics.start")(function* startAnalyt
         client.opt_in_capturing({ captureEventName: false });
     }
     posthog = client;
+    markStarted?.();
     notify();
 });
 
