@@ -4,7 +4,7 @@ import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import SquareLock02Icon from "@hugeicons/core-free-icons/SquareLock02Icon";
 import { decimalsFor } from "@outlayr/money/currency";
 import { accountLook } from "@outlayr/money/ledger-log";
-import { useNavigate } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Field } from "panelui-web/field";
@@ -14,7 +14,7 @@ import { useId, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { DayField, FlowDialog, MoneyField, plainAmount } from "@/components/dashboard/accounts/fields";
+import { DayField, FlowDialog, plainAmount } from "@/components/dashboard/accounts/fields";
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { accountRows, inMain } from "@/components/dashboard/accounts/model";
@@ -22,10 +22,13 @@ import type { AccountRow } from "@/components/dashboard/accounts/model";
 import { useMonthYear } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
+import { focusAmount } from "@/components/dashboard/transactions/entry-form";
 import { AccountTile } from "@/components/ledger/tiles";
+import { MoneyField } from "@/components/ui/money-field";
 import { parseAmount } from "@/lib/account-writes";
 import { wallInstant, wallText } from "@/lib/entry-writes";
 import { addDays } from "@/lib/ledger";
+import { viewTransition } from "@/lib/motion";
 import {
     createdTransfer,
     newTransferInput,
@@ -45,10 +48,11 @@ import type { GoalView } from "./model";
 import { GoalBar, PERCENT, useGoalMoney } from "./parts";
 
 const FOOTER_PILL = "min-w-max! px-3.5";
-const POPUP = "app-shell z-[60]";
+const POPUP = "app-shell ph-no-capture z-60";
 const DEFAULT_SPAN_DAYS = 365;
 const LABEL = "data-invalid:text-foreground has-[[aria-invalid=true]]:text-foreground";
-const LOCKED = "bg-app-fill/40 text-muted-foreground flex h-9 w-full items-center gap-2 rounded-lg border px-3 text-sm";
+const LOCKED =
+    "bg-app-fill/40 text-muted-foreground rounded-app-md text-app-body flex h-9 w-full items-center gap-2 border px-3";
 
 function Locked({ row }: { row: Pick<AccountRow, "look" | "name"> }) {
     return (
@@ -62,7 +66,7 @@ function Locked({ row }: { row: Pick<AccountRow, "look" | "name"> }) {
 
 function Hint({ children, icon = Calendar03Icon }: { children: ReactNode; icon?: typeof Calendar03Icon }) {
     return (
-        <p className="text-muted-foreground flex items-center gap-2 border-t pt-3 text-[13px] leading-5">
+        <p className="text-muted-foreground text-app-label flex items-center gap-2 border-t pt-3 leading-5">
             <Glyph icon={icon} className="flex-none" size={15} />
             {children}
         </p>
@@ -91,7 +95,7 @@ function AccountPick({
                 {picked ? <AccountTile account={picked.look} size="sm" /> : null}
                 <Select.Value placeholder={dialog.noAccounts.value} />
                 {picked ? (
-                    <span className="dash-figure text-muted-foreground ml-auto truncate ps-2 text-xs">
+                    <span className="dash-figure text-muted-foreground text-app-caption ml-auto truncate ps-2">
                         {dialog.holdsToday({ amount: format(picked.balance, picked.currency) })}
                     </span>
                 ) : null}
@@ -121,7 +125,7 @@ function NoAccounts({ onClose }: { onClose: () => void }) {
                         </Select.Trigger>
                     </Select>
                 </Field>
-                <p className="rounded-lg border px-3 py-2.5 text-[13px] leading-5">{dialog.noAccountsBody}</p>
+                <p className="rounded-app-md text-app-label border px-3 py-2.5 leading-5">{dialog.noAccountsBody}</p>
             </Dialog.Body>
             <Dialog.Footer>
                 <Button className={FOOTER_PILL} onClick={onClose} variant="secondary">
@@ -255,11 +259,11 @@ function FormSummary({
     const monthYear = useMonthYear();
     return (
         <div className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between gap-3 text-[13px] leading-5">
+            <div className="text-app-label flex items-baseline justify-between gap-3 leading-5">
                 <span className="text-muted-foreground min-w-0">
                     {dialog.summary({ account: account.name, amount: format(target, currency), month: monthYear(day) })}
                 </span>
-                <span className="dash-figure text-muted-foreground flex-none text-xs">
+                <span className="dash-figure text-muted-foreground text-app-caption flex-none">
                     {Math.min(PERCENT, Math.round((saved / target) * PERCENT))}%
                 </span>
             </div>
@@ -288,7 +292,7 @@ function AccountField({
             {view ? (
                 <>
                     <Locked row={view.account} />
-                    <Field.Description className="text-xs">{dialog.accountLocked}</Field.Description>
+                    <Field.Description className="text-app-caption!">{dialog.accountLocked}</Field.Description>
                 </>
             ) : (
                 <AccountPick onPick={onPick} rows={rows} value={value} />
@@ -428,14 +432,16 @@ function GoalForm({
                     </Field>
                     <div className="grid grid-cols-2 items-start gap-3">
                         <Field invalid={shown.includes("amount")}>
-                            <Field.Label className={LABEL}>{dialog.amount}</Field.Label>
                             <MoneyField
-                                autoFocus={!view}
-                                currency={currency}
-                                invalid={shown.includes("amount")}
-                                label={dialog.amount.value}
-                                onText={setAmountText}
-                                text={amountText}
+                                className={shown.includes("amount") ? "border-destructive max-w-none" : "max-w-none"}
+                                codes={[currency]}
+                                label={dialog.amount}
+                                onValueChange={(next) => setAmountText(next.amount === null ? "" : String(next.amount))}
+                                ref={view ? undefined : focusAmount}
+                                value={{
+                                    amount: amountText.trim() === "" ? null : target,
+                                    code: currency,
+                                }}
                             />
                             {shown.includes("amount") ? (
                                 <Field.Error match>{copy.amountRequired({ zero })}</Field.Error>
@@ -464,7 +470,7 @@ function GoalForm({
                         />
                     ) : null}
                     {failed ? (
-                        <p className="text-destructive text-xs" role="alert">
+                        <p className="text-destructive text-app-caption" role="alert">
                             {dialog.saveFailed}
                         </p>
                     ) : null}
@@ -499,10 +505,13 @@ function DeleteGoal({ onClose, view }: { onClose: () => void; view: GoalView }) 
     const { cancel, delete: copy } = useIntlayer("dashboard-goals");
     const format = useGoalMoney();
     const navigate = useNavigate();
+    const onDetail = useLocation({ select: (location) => location.pathname.startsWith("/goals/") });
     const remove = () => {
         onClose();
         committer.commitWithUndo([deletedGoal(view.goal, Date.now())], {
-            after: navigate({ to: "/goals" }),
+            after: onDetail
+                ? navigate({ to: "/goals", viewTransition: viewTransition("push-left", { back: true }) })
+                : undefined,
             failed: copy.failed.value,
             text: copy.toast.value,
         });
@@ -604,14 +613,15 @@ function AddMoney({ onClose, view }: { onClose: () => void; view: GoalView }) {
                     }}
                 >
                     <Field invalid={Boolean(amountError)}>
-                        <Field.Label className={LABEL}>{add.amount}</Field.Label>
                         <MoneyField
-                            autoFocus
-                            currency={fromCurrency}
-                            invalid={Boolean(amountError)}
-                            label={add.amount.value}
-                            onText={(text) => change(withSent(ledger, values, text))}
-                            text={values.sentText}
+                            className={amountError ? "border-destructive max-w-none" : "max-w-none"}
+                            codes={[fromCurrency]}
+                            label={add.amount}
+                            onValueChange={(next) =>
+                                change(withSent(ledger, values, next.amount === null ? "" : String(next.amount)))
+                            }
+                            ref={focusAmount}
+                            value={{ amount: values.sentText.trim() === "" ? null : sent, code: fromCurrency }}
                         />
                         {amountError ? <Field.Error match>{amountError}</Field.Error> : null}
                     </Field>
@@ -646,12 +656,20 @@ function AddMoney({ onClose, view }: { onClose: () => void; view: GoalView }) {
                     </div>
                     {fromCurrency === intoCurrency ? null : (
                         <Field>
-                            <Field.Label className={LABEL}>{add.arrives}</Field.Label>
                             <MoneyField
-                                currency={intoCurrency}
-                                label={add.arrives.value}
-                                onText={(text) => change(withArrived(ledger, values, text))}
-                                text={values.arrivedText}
+                                className="max-w-none"
+                                codes={[intoCurrency]}
+                                label={add.arrives}
+                                onValueChange={(next) =>
+                                    change(withArrived(ledger, values, next.amount === null ? "" : String(next.amount)))
+                                }
+                                value={{
+                                    amount:
+                                        values.arrivedText.trim() === ""
+                                            ? null
+                                            : parseAmount(values.arrivedText, decimalsFor(intoCurrency)),
+                                    code: intoCurrency,
+                                }}
                             />
                         </Field>
                     )}
@@ -666,7 +684,7 @@ function AddMoney({ onClose, view }: { onClose: () => void; view: GoalView }) {
                     </Field>
                     {arriving > 0 && !amountError && view.comparable ? (
                         <div className="flex flex-col gap-2">
-                            <div className="flex items-baseline justify-between gap-3 text-[13px] leading-5">
+                            <div className="text-app-label flex items-baseline justify-between gap-3 leading-5">
                                 <span className="text-muted-foreground">{add.afterThis}</span>
                                 <span className="dash-figure">
                                     {add.ofTarget({
@@ -682,7 +700,7 @@ function AddMoney({ onClose, view }: { onClose: () => void; view: GoalView }) {
                                     style={{ width: share(after - view.saved) }}
                                 />
                             </div>
-                            <p className="text-muted-foreground text-xs leading-4">{add.note}</p>
+                            <p className="text-muted-foreground text-app-caption">{add.note}</p>
                         </div>
                     ) : null}
                 </form>

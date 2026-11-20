@@ -17,8 +17,10 @@ import { useIntlayer } from "react-intlayer";
 import { ICON_TILE } from "@/components/dashboard/accounts/accounts-screen";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { MenuContent } from "@/components/ui/menu-content";
 import { money } from "@/lib/ledger";
 import { LedgerSettingsContext } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { useGoalFlows } from "./flow-context";
 import type { GoalView, Standing } from "./model";
@@ -47,14 +49,14 @@ export function GoalTile({ reached = false }: { reached?: boolean }) {
 export function GoalBar({ className = "", reached, value }: { className?: string; reached: boolean; value: number }) {
     return (
         <Kpi.Progress
-            className={`[&>[role=progressbar]]:bg-foreground/[0.06] gap-0 ${reached ? "[--pu-color:var(--color-app-income)]" : "[--pu-color:var(--color-app-tint)]"} ${className}`}
+            className={`[&>[role=progressbar]]:bg-app-fill gap-0 ${reached ? "[--pu-color:var(--color-app-income)]" : "[--pu-color:var(--color-app-tint)]"} ${className}`}
             maxValue={1}
             value={Math.min(1, Math.max(0, value))}
         />
     );
 }
 
-const BADGE = "dash-figure h-[22px] rounded-md px-2 text-xs font-medium normal-nums";
+const BADGE = "dash-figure text-app-caption! h-5.5 rounded-md px-2 font-medium normal-nums";
 
 export function PaceBadge({ standing }: { standing: Standing | null }) {
     const { pace } = useIntlayer("dashboard-goals");
@@ -114,7 +116,7 @@ export function GoalMenu({ className = "", view }: { className?: string; view: G
                 aria-label={menu.more({ name: view.name }).value}
                 render={
                     <Button
-                        className={`text-muted-foreground -mx-2 size-[26px] ${className}`}
+                        className={`text-muted-foreground -mx-2 size-6.5 ${className}`}
                         size="icon-sm"
                         variant="ghost"
                     />
@@ -122,8 +124,16 @@ export function GoalMenu({ className = "", view }: { className?: string; view: G
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" alignOffset={-4} className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
-                <Menu.Item onClick={() => navigate({ params: { goalId: view.id }, to: "/goals/$goalId" })}>
+            <MenuContent align="end" alignOffset={-4} className="w-60" sideOffset={4}>
+                <Menu.Item
+                    onClick={() =>
+                        navigate({
+                            params: { goalId: view.id },
+                            to: "/goals/$goalId",
+                            viewTransition: viewTransition("push-left"),
+                        })
+                    }
+                >
                     <Glyph icon={ArrowUpRight01Icon} size={16} />
                     {menu.open}
                 </Menu.Item>
@@ -142,29 +152,7 @@ export function GoalMenu({ className = "", view }: { className?: string; view: G
                     <Glyph icon={Delete02Icon} size={16} />
                     {menu.delete}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
-    );
-}
-
-// The plate's back lines start further in than its front ones, so a wide card would show its diagonal ends.
-const PLATE_EDGES =
-    "@min-[1640px]:[mask-image:linear-gradient(to_right,transparent_300px,#000_560px,#000_calc(100%_-_560px),transparent_calc(100%_-_300px))]";
-
-export function Terrain({ flat = false }: { flat?: boolean }) {
-    const name = flat ? "terrain-flat" : "terrain";
-    const height = flat ? 180 : 874;
-    const image = `pointer-events-none absolute top-0 left-1/2 -z-10 h-auto max-w-none -translate-x-1/2 select-none ${PLATE_EDGES}`;
-    return (
-        <>
-            <img alt="" className={`light-only ${image}`} height={height} src={`/art/goals/${name}.svg`} width={2202} />
-            <img
-                alt=""
-                className={`dark-only ${image}`}
-                height={height}
-                src={`/art/goals/${name}-dark.svg`}
-                width={2202}
-            />
-        </>
     );
 }

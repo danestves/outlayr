@@ -1,3 +1,4 @@
+import PauseIcon from "@hugeicons/core-free-icons/PauseIcon";
 import { Table } from "panelui-web/table";
 import { Fragment } from "react";
 import { useIntlayer } from "react-intlayer";
@@ -5,7 +6,7 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import type { RecurringModel, Schedule } from "@/lib/recurring";
 
-import { QuietTable } from "../home/setup";
+import { Empty } from "../home/empty";
 import type { ScheduleActions } from "./menu";
 import { ScheduleMenu } from "./menu";
 import { CELL, FIGURE, HEAD, MUTED, NameCell, useChargeMoney, useDay, useRepeatText } from "./parts";
@@ -33,13 +34,7 @@ export function PausedTable({
     const paused = model.schedules.filter((schedule) => schedule.state === "paused").toSorted(byDay);
     const stopped = model.schedules.filter((schedule) => schedule.state === "stopped").toSorted(byDay);
     if (paused.length + stopped.length === 0) {
-        return (
-            <div className="dash-empty relative isolate min-h-[299px] flex-1 justify-end pt-0 pb-7">
-                <QuietTable />
-                <b className="text-[15px] font-semibold">{copy.paused.emptyTitle}</b>
-                <p className="text-muted-foreground max-w-sm text-[13px]">{copy.paused.emptyLine}</p>
-            </div>
-        );
+        return <Empty icon={PauseIcon} line={copy.paused.emptyLine} title={copy.paused.emptyTitle} />;
     }
     const resumes = (schedule: Schedule) => {
         if (schedule.state === "stopped") {
@@ -76,7 +71,7 @@ export function PausedTable({
                                 {state === "paused" ? null : <GroupRow span={span}>{copy.groups[state]}</GroupRow>}
                                 {rows.map((schedule) => (
                                     <Table.Row
-                                        className={`h-[51px] cursor-pointer ${lit === schedule.id ? "bg-app-tint/8 hover:bg-app-tint/8 shadow-[inset_3px_0_0_var(--color-app-tint)]" : "hover:bg-muted/40"}`}
+                                        className={`h-12.75 cursor-pointer ${lit === schedule.id ? "bg-app-tint/8 hover:bg-app-tint/8 shadow-[inset_3px_0_0_var(--color-app-tint)]" : "hover:bg-muted/40"}`}
                                         key={schedule.id}
                                         onClick={() => actions.open(schedule)}
                                     >
@@ -94,7 +89,7 @@ export function PausedTable({
                                         </Table.Cell>
                                         <Table.Cell
                                             align="end"
-                                            className={`${CELL} ${FIGURE} text-muted-foreground text-sm`}
+                                            className={`${CELL} ${FIGURE} text-muted-foreground text-app-body!`}
                                         >
                                             {cash.plain(schedule.worth)}
                                         </Table.Cell>

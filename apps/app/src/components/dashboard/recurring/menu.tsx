@@ -9,6 +9,7 @@ import { Button } from "panelui-web/button";
 import { Menu } from "panelui-web/menu";
 import { useIntlayer } from "react-intlayer";
 
+import { MenuContent } from "@/components/ui/menu-content";
 import type { Candidate, Charge, Schedule } from "@/lib/recurring";
 
 import { Glyph } from "../accounts/glyph";
@@ -39,7 +40,7 @@ export function ScheduleMenu({ actions, schedule }: { actions: ScheduleActions; 
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" alignOffset={-4} className="app-shell ph-no-capture w-[220px]" sideOffset={4}>
+            <MenuContent align="end" alignOffset={-4} className="w-60" sideOffset={4}>
                 {state === "stopped" ? null : (
                     <Menu.Item onClick={() => actions.edit(schedule)}>
                         <Glyph icon={PencilEdit01Icon} size={16} />
@@ -79,7 +80,7 @@ export function ScheduleMenu({ actions, schedule }: { actions: ScheduleActions; 
                     <Glyph icon={Delete02Icon} size={16} />
                     {copy.delete}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }

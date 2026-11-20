@@ -1,3 +1,4 @@
+import SearchList01Icon from "@hugeicons/core-free-icons/SearchList01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { DAY_MS, wallNoon } from "@outlayr/money/ledger-zone";
 import { useNavigate } from "@tanstack/react-router";
@@ -10,7 +11,7 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import type { Candidate } from "@/lib/recurring";
 
 import { Glyph } from "../accounts/glyph";
-import { QuietTable } from "../home/setup";
+import { Empty } from "../home/empty";
 import type { ScheduleActions } from "./menu";
 import {
     CELL,
@@ -30,13 +31,7 @@ export const daysBetween = (later: string, earlier: string) =>
 
 export function DetectedEmpty() {
     const { detected } = useIntlayer("dashboard-recurring");
-    return (
-        <div className="dash-empty relative isolate min-h-[299px] flex-1 justify-end pt-0 pb-7">
-            <QuietTable />
-            <b className="text-[15px] font-semibold">{detected.emptyTitle}</b>
-            <p className="text-muted-foreground max-w-sm text-[13px]">{detected.emptyLine}</p>
-        </div>
-    );
+    return <Empty icon={SearchList01Icon} line={detected.emptyLine} title={detected.emptyTitle} />;
 }
 
 export function DetectedTable({
@@ -72,7 +67,7 @@ export function DetectedTable({
                     <Table.Head align="end" className={`${HEAD} w-[8.5%]`}>
                         {copy.columns.perMonth}
                     </Table.Head>
-                    <Table.Head className={`${HEAD} w-[312px] max-sm:w-[104px]`} />
+                    <Table.Head className={`${HEAD} w-78 max-sm:w-26`} />
                 </Table.Row>
             </Table.Header>
             <Table.Body>
@@ -81,14 +76,14 @@ export function DetectedTable({
                     return (
                         <Table.Row
                             aria-selected={lit}
-                            className={`relative h-[57px] cursor-pointer ${lit ? "bg-app-tint/8 hover:bg-app-tint/8 shadow-[inset_3px_0_0_var(--color-app-tint)]" : "hover:bg-muted/40"}`}
+                            className={`relative h-14.25 cursor-pointer ${lit ? "bg-app-tint/8 hover:bg-app-tint/8 shadow-[inset_3px_0_0_var(--color-app-tint)]" : "hover:bg-muted/40"}`}
                             key={candidate.key}
                             onClick={() => onSelect(candidate.key)}
                         >
                             <Table.Cell className={CELL}>
                                 <span className="flex min-w-0 items-center gap-3">
                                     <CandidateTile candidate={candidate} />
-                                    <span className="truncate text-sm font-medium">{candidate.name}</span>
+                                    <span className="text-app-body truncate font-medium">{candidate.name}</span>
                                 </span>
                             </Table.Cell>
                             <Table.Cell className={`${CELL} max-lg:hidden`}>
@@ -106,10 +101,13 @@ export function DetectedTable({
                             <Table.Cell className={`${CELL} ${FIGURE} text-muted-foreground max-sm:hidden`}>
                                 {days.day(candidate.next.day, ledger.today)}
                             </Table.Cell>
-                            <Table.Cell align="end" className={`${CELL} ${FIGURE} text-sm font-medium max-md:hidden`}>
+                            <Table.Cell
+                                align="end"
+                                className={`${CELL} ${FIGURE} text-app-body! font-medium max-md:hidden`}
+                            >
                                 {cash.plain(candidate.worth)}
                             </Table.Cell>
-                            <Table.Cell align="end" className={`${CELL} ${FIGURE} text-sm font-medium`}>
+                            <Table.Cell align="end" className={`${CELL} ${FIGURE} text-app-body! font-medium`}>
                                 {cash.plain(candidate.perMonth)}
                             </Table.Cell>
                             <Table.Cell className={CELL}>
@@ -162,10 +160,10 @@ export function CandidateDetail({ candidate }: { candidate: Candidate }) {
                 <Frame.Title as="h2" className="truncate">
                     {candidate.name}
                 </Frame.Title>
-                <span className="text-muted-foreground text-[13px] whitespace-nowrap max-sm:hidden">
+                <span className="text-muted-foreground text-app-label whitespace-nowrap max-sm:hidden">
                     {copy.detected.matching({ count: String(entries.length) })}
                 </span>
-                <span className="dash-figure text-muted-foreground ml-auto text-[13px] whitespace-nowrap">
+                <span className="dash-figure text-muted-foreground text-app-label ml-auto whitespace-nowrap">
                     {copy.detected.since({
                         amount: cash.plain(candidate.total),
                         month: days.month(candidate.since.slice(0, 7)),
@@ -189,8 +187,8 @@ export function CandidateDetail({ candidate }: { candidate: Candidate }) {
                         {entries.map((entry, index) => {
                             const before = entries[index + 1];
                             return (
-                                <Table.Row className="h-[62px] hover:bg-transparent" key={entry.id}>
-                                    <Table.Cell className={`${CELL} ${FIGURE} text-sm`}>
+                                <Table.Row className="h-15.5 hover:bg-transparent" key={entry.id}>
+                                    <Table.Cell className={`${CELL} ${FIGURE} text-app-body!`}>
                                         {days.day(entry.day, ledger.today)}
                                     </Table.Cell>
                                     <Table.Cell className={`${CELL} ${MUTED} max-sm:hidden`}>
@@ -206,7 +204,7 @@ export function CandidateDetail({ candidate }: { candidate: Candidate }) {
                                               })
                                             : null}
                                     </Table.Cell>
-                                    <Table.Cell align="end" className={`${CELL} ${FIGURE} text-sm font-medium`}>
+                                    <Table.Cell align="end" className={`${CELL} ${FIGURE} text-app-body! font-medium`}>
                                         {cash.signed(entry.worth, candidate.income)}
                                     </Table.Cell>
                                 </Table.Row>
@@ -215,7 +213,7 @@ export function CandidateDetail({ candidate }: { candidate: Candidate }) {
                     </Table.Body>
                 </Table>
             </Frame.Panel>
-            <Frame.Footer className="text-muted-foreground flex flex-row items-center text-[13px]">
+            <Frame.Footer className="text-muted-foreground text-app-label! flex flex-row items-center">
                 {copy.detected.footer({ count: String(candidate.gap) })}
                 <Button
                     className="ml-auto"

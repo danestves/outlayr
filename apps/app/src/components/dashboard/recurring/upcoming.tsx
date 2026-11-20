@@ -57,7 +57,7 @@ export function GroupRow({ children, span }: { children: ReactNode; span: number
 
 export function Foot({ children }: { children: ReactNode }) {
     return (
-        <div className="text-muted-foreground mt-auto flex flex-wrap items-center gap-2 py-3.5 ps-4 pe-6 text-[13px]">
+        <div className="text-muted-foreground text-app-label mt-auto flex flex-wrap items-center gap-2 py-3.5 ps-4 pe-6">
             {children}
         </div>
     );
@@ -87,7 +87,7 @@ export function UpcomingTable({ actions, model }: { actions: ScheduleActions; mo
                         <Table.Head align="end" className={`${HEAD} w-[13%]`}>
                             {copy.columns.amount}
                         </Table.Head>
-                        <Table.Head className={`${HEAD} w-[124px]`} />
+                        <Table.Head className={`${HEAD} w-31`} />
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -116,7 +116,7 @@ export function UpcomingTable({ actions, model }: { actions: ScheduleActions; mo
                                     <Table.Cell className={`${CELL} ${FIGURE} text-muted-foreground`}>
                                         {days.day(charge.day, ledger.today)}
                                     </Table.Cell>
-                                    <Table.Cell align="end" className={`${CELL} ${FIGURE} text-sm font-medium`}>
+                                    <Table.Cell align="end" className={`${CELL} ${FIGURE} text-app-body! font-medium`}>
                                         {cash.signed(schedule.worth, schedule.seed.income)}
                                     </Table.Cell>
                                     <Table.Cell className={CELL}>
@@ -176,18 +176,18 @@ export function SideCard({
                 <Frame.Title as="h2" className="flex items-center gap-2.5 whitespace-nowrap">
                     {title}
                     {count === undefined ? null : (
-                        <span className="dash-figure text-app-tint bg-app-tint/12 rounded-md px-1.5 text-xs leading-5 font-medium">
+                        <span className="dash-figure text-app-tint bg-app-tint/12 text-app-caption rounded-md px-1.5 leading-5 font-medium">
                             {count}
                         </span>
                     )}
                 </Frame.Title>
                 <span className="ml-auto flex items-center">
-                    {aside ? <span className="dash-figure text-muted-foreground text-[13px]">{aside}</span> : null}
+                    {aside ? <span className="dash-figure text-muted-foreground text-app-label">{aside}</span> : null}
                     {action}
                 </span>
             </Frame.Header>
             <Frame.Panel className="px-5 py-2">{children}</Frame.Panel>
-            {foot ? <Frame.Footer className="text-muted-foreground text-[13px]">{foot}</Frame.Footer> : null}
+            {foot ? <Frame.Footer className="text-muted-foreground text-app-label!">{foot}</Frame.Footer> : null}
         </Frame>
     );
 }
@@ -242,18 +242,18 @@ export function DetectedCard({
             title={copy.tabs.detected}
         >
             {model.candidates.slice(0, SIDE_CANDIDATES).map((candidate) => (
-                <div className="flex h-[57px] shrink-0 items-center gap-3 border-b last:border-0" key={candidate.key}>
+                <div className="flex h-14.25 shrink-0 items-center gap-3 border-b last:border-0" key={candidate.key}>
                     <CandidateTile candidate={candidate} />
                     <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{candidate.name}</p>
-                        <p className="dash-figure text-muted-foreground truncate text-[13px]">
+                        <p className="text-app-body truncate font-medium">{candidate.name}</p>
+                        <p className="dash-figure text-muted-foreground text-app-label truncate">
                             <CandidateLine candidate={candidate} />
                         </p>
                     </div>
                     <Button
                         aria-label={copy.detected.notRecurring.value}
                         onClick={() => actions.dismiss(candidate)}
-                        className="size-[30px]"
+                        className="size-7.5"
                         size="icon-sm"
                         variant="outline"
                     >
@@ -262,7 +262,7 @@ export function DetectedCard({
                     <Button
                         aria-label={copy.detected.confirm.value}
                         onClick={() => actions.confirm(candidate)}
-                        className="size-[30px]"
+                        className="size-7.5"
                         size="icon-sm"
                         variant="outline"
                     >
@@ -309,7 +309,7 @@ export function PerMonthCard({ model }: { model: RecurringModel }) {
             </div>
             <div className="border-b py-2">
                 {byCategory.map((category) => (
-                    <div className="flex h-8 items-center gap-2.5 px-1.5 text-sm font-medium" key={category.id}>
+                    <div className="text-app-body flex h-8 items-center gap-2.5 px-1.5 font-medium" key={category.id}>
                         <i className="size-2 rounded-full" style={{ backgroundColor: category.color }} />
                         <span className="truncate">{category.name}</span>
                         <span className="dash-figure ml-auto">{cash.plain(category.total)}</span>
@@ -318,7 +318,10 @@ export function PerMonthCard({ model }: { model: RecurringModel }) {
             </div>
             <div className="py-2">
                 {spending.map((schedule) => (
-                    <div className="text-muted-foreground flex h-8 items-center gap-2 px-1.5 text-sm" key={schedule.id}>
+                    <div
+                        className="text-muted-foreground text-app-body flex h-8 items-center gap-2 px-1.5"
+                        key={schedule.id}
+                    >
                         <span className="truncate">{schedule.name}</span>
                         <span className="dash-figure ml-auto">{cash.plain(schedule.perMonth)}</span>
                     </div>

@@ -2,6 +2,8 @@ import { Dialog } from "panelui-web/dialog";
 import { useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
+import { DialogContent } from "@/components/ui/dialog-content";
+
 import { GoalFlowsContext } from "./flow-context";
 import type { GoalFlow } from "./flow-context";
 import { GoalDialogs } from "./goal-dialogs";
@@ -22,9 +24,9 @@ export function GoalFlowsProvider({ children }: { children: ReactNode }) {
         <GoalFlowsContext value={value}>
             {children}
             <Dialog onOpenChange={(next) => next || setFlow(null)} open={open}>
-                <Dialog.Content className="app-shell ph-no-capture" showClose={flow?.kind !== "unvalued"} size="md">
+                <DialogContent showClose={flow?.kind !== "unvalued"} size="md">
                     {flow ? <GoalDialogs flow={flow} onClose={() => setFlow(null)} onSwitch={setFlow} /> : null}
-                </Dialog.Content>
+                </DialogContent>
             </Dialog>
         </GoalFlowsContext>
     );

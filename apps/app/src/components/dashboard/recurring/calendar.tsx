@@ -81,12 +81,12 @@ export function CalendarGrid(props: CalendarProps) {
     const { byDay, days, inMonth, selected } = useCalendar(props);
     const weeks = days.length / WEEK;
     return (
-        <div className="flex min-h-[560px] flex-1 flex-col">
-            <div className="flex min-h-[52px] flex-wrap items-center gap-2 border-b px-4 py-0">
+        <div className="flex min-h-140 flex-1 flex-col">
+            <div className="flex min-h-13 flex-wrap items-center gap-2 border-b px-4 py-0">
                 <Button
                     aria-label={copy.calendar.previousMonth.value}
                     onClick={() => onMonth(shiftMonth(month, -1))}
-                    className="size-[30px]"
+                    className="size-7.5"
                     size="icon"
                     variant="outline"
                 >
@@ -95,13 +95,13 @@ export function CalendarGrid(props: CalendarProps) {
                 <Button
                     aria-label={copy.calendar.nextMonth.value}
                     onClick={() => onMonth(shiftMonth(month, 1))}
-                    className="size-[30px]"
+                    className="size-7.5"
                     size="icon"
                     variant="outline"
                 >
                     <Glyph icon={ArrowRight01Icon} size={16} />
                 </Button>
-                <h2 aria-live="polite" className="ms-2 me-1 text-base font-semibold">
+                <h2 aria-live="polite" className="text-app-title ms-2 me-1 font-semibold">
                     {format.monthYear(month)}
                 </h2>
                 <Button
@@ -112,16 +112,16 @@ export function CalendarGrid(props: CalendarProps) {
                 >
                     {copy.calendar.today}
                 </Button>
-                <span className="text-muted-foreground ml-auto text-[13px]">
+                <span className="text-muted-foreground text-app-label ml-auto">
                     {inMonth.length === 1 ? copy.chargesOne : copy.charges({ count: String(inMonth.length) })}
-                    <span className="dash-figure text-foreground ms-2 text-sm font-medium">
+                    <span className="dash-figure text-foreground text-app-body ms-2 font-medium">
                         {cash.plain(spent(inMonth))}
                     </span>
                 </span>
             </div>
             <div className="grid grid-cols-7 border-b">
                 {days.slice(0, WEEK).map((each) => (
-                    <span className="text-muted-foreground px-2.5 py-1.5 text-xs font-medium" key={each}>
+                    <span className="text-muted-foreground text-app-caption px-2.5 py-1.5 font-medium" key={each}>
                         {format.weekdayShort(each)}
                     </span>
                 ))}
@@ -139,19 +139,19 @@ export function CalendarGrid(props: CalendarProps) {
                     return (
                         <button
                             aria-pressed={isSelected}
-                            className={`focus-visible:ring-ring flex min-w-0 flex-col items-start gap-1.5 overflow-hidden border-e border-b px-2 py-[7px] text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset ${index % WEEK === WEEK - 1 ? "border-e-0" : ""} ${index >= days.length - WEEK ? "border-b-0" : ""} ${isSelected ? "bg-muted/50 ring-border ring-1 ring-inset" : "hover:bg-muted/25"}`}
+                            className={`focus-visible:ring-ring flex min-w-0 flex-col items-start gap-1.5 overflow-hidden border-e border-b px-2 py-1.75 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset ${index % WEEK === WEEK - 1 ? "border-e-0" : ""} ${index >= days.length - WEEK ? "border-b-0" : ""} ${isSelected ? "bg-muted/50 ring-border ring-1 ring-inset" : "hover:bg-muted/25"}`}
                             key={each}
                             onClick={() => onDay(each)}
                             type="button"
                         >
                             <span
-                                className={`dash-figure flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs ${isToday ? "bg-primary text-primary-foreground font-semibold" : ""} ${outside && !isToday ? "text-muted-foreground/60" : ""}`}
+                                className={`dash-figure text-app-caption flex h-5 min-w-5 items-center justify-center rounded-md px-1 ${isToday ? "bg-primary text-primary-foreground font-semibold" : ""} ${outside && !isToday ? "text-muted-foreground/60" : ""}`}
                             >
                                 {Number(each.slice(8, 10))}
                             </span>
                             {events.map((event) => (
                                 <span
-                                    className={`flex w-full min-w-0 flex-col border-s-2 ps-1.5 text-xs leading-[15px] ${outside ? "opacity-55" : ""}`}
+                                    className={`text-app-caption flex w-full min-w-0 flex-col border-s-2 ps-1.5 leading-3.75 ${outside ? "opacity-55" : ""}`}
                                     key={`${event.schedule.id}:${event.kind}`}
                                     style={{
                                         borderColor:
@@ -229,19 +229,19 @@ export function CalendarSide(props: CalendarProps) {
                 title={`${format.weekdayShort(selected)}, ${dayText(selected)}`}
             >
                 {events.length === 0 ? (
-                    <p className="text-muted-foreground py-6 text-center text-[13px]">{copy.calendar.nothingOn}</p>
+                    <p className="text-muted-foreground text-app-label py-6 text-center">{copy.calendar.nothingOn}</p>
                 ) : null}
                 {events.map((event) => (
                     <button
-                        className="flex h-[57px] w-full items-center gap-3 border-b text-left last:border-0"
+                        className="flex h-14.25 w-full items-center gap-3 border-b text-left last:border-0"
                         key={`${event.schedule.id}:${event.kind}`}
                         onClick={() => actions.open(event.schedule)}
                         type="button"
                     >
                         <ScheduleTile name={event.schedule.name} seed={event.schedule.seed} />
                         <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-medium">{event.schedule.name}</span>
-                            <span className="text-muted-foreground block truncate text-[13px]">
+                            <span className="text-app-body block truncate font-medium">{event.schedule.name}</span>
+                            <span className="text-muted-foreground text-app-label block truncate">
                                 {[
                                     accountName(event.schedule.seed.accountId),
                                     repeat.word(event.schedule.chain.type, event.schedule.chain.every),
@@ -250,20 +250,20 @@ export function CalendarSide(props: CalendarProps) {
                                     .join(", ")}
                             </span>
                         </span>
-                        <span className="dash-figure text-sm font-medium">
+                        <span className="dash-figure text-app-body font-medium">
                             {cash.signed(event.worth, event.schedule.seed.income)}
                         </span>
                     </button>
                 ))}
                 {only ? (
                     <>
-                        <div className="flex h-9 items-center border-t px-1.5 text-sm">
+                        <div className="text-app-body flex h-9 items-center border-t px-1.5">
                             <span className="text-muted-foreground">{copy.fields.category}</span>
                             <span className="ml-auto">
                                 <CategoryBadge id={only.schedule.seed.categoryId} />
                             </span>
                         </div>
-                        <div className="flex h-9 items-center border-t px-1.5 text-sm">
+                        <div className="text-app-body flex h-9 items-center border-t px-1.5">
                             <span className="text-muted-foreground">{copy.fields.nextCharges}</span>
                             <span className="dash-figure text-muted-foreground ml-auto">
                                 {nextCharges(only.schedule, ledger, NEXT_SHOWN + 1)
@@ -283,7 +283,7 @@ export function CalendarSide(props: CalendarProps) {
                 >
                     {due.map(({ charge, schedule }) => (
                         <div
-                            className="flex h-[57px] items-center gap-3 border-b last:border-0"
+                            className="flex h-14.25 items-center gap-3 border-b last:border-0"
                             key={`${schedule.id}:${charge.day}`}
                         >
                             <ScheduleTile name={schedule.name} seed={schedule.seed} />
@@ -292,8 +292,8 @@ export function CalendarSide(props: CalendarProps) {
                                 onClick={() => actions.open(schedule)}
                                 type="button"
                             >
-                                <span className="block truncate text-sm font-medium">{schedule.name}</span>
-                                <span className="text-muted-foreground block truncate text-[13px]">
+                                <span className="text-app-body block truncate font-medium">{schedule.name}</span>
+                                <span className="text-muted-foreground text-app-label block truncate">
                                     {charge.day === ledger.today
                                         ? copy.calendar.todayLine({ amount: cash.plain(schedule.worth) })
                                         : copy.calendar.missedOn({
@@ -313,7 +313,7 @@ export function CalendarSide(props: CalendarProps) {
                 foot={
                     <div className="flex w-full items-center">
                         {format.month(month)}
-                        <span className="dash-figure text-foreground ml-auto text-sm font-medium">
+                        <span className="dash-figure text-foreground text-app-body ml-auto font-medium">
                             {cash.plain(spent(inMonth))}
                         </span>
                     </div>
@@ -323,7 +323,7 @@ export function CalendarSide(props: CalendarProps) {
                 {weeks.map(({ from, to }) => {
                     const total = spent(inMonth.filter((event) => event.day >= from && event.day <= to));
                     return (
-                        <div className="flex h-9 items-center border-b px-1.5 text-sm last:border-0" key={from}>
+                        <div className="text-app-body flex h-9 items-center border-b px-1.5 last:border-0" key={from}>
                             <span className="text-muted-foreground">
                                 {from === to
                                     ? dayText(from)

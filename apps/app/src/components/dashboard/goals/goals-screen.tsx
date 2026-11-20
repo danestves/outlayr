@@ -1,4 +1,5 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import Flag02Icon from "@hugeicons/core-free-icons/Flag02Icon";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
@@ -13,25 +14,17 @@ import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { accountRows } from "@/components/dashboard/accounts/model";
 import { KpiBand, KpiCell } from "@/components/dashboard/accounts/parts";
 import { useMonthShort } from "@/components/dashboard/accounts/worth-chart";
+import { Empty } from "@/components/dashboard/home/empty";
 import { titled, useDateFormat, useMonthYear } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
+import { viewTransition } from "@/lib/motion";
 
 import { useGoalFlows } from "./flow-context";
 import { GoalFlowsProvider } from "./goal-flows";
 import { goalsSummary, goalViews, lastMonth, roadOf, standingOf } from "./model";
 import type { GoalsSummary, GoalView, Road } from "./model";
-import {
-    GoalBar,
-    GoalMenu,
-    GoalTile,
-    PaceBadge,
-    PERCENT,
-    ReachedBadge,
-    Terrain,
-    percentOf,
-    useGoalMoney,
-} from "./parts";
+import { GoalBar, GoalMenu, GoalTile, PaceBadge, PERCENT, ReachedBadge, percentOf, useGoalMoney } from "./parts";
 
 const ROAD_LABELS = 12;
 
@@ -45,7 +38,7 @@ function useGoalsModel() {
 }
 
 const quiet = (children: ReactNode) => (
-    <span className="text-muted-foreground min-w-0 truncate text-[13px] leading-5">{children}</span>
+    <span className="text-muted-foreground text-app-label min-w-0 truncate leading-5">{children}</span>
 );
 
 function Kpis({ income, summary }: { income: number; summary: GoalsSummary }) {
@@ -75,7 +68,7 @@ function Kpis({ income, summary }: { income: number; summary: GoalsSummary }) {
                 {income > 0 ? (
                     <span className="flex min-w-0 items-center gap-2">
                         <Badge
-                            className="dash-figure text-muted-foreground h-5 rounded-full px-2 text-xs font-medium"
+                            className="dash-figure text-muted-foreground text-app-caption! h-5 rounded-full px-2 font-medium"
                             variant="secondary"
                         >
                             {Math.round((monthly / income) * PERCENT)}%
@@ -104,9 +97,10 @@ function Kpis({ income, summary }: { income: number; summary: GoalsSummary }) {
 function GoalLink({ view }: { view: GoalView }) {
     return (
         <Link
-            className="flex min-w-0 items-center gap-2.5 text-sm font-medium hover:underline"
+            className="text-app-body flex min-w-0 items-center gap-2.5 font-medium hover:underline"
             params={{ goalId: view.id }}
             to="/goals/$goalId"
+            viewTransition={viewTransition("push-left")}
         >
             <GoalTile reached={view.progress.reached} />
             <span className="truncate">{view.name}</span>
@@ -116,7 +110,7 @@ function GoalLink({ view }: { view: GoalView }) {
 
 function AccountName({ view }: { view: GoalView }) {
     return (
-        <span className="flex min-w-0 items-center gap-2 text-[13px]">
+        <span className="text-app-label flex min-w-0 items-center gap-2">
             <AccountTile account={view.account.look} size="sm" />
             <span className="truncate">{view.account.name}</span>
         </span>
@@ -127,15 +121,15 @@ function ProgressCell({ view }: { view: GoalView }) {
     return (
         <Cell>
             <span className="flex items-center gap-2.5">
-                <GoalBar className="w-[160px]" reached={view.progress.reached} value={view.progress.fraction} />
-                <span className="dash-figure text-muted-foreground w-9 text-[13px]">{percentOf(view)}%</span>
+                <GoalBar className="w-40" reached={view.progress.reached} value={view.progress.fraction} />
+                <span className="dash-figure text-muted-foreground text-app-label w-9">{percentOf(view)}%</span>
             </span>
         </Cell>
     );
 }
 
-const FIGURE = "dash-figure text-sm";
-const SOFT = "dash-figure text-muted-foreground text-sm";
+const FIGURE = "dash-figure text-app-body";
+const SOFT = "dash-figure text-muted-foreground text-app-body";
 
 function ActiveCard({ views }: { views: readonly GoalView[] }) {
     const { ledger } = useDashboard();
@@ -240,7 +234,7 @@ function ReachedCard({ views }: { views: readonly GoalView[] }) {
     );
 }
 
-const ROAD_GRID = "grid grid-cols-[minmax(96px,140px)_minmax(0,1fr)_90px] items-center gap-x-4";
+const ROAD_GRID = "grid grid-cols-[minmax(6rem,8.75rem)_minmax(0,1fr)_5.625rem] items-center gap-x-4";
 
 function RoadCard({ road }: { road: Road | null }) {
     const { ledger } = useDashboard();
@@ -258,7 +252,7 @@ function RoadCard({ road }: { road: Road | null }) {
         <span className="flex gap-1">
             {months.map((month, index) => (
                 <i
-                    className={`block h-3.5 min-w-0 flex-1 rounded-[3px] ${index < filled ? "bg-app-tint/70" : "bg-foreground/[0.03]"}`}
+                    className={`block h-3.5 min-w-0 flex-1 rounded-xs ${index < filled ? "bg-app-tint/70" : "bg-app-hover"}`}
                     key={month}
                 />
             ))}
@@ -275,13 +269,13 @@ function RoadCard({ road }: { road: Road | null }) {
             title={sections.road}
         >
             <div className="overflow-x-auto px-4">
-                <div className="min-w-[560px]">
+                <div className="min-w-140">
                     <div className={`${ROAD_GRID} h-10 border-b`}>
                         <span />
                         <span className="flex gap-1">
                             {months.map((month, index) => (
                                 <span
-                                    className="dash-figure text-muted-foreground min-w-0 flex-1 truncate text-center text-[11px]"
+                                    className="dash-figure text-muted-foreground text-app-micro min-w-0 flex-1 truncate text-center"
                                     key={month}
                                 >
                                     {index % every === 0 ? short(`${month}-15`) : ""}
@@ -293,14 +287,15 @@ function RoadCard({ road }: { road: Road | null }) {
                     {rows.map(({ filled, view }) => (
                         <div className={`${ROAD_GRID} h-24 border-b last:border-0`} key={view.id}>
                             <Link
-                                className="truncate text-[13px] font-medium hover:underline"
+                                className="text-app-label truncate font-medium hover:underline"
                                 params={{ goalId: view.id }}
                                 to="/goals/$goalId"
+                                viewTransition={viewTransition("push-left")}
                             >
                                 {view.name}
                             </Link>
                             {segments(filled)}
-                            <span className="dash-figure text-muted-foreground text-end text-[13px]">
+                            <span className="dash-figure text-muted-foreground text-app-label text-end">
                                 {view.comparable
                                     ? format(view.progress.remaining, ledger.currency)
                                     : format(Math.max(0, view.target - view.saved), view.targetCurrency)}
@@ -331,23 +326,21 @@ function EmptyGoals({ kept, month }: { kept: number; month: string }) {
     const date = useDateFormat();
     const { locale } = useLocale();
     return (
-        <Frame className="bg-card relative isolate min-w-0 flex-1 overflow-hidden rounded-3xl" variant="plain">
-            <Terrain />
-            <Frame.Panel className="flex-1 bg-transparent! px-6 pt-[clamp(560px,calc(100dvh-180px),672px)] pb-[84px]">
-                <div className="flex flex-col items-center gap-1.5 text-center">
-                    <b className="text-[15px] leading-[22px] font-semibold">{empty.title}</b>
-                    <p className="text-muted-foreground text-[13px]">
-                        {kept > 0
+        <Frame className="mb-4 min-w-0 flex-1">
+            <Frame.Panel className="flex flex-1 flex-col divide-y-0">
+                <Empty
+                    action={<NewGoal />}
+                    icon={Flag02Icon}
+                    line={
+                        kept > 0
                             ? empty.kept({
                                   amount: format(kept, ledger.currency),
                                   month: titled(date.month(month), locale),
                               })
-                            : empty.line}
-                    </p>
-                    <div className="mt-2.5">
-                        <NewGoal />
-                    </div>
-                </div>
+                            : empty.line
+                    }
+                    title={empty.title}
+                />
             </Frame.Panel>
         </Frame>
     );

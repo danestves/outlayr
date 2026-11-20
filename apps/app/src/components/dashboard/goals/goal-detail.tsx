@@ -1,6 +1,6 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
-import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
+import ChartLineData01Icon from "@hugeicons/core-free-icons/ChartLineData01Icon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
@@ -20,9 +20,13 @@ import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { accountRows } from "@/components/dashboard/accounts/model";
 import { KpiBand, KpiCell, useChartRatio } from "@/components/dashboard/accounts/parts";
 import { Y_LABEL, useMonthShort } from "@/components/dashboard/accounts/worth-chart";
+import { BACK, PARENT, PlanCrumbs } from "@/components/dashboard/budgets/plan-year";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useDateFormat, useMonthYear, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
+import { MenuContent } from "@/components/ui/menu-content";
+import { viewTransition } from "@/lib/motion";
 
 import { useGoalFlows } from "./flow-context";
 import { GoalFlowsProvider } from "./goal-flows";
@@ -39,7 +43,7 @@ import {
     standingOf,
 } from "./model";
 import type { GoalChart, GoalView, MonthAdded } from "./model";
-import { PERCENT, ReachedBadge, Terrain, percentOf, useGoalMoney } from "./parts";
+import { PERCENT, ReachedBadge, percentOf, useGoalMoney } from "./parts";
 
 const CHART = 778 / 250;
 const X_TICKS = 7;
@@ -47,8 +51,8 @@ const THOUSAND = 1000;
 const BAR_MENU_OVERHANG = -23;
 const TINT = "var(--color-app-tint)";
 const INCOME = "var(--color-app-income)";
-const FIELD = "flex h-[42px] items-center justify-between gap-3 border-b text-[13px] last:border-0";
-const KPI_BADGE = "dash-figure h-5 rounded-full px-2 text-xs font-medium";
+const FIELD = "text-app-label flex h-10.5 items-center justify-between gap-3 border-b last:border-0";
+const KPI_BADGE = "dash-figure text-app-caption! h-5 rounded-full px-2 font-medium";
 
 interface Detail {
     added: MonthAdded[];
@@ -78,23 +82,31 @@ function DetailBar({ view }: { view: GoalView }) {
     return (
         <AccountsBar
             title={
-                <span className="flex min-w-0 items-center gap-2">
-                    <Button
-                        aria-label={back.value}
-                        className="mr-1 size-[30px]"
-                        nativeButton={false}
-                        render={<Link to="/goals" />}
-                        size="icon"
-                        variant="outline"
-                    >
-                        <Glyph icon={ArrowLeft01Icon} className="text-muted-foreground" size={16} />
-                    </Button>
-                    <Link className="text-muted-foreground hover:text-foreground text-[13px] font-normal" to="/goals">
-                        {title}
-                    </Link>
-                    <Glyph icon={ArrowRight01Icon} className="text-muted-foreground flex-none" size={14} />
+                <PlanCrumbs
+                    back={
+                        <Button
+                            aria-label={back.value}
+                            className={BACK}
+                            nativeButton={false}
+                            render={<Link to="/goals" viewTransition={viewTransition("push-left", { back: true })} />}
+                            size="icon"
+                            variant="outline"
+                        >
+                            <Glyph icon={ArrowLeft01Icon} size={16} />
+                        </Button>
+                    }
+                    parent={
+                        <Link
+                            className={PARENT}
+                            to="/goals"
+                            viewTransition={viewTransition("push-left", { back: true })}
+                        >
+                            {title}
+                        </Link>
+                    }
+                >
                     <span className="truncate">{view.name}</span>
-                </span>
+                </PlanCrumbs>
             }
         >
             <Button className="max-sm:hidden" onClick={() => open({ goalId: view.id, kind: "edit" })} variant="outline">
@@ -114,12 +126,7 @@ function DetailBar({ view }: { view: GoalView }) {
                 >
                     <Glyph icon={MoreVerticalIcon} className="text-muted-foreground" />
                 </Menu.Trigger>
-                <Menu.Content
-                    align="end"
-                    alignOffset={BAR_MENU_OVERHANG}
-                    className="app-shell ph-no-capture w-[198px]"
-                    sideOffset={4}
-                >
+                <MenuContent align="end" alignOffset={BAR_MENU_OVERHANG} className="w-60" sideOffset={4}>
                     <Menu.Item className="sm:hidden" onClick={() => open({ goalId: view.id, kind: "edit" })}>
                         <Glyph icon={PencilEdit01Icon} size={16} />
                         {menu.edit}
@@ -129,14 +136,14 @@ function DetailBar({ view }: { view: GoalView }) {
                         <Glyph icon={Delete02Icon} size={16} />
                         {menu.delete}
                     </Menu.Item>
-                </Menu.Content>
+                </MenuContent>
             </Menu>
         </AccountsBar>
     );
 }
 
 const note = (children: ReactNode) => (
-    <span className="text-muted-foreground min-w-0 truncate text-[13px] leading-5">{children}</span>
+    <span className="text-muted-foreground text-app-label min-w-0 truncate leading-5">{children}</span>
 );
 
 function Kpis({ detail }: { detail: Detail }) {
@@ -297,7 +304,7 @@ function PointLabel({ index, value }: { index: number; value: number }) {
     const nearEnd = x > plot.left + plot.width - 72;
     return (
         <span
-            className={`dash-figure text-foreground absolute text-xs font-semibold whitespace-nowrap ${nearEnd ? "-translate-x-full" : "-translate-x-1/2"}`}
+            className={`dash-figure text-foreground text-app-caption absolute font-semibold whitespace-nowrap ${nearEnd ? "-translate-x-full" : "-translate-x-1/2"}`}
             style={{ left: nearEnd ? x - 8 : x, top: yOf(value, plot, domainMin, domainMax) - 24 }}
         >
             {format(value, ledger.currency)}
@@ -316,7 +323,7 @@ function LegendMark({ dash, color }: { color: string; dash?: string }) {
 function Legend({ projected }: { projected: string | null }) {
     const { chart } = useIntlayer("dashboard-goals");
     const monthYear = useMonthYear();
-    const item = "text-muted-foreground flex items-center gap-1.5 text-[13px] whitespace-nowrap";
+    const item = "text-muted-foreground text-app-label flex items-center gap-1.5 whitespace-nowrap";
     return (
         <span className="flex flex-wrap items-center gap-x-3.5 gap-y-1">
             <span className={item}>
@@ -361,7 +368,7 @@ function ChartCard({ chart, view }: { chart: GoalChart; view: GoalView }) {
         <Card
             action={
                 reached ? (
-                    <span className="text-muted-foreground text-[13px]">{copy.reachedNote}</span>
+                    <span className="text-muted-foreground text-app-label">{copy.reachedNote}</span>
                 ) : (
                     <Legend projected={chart.projectedDay} />
                 )
@@ -385,7 +392,7 @@ function ChartCard({ chart, view }: { chart: GoalChart; view: GoalView }) {
                     <Plot.Line color={color} dataKey="balance" strokeWidth={1.75} />
                     <Plot.Dots color={color} dataKey="mark" ringWidth={0} size={3.5} />
                     <Plot.XAxis
-                        className="dash-figure text-[11px]"
+                        className="dash-figure text-app-micro"
                         format={(datum) => short(String(datum.day))}
                         ticks={Math.min(X_TICKS, months)}
                     />
@@ -407,12 +414,8 @@ function ChartCard({ chart, view }: { chart: GoalChart; view: GoalView }) {
 function NoRateCard() {
     const { chart, detail } = useIntlayer("dashboard-goals");
     return (
-        <Card panelClassName="relative isolate min-h-[275px] overflow-hidden" title={chart.progress}>
-            <Terrain flat />
-            <div className="flex min-h-[275px] flex-col items-center justify-end gap-1.5 px-6 pb-4 text-center">
-                <b className="text-sm font-semibold">{detail.noRate}</b>
-                <p className="text-muted-foreground max-w-[380px] text-[13px] leading-5">{chart.noRate}</p>
-            </div>
+        <Card panelClassName="flex min-h-69 flex-col" title={chart.progress}>
+            <Empty icon={ChartLineData01Icon} line={chart.noRate} title={detail.noRate} />
         </Card>
     );
 }
@@ -436,19 +439,23 @@ function Contributions({ view }: { view: GoalView }) {
             title={copy.title}
         >
             {rows.length === 0 ? (
-                <p className="text-muted-foreground px-4 py-6 text-[13px]">
+                <p className="text-muted-foreground text-app-label px-4 py-6">
                     {copy.none({ date: date.full(view.startDay) })}
                 </p>
             ) : (
                 <DataTable head={[columns.date, columns.from, columns.added, columns.balance]} numbers={0}>
                     {rows.map((row) => (
                         <Table.Row key={row.id}>
-                            <Cell className="dash-figure text-muted-foreground text-[13px]">{date.day(row.day)}</Cell>
-                            <Cell className="text-muted-foreground max-w-[220px] truncate text-[13px]">{row.from}</Cell>
-                            <Cell className="dash-figure text-app-income text-[13px]">
+                            <Cell className="dash-figure text-muted-foreground text-app-label">
+                                {date.day(row.day)}
+                            </Cell>
+                            <Cell className="text-muted-foreground text-app-label max-w-55 truncate">{row.from}</Cell>
+                            <Cell className="dash-figure text-app-income text-app-label">
                                 {format(row.added, currency, "always")}
                             </Cell>
-                            <Cell className="dash-figure text-sm font-medium">{format(row.balance, currency)}</Cell>
+                            <Cell className="dash-figure text-app-body font-medium">
+                                {format(row.balance, currency)}
+                            </Cell>
                         </Table.Row>
                     ))}
                 </DataTable>
@@ -463,7 +470,7 @@ function GoalCard({ view }: { view: GoalView }) {
     const monthYear = useMonthYear();
     return (
         <Card title={summary.title}>
-            <div className="px-4 pt-[13px]">
+            <div className="px-4 pt-3">
                 <div className={FIELD}>
                     <span className="text-muted-foreground">{summary.name}</span>
                     <span className="truncate font-medium">{view.name}</span>
@@ -490,7 +497,7 @@ function GoalCard({ view }: { view: GoalView }) {
                     </Link>
                 </div>
             </div>
-            <p className="text-muted-foreground border-t px-4 py-3 text-xs leading-4">{dialog.accountLocked}</p>
+            <p className="text-muted-foreground text-app-caption border-t px-4 py-3">{dialog.accountLocked}</p>
         </Card>
     );
 }
@@ -508,12 +515,12 @@ function MonthlyCard({ months, view }: { months: readonly MonthAdded[]; view: Go
         return { bar: months.find((bar) => bar.month === month) ?? null, month };
     });
     return (
-        <Frame className="min-h-[300px] min-w-0 flex-1">
+        <Frame className="min-h-75 min-w-0 flex-1">
             <Frame.Header>
                 <Frame.Title as="h2">{monthly.title}</Frame.Title>
             </Frame.Header>
             <Frame.Panel className="flex flex-1 flex-col">
-                <div className="flex min-h-[200px] flex-1 items-end gap-[6px] px-4 pt-4">
+                <div className="flex min-h-50 flex-1 items-end gap-1.5 px-4 pt-4">
                     {slots.map(({ bar, month }) =>
                         bar ? (
                             <span
@@ -522,7 +529,7 @@ function MonthlyCard({ months, view }: { months: readonly MonthAdded[]; view: Go
                                 title={format(bar.added, view.account.currency)}
                             >
                                 <i
-                                    className={`block min-h-0.5 w-full rounded-t-[3px] ${color} ${bar.current ? "" : "opacity-40"}`}
+                                    className={`block min-h-0.5 w-full rounded-t-xs ${color} ${bar.current ? "" : "opacity-40"}`}
                                     style={{ height: `${(bar.added / top) * PERCENT}%` }}
                                 />
                             </span>
@@ -531,10 +538,10 @@ function MonthlyCard({ months, view }: { months: readonly MonthAdded[]; view: Go
                         )
                     )}
                 </div>
-                <div className="flex gap-[6px] px-4 pt-2 pb-3">
+                <div className="flex gap-1.5 px-4 pt-2 pb-3">
                     {slots.map((month) => (
                         <span
-                            className="dash-figure text-muted-foreground min-w-0 flex-1 text-center text-[11px]"
+                            className="dash-figure text-muted-foreground text-app-micro min-w-0 flex-1 text-center"
                             key={month.month}
                         >
                             {short(`${month.month}-15`).slice(0, 1)}
@@ -542,7 +549,7 @@ function MonthlyCard({ months, view }: { months: readonly MonthAdded[]; view: Go
                     ))}
                 </div>
             </Frame.Panel>
-            <div className="flex h-12 items-center justify-between px-4 text-[13px]">
+            <div className="text-app-label flex h-12 items-center justify-between px-4">
                 <span className="text-muted-foreground">{monthly.average}</span>
                 <span className="dash-figure font-semibold">
                     {format(Math.round(averageAdded(months)), view.account.currency)}
@@ -557,9 +564,13 @@ function NotFound() {
     return (
         <main className="min-w-0 px-4 pb-5 sm:px-6">
             <AccountsBar title={title} />
-            <p className="text-muted-foreground py-6 text-sm">
+            <p className="text-muted-foreground text-app-body py-6">
                 {detail.notFound}{" "}
-                <Link className="text-foreground underline" to="/goals">
+                <Link
+                    className="text-foreground underline"
+                    to="/goals"
+                    viewTransition={viewTransition("push-left", { back: true })}
+                >
                     {back}
                 </Link>
             </p>

@@ -15,12 +15,15 @@ import { Dialog } from "panelui-web/dialog";
 import { Field } from "panelui-web/field";
 import { Input } from "panelui-web/input";
 import { Select } from "panelui-web/select";
+import { Tabs } from "panelui-web/tabs";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
+import { DialogContent } from "@/components/ui/dialog-content";
+import { MoneyField } from "@/components/ui/money-field";
 import { parseAmount } from "@/lib/account-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
@@ -29,7 +32,7 @@ import type { Schedule } from "@/lib/recurring";
 import { draftProblems } from "@/lib/recurring-writes";
 import type { DraftProblem, ScheduleDraft } from "@/lib/recurring-writes";
 
-import { AmountInput, amountText, FlowDialog } from "../accounts/fields";
+import { amountText, FlowDialog } from "../accounts/fields";
 import { Glyph } from "../accounts/glyph";
 import { Pick, useCategoryOptions } from "../transactions/entry-form";
 import { ScheduleTile, useDay, useRepeatText } from "./parts";
@@ -37,7 +40,7 @@ import { ScheduleTile, useDay, useRepeatText } from "./parts";
 const NO_ACCOUNT = "none";
 const PREVIEW = 3;
 const MAX_EVERY = 99;
-const POPUP = "app-shell z-[60]";
+const POPUP = "app-shell ph-no-capture z-60";
 
 const UNITS = [
     { type: RECURRING_TYPE.daily, unit: "days" },
@@ -190,16 +193,16 @@ function PreviewList({ amount, first, rows }: { amount: string; first: boolean; 
     return (
         <div className="bg-background/40 rounded-xl border px-4">
             {rows.map((row, index) => (
-                <div className="flex h-[45px] items-center gap-3 border-b text-sm last:border-0" key={row.day}>
+                <div className="text-app-body flex h-11.25 items-center gap-3 border-b last:border-0" key={row.day}>
                     <span className="dash-figure">{days.day(row.day, "")}</span>
                     {first && index === 0 ? (
-                        <Badge className="h-6 rounded-md px-2 text-xs font-medium" variant="outline">
+                        <Badge className="text-app-caption! h-6 rounded-md px-2 font-medium" variant="outline">
                             {copy.form.firstPayment}
                         </Badge>
                     ) : null}
                     {row.short ? (
                         <Badge
-                            className="bg-app-warn/14 text-app-warn h-6 rounded-md px-2 text-xs font-medium"
+                            className="bg-app-warn/14 text-app-warn text-app-caption! h-6 rounded-md px-2 font-medium"
                             variant="secondary"
                         >
                             {copy.form.shortMonth}
@@ -228,7 +231,7 @@ function Stepper({ onChange, value }: { onChange: (every: number) => void; value
             </Button>
             <input
                 aria-label={copy.form.every.value}
-                className="dash-figure w-10 bg-transparent text-center text-sm outline-none"
+                className="dash-figure text-app-body w-10 bg-transparent text-center outline-none"
                 inputMode="numeric"
                 onChange={(event) => {
                     const next = Number.parseInt(event.target.value, 10);
@@ -296,7 +299,7 @@ function CustomView({
                 </div>
             </Dialog.Header>
             <Dialog.Body className="gap-3.5">
-                <p aria-live="polite" className="mb-0.5 text-[26px] leading-[34px] font-medium tracking-[-0.02em]">
+                <p aria-live="polite" className="text-app-figure mb-0.5 font-medium">
                     {sentence.map((part, index) => (
                         // Odd parts are the values the sentence was built around.
                         <span className={index % 2 === 1 ? "text-app-tint/90" : undefined} key={index}>
@@ -307,19 +310,19 @@ function CustomView({
                 <Slot label={copy.form.every}>
                     <div className="flex gap-2">
                         <Stepper onChange={(next) => setDraft({ ...draft, every: next })} value={draft.every} />
-                        <div className="bg-muted/50 flex flex-1 gap-1 rounded-lg p-1">
-                            {UNITS.map(({ type, unit }) => (
-                                <button
-                                    aria-pressed={draft.type === type}
-                                    className={`h-8 flex-1 rounded-md px-3 text-sm font-medium transition-colors ${draft.type === type ? "bg-background shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
-                                    key={unit}
-                                    onClick={() => setDraft({ ...draft, type })}
-                                    type="button"
-                                >
-                                    {copy.form.units[unit]}
-                                </button>
-                            ))}
-                        </div>
+                        <Tabs
+                            className="flex-1"
+                            onValueChange={(next: string) => setDraft({ ...draft, type: Number(next) })}
+                            value={String(draft.type)}
+                        >
+                            <Tabs.List className="w-full">
+                                {UNITS.map(({ type, unit }) => (
+                                    <Tabs.Trigger className="flex-1" key={unit} value={String(type)}>
+                                        {copy.form.units[unit]}
+                                    </Tabs.Trigger>
+                                ))}
+                            </Tabs.List>
+                        </Tabs>
                     </div>
                 </Slot>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -340,7 +343,7 @@ function CustomView({
                 </div>
                 <Slot label={copy.fields.nextCharges}>
                     <PreviewList amount="" first rows={rows} />
-                    {clamps ? <p className="text-muted-foreground text-xs">{copy.form.shortNote}</p> : null}
+                    {clamps ? <p className="text-muted-foreground text-app-caption">{copy.form.shortNote}</p> : null}
                 </Slot>
             </Dialog.Body>
             <Dialog.Footer>
@@ -468,19 +471,15 @@ function FormView({
         >
             <Dialog.Body className="gap-3.5">
                 {schedule ? null : (
-                    <div className="bg-muted/50 flex w-fit gap-1 rounded-lg p-1">
-                        {([false, true] as const).map((income) => (
-                            <button
-                                aria-pressed={values.income === income}
-                                className={`h-8 rounded-md px-4 text-sm font-medium transition-colors ${values.income === income ? "bg-background shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
-                                key={String(income)}
-                                onClick={() => set({ categoryId: null, income })}
-                                type="button"
-                            >
-                                {income ? copy.form.income : copy.form.expense}
-                            </button>
-                        ))}
-                    </div>
+                    <Tabs
+                        onValueChange={(next: string) => set({ categoryId: null, income: next === "income" })}
+                        value={values.income ? "income" : "expense"}
+                    >
+                        <Tabs.List>
+                            <Tabs.Trigger value="expense">{copy.form.expense}</Tabs.Trigger>
+                            <Tabs.Trigger value="income">{copy.form.income}</Tabs.Trigger>
+                        </Tabs.List>
+                    </Tabs>
                 )}
                 <Slot error={problems.has("name") ? errors.name : null} label={copy.fields.name}>
                     <Input
@@ -492,17 +491,20 @@ function FormView({
                     />
                 </Slot>
                 <div className="grid gap-3 gap-y-3.5 sm:grid-cols-2">
-                    <Slot
-                        error={problems.has("amount") ? errors.amount({ zero: amountText(0, currency) }) : null}
-                        label={copy.fields.amount}
-                    >
-                        <AmountInput
-                            currency={currency}
-                            label={copy.fields.amount.value}
-                            onText={(text) => set({ amountText: text })}
-                            text={values.amountText}
+                    <Field className="min-w-0" invalid={problems.has("amount")}>
+                        <MoneyField
+                            className={problems.has("amount") ? "border-destructive max-w-none" : "max-w-none"}
+                            codes={[currency]}
+                            label={copy.fields.amount}
+                            onValueChange={(next) =>
+                                set({ amountText: next.amount === null ? "" : String(next.amount) })
+                            }
+                            value={{ amount: Number.isFinite(amount) ? amount : null, code: currency }}
                         />
-                    </Slot>
+                        {problems.has("amount") ? (
+                            <Field.Error match>{errors.amount({ zero: amountText(0, currency) })}</Field.Error>
+                        ) : null}
+                    </Field>
                     <Slot error={problems.has("category") ? errors.category : null} label={copy.fields.category}>
                         <Pick
                             invalid={problems.has("category")}
@@ -562,7 +564,7 @@ function FormView({
                         first={schedule === null}
                         rows={previewOf(values, schedule ? 2 : PREVIEW)}
                     />
-                    {schedule ? <p className="text-muted-foreground text-xs">{copy.form.keepNote}</p> : null}
+                    {schedule ? <p className="text-muted-foreground text-app-caption">{copy.form.keepNote}</p> : null}
                 </Slot>
             </Dialog.Body>
             <Dialog.Footer className="items-center">
@@ -572,7 +574,7 @@ function FormView({
                         {copy.actions.stop}
                     </Button>
                 ) : (
-                    <span className="text-muted-foreground me-auto text-[13px] max-sm:hidden">
+                    <span className="text-muted-foreground text-app-label me-auto max-sm:hidden">
                         {perMonth > 0
                             ? copy.form
                                   .adds({ amount: money(perMonth, currency) })
@@ -614,14 +616,11 @@ export function ScheduleForm({
 }) {
     return (
         <Dialog onOpenChange={(open) => (open ? undefined : onClose())} open={target !== null}>
-            <Dialog.Content
-                className="app-shell ph-no-capture max-w-[520px] has-[[data-view=custom]]:max-w-md"
-                size="md"
-            >
+            <DialogContent className="max-w-130 has-[[data-view=custom]]:max-w-md" size="md">
                 {target ? (
                     <FormBody key={target.key} onClose={onClose} onSave={onSave} onStop={onStop} target={target} />
                 ) : null}
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }
