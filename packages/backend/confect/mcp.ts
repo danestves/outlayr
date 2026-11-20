@@ -7,6 +7,7 @@ import { components, internal } from "../convex/_generated/api";
 import type { ActionCtx, MutationCtx, QueryCtx } from "../convex/_generated/server";
 import { optionalUserId } from "./lib/auth";
 import { mcpConsentUrl } from "./lib/config";
+import { withAnalytics } from "./lib/mcpAnalytics";
 import { runEdge, runEdgeSync } from "./lib/runEdge";
 import { LogEntryInput, LoggedEntry } from "./mcpEntries";
 import {
@@ -21,6 +22,7 @@ import {
 
 const READ = "ledger:read";
 const WRITE = "ledger:write";
+const SERVER = { name: "com.tryoutlayr/ledger", version: "0.1.0" };
 
 function hasRunQuery(ctx: { auth: Auth }): ctx is ActionCtx | MutationCtx | QueryCtx {
     return "runQuery" in ctx;
@@ -30,13 +32,13 @@ export const mcp: McpServer = new McpServer(components.mcp, {
     consentUrl: runEdgeSync(mcpConsentUrl),
     instructions:
         "Read the signed-in user's Outlayr ledger, and add expenses or income to it. Amounts are in each entry's own currency unless a tool says main currency. Everything reflects what the user's devices last synced.",
-    name: "com.tryoutlayr/ledger",
+    name: SERVER.name,
     scopes: {
         [READ]: "Read your accounts, balances, budgets and entries",
         [WRITE]: "Add expenses and income for you",
     },
     title: "Outlayr ledger",
-    tools: {
+    tools: withAnalytics(SERVER, {
         account_balances: tool({
             annotations: { readOnlyHint: true },
             description:
@@ -96,8 +98,8 @@ export const mcp: McpServer = new McpServer(components.mcp, {
             returns: SchemaToValidator.compileSchema(UpcomingCharges),
             scope: READ,
         }),
-    },
-    version: "0.1.0",
+    }),
+    version: SERVER.version,
 });
 
 export const { authorize, createApiKey, findAuthRequest, getAuthRequest, listConnections, revokeConnection } = mcp.api({

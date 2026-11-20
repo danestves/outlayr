@@ -23,11 +23,13 @@
         "@outlayr/email": "workspace:*",
         "@outlayr/model-router": "workspace:*",
         "@outlayr/money": "workspace:*",
+        "@posthog/mcp": "1.6.0",
         "better-auth": "catalog:",
         "convex": "catalog:",
         "convex-revenuecat": "^0.3.2",
         "effect": "catalog:",
         "jose": "^6.2.13",
+        "posthog-node": "6.0.4",
         "unpdf": "1.9.1",
         "zod": "catalog:"
     },
