@@ -16,7 +16,6 @@ import type { EnrichmentJobsDoc } from "./_generated/docs";
 import type { Id } from "./_generated/id";
 import { applyToTree, BACKGROUND_REQUEST_TIMEOUT_MS, rateLimiter, runSuggest } from "./enrichment";
 import { groundedAnswer } from "./groundedLookup";
-import type { GroundedCallDeps } from "./groundedLookup";
 import { traceModel } from "./lib/aiTracing";
 import type { EnrichmentResult } from "./lib/enrichmentResult";
 import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
@@ -35,7 +34,7 @@ export const pool = new Workpool(components.enrichmentPool, {
 
 export interface ResolveDeps {
     fast?: (chosen: Route) => Effect.Effect<Option.Option<TextModel>>;
-    grounded?: GroundedCallDeps;
+    grounded?: TextModel;
 }
 
 type JobCtx = Pick<ActionCtx, "runMutation" | "runQuery" | "runAction" | "meta">;

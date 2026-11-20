@@ -1,4 +1,5 @@
 import { createOpenRouterText } from "@tanstack/ai-openrouter";
+import { webSearchTool } from "@tanstack/ai-openrouter/tools";
 import * as Config from "effect/Config";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -22,4 +23,5 @@ export const openrouter: TextProvider = {
     ),
     defaultModels: Option.some({ fast: "anthropic/claude-haiku-5.5", standard: "anthropic/claude-sonnet-5.5" }),
     outputLimit: (maxTokens) => ({ maxTokens }),
+    webSearch: () => webSearchTool(),
 };

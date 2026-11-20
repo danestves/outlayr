@@ -1,4 +1,5 @@
 import { createAnthropicChat } from "@tanstack/ai-anthropic";
+import { webSearchTool } from "@tanstack/ai-anthropic/tools";
 import * as Config from "effect/Config";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -20,4 +21,6 @@ export const anthropic: TextProvider = {
     ),
     defaultModels: Option.some({ fast: "claude-haiku-5-5", standard: "claude-sonnet-5-5" }),
     outputLimit: (maxTokens) => ({ max_tokens: maxTokens }),
+    webSearch: (maxSearches) =>
+        webSearchTool({ max_uses: maxSearches, name: "web_search", type: "web_search_20250305" }),
 };

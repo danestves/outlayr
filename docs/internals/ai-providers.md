@@ -13,13 +13,13 @@ Every model call goes through `@outlayr/ai` (`packages/ai`), which wraps TanStac
 ## Adding a provider
 
 1. Add the TanStack adapter to `packages/ai/package.json`, pinned exactly to a release at least a week old.
-2. Write `packages/ai/src/providers/<name>.ts` exporting a `TextProvider`: `connect` reads its env with `secret`/`setting` and returns a `(modelId) => adapter` factory, `defaultModels` gives a fast and a standard model (or `Option.none()` when there is no sensible default), and `outputLimit` maps a token cap to the provider option that holds it.
+2. Write `packages/ai/src/providers/<name>.ts` exporting a `TextProvider`: `connect` reads its env with `secret`/`setting` and returns a `(modelId) => adapter` factory, `defaultModels` gives a fast and a standard model (or `Option.none()` when there is no sensible default), `outputLimit` maps a token cap to the provider option that holds it, and the optional `webSearch` returns the provider's hosted search tool for grounded lookups.
 3. Add the name to `TextProviderName` in `provider.ts` and the provider to `textProviders` in `registry.ts`; the `satisfies` there fails until both agree.
 4. Run the receipt and grounded live tests against it before claiming support.
 
 ## Testing
 
-`@outlayr/ai/testing` has `fakeModel(responses)`, a `TextModel` over TanStack's fake adapter that records each request; `answers(value)` and `fails(message)` build its steps. Live tests resolve their model with `liveModel(feature)`, which is undefined unless `RUN_LIVE_MODEL_TESTS=1` and the configured provider has a key. A test that mocks `@outlayr/ai/model` must not import `@outlayr/ai/testing` inside the mock factory: it imports the module being mocked and the import never settles.
+`@outlayr/ai/testing` has `fakeModel(responses)`, a `TextModel` over TanStack's fake adapter that records each request; `answers(value)` and `fails(message)` build its steps. With `webSearch: true` the fake also has a hosted search, and `searched(text, urls)` answers as if it had searched and found those urls. Live tests resolve their model with `liveModel(feature)`, which is undefined unless `RUN_LIVE_MODEL_TESTS=1` and the configured provider has a key. A test that mocks `@outlayr/ai/model` must not import `@outlayr/ai/testing` inside the mock factory: it imports the module being mocked and the import never settles.
 
 ## Traps
 
@@ -33,4 +33,6 @@ Every model call goes through `@outlayr/ai` (`packages/ai`), which wraps TanStac
 - **A failed call throws before `onError`.** `chat({ stream: false })` throws on the `RUN_ERROR` chunk, and an abort runs `onAbort`, so `tracing.ts` records from `onChunk` and `onAbort` too, once per call.
 - **Provider SDKs retry on their own.** Every provider turns retries off (`maxRetries: 0`, OpenRouter's `retryConfig`): the backend's timeouts and its Sonnet retry assume one attempt.
 - **Voice entry is still on the AI SDK.** `@convex-dev/agent` takes an AI SDK model, so `voiceEntry.impl.ts` builds one from the gate's model with `anthropicAgentModel` and answers `notConfigured` on any other provider.
+- **Hosted search caps differ.** Only Anthropic honors `maxSearches`; the others search as often as the model likes within one turn (Grok ran 5 searches for one lookup). Spend records the measured count: from usage where the provider reports it (Anthropic, OpenRouter), else from the provider-executed search calls. The default prices are Claude's; set `GROUNDED_SEARCH_PRICE_MICROS` and the `GROUNDED_*_PRICE_MICROS_PER_TOKEN` overrides for another provider.
+- **Not every provider grounds.** OpenRouter's adapter drops url citations, so its answers carry no sources and never publish to shared merchant knowledge. Gemini cites through Google redirect URLs, which the harness drops, so its answers carry no sources and never publish either. `openai-compatible` has no hosted search, so lookups are skipped and the expense keeps its ordinary ungrounded enrichment.
 - **Keyless servers still need a key.** The OpenAI client refuses an empty one, so `openai-compatible` sends `unused` when `OPENAI_COMPATIBLE_API_KEY` is unset; Ollama and LM Studio ignore it.

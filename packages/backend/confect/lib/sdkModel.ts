@@ -127,24 +127,21 @@ const routeMiddleware = ({ effort, maxTokens }: Pick<Route, "effort" | "maxToken
     }),
 });
 
-export function tracedSdkModel(model: Exclude<LanguageModel, string>, route: Route, scope?: Omit<TraceScope, "route">) {
+function tracedSdkModel(model: Exclude<LanguageModel, string>, route: Route, scope?: Omit<TraceScope, "route">) {
     return wrapLanguageModel({
         middleware: [tracingMiddleware(route.feature, sendGeneration, { ...scope, route }), routeMiddleware(route)],
         model,
     });
 }
 
-export const anthropicSdk = Effect.fn("SdkModel.anthropic")(function* anthropicSdk(model: TextModel) {
-    const apiKey = yield* anthropicApiKey;
-    return model.provider === "anthropic"
-        ? apiKey.pipe(Option.map((key) => createAnthropic({ apiKey: Redacted.value(key) })))
-        : Option.none();
-});
-
 export const anthropicAgentModel = Effect.fn("SdkModel.anthropicAgent")(function* anthropicAgentModel(
     model: TextModel,
     scope?: Omit<TraceScope, "route">
 ) {
-    const anthropic = yield* anthropicSdk(model);
-    return anthropic.pipe(Option.map((sdk) => tracedSdkModel(sdk(model.modelId), model.route, scope)));
+    const apiKey = yield* anthropicApiKey;
+    const key = model.provider === "anthropic" ? apiKey : Option.none();
+    return key.pipe(
+        Option.map((value) => createAnthropic({ apiKey: Redacted.value(value) })(model.modelId)),
+        Option.map((sdk) => tracedSdkModel(sdk, model.route, scope))
+    );
 });

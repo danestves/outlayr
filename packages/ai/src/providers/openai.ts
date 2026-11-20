@@ -1,4 +1,5 @@
 import { createOpenaiChat } from "@tanstack/ai-openai";
+import { webSearchTool } from "@tanstack/ai-openai/tools";
 import * as Config from "effect/Config";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -21,4 +22,5 @@ export const openai: TextProvider = {
     defaultModels: Option.some({ fast: "gpt-5.4-mini", standard: "gpt-5.5" }),
     outputLimit: (maxTokens) => ({ max_output_tokens: maxTokens }),
     requestOptions: { store: false },
+    webSearch: () => webSearchTool({ type: "web_search" }),
 };
