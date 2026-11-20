@@ -12,7 +12,6 @@ const DEFAULT_NATIVE_APP_URL = "outlayr://";
 const DEFAULT_MCP_CONSENT_URL = "https://tryoutlayr.com/connect";
 
 export const anthropicApiKey = secret("ANTHROPIC_API_KEY");
-export const elevenLabsApiKey = secret("ELEVENLABS_API_KEY");
 
 export const convexSiteUrl = text("CONVEX_SITE_URL");
 

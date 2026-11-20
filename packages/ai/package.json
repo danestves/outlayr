@@ -15,8 +15,10 @@
         "@outlayr/model-router": "workspace:*",
         "@tanstack/ai": "1.4.0",
         "@tanstack/ai-anthropic": "1.1.1",
+        "@tanstack/ai-elevenlabs": "1.1.1",
         "@tanstack/ai-gemini": "1.2.1",
         "@tanstack/ai-grok": "1.1.1",
+        "@tanstack/ai-groq": "1.0.2",
         "@tanstack/ai-openai": "1.1.1",
         "@tanstack/ai-openrouter": "1.1.2",
         "effect": "catalog:"

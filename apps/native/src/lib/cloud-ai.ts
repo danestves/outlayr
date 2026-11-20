@@ -12,7 +12,7 @@ import type {
 } from "@outlayr/backend/confect/receiptScan.spec";
 import type { PROPOSE_DRAFT_TOOL as SERVER_DRAFT_TOOL } from "@outlayr/backend/confect/voiceEntry";
 import { OpenStreamResult, SpeakResult, StartThreadResult } from "@outlayr/backend/confect/voiceEntry.spec";
-import type { SpeakStatus } from "@outlayr/backend/confect/voiceEntry.spec";
+import type { SpeakStatus, StreamSession } from "@outlayr/backend/confect/voiceEntry.spec";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
@@ -229,7 +229,7 @@ export interface SpeakRequest {
 export type SpeakRefusal = Exclude<SpeakStatus, "ok"> | "invalidResponse";
 
 export type SpeakOutcome =
-    | { readonly ok: true; readonly order: number }
+    | { readonly ok: true; readonly order: number; readonly transcript: string | null }
     | { readonly ok: false; readonly reason: SpeakRefusal; readonly transcript: string | null };
 
 export interface SpeakTextRequest extends Omit<SpeakRequest, "audio"> {
@@ -237,7 +237,7 @@ export interface SpeakTextRequest extends Omit<SpeakRequest, "audio"> {
 }
 
 export type OpenStreamOutcome =
-    | { readonly ok: true; readonly token: string }
+    | { readonly ok: true; readonly session: StreamSession }
     | { readonly ok: false; readonly reason: SpeakRefusal };
 
 export type ThreadRefusal = Exclude<StartThreadResult["status"], "ok"> | "invalidResponse";
@@ -264,14 +264,14 @@ function speakOutcome({ order, status, transcript }: SpeakResult): SpeakOutcome 
     if (status !== "ok") {
         return { ok: false, reason: status, transcript };
     }
-    return order === null ? { ok: false, reason: "invalidResponse", transcript } : { ok: true, order };
+    return order === null ? { ok: false, reason: "invalidResponse", transcript } : { ok: true, order, transcript };
 }
 
-function openStreamOutcome({ status, token }: OpenStreamResult): OpenStreamOutcome {
+function openStreamOutcome({ session, status }: OpenStreamResult): OpenStreamOutcome {
     if (status !== "ok") {
         return { ok: false, reason: status };
     }
-    return token === null ? INVALID_RESPONSE : { ok: true, token };
+    return session === null ? INVALID_RESPONSE : { ok: true, session };
 }
 
 function threadOutcome({ status, threadId }: StartThreadResult): ThreadOutcome {

@@ -3,7 +3,10 @@ import * as Schema from "effect/Schema";
 
 import { languageSubtag, SUPPORTED_LANGUAGES } from "@/i18n/languages";
 
-export const SCRIBE_SAMPLE_RATE = 16_000;
+import { pcmToBase64, TranscriptStreamError } from "./transcript-stream";
+import type { TranscriptEvent, TranscriptFailureReason, TranscriptProtocol } from "./transcript-stream";
+
+const SCRIBE_SAMPLE_RATE = 16_000;
 // apps/voice-relay forwards the socket so ElevenLabs never sees the phone, as the privacy policy says.
 const SCRIBE_RELAY = "wss://voice.tryoutlayr.com";
 const SCRIBE_LANGUAGES = [...new Set(SUPPORTED_LANGUAGES.map(languageSubtag))];
@@ -20,21 +23,6 @@ const CURRENCY_KEYTERMS = [
     "bolivars",
     "pesos",
 ];
-
-export const ScribeFailureReason = Schema.Literals([
-    "unauthenticated",
-    "rateLimited",
-    "quotaExceeded",
-    "silent",
-    "provider",
-    "offline",
-]);
-export type ScribeFailureReason = typeof ScribeFailureReason.Type;
-
-export class ScribeStreamError extends Schema.TaggedError<ScribeStreamError>()("ScribeStreamError", {
-    message: Schema.String,
-    reason: ScribeFailureReason,
-}) {}
 
 const ServerErrorType = Schema.Literals([
     "error",
@@ -63,13 +51,9 @@ const ServerMessage = Schema.Union([
     }),
     Schema.Struct({ message_type: ServerErrorType, error: Schema.optional(Schema.String) }),
 ]);
-type ServerMessage = typeof ServerMessage.Type;
-
 const decodeServerMessage = Schema.decodeUnknownOption(Schema.fromJsonString(ServerMessage));
 
-const isErrorType = Schema.is(ServerErrorType);
-
-const REASON_BY_ERROR: Record<typeof ServerErrorType.Type, ScribeFailureReason> = {
+const REASON_BY_ERROR: Record<typeof ServerErrorType.Type, TranscriptFailureReason> = {
     auth_error: "unauthenticated",
     chunk_size_exceeded: "provider",
     commit_throttled: "rateLimited",
@@ -86,32 +70,18 @@ const REASON_BY_ERROR: Record<typeof ServerErrorType.Type, ScribeFailureReason> 
     unaccepted_terms: "unauthenticated",
 };
 
-const COMMIT_TIMEOUT_MS = 10_000;
-const OPEN_TIMEOUT_MS = 5000;
-
-export interface ScribeStreamOptions {
-    token: string;
-    language: string;
-    /** Everything heard so far: committed segments plus the one in progress. */
-    onPartial: (text: string) => void;
-    onCommitted: (text: string) => void;
-    onError: (error: ScribeStreamError) => void;
+export interface ScribeSession {
+    readonly language: string;
+    readonly model: string;
+    readonly token: string;
 }
 
-export interface ScribeStream {
-    /** Little-endian PCM16 mono at 16 kHz. Chunks sent before the socket opens are held, then flushed in order. */
-    send: (pcm: Uint8Array) => void;
-    /** Commits what was said and resolves with the committed text. Rejects with a `ScribeStreamError`. */
-    finish: () => Promise<string>;
-    close: () => void;
-}
-
-export function scribeUrl({ language, token }: Pick<ScribeStreamOptions, "language" | "token">): string {
+export function scribeUrl({ language, model, token }: ScribeSession): string {
     const query = new URLSearchParams({
         audio_format: `pcm_${SCRIBE_SAMPLE_RATE}`,
         commit_strategy: "manual",
         language_code: language,
-        model_id: "scribe_v3_live",
+        model_id: model,
         token,
     });
     for (const other of SCRIBE_LANGUAGES) {
@@ -125,149 +95,47 @@ export function scribeUrl({ language, token }: Pick<ScribeStreamOptions, "langua
     return `${SCRIBE_RELAY}/v1/speech-to-text/realtime?${query.toString()}`;
 }
 
-export function pcmToBase64(pcm: Uint8Array): string {
-    let binary = "";
-    const STEP = 32_768;
-    for (let at = 0; at < pcm.length; at += STEP) {
-        binary += String.fromCodePoint(...pcm.subarray(at, at + STEP));
+export function readScribeMessage(data: string): TranscriptEvent | null {
+    const decoded = decodeServerMessage(data);
+    if (Option.isNone(decoded)) {
+        return null;
     }
-    return btoa(binary);
+    const message = decoded.value;
+    switch (message.message_type) {
+        case "session_started": {
+            return null;
+        }
+        case "partial_transcript": {
+            return { kind: "partial", text: message.text };
+        }
+        case "committed_transcript": {
+            return { kind: "committed", text: message.text };
+        }
+        case "committed_transcript_with_timestamps": {
+            return null;
+        }
+        default: {
+            const type = message.message_type;
+            return {
+                error: new TranscriptStreamError({ message: message.error ?? type, reason: REASON_BY_ERROR[type] }),
+                kind: "failed",
+            };
+        }
+    }
 }
 
-function chunkMessage(pcm: Uint8Array, commit: boolean): string {
-    return JSON.stringify({
+const chunkMessage = (pcm: Uint8Array, commit: boolean) =>
+    JSON.stringify({
         audio_base_64: pcmToBase64(pcm),
         commit,
         message_type: "input_audio_chunk",
         sample_rate: SCRIBE_SAMPLE_RATE,
     });
-}
 
-export function openScribeStream({
-    language,
-    onCommitted,
-    onError,
-    onPartial,
-    token,
-}: ScribeStreamOptions): ScribeStream {
-    const socket = new WebSocket(scribeUrl({ language, token }));
-    const held: string[] = [];
-    const committed: string[] = [];
-    let opened = false;
-    let failure: ScribeStreamError | null = null;
-    let finishing: {
-        reject: (error: ScribeStreamError) => void;
-        resolve: (text: string) => void;
-        timer: ReturnType<typeof setTimeout>;
-    } | null = null;
-    let closed = false;
-
-    const fail = (error: ScribeStreamError) => {
-        if (failure || closed) {
-            return;
-        }
-        failure = error;
-        if (finishing) {
-            clearTimeout(finishing.timer);
-            finishing.reject(error);
-            finishing = null;
-        } else {
-            onError(error);
-        }
-        socket.close();
-    };
-
-    const write = (message: string) => {
-        if (opened && socket.readyState === WebSocket.OPEN) {
-            socket.send(message);
-        } else {
-            held.push(message);
-        }
-    };
-
-    const openTimer = setTimeout(
-        () => fail(new ScribeStreamError({ message: "The transcription socket never opened.", reason: "offline" })),
-        OPEN_TIMEOUT_MS
-    );
-
-    socket.addEventListener("open", () => {
-        clearTimeout(openTimer);
-        opened = true;
-        for (const message of held.splice(0)) {
-            socket.send(message);
-        }
-    });
-
-    socket.addEventListener("message", (event) => {
-        if (closed) {
-            return;
-        }
-        const decoded = decodeServerMessage(event.data);
-        if (Option.isNone(decoded)) {
-            return;
-        }
-        const message: ServerMessage = decoded.value;
-        if (message.message_type === "partial_transcript") {
-            onPartial([...committed, message.text.trim()].join(" ").trim());
-        } else if (message.message_type === "committed_transcript") {
-            const text = message.text.trim();
-            if (text) {
-                committed.push(text);
-                onCommitted(text);
-                onPartial(committed.join(" "));
-            }
-            if (finishing) {
-                clearTimeout(finishing.timer);
-                finishing.resolve(committed.join(" "));
-                finishing = null;
-            }
-        } else if (isErrorType(message.message_type)) {
-            const type = message.message_type;
-            fail(
-                new ScribeStreamError({
-                    message: "error" in message ? (message.error ?? type) : type,
-                    reason: REASON_BY_ERROR[type],
-                })
-            );
-        }
-    });
-
-    socket.addEventListener("error", () =>
-        fail(new ScribeStreamError({ message: "The transcription socket failed.", reason: "offline" }))
-    );
-    socket.addEventListener("close", () => {
-        if (!closed && !failure) {
-            fail(new ScribeStreamError({ message: "The transcription socket closed.", reason: "offline" }));
-        }
-    });
-
-    return {
-        close: () => {
-            closed = true;
-            clearTimeout(openTimer);
-            if (finishing) {
-                clearTimeout(finishing.timer);
-                finishing = null;
-            }
-            socket.close();
-        },
-        finish: () => {
-            if (failure) {
-                return Promise.reject(failure);
-            }
-            return new Promise<string>((resolve, reject) => {
-                const timer = setTimeout(() => {
-                    finishing = null;
-                    reject(new ScribeStreamError({ message: "The commit timed out.", reason: "provider" }));
-                }, COMMIT_TIMEOUT_MS);
-                finishing = { reject, resolve, timer };
-                write(chunkMessage(new Uint8Array(0), true));
-            });
-        },
-        send: (pcm) => {
-            if (!failure && !closed) {
-                write(chunkMessage(pcm, false));
-            }
-        },
-    };
-}
+export const scribeProtocol = (session: ScribeSession): TranscriptProtocol => ({
+    chunk: (pcm) => chunkMessage(pcm, false),
+    commit: () => chunkMessage(new Uint8Array(0), true),
+    connect: () => new WebSocket(scribeUrl(session)),
+    read: readScribeMessage,
+    sampleRate: SCRIBE_SAMPLE_RATE,
+});

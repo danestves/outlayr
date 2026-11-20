@@ -8,11 +8,13 @@ import {
     vStreamArgs,
 } from "@convex-dev/agent";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
-import { transcribe } from "ai";
-import type { LanguageModel, TranscriptionModel } from "ai";
+import { transcribe } from "@outlayr/ai/speech";
+import type { SpeechModel } from "@outlayr/ai/speech";
+import type { LanguageModel } from "ai";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import type { ObjectType } from "convex/values";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -23,7 +25,7 @@ import { liveIdentity } from "./lib/auth";
 import { categoryChoiceLines, placeCategory } from "./lib/categoryChoice";
 import { clampDate, draftCurrency, MAX_NAME_LENGTH, normalizeDomain, pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
-import { modelCallError, modelSchema } from "./lib/modelCall";
+import { modelSchema } from "./lib/modelCall";
 import { runTransactionEdge } from "./lib/runEdge";
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import type { SpeakResult, SpeakStatus } from "./voiceEntry.spec";
@@ -259,27 +261,12 @@ export function voiceAgent(model: AgentModel, context: LedgerContext, sentence: 
 }
 
 export const transcribeClip = Effect.fn("VoiceEntry.transcribeClip")(
-    function* transcribeClip(model: TranscriptionModel, audio: ArrayBuffer, language: string | undefined) {
-        const result = yield* Effect.tryPromise({
-            catch: modelCallError,
-            try: () =>
-                transcribe({
-                    abortSignal: AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
-                    audio: new Uint8Array(audio),
-                    maxRetries: 0,
-                    model,
-                    providerOptions: {
-                        elevenlabs: {
-                            diarize: false,
-                            languageCode: language?.split("-")[0],
-                            tagAudioEvents: false,
-                            timestampsGranularity: "none",
-                        },
-                    },
-                }),
+    function* transcribeClip(model: SpeechModel, audio: ArrayBuffer, language: string | undefined) {
+        const text = yield* transcribe(model, new File([audio], "clip.m4a", { type: "audio/mp4" }), {
+            language,
+            timeout: Duration.millis(TRANSCRIBE_TIMEOUT_MS),
         });
-        const text = result.text.trim();
-        const heard: Heard = text.length === 0 ? { error: "empty" } : { text };
+        const heard: Heard = { text };
         return heard;
     },
     Effect.catchTags({

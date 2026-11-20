@@ -1,4 +1,5 @@
 import { useUIMessages } from "@convex-dev/agent/react";
+import type { StreamSession } from "@outlayr/backend/confect/voiceEntry.spec";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
@@ -9,7 +10,7 @@ import type { SharedValue } from "react-native-reanimated";
 import { judgeSilence, localIsoDate, proposedDraftOf, startSilenceWatch, voiceTurnsOf } from "@/domain/voice-entry";
 import type { SilenceWatch, VoiceTurn, VoiceTurnMessage } from "@/domain/voice-entry";
 import { useRealtimeTranscript } from "@/hooks/use-realtime-transcript";
-import type { RealtimeStart, RealtimeTranscript } from "@/hooks/use-realtime-transcript";
+import type { RealtimeStart, RealtimeTranscript, Take } from "@/hooks/use-realtime-transcript";
 import { trackCapturesWall } from "@/hooks/use-usage-limits";
 import { duringHandoff } from "@/lib/app-handoff";
 import { VOICE_TURNS_QUERY, voiceThreadTransport } from "@/lib/cloud-ai";
@@ -21,8 +22,8 @@ import type {
     VoiceQuote,
     VoiceThreadTransport,
 } from "@/lib/cloud-ai";
-import { ScribeStreamError } from "@/lib/realtime-scribe";
-import type { ScribeFailureReason } from "@/lib/realtime-scribe";
+import { TranscriptStreamError } from "@/lib/transcript-stream";
+import type { TranscriptFailureReason } from "@/lib/transcript-stream";
 import { useLatest } from "@/lib/use-latest";
 import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-commands";
 import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
@@ -101,17 +102,18 @@ const THREAD_FAILURE_FOR = {
     unauthenticated: "unauthenticated",
 } as const satisfies Record<ThreadRefusal, VoiceFailure>;
 
-// Scribe's quota and rate limits are the provider's account, not the user's captures, so they read as a provider fault.
-const SCRIBE_FAILURE_FOR = {
+// The transcriber's quota and rate limits are the provider's account, not the user's captures,
+// so they read as a provider fault.
+const STREAM_FAILURE_FOR = {
     offline: "offline",
     provider: "provider",
     quotaExceeded: "provider",
     rateLimited: "provider",
     silent: "silent",
     unauthenticated: "unauthenticated",
-} as const satisfies Record<ScribeFailureReason, VoiceFailure>;
+} as const satisfies Record<TranscriptFailureReason, VoiceFailure>;
 
-const scribeFailureOf = (error: ScribeStreamError): VoiceFailure => SCRIBE_FAILURE_FOR[error.reason];
+const streamFailureOf = (error: TranscriptStreamError): VoiceFailure => STREAM_FAILURE_FOR[error.reason];
 
 function settledPhaseOf<Context>(
     phase: VoicePhase<Context>,
@@ -172,7 +174,7 @@ interface VoicePorts<Context> {
         messages: readonly VoiceTurnMessage[];
         request: UseVoiceEntryArgs<Context>["request"];
     }>;
-    resentRef: RefObject<string | null>;
+    resentRef: RefObject<Take | null>;
     setPhase: (phase: VoicePhase<Context>) => void;
     setSpoke: (spoke: boolean) => void;
     setThreadId: (threadId: string | null) => void;
@@ -250,7 +252,7 @@ const openTakeStream: <Context>(
     ports: VoicePorts<Context>,
     take: number,
     retried?: boolean
-) => Effect.Effect<string | null> = Effect.fn("VoiceEntry.openTakeStream")(function* openTakeStreamFor<Context>(
+) => Effect.Effect<StreamSession | null> = Effect.fn("VoiceEntry.openTakeStream")(function* openTakeStreamFor<Context>(
     ports: VoicePorts<Context>,
     take: number,
     retried = false
@@ -279,7 +281,7 @@ const openTakeStream: <Context>(
         return null;
     }
     if (settled.ok) {
-        return settled.token;
+        return settled.session;
     }
     if (settled.reason === "invalid" && !retried) {
         // The server sweeps threads idle for an hour: reopen once on a fresh thread.
@@ -292,19 +294,23 @@ const openTakeStream: <Context>(
     return null;
 });
 
-const sendText: <Context>(ports: VoicePorts<Context>, take: number, text: string, id: string) => Effect.Effect<void> =
-    Effect.fn("VoiceEntry.sendText")(function* sendTextTo<Context>(
+const sendTake: <Context>(ports: VoicePorts<Context>, take: number, said: Take, id: string) => Effect.Effect<void> =
+    Effect.fn("VoiceEntry.sendTake")(function* sendTakeTo<Context>(
         ports: VoicePorts<Context>,
         take: number,
-        text: string,
+        said: Take,
         id: string
     ) {
         const { api, latest, resentRef, setPhase, speakAbortRef, takeRef } = ports;
         const { context: sentContext, request: sentRequest } = latest.current;
         const controller = new AbortController();
         speakAbortRef.current = controller;
+        const request = { ...sentRequest, threadId: id, today: localIsoDate(new Date()) };
         const result = yield* fromCommand(speakCommand, {
-            call: api.speakText({ ...sentRequest, threadId: id, today: localIsoDate(new Date()), transcript: text }),
+            call:
+                said.kind === "transcript"
+                    ? api.speakText({ ...request, transcript: said.text })
+                    : api.speak({ ...request, audio: said.audio }),
             signal: controller.signal,
         }).pipe(Effect.exit);
         if (take !== takeRef.current) {
@@ -322,15 +328,16 @@ const sendText: <Context>(ports: VoicePorts<Context>, take: number, text: string
             return;
         }
         if (settled.ok) {
+            const text = said.kind === "transcript" ? said.text : (settled.transcript ?? "");
             setPhase({ context: sentContext, kind: "thinking", order: settled.order, text });
             return;
         }
-        if (settled.reason === "invalid" && resentRef.current !== text) {
-            resentRef.current = text;
+        if (settled.reason === "invalid" && resentRef.current !== said) {
+            resentRef.current = said;
             dropThread(ports);
             const reopened = yield* openThread(ports, take);
             if (reopened !== null && take === takeRef.current) {
-                yield* sendText(ports, take, text, reopened);
+                yield* sendTake(ports, take, said, reopened);
             }
             return;
         }
@@ -338,6 +345,8 @@ const sendText: <Context>(ports: VoicePorts<Context>, take: number, text: string
         trackCapturesWall(reason);
         fail(ports, take, reason, settled.transcript);
     });
+
+const trimmedTake = (said: Take): Take => (said.kind === "transcript" ? { ...said, text: said.text.trim() } : said);
 
 const finishTake = Effect.fn("VoiceEntry.finishTake")(function* finishTake<Context>(
     ports: VoicePorts<Context>,
@@ -360,10 +369,10 @@ const finishTake = Effect.fn("VoiceEntry.finishTake")(function* finishTake<Conte
     }
     setPhase({ kind: "sending", text: null });
     const finished = yield* Effect.tryPromise({
-        catch: (error): VoiceFailure => (error instanceof ScribeStreamError ? scribeFailureOf(error) : "provider"),
+        catch: (error): VoiceFailure => (error instanceof TranscriptStreamError ? streamFailureOf(error) : "provider"),
         try: () => transcriptRef.current.finish(),
     }).pipe(
-        Effect.map((text) => ({ ok: true as const, text: text.trim() })),
+        Effect.map((said) => ({ ok: true as const, said: trimmedTake(said) })),
         Effect.catch((reason) => Effect.succeed({ ok: false as const, reason }))
     );
     if (take !== takeRef.current) {
@@ -373,14 +382,15 @@ const finishTake = Effect.fn("VoiceEntry.finishTake")(function* finishTake<Conte
         fail(ports, take, finished.reason);
         return;
     }
-    if (finished.text === "") {
+    const { said } = finished;
+    if (said.kind === "transcript" && said.text === "") {
         fail(ports, take, "silent");
         return;
     }
-    setPhase({ kind: "sending", text: finished.text });
+    setPhase({ kind: "sending", text: said.kind === "transcript" ? said.text : null });
     const id = threadRef.current ?? (yield* openThread(ports, take));
     if (id !== null && take === takeRef.current) {
-        yield* sendText(ports, take, finished.text, id);
+        yield* sendTake(ports, take, said, id);
     }
 });
 
@@ -400,7 +410,7 @@ function hearLevel<Context>(ports: VoicePorts<Context>, sample: number, at: numb
     }
 }
 
-function streamFailed<Context>(ports: VoicePorts<Context>, error: ScribeStreamError) {
+function streamFailed<Context>(ports: VoicePorts<Context>, error: TranscriptStreamError) {
     const { endingRef, takeRef, transcriptRef, watchRef } = ports;
     // Past `finish` the stream's own promise carries the failure.
     if (watchRef.current === null) {
@@ -410,7 +420,7 @@ function streamFailed<Context>(ports: VoicePorts<Context>, error: ScribeStreamEr
     endingRef.current = take;
     watchRef.current = null;
     transcriptRef.current.cancel();
-    fail(ports, take, scribeFailureOf(error));
+    fail(ports, take, streamFailureOf(error));
 }
 
 const startTake = Effect.fn("VoiceEntry.startTake")(function* startTake<Context>(ports: VoicePorts<Context>) {
@@ -418,12 +428,12 @@ const startTake = Effect.fn("VoiceEntry.startTake")(function* startTake<Context>
     supersedeTake(ports);
     const take = takeRef.current;
     setPhase({ kind: "starting" });
-    const token = yield* openTakeStream(ports, take);
-    if (token === null || take !== takeRef.current) {
+    const session = yield* openTakeStream(ports, take);
+    if (session === null || take !== takeRef.current) {
         return;
     }
     const began = yield* duringHandoff(
-        Effect.promise(() => transcriptRef.current.start(token).catch((): RealtimeStart => "failed"))
+        Effect.promise(() => transcriptRef.current.start(session).catch((): RealtimeStart => "failed"))
     );
     if (take !== takeRef.current) {
         transcriptRef.current.cancel();
@@ -453,7 +463,7 @@ export function useVoiceEntry<Context>({
     const watchRef = useRef<SilenceWatch | null>(null);
     const endingRef = useRef<number | null>(null);
     const threadRef = useRef<string | null>(null);
-    const resentRef = useRef<string | null>(null);
+    const resentRef = useRef<Take | null>(null);
     const disposedRef = useRef(false);
     const speakAbortRef = useRef<AbortController | null>(null);
     const runFlow = useAtomCommand(voidFlowCommand);
