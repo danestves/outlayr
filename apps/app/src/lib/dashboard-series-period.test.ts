@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { periodKeyIn, periodKeyOf, periodOf, priorSlice, rangeKindOf, shiftPeriodKey } from "./dashboard-series-period";
+import {
+    periodKeyIn,
+    periodKeyOf,
+    periodOf,
+    presetKeyOf,
+    priorSlice,
+    rangeChoiceOf,
+    rangeKindOf,
+    shiftPeriodKey,
+} from "./dashboard-series-period";
 
 describe("periodOf", () => {
     it("spans the calendar month when the month starts on the 1st", () => {
@@ -108,5 +117,37 @@ describe("weeks and years", () => {
 
     it("files a day before the first day of January's period in the year before", () => {
         expect(periodKeyIn("year", "2026-01-10", { firstDayOfMonth: 15, firstWeekday: 1 })).toBe("2025");
+    });
+});
+
+describe("custom ranges", () => {
+    it("counts both ends and compares with the same number of days just before", () => {
+        const range = periodOf("2026-10-28..2026-11-03", 15);
+        expect(range).toStrictEqual({ days: 7, from: "2026-10-28", key: "2026-10-28..2026-11-03", to: "2026-11-03" });
+        expect(shiftPeriodKey(range.key, -1)).toBe("2026-10-21..2026-10-27");
+    });
+
+    it("cuts the range before to the days elapsed while the range is still running", () => {
+        const range = periodOf("2026-11-10..2026-11-23", 1);
+        expect(priorSlice(range, "2026-11-12", 1)).toMatchObject({ from: "2026-10-27", to: "2026-10-29" });
+    });
+
+    it("rejects a day that does not exist, a reversed range and anything else from the URL", () => {
+        expect(rangeChoiceOf("2026-02-01..2026-02-28")).toBe("2026-02-01..2026-02-28");
+        expect(rangeChoiceOf("2026-02-01..2026-02-30")).toBeNull();
+        expect(rangeChoiceOf("2026-03-05..2026-03-01")).toBeNull();
+        expect(rangeChoiceOf("2026-3-1..2026-3-5")).toBeNull();
+        expect(rangeChoiceOf("decade")).toBeNull();
+        expect(rangeChoiceOf("30d")).toBe("30d");
+    });
+
+    it("rolls presets with today and the week start the user set", () => {
+        const sunday = { firstWeekday: 1, today: "2026-11-19" };
+        const monday = { firstWeekday: 2, today: "2026-11-19" };
+        expect(presetKeyOf("week", sunday, "2025-01-01")).toBe("2026-11-15..2026-11-21");
+        expect(presetKeyOf("week", monday, "2025-01-01")).toBe("2026-11-16..2026-11-22");
+        expect(presetKeyOf("30d", monday, "2025-01-01")).toBe("2026-10-21..2026-11-19");
+        expect(presetKeyOf("all", monday, "2025-01-01")).toBe("2025-01-01..2026-11-19");
+        expect(presetKeyOf("all", monday, "2027-01-01")).toBe("2026-11-19..2026-11-19");
     });
 });

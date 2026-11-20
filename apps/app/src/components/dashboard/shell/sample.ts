@@ -238,6 +238,7 @@ export function sampleDashboard(now: number): Dashboard {
             accounts: [],
             categories: [],
             category: null,
+            choice: null,
             currentKey,
             period,
             range: period,

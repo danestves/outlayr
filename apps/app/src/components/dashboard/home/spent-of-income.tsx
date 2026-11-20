@@ -12,7 +12,15 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { kpis } from "@/lib/dashboard-series";
 import { round } from "@/lib/dashboard-series-ledger";
-import { lastMonthOf, periodOf, rangeKindOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
+import type { Ledger } from "@/lib/dashboard-series-ledger";
+import {
+    isCustomKey,
+    lastMonthIn,
+    periodOf,
+    priorSlice,
+    rangeKindOf,
+    shiftPeriodKey,
+} from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
 import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
@@ -20,7 +28,7 @@ import { viewTransition } from "@/lib/motion";
 
 import { CardFrame } from "./card-frame";
 import { Empty } from "./empty";
-import { categoryTone, percentChange, useDateFormat } from "./format";
+import { categoryTone, percentChange, useDateFormat, useRangeTitle } from "./format";
 import { categorySpend, snapWhatIf, whatIfStep } from "./model";
 import type { SetupState } from "./model";
 
@@ -197,10 +205,14 @@ function SpentFooter({
     );
 }
 
-function useCompareLabels(period: Period, firstDayOfMonth: number) {
+function useCompareLabels(period: Period, { firstDayOfMonth, today }: Pick<Ledger, "firstDayOfMonth" | "today">) {
     const copy = useIntlayer("dashboard-home").spentOfIncome;
     const date = useDateFormat();
-    const year = lastMonthOf(period.key).slice(0, 4);
+    const range = useRangeTitle();
+    if (isCustomKey(period.key)) {
+        return { now: range(period), prior: range(priorSlice(period, today, firstDayOfMonth)) };
+    }
+    const year = lastMonthIn(period, firstDayOfMonth).slice(0, 4);
     switch (rangeKindOf(period.key)) {
         case "quarter": {
             return { now: copy.thisQuarter.value, prior: copy.previousQuarter.value };
@@ -238,7 +250,7 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
     const { amount: whatIf, slider } = useWhatIf(income);
     const shown = (value: number) => money(value, ledger.currency);
     const { title } = copy.spentOfIncome;
-    const labels = useCompareLabels(period, ledger.firstDayOfMonth);
+    const labels = useCompareLabels(period, ledger);
     if (setup && (income === 0 || spent === 0)) {
         return <SpentSetup spent={spent} />;
     }

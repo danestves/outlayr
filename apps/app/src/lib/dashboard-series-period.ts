@@ -7,12 +7,23 @@ const YEAR_KEY = /^\d{4}$/;
 const WEEK_KEY = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 const RANGE_KEY = /^(\d{4})-(0[1-9]|1[0-2])\/(quarter|year)$/;
 const RANGE_MONTHS = { quarter: 3, year: 12 } as const;
+const CUSTOM_KEY = /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/;
+const LAST_DAYS = 30;
 const WALL_CLOCK = fixedOffset(0);
 const DAYS_IN_WEEK = 7;
 
 export type PeriodKind = "month" | "week" | "year";
 
 export type RangeKind = keyof typeof RANGE_MONTHS;
+
+export const RANGE_PRESETS = ["today", "week", "30d", "all"] as const;
+
+export type RangePreset = (typeof RANGE_PRESETS)[number];
+
+/** Two days, first and last, both counted: `2026-10-05..2026-10-18`. */
+export type CustomKey = `${string}..${string}`;
+
+export type RangeChoice = RangeKind | RangePreset | CustomKey;
 
 export interface Period {
     days: number;
@@ -50,7 +61,51 @@ function rangeParts(key: string) {
 
 export const rangeKindOf = (key: string): RangeKind | null => rangeParts(key)?.kind ?? null;
 
-export const lastMonthOf = (key: string) => rangeParts(key)?.month ?? key;
+const isDay = (value: string) => WEEK_KEY.test(value) && new Date(wallNoon(value)).toISOString().startsWith(value);
+
+function customParts(key: string) {
+    const [, from, to] = CUSTOM_KEY.exec(key) ?? [];
+    return from && to && isDay(from) && isDay(to) && from <= to ? { from, to } : null;
+}
+
+export const customKeyOf = (from: string, to: string): CustomKey => `${from}..${to}`;
+
+export const isCustomKey = (key: string): key is CustomKey => customParts(key) !== null;
+
+const isPreset = (value: string): value is RangePreset => RANGE_PRESETS.some((preset) => preset === value);
+
+export function rangeChoiceOf(value: string | undefined): RangeChoice | null {
+    if (value === undefined) {
+        return null;
+    }
+    return isRangeKind(value) || isPreset(value) || isCustomKey(value) ? value : null;
+}
+
+export interface Today {
+    firstWeekday: number;
+    today: string;
+}
+
+export function presetKeyOf(preset: RangePreset, { firstWeekday, today }: Today, earliest: string): CustomKey {
+    switch (preset) {
+        case "today": {
+            return customKeyOf(today, today);
+        }
+        case "week": {
+            const from = weekKeyOf(today, firstWeekday);
+            return customKeyOf(from, addDays(from, DAYS_IN_WEEK - 1));
+        }
+        case "30d": {
+            return customKeyOf(addDays(today, 1 - LAST_DAYS), today);
+        }
+        default: {
+            return customKeyOf(earliest < today ? earliest : today, today);
+        }
+    }
+}
+
+export const lastMonthIn = (period: Pick<Period, "to">, firstDayOfMonth: number) =>
+    periodKeyOf(period.to, firstDayOfMonth);
 
 function monthOf(key: string, firstDayOfMonth: number): Period {
     const { from, to } = monthWindow(wallMidnight(`${key}-28`), WALL_CLOCK, firstDayOfMonth, 0);
@@ -58,6 +113,10 @@ function monthOf(key: string, firstDayOfMonth: number): Period {
 }
 
 export function periodOf(key: string, firstDayOfMonth: number): Period {
+    const custom = customParts(key);
+    if (custom) {
+        return { days: daysBetween(custom.from, custom.to) + 1, ...custom, key };
+    }
     const range = rangeParts(key);
     if (range) {
         const first =
@@ -96,8 +155,14 @@ export function periodKeyIn(kind: PeriodKind, day: string, calendar: Calendar) {
     return kind === "year" ? month.slice(0, 4) : month;
 }
 
-// A quarter steps to the three months before it; a year to the same months a year earlier.
+// A quarter steps to the three months before it; a year to the same months a year earlier;
+// a custom range to the same number of days next to it.
 export function shiftPeriodKey(key: string, steps: number): string {
+    const custom = customParts(key);
+    if (custom) {
+        const days = (daysBetween(custom.from, custom.to) + 1) * steps;
+        return customKeyOf(addDays(custom.from, days), addDays(custom.to, days));
+    }
     const range = rangeParts(key);
     if (range) {
         return rangeKeyOf(shiftPeriodKey(range.month, steps * RANGE_MONTHS[range.kind]), range.kind);

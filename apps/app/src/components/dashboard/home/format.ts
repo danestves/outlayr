@@ -9,6 +9,9 @@ import type { LedgerCategory } from "@/lib/dashboard-series-ledger";
 import type { Period } from "@/lib/dashboard-series-period";
 
 const WEEKDAY_LEAD = /^([^\s,]+),?\s/;
+const SUNDAY_NOON = Date.UTC(2023, 11, 31, 12);
+const DAY_MS = 86_400_000;
+const WEEK = 7;
 
 export function useDateFormat() {
     const { locale } = useLocale();
@@ -34,13 +37,29 @@ export function useDateFormat() {
             weekday: "short",
         });
         const month = new Intl.DateTimeFormat(date, { month: "long", timeZone: "UTC" });
+        const monthYear = new Intl.DateTimeFormat(date, { month: "long", timeZone: "UTC", year: "numeric" });
         return {
             day: (day: string) => short.format(wallNoon(day)),
             full: (day: string) => withYear.format(wallNoon(day)),
             month: (key: string) => month.format(wallNoon(`${key}-15`)),
+            monthYear: (key: string) => monthYear.format(wallNoon(`${key}-15`)),
             weekday: (day: string) => withWeekday.format(wallNoon(day)).replace(WEEKDAY_LEAD, "$1, "),
         };
     }, [date]);
+}
+
+/** `firstWeekday` is 1 for Sunday and 2 for Monday, as the ledger stores it. */
+export function useWeekLetters(firstWeekday: number) {
+    const { locale } = useLocale();
+    return useMemo(() => {
+        const format = new Intl.DateTimeFormat(LANGUAGES[localeFromParam(locale)].date, {
+            timeZone: "UTC",
+            weekday: "narrow",
+        });
+        return Array.from({ length: WEEK }, (_, index) =>
+            format.format(SUNDAY_NOON + (firstWeekday - 1 + index) * DAY_MS)
+        );
+    }, [firstWeekday, locale]);
 }
 
 export const titled = (name: string, locale: string) => `${name.charAt(0).toLocaleUpperCase(locale)}${name.slice(1)}`;
@@ -69,6 +88,18 @@ export function usePeriodTitle(firstDayOfMonth: number, currentKey: string) {
                 : `${date.day(period.from)} - ${date.day(period.to)}`;
         const year = period.key.slice(0, YEAR_LENGTH);
         return year === currentKey.slice(0, YEAR_LENGTH) ? title : `${title} ${year}`;
+    };
+}
+
+export function useRangeTitle() {
+    const date = useDateFormat();
+    const { filters: copy } = useIntlayer("dashboard");
+    return ({ from, to }: Pick<Period, "from" | "to">) => {
+        if (from === to) {
+            return date.day(from);
+        }
+        const day = from.slice(0, YEAR_LENGTH) === to.slice(0, YEAR_LENGTH) ? date.day : date.full;
+        return copy.rangeLabel({ from: day(from), to: day(to) }).value;
     };
 }
 

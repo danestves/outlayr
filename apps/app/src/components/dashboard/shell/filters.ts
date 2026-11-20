@@ -4,13 +4,9 @@ import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 
 import { isPeriodKey, periodKeyIn, periodKindOf } from "../../../lib/dashboard-series-period";
-import type { Calendar, RangeKind } from "../../../lib/dashboard-series-period";
+import type { Calendar, RangeChoice } from "../../../lib/dashboard-series-period";
 
 const Param = Schema.UndefinedOr(Schema.String).pipe(
-    Schema.catchDecoding(() => Effect.succeed(Option.some(undefined)))
-);
-
-const RangeParam = Schema.UndefinedOr(Schema.Literals(["quarter", "year"])).pipe(
     Schema.catchDecoding(() => Effect.succeed(Option.some(undefined)))
 );
 
@@ -32,7 +28,7 @@ const Search = Schema.Struct({
     category: Schema.optional(Param),
     checkout: Schema.optional(Param),
     period: Schema.optional(PeriodParam),
-    range: Schema.optional(RangeParam),
+    range: Schema.optional(Param),
     restore: Schema.optional(RestoreParam),
 });
 
@@ -45,7 +41,7 @@ export interface FilterPatch {
     categories?: readonly string[];
     category?: string | null;
     period?: string | null;
-    range?: RangeKind | null;
+    range?: RangeChoice | null;
 }
 
 export const accountIdsOf = (accounts: string | undefined) => accounts?.split(",").filter((id) => id !== "") ?? [];
