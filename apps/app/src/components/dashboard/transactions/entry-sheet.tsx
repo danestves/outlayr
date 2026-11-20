@@ -24,6 +24,7 @@ import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { isFinanced } from "@/lib/entry-writes";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { photoSrc } from "@/lib/photo-src";
+import { parseReceipt } from "@/lib/receipt-scan";
 
 import { useCatalog } from "../home/catalog";
 import { timeOfDay, useCategoryName, useDateFormat } from "../home/format";
@@ -32,6 +33,7 @@ import type { FoldedRow } from "../home/rows";
 import { useWide } from "../insights/use-wide";
 import { EntryEditor, useRepeatNames } from "./entry-form";
 import { installmentTags, transferMoves } from "./model";
+import { SavedReceipt } from "./receipt-card";
 import { TransferEditor } from "./transfer-editor";
 import { useWeekday } from "./use-day-title";
 
@@ -367,6 +369,15 @@ function InstallmentLine({ installmentId, rowId }: { installmentId: string | nul
     );
 }
 
+function EntryReceipt({ raw }: { raw: ReturnType<ReturnType<typeof useCatalog>["transaction"]> }) {
+    const { ledger } = useDashboard();
+    const receipt = parseReceipt(raw?.receipt);
+    if (!raw || !receipt) {
+        return null;
+    }
+    return <SavedReceipt currency={raw.currency ?? ledger.currency} merchant={raw.note.trim()} receipt={receipt} />;
+}
+
 function ReadEntry({
     imageUrl,
     onDelete,
@@ -452,6 +463,7 @@ function ReadEntry({
                     </Line>
                 ) : null}
             </div>
+            <EntryReceipt raw={raw} />
             <div className="mt-5 flex flex-col gap-2 pb-4">
                 <div className="flex gap-2 *:flex-1">
                     {onLogAgain ? (
@@ -584,6 +596,7 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
                             total={total}
                         />
                         {(raw?.recurringType ?? 0) > 0 ? <RecurringLink id={row.id} /> : null}
+                        <EntryReceipt raw={raw} />
                     </>
                 }
                 categoryHint

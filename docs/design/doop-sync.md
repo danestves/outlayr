@@ -160,6 +160,7 @@ From the canvas page `Web · Transactions`, under `components/dashboard/transact
 - **Date:** the period chip opens the dashboard's `PeriodPicker` in a scoped context that writes the page's own `span`, `from` and `to`, so the list's coverage check keeps working.
 - **Pages:** 15 rows a page with a footer that totals the tab (In, Out and Net on All; per day and Spent on Expenses; Moved and Fees on Transfers).
 - **Drawer:** the entry sheet's amount is MoneyField. A recurring entry links to its schedule (`/recurring?item=`), an installment payment to its plan.
+- **Receipt scan:** the frame's Files card sits in Add entry, not the drawer, because the drawer saves as you type and a scan must be confirmed first. The read lines fill the form and save with Add; the drawer's Files card shows them. A PDF goes as a photo of its first page (`lib/receipt-scan.ts`).
 - **Loading:** the real screen over the sampled ledger inside a static skullet skeleton.
 
 ## Accounts

@@ -1,5 +1,6 @@
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { EntryDialog } from "@/components/dashboard/transactions/entry-form";
+import { ReceiptDialog } from "@/components/dashboard/transactions/receipt-dialog";
 import { TransferDialog, TransferNoAccounts } from "@/components/dashboard/transactions/transfer-dialog";
 import { transferAccounts } from "@/lib/transfer-create";
 
@@ -23,6 +24,9 @@ export default function FlowDialogs({
     const { ledger } = useDashboard();
     if (flow.kind === "entry") {
         return <EntryDialog flow={flow} onClose={onClose} onSwitch={onSwitch} />;
+    }
+    if (flow.kind === "receipt") {
+        return <ReceiptDialog flow={flow} onClose={onClose} onSwitch={onSwitch} />;
     }
     if (flow.kind === "transfer") {
         const choices = new Set(transferAccounts(ledger.books).map((row) => row.localId));

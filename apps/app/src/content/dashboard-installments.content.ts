@@ -68,7 +68,6 @@ const dashboardInstallments = {
         },
         comingUp: t({ en: "Coming up", de: "Demnächst", es: "Próximas", fr: "À venir", pt: "Próximas" }),
         consent: {
-            allow: t({ en: "Allow", de: "Erlauben", es: "Permitir", fr: "Autoriser", pt: "Permitir" }),
             fine: t({
                 en: "It goes through our server to a third-party AI provider, which never gets your name, email, or account ID. We don't keep the screenshot.",
                 de: "Es läuft über unseren Server zu einem KI-Anbieter, der weder deinen Namen noch deine E-Mail-Adresse oder Konto-ID erhält. Den Screenshot speichern wir nicht.",
@@ -76,7 +75,6 @@ const dashboardInstallments = {
                 fr: "Elle passe par notre serveur vers un fournisseur d'IA tiers, qui ne reçoit jamais votre nom, votre e-mail ni l'identifiant de votre compte. Nous ne conservons pas la capture.",
                 pt: "Ela passa pelo nosso servidor até um provedor de IA terceiro, que nunca recebe seu nome, e-mail ou ID da conta. Não guardamos a captura.",
             }),
-            notNow: t({ en: "Not now", de: "Nicht jetzt", es: "Ahora no", fr: "Pas maintenant", pt: "Agora não" }),
             planScan: t({
                 en: "Installment plan import",
                 de: "Import von Ratenplänen",
@@ -90,27 +88,6 @@ const dashboardInstallments = {
                 es: "La captura, el nombre de la cuenta, la moneda, el idioma, la región y la fecha de hoy",
                 fr: "La capture d'écran, le nom du compte, la devise, la langue, la région et la date du jour",
                 pt: "A captura de tela, o nome da conta, a moeda, o idioma, a região e a data de hoje",
-            }),
-            privacy: t({
-                en: "Privacy policy",
-                de: "Datenschutzerklärung",
-                es: "Política de privacidad",
-                fr: "Politique de confidentialité",
-                pt: "Política de privacidade",
-            }),
-            privacyHash: t({
-                en: "suggestions-voice-and-receipts",
-                de: "vorschläge-sprache-und-belege",
-                es: "sugerencias-voz-y-recibos",
-                fr: "suggestions-voix-et-tickets",
-                pt: "sugestões-voz-e-recibos",
-            }),
-            title: t({
-                en: "Send data to third-party AI providers?",
-                de: "Daten an KI-Anbieter von Drittanbietern senden?",
-                es: "¿Enviar datos a proveedores de IA externos?",
-                fr: "Envoyer des données à des fournisseurs d'IA tiers ?",
-                pt: "Enviar dados a provedores de IA terceiros?",
             }),
         },
         deletePending: {
