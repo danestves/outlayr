@@ -549,6 +549,47 @@ function EntryFields({
 export const merchantOf = (ledger: Ledger, values: EntryValues) =>
     values.note.trim() || (ledger.books.categories.find((row) => row.localId === values.categoryId)?.name ?? "");
 
+const ruleInput = (values: EntryValues) => ({
+    amount: parseAmount(values.amountText, decimalsFor(values.currency)),
+    details: values.details,
+    income: values.income,
+    note: values.note,
+});
+
+/** Saves a new entry the way Add entry does, rules included, and answers with the problem that stopped it. */
+export function useAddEntry() {
+    const { ledger } = useDashboard();
+    const committer = useLedgerCommitter();
+    const rules = useIncomingRules();
+    const { form } = useIntlayer("dashboard-transactions");
+    return (values: EntryValues, receipt?: string): EntryProblem | null => {
+        const at = Date.now();
+        const current = committer.current();
+        const ruled = rules(ruleInput(values));
+        const filled =
+            values.categoryId === null && ruled.categoryId !== null
+                ? { ...values, categoryId: ruled.categoryId }
+                : values;
+        const draft = {
+            ...draftOf(current, filled, null, form.feeNote({ merchant: merchantOf(ledger, filled) }).value),
+            receipt,
+        };
+        // The default minute keeps its seconds, so entries added back to back stay in the order they were typed.
+        const dated = values.dateText === wallText(at, ledger) ? { ...draft, date: at } : draft;
+        const found = entryProblem(current, dated, null, at);
+        if (found !== null) {
+            return found;
+        }
+        const id = crypto.randomUUID();
+        const links = ruled.tagIds.map((tagId) => newLink(id, tagId, at));
+        void committer.commit([...createdEntry(current, id, dated, at), ...links], {
+            failed: form.saveFailed.value,
+            saved: form.added.value,
+        });
+        return null;
+    };
+}
+
 /** Add entry. It closes at once: the row shows from the local copy, and a push that fails says so in a toast. */
 export function EntryDialog({
     flow,
@@ -560,13 +601,15 @@ export function EntryDialog({
     onSwitch: (flow: AccountFlow) => void;
 }) {
     const { ledger } = useDashboard();
-    const committer = useLedgerCommitter();
     const { add } = useIntlayer("dashboard");
     const { flows } = useIntlayer("dashboard-accounts");
     const { form } = useIntlayer("dashboard-transactions");
     const [values, setValues] = useState(() => {
         if (flow.scanned) {
             return flow.scanned.values;
+        }
+        if (flow.seed) {
+            return flow.seed;
         }
         const source = ledger.books.transactions.find((row) => row.localId === flow.from);
         return source
@@ -577,12 +620,8 @@ export function EntryDialog({
     const [problem, setProblem] = useState<EntryProblem | null>(null);
     const [round, setRound] = useState(0);
     const formId = useId();
-    const ruled = useIncomingRules()({
-        amount: parseAmount(values.amountText, decimalsFor(values.currency)),
-        details: values.details,
-        income: values.income,
-        note: values.note,
-    });
+    const addEntry = useAddEntry();
+    const ruled = useIncomingRules()(ruleInput(values));
     const filled =
         values.categoryId === null && ruled.categoryId !== null ? { ...values, categoryId: ruled.categoryId } : values;
     const change = (patch: Partial<EntryValues>) => {
@@ -590,25 +629,11 @@ export function EntryDialog({
         setProblem(null);
     };
     const submit = (another: boolean) => {
-        const at = Date.now();
-        const current = committer.current();
-        const draft = {
-            ...draftOf(current, filled, null, form.feeNote({ merchant: merchantOf(ledger, filled) }).value),
-            receipt: scan?.receipt ? JSON.stringify(scan.receipt) : undefined,
-        };
-        // The default minute keeps its seconds, so entries added back to back stay in the order they were typed.
-        const dated = values.dateText === wallText(at, ledger) ? { ...draft, date: at } : draft;
-        const found = entryProblem(current, dated, null, at);
+        const found = addEntry(values, scan?.receipt ? JSON.stringify(scan.receipt) : undefined);
         setProblem(found);
         if (found !== null) {
             return;
         }
-        const id = crypto.randomUUID();
-        const links = ruled.tagIds.map((tagId) => newLink(id, tagId, at));
-        void committer.commit([...createdEntry(current, id, dated, at), ...links], {
-            failed: form.saveFailed.value,
-            saved: form.added.value,
-        });
         if (another) {
             change({ amountText: "", details: "", feeText: "", note: "" });
             setScan(null);

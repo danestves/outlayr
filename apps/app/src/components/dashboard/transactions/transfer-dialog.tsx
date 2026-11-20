@@ -40,14 +40,47 @@ function Balance({ children }: { children: ReactNode }) {
     return <p className="text-muted-foreground text-app-caption mt-1.5 font-mono tabular-nums">{children}</p>;
 }
 
-export function TransferDialog({ accountId, onClose }: { accountId: string; onClose: () => void }) {
-    const { ledger, overview } = useDashboard();
+/** Saves a new transfer the way the dialog does, and answers with the problem that stopped it. */
+export function useAddTransfer() {
+    const { ledger } = useDashboard();
     const committer = useLedgerCommitter();
+    const { flows } = useIntlayer("dashboard-accounts");
+    const { form } = useIntlayer("dashboard-transactions");
+    return (values: NewTransferValues): NewTransferProblem | null => {
+        const at = Date.now();
+        const current = committer.current();
+        const found = newTransferProblem(current, values);
+        const name = (id: string | null) => current.books.accounts.find((row) => row.localId === id)?.name ?? "";
+        const feeNote = flows.transferFeeNote({ from: name(values.fromId), to: name(values.toId) }).value;
+        const draft = newTransferInput(current, values, feeNote);
+        if (found !== null || draft === null) {
+            return found ?? "amount";
+        }
+        const date = values.dateText === wallText(at, ledger) ? at : wallInstant(values.dateText, ledger);
+        const created = createdTransfer(current, crypto.randomUUID(), { ...draft, date: new Date(date) }, at);
+        void committer.commit(created, { failed: form.saveFailed.value, saved: flows.transferSaved.value });
+        return null;
+    };
+}
+
+export function TransferDialog({
+    accountId,
+    onClose,
+    seed,
+}: {
+    accountId: string;
+    onClose: () => void;
+    seed?: NewTransferValues;
+}) {
+    const { ledger, overview } = useDashboard();
     const { flows } = useIntlayer("dashboard-accounts");
     const { detail, form } = useIntlayer("dashboard-transactions");
     const { money } = useDisplayFormat();
     const rows = accountRows(ledger, overview);
     const [values, setValues] = useState<NewTransferValues>(() => {
+        if (seed) {
+            return seed;
+        }
         const row = rows.find((each) => each.id === accountId);
         const statement = row && statementOf(ledger, row);
         return newTransferValues(ledger, accountId, row && isCard(row) ? (statement?.due ?? 0) : null, Date.now());
@@ -55,6 +88,7 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
     const [problem, setProblem] = useState<NewTransferProblem | null>(null);
     const [round, setRound] = useState(0);
     const formId = useId();
+    const addTransfer = useAddTransfer();
     const change = (next: NewTransferValues) => {
         setValues(next);
         setProblem(null);
@@ -83,19 +117,11 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
     };
     const fee = input?.fees?.source?.amount ?? 0;
     const submit = (another: boolean) => {
-        const at = Date.now();
-        const current = committer.current();
-        const found = newTransferProblem(current, values);
+        const found = addTransfer(values);
         setProblem(found);
-        const name = (id: string | null) => current.books.accounts.find((row) => row.localId === id)?.name ?? "";
-        const feeNote = flows.transferFeeNote({ from: name(values.fromId), to: name(values.toId) }).value;
-        const draft = newTransferInput(current, values, feeNote);
-        if (found !== null || draft === null) {
+        if (found !== null) {
             return;
         }
-        const date = values.dateText === wallText(at, ledger) ? at : wallInstant(values.dateText, ledger);
-        const created = createdTransfer(current, crypto.randomUUID(), { ...draft, date: new Date(date) }, at);
-        void committer.commit(created, { failed: form.saveFailed.value, saved: flows.transferSaved.value });
         if (another) {
             change({ ...values, arrivedByHand: false, arrivedText: "", feeText: "", note: "", sentText: "" });
             setRound((count) => count + 1);
