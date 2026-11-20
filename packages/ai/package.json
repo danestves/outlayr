@@ -1,0 +1,30 @@
+{
+    "name": "@outlayr/ai",
+    "version": "0.0.0",
+    "private": true,
+    "license": "AGPL-3.0-only",
+    "type": "module",
+    "exports": {
+        "./*": "./src/*.ts"
+    },
+    "scripts": {
+        "check-types": "tsc --noEmit",
+        "test": "vp test run"
+    },
+    "dependencies": {
+        "@outlayr/model-router": "workspace:*",
+        "@tanstack/ai": "1.4.0",
+        "@tanstack/ai-anthropic": "1.1.1",
+        "@tanstack/ai-gemini": "1.2.1",
+        "@tanstack/ai-grok": "1.1.1",
+        "@tanstack/ai-openai": "1.1.1",
+        "@tanstack/ai-openrouter": "1.1.2",
+        "effect": "catalog:"
+    },
+    "devDependencies": {
+        "@outlayr/config": "workspace:*",
+        "@types/node": "^26.6.5",
+        "typescript": "catalog:",
+        "vite": "catalog:"
+    }
+}
