@@ -29,9 +29,9 @@ function minuteOf(clock: string) {
 
 function Nudge({ line, when }: { line: ReactNode; when: ReactNode }) {
     return (
-        <li className="border-border flex gap-2.5 border-t px-4 py-[13px] first:border-t-0">
+        <li className="border-border flex gap-2.5 border-t px-4 py-3 first:border-t-0">
             <LogoMark className="text-app-tint mt-0.5 ml-1 size-6 shrink-0" />
-            <span className="min-w-0 flex-1 text-[13px] leading-5">
+            <span className="text-app-label min-w-0 flex-1">
                 <span className="flex justify-between gap-3 font-medium">
                     Outlayr
                     <span className="dash-figure text-muted-foreground font-normal">{when}</span>
@@ -63,7 +63,7 @@ export function Rhythm({
             <Plate>
                 <PlateHead body={rhythm.body} title={rhythm.title} />
                 <div className="px-4 pt-4 pb-4">
-                    <label className="mb-2 block w-fit text-sm leading-5 font-medium" htmlFor={fieldId}>
+                    <label className="text-app-body mb-2 block w-fit font-medium" htmlFor={fieldId}>
                         {rhythm.time}
                     </label>
                     <div className="relative">

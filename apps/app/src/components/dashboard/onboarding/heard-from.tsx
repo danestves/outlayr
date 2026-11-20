@@ -77,7 +77,7 @@ export function HeardFromRows({ onChange, value }: { onChange: (next: HeardFrom)
     return (
         <>
             <div className={ROW}>
-                <dt className="text-muted-foreground text-[13px]">{heardFrom.label}</dt>
+                <dt className="text-muted-foreground text-app-label">{heardFrom.label}</dt>
                 <dd>
                     <Select
                         items={order.map((source) => ({ label: heardFrom.sources[source].value, value: source }))}
@@ -88,14 +88,14 @@ export function HeardFromRows({ onChange, value }: { onChange: (next: HeardFrom)
                     >
                         <Select.Trigger
                             aria-label={heardFrom.label.value}
-                            className="w-auto min-w-[160px] gap-2 text-[13px]"
+                            className="w-auto min-w-40 gap-2"
                             icon={<HugeiconsIcon className="size-4" icon={ArrowDown01Icon} />}
                             size="sm"
                         >
                             {value ? sourceIcon(value.source) : null}
                             <Select.Value placeholder={heardFrom.choose.value} />
                         </Select.Trigger>
-                        <Select.Content align="end" alignItemWithTrigger={false} className="app-shell z-[60]">
+                        <Select.Content align="end" alignItemWithTrigger={false} className="app-shell z-60">
                             {order.map((source) => (
                                 <Select.Item icon={sourceIcon(source)} key={source} value={source}>
                                     {heardFrom.sources[source]}
@@ -110,7 +110,7 @@ export function HeardFromRows({ onChange, value }: { onChange: (next: HeardFrom)
                     <Input
                         aria-label={heardFrom.where.value}
                         autoFocus
-                        className="h-9 w-full max-w-[376px] text-[13px]"
+                        className="w-full max-w-94"
                         maxLength={DETAIL_LIMIT}
                         onChange={(event) => onChange({ ...value, detail: event.target.value })}
                         placeholder={heardFrom.where.value}

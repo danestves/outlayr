@@ -1,5 +1,4 @@
 import { Combobox } from "@base-ui/react/combobox";
-import AlertCircleIcon from "@hugeicons/core-free-icons/AlertCircleIcon";
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
@@ -11,6 +10,7 @@ import { useId } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { SettingsCard } from "@/components/dashboard/settings/parts";
+import { ErrorBand } from "@/components/error-band";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import type { OnboardingStep } from "@/lib/onboarding";
 
@@ -52,25 +52,25 @@ function CurrencyPicker({ code, id, onPick }: { code: string; id: string; onPick
                     className="app-shell z-50 outline-none"
                     sideOffset={10}
                 >
-                    <Combobox.Popup className="bg-popover text-popover-foreground w-[calc(var(--anchor-width)-6px)] origin-(--transform-origin) rounded-xl border p-1 shadow-lg transition-[opacity,scale] duration-150 ease-out outline-none data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-none">
-                        <div className="border-input bg-background dark:bg-input/30 flex h-9 items-center gap-2 rounded-lg border px-3">
+                    <Combobox.Popup className="bg-popover text-popover-foreground rounded-app-lg w-[calc(var(--anchor-width)-6px)] border p-1 shadow-(--shadow-app-popover) outline-none">
+                        <div className="border-input bg-background dark:bg-input/30 h-app-control rounded-app-sm flex items-center gap-2 border px-3">
                             <HugeiconsIcon className="text-muted-foreground shrink-0" icon={Search01Icon} size={15} />
                             <Combobox.Input
                                 aria-label={currency.search.value}
-                                className="placeholder:text-muted-foreground h-full min-w-0 flex-1 bg-transparent text-[13px] outline-none"
+                                className="placeholder:text-muted-foreground text-app-label h-full min-w-0 flex-1 bg-transparent outline-none"
                                 placeholder={currency.search.value}
                             />
                         </div>
-                        <div className="bg-border mx-2 my-[5px] h-px" />
+                        <div className="bg-border mx-2 my-1 h-px" />
                         <Combobox.Empty className={`px-2 py-1.5 empty:hidden ${QUIET}`}>{currency.none}</Combobox.Empty>
                         <Combobox.List className="max-h-[min(var(--available-height),14rem)] scroll-py-1 [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent] overflow-y-auto">
                             {(item: string) => (
                                 <Combobox.Item
-                                    className="data-highlighted:bg-accent flex min-h-8 cursor-default items-center gap-2 rounded-lg px-2 text-sm outline-none select-none"
+                                    className="data-highlighted:bg-accent rounded-app-sm text-app-body flex min-h-8 cursor-default items-center gap-2 px-2 outline-none select-none"
                                     key={item}
                                     value={item}
                                 >
-                                    <span className="dash-figure w-[42px] shrink-0">{item}</span>
+                                    <span className="dash-figure w-10.5 shrink-0">{item}</span>
                                     <span className={`truncate ${QUIET}`}>{currencyDisplayFor(item).name}</span>
                                     <Combobox.ItemIndicator className="text-app-tint ml-auto flex shrink-0">
                                         <HugeiconsIcon icon={Tick02Icon} size={17} />
@@ -108,20 +108,12 @@ export function Currency({
             <Plate>
                 <PlateHead body={currency.body} title={currency.title} />
                 <div className="px-4 pt-4 pb-4">
-                    <label className="mb-2 block w-fit text-sm leading-5 font-medium" htmlFor={fieldId}>
+                    <label className="text-app-body mb-2 block w-fit font-medium" htmlFor={fieldId}>
                         {currency.label}
                     </label>
                     <CurrencyPicker code={code} id={fieldId} onPick={onPick} />
                 </div>
-                {failed ? (
-                    <p
-                        className="flex items-center gap-2 border-t border-[color-mix(in_oklab,var(--color-app-spend)_28%,transparent)] bg-[color-mix(in_oklab,var(--color-app-spend)_16%,var(--background))] px-5 py-2.5 text-[13px] leading-5 text-[color-mix(in_oklab,var(--color-app-spend),var(--foreground)_30%)]"
-                        role="alert"
-                    >
-                        <HugeiconsIcon className="shrink-0" icon={AlertCircleIcon} size={16} />
-                        {currency.failed}
-                    </p>
-                ) : null}
+                {failed ? <ErrorBand className="border-t px-5 py-2.5">{currency.failed}</ErrorBand> : null}
                 <PlateFoot>
                     <Button className="mr-auto" onClick={onLeave} size="sm" variant="outline">
                         {currency.account}
@@ -138,7 +130,7 @@ export function Currency({
                     ] as const
                 ).map(([label, amount]) => (
                     <div
-                        className="border-border flex min-h-11 items-center justify-between gap-3 border-t px-4 text-[13px] first:border-t-0"
+                        className="border-border min-h-app-row text-app-label flex items-center justify-between gap-3 border-t px-4 first:border-t-0"
                         key={amount}
                     >
                         <span className="text-muted-foreground">{label}</span>

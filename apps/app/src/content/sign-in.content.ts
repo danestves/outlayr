@@ -158,6 +158,34 @@ export default {
             fr: "Politique de confidentialité",
             pt: "Política de Privacidade",
         }),
+        signingIn: t({
+            en: "Signing in…",
+            de: "Anmeldung läuft…",
+            es: "Iniciando sesión…",
+            fr: "Connexion…",
+            pt: "Entrando…",
+        }),
+        creating: t({
+            en: "Creating account…",
+            de: "Konto wird erstellt…",
+            es: "Creando cuenta…",
+            fr: "Création du compte…",
+            pt: "Criando conta…",
+        }),
+        verifying: t({
+            en: "Verifying…",
+            de: "Wird bestätigt…",
+            es: "Verificando…",
+            fr: "Vérification…",
+            pt: "Verificando…",
+        }),
+        saving: t({
+            en: "Saving…",
+            de: "Speichern…",
+            es: "Guardando…",
+            fr: "Enregistrement…",
+            pt: "Salvando…",
+        }),
         failures: {
             email: t({
                 en: "Enter a valid email.",

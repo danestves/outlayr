@@ -23,10 +23,10 @@ import { HEADLINE, Plate, PlateFoot, QUIET, Staged, slotted, focusOnMount } from
 
 const DAY_LENGTH = 10;
 const SLOT_FIELD =
-    "border-input bg-background dark:bg-input/30 h-9 rounded-lg border shadow-xs transition-[border-color,box-shadow] duration-150";
+    "border-input bg-background dark:bg-input/30 h-app-control rounded-app-sm border shadow-xs transition duration-150";
 const HEAD =
-    "text-muted-foreground border-border h-10 border-b px-3 text-left text-xs font-medium first:pl-4 last:pr-4";
-const CELL = "h-[50px] px-3 whitespace-nowrap first:pl-4 last:pr-4";
+    "text-muted-foreground border-border text-app-caption h-10 border-b px-3 text-left font-medium first:pl-4 last:pr-4";
+const CELL = "h-12.5 px-3 whitespace-nowrap first:pl-4 last:pr-4";
 
 function Dot({ color, size }: { color: string | null | undefined; size: string }) {
     return <i className={`${size} flex-none rounded-full`} style={{ backgroundColor: color ?? undefined }} />;
@@ -90,11 +90,11 @@ export function FirstEntry({
                     <div className="px-5 pt-5 pb-4">
                         <h1 className={HEADLINE}>{firstEntry.title}</h1>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2.5 px-5 pt-1 pb-6 text-lg leading-7">
+                    <div className="text-app-heading flex flex-wrap items-center gap-2.5 px-5 pt-1 pb-6">
                         {slotted(firstEntry.sentence.value, {
                             amount: (
                                 <label
-                                    className={`dash-figure has-focus-visible:border-ring has-focus-visible:ring-ring/30 flex cursor-text items-center px-3 has-focus-visible:ring-[3px] ${amountText === "" ? "text-lg" : "text-sm"} ${SLOT_FIELD}`}
+                                    className={`dash-figure has-focus-visible:border-ring has-focus-visible:ring-ring/30 flex cursor-text items-center px-3 has-focus-visible:ring-3 ${amountText === "" ? "text-app-heading" : "text-app-body"} ${SLOT_FIELD}`}
                                     htmlFor={amountId}
                                 >
                                     <span className={amountText === "" ? "text-muted-foreground" : undefined}>
@@ -130,16 +130,16 @@ export function FirstEntry({
                                         aria-label={firstEntry.category.value}
                                         icon={
                                             <HugeiconsIcon
-                                                className="size-[17px] transition-transform duration-200 group-data-popup-open/slot:rotate-180 motion-reduce:transition-none"
+                                                className="size-4.25 transition-transform duration-200 group-data-popup-open/slot:rotate-180 motion-reduce:transition-none"
                                                 icon={ArrowDown01Icon}
                                             />
                                         }
-                                        className={`group/slot data-popup-open:ring-ring/30 w-auto px-3 data-popup-open:ring-[3px] ${picked ? "text-sm" : "text-lg"} ${SLOT_FIELD}`}
+                                        className={`group/slot data-popup-open:ring-ring/30 w-auto px-3 data-popup-open:ring-3 ${picked ? "text-sm" : "text-lg"} ${SLOT_FIELD}`}
                                     >
                                         {picked?.icon}
                                         <Select.Value placeholder={firstEntry.category.value} />
                                     </Select.Trigger>
-                                    <Select.Content alignItemWithTrigger={false} className="app-shell z-[60]">
+                                    <Select.Content alignItemWithTrigger={false} className="app-shell z-60">
                                         {options.map((option) => (
                                             <Select.Item icon={option.icon} key={option.value} value={option.value}>
                                                 {option.label}
@@ -153,7 +153,7 @@ export function FirstEntry({
                         ))}
                     </div>
                     {problem === null ? null : (
-                        <p className="text-app-spend -mt-3 px-5 pb-4 text-[13px] leading-5" role="alert">
+                        <p className="text-app-spend text-app-label -mt-3 px-5 pb-4" role="alert">
                             {problem === "rateMissing" ? firstEntry.rateMissing : firstEntry.failed}
                         </p>
                     )}
@@ -169,7 +169,7 @@ export function FirstEntry({
             </Plate>
             <SettingsCard title={firstEntry.transactions}>
                 {amount > 0 || picked ? (
-                    <table className="w-full border-collapse text-[13px]">
+                    <table className="text-app-label w-full border-collapse">
                         <thead>
                             <tr>
                                 <th className={HEAD} scope="col">
@@ -200,7 +200,7 @@ export function FirstEntry({
                     </table>
                 ) : (
                     <div className="flex flex-col items-center justify-center gap-1.5 px-6 py-8 text-center">
-                        <span className="bg-app-fill text-muted-foreground mb-2 flex size-11 items-center justify-center rounded-[14px]">
+                        <span className="bg-app-fill text-muted-foreground rounded-app-lg mb-2 flex size-11 items-center justify-center">
                             <HugeiconsIcon icon={TransactionHistoryIcon} size={20} />
                         </span>
                         <p className={QUIET}>{firstEntry.empty}</p>

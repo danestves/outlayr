@@ -293,6 +293,41 @@ From the canvas page `Web · Rules`, under `components/dashboard/rules`:
 - **Categories:** a rule that sets a subcategory reads its name and colour from the ledger's category rows, falling back to the parent's colour.
 - **Loading:** `rules-pending.tsx` is unchanged.
 
+## Paywall
+
+From the canvas page `Web · Paywall`, under `components/dashboard/paywall`:
+
+- **Chrome:** `BrandPage` (`components/brand-page.tsx`) is the brand bar with the signed-in email, outside the shell, carrying `app-shell` on its root. The plan card is a Frame at `rounded-3xl`, and what comes back is Frame rows with one icon each.
+- **Prices:** the frame's prices are the ones `packages/money/src/pro-prices.ts` sells, read per country through `paywallPrices`. None are written into the page.
+- **Motion:** the plan tabs swap the card's content in place, and checkout leaves the page, so nothing slides.
+- **Loading:** static bones over the plan card, no shimmer.
+- **Manage plan:** the manage plan frames are `settings/plan.tsx`, which is the Settings phase.
+- **Raw controls:** Restore stays a text `<button>` beside the Terms and Privacy links.
+
+## Auth
+
+From the canvas page `Web · Auth`, under `components/account`:
+
+- **Chrome:** `AuthSplit` (`account/auth.tsx`) is the form on the left and `DashboardShot` on the right, as onboarding's welcome lays it out, with `app-shell` on its root. The connect page and the ledger gate are `BrandPage` with one card under the brand bar.
+- **Fields:** email is `TextField`. Password is `PasswordField`, a Field with an end addon that shows and hides it. The code is `CodeField`, six slots over one hidden input.
+- **Errors:** an email, password or code error sits on its field. Rate limits, too many attempts and unknown failures are an `ErrorBand`, which the guide keeps apart from Alert.
+- **Busy buttons:** disabled, `aria-busy` and the progress label ("Signing in…", "Creating account…", "Verifying…", "Saving…", "Checking…", "Approving…").
+- **Connect:** the consent loads into static bones, as the frame draws them, instead of the empty screen it showed before. A closed or expired request is an `ArtCard` with Enter a code. The copy stays English, as it was.
+- **Gates:** the ledger that did not sync is an `ArtCard` with Try again.
+- **Motion:** sign in, create, verify and reset swap inside one route, so they do not animate.
+- **Not built:** frames with no web code keep the current screens: adopt (two ledgers), the turn on sync gate, the invite landing and the full page claim (the claim stays the Settings dialog).
+
+## Onboarding
+
+From the canvas page `Web · Onboarding`, under `components/dashboard/onboarding`, in the shell's `bare` mode:
+
+- **Chrome:** `chrome.tsx` keeps the step rail, headline and plate on contract tokens. Welcome's right panel is `DashboardShot`, shared with sign in.
+- **Menus:** the currency picker opens instant at `rounded-app-lg` with the popover shadow. The Selects stay PanelUI `Select` and put `app-shell` on by hand.
+- **Errors:** a failed currency load is an `ErrorBand`.
+- **First entry:** the amount stays the inline slot inside the sentence the frame draws, not `MoneyField`.
+- **Raw controls:** the rail buttons, the rhythm time input and the first entry amount input.
+- **Motion:** steps swap in place, as before.
+
 ## Primitives
 
 | Part         | Use                                                    | Notes                                                                                                   |
@@ -317,8 +352,7 @@ The shell is on the primitives: the account menu and the period menu use `MenuCo
 These still use `AmountInput` (`components/dashboard/accounts/fields.tsx`) or a bare `inputMode="decimal"` input. Each one moves in its screen's phase:
 
 - `AmountInput`: `transactions/transfer-editor.tsx`
-- Bare decimal inputs: `onboarding/first-entry.tsx`
-- Not amount entry, so they stay as they are: `transactions/filter-row.tsx` (the amount filter), `settings/currency-converter.tsx` (a converter, closer to Exchange) and the unreadable-amount fix in `import/file-done.tsx` (raw cell text the parser reads again, inside a 128 wide table cell). The transfer flow already uses Exchange.
+- Not amount entry, or an inline slot, so they stay as they are: `onboarding/first-entry.tsx` (an amount slot inside the sentence), `transactions/filter-row.tsx` (the amount filter), `settings/currency-converter.tsx` (a converter, closer to Exchange) and the unreadable-amount fix in `import/file-done.tsx` (raw cell text the parser reads again, inside a 128 wide table cell). The transfer flow already uses Exchange.
 - `settings/plan.tsx` and `import/money-manager/overview.tsx` had no decimal input left to move.
 
 ## Off contract
@@ -329,9 +363,9 @@ These are known and left for the screen phases:
 - **Arbitrary values:** about 1,360 arbitrary Tailwind values and 245 inline `style={...}` props under `apps/app/src`.
 - **Hard-coded colours:** 19 hex colours in 10 non-test source files, such as the identity picker and the provider icons.
 - **Raw controls:** 35 files with a raw `<button>` and 14 with a raw `<input>`. The account sheet's sign-out row stays a raw `<button>` until there is a row part, because Button's ghost hover and weight would change the row.
-- **Menu timing:** every menu except the account, period, dashboard filter, Transactions, Accounts, Goals, Recurring, Debts, Installments, Insights, Settings, Import and Rules menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
-- **Hand-placed scope:** 28 files outside `components/ui` still put `app-shell` on portaled content by hand. `DialogContent`, `SheetContent` and `MenuContent` replace that.
+- **Menu timing:** every menu except the account, period, dashboard filter, Transactions, Accounts, Goals, Recurring, Debts, Installments, Insights, Settings, Import, Rules and onboarding currency menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
+- **Hand-placed scope:** 29 files outside `components/ui` still put `app-shell` on by hand, on portaled content or, for `brand-page.tsx` and `account/auth.tsx`, on a page outside the shell. `DialogContent`, `SheetContent` and `MenuContent` replace that.
 - **Accent inside the shell:** `accentCss` (`lib/accent.ts`) writes the tint and on-tint on `:root`. The shell scope sets `--color-app-on-tint` again in both themes, and `--color-app-tint` again in dark, so inside the shell a non-default accent shows as vermilion in dark and keeps the default on-tint. This was already the case before this phase.
-- **Pages outside the shell:** `login` and `connect`, and any portal without `app-shell`, read the phone's dark palette from `:root`. So does `html` itself, whose background is `--color-app-bg`.
+- **Pages outside the shell:** `login`, `connect`, the paywall and the ledger gate carry `app-shell` on their root. Any portal without it reads the phone's dark palette from `:root`. So does `html` itself, whose background is `--color-app-bg`.
 - **What syncs:** `settings/sync.tsx` lists what syncs and what stays on each phone. No frame has it yet: it fills the Sync frames' right column, where the canvas draws a Devices table the app doesn't have.
 - **Duplicate block on the site:** apps/site keeps its own copy of the `.app-shell` palette, which matches these values.
