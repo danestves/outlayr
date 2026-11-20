@@ -22,11 +22,12 @@ import { useIntlayer } from "react-intlayer";
 import { FlowDialog } from "@/components/dashboard/accounts/fields";
 import { useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
-import { DayField, FOOTER_PILL, LABEL, MoneyField, POPUP, plainAmount } from "@/components/dashboard/debts/fields";
+import { DayField, FOOTER_PILL, LABEL, POPUP } from "@/components/dashboard/debts/fields";
 import { useCategoryName, useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import { parseAmount } from "@/lib/account-writes";
+import { focusAmount } from "@/components/dashboard/transactions/entry-form";
+import { MoneyField } from "@/components/ui/money-field";
 import { createdBudget, deletedBudget, editedBudget } from "@/lib/budget-writes";
 import type { Budget, BudgetDraft, MainBudget } from "@/lib/budget-writes";
 import { standingAt } from "@/lib/dashboard-series";
@@ -34,6 +35,7 @@ import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { periodKeyOf, periodOf } from "@/lib/dashboard-series-period";
 import { ledgerBooks } from "@/lib/ledger-db";
+import { viewTransition } from "@/lib/motion";
 
 import type { BudgetFlow } from "./flow-context";
 import { budgetOf, budgetsOverview, limitPreview } from "./model";
@@ -135,7 +137,7 @@ function PreviewBars({
     const windows = useWindowNames();
     return (
         <div className="mt-1">
-            <div className="mb-2 flex items-baseline justify-between text-[13px]">
+            <div className="text-app-label mb-2 flex items-baseline justify-between">
                 <span className="text-muted-foreground">{copy.detail.last[cadence]}</span>
                 {preview.typical.amount === null ? null : (
                     <span className="dash-figure text-muted-foreground">
@@ -262,7 +264,7 @@ function CategoryPick({
                     <Select.Item icon={<Dot color={choice.color} />} key={choice.id} value={choice.id}>
                         <span className="flex w-full min-w-0 items-center gap-2">
                             <span className="truncate">{choice.name}</span>
-                            <span className="dash-figure text-muted-foreground ms-auto text-[13px]">
+                            <span className="dash-figure text-muted-foreground text-app-label ms-auto">
                                 {form.thisMonth({ amount: money(choice.spent) })}
                             </span>
                         </span>
@@ -273,7 +275,7 @@ function CategoryPick({
                     <Select.Item disabled icon={<Dot color={choice.color} />} key={choice.id} value={choice.id}>
                         <span className="flex w-full min-w-0 items-center gap-2">
                             <span className="truncate">{choice.name}</span>
-                            <span className="text-muted-foreground ms-auto text-[13px]">{form.hasLimit}</span>
+                            <span className="text-muted-foreground text-app-label ms-auto">{form.hasLimit}</span>
                         </span>
                     </Select.Item>
                 ))}
@@ -284,8 +286,8 @@ function CategoryPick({
 
 function Locked({ children, icon, label }: { children: ReactNode; icon: ReactNode; label: string }) {
     return (
-        <fieldset aria-label={label} className="bg-foreground/[0.024] h-9 rounded-lg border p-0 text-sm">
-            <div className="flex h-[34px] items-center gap-2 px-3">
+        <fieldset aria-label={label} className="bg-app-hover rounded-app-sm text-app-body h-9 border p-0">
+            <div className="flex h-8.5 items-center gap-2 px-3">
                 {icon}
                 <span className="min-w-0 truncate">{children}</span>
                 <Glyph icon={SquareLock02Icon} className="text-muted-foreground ms-auto" size={16} />
@@ -303,15 +305,16 @@ type LimitMode =
 const shownAmount = (ledger: Ledger, row: Budget | MainBudget) =>
     row.currency === ledger.currency ? row.amount : standingAt(ledger, row, null, ledger.now).limit;
 
-function initialText(ledger: Ledger, mode: LimitMode) {
+function initialAmount(ledger: Ledger, mode: LimitMode) {
+    const decimals = decimalsFor(ledger.currency);
     if (mode.kind === "edit") {
-        return plainAmount(shownAmount(ledger, mode.stored.row), ledger.currency);
+        return Number(shownAmount(ledger, mode.stored.row).toFixed(decimals));
     }
     if (mode.kind === "overall") {
         const { limits } = budgetsOverview(ledger, monthNow(ledger)).totals;
-        return limits > 0 ? plainAmount(limits, ledger.currency) : "";
+        return limits > 0 ? Number(limits.toFixed(decimals)) : null;
     }
-    return "";
+    return null;
 }
 
 function monthNow(ledger: Ledger) {
@@ -452,8 +455,10 @@ function StoredFields({
                     />
                 </Field>
             </div>
-            {name.trim() === "" ? null : <p className="text-muted-foreground -mt-2 text-xs">{form.nameHint}</p>}
-            <label className="flex items-center justify-between gap-3 text-sm font-medium">
+            {name.trim() === "" ? null : (
+                <p className="text-muted-foreground text-app-caption -mt-2">{form.nameHint}</p>
+            )}
+            <label className="text-app-body flex items-center justify-between gap-3 font-medium">
                 {form.carryOver}
                 <Switch checked={rollover} onCheckedChange={onRollover} />
             </label>
@@ -556,19 +561,19 @@ function initialCategory(mode: LimitMode) {
 }
 
 function AmountFields({
+    amount,
     autoFocus,
     cadence,
     invalid,
+    onAmount,
     onCadence,
-    onText,
-    text,
 }: {
+    amount: number | null;
     autoFocus: boolean;
     cadence: Cadence;
     invalid: boolean;
+    onAmount: (amount: number | null) => void;
     onCadence: (cadence: Cadence) => void;
-    onText: (text: string) => void;
-    text: string;
 }) {
     const { ledger } = useDashboard();
     const { form } = useIntlayer("dashboard-budgets");
@@ -576,14 +581,13 @@ function AmountFields({
     return (
         <div className="grid grid-cols-2 gap-3">
             <Field invalid={invalid}>
-                <Field.Label className={LABEL}>{form.limit}</Field.Label>
                 <MoneyField
-                    autoFocus={autoFocus}
-                    currency={ledger.currency}
-                    invalid={invalid}
-                    label={form.limit.value}
-                    onText={onText}
-                    text={text}
+                    className={invalid ? "border-destructive max-w-none" : "max-w-none"}
+                    codes={[ledger.currency]}
+                    label={form.limit}
+                    onValueChange={(next) => onAmount(next.amount)}
+                    ref={autoFocus ? focusAmount : undefined}
+                    value={{ amount, code: ledger.currency }}
                 />
                 {invalid ? <Field.Error match>{form.limitHint({ zero: whole(0) })}</Field.Error> : null}
             </Field>
@@ -600,13 +604,13 @@ function useLimitForm(mode: LimitMode) {
     const stored = mode.kind === "edit" ? mode.stored : null;
     const storedDay = stored ? storedDayOf(ledger, stored.row) : null;
     const [categoryId, setCategoryId] = useState(() => initialCategory(mode));
-    const [text, setText] = useState(() => initialText(ledger, mode));
+    const [typed, setAmount] = useState(() => initialAmount(ledger, mode));
     const [cadence, setCadence] = useState<Cadence>(() => cadenceOf(stored?.row.type ?? BUDGET_TYPE.month));
     const [startDay, setStartDay] = useState<string | null>(storedDay);
     const [name, setName] = useState(stored?.row.name ?? "");
     const [rollover, setRollover] = useState(stored?.row.rollover ?? false);
     const [tried, setTried] = useState(false);
-    const amount = text.trim() === "" ? 0 : parseAmount(text, decimalsFor(ledger.currency));
+    const amount = typed ?? 0;
     const type = BUDGET_TYPE[cadence];
     const overall = mode.kind === "overall" || stored?.table === "mainBudget";
     const subject = overall ? null : categoryId;
@@ -635,17 +639,17 @@ function useLimitForm(mode: LimitMode) {
         setCadence,
         setCategoryId,
         setName,
+        setAmount,
         setRollover,
         setStartDay,
-        setText,
         setTried,
         startDay,
         stored,
         storedDay,
         subject,
         target,
-        text,
         tried,
+        typed,
     };
 }
 
@@ -681,17 +685,17 @@ function LimitDialog({
         setCadence,
         setCategoryId,
         setName,
+        setAmount,
         setRollover,
         setStartDay,
-        setText,
         setTried,
         startDay,
         stored,
         storedDay,
         subject,
         target,
-        text,
         tried,
+        typed,
     } = useLimitForm(mode);
     const missingCategory = tried && !chosen;
     const missingAmount = tried && amount <= 0;
@@ -739,15 +743,15 @@ function LimitDialog({
                         stored={stored !== null}
                     />
                     <AmountFields
+                        amount={typed}
                         autoFocus={mode.kind !== "new" || mode.categoryId !== null}
                         cadence={cadence}
                         invalid={missingAmount}
+                        onAmount={setAmount}
                         onCadence={(next) => {
                             setCadence(next);
                             setStartDay(stored && next === cadenceOf(stored.row.type) ? storedDay : null);
                         }}
-                        onText={setText}
-                        text={text}
                     />
                     {stored ? (
                         <StoredFields
@@ -811,7 +815,14 @@ function DeleteLimit({ onClose, stored }: { onClose: () => void; stored: StoredL
             ) ?? stored.row;
         onClose();
         committer.commitWithUndo([deletedBudget(stored.table, fresh, Date.now())], {
-            after: onDetail && categoryId === null ? navigate({ search: (prev) => prev, to: "/budgets" }) : undefined,
+            after:
+                onDetail && categoryId === null
+                    ? navigate({
+                          search: (prev) => prev,
+                          to: "/budgets",
+                          viewTransition: viewTransition("push-left", { back: true }),
+                      })
+                    : undefined,
             failed: copy.delete.failed.value,
             text: copy.delete.toast.value,
         });

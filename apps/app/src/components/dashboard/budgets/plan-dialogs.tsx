@@ -2,7 +2,6 @@ import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
 import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
 import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
-import { decimalsFor } from "@outlayr/money/currency";
 import {
     aboveTypical,
     editorMonths,
@@ -26,16 +25,17 @@ import { useIntlayer } from "react-intlayer";
 
 import { FlowDialog } from "@/components/dashboard/accounts/fields";
 import { useLedgerDb } from "@/components/dashboard/accounts/flows";
-import { FOOTER_PILL, LABEL, MoneyField, POPUP, plainAmount } from "@/components/dashboard/debts/fields";
+import { FOOTER_PILL, LABEL, POPUP } from "@/components/dashboard/debts/fields";
 import { useBox } from "@/components/dashboard/insights/use-box";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import { parseAmount } from "@/lib/account-writes";
+import { focusAmount } from "@/components/dashboard/transactions/entry-form";
+import { MoneyField } from "@/components/ui/money-field";
 import { plannedMonths } from "@/lib/budget-writes";
 import { ledgerBooks } from "@/lib/ledger-db";
 
 import type { BudgetFlow } from "./flow-context";
-import { Dot, Note, OK, TINT, useMoney } from "./parts";
+import { Dot, Note, TINT, useMoney } from "./parts";
 import { planStep, useYearPlan } from "./plan-model";
 import type { PlanCategoryMeta, YearPlan } from "./plan-model";
 import { usePlanMonths, usePlanName, useShortRunSentence } from "./plan-parts";
@@ -172,9 +172,9 @@ function PlanChart({
                                     </g>
                                 ) : null}
                                 <text
-                                    className="dash-figure"
+                                    className="dash-figure text-app-micro"
                                     fill={active ? "var(--color-foreground)" : "var(--color-muted-foreground)"}
-                                    style={{ fontSize: 11, textAnchor: "middle" }}
+                                    textAnchor="middle"
                                     x={x + barWidth / 2}
                                     y={CHART_HEIGHT - 4}
                                 >
@@ -192,7 +192,7 @@ function PlanChart({
                     <button
                         aria-label={names.month(month.key)}
                         aria-pressed={month.key === selected}
-                        className="pointer-events-none flex-1 rounded-sm opacity-0 focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-[var(--color-app-tint)]"
+                        className="focus-visible:ring-app-tint pointer-events-none flex-1 rounded-sm opacity-0 focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:ring-2"
                         disabled={month.locked}
                         key={month.key}
                         onClick={() => onPick(month.key)}
@@ -276,9 +276,7 @@ function PlanEditor({
     const [selected, setSelected] = useState<MonthKey | null>(
         () => (editable.find((month) => month.key >= flow.month) ?? editable[0])?.key ?? null
     );
-    const [text, setText] = useState(() =>
-        selected === null ? "" : plainAmount(values.get(selected) ?? 0, ledger.currency)
-    );
+    const [typed, setTyped] = useState<number | null>(() => (selected === null ? null : (values.get(selected) ?? 0)));
     const [same, setSame] = useState(false);
     const [axisTop] = useState(() =>
         Math.max(
@@ -288,7 +286,6 @@ function PlanEditor({
         )
     );
     const step = planStep(axisTop);
-    const decimals = decimalsFor(ledger.currency);
     const current = opened.map((month) => ({ ...month, value: values.get(month.key) ?? month.value }));
     const write = (key: MonthKey, value: number) =>
         setValues((last) => {
@@ -300,7 +297,7 @@ function PlanEditor({
         });
     const pick = (key: MonthKey) => {
         setSelected(key);
-        setText(plainAmount(values.get(key) ?? 0, ledger.currency));
+        setTyped(values.get(key) ?? 0);
     };
     const changed = new Map<MonthKey, number>();
     for (const month of editable) {
@@ -347,7 +344,7 @@ function PlanEditor({
                         save();
                     }}
                 >
-                    <div className="text-muted-foreground mb-2 flex items-center justify-between text-[13px]">
+                    <div className="text-muted-foreground text-app-label mb-2 flex items-center justify-between">
                         <span>{dialog.outlines}</span>
                         {typical === null ? null : (
                             <span className="dash-figure">{dialog.typical({ amount: money(typical) })}</span>
@@ -362,25 +359,23 @@ function PlanEditor({
                         onPick={pick}
                         onValue={(key, value) => {
                             write(key, value);
-                            setText(plainAmount(value, ledger.currency));
+                            setTyped(value);
                         }}
                         selected={selected}
                         step={step}
                     />
                     {selected === null ? null : (
                         <div className="mt-4 grid grid-cols-2 gap-3">
-                            <Field>
-                                <Field.Label>{months.month(selected)}</Field.Label>
-                                <MoneyField
-                                    currency={ledger.currency}
-                                    label={months.month(selected)}
-                                    onText={(next) => {
-                                        setText(next);
-                                        write(selected, next.trim() === "" ? 0 : Math.abs(parseAmount(next, decimals)));
-                                    }}
-                                    text={text}
-                                />
-                            </Field>
+                            <MoneyField
+                                className="max-w-none"
+                                codes={[ledger.currency]}
+                                label={months.month(selected)}
+                                onValueChange={(next) => {
+                                    setTyped(next.amount);
+                                    write(selected, next.amount ?? 0);
+                                }}
+                                value={{ amount: typed, code: ledger.currency }}
+                            />
                             <Field>
                                 <Field.Label>{dialog.fill}</Field.Label>
                                 <Button disabled={!canCopy} onClick={copyForward} type="button" variant="outline">
@@ -407,7 +402,7 @@ function PlanEditor({
             <Dialog.Footer>
                 <Button
                     aria-pressed={same}
-                    className={`me-auto ${FOOTER_PILL} ${same ? "ring-2 ring-[var(--color-app-tint)]" : ""}`}
+                    className={`me-auto ${FOOTER_PILL} ${same ? "ring-app-tint ring-2" : ""}`}
                     onClick={() => {
                         const next = !same;
                         setSame(next);
@@ -493,8 +488,8 @@ function TrimDialog({ flow, onClose }: { flow: TrimFlow; onClose: () => void }) 
         const floor = Math.floor((was * TRIM_FLOOR) / step) * step;
         return { amount: Math.max(floor, Math.floor((was - deficit) / step) * step), through };
     });
-    const [text, setText] = useState(() => plainAmount(opening.amount, ledger.currency));
-    const amount = text.trim() === "" ? 0 : Math.abs(parseAmount(text, decimalsFor(ledger.currency)));
+    const [typed, setTyped] = useState<number | null>(opening.amount);
+    const amount = typed ?? 0;
     const { through } = opening;
     const effect = useMemo(
         () => trimEffect(input, projection, categoryId, amount, fromKey, through),
@@ -530,27 +525,24 @@ function TrimDialog({ flow, onClose }: { flow: TrimFlow; onClose: () => void }) 
                         save();
                     }}
                 >
-                    <Field>
-                        <Field.Label>{dialog.trimTo}</Field.Label>
-                        <MoneyField
-                            autoFocus
-                            currency={ledger.currency}
-                            label={dialog.trimTo.value}
-                            onText={setText}
-                            text={text}
-                        />
-                    </Field>
+                    <MoneyField
+                        className="max-w-none"
+                        codes={[ledger.currency]}
+                        label={dialog.trimTo}
+                        onValueChange={(next) => setTyped(next.amount)}
+                        ref={focusAmount}
+                        value={{ amount: typed, code: ledger.currency }}
+                    />
                 </form>
-                <div className="mb-3.5 grid grid-cols-2 overflow-hidden rounded-xl border">
+                <div className="rounded-app-lg mb-3.5 grid grid-cols-2 overflow-hidden border">
                     <div className="px-3.5 py-3">
-                        <div className="text-muted-foreground text-[13px]">{dialog.was}</div>
-                        <div className="dash-figure mt-0.5 text-sm font-medium">{money(was)}</div>
+                        <div className="text-muted-foreground text-app-label">{dialog.was}</div>
+                        <div className="dash-figure text-app-body mt-0.5 font-medium">{money(was)}</div>
                     </div>
                     <div className="border-s px-3.5 py-3">
-                        <div className="text-muted-foreground text-[13px]">{dialog.saves}</div>
+                        <div className="text-muted-foreground text-app-label">{dialog.saves}</div>
                         <div
-                            className="dash-figure mt-0.5 text-sm font-medium"
-                            style={{ color: saves > 0 ? OK : undefined }}
+                            className={`dash-figure text-app-body mt-0.5 font-medium ${saves > 0 ? "text-app-income" : ""}`}
                         >
                             {money(Math.max(0, saves))}
                         </div>

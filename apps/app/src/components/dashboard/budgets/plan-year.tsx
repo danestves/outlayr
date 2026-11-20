@@ -1,6 +1,7 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
+import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import { isShort, monthDriver, monthKey } from "@outlayr/money/year-plan";
 import type { MonthProjection, YearProjection } from "@outlayr/money/year-plan";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
@@ -14,13 +15,15 @@ import { useIntlayer } from "react-intlayer";
 import { AccountsBar, DataTable } from "@/components/dashboard/accounts/accounts-screen";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { KpiBand, KpiCell, Trend } from "@/components/dashboard/accounts/parts";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useBox } from "@/components/dashboard/insights/use-box";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { periodKindOf } from "@/lib/dashboard-series-period";
+import { viewTransition } from "@/lib/motion";
 
 import { BudgetFlowsProvider } from "./budget-flows";
 import { useBudgetFlows } from "./flow-context";
-import { BAD, BADGE, Ghost, Stepper, TINT, quiet, useMoney } from "./parts";
+import { BAD, BADGE, Stepper, TINT, quiet, useMoney } from "./parts";
 import { periodKeyOfMonth, useYearPlan } from "./plan-model";
 import type { YearPlan } from "./plan-model";
 import { usePlanMonths, usePlanName, useShortRunSentence } from "./plan-parts";
@@ -36,7 +39,7 @@ const DEFICIT_REACH = 18;
 const LABEL_ROOM = 11;
 const COLUMN_GAP = 14;
 const MIN_BAR = 4;
-const USED_INK = "#57554a";
+const USED_INK = "var(--color-app-ghost)";
 const STRONG = "var(--color-app-strong)";
 const MUTED = "var(--color-muted-foreground)";
 
@@ -66,8 +69,8 @@ export function PlanCrumbs({ back, children, parent }: { back: ReactNode; childr
     );
 }
 
-export const BACK = "text-muted-foreground size-[30px]";
-export const PARENT = "text-muted-foreground hover:text-foreground text-[13px] font-normal";
+export const BACK = "text-muted-foreground size-7.5";
+export const PARENT = "text-muted-foreground hover:text-foreground text-app-label font-normal";
 
 function YearBar({ year }: { year: ReturnType<typeof usePlanYear> }) {
     const plan = useIntlayer("dashboard-budgets-plan");
@@ -81,7 +84,13 @@ function YearBar({ year }: { year: ReturnType<typeof usePlanYear> }) {
                             aria-label={title.value}
                             className={BACK}
                             nativeButton={false}
-                            render={<Link search={(prev) => ({ ...prev, period: undefined })} to="/budgets" />}
+                            render={
+                                <Link
+                                    search={(prev) => ({ ...prev, period: undefined })}
+                                    to="/budgets"
+                                    viewTransition={viewTransition("push-left", { back: true })}
+                                />
+                            }
                             size="icon"
                             variant="outline"
                         >
@@ -89,7 +98,12 @@ function YearBar({ year }: { year: ReturnType<typeof usePlanYear> }) {
                         </Button>
                     }
                     parent={
-                        <Link className={PARENT} search={(prev) => ({ ...prev, period: undefined })} to="/budgets">
+                        <Link
+                            className={PARENT}
+                            search={(prev) => ({ ...prev, period: undefined })}
+                            to="/budgets"
+                            viewTransition={viewTransition("push-left", { back: true })}
+                        >
                             {title}
                         </Link>
                     }
@@ -236,18 +250,18 @@ function LeftChart({ projection }: { projection: YearProjection }) {
                                     />
                                 )}
                                 <text
-                                    className="dash-figure"
+                                    className="dash-figure text-app-micro"
                                     fill={short ? BAD : MUTED}
-                                    style={{ fontSize: 11, textAnchor: "middle" }}
+                                    textAnchor="middle"
                                     x={center}
                                     y={short ? ZERO_LINE - 5 : y - 5}
                                 >
                                     {money(left)}
                                 </text>
                                 <text
-                                    className="dash-figure"
+                                    className="dash-figure text-app-micro"
                                     fill={current ? "var(--color-foreground)" : MUTED}
-                                    style={{ fontSize: 11, textAnchor: "middle" }}
+                                    textAnchor="middle"
                                     x={center}
                                     y={CHART_HEIGHT + 2}
                                 >
@@ -282,7 +296,7 @@ function LeftCard({ plan }: { plan: YearPlan }) {
                         {chart.short({ count: short, total: open.length })}
                     </Badge>
                 ) : null}
-                {line ? <span className="text-muted-foreground ms-auto text-[13px] leading-5">{line}</span> : null}
+                {line ? <span className="text-muted-foreground text-app-label ms-auto">{line}</span> : null}
             </Frame.Header>
             <Frame.Panel className="px-4 pt-5">
                 <LeftChart projection={projection} />
@@ -348,7 +362,14 @@ function MonthRow({ month, plan }: { month: MonthProjection; plan: YearPlan }) {
     return (
         <Table.Row
             className="cursor-pointer"
-            onClick={() => navigate({ params, search: (prev) => prev, to: "/budgets/plan/$month" })}
+            onClick={() =>
+                navigate({
+                    params,
+                    search: (prev) => prev,
+                    to: "/budgets/plan/$month",
+                    viewTransition: viewTransition("push-left"),
+                })
+            }
         >
             <Table.Cell className="font-medium">
                 <Link
@@ -357,22 +378,25 @@ function MonthRow({ month, plan }: { month: MonthProjection; plan: YearPlan }) {
                     params={params}
                     search={(prev) => prev}
                     to="/budgets/plan/$month"
+                    viewTransition={viewTransition("push-left")}
                 >
                     {months.month(month.key)}
                 </Link>
             </Table.Cell>
-            <Table.Cell className="w-[220px]">
+            <Table.Cell className="w-55">
                 <div aria-hidden className="bg-foreground/5 flex h-2 overflow-hidden rounded-full">
                     <i className="block h-full rounded-full" style={{ background: ink, width: `${used * PERCENT}%` }} />
                 </div>
             </Table.Cell>
-            <Table.Cell className="dash-figure text-muted-foreground text-[13px]">{money(month.in)}</Table.Cell>
-            <Table.Cell className="dash-figure text-[13px]">{money(month.out)}</Table.Cell>
-            <Table.Cell className="dash-figure text-muted-foreground text-[13px]">{money(month.setAside)}</Table.Cell>
-            <Table.Cell className={`dash-figure text-[13px] ${short ? "text-app-spend" : ""}`}>
+            <Table.Cell className="dash-figure text-muted-foreground text-app-label!">{money(month.in)}</Table.Cell>
+            <Table.Cell className="dash-figure text-app-label!">{money(month.out)}</Table.Cell>
+            <Table.Cell className="dash-figure text-muted-foreground text-app-label!">
+                {money(month.setAside)}
+            </Table.Cell>
+            <Table.Cell className={`dash-figure text-app-label! ${short ? "text-app-spend" : ""}`}>
                 {money(month.left)}
             </Table.Cell>
-            <Table.Cell className="text-muted-foreground text-[13px]">
+            <Table.Cell className="text-muted-foreground text-app-label!">
                 {big ? `${planName(plan.categories.get(big.categoryId))} ${money(big.projected)}` : ""}
             </Table.Cell>
             <Table.Cell>
@@ -417,16 +441,18 @@ function EmptyYear({ plan }: { plan: YearPlan }) {
     const first = monthKey(plan.projection.year, 0);
     return (
         <Frame className="mt-4 mb-5 min-w-0 flex-1">
-            <Frame.Panel className="relative isolate flex min-h-[744px] flex-1 flex-col items-center gap-1.5 divide-y-0 overflow-hidden px-6 pt-[392px] text-center">
-                <Ghost height={744} name="year" />
-                <b className="text-[15px] leading-[22px] font-semibold">
-                    {empty.yearTitle({ year: plan.projection.year })}
-                </b>
-                <p className="text-muted-foreground mb-2.5 max-w-[320px] text-[13px] leading-5">{empty.yearLine}</p>
-                <Button onClick={() => open({ categoryId: null, income: false, kind: "plan", month: first })}>
-                    <Glyph icon={Add01Icon} size={16} />
-                    {empty.planFirst({ month: months.month(first) })}
-                </Button>
+            <Frame.Panel className="flex flex-1 flex-col divide-y-0">
+                <Empty
+                    action={
+                        <Button onClick={() => open({ categoryId: null, income: false, kind: "plan", month: first })}>
+                            <Glyph icon={Add01Icon} size={16} />
+                            {empty.planFirst({ month: months.month(first) })}
+                        </Button>
+                    }
+                    icon={Calendar03Icon}
+                    line={empty.yearLine}
+                    title={empty.yearTitle({ year: plan.projection.year })}
+                />
             </Frame.Panel>
         </Frame>
     );
@@ -439,18 +465,20 @@ function PlanYearBody() {
     return (
         <main className="@container flex min-h-full min-w-0 flex-col px-4 pb-5 sm:px-6">
             <YearBar year={year} />
-            {empty ? (
-                <>
-                    <EmptyKpis plan={plan} />
-                    <EmptyYear plan={plan} />
-                </>
-            ) : (
-                <>
-                    <YearKpis plan={plan} />
-                    <LeftCard plan={plan} />
-                    <MonthsTable plan={plan} />
-                </>
-            )}
+            <div className="flex flex-1 flex-col" data-motion="dissolve" key={year.year}>
+                {empty ? (
+                    <>
+                        <EmptyKpis plan={plan} />
+                        <EmptyYear plan={plan} />
+                    </>
+                ) : (
+                    <>
+                        <YearKpis plan={plan} />
+                        <LeftCard plan={plan} />
+                        <MonthsTable plan={plan} />
+                    </>
+                )}
+            </div>
         </main>
     );
 }
