@@ -283,7 +283,7 @@ export function PaceGauge({
                         <text
                             className="dash-figure text-app-caption font-semibold"
                             fill={GROUND}
-                            textAnchor="middle"
+                            style={{ textAnchor: "middle" }}
                             x={PILL_WIDTH / 2}
                             y={16.5}
                         >
@@ -369,7 +369,13 @@ export function PaceChart({
                     {levels.map((level) => (
                         <g key={level}>
                             <line stroke={GRID} x1={CHART_LEFT} x2={width} y1={y(level)} y2={y(level)} />
-                            <text className={TICK} fill={MUTED_FILL} textAnchor="end" x={36} y={y(level) + 4}>
+                            <text
+                                className={TICK}
+                                fill={MUTED_FILL}
+                                style={{ textAnchor: "end" }}
+                                x={36}
+                                y={y(level) + 4}
+                            >
                                 {whole(level)}
                             </text>
                         </g>
@@ -397,7 +403,7 @@ export function PaceChart({
                                 className={TICK}
                                 fill={MUTED_FILL}
                                 key={index}
-                                textAnchor={anchor}
+                                style={{ textAnchor: anchor }}
                                 x={x(index)}
                                 y={height - 4}
                             >

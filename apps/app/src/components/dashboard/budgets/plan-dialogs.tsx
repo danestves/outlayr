@@ -174,7 +174,7 @@ function PlanChart({
                                 <text
                                     className="dash-figure text-app-micro"
                                     fill={active ? "var(--color-foreground)" : "var(--color-muted-foreground)"}
-                                    textAnchor="middle"
+                                    style={{ textAnchor: "middle" }}
                                     x={x + barWidth / 2}
                                     y={CHART_HEIGHT - 4}
                                 >

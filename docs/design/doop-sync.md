@@ -183,7 +183,7 @@ From the canvas page `Web · Budgets`, under `components/dashboard/budgets`:
 - **Dialogs:** the limit, delete and trim dialogs are `md` (448). The year plan editor is `lg` (576), where it was a hand-set 560.
 - **Confirms:** deleting a limit stays a Dialog with an undo toast, as the guide draws it.
 - **Empty:** no data, no budgets yet, a month not started, an empty plan month or year and a period with no spending use the dashboard's one-icon `Empty`. No budgets yet still names the person's top three categories. The frames' ghost art is not drawn and its SVGs are gone.
-- **Charts:** app SVGs. The used bar for a closed plan month reads `--color-app-ghost`, where it was a hand-set hex.
+- **Charts:** app SVGs. The used bar for a closed plan month reads `--color-app-ghost`, where it was a hand-set hex. SVG text keeps `style={{ textAnchor }}`: the JSX prop renders as a lowercase `textanchor` attribute the browser ignores, which clipped the axis labels and the pace pill.
 - **Loading:** `budgets-pending.tsx` draws the real screen over the sampled ledger inside a static skullet skeleton.
 - **Raw controls:** the plan month's category name and the plan chart's per-month focus targets stay raw buttons: a Button part would add hover chrome and padding the frames do not draw.
 

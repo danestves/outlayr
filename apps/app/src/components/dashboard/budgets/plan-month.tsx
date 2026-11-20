@@ -474,7 +474,7 @@ function SpentChart({ view }: { view: MonthView }) {
                                     <text
                                         className="dash-figure text-app-micro"
                                         fill={MUTED}
-                                        textAnchor="end"
+                                        style={{ textAnchor: "end" }}
                                         x={36}
                                         y={y(value) + 4}
                                     >
@@ -504,7 +504,7 @@ function SpentChart({ view }: { view: MonthView }) {
                                         className="dash-figure text-app-micro"
                                         fill={MUTED}
                                         key={tick}
-                                        textAnchor={anchor}
+                                        style={{ textAnchor: anchor }}
                                         x={x(tick - 1)}
                                         y={CHART_HEIGHT - 4}
                                     >

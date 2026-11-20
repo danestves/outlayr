@@ -252,7 +252,7 @@ function LeftChart({ projection }: { projection: YearProjection }) {
                                 <text
                                     className="dash-figure text-app-micro"
                                     fill={short ? BAD : MUTED}
-                                    textAnchor="middle"
+                                    style={{ textAnchor: "middle" }}
                                     x={center}
                                     y={short ? ZERO_LINE - 5 : y - 5}
                                 >
@@ -261,7 +261,7 @@ function LeftChart({ projection }: { projection: YearProjection }) {
                                 <text
                                     className="dash-figure text-app-micro"
                                     fill={current ? "var(--color-foreground)" : MUTED}
-                                    textAnchor="middle"
+                                    style={{ textAnchor: "middle" }}
                                     x={center}
                                     y={CHART_HEIGHT + 2}
                                 >
