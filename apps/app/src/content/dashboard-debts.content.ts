@@ -271,6 +271,13 @@ const dashboardDebts = {
                     pt: "1 pagamento · {{name}} atrasado desde {{date}}",
                 })
             ),
+            open: t({
+                en: "Open installments",
+                de: "Raten öffnen",
+                es: "Abrir cuotas",
+                fr: "Ouvrir les paiements échelonnés",
+                pt: "Abrir parcelas",
+            }),
             title: insert(
                 t({
                     en: "Due in the next {{days}} days",

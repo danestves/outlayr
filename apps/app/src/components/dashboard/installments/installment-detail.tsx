@@ -20,7 +20,9 @@ import { useGoalMoney } from "@/components/dashboard/goals/parts";
 import { titled, useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
+import { MenuContent } from "@/components/ui/menu-content";
 import { daysBetween } from "@/lib/ledger";
+import { viewTransition } from "@/lib/motion";
 
 import { useInstallmentFlows } from "./flow-context";
 import { useDeleteInstallment } from "./installment-dialogs";
@@ -58,15 +60,21 @@ function DetailBar({ view }: { view: PlanView }) {
                 <span className="flex min-w-0 items-center gap-2">
                     <Button
                         aria-label={back.value}
-                        className="text-muted-foreground -ms-1.5 size-[30px]"
+                        className="text-muted-foreground -ms-1.5 size-7.5"
                         nativeButton={false}
-                        render={<Link to="/installments" />}
+                        render={
+                            <Link to="/installments" viewTransition={viewTransition("push-left", { back: true })} />
+                        }
                         size="icon"
                         variant="ghost"
                     >
                         <Glyph icon={ArrowLeft02Icon} size={18} />
                     </Button>
-                    <Link className="text-muted-foreground hover:text-foreground font-medium" to="/installments">
+                    <Link
+                        className="text-muted-foreground hover:text-foreground font-medium"
+                        to="/installments"
+                        viewTransition={viewTransition("push-left", { back: true })}
+                    >
                         {title}
                     </Link>
                     <Glyph icon={ArrowRight01Icon} className="text-muted-foreground flex-none" size={14} />
@@ -97,12 +105,7 @@ function DetailBar({ view }: { view: PlanView }) {
                         >
                             <Glyph icon={MoreVerticalIcon} className="text-muted-foreground" />
                         </Menu.Trigger>
-                        <Menu.Content
-                            align="end"
-                            alignOffset={BAR_MENU_OVERHANG}
-                            className="app-shell ph-no-capture w-[220px]"
-                            sideOffset={4}
-                        >
+                        <MenuContent align="end" alignOffset={BAR_MENU_OVERHANG} className="w-60" sideOffset={4}>
                             {view.left > next.remaining ? (
                                 <Menu.Item
                                     className="sm:hidden"
@@ -113,7 +116,11 @@ function DetailBar({ view }: { view: PlanView }) {
                             ) : null}
                             <Menu.Item
                                 onClick={() =>
-                                    navigate({ params: { accountId: view.account.id }, to: "/accounts/$accountId" })
+                                    navigate({
+                                        params: { accountId: view.account.id },
+                                        to: "/accounts/$accountId",
+                                        viewTransition: viewTransition("push-left"),
+                                    })
                                 }
                             >
                                 <Glyph icon={LinkSquare02Icon} size={16} />
@@ -127,7 +134,7 @@ function DetailBar({ view }: { view: PlanView }) {
                                 <Glyph icon={Delete02Icon} size={16} />
                                 {menu.deletePending}
                             </Menu.Item>
-                        </Menu.Content>
+                        </MenuContent>
                     </Menu>
                 </>
             )}
@@ -136,7 +143,7 @@ function DetailBar({ view }: { view: PlanView }) {
 }
 
 const note = (children: ReactNode) => (
-    <span className="text-muted-foreground min-w-0 truncate text-[13px] leading-5">{children}</span>
+    <span className="text-muted-foreground text-app-label min-w-0 truncate leading-5">{children}</span>
 );
 
 function NextCell({ view }: { view: PlanView }) {
@@ -231,12 +238,12 @@ function RowMenu({ item, view }: { item: InstallmentView; view: PlanView }) {
             <Menu.Trigger
                 aria-label={menu.more({ name: label(view, item) }).value}
                 render={
-                    <Button className="text-muted-foreground -mx-2 -my-1 size-[26px]" size="icon-sm" variant="ghost" />
+                    <Button className="text-muted-foreground -mx-2 -my-1 size-6.5" size="icon-sm" variant="ghost" />
                 }
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" alignOffset={-4} className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
+            <MenuContent align="end" alignOffset={-4} className="w-60" sideOffset={4}>
                 <Menu.Item onClick={() => open({ installmentId: item.id, kind: "edit", planId: view.id })}>
                     <Glyph icon={PencilEdit01Icon} size={16} />
                     {menu.edit}
@@ -250,7 +257,7 @@ function RowMenu({ item, view }: { item: InstallmentView; view: PlanView }) {
                         </Menu.Item>
                     </>
                 )}
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -275,7 +282,7 @@ function Schedule({ view }: { view: PlanView }) {
     const rows = view.rows.toSorted((a, b) => a.sequence - b.sequence);
     return (
         <Card
-            action={<PlanBar className="w-[200px] max-sm:w-[120px]" view={view} />}
+            action={<PlanBar className="w-50 max-sm:w-30" view={view} />}
             className="flex-1"
             count={rows.length}
             title={detail.schedule}
@@ -309,7 +316,9 @@ function Schedule({ view }: { view: PlanView }) {
                             </Cell>
                             <Cell>
                                 <span className="flex items-center justify-end gap-3">
-                                    <span className="dash-figure text-sm">{format(item.leftAfter, view.currency)}</span>
+                                    <span className="dash-figure text-app-body">
+                                        {format(item.leftAfter, view.currency)}
+                                    </span>
                                     {view.finished ? null : <RowMenu item={item} view={view} />}
                                 </span>
                             </Cell>
@@ -326,7 +335,7 @@ function NotFound() {
     return (
         <main className="min-w-0 px-4 pb-5 sm:px-6">
             <AccountsBar title={title} />
-            <p className="text-muted-foreground py-6 text-sm">
+            <p className="text-muted-foreground text-app-body py-6">
                 {detail.notFound}{" "}
                 <Link className="text-foreground underline" to="/installments">
                     {back}

@@ -1,6 +1,6 @@
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
-import { currencyDisplayFor, decimalsFor } from "@outlayr/money/currency";
+import { decimalsFor } from "@outlayr/money/currency";
 import { Button } from "panelui-web/button";
 import { Chip } from "panelui-web/chip";
 import { Input } from "panelui-web/input";
@@ -14,10 +14,10 @@ import { Glyph } from "@/components/dashboard/accounts/glyph";
 import type { AccountRow } from "@/components/dashboard/accounts/model";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { AccountTile } from "@/components/ledger/tiles";
-import { parseAmount } from "@/lib/account-writes";
+import { MenuContent } from "@/components/ui/menu-content";
 
 export const FOOTER_PILL = "min-w-max! px-3.5";
-export const POPUP = "app-shell z-[60]";
+export const POPUP = "app-shell z-60";
 export const LABEL = "data-invalid:text-foreground has-[[aria-invalid=true]]:text-foreground";
 const NONE = "none";
 
@@ -27,51 +27,6 @@ export const plainAmount = (amount: number, currency: string) => {
         amount
     );
 };
-
-export function MoneyField({
-    autoFocus = false,
-    big = false,
-    currency,
-    invalid = false,
-    label,
-    onText,
-    text,
-}: {
-    autoFocus?: boolean;
-    big?: boolean;
-    currency: string;
-    invalid?: boolean;
-    label: string;
-    onText: (text: string) => void;
-    text: string;
-}) {
-    const decimals = decimalsFor(currency);
-    const size = big ? "h-[52px] text-sm font-semibold" : "";
-    return (
-        <Input.Group className={`has-[input[aria-invalid=true]]:ring-3 ${big ? "h-[52px]" : ""}`}>
-            <Input.Addon
-                className={`dash-figure pe-0.5! ${big && text.trim() !== "" ? `${size} text-foreground` : `${size} text-muted-foreground`}`}
-            >
-                {currencyDisplayFor(currency).symbol}
-            </Input.Addon>
-            <Input
-                aria-invalid={invalid || undefined}
-                aria-label={label}
-                autoFocus={autoFocus}
-                className={`dash-figure ps-1 ${size}`}
-                inputMode="decimal"
-                onBlur={() => {
-                    if (text.trim() !== "") {
-                        onText(plainAmount(parseAmount(text, decimals), currency));
-                    }
-                }}
-                onChange={(event) => onText(event.target.value)}
-                placeholder={plainAmount(0, currency)}
-                value={text}
-            />
-        </Input.Group>
-    );
-}
 
 export function DayField({
     day,
@@ -238,10 +193,10 @@ export function PersonField({
                             >
                                 <Glyph icon={ArrowDown01Icon} size={16} />
                             </Menu.Trigger>
-                            <Menu.Content
+                            <MenuContent
                                 align="end"
                                 alignOffset={-6}
-                                className={`${POPUP} ph-no-capture max-h-[280px] w-[220px] overflow-y-auto`}
+                                className="z-60 max-h-70 w-60 overflow-y-auto"
                                 sideOffset={8}
                             >
                                 {people.map((person) => (
@@ -249,7 +204,7 @@ export function PersonField({
                                         <span className="truncate">{person.name}</span>
                                     </Menu.Item>
                                 ))}
-                            </Menu.Content>
+                            </MenuContent>
                         </Menu>
                     </Input.Addon>
                 ) : null}

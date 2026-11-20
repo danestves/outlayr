@@ -17,20 +17,22 @@ import { GoalBar, useGoalMoney } from "@/components/dashboard/goals/parts";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
+import { MenuContent } from "@/components/ui/menu-content";
 import { daysBetween } from "@/lib/ledger";
+import { viewTransition } from "@/lib/motion";
 
 import { useInstallmentFlows } from "./flow-context";
 import { isWeekly } from "./model";
 import type { Cadence, InstallmentView, PlanView } from "./model";
 
-export const BADGE = "h-6 rounded-md px-2 text-xs font-medium";
+export const BADGE = "text-app-caption! h-6 rounded-md px-2 font-medium";
 
 export function OrderTile({ look }: { look: PlanView["look"] }) {
     const icon = look?.icon ? CATEGORY_ICONS.get(look.icon) : undefined;
     return (
         <span className={ICON_TILE}>
             {!icon && look?.emoji ? (
-                <span className="text-sm leading-none">{look.emoji}</span>
+                <span className="text-app-body leading-none">{look.emoji}</span>
             ) : (
                 <Glyph icon={icon ?? CalendarCheckIn01Icon} size={15} />
             )}
@@ -112,7 +114,7 @@ export function RowStatus({ item, next }: { item: InstallmentView; next: boolean
     }
     if (!next) {
         return (
-            <span className="text-muted-foreground text-[13px]">
+            <span className="text-muted-foreground text-app-label">
                 {item.status === "partial" ? status.partial : status.comingUp}
             </span>
         );
@@ -143,7 +145,7 @@ export function PlanMenu({ className = "", view }: { className?: string; view: P
                 aria-label={menu.more({ name: view.name }).value}
                 render={
                     <Button
-                        className={`text-muted-foreground -mx-2 size-[26px] ${className}`}
+                        className={`text-muted-foreground -mx-2 size-6.5 ${className}`}
                         size="icon-sm"
                         variant="ghost"
                     />
@@ -151,7 +153,7 @@ export function PlanMenu({ className = "", view }: { className?: string; view: P
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" alignOffset={-4} className="app-shell ph-no-capture w-[220px]" sideOffset={4}>
+            <MenuContent align="end" alignOffset={-4} className="w-60" sideOffset={4}>
                 {next ? (
                     <Menu.Item onClick={() => open({ kind: "pay", planId: view.id })}>
                         <Glyph icon={Tick02Icon} size={16} />
@@ -164,7 +166,15 @@ export function PlanMenu({ className = "", view }: { className?: string; view: P
                         {menu.payAll({ amount: format(view.left, view.currency) })}
                     </Menu.Item>
                 ) : null}
-                <Menu.Item onClick={() => navigate({ params: { planId: view.id }, to: "/installments/$planId" })}>
+                <Menu.Item
+                    onClick={() =>
+                        navigate({
+                            params: { planId: view.id },
+                            to: "/installments/$planId",
+                            viewTransition: viewTransition("push-left"),
+                        })
+                    }
+                >
                     <Glyph icon={LinkSquare02Icon} size={16} />
                     {menu.open}
                 </Menu.Item>
@@ -180,7 +190,7 @@ export function PlanMenu({ className = "", view }: { className?: string; view: P
                         </Menu.Item>
                     </>
                 )}
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }

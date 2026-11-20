@@ -2,6 +2,8 @@ import { Dialog } from "panelui-web/dialog";
 import { useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
+import { DialogContent } from "@/components/ui/dialog-content";
+
 import { InstallmentFlowsContext } from "./flow-context";
 import type { InstallmentFlow } from "./flow-context";
 import { InstallmentDialogs } from "./installment-dialogs";
@@ -22,9 +24,9 @@ export function InstallmentFlowsProvider({ children }: { children: ReactNode }) 
         <InstallmentFlowsContext value={value}>
             {children}
             <Dialog onOpenChange={(next) => next || setFlow(null)} open={open}>
-                <Dialog.Content className="app-shell ph-no-capture" size="md">
+                <DialogContent size="md">
                     {flow ? <InstallmentDialogs flow={flow} onClose={() => setFlow(null)} onSwitch={setFlow} /> : null}
-                </Dialog.Content>
+                </DialogContent>
             </Dialog>
         </InstallmentFlowsContext>
     );

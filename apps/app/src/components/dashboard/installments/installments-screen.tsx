@@ -1,5 +1,6 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
+import Invoice01Icon from "@hugeicons/core-free-icons/Invoice01Icon";
 import { decimalsFor } from "@outlayr/money/currency";
 import { roundMoney } from "@outlayr/money/round";
 import { Link } from "@tanstack/react-router";
@@ -18,9 +19,11 @@ import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { inMain } from "@/components/dashboard/accounts/model";
 import { KpiBand, KpiCell } from "@/components/dashboard/accounts/parts";
 import { useGoalMoney } from "@/components/dashboard/goals/parts";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
+import { viewTransition } from "@/lib/motion";
 
 import { InstallmentFlowsProvider } from "./installment-flows";
 import { installmentsSummary, planViews } from "./model";
@@ -30,9 +33,7 @@ import { BADGE, OrderTile, OverdueBadge, PlanBar, PlanMenu, useDueText, usePlanT
 type Tab = "orders" | "paidOff";
 
 const ALL = "all";
-const POPUP = "app-shell z-[60]";
-const GHOST_NAME = [68, 96, 84, 44, 58, 70, 50] as const;
-const GHOST_FADE = 0.12;
+const POPUP = "app-shell z-60";
 
 function useModel() {
     const { ledger } = useDashboard();
@@ -43,7 +44,7 @@ function useModel() {
 }
 
 const quiet = (children: ReactNode) => (
-    <span className="text-muted-foreground min-w-0 truncate text-[13px] leading-5">{children}</span>
+    <span className="text-muted-foreground text-app-label min-w-0 truncate leading-5">{children}</span>
 );
 
 const tone = (amount: number) => (amount === 0 ? "text-muted-foreground" : "");
@@ -92,9 +93,10 @@ function Kpis({ summary }: { summary: InstallmentsSummary }) {
 function OrderLink({ view }: { view: PlanView }) {
     return (
         <Link
-            className="flex max-w-[8.5rem] min-w-0 items-center gap-2.5 text-sm font-medium hover:underline sm:max-w-none"
+            className="text-app-body flex max-w-34 min-w-0 items-center gap-2.5 font-medium hover:underline sm:max-w-none"
             params={{ planId: view.id }}
             to="/installments/$planId"
+            viewTransition={viewTransition("push-left")}
         >
             <OrderTile look={view.look} />
             <span className="truncate">{view.name}</span>
@@ -102,7 +104,7 @@ function OrderLink({ view }: { view: PlanView }) {
     );
 }
 
-const SOFT = "dash-figure text-muted-foreground text-[13px]";
+const SOFT = "dash-figure text-muted-foreground text-app-label";
 
 function OrdersTable({ views }: { views: readonly PlanView[] }) {
     const { columns, progress } = useIntlayer("dashboard-installments");
@@ -122,10 +124,10 @@ function OrdersTable({ views }: { views: readonly PlanView[] }) {
                         <OrderLink view={view} />
                     </Cell>
                     <Cell className={SOFT}>{terms(view)}</Cell>
-                    <Cell className="w-[200px]">
+                    <Cell className="w-50">
                         <span className="flex items-center gap-2.5">
-                            <PlanBar className="w-[138px]" view={view} />
-                            <span className={`${SOFT} text-xs`}>
+                            <PlanBar className="w-34.5" view={view} />
+                            <span className="dash-figure text-muted-foreground text-app-caption">
                                 {progress({ count: view.count, paid: view.paidCount })}
                             </span>
                         </span>
@@ -139,7 +141,9 @@ function OrdersTable({ views }: { views: readonly PlanView[] }) {
                     </Cell>
                     <Cell>
                         <span className="flex items-center justify-end gap-3">
-                            <span className="dash-figure text-sm font-medium">{format(view.left, view.currency)}</span>
+                            <span className="dash-figure text-app-body font-medium">
+                                {format(view.left, view.currency)}
+                            </span>
                             <PlanMenu view={view} />
                         </span>
                     </Cell>
@@ -151,7 +155,7 @@ function OrdersTable({ views }: { views: readonly PlanView[] }) {
 
 function AccountName({ view }: { view: PlanView }) {
     return (
-        <span className="flex min-w-0 items-center gap-2 text-[13px]">
+        <span className="text-app-label flex min-w-0 items-center gap-2">
             <AccountTile account={view.account.look} size="sm" />
             <span className="truncate">{view.account.name}</span>
         </span>
@@ -211,7 +215,7 @@ function AccountFilter({
     ];
     return (
         <Select items={items} onValueChange={(next) => next !== null && onPick(next)} value={picked ? value : ALL}>
-            <Select.Trigger aria-label={tabs.allAccounts.value} className="w-auto gap-2 text-[13px]" size="sm">
+            <Select.Trigger aria-label={tabs.allAccounts.value} className="text-app-label! w-auto gap-2" size="sm">
                 {picked ? <AccountTile account={picked.look} size="sm" /> : null}
                 <Select.Value />
             </Select.Trigger>
@@ -232,45 +236,11 @@ function AccountFilter({
     );
 }
 
-const GHOST_LINE = "border-foreground/10 block h-2 rounded-full border";
-
-function Ghost() {
-    return (
-        <div aria-hidden className="absolute inset-x-0 top-0">
-            <div className="grid h-[50px] grid-cols-[1.4fr_1fr_1.2fr_1fr_0.6fr] items-center gap-6 border-b px-5">
-                {[42, 36, 50, 50, 40].map((width, index) => (
-                    <span
-                        className={`${GHOST_LINE} ${index === 4 ? "justify-self-end" : ""}`}
-                        key={index}
-                        style={{ width }}
-                    />
-                ))}
-            </div>
-            {GHOST_NAME.map((name, row) => (
-                <div
-                    className="grid h-[42px] grid-cols-[1.4fr_1fr_1.2fr_1fr_0.6fr] items-center gap-6 border-b px-5"
-                    key={name}
-                    style={{ opacity: 1 - row * GHOST_FADE }}
-                >
-                    <span className="flex items-center gap-2.5">
-                        <span className="border-foreground/10 size-[26px] flex-none rounded-lg border" />
-                        <span className={GHOST_LINE} style={{ width: name }} />
-                    </span>
-                    <span className={GHOST_LINE} style={{ width: 60 - (row % 3) * 7 }} />
-                    <span className={`${GHOST_LINE} w-full max-w-[220px]`} />
-                    <span className={GHOST_LINE} style={{ width: 36 + (row % 2) * 6 }} />
-                    <span className={`${GHOST_LINE} justify-self-end`} style={{ width: 60 + (row % 3) * 4 }} />
-                </div>
-            ))}
-        </div>
-    );
-}
-
-function ImportButton({ size }: { size?: "sm" }) {
+function ImportButton() {
     const { importScreenshot } = useIntlayer("dashboard-installments");
     const { open } = useAccountFlows();
     return (
-        <Button onClick={() => open({ kind: "scan" })} size={size} variant="outline">
+        <Button onClick={() => open({ kind: "scan" })} variant="outline">
             <Glyph icon={ImageAdd01Icon} className="text-muted-foreground" size={16} />
             {importScreenshot}
         </Button>
@@ -291,21 +261,21 @@ function NewPurchase() {
 function EmptyOrders() {
     const { empty } = useIntlayer("dashboard-installments");
     return (
-        <div className="relative flex min-h-[520px] flex-1 flex-col overflow-hidden">
-            <Ghost />
-            <div className="relative mx-auto flex flex-col items-center px-6 pt-[360px] pb-12 text-center">
-                <h2 className="text-[15px] leading-[22px] font-semibold">{empty.title}</h2>
-                <p className="text-muted-foreground mt-1.5 max-w-[330px] text-[13px] leading-5">{empty.line}</p>
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+        <Empty
+            action={
+                <>
+                    <ImportButton />
                     <NewPurchase />
-                    <ImportButton size="sm" />
-                </div>
-            </div>
-        </div>
+                </>
+            }
+            icon={Invoice01Icon}
+            line={empty.line}
+            title={empty.title}
+        />
     );
 }
 
-const count = (value: number) => <span className="dash-figure text-muted-foreground text-xs">{value}</span>;
+const count = (value: number) => <span className="dash-figure text-muted-foreground text-app-caption">{value}</span>;
 
 function OrdersCard({
     accountId,
@@ -360,15 +330,15 @@ function OrdersCard({
                         <EmptyOrders />
                     ) : (
                         <>
-                            <Tabs.Content value="orders">
+                            <Tabs.Content data-motion="dissolve" value="orders">
                                 <OrdersTable views={active.filter(mine)} />
                             </Tabs.Content>
-                            <Tabs.Content className="flex flex-1 flex-col" value="paidOff">
+                            <Tabs.Content className="flex flex-1 flex-col" data-motion="dissolve" value="paidOff">
                                 <div className="flex-1">
                                     <PaidOffTable views={shownOff} />
                                 </div>
                                 {shownOff.length > 0 ? (
-                                    <div className="flex h-12 items-center justify-between px-4 text-[13px]">
+                                    <div className="text-app-label flex h-12 items-center justify-between px-4">
                                         <span className="text-muted-foreground">
                                             {paidOffCount({ count: shownOff.length })}
                                         </span>
@@ -417,16 +387,21 @@ function ComingUpCard({ accountId, summary }: { accountId: string; summary: Inst
                 {rows.map(({ plan, row }) => (
                     <Table.Row key={row.id}>
                         <Cell
-                            className={`dash-figure text-[13px] ${row.overdue ? "text-destructive" : "text-muted-foreground"}`}
+                            className={`dash-figure text-app-label ${row.overdue ? "text-destructive" : "text-muted-foreground"}`}
                         >
                             {due(row.day)}
                         </Cell>
-                        <Cell className="text-[13px]">
-                            <Link className="hover:underline" params={{ planId: plan.id }} to="/installments/$planId">
+                        <Cell className="text-app-label">
+                            <Link
+                                className="hover:underline"
+                                params={{ planId: plan.id }}
+                                to="/installments/$planId"
+                                viewTransition={viewTransition("push-left")}
+                            >
                                 {plan.name}
                             </Link>
                         </Cell>
-                        <Cell className="text-muted-foreground text-[13px]">{label(plan, row)}</Cell>
+                        <Cell className="text-muted-foreground text-app-label">{label(plan, row)}</Cell>
                         <Cell figure>{format(row.remaining, plan.currency)}</Cell>
                     </Table.Row>
                 ))}

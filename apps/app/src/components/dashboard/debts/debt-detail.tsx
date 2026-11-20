@@ -1,3 +1,4 @@
+import ArrowDataTransferHorizontalIcon from "@hugeicons/core-free-icons/ArrowDataTransferHorizontalIcon";
 import ArrowDown02Icon from "@hugeicons/core-free-icons/ArrowDown02Icon";
 import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
@@ -16,10 +17,13 @@ import { AccountsBar, Card, Cell, DataTable, MUTED } from "@/components/dashboar
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import type { AccountRow } from "@/components/dashboard/accounts/model";
 import { KpiBand, KpiCell } from "@/components/dashboard/accounts/parts";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
+import { MenuContent } from "@/components/ui/menu-content";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { DebtFlowsProvider } from "./debt-flows";
 import { useDebtFlows } from "./flow-context";
@@ -33,7 +37,7 @@ const daysBetween = (from: string, to: string) =>
     Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS);
 
 const note = (children: ReactNode) => (
-    <span className="text-muted-foreground min-w-0 truncate text-xs leading-5">{children}</span>
+    <span className="text-muted-foreground text-app-caption min-w-0 truncate leading-5">{children}</span>
 );
 
 function useDetail(accountId: string) {
@@ -52,21 +56,25 @@ function DetailBar({ row }: { row: DebtRow }) {
                 <span className="flex min-w-0 items-center gap-2">
                     <Button
                         aria-label={back.value}
-                        className="text-muted-foreground -ms-1.5 size-[30px]"
+                        className="text-muted-foreground -ms-1.5 size-7.5"
                         nativeButton={false}
-                        render={<Link to="/debts" />}
+                        render={<Link to="/debts" viewTransition={viewTransition("push-left", { back: true })} />}
                         size="icon"
                         variant="ghost"
                     >
                         <Glyph icon={ArrowLeft01Icon} size={16} />
                     </Button>
-                    <Link className="text-muted-foreground hover:text-foreground font-normal" to="/debts">
+                    <Link
+                        className="text-muted-foreground hover:text-foreground font-normal"
+                        to="/debts"
+                        viewTransition={viewTransition("push-left", { back: true })}
+                    >
                         {title}
                     </Link>
                     <Glyph icon={ArrowRight01Icon} className="text-muted-foreground flex-none" size={14} />
                     <span className="truncate">{row.account.name}</span>
                     {settled ? (
-                        <Badge className="ms-1 h-[22px] rounded-md px-2 text-xs font-medium" variant="success">
+                        <Badge className="text-app-caption! ms-1 h-5.5 rounded-md px-2 font-medium" variant="success">
                             {detail.settled}
                         </Badge>
                     ) : null}
@@ -94,12 +102,7 @@ function DetailBar({ row }: { row: DebtRow }) {
                 >
                     <Glyph icon={MoreVerticalIcon} className="text-muted-foreground" />
                 </Menu.Trigger>
-                <Menu.Content
-                    align="end"
-                    alignOffset={BAR_MENU_OVERHANG}
-                    className="app-shell ph-no-capture w-[198px]"
-                    sideOffset={4}
-                >
+                <MenuContent align="end" alignOffset={BAR_MENU_OVERHANG} className="w-60" sideOffset={4}>
                     {moves.map((move) => (
                         <Menu.Item className="sm:hidden" key={move.label.value} onClick={move.run}>
                             <Glyph icon={move.icon} size={16} />
@@ -107,7 +110,7 @@ function DetailBar({ row }: { row: DebtRow }) {
                         </Menu.Item>
                     ))}
                     <DetailMenuItems row={row} />
-                </Menu.Content>
+                </MenuContent>
             </Menu>
         </AccountsBar>
     );
@@ -216,7 +219,9 @@ function ProgressCard({ row }: { row: DebtRow }) {
         <Frame className="mt-4 min-w-0" variant="plain">
             <Frame.Panel className="bg-card flex flex-col gap-3 rounded-3xl border px-5 py-4">
                 <div className="flex min-h-8 flex-wrap items-center gap-2.5">
-                    <b className="text-[13px] font-medium">{owesYou ? detail.theyPay(facts) : detail.youPay(facts)}</b>
+                    <b className="text-app-label font-medium">
+                        {owesYou ? detail.theyPay(facts) : detail.youPay(facts)}
+                    </b>
                     {line.behind ? <BehindBadge amount={line.behind} currency={currency} /> : <OnTrackBadge />}
                     <Button
                         className="ms-auto"
@@ -228,7 +233,7 @@ function ProgressCard({ row }: { row: DebtRow }) {
                     </Button>
                 </div>
                 <PayoffBar row={row} />
-                <div className="dash-figure text-muted-foreground flex justify-between gap-3 text-xs">
+                <div className="dash-figure text-muted-foreground text-app-caption flex justify-between gap-3">
                     <span>{detail.paidBackTotal({ amount: money(repaid.total, currency) })}</span>
                     <span>
                         {(owesYou ? detail.lentTotal : detail.borrowedTotal)({ amount: money(added.total, currency) })}
@@ -265,7 +270,7 @@ function Movements({ accounts, row }: { accounts: readonly AccountRow[]; row: De
     return (
         <Card className="mt-4 flex-1" count={movements.length} title={detail.movements}>
             {movements.length === 0 ? (
-                <p className="text-muted-foreground px-4 py-6 text-[13px]">{detail.noMovements}</p>
+                <Empty icon={ArrowDataTransferHorizontalIcon} title={detail.noMovements} />
             ) : (
                 <DataTable
                     density="comfortable"
@@ -281,21 +286,21 @@ function Movements({ accounts, row }: { accounts: readonly AccountRow[]; row: De
                 >
                     {movements.map((movement) => (
                         <Table.Row key={movement.id}>
-                            <Cell className="dash-figure text-muted-foreground text-[13px]">
+                            <Cell className="dash-figure text-muted-foreground text-app-label">
                                 {date.day(movement.day)}
                             </Cell>
                             <Cell>
-                                <span className="flex items-center gap-2.5 text-[13px] font-medium">
-                                    <span className="bg-app-fill text-muted-foreground flex size-[26px] shrink-0 items-center justify-center rounded-lg">
+                                <span className="text-app-label flex items-center gap-2.5 font-medium">
+                                    <span className="bg-app-fill text-muted-foreground rounded-app-sm flex size-6.5 shrink-0 items-center justify-center">
                                         <Glyph icon={movement.amount > 0 ? ArrowDown02Icon : ArrowUp02Icon} size={14} />
                                     </span>
                                     {kinds[movement.kind]}
                                 </span>
                             </Cell>
-                            <Cell className="text-[13px]">
+                            <Cell className="text-app-label">
                                 <AccountCell accounts={accounts} movement={movement} />
                             </Cell>
-                            <Cell className="text-muted-foreground max-w-[280px] truncate text-[13px]">
+                            <Cell className="text-muted-foreground text-app-label max-w-70 truncate">
                                 {movement.note}
                             </Cell>
                             <Cell className={movement.kind === "gotPaidBack" ? "text-app-income" : ""} figure>
@@ -315,7 +320,7 @@ function NotFound() {
     return (
         <main className="min-w-0 px-4 pb-5 sm:px-6">
             <AccountsBar title={title} />
-            <p className="text-muted-foreground py-6 text-sm">
+            <p className="text-muted-foreground text-app-body py-6">
                 {detail.notFound}{" "}
                 <Link className="text-foreground underline" to="/debts">
                     {back}

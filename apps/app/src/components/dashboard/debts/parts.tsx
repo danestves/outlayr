@@ -20,7 +20,9 @@ import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
+import { MenuContent } from "@/components/ui/menu-content";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { useGoalMoney } from "../goals/parts";
 import { useDebtFlows } from "./flow-context";
@@ -29,7 +31,7 @@ import type { DebtRow, DebtsModel } from "./model";
 import { removedPlans } from "./writes";
 
 const PERCENT = 100;
-const BADGE = "h-[22px] rounded-md px-2 text-xs font-medium normal-nums";
+const BADGE = "text-app-caption! h-5.5 rounded-md px-2 font-medium normal-nums";
 
 export function useDebts() {
     const { ledger, overview } = useDashboard();
@@ -48,7 +50,7 @@ export function PersonTile({ row }: { row: DebtRow }) {
         return <AccountTile account={row.account.look} size="lg" />;
     }
     return (
-        <span className="bg-app-fill text-muted-foreground flex size-[26px] shrink-0 items-center justify-center rounded-full text-[11px] font-medium">
+        <span className="bg-app-fill text-muted-foreground text-app-micro flex size-6.5 shrink-0 items-center justify-center rounded-full font-medium">
             {row.account.name.trim().charAt(0).toLocaleUpperCase()}
         </span>
     );
@@ -227,16 +229,20 @@ export function DebtMenu({ row }: { row: DebtRow }) {
         <Menu>
             <Menu.Trigger
                 aria-label={actions.more({ name: row.account.name }).value}
-                render={<Button className="text-muted-foreground -mx-2 size-[26px]" size="icon-sm" variant="ghost" />}
+                render={<Button className="text-muted-foreground -mx-2 size-6.5" size="icon-sm" variant="ghost" />}
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" alignOffset={-4} className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
+            <MenuContent align="end" alignOffset={-4} className="w-60" sideOffset={4}>
                 {row.card ? (
                     <>
                         <Menu.Item
                             onClick={() =>
-                                navigate({ params: { accountId: row.account.id }, to: "/accounts/$accountId" })
+                                navigate({
+                                    params: { accountId: row.account.id },
+                                    to: "/accounts/$accountId",
+                                    viewTransition: viewTransition("push-left"),
+                                })
                             }
                         >
                             <Glyph icon={ArrowUpRight01Icon} size={16} />
@@ -250,7 +256,7 @@ export function DebtMenu({ row }: { row: DebtRow }) {
                         <DeleteItem row={row} />
                     </>
                 )}
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -284,12 +290,7 @@ export function PayoffBar({ row }: { row: DebtRow }) {
                 className={`block h-full rounded-full ${row.standing === "owesYou" ? "bg-app-income" : "bg-app-tint"}`}
                 style={{ width: `${paid}%` }}
             />
-            {late > 0 ? (
-                <i
-                    className="block h-full rounded-full bg-[color-mix(in_oklab,var(--color-app-warn)_55%,var(--color-app-fill))]"
-                    style={{ width: `${late}%` }}
-                />
-            ) : null}
+            {late > 0 ? <i className="bg-app-warn/55 block h-full rounded-full" style={{ width: `${late}%` }} /> : null}
             <i className="bg-app-fill block h-full flex-1 rounded-full" />
         </div>
     );
