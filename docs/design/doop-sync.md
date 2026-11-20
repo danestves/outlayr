@@ -162,6 +162,7 @@ From the canvas page `Web · Transactions`, under `components/dashboard/transact
 - **Drawer:** the entry sheet's amount is MoneyField. A recurring entry links to its schedule (`/recurring?item=`), an installment payment to its plan. Under the fields sit the split, the files and the history slot (`entry-record.tsx`). History reads "coming" until an edit log exists; nothing fills it from other rows.
 - **Receipt scan:** the frame's Files card sits in Add entry, not the drawer, because the drawer saves as you type and a scan must be confirmed first. The read lines fill the form and save with Add; the drawer's Files card shows them, on the photo a phone scan kept or as a card of their own for a web scan, which keeps no photo. A PDF goes as a photo of its first page (`lib/receipt-scan.ts`).
 - **Loading:** the real screen over the sampled ledger inside a static skullet skeleton.
+- **Merchant:** the row menu and the drawer (its tile and More menu) open `merchant-dialog.tsx`: the name, a logo found from a website or an uploaded photo, for this entry or every entry under the name. The frame's Emoji and Icons tabs are not built. A rename that spreads confirms first, holds an undo, and goes into the synced `merchantNames` map so new entries arrive under the new name.
 
 ## Accounts
 
