@@ -10,6 +10,7 @@ import { DialogContent } from "@/components/ui/dialog-content";
 import type { Notice, NoticeHost } from "@/lib/commit-notices";
 import type { PurchaseSeed } from "@/lib/installment-scan";
 import { writeSettings } from "@/lib/ledger-settings";
+import type { ScannedEntry } from "@/lib/receipt-scan";
 
 import type { AccountValues } from "./account-form";
 import type { AccountSort } from "./model";
@@ -23,8 +24,9 @@ export type AccountFlow =
     | { draft?: AccountValues; kind: "create"; type: AccountType }
     | { accountId?: string; draft?: PurchaseValues; kind: "purchase"; seed?: PurchaseSeed }
     | { accountId?: string; kind: "scan" }
+    | { accountId?: string; file?: File; kind: "receipt" }
     | { accountId?: string; kind: "transfer" }
-    | { accountId?: string; from?: string; kind: "entry"; note?: string };
+    | { accountId?: string; from?: string; kind: "entry"; note?: string; scanned?: ScannedEntry };
 
 interface AccountFlows {
     open: (flow: AccountFlow) => void;
@@ -168,7 +170,7 @@ export function AccountFlowsProvider({ children }: { children: ReactNode }) {
             <Dialog onOpenChange={(next) => next || setFlow(null)} open={open && !targetGone}>
                 <DialogContent
                     className="transition-none"
-                    size={flow?.kind === "entry" || flow?.kind === "purchase" ? "lg" : "md"}
+                    size={flow?.kind === "entry" || flow?.kind === "purchase" || flow?.kind === "receipt" ? "lg" : "md"}
                 >
                     <Suspense fallback={null}>
                         {flow ? <FlowDialogs flow={flow} onClose={() => setFlow(null)} onSwitch={setFlow} /> : null}

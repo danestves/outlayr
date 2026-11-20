@@ -15,9 +15,9 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { AiConsentActions, AiConsentPrompt } from "@/components/dashboard/ai-consent-prompt";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
-import { SiteLink } from "@/components/site-link";
 import { allowPlanScan, hasPlanScanConsent } from "@/lib/ai-consent";
 import { convexClient } from "@/lib/convex";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
@@ -49,30 +49,6 @@ const imageIn = (items: Iterable<{ getAsFile?: () => File | null; type: string }
     }
     return null;
 };
-
-function Consent() {
-    const { consent } = useIntlayer("dashboard-installments");
-    return (
-        <div className="text-app-label flex flex-col gap-3">
-            <h3 className="text-app-title font-semibold">{consent.title}</h3>
-            <div className="border-y py-2.5">
-                <p className="font-medium">{consent.planScan}</p>
-                <p className="text-muted-foreground">{consent.planScanSends}</p>
-            </div>
-            <p className="text-muted-foreground">
-                {consent.fine}{" "}
-                <SiteLink
-                    className="text-foreground underline underline-offset-2"
-                    hash={consent.privacyHash.value}
-                    target="_blank"
-                    to="/privacy"
-                >
-                    {consent.privacy}
-                </SiteLink>
-            </p>
-        </div>
-    );
-}
 
 function FileBox({ file }: { file: File }) {
     return (
@@ -283,7 +259,7 @@ export function ScanDialog({
 
     let body: ReactNode = null;
     if (phase.kind === "consent") {
-        body = <Consent />;
+        body = <AiConsentPrompt feature={consent.planScan} fine={consent.fine} sends={consent.planScanSends} />;
     } else if (cards.length === 0) {
         body = <p className="text-muted-foreground text-app-label">{scan.noCard}</p>;
     } else if (phase.kind === "pick") {
@@ -319,19 +295,13 @@ export function ScanDialog({
     );
     if (phase.kind === "consent") {
         footer = (
-            <>
-                <Button onClick={onClose} variant="secondary">
-                    {consent.notNow}
-                </Button>
-                <Button
-                    onClick={() => {
-                        allowPlanScan();
-                        setPhase({ kind: "pick" });
-                    }}
-                >
-                    {consent.allow}
-                </Button>
-            </>
+            <AiConsentActions
+                onAllow={() => {
+                    allowPlanScan();
+                    setPhase({ kind: "pick" });
+                }}
+                onDecline={onClose}
+            />
         );
     } else if (cards.length === 0) {
         footer = (

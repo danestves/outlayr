@@ -47,6 +47,7 @@ import { newLink } from "@/lib/rule-writes";
 
 import { useCategoryName } from "../home/format";
 import { useIncomingRules } from "../rules/incoming";
+import { DraftReceipt, FilesLabel, ScanCard } from "./receipt-card";
 import { useWeekday } from "./use-day-title";
 
 const REPEATS = [
@@ -539,11 +540,15 @@ export function EntryDialog({
     const { flows } = useIntlayer("dashboard-accounts");
     const { form } = useIntlayer("dashboard-transactions");
     const [values, setValues] = useState(() => {
+        if (flow.scanned) {
+            return flow.scanned.values;
+        }
         const source = ledger.books.transactions.find((row) => row.localId === flow.from);
         return source
             ? logAgainValues(ledger, source, Date.now())
             : { ...blankValues(ledger, flow.accountId ?? null, Date.now()), note: flow.note ?? "" };
     });
+    const [scan, setScan] = useState(flow.scanned ?? null);
     const [problem, setProblem] = useState<EntryProblem | null>(null);
     const [round, setRound] = useState(0);
     const formId = useId();
@@ -562,7 +567,10 @@ export function EntryDialog({
     const submit = (another: boolean) => {
         const at = Date.now();
         const current = committer.current();
-        const draft = draftOf(current, filled, null, form.feeNote({ merchant: merchantOf(ledger, filled) }).value);
+        const draft = {
+            ...draftOf(current, filled, null, form.feeNote({ merchant: merchantOf(ledger, filled) }).value),
+            receipt: scan?.receipt ? JSON.stringify(scan.receipt) : undefined,
+        };
         // The default minute keeps its seconds, so entries added back to back stay in the order they were typed.
         const dated = values.dateText === wallText(at, ledger) ? { ...draft, date: at } : draft;
         const found = entryProblem(current, dated, null, at);
@@ -578,6 +586,7 @@ export function EntryDialog({
         });
         if (another) {
             change({ amountText: "", details: "", feeText: "", note: "" });
+            setScan(null);
             setRound((count) => count + 1);
         } else {
             onClose();
@@ -603,6 +612,23 @@ export function EntryDialog({
                         problem={problem}
                         values={filled}
                     />
+                    <section className="mt-5 flex flex-col gap-2">
+                        <FilesLabel />
+                        {scan ? (
+                            <DraftReceipt
+                                currency={values.currency}
+                                merchant={values.note.trim()}
+                                onRemove={() => setScan(null)}
+                                receipt={scan.receipt}
+                            />
+                        ) : (
+                            <ScanCard
+                                onScan={(file) =>
+                                    onSwitch({ accountId: values.accountId ?? undefined, file, kind: "receipt" })
+                                }
+                            />
+                        )}
+                    </section>
                 </form>
             </Dialog.Body>
             <Dialog.Footer>
@@ -625,6 +651,7 @@ export function EntryEditor({
     accountTrigger,
     categoryTrigger,
     doc,
+    files,
     imageUrl,
     onDelete,
     onLogAgain,
@@ -633,6 +660,7 @@ export function EntryEditor({
     accountTrigger?: RefObject<HTMLButtonElement | null>;
     categoryTrigger?: RefObject<HTMLButtonElement | null>;
     doc: Doc;
+    files?: ReactNode;
     imageUrl?: string;
     onDelete: () => void;
     onLogAgain: () => void;
@@ -691,6 +719,7 @@ export function EntryEditor({
                 problem={problem}
                 values={values}
             />
+            {files}
             <div className="flex flex-wrap items-center gap-2 py-4">
                 <Button onClick={onLogAgain} size="sm" variant="outline">
                     <HugeiconsIcon icon={Copy01Icon} size={14} />

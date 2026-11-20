@@ -32,6 +32,8 @@ export interface EntryDraft {
     note: string;
     /** Absent leaves the frozen rate alone; picking one re-freezes the entry at it. */
     rate?: { custom: number | null; type: EntryRateType };
+    /** A scanned receipt's lines as the phone stores them, JSON. */
+    receipt?: string;
     /** The day a monthly chain aims for, when it is not the date's own. */
     recurringAnchorDay?: number;
     recurringCoefficient: number;
@@ -245,6 +247,7 @@ function entryOf(ledger: Ledger, id: string, draft: EntryDraft, at: number) {
                 income: draft.income,
                 note: draft.note,
                 onceRecurring: recurring,
+                receipt: draft.receipt,
                 recurringCoefficient: draft.recurringCoefficient,
                 recurringEndDate: draft.recurringEndDate === null ? null : new Date(draft.recurringEndDate),
                 recurringType: draft.recurringType,
