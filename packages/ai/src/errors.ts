@@ -1,7 +1,7 @@
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 
-export const ModelCallFailure = Schema.Literals(["invalidResponse", "noTranscript", "providerError"]);
+const ModelCallFailure = Schema.Literals(["invalidResponse", "noTranscript", "providerError"]);
 
 export class ModelCallError extends Schema.TaggedError<ModelCallError>()("ModelCallError", {
     cause: Schema.Defect(),

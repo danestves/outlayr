@@ -1,13 +1,11 @@
 /// <reference types="vite/client" />
 
-// Opt-in: RUN_LIVE_MODEL_TESTS=1 plus ANTHROPIC_API_KEY and ELEVENLABS_API_KEY from `npx convex env get`. Record
-// /tmp/voice-clip.m4a with `say --data-format=aac "Twelve fifty at Starbucks yesterday on the Amex"` and
-// /tmp/voice-fix.m4a with "No, that was today, and put it under groceries".
+// Opt-in: RUN_LIVE_MODEL_TESTS=1 plus the configured text provider's key. Transcription is skipped: each turn
+// spends a stream credit planted here, so no speech key or recorded clip is needed.
 
-import { readFile } from "node:fs/promises";
-
-import agentTest from "@convex-dev/agent/test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { liveModel } from "@outlayr/ai/testing";
+import { route } from "@outlayr/model-router/route";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
@@ -16,40 +14,14 @@ import { describe, expect, it } from "vite-plus/test";
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { authenticatedAs, seedProUser } from "./test.helpers";
-import { PROPOSE_DRAFT_TOOL } from "./voiceEntry";
-import type { ProposedDraft } from "./voiceEntry";
 
 const modules = import.meta.glob("../convex/**/*.ts");
 
-const live =
-    process.env.RUN_LIVE_MODEL_TESTS === "1" &&
-    Boolean(process.env.ANTHROPIC_API_KEY) &&
-    Boolean(process.env.ELEVENLABS_API_KEY);
-const CLIP_PATH = process.env.VOICE_CLIP_PATH ?? "/tmp/voice-clip.m4a";
-const FIX_PATH = process.env.VOICE_FIX_PATH ?? "/tmp/voice-fix.m4a";
+const model = await liveModel(route({ feature: "voice_entry" }));
 
-async function clipBytes(path: string): Promise<ArrayBuffer> {
-    const bytes = await readFile(path);
-    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-}
-
-interface Turn {
-    order: number;
-    parts: { output?: unknown; state?: string; type: string }[];
-    role: string;
-}
-
-function draftAt(turns: Turn[], order: number): ProposedDraft | null {
-    const answer = turns.find((turn) => turn.role === "assistant" && turn.order === order);
-    const part = answer?.parts.find((p) => p.type === `tool-${PROPOSE_DRAFT_TOOL}` && p.state === "output-available");
-    // SAFETY: the tool's `execute` returns a ProposedDraft; the part carries it as `output`.
-    return (part?.output as ProposedDraft | undefined) ?? null;
-}
-
-describe.skipIf(!live)("voice thread, live", () => {
-    it("a clip becomes a draft, and the next sentence corrects it in place", async () => {
+describe.skipIf(model === undefined)("voice thread, live", () => {
+    it("a sentence becomes a draft, and the next sentence corrects it in place", async () => {
         const t = convexTest(schema, modules);
-        agentTest.register(t);
         rateLimiterTest.register(t);
         revenuecatTest.register(t);
         const asUser = authenticatedAs(t, await seedProUser(t));
@@ -69,33 +41,27 @@ describe.skipIf(!live)("voice thread, live", () => {
             threadId,
             today: "2026-09-03",
         };
-        const page = { cursor: null, numItems: 20 };
+        const say = async (transcript: string) => {
+            await t.run(async (ctx) => {
+                await ctx.db.insert("voiceStreamCredits", { threadId });
+            });
+            return asUser.action(api.voiceEntry.speakText, { ...context, transcript });
+        };
 
-        const first = await asUser.action(api.voiceEntry.speak, { ...context, audio: await clipBytes(CLIP_PATH) });
-        expect(first.status).toBe("ok");
-        expect(first.transcript?.toLowerCase()).toContain("starbucks");
-        if (first.order === null) {
-            return;
-        }
-        const afterFirst = await asUser.query(api.voiceEntry.listTurns, { paginationOpts: page, threadId });
-        expect(draftAt(afterFirst.page, first.order)?.draft).toMatchObject({
+        await expect(say("Twelve fifty at Starbucks yesterday on the Amex")).resolves.toMatchObject({ status: "ok" });
+        const [first] = await asUser.query(api.voiceEntry.turns, { threadId });
+        expect(first?.proposed?.draft).toMatchObject({
             accountName: "Amex",
             amount: 12.5,
             date: "2026-09-02",
             domain: "starbucks.com",
             kind: "entry",
         });
-        expect(draftAt(afterFirst.page, first.order)?.quotes).toContainEqual(
-            expect.objectContaining({ field: "amount" })
-        );
+        expect(first?.proposed?.quotes).toContainEqual(expect.objectContaining({ field: "amount" }));
 
-        const second = await asUser.action(api.voiceEntry.speak, { ...context, audio: await clipBytes(FIX_PATH) });
-        expect(second.status).toBe("ok");
-        if (second.order === null) {
-            return;
-        }
-        const afterSecond = await asUser.query(api.voiceEntry.listTurns, { paginationOpts: page, threadId });
-        expect(draftAt(afterSecond.page, second.order)?.draft).toMatchObject({
+        await expect(say("No, that was today, and put it under groceries")).resolves.toMatchObject({ status: "ok" });
+        const [, second] = await asUser.query(api.voiceEntry.turns, { threadId });
+        expect(second?.proposed?.draft).toMatchObject({
             accountName: "Amex",
             amount: 12.5,
             categoryName: "Groceries",

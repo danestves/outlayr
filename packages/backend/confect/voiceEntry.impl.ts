@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { createThread, getThreadMetadata, saveMessage } from "@convex-dev/agent";
+import { generateObject } from "@outlayr/ai/generate";
+import type { TextModel } from "@outlayr/ai/model";
 import { resolveSpeechModel } from "@outlayr/ai/speech";
 import { route } from "@outlayr/model-router/route";
 import type { UserIdentity } from "convex/server";
@@ -10,7 +11,6 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import {
@@ -19,6 +19,7 @@ import {
     DatabaseWriter,
     MutationCtx,
     MutationRunner,
+    QueryCtx,
     Scheduler,
 } from "./_generated/services";
 import { openAiGate, refuse } from "./lib/aiGate";
@@ -27,39 +28,31 @@ import { admitCapture, withinCaptureAllowance } from "./lib/captures";
 import { outboundHttp } from "./lib/http";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { fixedBurst } from "./lib/limits";
-import { modelCallError } from "./lib/modelCall";
-import { anthropicAgentModel } from "./lib/sdkModel";
 import { isPro } from "./revenuecat";
 import {
+    beginTurn,
     buildPrompt,
-    CONTEXT_TURNS,
+    clearStreamCredits,
+    deleteThreadBatch,
     ENDED_THREAD_GRACE_MS,
     failure,
     listTurns,
     MAX_STREAM_CREDITS,
+    ModelOutput,
     ownsThread,
     PARSE_TIMEOUT_MS,
+    proposeDraft,
     rateLimiter,
+    readTurns,
     THREAD_TTL_MS,
+    threadOwner,
     transcribeClip,
-    voiceAgent,
+    turnMessages,
 } from "./voiceEntry";
 import spec, { SpeakTextInput, VoiceEntryInput } from "./voiceEntry.spec";
 
 const isVoiceEntryInput = Schema.is(VoiceEntryInput);
 const isSpeakTextInput = Schema.is(SpeakTextInput);
-
-const clearStreamCredits = Effect.fn("VoiceEntry.clearStreamCredits")(function* clearStreamCredits(threadId: string) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const credits = yield* reader
-        .table("voiceStreamCredits")
-        .index("by_threadId", (q) => q.eq("threadId", threadId))
-        .take(MAX_STREAM_CREDITS);
-    for (const credit of credits) {
-        yield* writer.table("voiceStreamCredits").delete(credit._id);
-    }
-});
 
 const ledgerContext = (args: Pick<LedgerContext, "accounts" | "categoryTree" | "currency" | "language" | "today">) =>
     ({
@@ -70,45 +63,35 @@ const ledgerContext = (args: Pick<LedgerContext, "accounts" | "categoryTree" | "
         today: args.today,
     }) satisfies LedgerContext;
 
-const parseTurn = Effect.fn("VoiceEntry.parseTurn")(function* parseTurn(
-    ctx: ActionCtx,
-    turn: {
-        readonly context: LedgerContext;
-        readonly model: Parameters<typeof voiceAgent>[0];
-        readonly text: string;
-        readonly threadId: string;
-        readonly userId: string;
+const parseTurn = Effect.fn("VoiceEntry.parseTurn")(function* parseTurn(turn: {
+    readonly context: LedgerContext;
+    readonly model: TextModel;
+    readonly text: string;
+    readonly threadId: string;
+}) {
+    const { context, model, text, threadId } = turn;
+    const { runMutation } = yield* MutationRunner;
+    const begun = yield* runMutation(refs.internal.voiceEntry.beginTurn, { said: text, threadId });
+    if (begun === null) {
+        return failure("invalid", text);
     }
-) {
-    const { context, model, text, threadId, userId } = turn;
-    const agent = voiceAgent(model, context, text);
-    const { message, messageId } = yield* Effect.promise(() =>
-        saveMessage(ctx, components.agent, { prompt: text, threadId, userId })
+    const answered = yield* generateObject(model, ModelOutput, {
+        messages: turnMessages(begun.history, text),
+        system: buildPrompt(context),
+        timeout: Duration.millis(PARSE_TIMEOUT_MS),
+    }).pipe(
+        Effect.map(Option.some),
+        Effect.catchTags({ ModelCallError: () => Effect.succeed(Option.none<ModelOutput>()) })
     );
-    const parsed = yield* Effect.tryPromise({
-        catch: modelCallError,
-        try: async () => {
-            const result = await agent.streamText(
-                ctx,
-                { threadId, userId },
-                {
-                    abortSignal: AbortSignal.timeout(PARSE_TIMEOUT_MS),
-                    maxRetries: 0,
-                    promptMessageId: messageId,
-                    system: buildPrompt(context),
-                },
-                {
-                    contextOptions: { recentMessages: CONTEXT_TURNS * 2 },
-                    saveStreamDeltas: true,
-                }
-            );
-            await result.consumeStream();
-        },
-    }).pipe(Effect.as(true), Effect.catchTags({ ModelCallError: () => Effect.succeed(false) }));
-    if (!parsed) {
+    if (Option.isNone(answered)) {
         return failure("providerError", text);
     }
-    return { order: message.order, status: "ok" as const, transcript: text };
+    yield* runMutation(refs.internal.voiceEntry.answerTurn, {
+        proposed: proposeDraft(answered.value, context, text),
+        reply: JSON.stringify(answered.value),
+        turnId: begun.turnId,
+    });
+    return { order: begun.order, status: "ok" as const, transcript: text };
 });
 
 const startThread = FunctionImpl.make(
@@ -136,10 +119,7 @@ const startThread = FunctionImpl.make(
             return { status: "rateLimited" as const, threadId: null };
         }
         const threadId = yield* Effect.promise(() =>
-            createThread(ctx, components.agent, {
-                title: "Voice entry",
-                userId: identity.tokenIdentifier,
-            })
+            ctx.db.insert("voiceThreads", { userId: identity.tokenIdentifier })
         );
         const scheduler = yield* Scheduler;
         yield* scheduler.runAfter(Duration.millis(THREAD_TTL_MS), refs.internal.voiceEntry.expireThread, { threadId });
@@ -153,31 +133,34 @@ const expireThread = FunctionImpl.make(
     "expireThread",
     Effect.fn("VoiceEntry.expireThread")(function* expireThread({ idleLimitMs = THREAD_TTL_MS, threadId }) {
         const ctx = yield* MutationCtx;
-        const thread = yield* Effect.promise(() => getThreadMetadata(ctx, components.agent, { threadId })).pipe(
-            Effect.catchDefect(() => Effect.succeed(null))
-        );
+        const scheduler = yield* Scheduler;
+        const id = ctx.db.normalizeId("voiceThreads", threadId);
+        const thread = id === null ? null : yield* Effect.promise(() => ctx.db.get(id));
         if (thread === null) {
-            yield* clearStreamCredits(threadId);
+            yield* clearStreamCredits(ctx.db, threadId);
             return null;
         }
         const latest = yield* Effect.promise(() =>
-            ctx.runQuery(components.agent.messages.listMessagesByThreadId, {
-                order: "desc",
-                paginationOpts: { cursor: null, numItems: 1 },
-                threadId,
-            })
+            ctx.db
+                .query("voiceTurns")
+                .withIndex("by_threadId_and_order", (q) => q.eq("threadId", thread._id))
+                .order("desc")
+                .first()
         );
-        const idleFor = (yield* Clock.currentTimeMillis) - (latest.page[0]?._creationTime ?? thread._creationTime);
+        const idleFor = (yield* Clock.currentTimeMillis) - (latest?._creationTime ?? thread._creationTime);
         if (idleFor < idleLimitMs) {
-            const scheduler = yield* Scheduler;
             yield* scheduler.runAfter(Duration.millis(idleLimitMs - idleFor), refs.internal.voiceEntry.expireThread, {
                 idleLimitMs,
                 threadId,
             });
             return null;
         }
-        yield* Effect.promise(() => ctx.runMutation(components.agent.threads.deleteAllForThreadIdAsync, { threadId }));
-        yield* clearStreamCredits(threadId);
+        if (!(yield* deleteThreadBatch(ctx.db, thread._id))) {
+            yield* scheduler.runAfter(Duration.zero, refs.internal.voiceEntry.expireThread, {
+                idleLimitMs: 0,
+                threadId,
+            });
+        }
         return null;
     }, Effect.orDie)
 );
@@ -226,8 +209,7 @@ const speak = FunctionImpl.make(
         function* speak(args) {
             const ctx = yield* ActionCtx;
             const {
-                admitted: { speech, userId },
-                distinctId,
+                admitted: { speech },
                 model,
             } = yield* openAiGate(ctx, {
                 admit: Effect.fn("VoiceEntry.speakRungs")(function* speakRungs(caller: UserIdentity) {
@@ -247,28 +229,22 @@ const speak = FunctionImpl.make(
                         admit: runMutation(refs.internal.voiceEntry.admit),
                         burst: "voiceEntry",
                     });
-                    return { speech: resolved.value, userId: owner };
+                    return { speech: resolved.value };
                 }),
                 args,
                 route: route({ feature: "voice_entry" }),
                 sessionId: args.threadId,
             });
-            const agentModel = yield* anthropicAgentModel(model, { distinctId, sessionId: args.threadId });
-            if (Option.isNone(agentModel)) {
-                return yield* refuse("notConfigured");
-            }
-
             const heard = yield* transcribeClip(speech, args.audio, args.language);
             if ("error" in heard) {
                 return failure(heard.error === "empty" ? "unclear" : "providerError");
             }
 
-            return yield* parseTurn(ctx, {
+            return yield* parseTurn({
                 context: ledgerContext(args),
-                model: agentModel.value,
+                model,
                 text: heard.text,
                 threadId: args.threadId,
-                userId,
             });
         },
         Effect.catchTags({ AiRefused: ({ status }) => Effect.succeed(failure(status)) }),
@@ -382,11 +358,7 @@ const speakText = FunctionImpl.make(
     Effect.fn("VoiceEntry.speakText")(
         function* speakText(args) {
             const ctx = yield* ActionCtx;
-            const {
-                admitted: { userId },
-                distinctId,
-                model,
-            } = yield* openAiGate(ctx, {
+            const { model } = yield* openAiGate(ctx, {
                 admit: Effect.fn("VoiceEntry.speakTextRungs")(function* speakTextRungs() {
                     if (!isSpeakTextInput(args)) {
                         return yield* refuse("invalid");
@@ -395,16 +367,12 @@ const speakText = FunctionImpl.make(
                     if (owner === null) {
                         return yield* refuse("invalid");
                     }
-                    return { userId: owner };
+                    return owner;
                 }),
                 args,
                 route: route({ feature: "voice_entry" }),
                 sessionId: args.threadId,
             });
-            const agentModel = yield* anthropicAgentModel(model, { distinctId, sessionId: args.threadId });
-            if (Option.isNone(agentModel)) {
-                return yield* refuse("notConfigured");
-            }
             const text = args.transcript.trim();
             if (text.length === 0) {
                 return failure("unclear");
@@ -414,17 +382,73 @@ const speakText = FunctionImpl.make(
             if (!spent) {
                 return failure("invalid");
             }
-            return yield* parseTurn(ctx, {
-                context: ledgerContext(args),
-                model: agentModel.value,
-                text,
-                threadId: args.threadId,
-                userId,
-            });
+            return yield* parseTurn({ context: ledgerContext(args), model, text, threadId: args.threadId });
         },
         Effect.catchTags({ AiRefused: ({ status }) => Effect.succeed(failure(status)) }),
         Effect.orDie
     )
+);
+
+const turns = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "turns",
+    Effect.fn("VoiceEntry.turns")(function* turns({ threadId }) {
+        return yield* readTurns(yield* QueryCtx, threadId);
+    }, Effect.orDie)
+);
+
+const threadOwnerQuery = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "threadOwner",
+    Effect.fn("VoiceEntry.threadOwnerQuery")(function* threadOwnerQuery({ threadId }) {
+        return yield* threadOwner((yield* QueryCtx).db, threadId);
+    }, Effect.orDie)
+);
+
+const beginTurnMutation = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "beginTurn",
+    Effect.fn("VoiceEntry.beginTurnMutation")(function* beginTurnMutation(turn) {
+        return yield* beginTurn(yield* MutationCtx, turn);
+    }, Effect.orDie)
+);
+
+const answerTurn = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "answerTurn",
+    Effect.fn("VoiceEntry.answerTurn")(function* answerTurn({ proposed, reply, turnId }) {
+        const turn = yield* (yield* DatabaseReader).table("voiceTurns").get(turnId).pipe(Effect.option);
+        if (Option.isSome(turn)) {
+            yield* (yield* DatabaseWriter).table("voiceTurns").patch(turnId, { proposed, reply });
+        }
+        return null;
+    }, Effect.orDie)
+);
+
+const forgetUser = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "forgetUser",
+    Effect.fn("VoiceEntry.forgetUser")(function* forgetUser({ userId }) {
+        const ctx = yield* MutationCtx;
+        const thread = yield* Effect.promise(() =>
+            ctx.db
+                .query("voiceThreads")
+                .withIndex("by_userId", (q) => q.eq("userId", userId))
+                .first()
+        );
+        if (thread === null) {
+            return null;
+        }
+        yield* deleteThreadBatch(ctx.db, thread._id);
+        const scheduler = yield* Scheduler;
+        yield* scheduler.runAfter(Duration.zero, refs.internal.voiceEntry.forgetUser, { userId });
+        return null;
+    }, Effect.orDie)
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
@@ -438,5 +462,10 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(speakText),
     Layer.provide(grantStream),
     Layer.provide(spendStream),
+    Layer.provide(turns),
+    Layer.provide(threadOwnerQuery),
+    Layer.provide(beginTurnMutation),
+    Layer.provide(answerTurn),
+    Layer.provide(forgetUser),
     GroupImpl.finalize
 );

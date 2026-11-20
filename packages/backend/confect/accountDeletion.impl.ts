@@ -255,9 +255,8 @@ const forgetUsage = Effect.fn("AccountDeletion.forgetUsage")(function* forgetUsa
     for (const name of USAGE_BY_TOKEN) {
         yield* Effect.promise(() => usage.reset(ctx, name, { key: tokenIdentifier }));
     }
-    yield* Effect.promise(() =>
-        ctx.runMutation(components.agent.users.deleteAllForUserIdAsync, { userId: tokenIdentifier })
-    );
+    const scheduler = yield* Scheduler;
+    yield* scheduler.runAfter(Duration.zero, refs.internal.voiceEntry.forgetUser, { userId: tokenIdentifier });
 });
 
 /** Better Auth's user cascade is off (`lib/betterAuth.ts`), so these are ours; `deleteMany` takes one page per call. */

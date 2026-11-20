@@ -1,7 +1,5 @@
 /// <reference types="vite/client" />
 
-import { createThread, getThreadMetadata } from "@convex-dev/agent";
-import agentTest from "@convex-dev/agent/test";
 import mcpTest from "@convex-dev/mcp/test";
 import { RateLimiter } from "@convex-dev/rate-limiter";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
@@ -84,7 +82,6 @@ function stubUpstream(status: number, deletionErrors: unknown[] = []) {
 
 async function purgedJob() {
     const t = convexTest(schema, modules);
-    agentTest.register(t);
     mcpTest.register(t);
     rateLimiterTest.register(t);
     revenuecatTest.register(t);
@@ -434,7 +431,6 @@ describe("auth deletion", () => {
     it("leaves no suggestion requests, usage counters, voice threads or mail state behind", async () => {
         stubUpstream(200);
         const t = convexTest(schema, modules);
-        agentTest.register(t);
         mcpTest.register(t);
         rateLimiterTest.register(t);
         revenuecatTest.register(t);
@@ -444,7 +440,7 @@ describe("auth deletion", () => {
         await grantPro(t, owner);
         const asOwner = authenticatedAs(t, owner);
         const key = (await asOwner.run(async (ctx) => (await ctx.auth.getUserIdentity())?.tokenIdentifier)) ?? "";
-        const threadId = await t.run(async (ctx) => {
+        const strangerThread = await t.run(async (ctx) => {
             await ctx.db.insert("enrichmentJobs", {
                 categoryTree: [],
                 grounded: false,
@@ -463,7 +459,15 @@ describe("auth deletion", () => {
             });
             await usage.limit(ctx, "capturesFree", { config: FREE_CAPTURE_CONFIG, count: 3, key });
             await usage.limit(ctx, "enrichmentQueue", { config: queue, count: 3, key: owner.userId });
-            return await createThread(ctx, components.agent, { userId: key });
+            for (const turns of [2, 1]) {
+                const threadId = await ctx.db.insert("voiceThreads", { userId: key });
+                for (let order = 0; order < turns; order += 1) {
+                    await ctx.db.insert("voiceTurns", { order, said: "twenty at netflix", threadId });
+                }
+            }
+            const stranger = await ctx.db.insert("voiceThreads", { userId: `${key}-someone-else` });
+            await ctx.db.insert("voiceTurns", { order: 0, said: "five for coffee", threadId: stranger });
+            return stranger;
         });
 
         const { resumeSecret } = await asOwner.mutation(api.accountDeletion.prepare, {});
@@ -489,9 +493,12 @@ describe("auth deletion", () => {
         await expect(
             t.run(async (ctx) => await usage.getValue(ctx, "enrichmentQueue", { config: queue, key: owner.userId }))
         ).resolves.toMatchObject({ value: queue.capacity });
-        await expect(
-            t.run(async (ctx) => await getThreadMetadata(ctx, components.agent, { threadId }).catch(() => null))
-        ).resolves.toBeNull();
+        await expect(t.run(async (ctx) => await ctx.db.query("voiceThreads").collect())).resolves.toMatchObject([
+            { _id: strangerThread },
+        ]);
+        await expect(t.run(async (ctx) => await ctx.db.query("voiceTurns").collect())).resolves.toMatchObject([
+            { threadId: strangerThread },
+        ]);
         await expect(
             t.run(async (ctx) => await ctx.db.query("accountDeletionJobs").first())
         ).resolves.not.toHaveProperty("tokenIdentifier");

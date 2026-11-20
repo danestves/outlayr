@@ -10,7 +10,6 @@ import type {
     ReceiptItem as ReceiptItemSchema,
     ScanStatus as ScanStatusSchema,
 } from "@outlayr/backend/confect/receiptScan.spec";
-import type { PROPOSE_DRAFT_TOOL as SERVER_DRAFT_TOOL } from "@outlayr/backend/confect/voiceEntry";
 import { OpenStreamResult, SpeakResult, StartThreadResult } from "@outlayr/backend/confect/voiceEntry.spec";
 import type { SpeakStatus, StreamSession } from "@outlayr/backend/confect/voiceEntry.spec";
 import { api } from "@outlayr/backend/convex/_generated/api";
@@ -26,7 +25,8 @@ import { aiConsentArgs, cloudAction, cloudMutation } from "./convex";
 import type { CategoryBranch } from "./convex";
 
 export type { LabelSuggestion } from "@outlayr/backend/confect/csvImport.spec";
-export type { ProposedDraft, VoiceDraft, VoiceQuote, VoiceRecurrence } from "@outlayr/backend/confect/voiceEntry";
+export type { ProposedDraft, VoiceDraft, VoiceQuote, VoiceRecurrence } from "@outlayr/backend/confect/lib/voiceDraft";
+export type { VoiceTurn as ThreadTurn } from "@outlayr/backend/confect/voiceEntry.spec";
 
 export type ReceiptDraft = typeof ReceiptDraftSchema.Type;
 
@@ -210,10 +210,7 @@ export const pdfImport = Effect.fn("Cloud.pdfImport")(function* pdfImport({ byte
     return Option.match(decodePdfImportResult(reply), { onNone: () => INVALID_RESPONSE, onSome: pdfImportOutcome });
 });
 
-export const VOICE_TURNS_QUERY = api.voiceEntry.listTurns;
-
-/** Must match the server's tool name; its UI part is `tool-${name}`. */
-export const PROPOSE_DRAFT_TOOL: typeof SERVER_DRAFT_TOOL = "proposeDraft";
+export const VOICE_TURNS_QUERY = api.voiceEntry.turns;
 
 export interface SpeakRequest {
     accounts: string[];

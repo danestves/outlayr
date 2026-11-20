@@ -4,8 +4,7 @@ import { roundMoney } from "@outlayr/money/round";
 
 import { pendingCategoryFor } from "@/data/categories-core";
 import type { PendingCategory } from "@/data/categories-core";
-import { PROPOSE_DRAFT_TOOL } from "@/lib/cloud-ai";
-import type { ProposedDraft, VoiceDraft, VoiceQuote, VoiceRecurrence } from "@/lib/cloud-ai";
+import type { ThreadTurn, VoiceDraft, VoiceQuote, VoiceRecurrence } from "@/lib/cloud-ai";
 
 import { minorUnitsFor } from "./money";
 
@@ -299,47 +298,15 @@ export function localIsoDate(now: Date): string {
     return `${now.getFullYear()}-${month}-${day}`;
 }
 
-export interface VoiceTurnMessage {
-    order: number;
-    parts: readonly { output?: unknown; state?: string; type: string }[];
-    role: string;
-    status: string;
-    text: string;
-}
-
 export type VoiceTurn =
     | { kind: "said"; order: number; text: string }
     | { draft: VoiceDraft | null; kind: "proposed"; order: number };
 
-const DRAFT_PART = `tool-${PROPOSE_DRAFT_TOOL}`;
-
-export function proposedDraftOf(message: VoiceTurnMessage): ProposedDraft | null {
-    if (message.role !== "assistant") {
-        return null;
-    }
-    const part = message.parts.find(
-        (candidate) => candidate.type === DRAFT_PART && candidate.state === "output-available"
-    );
-    if (part === undefined) {
-        return null;
-    }
-    // SAFETY: the part is the `ProposedDraft` the server's `proposeDraft` tool returned.
-    return part.output as ProposedDraft;
-}
-
-export function voiceTurnsOf(messages: readonly VoiceTurnMessage[]): VoiceTurn[] {
-    const turns: VoiceTurn[] = [];
-    for (const message of messages) {
-        if (message.role === "user") {
-            turns.push({ kind: "said", order: message.order, text: message.text });
-            continue;
-        }
-        const proposed = proposedDraftOf(message);
-        if (proposed !== null) {
-            turns.push({ draft: proposed.draft, kind: "proposed", order: message.order });
-        }
-    }
-    return turns;
+export function voiceTurnsOf(turns: readonly ThreadTurn[]): VoiceTurn[] {
+    return turns.flatMap(({ order, proposed, said }): VoiceTurn[] => {
+        const spoken = { kind: "said" as const, order, text: said };
+        return proposed === null ? [spoken] : [spoken, { draft: proposed.draft, kind: "proposed", order }];
+    });
 }
 
 export interface HeardSegment {

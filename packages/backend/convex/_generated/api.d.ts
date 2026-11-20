@@ -124,7 +124,6 @@ export declare const components: {
   betterAuth: import("@convex-dev/better-auth/_generated/component.js").ComponentApi<"betterAuth">;
   r2: import("@convex-dev/r2/_generated/component.js").ComponentApi<"r2">;
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
-  agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
   mcp: import("@convex-dev/mcp/_generated/component.js").ComponentApi<"mcp">;
   revenuecat: import("convex-revenuecat/_generated/component.js").ComponentApi<"revenuecat">;
   enrichmentPool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"enrichmentPool">;

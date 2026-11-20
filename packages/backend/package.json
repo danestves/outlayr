@@ -11,11 +11,9 @@
         "test": "vp test run"
     },
     "dependencies": {
-        "@ai-sdk/anthropic": "4.0.90",
         "@better-auth/expo": "catalog:",
         "@confect/core": "catalog:",
         "@confect/server": "catalog:",
-        "@convex-dev/agent": "catalog:",
         "@convex-dev/better-auth": "catalog:",
         "@convex-dev/mcp": "0.1.0-alpha.7",
         "@convex-dev/r2": "^0.10.4",
@@ -25,7 +23,6 @@
         "@outlayr/email": "workspace:*",
         "@outlayr/model-router": "workspace:*",
         "@outlayr/money": "workspace:*",
-        "ai": "7.0.155",
         "better-auth": "catalog:",
         "convex": "catalog:",
         "convex-revenuecat": "^0.3.2",

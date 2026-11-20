@@ -36,6 +36,8 @@ import transactionTags from "./tables/transactionTags";
 import transactions from "./tables/transactions";
 import transfers from "./tables/transfers";
 import voiceStreamCredits from "./tables/voiceStreamCredits";
+import voiceThreads from "./tables/voiceThreads";
+import voiceTurns from "./tables/voiceTurns";
 import webPushSubscriptions from "./tables/webPushSubscriptions";
 
 export default $defineSchema({
@@ -74,5 +76,7 @@ export default $defineSchema({
   transactions: $Table.tableDefinition(transactions),
   transfers: $Table.tableDefinition(transfers),
   voiceStreamCredits: $Table.tableDefinition(voiceStreamCredits),
+  voiceThreads: $Table.tableDefinition(voiceThreads),
+  voiceTurns: $Table.tableDefinition(voiceTurns),
   webPushSubscriptions: $Table.tableDefinition(webPushSubscriptions),
 });

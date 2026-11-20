@@ -1,5 +1,5 @@
-import { useUIMessages } from "@convex-dev/agent/react";
 import type { StreamSession } from "@outlayr/backend/confect/voiceEntry.spec";
+import { useQueries } from "convex/react";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
@@ -7,8 +7,8 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type { RefObject } from "react";
 import type { SharedValue } from "react-native-reanimated";
 
-import { judgeSilence, localIsoDate, proposedDraftOf, startSilenceWatch, voiceTurnsOf } from "@/domain/voice-entry";
-import type { SilenceWatch, VoiceTurn, VoiceTurnMessage } from "@/domain/voice-entry";
+import { judgeSilence, localIsoDate, startSilenceWatch, voiceTurnsOf } from "@/domain/voice-entry";
+import type { SilenceWatch, VoiceTurn } from "@/domain/voice-entry";
 import { useRealtimeTranscript } from "@/hooks/use-realtime-transcript";
 import type { RealtimeStart, RealtimeTranscript, Take } from "@/hooks/use-realtime-transcript";
 import { trackCapturesWall } from "@/hooks/use-usage-limits";
@@ -18,6 +18,7 @@ import type {
     SpeakRefusal,
     SpeakRequest,
     ThreadRefusal,
+    ThreadTurn,
     VoiceDraft,
     VoiceQuote,
     VoiceThreadTransport,
@@ -29,8 +30,6 @@ import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-comman
 import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
 import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
-
-const TURNS_PAGE = 40;
 
 const speakCommand = timedCaptureCommand<Effect.Success<ReturnType<VoiceThreadTransport["speakText"]>>>({
     operation: "speak",
@@ -84,6 +83,8 @@ export interface UseVoiceEntryResult<Context> {
     turns: VoiceTurn[];
 }
 
+const NO_TURNS: readonly ThreadTurn[] = [];
+
 const FAILURE_FOR = {
     invalid: "provider",
     invalidResponse: "provider",
@@ -115,37 +116,28 @@ const STREAM_FAILURE_FOR = {
 
 const streamFailureOf = (error: TranscriptStreamError): VoiceFailure => STREAM_FAILURE_FOR[error.reason];
 
-function settledPhaseOf<Context>(
-    phase: VoicePhase<Context>,
-    messages: readonly VoiceTurnMessage[]
-): VoicePhase<Context> {
+function settledPhaseOf<Context>(phase: VoicePhase<Context>, turns: readonly ThreadTurn[]): VoicePhase<Context> {
     if (phase.kind !== "thinking") {
         return phase;
     }
-    const answer = messages.find((message) => message.role === "assistant" && message.order === phase.order);
-    if (answer === undefined) {
+    const turn = turns.find(({ order }) => order === phase.order);
+    if (turn === undefined || turn.proposed === null) {
         return phase;
     }
-    const proposed = proposedDraftOf(answer);
-    if (proposed !== null) {
-        if (proposed.draft === null) {
-            const said = messages.find((message) => message.role === "user" && message.order === phase.order);
-            return { kind: "failed", reason: "unclear", transcript: said?.text ?? null };
-        }
-        return {
-            context: phase.context,
-            draft: proposed.draft,
-            kind: "review",
-            order: phase.order,
-            quotes: proposed.quotes ?? [],
-        };
+    if (turn.proposed.draft === null) {
+        return { kind: "failed", reason: "unclear", transcript: turn.said };
     }
-    return answer.status === "failed" ? { kind: "failed", reason: "provider", transcript: null } : phase;
+    return {
+        context: phase.context,
+        draft: turn.proposed.draft,
+        kind: "review",
+        order: phase.order,
+        quotes: turn.proposed.quotes ?? [],
+    };
 }
 
-function heardIn(phase: VoicePhase, messages: readonly VoiceTurnMessage[]): string | null {
-    const said = (order: number) =>
-        messages.find((message) => message.role === "user" && message.order === order)?.text ?? null;
+function heardIn(phase: VoicePhase, turns: readonly ThreadTurn[]): string | null {
+    const said = (order: number) => turns.find((turn) => turn.order === order)?.said ?? null;
     switch (phase.kind) {
         case "sending": {
             return phase.text;
@@ -171,7 +163,6 @@ interface VoicePorts<Context> {
     endingRef: RefObject<number | null>;
     latest: RefObject<{
         context: Context;
-        messages: readonly VoiceTurnMessage[];
         request: UseVoiceEntryArgs<Context>["request"];
     }>;
     resentRef: RefObject<Take | null>;
@@ -479,12 +470,12 @@ export function useVoiceEntry<Context>({
     });
     const transcriptRef = useLatest(transcript);
 
-    const { results: messages } = useUIMessages(VOICE_TURNS_QUERY, threadId === null ? "skip" : { threadId }, {
-        initialNumItems: TURNS_PAGE,
-        stream: true,
-    });
+    const threadTurns: readonly ThreadTurn[] | Error | undefined = useQueries(
+        threadId === null ? {} : { turns: { args: { threadId }, query: VOICE_TURNS_QUERY } }
+    ).turns;
+    const thread = Array.isArray(threadTurns) ? threadTurns : NO_TURNS;
 
-    const latest = useLatest({ context, messages, request });
+    const latest = useLatest({ context, request });
 
     const ports: VoicePorts<Context> = {
         api,
@@ -529,14 +520,14 @@ export function useVoiceEntry<Context>({
         };
     }, []);
 
-    const settledPhase = settledPhaseOf(phase, messages);
+    const settledPhase = settledPhaseOf(phase, thread);
     if (settledPhase !== phase) {
         setPhase(settledPhase);
     }
 
-    const turns = voiceTurnsOf(messages);
+    const turns = voiceTurnsOf(thread);
 
-    const heard = heardIn(settledPhase, messages);
+    const heard = heardIn(settledPhase, thread);
 
     const finish = () => {
         if (phase.kind === "listening") {

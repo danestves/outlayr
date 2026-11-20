@@ -1,7 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import * as Schema from "effect/Schema";
 
+import { Id } from "./_generated/id";
 import { AudioClip, CurrencyCode, IsoDay, LanguageTag, withinNameBudget } from "./lib/captureArgs";
+import { ProposedDraft } from "./lib/voiceDraft";
 import { CaptureAdmission } from "./receiptScan.spec";
 import type { listTurns } from "./voiceEntry";
 
@@ -105,6 +107,20 @@ export const StartThreadResult = Schema.Struct({
 
 export type StartThreadResult = typeof StartThreadResult.Type;
 
+export const VoiceTurn = Schema.Struct({
+    order: Schema.Number,
+    proposed: Schema.NullOr(ProposedDraft),
+    said: Schema.String,
+});
+
+export type VoiceTurn = typeof VoiceTurn.Type;
+
+const BegunTurn = Schema.Struct({
+    history: Schema.Array(Schema.Struct({ reply: Schema.String, said: Schema.String })),
+    order: Schema.Number,
+    turnId: Id("voiceTurns"),
+});
+
 export default GroupSpec.make()
     .addFunction(
         FunctionSpec.publicMutation({ args: () => ({}), name: "startThread", returns: () => StartThreadResult })
@@ -117,6 +133,41 @@ export default GroupSpec.make()
         })
     )
     .addFunction(FunctionSpec.convexPublicQuery<typeof listTurns>()("listTurns"))
+    .addFunction(
+        FunctionSpec.publicQuery({
+            args: () => ({ threadId: Schema.String }),
+            name: "turns",
+            returns: () => Schema.Array(VoiceTurn),
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalQuery({
+            args: () => ({ threadId: Schema.String }),
+            name: "threadOwner",
+            returns: () => Schema.NullOr(Schema.String),
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            args: () => ({ said: Schema.String, threadId: Schema.String }),
+            name: "beginTurn",
+            returns: () => Schema.NullOr(BegunTurn),
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            args: () => ({ proposed: ProposedDraft, reply: Schema.String, turnId: Id("voiceTurns") }),
+            name: "answerTurn",
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            args: () => ({ userId: Schema.String }),
+            name: "forgetUser",
+            returns: () => Schema.Null,
+        })
+    )
     .addFunction(
         FunctionSpec.publicMutation({
             args: () => ({ threadId: Schema.String }),

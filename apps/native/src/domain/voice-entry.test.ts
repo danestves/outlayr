@@ -9,7 +9,6 @@ import {
     meterToLevel,
     NO_SPEECH_TIMEOUT_MS,
     heardSegments,
-    proposedDraftOf,
     resolveVoiceDraft,
     savableEntry,
     savableTransfer,
@@ -357,30 +356,10 @@ describe("heardSegments", () => {
 });
 
 describe("thread turns", () => {
-    const said = { order: 1, parts: [{ type: "text" }], role: "user", status: "success", text: "twenty at netflix" };
-    const answered = {
-        order: 1,
-        parts: [{ output: { draft: DRAFT }, state: "output-available", type: "tool-proposeDraft" }],
-        role: "assistant",
-        status: "success",
-        text: "",
-    };
-    const pending = {
-        order: 2,
-        parts: [{ state: "input-streaming", type: "tool-proposeDraft" }],
-        role: "assistant",
-        status: "streaming",
-        text: "",
-    };
-
-    it("reads the draft off the tool part once it has output, and nothing before", () => {
-        expect(proposedDraftOf(answered)).toStrictEqual({ draft: DRAFT });
-        expect(proposedDraftOf(pending)).toBeNull();
-        expect(proposedDraftOf(said)).toBeNull();
-    });
-
     it("the strip lists what was said and every answer that reached a draft", () => {
-        expect(voiceTurnsOf([said, answered, { ...said, order: 2 }, pending])).toStrictEqual([
+        const answered = { order: 1, proposed: { draft: DRAFT }, said: "twenty at netflix" };
+        const pending = { order: 2, proposed: null, said: "twenty at netflix" };
+        expect(voiceTurnsOf([answered, pending])).toStrictEqual([
             { kind: "said", order: 1, text: "twenty at netflix" },
             { draft: DRAFT, kind: "proposed", order: 1 },
             { kind: "said", order: 2, text: "twenty at netflix" },
