@@ -1,3 +1,5 @@
+import { isBalanced } from "@outlayr/money/split";
+import type { Allocation } from "@outlayr/money/split";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -5,8 +7,6 @@ import * as Schema from "effect/Schema";
 import type { Database } from "@/db/client";
 import { transactionSplits } from "@/db/schema";
 import { newId } from "@/domain/ids";
-import { isBalanced } from "@/domain/split";
-import type { Allocation } from "@/domain/split";
 
 /** Failed, never written: the row and its parts would state different amounts to every category total. */
 export class UnbalancedSplitError extends Schema.TaggedError<UnbalancedSplitError>()("UnbalancedSplitError", {

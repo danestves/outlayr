@@ -1,4 +1,5 @@
-import { serializeReceipt } from "@/domain/receipt-items";
+import { serializeReceipt } from "@outlayr/money/receipt";
+
 import type { ResolvedReceipt } from "@/domain/receipt-scan";
 import type { ResolvedVoiceEntry } from "@/domain/voice-entry";
 import type { EntryDraft } from "@/state/entry-commit";

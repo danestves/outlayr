@@ -39,16 +39,13 @@ export function rebalance(
     amount: number,
     decimals: number
 ): Allocation[] {
-    const next = allocations.map((allocation) => ({ ...allocation }));
-    if (index < 0 || index >= next.length) {
-        return next;
+    if (index < 0 || index >= allocations.length) {
+        return allocations.map((allocation) => ({ ...allocation }));
     }
-    next[index] = { ...next[index], amount: roundMoney(Math.max(0, amount), decimals) };
-    const absorber = next.length - 1 === index ? next.length - 2 : next.length - 1;
-    if (absorber < 0) {
-        return next;
-    }
-    const others = next.reduce((sum, one, at) => (at === absorber ? sum : sum + one.amount), 0);
-    next[absorber] = { ...next[absorber], amount: roundMoney(total - others, decimals) };
-    return next;
+    const typed = allocations.map((one, at) =>
+        at === index ? { ...one, amount: roundMoney(Math.max(0, amount), decimals) } : { ...one }
+    );
+    const absorber = typed.length - 1 === index ? typed.length - 2 : typed.length - 1;
+    const others = typed.reduce((sum, one, at) => (at === absorber ? sum : sum + one.amount), 0);
+    return typed.map((one, at) => (at === absorber ? { ...one, amount: roundMoney(total - others, decimals) } : one));
 }

@@ -13,17 +13,14 @@ export function addPart(allocations: readonly Allocation[], categoryId: string |
 }
 
 export function removePart(allocations: readonly Allocation[], index: number, decimals: number): Allocation[] {
-    if (index < 0 || index >= allocations.length) {
+    const removed = allocations[index];
+    if (index < 0 || removed === undefined) {
         return allocations.map((one) => ({ ...one }));
     }
-    const next = allocations.filter((_, at) => at !== index).map((one) => ({ ...one }));
-    const freed = allocations[index].amount;
-    if (next.length === 0) {
-        return next;
-    }
-    const last = next.length - 1;
-    next[last] = { ...next[last], amount: roundMoney(next[last].amount + freed, decimals) };
-    return next;
+    const next = allocations.filter((_, at) => at !== index);
+    return next.map((one, at) =>
+        at === next.length - 1 ? { ...one, amount: roundMoney(one.amount + removed.amount, decimals) } : { ...one }
+    );
 }
 
 // The absorber is floored at zero and the draft may go unbalanced: `rebalance` does not clamp it, and a negative

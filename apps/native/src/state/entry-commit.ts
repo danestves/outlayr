@@ -1,6 +1,7 @@
 import type { CardFeeInput } from "@outlayr/money/card-fee";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
+import type { Allocation } from "@outlayr/money/split";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -21,7 +22,6 @@ import { transactionsRepo } from "@/data/transactions-core";
 import type { Transaction, TransactionInput } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import type { PaidVia } from "@/domain/paid-via";
-import type { Allocation } from "@/domain/split";
 import { sendEnrichmentQueue } from "@/lib/enrichment-queue";
 import { freshEntries } from "@/lib/fresh-entries";
 import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";

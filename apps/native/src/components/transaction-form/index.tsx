@@ -1,5 +1,7 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { toAccountKind } from "@outlayr/money/account-kind";
+import { parseReceipt } from "@outlayr/money/receipt";
+import type { Allocation } from "@outlayr/money/split";
 import { useField, useForm, useSelector } from "@tanstack/react-form";
 import type * as Effect from "effect/Effect";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
@@ -35,8 +37,6 @@ import { computeCurtainHues } from "@/domain/curtain-hues";
 import { suggestMerchants } from "@/domain/merchant-suggest";
 import { formatAmount, minorUnitsFor } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
-import { parseReceipt } from "@/domain/receipt-items";
-import type { Allocation } from "@/domain/split";
 import type { LogAgainDraft } from "@/domain/transaction-actions";
 import { ctaKey, transactionWhenLabel } from "@/domain/transaction-form-labels";
 import { transactionFormErrors } from "@/domain/transaction-form-validate";

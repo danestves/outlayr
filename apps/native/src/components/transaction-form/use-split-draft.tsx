@@ -1,4 +1,7 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
+import { isBalanced } from "@outlayr/money/split";
+import type { Allocation } from "@outlayr/money/split";
+import { isRealSplit, openDraft } from "@outlayr/money/split-draft";
 import { useRef, useState } from "react";
 import { Keyboard } from "react-native";
 
@@ -8,9 +11,6 @@ import type { Transaction } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { transactionSplits } from "@/db/schema";
 import { minorUnitsFor } from "@/domain/money";
-import { isBalanced } from "@/domain/split";
-import type { Allocation } from "@/domain/split";
-import { isRealSplit, openDraft } from "@/domain/split-draft";
 import { useTranslation } from "@/i18n/context";
 
 import { SplitSheet } from "../split-sheet";
