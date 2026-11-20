@@ -178,7 +178,9 @@ describe("parseNotification", () => {
         expect(
             parseNotification("Compra por Bs. 500,00 en FARMATODO. Te recordamos que nunca te pediremos tu clave.")
         ).toMatchObject({ amount: 500, merchant: "FARMATODO" });
-        expect(parseNotification("Se aplicó un cargo por atraso de $4,00 a tu cuenta")).toMatchObject({ amount: 4 });
+        expect(parseNotification("Se aplicó un cargo por atraso de $4,00 por una cuota vencida")).toMatchObject({
+            amount: 4,
+        });
     });
 
     it("reads Venezuelan bank notices in each bank's own number format", () => {

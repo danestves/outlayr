@@ -64,8 +64,8 @@ const AFTER_NUMBER = /^\d|\s?\d/;
 /* oxlint-disable prefer-regex-literals -- LogNotificationIntent reads these sources with ICU, and Babel rewrites a u-flag literal into surrogate classes ICU matches differently */
 const DECLINED = String.raw`\b(?:declined|denied|failed|reverted|unsuccessful|insufficient funds|rechazad[ao]|denegad[ao]|fallid[ao]|revertid[ao]|no aprobad[ao]|no realizad[ao]|fondos insuficientes)\b`;
 // "Evitas el cargo por atraso de $4" warns about a charge the user has not made. A real installment purchase still
-// says "tu cuota vence el 15/12", so "vence" counts only beside a nearby day or as overdue.
-const REMINDER = String.raw`\b(?:recordatorio\s+de\s+(?:pago|cuota|vencimiento)|(?:payment|bill)\s+reminder|(?:hoy|ma[ñn]ana|pronto)\s+vencen?|vencen?\s+(?:hoy|ma[ñn]ana|pronto)|por\s+vencer|pr[oó]xim[ao]s?\s+a\s+vencer|vencid[ao]s?|past\s+due|overdue|(?:is|are)\s+due|due\s+(?:today|tomorrow|soon)|payment\s+due|pay\s+today|pag(?:a|ue)\s+hoy|avoid\s+(?:a\s+|the\s+|any\s+)?(?:late\s+)?(?:fees?|charges?|interest|penalt(?:y|ies))|evita(?:s|r)?\s+(?:el\s+|los\s+|un\s+)?(?:cargos?|recargos?|intereses|multas?|penalidad(?:es)?|penalizaci[oó]n))(?!\p{L})`;
+// says "tu cuota vence el 15/12", and paying one says "cuota vencida", so "vence" counts only beside a nearby day.
+const REMINDER = String.raw`\b(?:recordatorio\s+de\s+(?:pago|cuota|vencimiento)|(?:payment|bill)\s+reminder|(?:hoy|ma[ñn]ana|pronto)\s+vencen?|vencen?\s+(?:hoy|ma[ñn]ana|pronto)|por\s+vencer|pr[oó]xim[ao]s?\s+a\s+vencer|(?:is|are)\s+due|due\s+(?:today|tomorrow|soon)|payment\s+due|pay\s+today|pag(?:a|ue)\s+hoy|avoid\s+(?:a\s+|the\s+|any\s+)?(?:late\s+)?(?:fees?|charges?|interest|penalt(?:y|ies))|evita(?:s|r)?\s+(?:el\s+|los\s+|un\s+)?(?:cargos?|recargos?|intereses|multas?|penalidad(?:es)?|penalizaci[oó]n))(?!\p{L})`;
 // A shipped LogNotificationIntent or PurchaseListenerService reads only the pattern keys it was built with, so the
 // reminder cue rides on declined, which already drops the whole text there.
 const NO_CHARGE = new RegExp(`(?:${DECLINED})|(?:${REMINDER})`, "iu");
