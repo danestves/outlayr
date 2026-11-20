@@ -54,6 +54,8 @@ const tinted = (color: string) => ({
     color: `color-mix(in oklab, ${color} 70%, white)`,
 });
 
+const PICK = "text-app-muted aria-pressed:bg-app-ink/8 aria-pressed:text-app-ink rounded-app-sm h-8.5 w-full text-base";
+
 const COLORS = ["#B26C43", "#53915A", "#4D84BD", "#7C76BC", "#B16482", "#A97332"] as const;
 const EMOJI = [
     "💵",
@@ -150,11 +152,11 @@ function useUploadPhoto() {
 function IdentityFace({ identity, initials }: { identity: Identity; initials: ReactNode }) {
     const glyph = identity.icon ? CATEGORY_ICONS.get(identity.icon) : undefined;
     if (identity.preview) {
-        return <img alt="" src={identity.preview} />;
+        return <img alt="" className="rounded-app-xl size-full bg-white object-cover" src={identity.preview} />;
     }
     return (
         <span
-            className="text-app-muted bg-app-fill flex size-full items-center justify-center rounded-2xl text-2xl"
+            className="text-app-muted bg-app-fill rounded-app-xl text-app-figure flex size-full items-center justify-center"
             style={identity.color ? tinted(identity.color) : undefined}
         >
             {glyph ? <Glyph icon={glyph} className="size-6" /> : (identity.emoji ?? initials)}
@@ -164,12 +166,13 @@ function IdentityFace({ identity, initials }: { identity: Identity; initials: Re
 
 function Swatches({ identity, onChange }: { identity: Identity; onChange: (identity: Identity) => void }) {
     return (
-        <div className="dash-swatches">
+        <div className="mt-2.5 flex justify-between px-0.75">
             {COLORS.map((color) => (
                 <Button
                     aria-label={color}
                     aria-pressed={identity.color === color}
                     key={color}
+                    className="aria-pressed:ring-app-ink aria-pressed:ring-offset-app-float size-5 rounded-full aria-pressed:ring-2 aria-pressed:ring-offset-2"
                     onClick={() => onChange({ ...identity, color })}
                     size="icon-sm"
                     style={{ background: color }}
@@ -224,22 +227,22 @@ export function IdentityPicker({
             <Popover.Trigger
                 aria-label={label}
                 ref={trigger}
-                render={<Button className="dash-ib" size="icon" variant="ghost" />}
+                render={<Button className="rounded-app-xl relative size-14 flex-none" size="icon" variant="ghost" />}
             >
                 <IdentityFace identity={identity} initials={initials} />
-                <u>
+                <span className="border-app-strong bg-app-fill text-app-ink absolute -right-1.25 -bottom-1.25 flex size-5.5 items-center justify-center rounded-full border">
                     <Glyph icon={PencilEdit01Icon} className="size-3" />
-                </u>
+                </span>
             </Popover.Trigger>
             <Popover.Portal>
                 <Popover.Positioner
                     align="start"
                     anchor={() => trigger.current?.closest("[role=dialog]") ?? null}
-                    className="z-[60]"
+                    className="z-60"
                     side="left"
                     sideOffset={16}
                 >
-                    <Popover.Popup className="app-shell dash-po ph-no-capture w-[232px]">
+                    <Popover.Popup className="app-shell dash-po ph-no-capture w-58">
                         <Tabs
                             className="gap-0"
                             onValueChange={(next) => {
@@ -282,7 +285,7 @@ export function IdentityPicker({
                                             >
                                                 <img
                                                     alt=""
-                                                    className="size-[26px] flex-none rounded-lg bg-white"
+                                                    className="rounded-app-sm size-6.5 flex-none border bg-white"
                                                     src={logoUrl(domain)}
                                                 />
                                                 <span className="truncate">{name}</span>
@@ -299,7 +302,7 @@ export function IdentityPicker({
                                 </div>
                             </Tabs.Content>
                             <Tabs.Content value="icon">
-                                <div className="dash-pg grid-cols-5">
+                                <div className="mt-2.5 grid grid-cols-5 gap-1">
                                     {ICONS.map((key) => {
                                         const glyph = CATEGORY_ICONS.get(key);
                                         return glyph ? (
@@ -316,6 +319,7 @@ export function IdentityPicker({
                                                         preview: null,
                                                     })
                                                 }
+                                                className={PICK}
                                                 size="icon"
                                                 variant="ghost"
                                             >
@@ -327,7 +331,7 @@ export function IdentityPicker({
                                 <Swatches identity={identity} onChange={onChange} />
                             </Tabs.Content>
                             <Tabs.Content value="emoji">
-                                <div className="dash-pg grid-cols-7">
+                                <div className="mt-2.5 grid grid-cols-7 gap-1">
                                     {EMOJI.map((emoji) => (
                                         <Button
                                             aria-pressed={identity.emoji === emoji}
@@ -341,6 +345,7 @@ export function IdentityPicker({
                                                     preview: null,
                                                 })
                                             }
+                                            className={PICK}
                                             size="icon"
                                             variant="ghost"
                                         >

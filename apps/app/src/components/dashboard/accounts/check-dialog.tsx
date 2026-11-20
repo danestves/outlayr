@@ -1,19 +1,21 @@
+import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import { decimalsFor } from "@outlayr/money/currency";
 import { roundMoney } from "@outlayr/money/round";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
-import { Field } from "panelui-web/field";
 import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import { checkedAccount, parseAmount } from "@/lib/account-writes";
+import { IconButton } from "@/components/ui/icon-button";
+import { checkedAccount } from "@/lib/account-writes";
 import type { LedgerBooks } from "@/lib/ledger-books";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
-import { AmountInput, amountText, Fact, FlowDialog } from "./fields";
+import { Fact, FlowDialog } from "./fields";
 import { heldBalance } from "./model";
+import { SignedMoney } from "./signed-money";
 
 type Account = LedgerBooks["accounts"][number];
 
@@ -26,9 +28,9 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
     const has = heldBalance(ledger, account.localId);
     const [different, setDifferent] = useState(false);
     const [negative, setNegative] = useState(has < 0);
-    const [text, setText] = useState(() => amountText(Math.abs(has), currency));
+    const [amount, setAmount] = useState<number | null>(Math.abs(has));
     const decimals = decimalsFor(currency);
-    const shows = (negative ? -1 : 1) * parseAmount(text, decimals);
+    const shows = (negative ? -1 : 1) * (amount ?? 0);
     const change = different ? roundMoney(shows - has, decimals) : 0;
 
     const save = () => {
@@ -51,11 +53,11 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
             <FlowDialog label={flows.checkTitle({ name })}>
                 <Dialog.Body className="gap-5 text-center">
                     <div>
-                        <p className="text-muted-foreground text-[13px]">{flows.checkQuestion}</p>
-                        <div className="dash-figure mt-0.5 text-[32px] leading-11 font-semibold tracking-[-0.04em]">
+                        <p className="text-muted-foreground text-app-label">{flows.checkQuestion}</p>
+                        <div className="text-app-figure mt-1 font-mono font-semibold tabular-nums">
                             {money(has, currency)}
                         </div>
-                        <p className="text-muted-foreground mt-0.5 text-[13px]">{flows.checkCompare}</p>
+                        <p className="text-muted-foreground text-app-label mt-1">{flows.checkCompare}</p>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                         <Button onClick={() => setDifferent(true)} variant="outline">
@@ -68,19 +70,28 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
         );
     }
     return (
-        <FlowDialog label={flows.checkTitle({ name })}>
+        <FlowDialog
+            head={
+                <IconButton
+                    className="-ms-2"
+                    icon={ArrowLeft02Icon}
+                    label={flows.checkBack.value}
+                    onClick={() => setDifferent(false)}
+                    size="sm"
+                />
+            }
+            label={flows.checkTitle({ name })}
+        >
             <Dialog.Body className="gap-3">
-                <Field className="[&_.dash-sg]:text-foreground [&_input]:ps-0.5 [&_input]:font-medium">
-                    <Field.Label>{flows.checkShows({ name })}</Field.Label>
-                    <AmountInput
-                        autoFocus
-                        currency={currency}
-                        negative={negative}
-                        onNegative={setNegative}
-                        onText={setText}
-                        text={text}
-                    />
-                </Field>
+                <SignedMoney
+                    amount={amount}
+                    autoFocus
+                    currency={currency}
+                    label={flows.checkShows({ name })}
+                    negative={negative}
+                    onAmount={setAmount}
+                    onNegative={setNegative}
+                />
                 <div>
                     <Fact label={flows.checkOutlayrHas}>{money(has, currency)}</Fact>
                     <Fact label={flows.checkAdjustment}>
@@ -96,7 +107,7 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
                 <Button className="px-3.5 sm:min-w-max!" onClick={() => setDifferent(false)} variant="secondary">
                     {flows.checkBack}
                 </Button>
-                <Button className="px-3.5 sm:min-w-max!" onClick={save}>
+                <Button className="grow-2 px-3.5 sm:min-w-max!" onClick={save}>
                     {change === 0
                         ? flows.checkMarkChecked
                         : flows.checkLog({ amount: money(change, currency, "always") })}

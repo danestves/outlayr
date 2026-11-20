@@ -5,7 +5,6 @@ import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import Wallet01Icon from "@hugeicons/core-free-icons/Wallet01Icon";
 import { toAccountKind } from "@outlayr/money/account-kind";
-import { decimalsFor } from "@outlayr/money/currency";
 import { resolveInstitutionDomain } from "@outlayr/money/institution-map";
 import { merchantKey } from "@outlayr/money/merchant-key";
 import { useForm, useStore } from "@tanstack/react-form";
@@ -23,17 +22,19 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import { createdAccount, editedAccount, parseAmount } from "@/lib/account-writes";
+import { MoneyField } from "@/components/ui/money-field";
+import { createdAccount, editedAccount } from "@/lib/account-writes";
 import type { LedgerBooks } from "@/lib/ledger-books";
 import { photoSrc } from "@/lib/photo-src";
 
-import { AmountInput, amountText, CurrencyField, FlowDialog, focusNode } from "./fields";
+import { CurrencyField, FlowDialog, focusNode } from "./fields";
 import { useAccountFlows } from "./flows";
 import type { AccountFlow, AccountType } from "./flows";
 import { Glyph } from "./glyph";
 import { IdentityPicker, logoIdentity, logoUrl } from "./identity-picker";
 import type { Identity } from "./identity-picker";
 import { heldBalance } from "./model";
+import { SignedMoney } from "./signed-money";
 
 type Account = LedgerBooks["accounts"][number];
 
@@ -42,7 +43,7 @@ const DAYS = Array.from({ length: 28 }, (_, index) => String(index + 1));
 const DEFAULT_STATEMENT = 25;
 const DEFAULT_PAYMENT = 20;
 const TYPE_ITEM =
-    "border-border bg-foreground/[0.024] hover:bg-muted/60 data-checked:border-primary data-checked:bg-[color-mix(in_oklab,var(--primary)_14%,var(--card))] h-11 flex-row items-center gap-2 rounded-[10px] border px-3 py-0 data-checked:outline-none [&>[data-slot=choice-cards-check]]:hidden [&>[data-slot=choice-cards-text]]:min-w-0 [&>[data-slot=choice-cards-text]]:p-0";
+    "border-border bg-app-hover hover:bg-muted/60 data-checked:border-primary data-checked:bg-app-tint/14 h-11 flex-row items-center gap-2 rounded-app-md border px-3 py-0 data-checked:outline-none [&>[data-slot=choice-cards-check]]:hidden [&>[data-slot=choice-cards-text]]:min-w-0 [&>[data-slot=choice-cards-text]]:p-0";
 const TYPE_MEDIA =
     "text-muted-foreground group-data-checked/choice:text-primary aspect-auto w-auto flex-none rounded-none bg-transparent ring-0 group-data-checked/choice:[&>*]:scale-100 dark:bg-transparent";
 
@@ -81,9 +82,9 @@ function DayField({ label, onChange, value }: { label: ReactNode; onChange: (day
                 value={String(value)}
             >
                 <Select.Trigger icon={<Glyph icon={ArrowDown01Icon} size={16} />}>
-                    <Select.Value className="dash-figure" />
+                    <Select.Value className="font-mono tabular-nums" />
                 </Select.Trigger>
-                <Select.Content className="app-shell z-[60]">
+                <Select.Content className="app-shell z-60">
                     {DAYS.map((day) => (
                         <Select.Item key={day} value={day}>
                             {flows.day({ day })}
@@ -102,11 +103,11 @@ function startValues(account: Account | null, type: AccountType, balance: number
     const currency = account?.currency ?? mainCurrency;
     const liability = account ? toAccountKind(account.kind) === "liability" : type === "card";
     return {
-        balanceText: account ? amountText(Math.abs(balance), currency) : "",
+        balance: account ? Math.abs(balance) : null,
         currency,
         identity: account ? identityOf(account) : blankIdentity(type),
         identityByHand: account ? Boolean(account.imageKey || account.emoji || account.icon) : false,
-        limitText: account?.creditLimit ? amountText(account.creditLimit, currency) : "",
+        limit: account?.creditLimit ?? null,
         liability,
         name: account?.name ?? "",
         negative: balance < 0 || (balance === 0 && liability),
@@ -231,17 +232,16 @@ export function AccountForm({
     const form = useForm({
         defaultValues: kept ?? start,
         onSubmit: ({ value }) => {
-            const decimals = decimalsFor(value.currency);
-            const magnitude = parseAmount(value.balanceText, decimals);
+            const magnitude = value.balance ?? 0;
             const balance = value.negative ? -magnitude : magnitude;
-            const draft = accountDraft(value, parseAmount(value.limitText, decimals));
+            const draft = accountDraft(value, value.limit ?? 0);
             const { books, opening } = committer.current();
             if (account && opening !== null && value.currency !== account.currency) {
                 return;
             }
             const at = Date.now();
             const moneyTouched =
-                value.balanceText !== start.balanceText ||
+                value.balance !== start.balance ||
                 value.negative !== start.negative ||
                 value.currency !== start.currency;
             const row = account
@@ -308,8 +308,7 @@ export function AccountForm({
                             const [error] = field.state.meta.errors;
                             return (
                                 <div
-                                    className={editing ? "flex gap-4" : "mt-1 flex gap-4"}
-                                    style={{ alignItems: error ? "flex-start" : "flex-end" }}
+                                    className={`flex gap-4 ${editing ? "" : "mt-1"} ${error ? "items-start" : "items-end"}`}
                                 >
                                     <IdentityPicker
                                         handPicked={form.state.values.identityByHand}
@@ -329,7 +328,7 @@ export function AccountForm({
                                     <Field className="flex-1" invalid={Boolean(error)}>
                                         <Field.Label className="data-invalid:text-foreground">{flows.name}</Field.Label>
                                         <Input
-                                            className="aria-invalid:ring-[3px]"
+                                            className="aria-invalid:ring-3"
                                             onBlur={field.handleBlur}
                                             onChange={(event) => onName(event.target.value)}
                                             placeholder={flows.namePlaceholder.value}
@@ -342,42 +341,38 @@ export function AccountForm({
                             );
                         }}
                     </form.Field>
-                    <div className="grid grid-cols-2 gap-3">
-                        <form.Field name="currency">
-                            {(field) => (
-                                <CurrencyField
-                                    inUse={inUse}
-                                    label={flows.currency}
-                                    onPick={field.handleChange}
-                                    value={field.state.value}
-                                />
-                            )}
-                        </form.Field>
-                        <Field>
-                            <Field.Label>{flows.balance}</Field.Label>
-                            <form.Field name="balanceText">
-                                {(text) => (
-                                    <form.Field name="negative">
-                                        {(negative) => (
-                                            <AmountInput
-                                                currency={currency}
-                                                negative={negative.state.value}
-                                                onNegative={negative.handleChange}
-                                                onText={text.handleChange}
-                                                text={text.state.value}
-                                            />
-                                        )}
-                                    </form.Field>
+                    <form.Field name="currency">
+                        {(field) => (
+                            <CurrencyField
+                                inUse={inUse}
+                                label={flows.currency}
+                                onPick={field.handleChange}
+                                value={field.state.value}
+                            />
+                        )}
+                    </form.Field>
+                    <form.Field name="balance">
+                        {(amount) => (
+                            <form.Field name="negative">
+                                {(negative) => (
+                                    <SignedMoney
+                                        amount={amount.state.value}
+                                        currency={currency}
+                                        label={flows.balance}
+                                        negative={negative.state.value}
+                                        onAmount={amount.handleChange}
+                                        onNegative={negative.handleChange}
+                                    />
                                 )}
                             </form.Field>
-                        </Field>
-                    </div>
+                        )}
+                    </form.Field>
                     {editing ? (
                         <form.Field name="liability">
                             {(field) => (
                                 <Field className="-mb-2 h-9 justify-center">
                                     <Field.Label>
-                                        <Label.Text className="text-[13px]">{flows.moneyIOwe}</Label.Text>
+                                        <Label.Text className="text-app-label">{flows.moneyIOwe}</Label.Text>
                                         <Label.Action>
                                             <Switch
                                                 className="[--switch-thumb:white]"
@@ -393,18 +388,16 @@ export function AccountForm({
                     ) : null}
                     {liability ? (
                         <>
-                            <Field>
-                                <Field.Label>{flows.creditLimit}</Field.Label>
-                                <form.Field name="limitText">
-                                    {(field) => (
-                                        <AmountInput
-                                            currency={currency}
-                                            onText={field.handleChange}
-                                            text={field.state.value}
-                                        />
-                                    )}
-                                </form.Field>
-                            </Field>
+                            <form.Field name="limit">
+                                {(field) => (
+                                    <MoneyField
+                                        codes={[currency]}
+                                        label={flows.creditLimit}
+                                        onValueChange={(next) => field.handleChange(next.amount)}
+                                        value={{ amount: field.state.value, code: currency }}
+                                    />
+                                )}
+                            </form.Field>
                             <div className="grid grid-cols-2 gap-3">
                                 <form.Field name="statementDay">
                                     {(field) => (

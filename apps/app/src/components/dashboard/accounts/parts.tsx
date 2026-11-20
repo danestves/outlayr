@@ -21,6 +21,8 @@ import { useIntlayer } from "react-intlayer";
 import { STACKED, TWO_BY_TWO } from "@/components/dashboard/home/kpi-group";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
+import { MenuContent } from "@/components/ui/menu-content";
+import { viewTransition } from "@/lib/motion";
 
 import { useAccountFlows } from "./flows";
 import { Glyph } from "./glyph";
@@ -42,7 +44,7 @@ export function Trend({
     return (
         <Kpi.Trend
             aria-label={children}
-            className={`dash-figure ${className}`}
+            className={`font-mono tabular-nums [&_svg]:hidden ${className}`}
             format={() => children}
             goodDirection={goodWhenUp ? "up" : "down"}
             value={value}
@@ -124,12 +126,12 @@ export function KpiCell({
                 <Kpi.Title>{label}</Kpi.Title>
             </Kpi.Header>
             <Kpi.Value
-                className={`dash-figure ${icon || loose ? "mt-2" : "mt-1"} truncate ${loose ? "leading-[30px]" : "leading-8"} font-semibold tracking-[-0.04em] ${quiet ? "text-muted-foreground" : ""} ${tone}`}
+                className={`text-app-figure ${icon || loose ? "mt-2" : "mt-1"} truncate font-mono font-semibold tabular-nums`}
             >
-                {value}
+                <span className={quiet ? "text-muted-foreground" : tone}>{value}</span>
             </Kpi.Value>
             {quiet ? null : (
-                <Kpi.Footer className={`${icon ? "h-7" : "h-5"} ${loose ? "mt-2" : "mt-1"} justify-between`}>
+                <Kpi.Footer className={`text-app-caption h-5 ${loose ? "mt-2" : "mt-1"} justify-between`}>
                     {children}
                 </Kpi.Footer>
             )}
@@ -140,7 +142,7 @@ export function KpiCell({
 export function KpiBand({ children }: { children: ReactNode }) {
     return (
         <Kpi.Group
-            className={`rounded-3xl lg:grid lg:auto-cols-fr lg:grid-flow-col lg:*:not-first:ps-4! ${TWO_BY_TWO} ${STACKED}`}
+            className={`rounded-app-3xl lg:grid lg:auto-cols-fr lg:grid-flow-col lg:*:not-first:ps-4! ${TWO_BY_TWO} ${STACKED}`}
             surface
         >
             {children}
@@ -177,10 +179,10 @@ export function AccountCell({ note, row }: { note?: ReactNode; row: AccountRow }
     const age = checkedAge(row.checkedAt, ledger);
     return (
         <div className="flex min-w-0 items-center gap-2.5">
-            <AccountTile account={row.look} size="lg" />
+            <AccountTile account={row.look} size="logo" />
             <div className="min-w-0">
-                <b className="block truncate text-sm leading-[18px] font-medium">{row.name}</b>
-                <small className="text-muted-foreground block truncate text-xs leading-4">
+                <b className="text-app-label block truncate font-medium">{row.name}</b>
+                <small className="text-muted-foreground text-app-caption block truncate">
                     {note ?? (
                         <>
                             {row.currency} ·{" "}
@@ -233,8 +235,16 @@ export function RowMenu({ row }: { row: AccountRow }) {
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" alignOffset={-4} className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
-                <Menu.Item onClick={() => navigate({ params: { accountId: row.id }, to: "/accounts/$accountId" })}>
+            <MenuContent align="end" alignOffset={-4} className="w-50" sideOffset={4}>
+                <Menu.Item
+                    onClick={() =>
+                        navigate({
+                            params: { accountId: row.id },
+                            to: "/accounts/$accountId",
+                            viewTransition: viewTransition("push-left"),
+                        })
+                    }
+                >
                     <Glyph icon={ArrowUpRight01Icon} size={16} />
                     {actions.open}
                 </Menu.Item>
@@ -255,7 +265,7 @@ export function RowMenu({ row }: { row: AccountRow }) {
                     <Glyph icon={Delete02Icon} size={16} />
                     {actions.delete}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -280,15 +290,17 @@ export function SortMenu({ onSort, sort }: { onSort: (sort: AccountSort) => void
                 <Glyph icon={Sorting05Icon} className="text-muted-foreground" size={16} />
                 {sort === "order" ? actions.yourOrder : actions.byBalance}
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell ph-no-capture w-[188px]" sideOffset={4}>
+            <MenuContent align="end" className="w-50" sideOffset={4}>
                 {choice("order", Sorting05Icon, actions.yourOrder)}
                 {choice("balance", Sorting05Icon, actions.byBalance)}
                 <Menu.Separator />
-                <Menu.Item onClick={() => navigate({ to: "/accounts/reorder" })}>
+                <Menu.Item
+                    onClick={() => navigate({ to: "/accounts/reorder", viewTransition: viewTransition("push-left") })}
+                >
                     <Glyph icon={DragDropVerticalIcon} size={16} />
                     {actions.reorder}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }

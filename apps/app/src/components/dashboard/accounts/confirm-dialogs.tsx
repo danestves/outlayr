@@ -13,6 +13,7 @@ import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committe
 import { archivedAccount, deletedAccount } from "@/lib/account-writes";
 import type { LedgerBooks } from "@/lib/ledger-books";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { Fact, FlowDialog } from "./fields";
 import { Glyph } from "./glyph";
@@ -42,7 +43,7 @@ export function ArchiveDialog({ account, onClose }: { account: Account; onClose:
         const at = Date.now();
         onClose();
         committer.commitWithUndo([archivedAccount(account, at, at)], {
-            after: navigate({ to: "/accounts" }),
+            after: navigate({ to: "/accounts", viewTransition: viewTransition("push-left", { back: true }) }),
             failed: flows.archiveFailed({ name: account.name }).value,
             text: flows.archivedToast({ name: account.name }).value,
         });
@@ -84,7 +85,7 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
         const rows = deletedAccount(committer.current().books, account, Date.now());
         onClose();
         committer.commitWithUndo(rows, {
-            after: navigate({ to: "/accounts" }),
+            after: navigate({ to: "/accounts", viewTransition: viewTransition("push-left", { back: true }) }),
             detail: nothing ? undefined : flows.deleteBody.value,
             failed: flows.deleteFailed({ name: account.name }).value,
             text: flows.deletedToast.value,

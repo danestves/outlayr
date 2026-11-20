@@ -1,6 +1,5 @@
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
-import { decimalsFor } from "@outlayr/money/currency";
 import { EVERY_ORDER, MAX_INSTALLMENT_COUNT, newInstallmentDraft } from "@outlayr/money/installment-draft";
 import type { EveryOption } from "@outlayr/money/installment-draft";
 import { installmentAppsIn, installmentRegion } from "@outlayr/money/institution-map";
@@ -19,7 +18,8 @@ import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
-import { createdAccount, parseAmount } from "@/lib/account-writes";
+import { MoneyField } from "@/components/ui/money-field";
+import { createdAccount } from "@/lib/account-writes";
 import { openAccounts, startOfDay } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import type { PurchaseSeed } from "@/lib/installment-scan";
@@ -29,7 +29,7 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 import { planPurchase, purchaseInInstallments } from "@/lib/plan-writes";
 import type { PurchaseDraft } from "@/lib/plan-writes";
 
-import { AmountInput, amountText, DayField, FlowDialog, focusNode } from "./fields";
+import { DayField, FlowDialog, focusNode } from "./fields";
 import { useAccountFlows } from "./flows";
 import type { AccountFlow } from "./flows";
 import { Glyph } from "./glyph";
@@ -37,7 +37,7 @@ import { logoIdentity } from "./identity-picker";
 
 const COUNTS = Array.from({ length: MAX_INSTALLMENT_COUNT }, (_, index) => String(index + 1));
 const OTHER_APP = "other";
-const CONTENT = "app-shell z-[60]";
+const CONTENT = "app-shell z-60";
 const CHEVRON = <Glyph icon={ArrowDown01Icon} size={16} />;
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -73,7 +73,7 @@ function ChoiceField<Value extends string>({
             <Field.Label>{label}</Field.Label>
             <Select items={options} onValueChange={(next) => next && onPick(next)} value={value}>
                 <Select.Trigger icon={CHEVRON}>
-                    <Select.Value className={figure ? "dash-figure" : undefined} />
+                    <Select.Value className={figure ? "font-mono tabular-nums" : undefined} />
                 </Select.Trigger>
                 <Select.Content alignItemWithTrigger={false} className={CONTENT}>
                     {options.map((option) => (
@@ -211,7 +211,7 @@ function AccountField({
     );
 }
 
-const SUMMARY_ROW = "flex h-[33px] items-center text-[13px]";
+const SUMMARY_ROW = "text-app-label flex h-9 items-center";
 
 function Summary({
     currency,
@@ -237,10 +237,10 @@ function Summary({
     };
     return (
         <div>
-            <div className={`rounded-xl border px-3 ${over > 0 ? "border-destructive" : ""}`}>
+            <div className={`rounded-app-lg border px-3 ${over > 0 ? "border-destructive" : ""}`}>
                 <div className={`${SUMMARY_ROW} border-b`}>
                     <span className="text-muted-foreground">{purchase.paidNow}</span>
-                    <span className="dash-figure ml-auto">{money(paidNow, currency)}</span>
+                    <span className="ml-auto font-mono tabular-nums">{money(paidNow, currency)}</span>
                 </div>
                 {first ? (
                     <div className={`${SUMMARY_ROW} border-b`}>
@@ -249,14 +249,14 @@ function Summary({
                                 ? purchase.thenEach({ amount: money(first.amount, currency), count: ahead.length })
                                 : purchase.thenMixed({ count: ahead.length })}
                         </span>
-                        <span className="dash-figure ml-auto">
+                        <span className="ml-auto font-mono tabular-nums">
                             {over > 0 ? money(total - paidNow, currency) : dates()}
                         </span>
                     </div>
                 ) : null}
                 <div className={SUMMARY_ROW}>
                     <span className="text-muted-foreground">{purchase.total}</span>
-                    <span className="dash-figure ml-auto">{money(total, currency)}</span>
+                    <span className="ml-auto font-mono tabular-nums">{money(total, currency)}</span>
                 </div>
             </div>
             {over > 0 ? (
@@ -331,26 +331,25 @@ function seededFees(
 export interface PurchaseValues {
     categoryId: string | null;
     count: number;
-    eachText: string | null;
+    each?: number | null;
     every: EveryOption;
     firstDueKey: string | null;
     name: string;
     picked: string | null;
-    totalText: string;
-    upfrontText: string;
+    total: number | null;
+    upfront: number | null;
 }
 
-function startFields(seed: PurchaseSeed | undefined, picked: string | null, currency: string): PurchaseValues {
+function startFields(seed: PurchaseSeed | undefined, picked: string | null): PurchaseValues {
     return {
         categoryId: null,
         count: seed?.count ?? newInstallmentDraft(null).count,
-        eachText: null,
         every: seed?.every ?? "days14",
         firstDueKey: seed ? dayKey(seed.firstDue) : null,
         name: "",
         picked,
-        totalText: seed ? amountText(seed.price, currency) : "",
-        upfrontText: seed?.upfront ? amountText(seed.upfront, currency) : "",
+        total: seed?.price ?? null,
+        upfront: seed?.upfront || null,
     };
 }
 
@@ -396,21 +395,15 @@ export function PurchaseForm({
     const id = useId();
     const cards = openAccounts(ledger.books).filter((row) => row.kind === "liability");
     const [start] = useState(
-        () =>
-            draft ??
-            startFields(
-                seed,
-                seed?.accountId ?? accountId ?? cards[0]?.localId ?? null,
-                cards.find((row) => row.localId === seed?.accountId)?.currency ?? ledger.currency
-            )
+        () => draft ?? startFields(seed, seed?.accountId ?? accountId ?? cards[0]?.localId ?? null)
     );
     const [name, setName] = useState(start.name);
     const [categoryId, setCategoryId] = useState(start.categoryId);
-    const [totalText, setTotalText] = useState(start.totalText);
+    const [totalAmount, setTotalAmount] = useState(start.total);
     const [picked, setPicked] = useState(start.picked);
-    const [upfrontText, setUpfrontText] = useState(start.upfrontText);
+    const [upfrontAmount, setUpfrontAmount] = useState(start.upfront);
     const [count, setCount] = useState(start.count);
-    const [eachText, setEachText] = useState(start.eachText);
+    const [eachAmount, setEachAmount] = useState(start.each);
     const [every, setEvery] = useState(start.every);
     const [firstDueKey, setFirstDueKey] = useState(start.firstDueKey);
     const [attempted, setAttempted] = useState(false);
@@ -425,10 +418,9 @@ export function PurchaseForm({
     };
     const account = cards.find((row) => row.localId === picked) ?? null;
     const currency = account?.currency ?? ledger.currency;
-    const decimals = decimalsFor(currency);
-    const price = parseAmount(totalText, decimals);
-    const upfront = parseAmount(upfrontText, decimals);
-    const each = eachText?.trim() ? parseAmount(eachText, decimals) : null;
+    const price = totalAmount ?? 0;
+    const upfront = upfrontAmount ?? 0;
+    const each = eachAmount ?? null;
     const scanned = stillScanned(seed, { accountId: picked, count, each, every, firstDueKey, price, upfront });
     const plan = planPurchase({
         count,
@@ -443,7 +435,6 @@ export function PurchaseForm({
         purchaseDay: scanned?.purchaseDay ?? null,
         upfront,
     });
-    const splitText = plan.split === null ? "" : amountText(plan.split, currency);
     const blocked = plan.over > 0 || plan.upfrontTooHigh;
     const nameMissing = name.trim() === "";
 
@@ -503,7 +494,17 @@ export function PurchaseForm({
             if (!saved) {
                 reopen({
                     accountId,
-                    draft: { categoryId, count, eachText, every, firstDueKey, name, picked, totalText, upfrontText },
+                    draft: {
+                        categoryId,
+                        count,
+                        each: eachAmount,
+                        every,
+                        firstDueKey,
+                        name,
+                        picked,
+                        total: totalAmount,
+                        upfront: upfrontAmount,
+                    },
                     kind: "purchase",
                     seed,
                 });
@@ -538,11 +539,6 @@ export function PurchaseForm({
                         <CategoryField onPick={setCategoryId} value={categoryId} />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                        <Field invalid={attempted && price <= 0}>
-                            <Field.Label>{purchase.total}</Field.Label>
-                            <AmountInput currency={currency} onText={setTotalText} text={totalText} />
-                            {attempted && price <= 0 ? <Field.Error match>{purchase.totalRequired}</Field.Error> : null}
-                        </Field>
                         <AccountField
                             error={attempted && !account}
                             onAdd={addApp}
@@ -550,12 +546,6 @@ export function PurchaseForm({
                             onPick={setPicked}
                             value={picked}
                         />
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                        <Field>
-                            <Field.Label>{purchase.upfront}</Field.Label>
-                            <AmountInput currency={currency} onText={setUpfrontText} text={upfrontText} />
-                        </Field>
                         <ChoiceField
                             figure
                             label={purchase.count}
@@ -563,13 +553,33 @@ export function PurchaseForm({
                             options={COUNTS.map((value) => ({ label: value, value }))}
                             value={String(count)}
                         />
-                        <Field invalid={plan.over > 0} onBlur={() => eachText?.trim() === "" && setEachText(null)}>
-                            <Field.Label>{purchase.each}</Field.Label>
-                            <AmountInput
-                                currency={currency}
-                                // The blur reformat lands here too, and must not make the split amount a typed one.
-                                onText={(next) => setEachText(next === splitText ? null : next)}
-                                text={eachText ?? splitText}
+                    </div>
+                    <Field invalid={attempted && price <= 0}>
+                        <MoneyField
+                            className={attempted && price <= 0 ? "border-destructive" : undefined}
+                            codes={[currency]}
+                            label={purchase.total}
+                            onValueChange={(next) => setTotalAmount(next.amount)}
+                            value={{ amount: totalAmount, code: currency }}
+                        />
+                        {attempted && price <= 0 ? <Field.Error match>{purchase.totalRequired}</Field.Error> : null}
+                    </Field>
+                    <div className="grid grid-cols-2 gap-3">
+                        <MoneyField
+                            codes={[currency]}
+                            label={purchase.upfront}
+                            onValueChange={(next) => setUpfrontAmount(next.amount)}
+                            value={{ amount: upfrontAmount, code: currency }}
+                        />
+                        <Field invalid={plan.over > 0} onBlur={() => eachAmount === null && setEachAmount(undefined)}>
+                            <MoneyField
+                                className={plan.over > 0 ? "border-destructive" : undefined}
+                                codes={[currency]}
+                                label={purchase.each}
+                                onValueChange={(next) =>
+                                    setEachAmount(next.amount === plan.split ? undefined : next.amount)
+                                }
+                                value={{ amount: eachAmount === undefined ? plan.split : eachAmount, code: currency }}
                             />
                         </Field>
                     </div>

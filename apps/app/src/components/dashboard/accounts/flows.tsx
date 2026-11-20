@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { DialogContent } from "@/components/ui/dialog-content";
 import type { Notice, NoticeHost } from "@/lib/commit-notices";
 import type { PurchaseSeed } from "@/lib/installment-scan";
 import { writeSettings } from "@/lib/ledger-settings";
@@ -165,14 +166,14 @@ export function AccountFlowsProvider({ children }: { children: ReactNode }) {
         <FlowsContext value={flows}>
             {children}
             <Dialog onOpenChange={(next) => next || setFlow(null)} open={open && !targetGone}>
-                <Dialog.Content
-                    className="app-shell ph-no-capture"
+                <DialogContent
+                    className="transition-none"
                     size={flow?.kind === "entry" || flow?.kind === "purchase" ? "lg" : "md"}
                 >
                     <Suspense fallback={null}>
                         {flow ? <FlowDialogs flow={flow} onClose={() => setFlow(null)} onSwitch={setFlow} /> : null}
                     </Suspense>
-                </Dialog.Content>
+                </DialogContent>
             </Dialog>
             {toast ? <ShowToast onDone={clearToast} toast={toast} /> : null}
             {/* Inline, because the portal would leave the shell's tokens and the capture mask behind. The wrapper stays

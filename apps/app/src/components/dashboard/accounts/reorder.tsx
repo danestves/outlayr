@@ -12,6 +12,7 @@ import { AccountTile } from "@/components/ledger/tiles";
 import { reorderedAccounts } from "@/lib/account-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { AccountsBar, Card } from "./accounts-screen";
 import { useAccountFlows } from "./flows";
@@ -68,12 +69,12 @@ function Rows({ onMove, rows }: { onMove: (id: string, to: number) => void; rows
                 const lifted = dragging === row.id;
                 return (
                     <div
-                        className={`flex h-14 items-center gap-3 px-4 last:border-b-0 ${lifted ? "bg-card border-app-ghost relative z-10 -mx-1.5 rounded-xl border shadow-[0_16px_32px_-12px_#000c,0_4px_12px_#0006]" : "border-b"}`}
+                        className={`flex h-14 items-center gap-3 px-4 last:border-b-0 ${lifted ? "bg-card border-app-ghost shadow-app-popover rounded-app-lg relative z-10 -mx-1.5 border" : "border-b"}`}
                         key={row.id}
                     >
                         <Button
                             aria-label={flows.reorderMove({ name: row.name }).value}
-                            className={`-mx-[3px] size-6 cursor-grab touch-none ${lifted ? "text-app-tint hover:not-disabled:text-app-tint hover:not-disabled:bg-transparent" : "text-muted-foreground"}`}
+                            className={`-mx-0.75 size-6 cursor-grab touch-none ${lifted ? "text-app-tint hover:not-disabled:text-app-tint hover:not-disabled:bg-transparent" : "text-muted-foreground"}`}
                             onKeyDown={(event) => onKey(event, row.id, index)}
                             onPointerCancel={() => setDragging(null)}
                             onPointerDown={(event) => {
@@ -87,17 +88,17 @@ function Rows({ onMove, rows }: { onMove: (id: string, to: number) => void; rows
                         >
                             <Glyph icon={DragDropVerticalIcon} size={18} strokeWidth={2.5} />
                         </Button>
-                        <span className="dash-figure text-muted-foreground w-[18px] shrink-0 text-end text-xs">
+                        <span className="text-muted-foreground text-app-caption w-4.5 shrink-0 text-end font-mono tabular-nums">
                             {index + 1}
                         </span>
                         <AccountTile account={row.look} size="lg" />
                         <div className="min-w-0 flex-1">
-                            <b className="block truncate text-sm leading-[18px] font-medium">{row.name}</b>
+                            <b className="text-app-body block truncate font-medium">{row.name}</b>
                             <small className="text-muted-foreground block truncate text-sm leading-5">
                                 {row.currency}
                             </small>
                         </div>
-                        <span className="dash-figure text-sm font-medium whitespace-nowrap">
+                        <span className="font-mono text-sm font-medium whitespace-nowrap tabular-nums">
                             {money(row.balance, row.currency)}
                         </span>
                     </div>
@@ -181,7 +182,7 @@ export function ReorderAccounts() {
             void committer.commit(reorderedAccounts(order, Date.now()), { failed: flows.reorderFailed.value });
         }
         saveSort(sort);
-        void navigate({ to: "/accounts" });
+        void navigate({ to: "/accounts", viewTransition: viewTransition("push-left", { back: true }) });
     };
 
     const hint = <span className="font-sans tracking-normal">{flows.reorderHint}</span>;
@@ -192,9 +193,11 @@ export function ReorderAccounts() {
                     <span className="flex min-w-0 items-center gap-3">
                         <Button
                             aria-label={detail.back.value}
-                            className="shrink-0 rounded-[10px]"
+                            className="rounded-app-md shrink-0"
                             nativeButton={false}
-                            render={<Link to="/accounts" />}
+                            render={
+                                <Link to="/accounts" viewTransition={viewTransition("push-left", { back: true })} />
+                            }
                             size="icon"
                             variant="outline"
                         >
@@ -212,12 +215,16 @@ export function ReorderAccounts() {
                     ]}
                     value={sort}
                 />
-                <Button nativeButton={false} render={<Link to="/accounts" />} variant="outline">
+                <Button
+                    nativeButton={false}
+                    render={<Link to="/accounts" viewTransition={viewTransition("push-left", { back: true })} />}
+                    variant="outline"
+                >
                     {flows.cancel}
                 </Button>
                 <Button onClick={done}>{flows.reorderDone}</Button>
             </AccountsBar>
-            <div className="mx-auto flex max-w-[760px] flex-col gap-4">
+            <div className="mx-auto flex max-w-190 flex-col gap-4" data-motion="dissolve" key={sort}>
                 <Group aside={hint} onMove={moveIn(assets)} rows={assets} title={list.accounts} />
                 <Group
                     aside={assets.length === 0 ? hint : undefined}

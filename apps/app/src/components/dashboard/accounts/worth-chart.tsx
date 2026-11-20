@@ -14,7 +14,7 @@ import { useChartRatio } from "./parts";
 
 const TINT = "var(--color-app-tint)";
 const FILL = "worth-fill";
-export const Y_LABEL = "dash-figure flex justify-end overflow-visible text-[11px]";
+export const Y_LABEL = "text-app-micro flex justify-end overflow-visible font-mono tabular-nums";
 const DAILY_TICKS = 5;
 const THOUSAND = 1000;
 const FINE_STEP = 100;
@@ -93,7 +93,7 @@ export function WorthChart({
                 <Plot.Line color={TINT} dataKey="value" strokeWidth={1.75} />
                 <Plot.Dots color={TINT} dataKey="end" ringWidth={0} size={3.5} />
                 <Plot.XAxis
-                    className="dash-figure text-[11px]"
+                    className="text-app-micro font-mono tabular-nums"
                     format={(datum) => (monthly ? month(String(datum.day)) : date.day(String(datum.day)))}
                     ticks={monthly ? data.length : DAILY_TICKS}
                 />
@@ -106,7 +106,7 @@ export function WorthChart({
                     {(datum) => (
                         <>
                             <div className="text-muted-foreground">{date.day(String(datum.day))}</div>
-                            <div className="dash-figure">{money(Number(datum.value), shownIn)}</div>
+                            <div className="font-mono tabular-nums">{money(Number(datum.value), shownIn)}</div>
                         </>
                     )}
                 </Plot.Tooltip>

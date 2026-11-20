@@ -40,8 +40,6 @@ export function AmountInput({
     autoFocus = false,
     currency,
     label,
-    negative,
-    onNegative,
     onText,
     sign,
     size,
@@ -51,8 +49,6 @@ export function AmountInput({
     autoFocus?: boolean;
     currency: string;
     label?: string;
-    negative?: boolean;
-    onNegative?: (negative: boolean) => void;
     onText: (text: string) => void;
     sign?: string;
     size?: "lg" | "md" | "sm";
@@ -61,23 +57,10 @@ export function AmountInput({
 }) {
     return (
         <Input.Group size={size}>
-            {onNegative ? (
-                <Input.Addon>
-                    <Button
-                        aria-pressed={negative}
-                        className="dash-sg dash-figure"
-                        onClick={() => onNegative(!negative)}
-                        size="icon-sm"
-                        variant="ghost"
-                    >
-                        {negative ? "-" : "+"}
-                    </Button>
-                </Input.Addon>
-            ) : null}
             {sign ? <Input.Addon className="dash-figure text-foreground pe-1.5!">{sign}</Input.Addon> : null}
             <Input
                 aria-label={label}
-                className={onNegative ? "dash-figure ps-0.5" : "dash-figure"}
+                className="dash-figure"
                 inputMode="decimal"
                 onBlur={() => {
                     if (text.trim() !== "") {
@@ -172,7 +155,7 @@ export function CurrencyField({
                 </Popover.Trigger>
             </div>
             <Popover.Portal>
-                <Popover.Positioner align="start" alignOffset={-8} className="z-[60]" sideOffset={6}>
+                <Popover.Positioner align="start" alignOffset={-8} className="z-60" sideOffset={6}>
                     <Popover.Popup className="app-shell dash-po ph-no-capture flex max-h-[440px] w-[290px] flex-col">
                         <Input.Group className="flex-none">
                             <Input.Addon>
@@ -214,7 +197,7 @@ export function FlowDialog({ children, head, label }: { children: ReactNode; hea
 
 export function Fact({ children, label }: { children: ReactNode; label: ReactNode }) {
     return (
-        <div className="flex h-9 items-center gap-2 border-b text-[13px] last:border-0">
+        <div className="text-app-label flex h-9 items-center gap-2 border-b last:border-0">
             <span className="text-muted-foreground flex min-w-0 items-center gap-2 [&>svg]:flex-none">{label}</span>
             <span className="dash-figure ml-auto">{children}</span>
         </div>
