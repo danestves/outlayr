@@ -61,6 +61,7 @@ export type PdfAnswer =
           ok: true;
           rows: readonly { amount: number; currency: string | null; date: string; label: string }[];
           suggestions: readonly Suggestion[];
+          unreadPages: readonly number[];
       }
     | { ok: false; reason: PdfRefusal };
 
@@ -117,7 +118,12 @@ export async function readStatement(
         if (reply.status !== "ok" || reply.rows === null) {
             return { ok: false, reason: pdfRefusal(reply.status) };
         }
-        return { ok: true, rows: reply.rows, suggestions: reply.suggestions ?? [] };
+        return {
+            ok: true,
+            rows: reply.rows,
+            suggestions: reply.suggestions ?? [],
+            unreadPages: reply.unreadPages ?? [],
+        };
     } catch {
         return { ok: false, reason: offline() ? "offline" : "service" };
     }

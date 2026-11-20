@@ -52,6 +52,7 @@
         "./money-manager/types": "./src/money-manager/types.ts",
         "./merchant-key": "./src/merchant-key.ts",
         "./occurrence": "./src/occurrence.ts",
+        "./page-ranges": "./src/page-ranges.ts",
         "./pattern-index": "./src/pattern-index.ts",
         "./pro-prices": "./src/pro-prices.ts",
         "./rates": "./src/rates.ts",

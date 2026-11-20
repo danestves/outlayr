@@ -6,6 +6,7 @@ import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
 import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
 import SparklesIcon from "@hugeicons/core-free-icons/SparklesIcon";
 import type { IconSvgElement } from "@hugeicons/react";
+import { pageRanges } from "@outlayr/money/page-ranges";
 import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
 import { Table } from "panelui-web/table";
@@ -212,6 +213,7 @@ export function ResolveStep({
     const fromAi = count("ai");
     const visible = filter === "all" ? model.groups : model.groups.filter((group) => filterOf(group) === filter);
     const failed = ai.kind === "failed" ? ai : null;
+    const unread = draft.unreadPages.length > 0 ? pageRanges(draft.unreadPages) : null;
     const tabs: { count: number; label: ReactNode; value: Filter }[] = [
         { count: model.groups.length, label: resolve.all, value: "all" },
         { count: count("matched"), label: resolve.matched, value: "matched" },
@@ -261,6 +263,20 @@ export function ResolveStep({
                         </Tabs>
                     </Frame.Header>
                     <Frame.Panel className="flex flex-1 flex-col">
+                        {unread ? (
+                            <Banner
+                                title={resolve.unreadPages({
+                                    pages:
+                                        unread.hidden > 0
+                                            ? resolve.unreadPagesMore({ count: unread.hidden, pages: unread.shown })
+                                                  .value
+                                            : unread.shown,
+                                })}
+                                tone="warn"
+                            >
+                                {resolve.unreadPagesWhy}
+                            </Banner>
+                        ) : null}
                         {failed ? (
                             <Banner
                                 action={

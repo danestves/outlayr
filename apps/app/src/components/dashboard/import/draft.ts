@@ -1,3 +1,4 @@
+import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { useCallback, useSyncExternalStore } from "react";
@@ -51,6 +52,8 @@ const Draft = Schema.Struct({
     targets: Schema.Array(Schema.Literals([...FIELDS, "skip"])),
     /** New rows the user unticked. */
     unticked: Schema.Array(Schema.Number),
+    /** Statement pages with no text to read, so their rows never reached the model. */
+    unreadPages: Schema.Array(Schema.Number).pipe(Schema.withDecodingDefaultKey(Effect.succeed([]))),
 });
 export type Draft = typeof Draft.Type;
 
@@ -145,7 +148,7 @@ export function useDraft(store: DraftStore | null) {
 
 export function newDraft(
     fields: Pick<Draft, "dateFormat" | "header" | "name" | "rows" | "size" | "source" | "step" | "targets"> &
-        Partial<Pick<Draft, "intoAccountId" | "readMs" | "suggestions">>
+        Partial<Pick<Draft, "intoAccountId" | "readMs" | "suggestions" | "unreadPages">>
 ): Draft {
     return {
         accounts: {},
@@ -158,6 +161,7 @@ export function newDraft(
         rowCategories: {},
         suggestions: null,
         unticked: [],
+        unreadPages: [],
         ...fields,
     };
 }
