@@ -14,6 +14,7 @@ import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
 import { SiteLink } from "@/components/site-link";
 import { parseAmount } from "@/lib/account-writes";
 import { allowAi, useAiConsent } from "@/lib/ai-consent";
+import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { ledgerToday, promptLedger, resolveVoiceDraft } from "@/lib/voice-entry";
 import type { ResolvedVoiceDraft } from "@/lib/voice-entry";
@@ -121,7 +122,8 @@ function Review({ heard, resolved }: { heard: string; resolved: ResolvedVoiceDra
     }
     const { values } = resolved;
     const category = ledger.books.categories.find((row) => row.localId === values.categoryId);
-    const top = category ? ledger.categories.get(category.parentId ?? category.localId) : undefined;
+    const parent = category?.parentId ? ledger.books.categories.find((row) => row.localId === category.parentId) : null;
+    const dot = (parent ?? category)?.color ?? NEUTRAL_COLOR;
     const account = accountOf(values.accountId);
     const amount = parseAmount(values.amountText, decimalsFor(values.currency)) ?? 0;
     const merchant = values.note || (category?.name ?? "");
@@ -147,7 +149,7 @@ function Review({ heard, resolved }: { heard: string; resolved: ResolvedVoiceDra
                             <span
                                 aria-hidden
                                 className="size-2 shrink-0 rounded-full"
-                                style={{ backgroundColor: top?.color }}
+                                style={{ backgroundColor: dot }}
                             />
                             <span className="truncate font-medium">
                                 {categoryName({ id: category.localId, name: category.name })}
