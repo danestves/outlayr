@@ -187,6 +187,32 @@ From the canvas page `Web · Budgets`, under `components/dashboard/budgets`:
 - **Loading:** `budgets-pending.tsx` draws the real screen over the sampled ledger inside a static skullet skeleton.
 - **Raw controls:** the plan month's category name and the plan chart's per-month focus targets stay raw buttons: a Button part would add hover chrome and padding the frames do not draw.
 
+## Goals
+
+From the canvas page `Web · Goals`, under `components/dashboard/goals`:
+
+- **Amounts:** the goal form and add money use MoneyField, locked to the goal's currency. Add money keeps its sent and arrives pair when the account's currency differs.
+- **Motion:** a goal row, the road and Open push left, and every way back (the back button, the crumb, deleting from the detail page) reverses.
+- **Menus:** 240 wide on `MenuContent`. The form's own selects keep the shell scope at `z-60`, above the dialog.
+- **Confirms:** delete stays a Dialog with an undo toast, as the guide draws it.
+- **Empty:** no goals and the detail's no-exchange-rate chart use the dashboard's one-icon `Empty`. The frames' terrain art is not drawn and its SVGs are gone.
+- **Charts:** inline `style` stays only for plot geometry and bar heights, which come from the data.
+- **Loading:** `goals-pending.tsx` draws the real screen over the sampled ledger inside a static skullet skeleton.
+
+## Recurring
+
+From the canvas page `Web · Recurring`, under `components/dashboard/recurring`:
+
+- **Amounts:** the schedule form, the log dialog and the confirm dialog use MoneyField, locked to the schedule's currency.
+- **Motion:** the tab body dissolves on a tab swap. The detail drawer is a `SheetContent` and slides with PanelUI's Sheet. Dialogs and menus are instant.
+- **Drawer:** a right sheet on wide screens and a full bottom sheet on narrow ones. It sets `showClose={false}` because its header draws its own close, as the guide says.
+- **Menus:** the row menu, the filter menus and sort are 240 wide on `MenuContent`.
+- **Dialogs:** pause and delete stay 420 and the log dialog 440, as the frames draw them. The confirm dialog is `md` (448) and the schedule form 520, `md` on its custom schedule view.
+- **Segments:** expense or income and the custom schedule's units are PanelUI Tabs, where they were raw buttons.
+- **Empty:** nothing set up yet, nothing detected, nothing paused and no filter match use the dashboard's one-icon `Empty`. The frames' ghost table is not drawn.
+- **Loading:** `recurring-pending.tsx` draws the real screen over the sampled ledger inside a static skullet skeleton.
+- **Raw controls:** the calendar's day cells and side lists, the pause choices (each row holds a date button, which a RadioCard cannot nest), the hidden date inputs behind the day fields and the stepper's number stay raw: a part would add chrome the frames do not draw.
+
 ## Primitives
 
 | Part         | Use                                                    | Notes                                                                                                   |
@@ -210,7 +236,7 @@ The shell is on the primitives: the account menu and the period menu use `MenuCo
 
 These still use `AmountInput` (`components/dashboard/accounts/fields.tsx`) or a bare `inputMode="decimal"` input. Each one moves in its screen's phase:
 
-- `AmountInput`: `recurring/dialogs.tsx` (2), `recurring/schedule-form.tsx`
+- `AmountInput`: `transactions/transfer-editor.tsx`
 - Bare decimal inputs: `debts/fields.tsx`, `debts/debt-dialogs.tsx`, `onboarding/first-entry.tsx`, `import/money-manager/overview.tsx`, `import/file-done.tsx`, `settings/plan.tsx`
 - Not amount entry, so they stay as they are: `transactions/filter-row.tsx` (the amount filter) and `settings/currency-converter.tsx` (a converter, closer to Exchange). The transfer flow already uses Exchange.
 
@@ -223,7 +249,7 @@ These are known and left for the screen phases:
 - **Hard-coded colours:** 42 hex colours in 21 non-test source files, such as the recap share card and the insights samples.
 - **Raw controls:** 35 files with a raw `<button>` and 14 with a raw `<input>`. The account sheet's sign-out row stays a raw `<button>` until there is a row part, because Button's ghost hover and weight would change the row.
 - **Spinners:** Button `loading` draws a spinner in `settings/invite.tsx`, `settings/plan.tsx`, `settings/account.tsx` and `settings/about/suggest.tsx`.
-- **Menu timing:** every menu except the account, period, dashboard filter, Transactions and Accounts menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
+- **Menu timing:** every menu except the account, period, dashboard filter, Transactions, Accounts, Goals and Recurring menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
 - **Hand-placed scope:** 74 files put `app-shell ph-no-capture` on portaled content by hand. `DialogContent`, `SheetContent` and `MenuContent` replace that.
 - **Accent inside the shell:** `accentCss` (`lib/accent.ts`) writes the tint and on-tint on `:root`. The shell scope sets `--color-app-on-tint` again in both themes, and `--color-app-tint` again in dark, so inside the shell a non-default accent shows as vermilion in dark and keeps the default on-tint. This was already the case before this phase.
 - **Pages outside the shell:** `login` and `connect`, and any portal without `app-shell`, read the phone's dark palette from `:root`. So does `html` itself, whose background is `--color-app-bg`.
