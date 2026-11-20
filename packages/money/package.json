@@ -51,6 +51,7 @@
         "./money-manager/snapshot": "./src/money-manager/snapshot.ts",
         "./money-manager/types": "./src/money-manager/types.ts",
         "./merchant-key": "./src/merchant-key.ts",
+        "./merchant-names": "./src/merchant-names.ts",
         "./occurrence": "./src/occurrence.ts",
         "./page-ranges": "./src/page-ranges.ts",
         "./pattern-index": "./src/pattern-index.ts",

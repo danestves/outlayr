@@ -17,6 +17,9 @@ its sync scope (`synced` or device-local). Reads and writes go through `Meta` in
   [Convex sync](./convex-sync.md) for what a newly synced key does and does not push.
 - **Absence can be an answer.** A missing row reads as the key's default, so a feature that asks "did the
   person ever choose" uses `Meta.has`, not `Meta.get`. `showNotifications` and `installmentReminders` do.
+- **One synced key is web-only.** `merchantNames` (`packages/money/src/merchant-names.ts`) is written by the
+  web's merchant dialog and read by the server's enrichment `suggest` and the web import. The registry does
+  not hold it, so phones drop it on pull (`isReplicated`) and still get the new name from `suggest`.
 
 ## A corrupt value
 

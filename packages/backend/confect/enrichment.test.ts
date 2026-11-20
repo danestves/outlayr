@@ -4,6 +4,7 @@ import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import { answers, fails, fakeModel } from "@outlayr/ai/testing";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { knowledgeKey, merchantKey } from "@outlayr/money/merchant-key";
+import { MERCHANT_NAMES_KEY, renamedMerchant } from "@outlayr/money/merchant-names";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import * as Effect from "effect/Effect";
@@ -301,6 +302,43 @@ describe("merchantKnowledge cache (Tier 1.5)", () => {
             domain: "farmatodo.com",
             grounding: false,
         });
+    });
+
+    async function seedRenames(t: ReturnType<typeof convexTest>, userId: string, names: Record<string, string>) {
+        await t.run((ctx) =>
+            ctx.db.insert("appMeta", {
+                deviceId: "test-device",
+                key: MERCHANT_NAMES_KEY,
+                seq: 1,
+                updatedAt: Date.now(),
+                userId,
+                value: JSON.stringify(names),
+            })
+        );
+    }
+
+    it("a merchant the person renamed comes back under their name, over the shared list's", async () => {
+        const t = convexTest(schema, modules);
+        const identity = await seedAuthUser(t);
+        await seedKnowledge(t, "Farmatodo");
+        await seedRenames(t, identity.userId, renamedMerchant({}, "Farmatodo", "Farmatodo Las Mercedes"));
+
+        await expect(
+            authenticatedAs(t, identity).action(api.enrichment.suggest, { ...BASE_ARGS, name: "FARMATODO" })
+        ).resolves.toMatchObject({ categoryName: "Healthcare", merchantName: "Farmatodo Las Mercedes" });
+    });
+
+    it("a rename reaches a knowledgeOnly miss, and never another person's lookup", async () => {
+        const t = convexTest(schema, modules);
+        const owner = await seedAuthUser(t);
+        const other = await seedAuthUser(t);
+        await seedRenames(t, owner.userId, renamedMerchant({}, "Bodega Juan", "Juan's"));
+        const args = { ...BASE_ARGS, knowledgeOnly: true, name: "Bodega Juan" };
+
+        await expect(authenticatedAs(t, owner).action(api.enrichment.suggest, args)).resolves.toMatchObject({
+            merchantName: "Juan's",
+        });
+        await expect(authenticatedAs(t, other).action(api.enrichment.suggest, args)).resolves.toStrictEqual(EMPTY);
     });
 
     it("a knowledgeOnly miss returns EMPTY without consuming a rate limit or the model", async () => {
