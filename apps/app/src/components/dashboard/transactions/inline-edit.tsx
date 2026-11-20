@@ -25,6 +25,12 @@ export interface Editing {
 
 const NOT_FIGURE = /[^\d.,]/gu;
 
+// autoFocus only took on the first editor after a load, so the field focuses itself on mount.
+const focusOnMount = (node: HTMLInputElement | null) => {
+    node?.focus();
+    node?.select();
+};
+
 /** The entry an amount edit rewrites, with its figure as typed text, or null when the drawer's rules lock it. */
 export function amountDraft(ledger: Ledger, row: LedgerRow) {
     const doc = editableDoc(ledger.books, row.id);
@@ -117,7 +123,6 @@ function CellEditor({ addon, align, initial, label, numeric, onCancel, onCommit,
     const input = (
         <Input
             aria-label={label}
-            autoFocus
             className={align === "end" ? "text-end font-mono tabular-nums" : undefined}
             inputMode={numeric ? "decimal" : "text"}
             onBlur={commit}
@@ -125,7 +130,6 @@ function CellEditor({ addon, align, initial, label, numeric, onCancel, onCommit,
                 setText(event.target.value);
                 setError(null);
             }}
-            onFocus={(event) => event.currentTarget.select()}
             onKeyDown={(event) => {
                 if (event.key === "Enter") {
                     event.preventDefault();
@@ -138,12 +142,16 @@ function CellEditor({ addon, align, initial, label, numeric, onCancel, onCommit,
                 }
             }}
             placeholder={placeholder}
+            ref={focusOnMount}
             size={addon === null ? "sm" : undefined}
             value={text}
         />
     );
     return (
-        <Field className="relative z-1 -my-1.5 gap-1" invalid={error !== null}>
+        <Field
+            className={`relative z-1 -my-1.5 gap-1 ${align === "end" ? "items-end" : "items-start"}`}
+            invalid={error !== null}
+        >
             {addon === null ? (
                 input
             ) : (
@@ -155,7 +163,7 @@ function CellEditor({ addon, align, initial, label, numeric, onCancel, onCommit,
                 </Input.Group>
             )}
             {error === null ? null : (
-                <Field.Error className="text-app-caption text-start whitespace-normal" match>
+                <Field.Error className="font-sans whitespace-nowrap" match>
                     {error}
                 </Field.Error>
             )}
