@@ -448,15 +448,15 @@ function Stuck({
     icon,
     onRestore,
     onRetry,
-    restoring,
+    restoring = false,
     retrying,
     text,
 }: {
     art?: keyof typeof ART;
     icon?: "time" | "warning";
-    onRestore: () => void;
+    onRestore?: () => void;
     onRetry: () => void;
-    restoring: boolean;
+    restoring?: boolean;
     retrying: boolean;
     text: ReactNode;
 }) {
@@ -723,13 +723,7 @@ export function Paywall() {
     }
     if (plan.data.state === "unbilled") {
         return frame(
-            <Stuck
-                onRestore={onRestore}
-                onRetry={() => window.location.reload()}
-                restoring={restoring}
-                retrying={false}
-                text={planCopy.unbilled.footer}
-            />
+            <Stuck onRetry={() => window.location.reload()} retrying={false} text={planCopy.unbilled.footer} />
         );
     }
     if (HELD_STATES.has(plan.data.state) && !confirming) {
