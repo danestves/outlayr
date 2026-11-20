@@ -18,7 +18,7 @@ import { useCategoryName } from "../home/format";
 
 export const CELL = "h-9.75 px-3 py-0 align-middle first:ps-4 last:pe-3";
 export const HEAD = "text-app-caption! h-8 px-3 font-medium first:ps-4 last:pe-3";
-export const GROUP = "text-muted-foreground text-app-caption! h-8 px-4 font-medium";
+export const GROUP = "text-muted-foreground text-app-caption! h-8 px-4 font-medium first:ps-4";
 export const FIGURE = "dash-figure whitespace-nowrap";
 export const MUTED = "text-muted-foreground whitespace-nowrap";
 
