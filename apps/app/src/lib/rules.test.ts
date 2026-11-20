@@ -4,9 +4,11 @@ import {
     EMPTY_BOOK,
     conflictsOf,
     outcomeOf,
+    removed,
     resolved,
     ruleBookOf,
     runOf,
+    saved,
     skipConditionOf,
     statsOf,
     suggestionsOf,
@@ -248,5 +250,24 @@ describe("ruleBookOf", () => {
         expect(ruleBookOf("{")).toEqual(EMPTY_BOOK);
         expect(ruleBookOf(JSON.stringify({ rules: [{ id: 1 }] }))).toEqual(EMPTY_BOOK);
         expect(ruleBookOf(null)).toEqual(EMPTY_BOOK);
+    });
+});
+
+describe("saved and removed", () => {
+    it("appends a new rule last and keeps an edited one where it was", () => {
+        const book: RuleBook = { ...EMPTY_BOOK, rules: [fresh, amazon] };
+        const added = rule("new", [merchant("Uber", "is")], "shopping");
+        expect(saved(book, added, Number.POSITIVE_INFINITY).rules.map((row) => row.id)).toEqual([
+            "fresh",
+            "amazon",
+            "new",
+        ]);
+        expect(saved(book, { ...fresh, name: "Fresh" }, 0).rules.map((row) => row.name)).toEqual(["Fresh", "amazon"]);
+    });
+
+    it("undoes a save without leaving its settled conflicts behind", () => {
+        const added = rule("new", [merchant("Uber", "is")], "shopping");
+        const book: RuleBook = { ...EMPTY_BOOK, rules: [fresh, added], settled: ["fresh|new", "amazon|fresh"] };
+        expect(removed(book, "new")).toEqual({ ...EMPTY_BOOK, rules: [fresh], settled: ["amazon|fresh"] });
     });
 });

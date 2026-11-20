@@ -16,6 +16,13 @@ const dashboardTransactions = {
                 fr: "Effacer la sélection",
                 pt: "Limpar seleção",
             }),
+            createRule: t({
+                en: "Create rule",
+                de: "Regel erstellen",
+                es: "Crear regla",
+                fr: "Créer une règle",
+                pt: "Criar regra",
+            }),
             delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
             selectAll: t({
                 en: "Select all",
@@ -630,6 +637,170 @@ const dashboardTransactions = {
             }),
         },
         recurring: t({ en: "Recurring", de: "Wiederkehrend", es: "Recurrente", fr: "Récurrente", pt: "Recorrente" }),
+        rule: {
+            account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
+            accountNote: t({
+                en: "Rules don't use it",
+                de: "Regeln nutzen es nicht",
+                es: "Las reglas no la usan",
+                fr: "Les règles ne l'utilisent pas",
+                pt: "Regras não a usam",
+            }),
+            addTag: t({
+                en: "Add tag",
+                de: "Tag hinzufügen",
+                es: "Añadir etiqueta",
+                fr: "Ajouter un tag",
+                pt: "Adicionar tag",
+            }),
+            cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
+            category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
+            create: t({
+                en: "Create rule",
+                de: "Regel erstellen",
+                es: "Crear regla",
+                fr: "Créer une règle",
+                pt: "Criar regra",
+            }),
+            created: t({
+                en: "Rule created",
+                de: "Regel erstellt",
+                es: "Regla creada",
+                fr: "Règle créée",
+                pt: "Regra criada",
+            }),
+            description: t({
+                en: "Description",
+                de: "Beschreibung",
+                es: "Descripción",
+                fr: "Description",
+                pt: "Descrição",
+            }),
+            from: insert(
+                t({
+                    en: "From {{count}} selected entries.",
+                    de: "Aus {{count}} ausgewählten Einträgen.",
+                    es: "A partir de {{count}} movimientos seleccionados.",
+                    fr: "À partir de {{count}} opérations sélectionnées.",
+                    pt: "A partir de {{count}} lançamentos selecionados.",
+                })
+            ),
+            fromOne: t({
+                en: "From 1 selected entry.",
+                de: "Aus 1 ausgewähltem Eintrag.",
+                es: "A partir de 1 movimiento seleccionado.",
+                fr: "À partir de 1 opération sélectionnée.",
+                pt: "A partir de 1 lançamento selecionado.",
+            }),
+            fromSome: insert(
+                t({
+                    en: "From {{count}} of {{total}} selected entries. Rules skip transfers, fees and installment payments.",
+                    de: "Aus {{count}} von {{total}} ausgewählten Einträgen. Regeln überspringen Überweisungen, Gebühren und Ratenzahlungen.",
+                    es: "A partir de {{count}} de {{total}} movimientos seleccionados. Las reglas omiten transferencias, comisiones y cuotas.",
+                    fr: "À partir de {{count}} des {{total}} opérations sélectionnées. Les règles ignorent les virements, les frais et les échéances.",
+                    pt: "A partir de {{count}} de {{total}} lançamentos selecionados. Regras ignoram transferências, tarifas e parcelas.",
+                })
+            ),
+            invalid: t({
+                en: "Check something to match and something to set.",
+                de: "Wähle etwas zum Abgleichen und etwas zum Setzen.",
+                es: "Marca algo que coincida y algo que asignar.",
+                fr: "Cochez un critère et une action.",
+                pt: "Marque algo para comparar e algo para definir.",
+            }),
+            merchant: t({ en: "Merchant", de: "Händler", es: "Comercio", fr: "Marchand", pt: "Estabelecimento" }),
+            name: t({ en: "Name", de: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
+            nameOf: insert(
+                t({
+                    en: "{{subject}} is {{category}}",
+                    de: "{{subject}} ist {{category}}",
+                    es: "{{subject}} es {{category}}",
+                    fr: "{{subject}} est {{category}}",
+                    pt: "{{subject}} é {{category}}",
+                })
+            ),
+            nameRequired: t({
+                en: "Add a name",
+                de: "Gib einen Namen ein",
+                es: "Escribe un nombre",
+                fr: "Ajoutez un nom",
+                pt: "Adicione um nome",
+            }),
+            past: insert(
+                t({
+                    en: "Apply to {{count}} past entries",
+                    de: "Auf {{count}} frühere Einträge anwenden",
+                    es: "Aplicar a {{count}} movimientos pasados",
+                    fr: "Appliquer à {{count}} opérations passées",
+                    pt: "Aplicar a {{count}} lançamentos passados",
+                })
+            ),
+            pastDone: insert(
+                t({
+                    en: "{{count}} past entries changed",
+                    de: "{{count}} frühere Einträge geändert",
+                    es: "{{count}} movimientos pasados cambiados",
+                    fr: "{{count}} opérations passées modifiées",
+                    pt: "{{count}} lançamentos passados alterados",
+                })
+            ),
+            pastDoneOne: t({
+                en: "1 past entry changed",
+                de: "1 früherer Eintrag geändert",
+                es: "1 movimiento pasado cambiado",
+                fr: "1 opération passée modifiée",
+                pt: "1 lançamento passado alterado",
+            }),
+            pastOne: t({
+                en: "Apply to 1 past entry",
+                de: "Auf 1 früheren Eintrag anwenden",
+                es: "Aplicar a 1 movimiento pasado",
+                fr: "Appliquer à 1 opération passée",
+                pt: "Aplicar a 1 lançamento passado",
+            }),
+            subjectDescription: t({
+                en: "the description",
+                de: "die Beschreibung",
+                es: "la descripción",
+                fr: "la description",
+                pt: "a descrição",
+            }),
+            subjectMerchant: t({
+                en: "the merchant",
+                de: "der Händler",
+                es: "el comercio",
+                fr: "le marchand",
+                pt: "o estabelecimento",
+            }),
+            summary: insert(
+                t({
+                    en: "From now on, entries you add or import where {{conditions}} get {{actions}}.",
+                    de: "Ab jetzt gilt für Einträge, die du hinzufügst oder importierst: wenn {{conditions}}, dann {{actions}}.",
+                    es: "De ahora en adelante, los movimientos que agregues o importes donde {{conditions}} reciben {{actions}}.",
+                    fr: "Désormais, les opérations que vous ajoutez ou importez où {{conditions}} reçoivent {{actions}}.",
+                    pt: "A partir de agora, lançamentos que você adicionar ou importar em que {{conditions}} recebem {{actions}}.",
+                })
+            ),
+            summaryPast: insert(
+                t({
+                    en: "{{count}} past entries change now.",
+                    de: "{{count}} frühere Einträge ändern sich jetzt.",
+                    es: "{{count}} movimientos pasados cambian ahora.",
+                    fr: "{{count}} opérations passées changent maintenant.",
+                    pt: "{{count}} lançamentos passados mudam agora.",
+                })
+            ),
+            summaryPastOne: t({
+                en: "1 past entry changes now.",
+                de: "1 früherer Eintrag ändert sich jetzt.",
+                es: "1 movimiento pasado cambia ahora.",
+                fr: "1 opération passée change maintenant.",
+                pt: "1 lançamento passado muda agora.",
+            }),
+            tag: t({ en: "Tag", de: "Tag", es: "Etiqueta", fr: "Tag", pt: "Tag" }),
+            outcome: t({ en: "Then", de: "Dann", es: "Entonces", fr: "Alors", pt: "Então" }),
+            when: t({ en: "When", de: "Wenn", es: "Cuando", fr: "Quand", pt: "Quando" }),
+        },
         search: t({
             en: "Search merchant, note, amount",
             de: "Händler, Notiz, Betrag suchen",

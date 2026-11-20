@@ -2,6 +2,7 @@ import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import HashtagIcon from "@hugeicons/core-free-icons/HashtagIcon";
+import MagicWand01Icon from "@hugeicons/core-free-icons/MagicWand01Icon";
 import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { accountLook } from "@outlayr/money/ledger-log";
@@ -26,6 +27,7 @@ import { createdTag, findTag, linkRows, normalizeTagName, TAG_NAME_LIMIT } from 
 import type { FoldedRow } from "../home/rows";
 import { merchantOf, useCategoryOptions } from "./entry-form";
 import { tally } from "./model";
+import { RuleDialog } from "./rule-dialog";
 import { entryNotices } from "./use-delete";
 import type { LedgerList } from "./use-ledger-list";
 
@@ -113,6 +115,7 @@ export function BulkBar({ list, onClear, onDelete, picked }: BulkBarProps) {
     const expense = useCategoryOptions(ledger, false);
     const income = useCategoryOptions(ledger, true);
     const [confirming, setConfirming] = useState(false);
+    const [ruling, setRuling] = useState(false);
     const entries = picked.flatMap((row) => ("fromId" in row ? [] : [row]));
     const ids = entries.map((row) => row.id);
     const kinds = new Set(entries.map((row) => row.income));
@@ -139,7 +142,7 @@ export function BulkBar({ list, onClear, onDelete, picked }: BulkBarProps) {
     return (
         <div className="pointer-events-none fixed inset-x-0 bottom-21 z-20 flex justify-center px-4">
             <Toolbar
-                hidden={confirming}
+                hidden={confirming || ruling}
                 aria-label={bulk.selected({ count }).value}
                 className="pointer-events-auto shadow-(--shadow-app-popover)"
             >
@@ -184,6 +187,10 @@ export function BulkBar({ list, onClear, onDelete, picked }: BulkBarProps) {
                             </MenuContent>
                         </Menu>
                         <TagAction ids={ids} list={list} />
+                        <Toolbar.Button className={ACTION} onClick={() => setRuling(true)}>
+                            <HugeiconsIcon icon={MagicWand01Icon} size={14} strokeWidth={2} />
+                            {bulk.createRule}
+                        </Toolbar.Button>
                     </>
                 ) : null}
                 <Toolbar.Button className={ACTION} onClick={() => setConfirming(true)}>
@@ -195,6 +202,7 @@ export function BulkBar({ list, onClear, onDelete, picked }: BulkBarProps) {
                     <HugeiconsIcon icon={Cancel01Icon} size={16} strokeWidth={2} />
                 </Toolbar.Button>
             </Toolbar>
+            <RuleDialog onOpenChange={setRuling} open={ruling} picked={picked} />
             <ConfirmDialog
                 action={words.bulk.delete}
                 body={words.bulk.deleteBody}
