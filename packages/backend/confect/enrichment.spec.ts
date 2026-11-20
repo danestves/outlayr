@@ -50,6 +50,13 @@ export default GroupSpec.make()
     .addFunction(
         FunctionSpec.internalQuery({ args: () => ({}), name: "groundedConsent", returns: () => Schema.Boolean })
     )
+    .addFunction(
+        FunctionSpec.internalQuery({
+            args: () => ({}),
+            name: "merchantNames",
+            returns: () => Schema.NullOr(Schema.String),
+        })
+    )
     .addFunction(FunctionSpec.publicAction({ args: () => suggestArgs, name: "suggest", returns: () => Suggestion }))
     .addFunction(
         FunctionSpec.publicAction({ args: () => submitWebsiteArgs, name: "submitWebsite", returns: () => Schema.Null })

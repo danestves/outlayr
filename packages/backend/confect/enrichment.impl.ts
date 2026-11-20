@@ -2,6 +2,7 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import { route } from "@outlayr/model-router/route";
 import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
+import { MERCHANT_NAMES_KEY, merchantNamesOf, renameFor } from "@outlayr/money/merchant-names";
 import type { UserIdentity } from "convex/server";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
@@ -30,6 +31,7 @@ import {
     sanitizeRegionCode,
 } from "./enrichment";
 import spec from "./enrichment.spec";
+import type { Suggestion } from "./enrichment.spec";
 import { isForbiddenLogoOrigin } from "./groundedLookup";
 import { openAiGateFor, withinLimit } from "./lib/aiGate";
 import { liveIdentity, optionalUserId } from "./lib/auth";
@@ -110,6 +112,26 @@ const groundedConsent = FunctionImpl.make(
     }, Effect.orDie)
 );
 
+/** The synced renames, read with the caller's own session; a lost session reads as none. */
+const merchantNames = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "merchantNames",
+    Effect.fn("Enrichment.merchantNames")(function* merchantNames() {
+        const ctx = yield* QueryCtx;
+        const userId = yield* optionalUserId(ctx);
+        if (userId === null) {
+            return null;
+        }
+        const reader = yield* DatabaseReader;
+        const row = yield* reader
+            .table("appMeta")
+            .get("by_user_and_key", userId, MERCHANT_NAMES_KEY)
+            .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
+        return row?.value ?? null;
+    }, Effect.orDie)
+);
+
 const suggest = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -131,20 +153,27 @@ const suggest = FunctionImpl.make(
             const locale = sanitizeLocale(args.locale);
 
             const { runQuery } = yield* QueryRunner;
+            // A person's rename beats the shared list and the model,
+            // so the phone's queue writes it on the next capture.
+            const names = merchantNamesOf(yield* runQuery(refs.internal.enrichment.merchantNames, {}));
+            const named = (suggestion: Suggestion): Suggestion => {
+                const merchantName = renameFor(names, trimmedName, suggestion.merchantName);
+                return merchantName === null ? suggestion : { ...suggestion, merchantName };
+            };
             // Tier 1.5 spends no rate limit and runs before the API key check, so a hit works without the key.
             const cached = yield* runQuery(refs.internal.merchantKnowledge.lookup, {
                 keys: knowledgeKeys(trimmedName, currency),
                 now: yield* Clock.currentTimeMillis,
             });
             if (cached !== null) {
-                return {
+                return named({
                     ...applyToTree(args.categoryTree, cached),
                     grounding: false,
-                };
+                });
             }
 
             if (args.knowledgeOnly === true) {
-                return EMPTY;
+                return named(EMPTY);
             }
 
             const ctx = yield* ActionCtx;
@@ -197,13 +226,13 @@ const suggest = FunctionImpl.make(
             );
             if (result === null) {
                 // Not a thrown ConvexError: an ordinary timeout should not fill the logs with stack traces.
-                return { ...EMPTY, grounding: yield* scheduleGrounded };
+                return named({ ...EMPTY, grounding: yield* scheduleGrounded });
             }
 
             // Never awaited: it fills Tier 1.5 for the NEXT lookup.
             const scheduled = needsGroundedLookup(result) && (yield* scheduleGrounded);
             // `grounding: true` stops the client caching this as final.
-            return scheduled ? { ...result, grounding: true } : result;
+            return named(scheduled ? { ...result, grounding: true } : result);
         },
         Effect.catchTags({ AiRefused: () => Effect.succeed(EMPTY) }),
         Effect.orDie
@@ -262,6 +291,7 @@ const submitWebsite = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(groundedConsent),
+    Layer.provide(merchantNames),
     Layer.provide(suggest),
     Layer.provide(submitWebsite),
     GroupImpl.finalize
