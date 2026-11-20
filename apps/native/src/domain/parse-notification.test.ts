@@ -164,6 +164,8 @@ describe("parseNotification", () => {
             "Tu cuota de $25,00 vence mañana",
             "Your payment of $50.00 is due tomorrow. Pay today to avoid a late fee.",
             "Recordatorio de pago: tu factura de Bs. 320,00 está por vencer",
+            "Your payment of $50.00 is overdue",
+            "Tu cuota de $25,00 está vencida",
         ]) {
             expect(parseNotification(text)).toBeNull();
             expect(hasChargeAmount(text)).toBe(false);
