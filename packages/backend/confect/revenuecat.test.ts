@@ -5,7 +5,7 @@ import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import { afterEach, describe, expect, it, test, vi } from "vite-plus/test";
 
-import { api } from "../convex/_generated/api";
+import { api, components } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { runEdge } from "./lib/runEdge";
 import { isPro } from "./revenuecat";
@@ -70,6 +70,49 @@ describe("webhook route", () => {
         expect(response.status).toBe(200);
         await expect(t.run((ctx) => runEdge(isPro(ctx, identity.userId)))).resolves.toBeTruthy();
         await expect(t.run((ctx) => runEdge(isPro(ctx, other.userId)))).resolves.toBeFalsy();
+    });
+});
+
+describe("PRO_ACCOUNTS on a deployment without RevenueCat", () => {
+    afterEach(() => {
+        vi.unstubAllEnvs();
+    });
+
+    const setup = () => {
+        const t = convexTest(schema, modules);
+        revenuecatTest.register(t);
+        const pro = (userId: string) => t.run((ctx) => runEdge(isPro(ctx, userId)));
+        return { pro, t };
+    };
+
+    it("grants Pro to listed emails only once they are verified", async () => {
+        const { pro, t } = setup();
+        const ana = await seedAuthUser(t, { email: "ana@example.com" });
+        const ben = await seedAuthUser(t);
+        const impostor = await t.run(async (ctx) => {
+            const user = await ctx.runMutation(components.betterAuth.adapter.create, {
+                input: {
+                    data: { createdAt: 0, email: "luis@example.com", emailVerified: false, name: "", updatedAt: 0 },
+                    model: "user",
+                },
+            });
+            return String(user._id);
+        });
+        vi.stubEnv("PRO_ACCOUNTS", " Ana@Example.com, luis@example.com ");
+
+        await expect(pro(ana.userId)).resolves.toBeTruthy();
+        await expect(pro(ben.userId)).resolves.toBeFalsy();
+        await expect(pro(impostor)).resolves.toBeFalsy();
+    });
+
+    it("grants Pro to every account with all", async () => {
+        const { pro, t } = setup();
+        const ana = await seedAuthUser(t);
+        await expect(pro(ana.userId)).resolves.toBeFalsy();
+
+        vi.stubEnv("PRO_ACCOUNTS", "all");
+
+        await expect(pro(ana.userId)).resolves.toBeTruthy();
     });
 });
 

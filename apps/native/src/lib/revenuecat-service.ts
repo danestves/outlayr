@@ -13,6 +13,7 @@ import * as SubscriptionRef from "effect/SubscriptionRef";
 import type { PurchasesPackage } from "react-native-purchases";
 
 import { WatchAppState } from "@/lib/app-events";
+import { isCloudAuthenticated, subscribeCloudAuthenticated } from "@/lib/convex";
 import { mirrorEntitlement } from "@/lib/entitlement-mirror";
 import {
     configureRevenueCat,
@@ -79,7 +80,11 @@ type Watch<A> = (listener: (value: A) => void) => () => void;
 const watchEntitlement: Watch<boolean> = (listener) =>
     onCustomerInfoUpdated((customerInfo) => listener(hasProEntitlement(customerInfo)));
 
+const watchCloudAuthenticated: Watch<boolean> = (listener) =>
+    subscribeCloudAuthenticated(() => listener(isCloudAuthenticated()));
+
 const revenueCatSdk = {
+    cloudAuthenticated: isCloudAuthenticated,
     configureRevenueCat,
     eligibleForTrial,
     getPackages,
@@ -90,6 +95,7 @@ const revenueCatSdk = {
     refreshProEntitlement,
     restoreAndCheckPro,
     setCustomerProfile,
+    watchCloudAuthenticated,
     watchEntitlement,
 };
 
@@ -251,18 +257,52 @@ const listen = <A>(watch: Watch<A>): Stream.Stream<A> =>
         )
     );
 
-const unconfigured = (sdk: typeof revenueCatSdk, run: Effect.Effect<void>) =>
-    RevenueCat.of({
+const UNCONFIGURED: Entitlement = { kind: "unconfigured" };
+const GRANTED: Entitlement = { kind: "pro", mirrored: true, pending: false };
+
+interface Grant {
+    readonly account: string | null;
+    readonly pro: boolean;
+    readonly ticket: number;
+}
+
+const unconfigured = Effect.fn("RevenueCat.unconfigured")(function* unconfigured(
+    sdk: typeof revenueCatSdk,
+    run: Effect.Effect<void>
+) {
+    const grant = yield* SubscriptionRef.make<Grant>({ account: null, pro: false, ticket: 0 });
+    const lookUp = Effect.fn("RevenueCat.lookUpGrant")(function* lookUp(next: (last: Grant) => Grant) {
+        const { account, ticket } = yield* SubscriptionRef.updateAndGet(grant, (last) => ({
+            ...next(last),
+            ticket: last.ticket + 1,
+        }));
+        if (account === null || !sdk.cloudAuthenticated()) {
+            return;
+        }
+        const pro = yield* sdk.mirrorEntitlement();
+        yield* SubscriptionRef.update(grant, (last) => (last.ticket === ticket ? { ...last, pro } : last));
+    });
+    const authChanges = listen(sdk.watchCloudAuthenticated).pipe(
+        Stream.mapEffect((authenticated) => lookUp((last) => (authenticated ? last : { ...last, pro: false })), {
+            concurrency: "unbounded",
+        }),
+        Stream.runDrain
+    );
+    return RevenueCat.of({
         eligibleForTrial: () => Effect.succeed(new Set<string>()),
-        entitlement: Stream.succeed<Entitlement>({ kind: "unconfigured" }),
-        follow: () => Effect.void,
+        entitlement: SubscriptionRef.changes(grant).pipe(
+            Stream.map(({ pro }) => (pro ? GRANTED : UNCONFIGURED)),
+            Stream.changes
+        ),
+        follow: ({ accountId }) => lookUp(() => ({ account: accountId, pro: false, ticket: 0 })),
         getPackages: () => Effect.succeed([]),
         mirror: () => sdk.mirrorEntitlement(),
         purchase: () => Effect.succeed("cancelled"),
         refresh: () => Effect.succeed(false),
         restore: () => Effect.succeed(false),
-        run: () => run,
+        run: () => Effect.all([run, authChanges], { concurrency: "unbounded", discard: true }),
     });
+});
 
 export const make = Effect.gen(function* make() {
     const sdk = yield* RevenueCatSdk;
@@ -270,10 +310,10 @@ export const make = Effect.gen(function* make() {
     const scope = yield* Effect.scope;
     const configured = yield* Effect.result(Effect.try({ catch: failedAt("configure"), try: sdk.configureRevenueCat }));
     if (Result.isFailure(configured)) {
-        return unconfigured(sdk, Effect.die(configured.failure.cause));
+        return yield* unconfigured(sdk, Effect.die(configured.failure.cause));
     }
     if (!configured.success) {
-        return unconfigured(sdk, Effect.never);
+        return yield* unconfigured(sdk, Effect.never);
     }
     const ref = yield* SubscriptionRef.make(initialState);
     const lane = yield* Queue.unbounded<Effect.Effect<unknown>>();

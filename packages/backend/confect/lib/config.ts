@@ -78,6 +78,16 @@ export const emailConfig = Config.all({
 
 export const revenueCatSecretKey = secret("REVENUECAT_SECRET_KEY");
 
+export const proAccounts = Config.String("PRO_ACCOUNTS").pipe(
+    Config.withDefault(""),
+    Config.map((value) =>
+        value
+            .split(",")
+            .map((entry) => entry.trim().toLowerCase())
+            .filter((entry) => entry !== "")
+    )
+);
+
 export const revenueCatMetricsConfig = Config.all({
     projectId: text("REVENUECAT_PROJECT_ID"),
     secretKey: secret("REVENUECAT_V2_SECRET_KEY"),

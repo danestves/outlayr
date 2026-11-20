@@ -36,8 +36,10 @@ function watchable<A>() {
 
 const customerInfo = watchable<boolean>();
 const appState = watchable<AppStateStatus>();
+const cloudAuth = watchable<boolean>();
 
 const sdk = {
+    cloudAuthenticated: vi.fn<() => boolean>(),
     configureRevenueCat: () => true,
     eligibleForTrial: vi.fn<(productIds: readonly string[]) => Effect.Effect<Set<string>, PurchasesError>>(),
     getPackages: vi.fn<() => Effect.Effect<PurchasesPackage[], PurchasesError>>(),
@@ -48,6 +50,7 @@ const sdk = {
     refreshProEntitlement: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
     restoreAndCheckPro: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
     setCustomerProfile: vi.fn<(profile: { email: string; name: string }) => Effect.Effect<void, PurchasesError>>(),
+    watchCloudAuthenticated: cloudAuth.watch,
     watchEntitlement: customerInfo.watch,
 };
 
@@ -117,6 +120,8 @@ describe("revenueCat", () => {
         vi.resetAllMocks();
         customerInfo.listeners.clear();
         appState.listeners.clear();
+        cloudAuth.listeners.clear();
+        sdk.cloudAuthenticated.mockReturnValue(true);
         leaveSession = undefined;
         sdk.eligibleForTrial.mockReturnValue(Effect.succeed(new Set()));
         sdk.getPackages.mockReturnValue(Effect.succeed([]));
@@ -168,6 +173,7 @@ describe("revenueCat", () => {
 
     it("fails the run with the SDK's error when configuring throws, so the error boundary sees it", async () => {
         const thrown = new Error("missing API key");
+        sdk.mirrorEntitlement.mockReturnValue(Effect.succeed(false));
         await start("user-1", {
             ...sdk,
             configureRevenueCat: () => {
@@ -180,6 +186,47 @@ describe("revenueCat", () => {
             throw new Error("the run did not fail");
         }
         expect(Cause.squash(run.cause)).toBe(thrown);
+        expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
+    });
+
+    it("without RevenueCat, takes Pro from the server for whichever account is signed in", async () => {
+        const local = { ...sdk, configureRevenueCat: () => false };
+        await start("user-30", local);
+        expect(entitlement()).toStrictEqual({ kind: "pro", mirrored: true, pending: false });
+
+        const lookup = held<boolean>();
+        sdk.mirrorEntitlement.mockReturnValueOnce(Effect.promise(() => lookup.promise));
+        signIn("user-31");
+        await flush();
+        expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
+        signIn(null);
+        await flush();
+        lookup.resolve(true);
+        await flush();
+        expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
+    });
+
+    it("without RevenueCat, waits for Convex to authenticate before asking the server", async () => {
+        sdk.cloudAuthenticated.mockReturnValue(false);
+        await start("user-32", { ...sdk, configureRevenueCat: () => false });
+        expect(sdk.mirrorEntitlement).not.toHaveBeenCalled();
+        expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
+
+        sdk.cloudAuthenticated.mockReturnValue(true);
+        cloudAuth.emit(true);
+        await flush();
+        expect(entitlement()).toStrictEqual({ kind: "pro", mirrored: true, pending: false });
+
+        const lookup = held<boolean>();
+        sdk.mirrorEntitlement.mockReturnValueOnce(Effect.promise(() => lookup.promise));
+        cloudAuth.emit(true);
+        await flush();
+        expect(sdk.mirrorEntitlement).toHaveBeenCalledTimes(2);
+        sdk.cloudAuthenticated.mockReturnValue(false);
+        cloudAuth.emit(false);
+        await flush();
+        lookup.resolve(true);
+        await flush();
         expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
     });
 
