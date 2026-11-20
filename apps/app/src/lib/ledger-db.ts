@@ -27,8 +27,10 @@ const onServer = (db: DbClient) => db.getDependency<boolean>(SERVER) === true;
 
 type TagTable = "tags" | "transactionTags";
 
+type RecordTable = "transactionAttachments" | "transactionSplits";
+
 type Stored = { [Table in Exclude<keyof LedgerBooks, "appMeta" | "exchangeRates">]: LedgerBooks[Table][number] } & {
-    [Table in TagTable]: Doc<Table>;
+    [Table in RecordTable | TagTable]: Doc<Table>;
 };
 
 type DocTable = keyof Stored;
@@ -252,10 +254,12 @@ export const ledgerCollections = {
     outsidePayments: ledgerTable(docs("outsidePayments")),
     savingsGoals: ledgerTable(docs("savingsGoals")),
     tags: ledgerTable(docs("tags")),
+    transactionAttachments: ledgerTable(docs("transactionAttachments")),
+    transactionSplits: ledgerTable(docs("transactionSplits")),
     transactionTags: ledgerTable(docs("transactionTags")),
     transactions: ledgerTable(docs("transactions", false)),
     transfers: ledgerTable(docs("transfers", false)),
-} satisfies Record<keyof LedgerBooks | TagTable, { id: string }>;
+} satisfies Record<keyof LedgerBooks | RecordTable | TagTable, { id: string }>;
 
 export type ExchangeRate = LedgerBooks["exchangeRates"][number];
 
@@ -462,4 +466,23 @@ export function useTagBooks(): TagBooks {
     const links = useRows(ledgerCollections.transactionTags);
     const tags = useRows(ledgerCollections.tags);
     return useMemo(() => ({ links, tags }), [links, tags]);
+}
+
+export type Attachment = Stored["transactionAttachments"];
+export type SplitPart = Stored["transactionSplits"];
+
+export interface RecordBooks {
+    attachments: readonly Attachment[];
+    splits: readonly SplitPart[];
+}
+
+export const recordBooks = (db: DbClient): RecordBooks => ({
+    attachments: rowsOf(db, ledgerCollections.transactionAttachments),
+    splits: rowsOf(db, ledgerCollections.transactionSplits),
+});
+
+export function useRecordBooks(): RecordBooks {
+    const attachments = useRows(ledgerCollections.transactionAttachments);
+    const splits = useRows(ledgerCollections.transactionSplits);
+    return useMemo(() => ({ attachments, splits }), [attachments, splits]);
 }

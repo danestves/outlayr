@@ -29,6 +29,8 @@ const COLLECTED = {
     outsidePayments: ledgerCollections.outsidePayments,
     savingsGoals: ledgerCollections.savingsGoals,
     tags: ledgerCollections.tags,
+    transactionAttachments: ledgerCollections.transactionAttachments,
+    transactionSplits: ledgerCollections.transactionSplits,
     transactionTags: ledgerCollections.transactionTags,
     transactions: ledgerCollections.transactions,
     transfers: ledgerCollections.transfers,
