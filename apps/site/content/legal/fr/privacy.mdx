@@ -210,6 +210,10 @@ Anthropic est la société américaine qui conçoit les modèles d’IA Claude. 
 
 Si une requête envoyée à Anthropic échoue, le journal d’erreurs de notre serveur peut contenir le nom du commerçant concerné, afin que nous puissions trouver le problème. Il ne contient jamais le texte d’une notification.
 
+### Outlayr exploité par d’autres
+
+Le code d’Outlayr est open source : n’importe qui peut l’exécuter sur ses propres serveurs. Cette politique ne couvre que l’Outlayr que nous exploitons : les apps de l’App Store et de Google Play, ce site web et nos serveurs, qui utilisent Anthropic et ElevenLabs comme décrit ci-dessus. Si vous utilisez une installation exploitée par quelqu’un d’autre, c’est son exploitant qui en est responsable : il choisit ses fournisseurs d’IA et de reconnaissance vocale, et ce sont ses conditions et sa politique de confidentialité qui s’appliquent, pas les nôtres. Les fournisseurs pris en charge par le code d’Outlayr sont listés dans son [code source public](https://github.com/danestves/outlayr/tree/main/packages/ai/src/providers).
+
 ### Enregistrements des requêtes d’IA
 
 Après chaque requête envoyée à Anthropic, notre serveur envoie à PostHog un enregistrement de celle-ci : la fonctionnalité, le modèle, le nombre de jetons utilisés et leur coût, la durée, si elle a échoué, et les noms des outils du modèle qu’elle a utilisés, comme la recherche web. Les enregistrements de saisie vocale contiennent aussi un identifiant de conversation, afin que ses échanges restent regroupés. Un enregistrement ne contient jamais ce que vous avez dit, la photo ou la capture d’écran, le texte d’une notification, ni aucun autre texte envoyé à Anthropic ou reçu de lui. Si **Réglages › Partager les données d’analyse** est activé sur l’appareil qui fait la requête, l’enregistrement contient votre identifiant de compte, afin que nous puissions voir ce que coûtent les fonctionnalités d’IA pour chaque compte. S’il est désactivé, l’enregistrement contient un identifiant aléatoire qui n’est pas lié à vous.

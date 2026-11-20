@@ -210,6 +210,10 @@ Anthropic es la empresa estadounidense que crea los modelos de IA Claude. Eleven
 
 Si una solicitud a Anthropic falla, el registro de errores de nuestro servidor puede incluir el nombre del comercio involucrado, para que podamos encontrar el problema. Nunca incluye el texto de una notificación.
 
+### Outlayr operado por otros
+
+El código de Outlayr es abierto, así que cualquiera puede ejecutarlo en sus propios servidores. Esta política cubre solo el Outlayr que operamos nosotros: las apps del App Store y Google Play, este sitio web y nuestros servidores, que usan Anthropic y ElevenLabs como se describe arriba. Si usas una instalación que opera otra persona o empresa, quien la opera es responsable de ella: elige sus proveedores de IA y de voz, y se aplican sus términos y su política de privacidad, no los nuestros. Los proveedores que admite el código de Outlayr aparecen en su [código fuente público](https://github.com/danestves/outlayr/tree/main/packages/ai/src/providers).
+
 ### Registros de solicitudes de IA
 
 Después de cada solicitud a Anthropic, nuestro servidor le envía a PostHog un registro de ella: la función, el modelo, cuántos tokens usó y cuánto costó, cuánto tardó, si falló y los nombres de las herramientas del modelo que usó, como la búsqueda web. Los registros de la entrada por voz también llevan un ID de la conversación, para que sus turnos queden juntos. Un registro nunca incluye lo que dijiste, la foto o la captura, el texto de una notificación ni ningún otro texto enviado a Anthropic o recibido de ella. Si **Configuración › Compartir analíticas** está activado en el dispositivo que hace la solicitud, el registro lleva tu ID de cuenta, para que podamos ver cuánto cuestan las funciones de IA en cada cuenta. Si está desactivado, el registro lleva un ID aleatorio que no está vinculado a ti.

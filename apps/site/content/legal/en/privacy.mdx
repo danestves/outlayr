@@ -210,6 +210,10 @@ Anthropic is the US company that makes the Claude AI models. ElevenLabs makes th
 
 If a request to Anthropic fails, our server’s error log can include the merchant name involved, so we can find the problem. It never includes a notification’s text.
 
+### Outlayr run by someone else
+
+Outlayr’s code is open source, so anyone can run it on their own servers. This policy covers only the Outlayr we run: the apps on the App Store and Google Play, this website, and our servers, which use Anthropic and ElevenLabs as described above. If you use a deployment run by someone else, they operate it: they choose its AI and speech providers, and their terms and privacy policy apply, not ours. The providers Outlayr’s code supports are listed in its [public source code](https://github.com/danestves/outlayr/tree/main/packages/ai/src/providers).
+
 ### Records of AI requests
 
 After each request to Anthropic, our server sends PostHog a record of it: the feature, the model, how many tokens it used and what it cost, how long it took, whether it failed, and the names of the model’s tools it used, such as web search. Voice entry records also carry an ID for the conversation, so its turns stay together. A record never includes what you said, the photo or screenshot, a notification’s text, or any other text sent to or received from Anthropic. If **Settings › Share analytics** is on for the device making the request, the record carries your account ID, so we can see what AI features cost for each account. If it’s off, the record carries a random ID that isn’t linked to you.
