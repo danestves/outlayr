@@ -9,7 +9,7 @@ import * as Layer from "effect/Layer";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import { ActionCtx, QueryRunner } from "./_generated/services";
-import { classify, failure, MAX_LABELS, rateLimiter, scheduleImportGrounded } from "./csvImport";
+import { classify, failure, MAX_LABELS, rateLimiter, REQUEST_TIMEOUT_MS, scheduleImportGrounded } from "./csvImport";
 import spec from "./csvImport.spec";
 import type { LabelSuggestion } from "./csvImport.spec";
 import { sanitizeRegionCode } from "./enrichment";
@@ -71,7 +71,11 @@ const csvImport = FunctionImpl.make(
                 return { status: "ok" as const, suggestions: known };
             }
 
-            const classified = yield* classify(model, { categoryTree: args.categoryTree, labels: remaining });
+            const classified = yield* classify(model, {
+                categoryTree: args.categoryTree,
+                labels: remaining,
+                timeout: REQUEST_TIMEOUT_MS,
+            });
             if (classified.status !== "ok" || classified.suggestions === null) {
                 if (known.length > 0) {
                     return { degraded: true, status: "ok" as const, suggestions: known };
