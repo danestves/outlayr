@@ -25,6 +25,8 @@ import { isPro } from "./revenuecat";
 // Convex upload urls live an hour. Extraction deletes a statement at once; this catches the client that never called.
 const UPLOAD_URL_LIFETIME = Duration.hours(1);
 const SWEEP_GRACE = Duration.minutes(15);
+// PDF extraction has no client deadline and classifies up to 200 labels, which can outrun the CSV budget.
+const CLASSIFY_TIMEOUT = Duration.seconds(60);
 
 const requestUpload = FunctionImpl.make(
     databaseSchema,
@@ -140,7 +142,11 @@ const suggestCategories = Effect.fn("PdfImport.suggestCategories")(function* sug
     if (remaining.length === 0) {
         return { degraded: overCap, suggestions: known };
     }
-    const classified = yield* classify(args.model, { categoryTree: args.categoryTree, labels: remaining });
+    const classified = yield* classify(args.model, {
+        categoryTree: args.categoryTree,
+        labels: remaining,
+        timeout: CLASSIFY_TIMEOUT,
+    });
     if (classified.status !== "ok" || classified.suggestions === null) {
         return { degraded: true, suggestions: known };
     }

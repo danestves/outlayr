@@ -322,6 +322,29 @@ describe("pdfImport.extract", () => {
         expect(bodies).toHaveLength(2);
     });
 
+    it("keeps the suggestions when classifying a statement outlasts the CSV import's 12s budget", async () => {
+        const { args, asUser, upload } = await setup();
+        const storageId = await upload();
+        vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+        try {
+            stubModel(({ request }) => {
+                if (JSON.stringify(request.messages).includes("<statement>")) {
+                    return answers({ rows: ROWS });
+                }
+                vi.advanceTimersByTime(13_000);
+                return answers({ mapping: [{ categoryName: "Coffee", label: "STARBUCKS CENTRO" }] });
+            });
+
+            await expect(asUser.action(api.pdfImport.extract, args(storageId))).resolves.toStrictEqual({
+                rows: ROWS,
+                status: "ok",
+                suggestions: [{ categoryName: "Coffee", domain: null, label: "STARBUCKS CENTRO" }],
+            });
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it("tells the client which pages had no text to read", async () => {
         const { args, asUser, upload } = await setup();
         stubAnswers(ROWS, [{ categoryName: "Coffee", label: "STARBUCKS CENTRO" }]);

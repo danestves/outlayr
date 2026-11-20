@@ -2,6 +2,7 @@ import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { generateObject } from "@outlayr/ai/generate";
 import type { TextModel } from "@outlayr/ai/model";
 import { merchantKey } from "@outlayr/money/merchant-key";
+import type * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -15,7 +16,7 @@ import type { CategoryBranch } from "./lib/ledgerPrompt";
 
 export const MAX_LABELS = 200;
 /** The action's own budget under the client's 15s hard `Promise.race` abort. */
-const REQUEST_TIMEOUT_MS = 12_000;
+export const REQUEST_TIMEOUT_MS = 12_000;
 
 export function failure(status: Exclude<CsvImportStatus, "ok">): CsvImportResult {
     return { status, suggestions: null };
@@ -34,6 +35,7 @@ const ModelOutput = Schema.Struct({
 export interface RunClassifyArgs {
     categoryTree: readonly CategoryBranch[];
     labels: readonly string[];
+    timeout: Duration.Input;
 }
 
 function buildPrompt(args: RunClassifyArgs): string {
@@ -62,7 +64,7 @@ export const classify = Effect.fn("CsvImport.classify")(
     function* classify(model: TextModel, args: RunClassifyArgs) {
         const output = yield* generateObject(model, ModelOutput, {
             messages: [{ content: buildPrompt(args), role: "user" }],
-            timeout: REQUEST_TIMEOUT_MS,
+            timeout: args.timeout,
         });
 
         const suggestions: LabelSuggestion[] = [];

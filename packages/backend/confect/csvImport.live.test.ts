@@ -13,7 +13,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
-import { classify } from "./csvImport";
+import { classify, REQUEST_TIMEOUT_MS } from "./csvImport";
 import { authenticatedAs, seedProUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");
@@ -39,6 +39,7 @@ describe.skipIf(model === undefined)("csvImport against the live model", () => {
             classify(model, {
                 categoryTree: CATEGORY_TREE,
                 labels: LABELS,
+                timeout: REQUEST_TIMEOUT_MS,
             })
         );
 

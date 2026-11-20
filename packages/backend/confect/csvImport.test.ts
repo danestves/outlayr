@@ -6,6 +6,7 @@ import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { merchantKey } from "@outlayr/money/merchant-key";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -465,6 +466,7 @@ describe(classify, () => {
                 classify(model, {
                     categoryTree: BASE_ARGS.categoryTree,
                     labels: BASE_ARGS.labels,
+                    timeout: Duration.seconds(12),
                 })
             )
         ).resolves.toStrictEqual({
@@ -491,6 +493,7 @@ describe(classify, () => {
                 classify(model, {
                     categoryTree: BASE_ARGS.categoryTree,
                     labels: BASE_ARGS.labels,
+                    timeout: Duration.seconds(12),
                 })
             )
         ).resolves.toStrictEqual({
@@ -507,6 +510,7 @@ describe(classify, () => {
                 classify(model, {
                     categoryTree: BASE_ARGS.categoryTree,
                     labels: BASE_ARGS.labels,
+                    timeout: Duration.seconds(12),
                 })
             )
         ).resolves.toStrictEqual({
@@ -523,6 +527,7 @@ describe(classify, () => {
                 classify(model, {
                     categoryTree: BASE_ARGS.categoryTree,
                     labels: BASE_ARGS.labels,
+                    timeout: Duration.seconds(12),
                 })
             )
         ).resolves.toStrictEqual({
