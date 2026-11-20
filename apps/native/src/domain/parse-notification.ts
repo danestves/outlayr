@@ -66,11 +66,13 @@ const DECLINED = String.raw`\b(?:declined|denied|failed|reverted|unsuccessful|in
 // "Evitas el cargo por atraso de $4" warns about a charge the user has not made. A purchase still says "tu cuota
 // vence el 15/12" and a payment "cuota vencida", so due words count only beside a nearby day or as a status.
 const REMINDER = String.raw`\b(?:recordatorio\s+de\s+(?:pago|cuota|vencimiento)|(?:payment|bill)\s+reminder|(?:hoy|ma[ñn]ana|pronto)\s+vencen?|vencen?\s+(?:hoy|ma[ñn]ana|pronto)|por\s+vencer|pr[oó]xim[ao]s?\s+a\s+vencer|(?:is|are)\s+(?:overdue|(?:past\s+)?due)|est[aá]n?\s+vencid[ao]s?|due\s+(?:today|tomorrow|soon)|payment\s+due|pay\s+today|pag(?:a|ue)\s+hoy|avoid\s+(?:a\s+|the\s+|any\s+)?(?:late\s+)?(?:fees?|charges?|interest|penalt(?:y|ies))|evita(?:s|r)?\s+(?:el\s+|los\s+|un\s+)?(?:cargos?|recargos?|intereses|multas?|penalidad(?:es)?|penalizaci[oó]n))(?!\p{L})`;
+// Payoneer announces a payment "on its way" and pushes again once it is deposited; only the deposit is money in.
+const PENDING = String.raw`\b(?:is\s+on\s+its\s+way|est[aá]\s+en\s+camino)\b`;
 // A shipped LogNotificationIntent or PurchaseListenerService reads only the pattern keys it was built with, so the
-// reminder cue rides on declined, which already drops the whole text there.
-const NO_CHARGE = new RegExp(`(?:${DECLINED})|(?:${REMINDER})`, "iu");
+// reminder and pending cues ride on declined, which already drops the whole text there.
+const NO_CHARGE = new RegExp(`(?:${DECLINED})|(?:${REMINDER})|(?:${PENDING})`, "iu");
 const INCOMING = new RegExp(
-    String.raw`\b(?:received|refund(?:ed)?|reversal|credited|recibi(?:ste|d[ao])|reembols(?:o|ad[ao])|devoluci[oó]n|abon(?:o|ad[ao])|acreditad[ao])\b|\bte\s+(?:transfer[ií]|pagu[eé]|envi[eé]|mand[eé]|deposit[eé]|pas[eé]|hice)(?!\p{L})`,
+    String.raw`\b(?:received|refund(?:ed)?|reversal|credited|deposited|depositad[ao]|recibi(?:ste|d[ao])|reembols(?:o|ad[ao])|devoluci[oó]n|abon(?:o|ad[ao])|acreditad[ao])\b|\bte\s+(?:transfer[ií]|pagu[eé]|envi[eé]|mand[eé]|deposit[eé]|pas[eé]|hice)(?!\p{L})`,
     "iu"
 );
 
@@ -94,7 +96,11 @@ const BALANCE_BEFORE = new RegExp(`(?:${BALANCE})|(?:${EXCHANGE_RATE})`, "iu");
 
 const STOP = String.raw`(?=\s+(?:with|using|via|on|for|con|usando|por|el|la|desde|mediante)\b|[,.;\n]|$)`;
 const PAID_TO = new RegExp(String.raw`\b(?:at|in|en|to|a|de|@)\s+(?!las?\s+\d|fecha\b)(.+?)${STOP}`, "iu");
-const RECEIVED_FROM = new RegExp(String.raw`\b(?:from|de|por parte de)\s+(?!operaci[oó]n\b)(.+?)${STOP}`, "iu");
+const DEPOSITED = String.raw`(?=\s+(?:was|has\s+been|fue|ha\s+sido)\s+deposit)`;
+const RECEIVED_FROM = new RegExp(
+    String.raw`\b(?:from|de|por parte de)\s+(?!operaci[oó]n\b)(.+?)(?:${DEPOSITED}|${STOP})`,
+    "iu"
+);
 const SENT_BY = new RegExp(String.raw`\bde\s+(\p{Lu}[\p{Lu} .'-]*\p{Lu})\s+por\s*$`, "u");
 const YOUR_CHARGE = new RegExp(
     String.raw`\byour[^\S\n]+([^\n]+?)[^\S\n]+(?:transaction|purchase|payment|charge|order)\b`,
