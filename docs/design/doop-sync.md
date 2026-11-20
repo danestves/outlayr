@@ -213,6 +213,31 @@ From the canvas page `Web · Recurring`, under `components/dashboard/recurring`:
 - **Loading:** `recurring-pending.tsx` draws the real screen over the sampled ledger inside a static skullet skeleton.
 - **Raw controls:** the calendar's day cells and side lists, the pause choices (each row holds a date button, which a RadioCard cannot nest), the hidden date inputs behind the day fields and the stepper's number stay raw: a part would add chrome the frames do not draw.
 
+## Debts
+
+From the canvas page `Web · Debts`, under `components/dashboard/debts`:
+
+- **Amounts:** new debt, something I owe, pay back and the second leg (the account's currency, or USD when no rate covers the day) use MoneyField, each on its own row. Pay back's chips fill the amount. An on-credit entry still gets the amount as text, written by `plainAmount`.
+- **Due strip:** the next 14 days of installments, with Open installments on the right, as the frame draws it.
+- **Motion:** a name, a card's Open and the row link push left, and every way back (the back button, the crumb, deleting from the detail page) reverses. The table dissolves on a tab swap.
+- **Menus:** the row, the bar and the person picker are 240 wide on `MenuContent`. The form's selects keep the shell scope at `z-60`, above the dialog.
+- **Dialogs:** every flow is `md` (448) on `DialogContent`. Delete stays a dialog with an undo toast.
+- **Empty:** no debts and a detail with no movements use the dashboard's one-icon `Empty`. The frame's ghost rows are not drawn.
+- **Payoff bar:** the late share is `bg-app-warn/55`, where it mixed warn into the track by hand. Widths stay inline: they come from the data.
+- **Loading:** `debts-pending.tsx` draws the real screen over the sampled ledger inside a static skullet skeleton.
+- **Raw controls:** the hidden date input behind the day field stays raw: the button opens its picker.
+
+## Installments
+
+From the canvas page `Web · Installments`, under `components/dashboard/installments`:
+
+- **Amounts:** pay, pay all, edit an installment and the late fee use MoneyField, each on its own row. The amount the source account leaves in its own currency follows the day's rate until it is typed over. The scan and purchase forms were already moved in the Accounts phase.
+- **Motion:** an order, a coming-up row and Open push left, and every way back (the back button, the crumb, deleting the whole order from its page) reverses. Orders and Paid off dissolve on a tab swap.
+- **Menus:** the row, the bar and the schedule row menus are 240 wide on `MenuContent`. Add and remove late fee are link Buttons, where they were raw buttons.
+- **Dialogs:** every flow is `md` (448) on `DialogContent`. Deleting one installment and deleting what is pending end in an undo toast.
+- **Empty:** no orders uses the dashboard's one-icon `Empty` with Import a screenshot and New purchase. The frame's ghost table is not drawn.
+- **Loading:** `installments-pending.tsx` draws the real screen over the sampled ledger inside a static skullet skeleton.
+
 ## Primitives
 
 | Part         | Use                                                    | Notes                                                                                                   |
@@ -237,7 +262,7 @@ The shell is on the primitives: the account menu and the period menu use `MenuCo
 These still use `AmountInput` (`components/dashboard/accounts/fields.tsx`) or a bare `inputMode="decimal"` input. Each one moves in its screen's phase:
 
 - `AmountInput`: `transactions/transfer-editor.tsx`
-- Bare decimal inputs: `debts/fields.tsx`, `debts/debt-dialogs.tsx`, `onboarding/first-entry.tsx`, `import/money-manager/overview.tsx`, `import/file-done.tsx`, `settings/plan.tsx`
+- Bare decimal inputs: `onboarding/first-entry.tsx`, `import/money-manager/overview.tsx`, `import/file-done.tsx`, `settings/plan.tsx`
 - Not amount entry, so they stay as they are: `transactions/filter-row.tsx` (the amount filter) and `settings/currency-converter.tsx` (a converter, closer to Exchange). The transfer flow already uses Exchange.
 
 ## Off contract
@@ -249,7 +274,7 @@ These are known and left for the screen phases:
 - **Hard-coded colours:** 42 hex colours in 21 non-test source files, such as the recap share card and the insights samples.
 - **Raw controls:** 35 files with a raw `<button>` and 14 with a raw `<input>`. The account sheet's sign-out row stays a raw `<button>` until there is a row part, because Button's ghost hover and weight would change the row.
 - **Spinners:** Button `loading` draws a spinner in `settings/invite.tsx`, `settings/plan.tsx`, `settings/account.tsx` and `settings/about/suggest.tsx`.
-- **Menu timing:** every menu except the account, period, dashboard filter, Transactions, Accounts, Goals and Recurring menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
+- **Menu timing:** every menu except the account, period, dashboard filter, Transactions, Accounts, Goals, Recurring, Debts and Installments menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
 - **Hand-placed scope:** 74 files put `app-shell ph-no-capture` on portaled content by hand. `DialogContent`, `SheetContent` and `MenuContent` replace that.
 - **Accent inside the shell:** `accentCss` (`lib/accent.ts`) writes the tint and on-tint on `:root`. The shell scope sets `--color-app-on-tint` again in both themes, and `--color-app-tint` again in dark, so inside the shell a non-default accent shows as vermilion in dark and keeps the default on-tint. This was already the case before this phase.
 - **Pages outside the shell:** `login` and `connect`, and any portal without `app-shell`, read the phone's dark palette from `:root`. So does `html` itself, whose background is `--color-app-bg`.
