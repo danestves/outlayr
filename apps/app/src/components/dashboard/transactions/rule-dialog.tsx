@@ -119,11 +119,13 @@ function TextRow({
 }
 
 interface RuleFormProps {
+    onCreated: () => void;
     onDone: () => void;
     picked: readonly FoldedRow[];
 }
 
-function RuleForm({ onDone, picked }: RuleFormProps) {
+function RuleForm({ onCreated, onDone, picked }: RuleFormProps) {
+    const formId = useId();
     const words = useIntlayer("dashboard-transactions");
     const { ops } = useIntlayer("dashboard-rules");
     const { rule: copy } = words;
@@ -237,6 +239,7 @@ function RuleForm({ onDone, picked }: RuleFormProps) {
             committer.notify({ detail: rule.name, onUndo: undoRule, text: copy.created.value });
         }
         onDone();
+        onCreated();
     };
     const total = picked.length;
     const covered = seed.covered.length;
@@ -248,6 +251,7 @@ function RuleForm({ onDone, picked }: RuleFormProps) {
     };
     return (
         <form
+            id={formId}
             onSubmit={(event) => {
                 event.preventDefault();
                 create();
@@ -378,17 +382,21 @@ function RuleForm({ onDone, picked }: RuleFormProps) {
                 <Button onClick={onDone} type="button" variant="secondary">
                     {copy.cancel}
                 </Button>
-                <Button type="submit">{copy.create}</Button>
+                <Button form={formId} type="submit">
+                    {copy.create}
+                </Button>
             </Dialog.Footer>
         </form>
     );
 }
 
 export function RuleDialog({
+    onCreated,
     onOpenChange,
     open,
     picked,
 }: {
+    onCreated: () => void;
     onOpenChange: (open: boolean) => void;
     open: boolean;
     picked: readonly FoldedRow[];
@@ -396,7 +404,7 @@ export function RuleDialog({
     return (
         <Dialog onOpenChange={onOpenChange} open={open}>
             <DialogContent>
-                {open ? <RuleForm onDone={() => onOpenChange(false)} picked={picked} /> : null}
+                {open ? <RuleForm onCreated={onCreated} onDone={() => onOpenChange(false)} picked={picked} /> : null}
             </DialogContent>
         </Dialog>
     );

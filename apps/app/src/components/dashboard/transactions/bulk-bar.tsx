@@ -202,7 +202,7 @@ export function BulkBar({ list, onClear, onDelete, picked }: BulkBarProps) {
                     <HugeiconsIcon icon={Cancel01Icon} size={16} strokeWidth={2} />
                 </Toolbar.Button>
             </Toolbar>
-            <RuleDialog onOpenChange={setRuling} open={ruling} picked={picked} />
+            <RuleDialog onCreated={onClear} onOpenChange={setRuling} open={ruling} picked={picked} />
             <ConfirmDialog
                 action={words.bulk.delete}
                 body={words.bulk.deleteBody}
