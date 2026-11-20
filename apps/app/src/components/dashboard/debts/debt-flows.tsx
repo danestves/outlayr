@@ -2,6 +2,8 @@ import { Dialog } from "panelui-web/dialog";
 import { useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
+import { DialogContent } from "@/components/ui/dialog-content";
+
 import { DebtDialogs } from "./debt-dialogs";
 import { DebtFlowsContext } from "./flow-context";
 import type { DebtFlow } from "./flow-context";
@@ -22,9 +24,9 @@ export function DebtFlowsProvider({ children }: { children: ReactNode }) {
         <DebtFlowsContext value={value}>
             {children}
             <Dialog onOpenChange={(next) => next || setFlow(null)} open={open}>
-                <Dialog.Content className="app-shell ph-no-capture" size="md">
+                <DialogContent size="md">
                     {flow ? <DebtDialogs flow={flow} onClose={() => setFlow(null)} onSwitch={setFlow} /> : null}
-                </Dialog.Content>
+                </DialogContent>
             </Dialog>
         </DebtFlowsContext>
     );

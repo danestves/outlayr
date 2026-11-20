@@ -17,16 +17,17 @@ import type { AccountRow } from "@/components/dashboard/accounts/model";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import { useCategoryOptions } from "@/components/dashboard/transactions/entry-form";
-import { deletedAccount, frozenUsd, parseAmount } from "@/lib/account-writes";
+import { focusAmount, useCategoryOptions } from "@/components/dashboard/transactions/entry-form";
+import { MoneyField } from "@/components/ui/money-field";
+import { deletedAccount, frozenUsd } from "@/lib/account-writes";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { wallInstant, wallText } from "@/lib/entry-writes";
 import { addDays } from "@/lib/ledger";
 import type { CommitRow } from "@/lib/ledger-committer";
 import { ledgerBooks } from "@/lib/ledger-db";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 import { createdTransfer, marketRate } from "@/lib/transfer-create";
-import { cn } from "@/lib/utils";
 
 import { targetInstant } from "../goals/model";
 import {
@@ -35,7 +36,6 @@ import {
     DayField,
     FOOTER_PILL,
     LABEL,
-    MoneyField,
     POPUP,
     PersonField,
     Pick,
@@ -107,19 +107,19 @@ const defaultAccount = (rows: readonly AccountRow[], currency: string) =>
 interface MoveState {
     /** Undefined while the pick follows the default account. */
     accountId: string | null | undefined;
-    /** Null while the other leg follows the day's rate. */
-    crossText: string | null;
+    /** Undefined while the other leg follows the day's rate. */
+    cross: number | null | undefined;
     day: string;
-    usdText: string;
+    usd: number | null;
 }
 
 function useMoveState() {
     const { ledger } = useDashboard();
     const [state, setState] = useState<MoveState>({
         accountId: undefined,
-        crossText: null,
+        cross: undefined,
         day: ledger.today,
-        usdText: "",
+        usd: null,
     });
     return [state, (patch: Partial<MoveState>) => setState((last) => ({ ...last, ...patch }))] as const;
 }
@@ -144,21 +144,18 @@ function moveOf(ledger: Ledger, { amount, fallback, personCurrency, rows, state 
     const crossed = account !== null && account.currency !== personCurrency;
     const accountCurrency = account?.currency ?? personCurrency;
     const rate = crossed ? marketRate(ledger, personCurrency, accountCurrency, `${state.day}T12:00`) : null;
-    const marketText =
-        rate !== null && amount > 0
-            ? plainAmount(roundMoney(amount * rate, decimalsFor(accountCurrency)), accountCurrency)
-            : "";
-    const crossText = state.crossText ?? marketText;
+    const market = rate !== null && amount > 0 ? roundMoney(amount * rate, decimalsFor(accountCurrency)) : null;
+    const crossAmount = state.cross === undefined ? market : state.cross;
     const needsUsd = account === null && usdMissing(ledger, personCurrency, state.day);
     return {
         account,
-        cross: crossed ? parseAmount(crossText, decimalsFor(accountCurrency)) : amount,
-        crossByHand: state.crossText !== null,
-        crossText,
+        cross: crossed ? (crossAmount ?? 0) : amount,
+        crossAmount,
+        crossByHand: state.cross !== undefined,
         crossed,
         needsUsd,
         state,
-        usd: needsUsd ? parseAmount(state.usdText, decimalsFor(USD)) : null,
+        usd: needsUsd ? (state.usd ?? 0) : null,
     };
 }
 
@@ -197,7 +194,7 @@ function MoveFields({
                     <Field.Label className={LABEL}>{accountLabel}</Field.Label>
                     <AccountPick
                         label={accountLabel}
-                        onPick={(accountId) => move.set({ accountId, crossText: null })}
+                        onPick={(accountId) => move.set({ accountId, cross: undefined })}
                         rows={rows}
                         value={move.account?.id ?? null}
                     />
@@ -214,18 +211,18 @@ function MoveFields({
             </div>
             {move.crossed && account ? (
                 <CrossField
+                    amount={move.crossAmount}
                     currency={account.currency}
                     invalid={tried && !(move.cross > 0)}
-                    onText={(crossText) => move.set({ crossText })}
-                    text={move.crossText}
+                    onAmount={(cross) => move.set({ cross })}
                 />
             ) : null}
             {move.needsUsd ? (
                 <CrossField
+                    amount={state.usd}
                     currency={USD}
                     invalid={tried && !((move.usd ?? 0) > 0)}
-                    onText={(usdText) => move.set({ usdText })}
-                    text={state.usdText}
+                    onAmount={(usd) => move.set({ usd })}
                 />
             ) : null}
         </>
@@ -233,22 +230,26 @@ function MoveFields({
 }
 
 function CrossField({
+    amount,
     currency,
     invalid,
-    onText,
-    text,
+    onAmount,
 }: {
+    amount: number | null;
     currency: string;
     invalid: boolean;
-    onText: (text: string) => void;
-    text: string;
+    onAmount: (amount: number | null) => void;
 }) {
     const { form } = useIntlayer("dashboard-debts");
-    const label = form.inCurrency({ currency }).value;
     return (
         <Field invalid={invalid}>
-            <Field.Label className={LABEL}>{label}</Field.Label>
-            <MoneyField currency={currency} invalid={invalid} label={label} onText={onText} text={text} />
+            <MoneyField
+                className={invalid ? "border-destructive max-w-none" : "max-w-none"}
+                codes={[currency]}
+                label={form.inCurrency({ currency })}
+                onValueChange={(next) => onAmount(next.amount)}
+                value={{ amount, code: currency }}
+            />
             {invalid ? <Field.Error match>{form.inCurrencyRequired({ currency })}</Field.Error> : null}
         </Field>
     );
@@ -304,7 +305,7 @@ function ProblemLine({ problem }: { problem: Problem }) {
         return null;
     }
     return (
-        <p className="text-destructive text-xs" role="alert">
+        <p className="text-destructive text-app-caption" role="alert">
             {problem === "rateMissing" ? form.noRate : form.saveFailed}
         </p>
     );
@@ -362,32 +363,30 @@ function DebtForm({
 }
 
 function AmountField({
+    amount,
     autoFocus = true,
     currency,
     invalid,
-    onText,
-    text,
+    onAmount,
     children,
 }: {
+    amount: number | null;
     autoFocus?: boolean;
     children?: ReactNode;
     currency: string;
     invalid: boolean;
-    onText: (text: string) => void;
-    text: string;
+    onAmount: (amount: number | null) => void;
 }) {
     const { form } = useIntlayer("dashboard-debts");
     return (
         <Field invalid={invalid}>
-            <Field.Label className={LABEL}>{form.amount}</Field.Label>
             <MoneyField
-                autoFocus={autoFocus}
-                big
-                currency={currency}
-                invalid={invalid}
-                label={form.amount.value}
-                onText={onText}
-                text={text}
+                className={invalid ? "border-destructive max-w-none" : "max-w-none"}
+                codes={[currency]}
+                label={form.amount}
+                onValueChange={(next) => onAmount(next.amount)}
+                ref={autoFocus ? focusAmount : undefined}
+                value={{ amount, code: currency }}
             />
             {invalid ? <Field.Error match>{form.amountRequired}</Field.Error> : null}
             {children}
@@ -523,7 +522,6 @@ const VERBS: readonly NewVerb[] = ["borrowed", "lent", "bought", "sold"];
 
 interface NewDebtDraft {
     amount: number;
-    amountText: string;
     categoryId: string | null;
     currency: string;
     move: Move;
@@ -559,7 +557,7 @@ function newDebtRows(ledger: Ledger, draft: NewDebtDraft, id: string, at: number
         const made = onCreditRows(
             ledger,
             {
-                amountText: draft.amountText,
+                amountText: plainAmount(amount, currency),
                 categoryId: draft.categoryId,
                 currency,
                 dateText: wallText(at, ledger),
@@ -624,7 +622,7 @@ function CurrencyRow({
         return null;
     }
     return (
-        <div className={cn("grid items-start gap-3", askCurrency && move.needsUsd && "grid-cols-[3fr_2fr]")}>
+        <div className="grid items-start gap-3">
             {askCurrency ? (
                 <CurrencyField
                     inUse={[...new Set(accounts.map((row) => row.currency))]}
@@ -635,10 +633,10 @@ function CurrencyRow({
             ) : null}
             {move.needsUsd ? (
                 <CrossField
+                    amount={move.state.usd}
                     currency={USD}
                     invalid={usdInvalid}
-                    onText={(usdText) => move.set({ usdText })}
-                    text={move.state.usdText}
+                    onAmount={(usd) => move.set({ usd })}
                 />
             ) : null}
         </div>
@@ -680,7 +678,7 @@ function useNewDebtDraft(personId: string | null, startVerb: NewVerb) {
     const people = usePeopleChoices();
     const preset = people.people.find((row) => row.account.id === personId) ?? null;
     const [verb, setVerb] = useState<NewVerb>(startVerb);
-    const [amountText, setAmountText] = useState("");
+    const [typed, setTyped] = useState<number | null>(null);
     const [name, setName] = useState(preset?.account.name ?? "");
     const [currencyPick, setCurrencyPick] = useState(ledger.currency);
     const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -693,7 +691,7 @@ function useNewDebtDraft(personId: string | null, startVerb: NewVerb) {
     const picked = onCredit ? null : (accounts.find((row) => row.id === pickedId(state, fallback)) ?? null);
     const askCurrency = person === null && picked === null;
     const currency = person?.account.currency ?? picked?.currency ?? currencyPick;
-    const amount = parseAmount(amountText, decimalsFor(currency));
+    const amount = typed ?? 0;
     const moved = moveOf(ledger, {
         amount,
         fallback: onCredit ? null : fallback,
@@ -704,7 +702,6 @@ function useNewDebtDraft(personId: string | null, startVerb: NewVerb) {
     const move: Move = { ...moved, set: setMove };
     const draft: NewDebtDraft = {
         amount,
-        amountText,
         categoryId,
         currency,
         move,
@@ -722,13 +719,14 @@ function useNewDebtDraft(personId: string | null, startVerb: NewVerb) {
         people,
         preset,
         set: {
-            amountText: setAmountText,
+            amount: setTyped,
             categoryId: setCategoryId,
             currency: setCurrencyPick,
             name: setName,
             note: setNote,
             verb: setVerb,
         },
+        typed,
     };
 }
 
@@ -747,7 +745,7 @@ function NewDebt({
     const write = useWrite();
     const settledText = useSettledToast();
     const formId = useId();
-    const { accounts, askCurrency, draft, nameText, people, preset, set } = useNewDebtDraft(personId, startVerb);
+    const { accounts, askCurrency, draft, nameText, people, preset, set, typed } = useNewDebtDraft(personId, startVerb);
     const { amount, currency, move, person, verb } = draft;
     const [planDay, setPlanDay] = useState<string | null>(null);
     const [tried, setTried] = useState(false);
@@ -800,7 +798,7 @@ function NewDebt({
         onClose();
     };
     const categoryError = verb === "sold" ? newForm.soldNeedsCategory : newForm.boughtNeedsCategory;
-    const dim = Object.values(shown ?? {}).some(Boolean) || draft.amountText.trim() === "";
+    const dim = Object.values(shown ?? {}).some(Boolean) || typed === null;
     return (
         <FlowDialog label={newForm.title}>
             <Dialog.Body>
@@ -814,11 +812,11 @@ function NewDebt({
                         verb={verb}
                     />
                     <AmountField
+                        amount={typed}
                         autoFocus={preset !== null}
                         currency={currency}
                         invalid={shown?.amount ?? false}
-                        onText={set.amountText}
-                        text={draft.amountText}
+                        onAmount={set.amount}
                     />
                     <Field invalid={shown?.name ?? false}>
                         <Field.Label className={LABEL}>{form.name}</Field.Label>
@@ -827,7 +825,7 @@ function NewDebt({
                             label={form.name.value}
                             onText={(text) => {
                                 set.name(text);
-                                move.set({ accountId: undefined, crossText: null });
+                                move.set({ accountId: undefined, cross: undefined });
                             }}
                             people={people.choices}
                             placeholder={form.namePlaceholder.value}
@@ -931,7 +929,7 @@ function SomethingIOwe({ onClose }: { onClose: () => void }) {
     const weekdayDay = useWeekdayDay();
     const formId = useId();
     const { choices, people } = usePeopleChoices();
-    const [amountText, setAmountText] = useState("");
+    const [typed, setTyped] = useState<number | null>(null);
     const [name, setName] = useState("");
     const [note, setNote] = useState("");
     const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -942,7 +940,7 @@ function SomethingIOwe({ onClose }: { onClose: () => void }) {
     const matched = matchPerson(choices, name);
     const person = people.find((row) => row.account.id === matched?.id) ?? null;
     const currency = person?.account.currency ?? ledger.currency;
-    const amount = parseAmount(amountText, decimalsFor(currency));
+    const amount = typed ?? 0;
     const days = payDays(ledger.today);
     const move: Move = {
         ...moveOf(ledger, { amount, fallback: null, personCurrency: currency, rows: [], state: moveState }),
@@ -968,7 +966,6 @@ function SomethingIOwe({ onClose }: { onClose: () => void }) {
             current,
             {
                 amount,
-                amountText,
                 categoryId,
                 currency,
                 move,
@@ -1004,7 +1001,7 @@ function SomethingIOwe({ onClose }: { onClose: () => void }) {
         write([...made.rows, ...planned], owe.saved({ amount: money(amount, currency), name: trimmed }).value);
         onClose();
     };
-    const dim = (shown !== null && Object.values(shown).some(Boolean)) || amountText.trim() === "";
+    const dim = (shown !== null && Object.values(shown).some(Boolean)) || typed === null;
     const payChoices: readonly { label: ReactNode; value: PayDay | null }[] = [
         { label: owe.tomorrow, value: "tomorrow" },
         { label: weekdayDay(days.friday), value: "friday" },
@@ -1016,10 +1013,10 @@ function SomethingIOwe({ onClose }: { onClose: () => void }) {
             <Dialog.Body>
                 <DebtForm formId={formId} onSubmit={submit}>
                     <AmountField
+                        amount={typed}
                         currency={currency}
                         invalid={shown?.amount ?? false}
-                        onText={setAmountText}
-                        text={amountText}
+                        onAmount={setTyped}
                     />
                     <Field invalid={shown?.name ?? false}>
                         <Field.Label className={LABEL}>{owe.who}</Field.Label>
@@ -1050,10 +1047,10 @@ function SomethingIOwe({ onClose }: { onClose: () => void }) {
                     </div>
                     {move.needsUsd ? (
                         <CrossField
+                            amount={moveState.usd}
                             currency={USD}
                             invalid={shown?.usd ?? false}
-                            onText={(usdText) => move.set({ usdText })}
-                            text={moveState.usdText}
+                            onAmount={(usd) => move.set({ usd })}
                         />
                     ) : null}
                     <Field>
@@ -1087,11 +1084,11 @@ function PayBack({ onClose, row }: { onClose: () => void; row: DebtRow }) {
     const { currency } = person;
     const youOwe = row.standing === "youOwe";
     const verb: DebtVerb = youOwe ? "paidBack" : "gotPaidBack";
-    const [amountText, setAmountText] = useState("");
+    const [typed, setTyped] = useState<number | null>(null);
     const [note, setNote] = useState("");
     const [tried, setTried] = useState(false);
     const [problem, setProblem] = useState<Problem>(null);
-    const amount = parseAmount(amountText, decimalsFor(currency));
+    const amount = typed ?? 0;
     const move = useMove(accounts, currency, amount);
     const decimals = decimalsFor(currency);
     const after = roundMoney(balance - amount, decimals);
@@ -1137,7 +1134,7 @@ function PayBack({ onClose, row }: { onClose: () => void; row: DebtRow }) {
         );
         onClose();
     };
-    const dim = (shown !== null && Object.values(shown).some(Boolean)) || amountText.trim() === "";
+    const dim = (shown !== null && Object.values(shown).some(Boolean)) || typed === null;
     let label: ReactNode = youOwe ? pay.submitEmpty : pay.recordEmpty;
     if (amount > 0) {
         label = (youOwe ? pay.submit : pay.record)({ amount: money(amount, currency) });
@@ -1147,16 +1144,16 @@ function PayBack({ onClose, row }: { onClose: () => void; row: DebtRow }) {
             <Dialog.Body>
                 <DebtForm formId={formId} onSubmit={submit}>
                     <AmountField
+                        amount={typed}
                         currency={currency}
                         invalid={shown?.amount ?? false}
-                        onText={setAmountText}
-                        text={amountText}
+                        onAmount={setTyped}
                     >
                         <Chips>
                             {chips.map((chip) => (
                                 <Pick
                                     key={chip.id}
-                                    onPress={() => setAmountText(plainAmount(chip.amount, currency))}
+                                    onPress={() => setTyped(chip.amount)}
                                     pressed={amount === chip.amount}
                                 >
                                     {chip.label({ amount: money(chip.amount, currency) })}
@@ -1171,7 +1168,7 @@ function PayBack({ onClose, row }: { onClose: () => void; row: DebtRow }) {
                         tried={tried}
                     />
                     <NoteField onText={setNote} text={note} />
-                    <div className="rounded-lg border px-3">
+                    <div className="rounded-app-lg border px-3">
                         <Fact label={youOwe ? pay.youOweNow : pay.owesYouNow}>{money(balance, currency)}</Fact>
                         <Fact label={pay.afterThis}>{money(Math.abs(after), currency)}</Fact>
                     </div>
@@ -1326,14 +1323,14 @@ function PlanDialog({ onClose, row }: { onClose: () => void; row: DebtRow }) {
                             })}
                         </Chips>
                     </Field>
-                    <div className="rounded-lg border px-3">
+                    <div className="rounded-app-lg border px-3">
                         <Fact label={row.standing === "owesYou" ? kpi.owesYou : kpi.youOwe}>
                             {money(row.amount, account.currency)}
                         </Fact>
                         <Fact label={plan.plan}>{late ? "–" : ask(account.balance, account.currency, day)}</Fact>
                     </div>
                     {problem ? (
-                        <p className="text-destructive text-xs" role="alert">
+                        <p className="text-destructive text-app-caption" role="alert">
                             {plan.noRate}
                         </p>
                     ) : null}
@@ -1420,7 +1417,9 @@ function DeleteDebt({ onClose, row }: { onClose: () => void; row: DebtRow }) {
             return;
         }
         committer.commitWithUndo(deletedAccount(books, account, Date.now()), {
-            after: onDetail ? navigate({ to: "/debts" }) : undefined,
+            after: onDetail
+                ? navigate({ to: "/debts", viewTransition: viewTransition("push-left", { back: true }) })
+                : undefined,
             failed: copy.failed.value,
             text: copy.toast({ name: row.account.name }).value,
         });

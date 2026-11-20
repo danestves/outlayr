@@ -1,5 +1,6 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import Calendar01Icon from "@hugeicons/core-free-icons/Calendar01Icon";
+import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { Link } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
@@ -12,9 +13,11 @@ import { useIntlayer } from "react-intlayer";
 import { AccountsBar, Cell, DataTable, MUTED } from "@/components/dashboard/accounts/accounts-screen";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { KpiBand, KpiCell } from "@/components/dashboard/accounts/parts";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { DebtFlowsProvider } from "./debt-flows";
 import { useDebtFlows } from "./flow-context";
@@ -27,7 +30,7 @@ type Tab = "all" | "owesYou" | "settled" | "youOwe";
 const TABS: readonly Tab[] = ["all", "owesYou", "youOwe", "settled"];
 
 const quiet = (children: ReactNode) => (
-    <span className="text-muted-foreground min-w-0 truncate text-xs leading-5">{children}</span>
+    <span className="text-muted-foreground text-app-caption min-w-0 truncate leading-5">{children}</span>
 );
 
 const tone = (value: number) => (value === 0 ? "text-muted-foreground" : "");
@@ -88,11 +91,19 @@ function DueStrip({ due }: { due: NonNullable<DebtsModel["due"]> }) {
         summary = count === 1 ? copy.overdueOne(facts) : copy.overdue(facts);
     }
     return (
-        <div className="bg-card mt-3 flex min-h-11 flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl border px-3.5 py-2 text-[13px]">
+        <div className="bg-card rounded-app-lg text-app-label mt-3 flex min-h-11 flex-wrap items-center gap-x-2.5 gap-y-1 border py-1.5 ps-3.5 pe-1.5">
             <Glyph icon={Calendar01Icon} className="text-muted-foreground" size={16} />
             <span>{copy.title({ days: DUE_DAYS })}</span>
             <span className="dash-figure">{money(due.total, ledger.currency)}</span>
-            <span className="text-muted-foreground min-w-0 truncate">{summary}</span>
+            <span className="text-muted-foreground min-w-0 flex-1 truncate">{summary}</span>
+            <Button
+                nativeButton={false}
+                render={<Link to="/installments" viewTransition={viewTransition("push-left")} />}
+                size="sm"
+                variant="outline"
+            >
+                {copy.open}
+            </Button>
         </div>
     );
 }
@@ -104,13 +115,14 @@ function NameCell({ row }: { row: DebtRow }) {
             <span className="truncate">{row.account.name}</span>
         </>
     );
-    const style = "flex min-w-0 items-center gap-2.5 text-sm font-medium hover:underline";
+    const style = "text-app-body flex min-w-0 items-center gap-2.5 font-medium hover:underline";
+    const push = viewTransition("push-left");
     return row.card ? (
-        <Link className={style} params={{ accountId: row.account.id }} to="/accounts/$accountId">
+        <Link className={style} params={{ accountId: row.account.id }} to="/accounts/$accountId" viewTransition={push}>
             {name}
         </Link>
     ) : (
-        <Link className={style} params={{ accountId: row.account.id }} to="/debts/$accountId">
+        <Link className={style} params={{ accountId: row.account.id }} to="/debts/$accountId" viewTransition={push}>
             {name}
         </Link>
     );
@@ -122,14 +134,16 @@ function Row({ row }: { row: DebtRow }) {
     const planText = usePlanText();
     return (
         <Table.Row>
-            <Cell className="w-[280px] max-w-[280px]">
+            <Cell className="w-70 max-w-70">
                 <NameCell row={row} />
             </Cell>
-            <Cell className="dash-figure text-muted-foreground w-[160px] text-[13px]">{date.day(row.lastDay)}</Cell>
-            <Cell className="text-muted-foreground text-[13px]">{planText(row)}</Cell>
-            <Cell className="w-[150px]">
+            <Cell className="dash-figure text-muted-foreground text-app-label w-40">{date.day(row.lastDay)}</Cell>
+            <Cell className="text-muted-foreground text-app-label">{planText(row)}</Cell>
+            <Cell className="w-37.5">
                 <span className="flex items-center justify-end gap-3">
-                    <span className="dash-figure text-sm font-medium">{money(row.amount, row.account.currency)}</span>
+                    <span className="dash-figure text-app-body font-medium">
+                        {money(row.amount, row.account.currency)}
+                    </span>
                     <DebtMenu row={row} />
                 </span>
             </Cell>
@@ -145,11 +159,14 @@ function Group({ rows, title, total }: { rows: readonly DebtRow[]; title: ReactN
     }
     return (
         <>
-            <Table.Row className="bg-foreground/[0.016] hover:bg-foreground/[0.016]">
-                <Table.Cell className="text-muted-foreground h-8 py-0 text-xs font-medium" colSpan={3}>
+            <Table.Row className="bg-app-hover hover:bg-app-hover">
+                <Table.Cell className="text-muted-foreground text-app-caption h-8 py-0 font-medium" colSpan={3}>
                     {title}
                 </Table.Cell>
-                <Table.Cell align="end" className="dash-figure text-muted-foreground h-8 py-0 text-xs font-medium">
+                <Table.Cell
+                    align="end"
+                    className="dash-figure text-muted-foreground text-app-caption h-8 py-0 font-medium"
+                >
                     {money(total, ledger.currency)}
                 </Table.Cell>
             </Table.Row>
@@ -169,7 +186,9 @@ function TabBar({ counts, onTab, tab }: { counts: Record<Tab, number | null>; on
                     <Tabs.Trigger key={each} value={each}>
                         {tabs[each]}
                         {counts[each] === null ? null : (
-                            <span className="dash-figure text-muted-foreground ml-1 text-xs">{counts[each]}</span>
+                            <span className="dash-figure text-muted-foreground text-app-caption ml-1">
+                                {counts[each]}
+                            </span>
                         )}
                     </Tabs.Trigger>
                 ))}
@@ -197,77 +216,50 @@ function DebtsTable({ model }: { model: DebtsModel }) {
                 <TabBar counts={tabCounts(model)} onTab={setTab} tab={tab} />
             </Frame.Header>
             <Frame.Panel className="flex-1 p-0">
-                <DataTable
-                    head={[columns.name, columns.last, columns.plan, columns.balance]}
-                    numbers={0}
-                    phoneHidden={[2, 3]}
-                >
-                    {shows("owesYou") ? (
-                        <Group rows={model.owesYou} title={kpi.owesYou} total={model.totals.owesYou} />
-                    ) : null}
-                    {shows("youOwe") ? (
-                        <>
-                            <Group rows={model.youOwe} title={kpi.youOwe} total={model.totals.youOwe} />
-                            <Group rows={model.cards} title={kpi.cards} total={model.totals.cards} />
-                        </>
-                    ) : null}
-                    {shows("settled") ? (
-                        <Group rows={model.settled} title={groups.settled({ count: model.settled.length })} total={0} />
-                    ) : null}
-                </DataTable>
+                <div data-motion="dissolve" key={tab}>
+                    <DataTable
+                        head={[columns.name, columns.last, columns.plan, columns.balance]}
+                        numbers={0}
+                        phoneHidden={[2, 3]}
+                    >
+                        {shows("owesYou") ? (
+                            <Group rows={model.owesYou} title={kpi.owesYou} total={model.totals.owesYou} />
+                        ) : null}
+                        {shows("youOwe") ? (
+                            <>
+                                <Group rows={model.youOwe} title={kpi.youOwe} total={model.totals.youOwe} />
+                                <Group rows={model.cards} title={kpi.cards} total={model.totals.cards} />
+                            </>
+                        ) : null}
+                        {shows("settled") ? (
+                            <Group
+                                rows={model.settled}
+                                title={groups.settled({ count: model.settled.length })}
+                                total={0}
+                            />
+                        ) : null}
+                    </DataTable>
+                </div>
             </Frame.Panel>
         </Frame>
     );
 }
 
-const GHOST_ROWS = [
-    [80, 64, 238, 72],
-    [46, 52, 238, 68],
-    [92, 72, 238, 58],
-    [62, 70, 238, 56],
-    [88, 64, 238, 54],
-    [76, 70, 238, 66],
-    [78, 76, 238, 70],
-] as const;
-
-const pill = (width: number) => <i className="border-app-strong block h-2 rounded-full border" style={{ width }} />;
-
-const GHOST_GRID = "grid grid-cols-[minmax(0,336px)_minmax(0,268px)_minmax(0,1fr)_auto] items-center px-4";
-
 function EmptyDebts() {
     const { empty, newDebt } = useIntlayer("dashboard-debts");
     const { open } = useDebtFlows();
     return (
-        <>
-            <div aria-hidden className="[mask-image:linear-gradient(to_bottom,black_70%,transparent)]">
-                <div className={`${GHOST_GRID} h-[50px] border-b`}>
-                    {[52, 48, 46, 40].map((width, index) => (
-                        <span className={index === 3 ? "justify-self-end" : ""} key={width}>
-                            {pill(width)}
-                        </span>
-                    ))}
-                </div>
-                {GHOST_ROWS.map(([name, last, plan, balance]) => (
-                    <div className={`${GHOST_GRID} h-[42px] border-b last:border-0`} key={`${name}-${balance}`}>
-                        <span className="flex items-center gap-2.5">
-                            <i className="border-app-strong block size-7 rounded-lg border" />
-                            {pill(name)}
-                        </span>
-                        {pill(last)}
-                        {pill(plan)}
-                        <span className="justify-self-end">{pill(balance)}</span>
-                    </div>
-                ))}
-            </div>
-            <div className="flex flex-col items-center gap-1.5 px-6 pt-6 pb-10 text-center">
-                <b className="text-[15px] leading-[22px] font-semibold">{empty.title}</b>
-                <p className="text-muted-foreground max-w-[320px] text-[13px] leading-5">{empty.line}</p>
-                <Button className="mt-2.5" onClick={() => open({ kind: "new", personId: null, verb: "borrowed" })}>
+        <Empty
+            action={
+                <Button onClick={() => open({ kind: "new", personId: null, verb: "borrowed" })}>
                     <Glyph icon={Add01Icon} size={16} />
                     {newDebt}
                 </Button>
-            </div>
-        </>
+            }
+            icon={UserGroupIcon}
+            line={empty.line}
+            title={empty.title}
+        />
     );
 }
 
@@ -278,7 +270,7 @@ function EmptyCard({ model }: { model: DebtsModel }) {
             <Frame.Header className="pb-0">
                 <TabBar counts={tabCounts(model)} onTab={setTab} tab={tab} />
             </Frame.Header>
-            <Frame.Panel className="flex-1 p-0">
+            <Frame.Panel className="flex flex-1 flex-col p-0">
                 <EmptyDebts />
             </Frame.Panel>
         </Frame>

@@ -211,48 +211,6 @@ export const plainAmount = (amount: number, currency: string) => {
     );
 };
 
-export function MoneyField({
-    autoFocus = false,
-    className = "",
-    currency,
-    invalid = false,
-    label,
-    onText,
-    text,
-}: {
-    autoFocus?: boolean;
-    className?: string;
-    currency: string;
-    invalid?: boolean;
-    label: string;
-    onText: (text: string) => void;
-    text: string;
-}) {
-    const decimals = decimalsFor(currency);
-    return (
-        <Input.Group className={`has-[input[aria-invalid=true]]:ring-3 ${className}`}>
-            <Input.Addon className="dash-figure text-muted-foreground pe-2!">
-                {currencyDisplayFor(currency).symbol}
-            </Input.Addon>
-            <Input
-                aria-invalid={invalid || undefined}
-                aria-label={label}
-                autoFocus={autoFocus}
-                className="dash-figure ps-1"
-                inputMode="decimal"
-                onBlur={() => {
-                    if (text.trim() !== "") {
-                        onText(plainAmount(parseAmount(text, decimals), currency));
-                    }
-                }}
-                onChange={(event) => onText(event.target.value)}
-                placeholder={plainAmount(0, currency)}
-                value={text}
-            />
-        </Input.Group>
-    );
-}
-
 export function DayField({
     invalid = false,
     label,

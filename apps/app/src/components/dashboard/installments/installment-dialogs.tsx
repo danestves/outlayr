@@ -14,14 +14,16 @@ import { useId, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { DayField, FlowDialog, MoneyField, plainAmount } from "@/components/dashboard/accounts/fields";
+import { DayField, FlowDialog, plainAmount } from "@/components/dashboard/accounts/fields";
 import { useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { accountRows } from "@/components/dashboard/accounts/model";
 import { useGoalMoney } from "@/components/dashboard/goals/parts";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
+import { focusAmount } from "@/components/dashboard/transactions/entry-form";
 import { AccountTile } from "@/components/ledger/tiles";
+import { MoneyField } from "@/components/ui/money-field";
 import { parseAmount } from "@/lib/account-writes";
 import { startOfDay } from "@/lib/dashboard-series-ledger";
 import { wallInstant, wallText } from "@/lib/entry-writes";
@@ -34,6 +36,7 @@ import {
 } from "@/lib/installment-writes";
 import type { CommitRow } from "@/lib/ledger-committer";
 import { ledgerBooks } from "@/lib/ledger-db";
+import { viewTransition } from "@/lib/motion";
 import {
     createdTransfer,
     newTransferInput,
@@ -50,12 +53,11 @@ import type { InstallmentView, PlanView } from "./model";
 import { useRowLabel } from "./parts";
 
 const FOOTER_PILL = "min-w-max! px-3.5";
-const POPUP = "app-shell z-[60]";
+const POPUP = "app-shell z-60";
 const LABEL = "data-invalid:text-foreground has-[[aria-invalid=true]]:text-foreground";
 const NONE = "none";
-const SUMMARY = "rounded-lg border px-3";
-const SUMMARY_ROW = "flex h-[33px] items-center justify-between gap-3 border-b text-[13px] last:border-0";
-const LINK = "flex w-fit items-center gap-1.5 text-[13px] font-medium";
+const SUMMARY = "rounded-app-lg border px-3";
+const SUMMARY_ROW = "text-app-label flex h-8.25 items-center justify-between gap-3 border-b last:border-0";
 
 function SummaryRow({ children, label }: { children: ReactNode; label: ReactNode }) {
     return (
@@ -82,35 +84,51 @@ export function useDeleteInstallment() {
 function FeeToggle({ onAdd }: { onAdd: () => void }) {
     const { fee } = useIntlayer("dashboard-installments");
     return (
-        <button className={`${LINK} text-app-tint`} onClick={onAdd} type="button">
+        <Button
+            className="text-app-tint text-app-label! h-auto w-fit gap-1.5 p-0"
+            onClick={onAdd}
+            size="sm"
+            type="button"
+            variant="link"
+        >
             <Glyph icon={Add01Icon} size={15} />
             {fee.add}
-        </button>
+        </Button>
     );
 }
 
 function FeeField({
+    amount,
     currency,
+    onAmount,
     onRemove,
-    onText,
-    text,
 }: {
+    amount: number | null;
     currency: string;
+    onAmount: (amount: number | null) => void;
     onRemove: () => void;
-    onText: (text: string) => void;
-    text: string;
 }) {
     const { fee } = useIntlayer("dashboard-installments");
     return (
         <div className="flex flex-col gap-2.5">
-            <Field>
-                <Field.Label className={LABEL}>{fee.label}</Field.Label>
-                <MoneyField autoFocus currency={currency} label={fee.label.value} onText={onText} text={text} />
-            </Field>
-            <button className={`${LINK} text-muted-foreground font-normal`} onClick={onRemove} type="button">
+            <MoneyField
+                className="max-w-none"
+                codes={[currency]}
+                label={fee.label}
+                onValueChange={(next) => onAmount(next.amount)}
+                ref={focusAmount}
+                value={{ amount, code: currency }}
+            />
+            <Button
+                className="text-muted-foreground text-app-label! h-auto w-fit gap-1.5 p-0 font-normal"
+                onClick={onRemove}
+                size="sm"
+                type="button"
+                variant="link"
+            >
                 <Glyph icon={Cancel01Icon} size={13} />
                 {fee.remove}
-            </button>
+            </Button>
         </div>
     );
 }
@@ -155,7 +173,7 @@ function SourcePick({
                     >
                         <span className="flex min-w-0 flex-1 items-center gap-3">
                             <span className="truncate">{source.name}</span>
-                            <span className="dash-figure text-muted-foreground ms-auto text-xs">
+                            <span className="dash-figure text-muted-foreground text-app-caption ms-auto">
                                 {format(source.balance, source.currency)}
                             </span>
                         </span>
@@ -224,19 +242,20 @@ function payRows(
 function transferValues(
     ledger: Ledger,
     {
-        amountText,
+        amount,
         dateText,
-        leavesText,
+        leaves,
         source,
         view,
     }: {
-        amountText: string;
+        amount: number | null;
         dateText: string;
-        leavesText: string | null;
+        leaves: number | null | undefined;
         source: Source | null;
         view: PlanView;
     }
 ) {
+    const amountText = amount === null ? "" : plainAmount(amount, view.currency);
     const bare: NewTransferValues = {
         arrivedByHand: false,
         arrivedText: "",
@@ -247,16 +266,20 @@ function transferValues(
         sentText: amountText,
         toId: view.account.id,
     };
-    const amount = parseAmount(amountText, decimalsFor(view.currency));
     if (source === null || source.currency === view.currency) {
-        return { leaves: "", values: bare };
+        return { leaves: null, values: bare };
     }
-    const market = amount > 0 ? pinnedArrival(ledger, bare, amount).sentText : "";
-    const leaves =
-        leavesText ?? (market ? plainAmount(parseAmount(market, decimalsFor(source.currency)), source.currency) : "");
+    const market = amount !== null && amount > 0 ? pinnedArrival(ledger, bare, amount).sentText : "";
+    const marketAmount = market ? parseAmount(market, decimalsFor(source.currency)) : null;
+    const shown = leaves === undefined ? marketAmount : leaves;
     return {
-        leaves,
-        values: { ...bare, arrivedByHand: leavesText !== null, arrivedText: amountText, sentText: leaves },
+        leaves: shown,
+        values: {
+            ...bare,
+            arrivedByHand: leaves !== undefined,
+            arrivedText: amountText,
+            sentText: shown === null ? "" : plainAmount(shown, source.currency),
+        },
     };
 }
 
@@ -295,7 +318,7 @@ function PayTitle({ all, target, view }: { all: boolean; target: InstallmentView
         <span className="flex items-center gap-2">
             {all ? pay.allTitle({ name: view.name }) : pay.title({ account: view.account.name })}
             {target?.overdue ? (
-                <Badge className="h-6 rounded-md px-2 text-xs font-medium" variant="destructive">
+                <Badge className="text-app-caption! h-6 rounded-md px-2 font-medium" variant="destructive">
                     {status.overdue}
                 </Badge>
             ) : null}
@@ -311,6 +334,8 @@ function useAmountError(problem: PayProblem, currency: string, owed: number): Re
     }
     return problem === "over" ? pay.overLeft({ amount: format(owed, currency) }) : null;
 }
+
+const positiveOrNull = (amount: number) => (amount > 0 ? amount : null);
 
 function PayDialog({ all, onClose, view }: { all: boolean; onClose: () => void; view: PlanView }) {
     const { ledger } = useDashboard();
@@ -328,22 +353,28 @@ function PayDialog({ all, onClose, view }: { all: boolean; onClose: () => void; 
     );
     const targetFee = target?.fee ?? 0;
     const [feeOpen, setFeeOpen] = useState(targetFee > 0);
-    const [feeText, setFeeText] = useState(targetFee > 0 ? plainAmount(targetFee, view.currency) : "");
-    const [amountText, setAmountText] = useState<string | null>(null);
-    const [leavesText, setLeavesText] = useState<string | null>(null);
+    const [feeAmount, setFeeAmount] = useState<number | null>(targetFee > 0 ? targetFee : null);
+    const [typed, setTyped] = useState<number | null | undefined>(undefined);
+    const [typedLeaves, setTypedLeaves] = useState<number | null | undefined>(undefined);
     const [day, setDay] = useState(ledger.today);
     const [problem, setProblem] = useState<PayProblem>(null);
     const { currency } = view;
     const decimals = decimalsFor(currency);
-    const fee = feeOpen ? parseAmount(feeText, decimals) : 0;
+    const fee = feeAmount ?? 0;
     const feeDelta = roundMoney(fee - targetFee, decimals);
     const owed = roundMoney(view.left + feeDelta, decimals);
     const suggested = all ? owed : roundMoney((target?.remaining ?? 0) + feeDelta, decimals);
-    const shownAmount = amountText ?? (suggested > 0 ? plainAmount(suggested, currency) : "");
-    const amount = parseAmount(shownAmount, decimals);
+    const shownAmount = typed === undefined ? positiveOrNull(suggested) : typed;
+    const amount = shownAmount ?? 0;
     const source = sources.find((each) => each.id === sourceId) ?? null;
     const dateText = `${day}T${wallText(openedAt, ledger).split("T")[1] ?? "12:00"}`;
-    const { leaves, values } = transferValues(ledger, { amountText: shownAmount, dateText, leavesText, source, view });
+    const { leaves, values } = transferValues(ledger, {
+        amount: shownAmount,
+        dateText,
+        leaves: typedLeaves,
+        source,
+        view,
+    });
     const sent = source ? parseAmount(values.sentText, decimalsFor(source.currency)) : 0;
     const amountError = useAmountError(problem, currency, owed);
     const change =
@@ -395,14 +426,14 @@ function PayDialog({ all, onClose, view }: { all: boolean; onClose: () => void; 
             <SourcePick
                 onPick={(id) => {
                     setSourceId(id);
-                    setLeavesText(null);
+                    setTypedLeaves(undefined);
                     setProblem(null);
                 }}
                 sources={sources}
                 value={source ? source.id : NONE}
             />
             {source ? null : (
-                <Field.Description className="text-muted-foreground text-[13px]">
+                <Field.Description className="text-muted-foreground text-app-label">
                     {pay.noneHint({ account: view.account.name })}
                 </Field.Description>
             )}
@@ -412,7 +443,7 @@ function PayDialog({ all, onClose, view }: { all: boolean; onClose: () => void; 
         <FlowDialog label={<PayTitle all={all} target={target} view={view} />}>
             <Dialog.Body>
                 {target ? (
-                    <Dialog.Description className="-mt-1 mb-3 text-sm">
+                    <Dialog.Description className="text-app-body -mt-1 mb-3">
                         {target.sequence === 0
                             ? pay.subtitleUpfront({ name: view.name })
                             : pay.subtitle({ count: view.count, index: target.sequence, name: view.name })}
@@ -430,15 +461,13 @@ function PayDialog({ all, onClose, view }: { all: boolean; onClose: () => void; 
                     }}
                 >
                     <Field invalid={amountError !== null}>
-                        <Field.Label className={LABEL}>{pay.amount}</Field.Label>
                         <MoneyField
-                            autoFocus
-                            className="h-[52px] [&_input]:text-[15px]"
-                            currency={currency}
-                            invalid={amountError !== null}
-                            label={pay.amount.value}
-                            onText={change(setAmountText)}
-                            text={shownAmount}
+                            className={amountError === null ? "max-w-none" : "border-destructive max-w-none"}
+                            codes={[currency]}
+                            label={pay.amount}
+                            onValueChange={(next) => change(setTyped)(next.amount)}
+                            ref={focusAmount}
+                            value={{ amount: shownAmount, code: currency }}
                         />
                         {amountError ? <Field.Error match>{amountError}</Field.Error> : null}
                     </Field>
@@ -454,26 +483,24 @@ function PayDialog({ all, onClose, view }: { all: boolean; onClose: () => void; 
                         </div>
                     )}
                     {source && source.currency !== currency ? (
-                        <Field>
-                            <Field.Label className={LABEL}>{pay.leaves({ account: source.name })}</Field.Label>
-                            <MoneyField
-                                currency={source.currency}
-                                label={pay.leaves({ account: source.name }).value}
-                                onText={change(setLeavesText)}
-                                text={leaves}
-                            />
-                        </Field>
+                        <MoneyField
+                            className="max-w-none"
+                            codes={[source.currency]}
+                            label={pay.leaves({ account: source.name })}
+                            onValueChange={(next) => change(setTypedLeaves)(next.amount)}
+                            value={{ amount: leaves, code: source.currency }}
+                        />
                     ) : null}
                     {target && !feeOpen ? <FeeToggle onAdd={() => setFeeOpen(true)} /> : null}
                     {target && feeOpen ? (
                         <FeeField
+                            amount={feeAmount}
                             currency={currency}
+                            onAmount={change(setFeeAmount)}
                             onRemove={() => {
                                 setFeeOpen(false);
-                                setFeeText("");
+                                setFeeAmount(null);
                             }}
-                            onText={change(setFeeText)}
-                            text={feeText}
                         />
                     ) : null}
                     {amount > 0 && amountError === null ? (
@@ -505,12 +532,12 @@ function EditInstallment({ item, onClose, view }: { item: InstallmentView; onClo
     const { currency } = view;
     const decimals = decimalsFor(currency);
     const [day, setDay] = useState(item.day);
-    const [amountText, setAmountText] = useState(plainAmount(item.amount, currency));
+    const [typed, setTyped] = useState<number | null>(item.amount);
     const [feeOpen, setFeeOpen] = useState(item.fee > 0);
-    const [feeText, setFeeText] = useState(item.fee > 0 ? plainAmount(item.fee, currency) : "");
+    const [feeAmount, setFeeAmount] = useState<number | null>(item.fee > 0 ? item.fee : null);
     const [tried, setTried] = useState(false);
-    const amount = parseAmount(amountText, decimals);
-    const fee = feeOpen ? parseAmount(feeText, decimals) : 0;
+    const amount = typed ?? 0;
+    const fee = feeAmount ?? 0;
     const invalid = tried && !(amount > 0);
     const submit = (at: number) => {
         setTried(true);
@@ -552,34 +579,31 @@ function EditInstallment({ item, onClose, view }: { item: InstallmentView; onClo
                         submit(Date.now());
                     }}
                 >
-                    <div className="grid grid-cols-2 items-start gap-3">
-                        <Field>
-                            <Field.Label className={LABEL}>{edit.due}</Field.Label>
-                            <DayField day={day} label={edit.due.value} onDay={setDay} trailing />
-                        </Field>
-                        <Field invalid={invalid}>
-                            <Field.Label className={LABEL}>{pay.amount}</Field.Label>
-                            <MoneyField
-                                currency={currency}
-                                invalid={invalid}
-                                label={pay.amount.value}
-                                onText={setAmountText}
-                                text={amountText}
-                            />
-                            {invalid ? (
-                                <Field.Error match>{edit.amountRequired({ zero: format(0, currency) })}</Field.Error>
-                            ) : null}
-                        </Field>
-                    </div>
+                    <Field>
+                        <Field.Label className={LABEL}>{edit.due}</Field.Label>
+                        <DayField day={day} label={edit.due.value} onDay={setDay} trailing />
+                    </Field>
+                    <Field invalid={invalid}>
+                        <MoneyField
+                            className={invalid ? "border-destructive max-w-none" : "max-w-none"}
+                            codes={[currency]}
+                            label={pay.amount}
+                            onValueChange={(next) => setTyped(next.amount)}
+                            value={{ amount: typed, code: currency }}
+                        />
+                        {invalid ? (
+                            <Field.Error match>{edit.amountRequired({ zero: format(0, currency) })}</Field.Error>
+                        ) : null}
+                    </Field>
                     {feeOpen ? (
                         <FeeField
+                            amount={feeAmount}
                             currency={currency}
+                            onAmount={setFeeAmount}
                             onRemove={() => {
                                 setFeeOpen(false);
-                                setFeeText("");
+                                setFeeAmount(null);
                             }}
-                            onText={setFeeText}
-                            text={feeText}
                         />
                     ) : (
                         <FeeToggle onAdd={() => setFeeOpen(true)} />
@@ -638,7 +662,9 @@ function DeletePending({ onClose, view }: { onClose: () => void; view: PlanView 
         const rows = pendingDeletion(ledgerBooks(db), view, Date.now());
         onClose();
         committer.commitWithUndo(rows, {
-            after: whole ? navigate({ to: "/installments" }) : undefined,
+            after: whole
+                ? navigate({ to: "/installments", viewTransition: viewTransition("push-left", { back: true }) })
+                : undefined,
             failed: failed.value,
             text: copy.done({ name: view.name }).value,
         });
