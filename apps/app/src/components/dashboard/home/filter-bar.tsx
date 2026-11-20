@@ -1,7 +1,10 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
+import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
 import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
+import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import type { IconSvgElement } from "@hugeicons/react";
 import { accountLook } from "@outlayr/money/ledger-log";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
@@ -19,6 +22,7 @@ import type { Dashboard } from "@/components/dashboard/shell/dashboard";
 import { toggledAccounts } from "@/components/dashboard/shell/filters";
 import { CHIP, TopBar } from "@/components/dashboard/shell/top-bar";
 import { AccountTile } from "@/components/ledger/tiles";
+import { MenuContent } from "@/components/ui/menu-content";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
@@ -36,10 +40,11 @@ interface CheckRowProps {
 }
 
 const InSheet = createContext(false);
-const SHEET_LABEL = "text-muted-foreground px-2 pt-1.5 pb-0.5 text-xs leading-4";
+const NO_CHECK = "[&>[data-slot=chip-check]]:hidden";
+const SHEET_LABEL = "text-muted-foreground text-app-caption px-2 pt-1.5 pb-0.5";
 
-const SHEET_ROW = "hover:bg-app-hover flex h-11 w-full shrink-0 items-center gap-2 rounded-lg px-2 text-sm";
-const FIGURE = "dash-figure text-muted-foreground min-w-0 flex-1 pl-2 text-right text-[13px] whitespace-nowrap";
+const SHEET_ROW = "hover:bg-app-hover rounded-app-sm text-app-body flex h-11 w-full shrink-0 items-center gap-2 px-2";
+const FIGURE = "dash-figure text-muted-foreground text-app-label min-w-0 flex-1 pl-2 text-right whitespace-nowrap";
 function CheckRow({ children, figure, on, onToggle }: CheckRowProps) {
     const inSheet = useContext(InSheet);
     if (inSheet) {
@@ -62,13 +67,14 @@ function CheckRow({ children, figure, on, onToggle }: CheckRowProps) {
 interface FilterMenuProps {
     children: (matches: (name: string) => boolean) => ReactNode;
     count: number;
+    icon: IconSvgElement;
     label: ReactNode;
     onClear: () => void;
     searchLabel: string;
     width: string;
 }
 
-export function FilterMenu({ children, count, label, onClear, searchLabel, width }: FilterMenuProps) {
+export function FilterMenu({ children, count, icon, label, onClear, searchLabel, width }: FilterMenuProps) {
     const { filters: copy } = useIntlayer("dashboard");
     const [query, setQuery] = useState("");
     const needle = query.trim().toLocaleLowerCase();
@@ -80,7 +86,7 @@ export function FilterMenu({ children, count, label, onClear, searchLabel, width
     };
     const chip = (
         <>
-            {count > 0 ? null : <HugeiconsIcon icon={Add01Icon} strokeWidth={1.5} />}
+            <HugeiconsIcon icon={count > 0 ? icon : Add01Icon} strokeWidth={1.5} />
             {label}
             {count > 0 ? (
                 <Badge className="dash-figure ml-1.5" size="sm" variant="secondary">
@@ -120,7 +126,7 @@ export function FilterMenu({ children, count, label, onClear, searchLabel, width
                 <Menu.Trigger
                     render={
                         <Chip
-                            className={`${CHIP} max-lg:hidden`}
+                            className={`${CHIP} max-lg:hidden ${NO_CHECK}`}
                             data-pressed={count > 0 ? "" : undefined}
                             pressed={count > 0}
                             size="lg"
@@ -129,21 +135,23 @@ export function FilterMenu({ children, count, label, onClear, searchLabel, width
                 >
                     {chip}
                 </Menu.Trigger>
-                <Menu.Content className={`app-shell ph-no-capture ${width}`} sideOffset={8}>
+                <MenuContent className={width} sideOffset={8}>
                     {search(true)}
                     {children(matches)}
                     <Menu.Separator />
                     <Menu.Item closeOnClick={false} onClick={onClear}>
                         <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
                         {copy.clear}
-                        <span className="dash-figure text-muted-foreground ml-auto text-xs">
+                        <span className="dash-figure text-muted-foreground text-app-caption ml-auto">
                             {copy.selected({ count })}
                         </span>
                     </Menu.Item>
-                </Menu.Content>
+                </MenuContent>
             </Menu>
             <Sheet onOpenChange={forget}>
-                <Sheet.Trigger render={<Chip className={`${CHIP} lg:hidden`} pressed={count > 0} size="lg" />}>
+                <Sheet.Trigger
+                    render={<Chip className={`${CHIP} lg:hidden ${NO_CHECK}`} pressed={count > 0} size="lg" />}
+                >
                     {chip}
                 </Sheet.Trigger>
                 <Sheet.Content className="app-shell ph-no-capture">
@@ -157,7 +165,7 @@ export function FilterMenu({ children, count, label, onClear, searchLabel, width
                         <Button onClick={onClear} size="lg" variant="ghost">
                             {copy.clear}
                             {count > 0 ? (
-                                <span className="dash-figure text-muted-foreground text-xs">{count}</span>
+                                <span className="dash-figure text-muted-foreground text-app-caption">{count}</span>
                             ) : null}
                         </Button>
                     </Sheet.Footer>
@@ -180,11 +188,11 @@ function AccountRows({
     const { money } = useDisplayFormat();
     const balances = useMemo(
         () =>
-            new Map(accountBalances(ledger, filters.period, quiet, []).accounts.map((each) => [each.id, each.balance])),
-        [filters.period, ledger, quiet]
+            new Map(accountBalances(ledger, filters.range, quiet, []).accounts.map((each) => [each.id, each.balance])),
+        [filters.range, ledger, quiet]
     );
     return (
-        <div className="dash-menu-list flex max-h-[323px] flex-col gap-0.5 overflow-y-auto">
+        <div className="dash-menu-list flex max-h-80 flex-col gap-0.5 overflow-y-auto">
             {accounts
                 .filter((account) => matches(account.name))
                 .map((account) => (
@@ -212,10 +220,11 @@ export function AccountMenu({ quiet }: { quiet: boolean }) {
     return (
         <FilterMenu
             count={filters.accounts.length}
+            icon={CreditCardIcon}
             label={copy.accountsChip}
             onClear={() => setFilters({ accounts: [] })}
             searchLabel={copy.searchAccounts.value}
-            width="w-[320px]"
+            width="w-80"
         >
             {(matches) => <AccountRows accounts={accounts} matches={matches} quiet={quiet} />}
         </FilterMenu>
@@ -274,8 +283,8 @@ export function CategoryMenu() {
     const categoryName = useCategoryName();
     const { money } = useDisplayFormat();
     const choices = useMemo(
-        () => categoryChoices(ledger, filters.period, { accounts: filters.accounts }, filters.categories),
-        [filters.accounts, filters.categories, filters.period, ledger]
+        () => categoryChoices(ledger, filters.range, { accounts: filters.accounts }, filters.categories),
+        [filters.accounts, filters.categories, filters.range, ledger]
     );
     const row = (each: (typeof choices.all)[number]) => {
         const on = filters.categories.includes(each.id);
@@ -300,10 +309,11 @@ export function CategoryMenu() {
     return (
         <FilterMenu
             count={filters.categories.length}
+            icon={Tag01Icon}
             label={copy.categoryChip}
             onClear={() => setFilters({ categories: [] })}
             searchLabel={copy.searchCategories.value}
-            width="w-[300px]"
+            width="w-75"
         >
             {(matches) => {
                 const recent = choices.recent.filter((each) => matches(categoryName(each)));

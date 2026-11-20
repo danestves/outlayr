@@ -4,9 +4,13 @@ import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 
 import { isPeriodKey, periodKeyIn, periodKindOf } from "../../../lib/dashboard-series-period";
-import type { Calendar } from "../../../lib/dashboard-series-period";
+import type { Calendar, RangeKind } from "../../../lib/dashboard-series-period";
 
 const Param = Schema.UndefinedOr(Schema.String).pipe(
+    Schema.catchDecoding(() => Effect.succeed(Option.some(undefined)))
+);
+
+const RangeParam = Schema.UndefinedOr(Schema.Literals(["quarter", "year"])).pipe(
     Schema.catchDecoding(() => Effect.succeed(Option.some(undefined)))
 );
 
@@ -28,6 +32,7 @@ const Search = Schema.Struct({
     category: Schema.optional(Param),
     checkout: Schema.optional(Param),
     period: Schema.optional(PeriodParam),
+    range: Schema.optional(RangeParam),
     restore: Schema.optional(RestoreParam),
 });
 
@@ -40,6 +45,7 @@ export interface FilterPatch {
     categories?: readonly string[];
     category?: string | null;
     period?: string | null;
+    range?: RangeKind | null;
 }
 
 export const accountIdsOf = (accounts: string | undefined) => accounts?.split(",").filter((id) => id !== "") ?? [];
@@ -67,6 +73,7 @@ export const searchPatch = (patch: FilterPatch): DashboardSearch => ({
         category: patch.categories.length > 0 ? patch.categories.join(",") : undefined,
     }),
     ...(patch.period !== undefined && { period: patch.period ?? undefined }),
+    ...(patch.range !== undefined && { range: patch.range ?? undefined }),
 });
 
 // An empty list means every account, so ticking a row narrows and unticking the last one widens back.

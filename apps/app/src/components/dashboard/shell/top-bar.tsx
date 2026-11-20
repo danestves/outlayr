@@ -13,12 +13,13 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
-import { usePeriodTitle } from "@/components/dashboard/home/format";
+import { useDateFormat, usePeriodTitle } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { usePeriodKeys } from "@/components/dashboard/shell/period-keys";
 import { MenuContent } from "@/components/ui/menu-content";
 import { rowsBetween, total } from "@/lib/dashboard-series-ledger";
-import { periodOf } from "@/lib/dashboard-series-period";
+import { periodOf, rangeKindOf } from "@/lib/dashboard-series-period";
+import type { RangeKind } from "@/lib/dashboard-series-period";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 const SHEET_ROW = "hover:bg-app-hover flex h-app-row w-full shrink-0 items-center gap-2 rounded-app-md px-2";
@@ -26,40 +27,60 @@ const SHEET_ROW = "hover:bg-app-hover flex h-app-row w-full shrink-0 items-cente
 export const CHIP =
     "relative gap-1.5 not-data-pressed:[&>[data-slot=chip-check]]:-me-1.5 max-lg:text-app-label max-lg:after:absolute max-lg:after:-inset-x-0.5 max-lg:after:-inset-y-1.5";
 
+type RangeTab = RangeKind | "month";
+
+const isRangeTab = (value: unknown): value is RangeTab => value === "month" || value === "quarter" || value === "year";
+
+function useRangeTab() {
+    const { filters, setFilters } = useDashboard();
+    const tab: RangeTab = rangeKindOf(filters.range.key) ?? "month";
+    const pick = (value: RangeTab) => {
+        if (value !== tab) {
+            setFilters({ range: value === "month" ? null : value });
+        }
+    };
+    return { pick, tab };
+}
+
 function PeriodControl() {
     const dashboard = useDashboard();
     const { filters, ledger, setFilters } = dashboard;
     const { filters: copy } = useIntlayer("dashboard");
+    const date = useDateFormat();
     const title = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
     const keys = usePeriodKeys(dashboard);
+    const { pick, tab } = useRangeTab();
     return (
-        <Tabs className="ml-auto max-lg:hidden" value="month">
-            <Tabs.List>
-                <Menu>
-                    <Menu.Trigger render={<Tabs.Trigger value="month" />}>{title(filters.period)}</Menu.Trigger>
-                    <MenuContent className="max-h-80 overflow-y-auto" sideOffset={8}>
-                        <Menu.RadioGroup
-                            onValueChange={(key: string) =>
-                                setFilters({ period: key === filters.currentKey ? null : key })
-                            }
-                            value={filters.period.key}
-                        >
-                            {keys.map((key) => (
-                                <Menu.RadioItem closeOnClick key={key} value={key}>
-                                    {title(periodOf(key, ledger.firstDayOfMonth))}
-                                </Menu.RadioItem>
-                            ))}
-                        </Menu.RadioGroup>
-                    </MenuContent>
-                </Menu>
-                <Tabs.Trigger className="data-disabled:opacity-100" disabled value="quarter">
-                    {copy.quarter}
-                </Tabs.Trigger>
-                <Tabs.Trigger className="data-disabled:opacity-100" disabled value="year">
-                    {copy.year}
-                </Tabs.Trigger>
-            </Tabs.List>
-        </Tabs>
+        <div className="ml-auto flex items-center gap-3 max-lg:hidden">
+            {tab === "month" ? null : (
+                <span className="dash-figure text-muted-foreground text-app-label whitespace-nowrap">
+                    {copy.rangeLabel({ from: date.day(filters.range.from), to: date.day(filters.range.to) })}
+                </span>
+            )}
+            <Tabs onValueChange={(value) => isRangeTab(value) && pick(value)} value={tab}>
+                <Tabs.List>
+                    <Menu>
+                        <Menu.Trigger render={<Tabs.Trigger value="month" />}>{title(filters.period)}</Menu.Trigger>
+                        <MenuContent className="max-h-80 overflow-y-auto" sideOffset={8}>
+                            <Menu.RadioGroup
+                                onValueChange={(key: string) =>
+                                    setFilters({ period: key === filters.currentKey ? null : key })
+                                }
+                                value={filters.period.key}
+                            >
+                                {keys.map((key) => (
+                                    <Menu.RadioItem closeOnClick key={key} value={key}>
+                                        {title(periodOf(key, ledger.firstDayOfMonth))}
+                                    </Menu.RadioItem>
+                                ))}
+                            </Menu.RadioGroup>
+                        </MenuContent>
+                    </Menu>
+                    <Tabs.Trigger value="quarter">{copy.quarter}</Tabs.Trigger>
+                    <Tabs.Trigger value="year">{copy.year}</Tabs.Trigger>
+                </Tabs.List>
+            </Tabs>
+        </div>
     );
 }
 
@@ -108,6 +129,7 @@ function PeriodSheet() {
     const { filters: copy } = useIntlayer("dashboard");
     const { spent } = useIntlayer("dashboard-home").kpi;
     const title = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
+    const { pick, tab } = useRangeTab();
     const [open, setOpen] = useState(false);
     return (
         <Sheet onOpenChange={setOpen} open={open}>
@@ -118,15 +140,15 @@ function PeriodSheet() {
             </Sheet.Trigger>
             <Sheet.Content className="app-shell ph-no-capture max-h-3/5">
                 <Sheet.Header title={copy.period} />
-                <Tabs className="mx-4 mb-2" value="month">
+                <Tabs className="mx-4 mb-2" onValueChange={(value) => isRangeTab(value) && pick(value)} value={tab}>
                     <Tabs.List className="w-full">
                         <Tabs.Trigger className="flex-1" value="month">
                             {copy.month}
                         </Tabs.Trigger>
-                        <Tabs.Trigger className="flex-1" disabled value="quarter">
+                        <Tabs.Trigger className="flex-1" value="quarter">
                             {copy.quarter}
                         </Tabs.Trigger>
-                        <Tabs.Trigger className="flex-1" disabled value="year">
+                        <Tabs.Trigger className="flex-1" value="year">
                             {copy.year}
                         </Tabs.Trigger>
                     </Tabs.List>

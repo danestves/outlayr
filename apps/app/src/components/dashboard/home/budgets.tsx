@@ -1,5 +1,8 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
+import PieChartIcon from "@hugeicons/core-free-icons/PieChartIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Link } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Stat } from "panelui-web/stat";
@@ -8,19 +11,21 @@ import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { useBudgetFlows } from "@/components/dashboard/budgets/flow-context";
 import { useWide } from "@/components/dashboard/insights/use-wide";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { budgetParts, categoryBudgets } from "@/lib/dashboard-series";
+import { budgetParts, spendSeries } from "@/lib/dashboard-series";
 import type { CategoryBudget } from "@/lib/dashboard-series";
 import type { BudgetTarget } from "@/lib/dashboard-series-ledger";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { CardFrame } from "./card-frame";
+import { Empty } from "./empty";
 import { useCategoryName, useDateFormat, useWholeMoney } from "./format";
-import { budgetRows } from "./model";
+import { budgetRows, rangeBudgets } from "./model";
 import type { SetupState } from "./model";
-import { Cover, GhostBudgets, PhoneButton } from "./setup";
 
 const ROWS_SHOWN = 5;
 const PERCENT = 100;
@@ -43,8 +48,8 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
         [ledger.currency]
     );
     const parts = useMemo(
-        () => budgetParts(ledger, category.id, standing, filters.period),
-        [category.id, filters.period, ledger, standing]
+        () => budgetParts(ledger, category.id, standing, filters.range),
+        [category.id, filters.range, ledger, standing]
     );
     const name = categoryName(category);
     const dimmed = filters.categories.length > 0 && !filters.categories.includes(category.topId);
@@ -54,7 +59,7 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
     const filter = () => setFilters({ category: category.topId });
     const percent = Math.round((standing.spent / Math.max(standing.effectiveLimit, 1)) * PERCENT);
     const badge = (
-        <Badge className={`ml-auto shrink-0 ${OVER_BADGE}`} dot variant="destructive">
+        <Badge className={`ms-auto shrink-0 ${OVER_BADGE}`} dot variant="destructive">
             {overAmount}
         </Badge>
     );
@@ -130,15 +135,15 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
                 </Usage.Content>
             </Usage>
             <button
-                className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 self-stretch py-1 pr-1.5 text-left text-[13px] font-medium"
+                className="text-app-label flex min-w-0 flex-1 flex-wrap items-center gap-x-2 self-stretch py-1 pr-1.5 text-start font-medium"
                 onClick={filter}
                 type="button"
             >
-                <span className="min-w-18 flex-[1_1_0] truncate">{name}</span>
+                <span className="min-w-18 flex-1 truncate">{name}</span>
                 {over ? (
                     badge
                 ) : (
-                    <span className="dash-figure text-muted-foreground ml-auto text-xs leading-4 font-normal whitespace-nowrap">
+                    <span className="dash-figure text-muted-foreground text-app-caption ms-auto font-normal whitespace-nowrap">
                         <b className="text-foreground font-medium">{whole(standing.spent)}</b> /{" "}
                         {whole(standing.effectiveLimit)}
                     </span>
@@ -148,63 +153,86 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
     );
 }
 
-export function Budgets({ setup }: { setup: SetupState | null }) {
+function NoBudgets({ setup }: { setup: SetupState | null }) {
     const { filters, ledger } = useDashboard();
-    const { panel: copy, setup: setupCopy, transactions } = useIntlayer("dashboard-home");
+    const { panel: copy, setup: setupCopy } = useIntlayer("dashboard-home");
     const categoryName = useCategoryName();
-    const { whole } = useWholeMoney(ledger.currency);
-    const [expanded, setExpanded] = useState(false);
-    const { left, limit, over, rows } = useMemo(
-        () => budgetRows(ledger, categoryBudgets(ledger, filters.period)),
-        [filters.period, ledger]
-    );
-    if (rows.length === 0) {
-        const active = !setup || setup.step === "budget";
-        const first = setup?.firstSpendTopId ? ledger.categories.get(setup.firstSpendTopId) : undefined;
-        const setupLine = first ? setupCopy.budgetFirstSpend({ name: categoryName(first) }) : setupCopy.budgetLine;
-        return (
-            <CardFrame
-                className={`min-h-[363px] ${setup && active ? "ring-primary/55 ring-1" : ""}`}
-                title={copy.budgets}
-            >
-                <GhostBudgets />
-                <Cover line={setup ? setupLine : copy.budgetsEmptyLine} title={copy.budgetsEmptyTitle}>
-                    <PhoneButton size={active ? "md" : "sm"} variant={active ? "default" : "outline"}>
+    const { open } = useBudgetFlows();
+    const biggest = useMemo(() => {
+        if (setup) {
+            return setup.firstSpendTopId ? ledger.categories.get(setup.firstSpendTopId) : undefined;
+        }
+        const { categories } = spendSeries(ledger, filters.range, { accounts: filters.accounts, category: null });
+        const [top] = categories.toSorted((a, b) => b.total - a.total);
+        return top ? ledger.categories.get(top.id) : undefined;
+    }, [filters.accounts, filters.range, ledger, setup]);
+    let line: ReactNode = copy.budgetsEmptyLine;
+    if (biggest) {
+        line = setup
+            ? setupCopy.budgetFirstSpend({ name: categoryName(biggest) })
+            : copy.budgetBiggest({ name: categoryName(biggest) });
+    }
+    return (
+        <CardFrame highlighted={setup?.step === "budget"} title={copy.budgets}>
+            <Empty
+                action={
+                    <Button
+                        onClick={() => open({ categoryId: biggest?.id ?? null, kind: "new" })}
+                        variant={!setup || setup.step === "budget" ? "default" : "outline"}
+                    >
                         <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
                         {setupCopy.addBudget}
-                    </PhoneButton>
-                </Cover>
-            </CardFrame>
-        );
+                    </Button>
+                }
+                icon={PieChartIcon}
+                line={line}
+                title={copy.budgetsEmptyTitle}
+            />
+        </CardFrame>
+    );
+}
+
+export function Budgets({ setup }: { setup: SetupState | null }) {
+    const { filters, ledger } = useDashboard();
+    const { panel: copy } = useIntlayer("dashboard-home");
+    const { whole } = useWholeMoney(ledger.currency);
+    const { left, limit, over, rows } = useMemo(
+        () => budgetRows(ledger, rangeBudgets(ledger, filters.range)),
+        [filters.range, ledger]
+    );
+    if (rows.length === 0) {
+        return <NoBudgets setup={setup} />;
     }
     return (
         <CardFrame
             footer={
                 <>
-                    <span className="text-muted-foreground text-[13px] leading-5">{copy.onTrackLabel}</span>
+                    <span className="text-muted-foreground text-app-label">{copy.onTrackLabel}</span>
                     <span className="dash-figure font-medium">
                         {copy.onTrackCount({ count: rows.length - over, total: rows.length })}
                     </span>
-                    {rows.length > ROWS_SHOWN ? (
-                        <Button className="ml-auto" onClick={() => setExpanded(!expanded)} size="sm" variant="outline">
-                            {expanded ? copy.budgetShowLess : transactions.seeAll}
-                        </Button>
-                    ) : null}
+                    <Button
+                        className="[&_svg]:text-muted-foreground ms-auto gap-1.5"
+                        nativeButton={false}
+                        render={<Link to="/budgets" viewTransition={viewTransition("push-left")} />}
+                        size="sm"
+                        variant="outline"
+                    >
+                        {copy.details}
+                        <HugeiconsIcon icon={ArrowUpRight01Icon} strokeWidth={1.5} />
+                    </Button>
                 </>
             }
             title={copy.budgets}
         >
-            <Stat className="flex-wrap gap-y-1 px-3.5 pt-[11px] pb-[7px]">
+            <Stat className="flex-wrap gap-y-1 px-3.5 pt-3 pb-2">
                 <Stat.Content>
-                    <Stat.Label className="text-[13px] leading-[18px]">
+                    <Stat.Label className="text-app-label">
                         {left < 0 ? copy.budgetOverTotal : copy.budgetLeft}
                     </Stat.Label>
-                    <Stat.Value
-                        className={`dash-figure tracking-[-0.04em] ${left < 0 ? "text-[color-mix(in_oklab,var(--color-app-spend),var(--color-app-ink)_30%)]" : ""}`}
-                        size="sm"
-                    >
+                    <Stat.Value className={`dash-figure tracking-tight ${left < 0 ? "text-app-spend" : ""}`} size="sm">
                         {whole(Math.abs(left))}
-                        <Stat.Unit className="ms-1.5 font-sans text-[13px] leading-none tracking-normal normal-nums">
+                        <Stat.Unit className="text-app-label ms-1.5 font-sans leading-none tracking-normal normal-nums">
                             {copy.of} {whole(limit)}
                         </Stat.Unit>
                     </Stat.Value>
@@ -216,7 +244,7 @@ export function Budgets({ setup }: { setup: SetupState | null }) {
                 ) : null}
             </Stat>
             <div className="px-2 pb-0.5">
-                {(expanded ? rows : rows.slice(0, ROWS_SHOWN)).map(({ category, standing }) => (
+                {rows.slice(0, ROWS_SHOWN).map(({ category, standing }) => (
                     <BudgetRow category={category} key={category.id} standing={standing} />
                 ))}
             </div>

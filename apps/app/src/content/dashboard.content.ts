@@ -91,6 +91,15 @@ const dashboard = {
             month: t({ en: "Month", de: "Monat", es: "Mes", fr: "Mois", pt: "Mês" }),
             period: t({ en: "Period", de: "Zeitraum", es: "Periodo", fr: "Période", pt: "Período" }),
             quarter: t({ en: "Quarter", de: "Quartal", es: "Trimestre", fr: "Trimestre", pt: "Trimestre" }),
+            rangeLabel: insert(
+                t({
+                    en: "{{from}} to {{to}}",
+                    de: "{{from}} bis {{to}}",
+                    es: "{{from}} al {{to}}",
+                    fr: "{{from}} au {{to}}",
+                    pt: "{{from}} a {{to}}",
+                })
+            ),
             recent: t({ en: "Recent", de: "Zuletzt", es: "Recientes", fr: "Récents", pt: "Recentes" }),
             searchAccounts: t({
                 en: "Search accounts",

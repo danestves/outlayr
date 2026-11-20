@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo } from "react";
 
 import type { Overview } from "@/components/ledger/overview";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
-import { periodKeyOf, periodOf } from "@/lib/dashboard-series-period";
+import { periodKeyOf, periodOf, rangeKeyOf } from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
 
 import { accountIdsOf, periodKeyOr, spanKeyOr } from "./filters";
@@ -14,6 +14,8 @@ export interface DashboardFilters {
     category: string | null;
     currentKey: string;
     period: Period;
+    /** What the dashboard home reads: `period`, or the quarter or year ending with it. */
+    range: Period;
     /** The week, month or year Insights is reading; `period` stays a month for every other screen. */
     span: Period;
 }
@@ -51,6 +53,8 @@ export function useFilters(search: DashboardSearch, ledger: Ledger): DashboardFi
     const accounts = useMemo(() => (accountKey === "" ? NONE : accountKey.split(",")), [accountKey]);
     const categories = useMemo(() => (categoryKey === "" ? NONE : categoryKey.split(",")), [categoryKey]);
     const period = useMemo(() => periodOf(periodKey, firstDayOfMonth), [firstDayOfMonth, periodKey]);
+    const rangeKey = rangeKeyOf(periodKey, search.range ?? null);
+    const range = useMemo(() => periodOf(rangeKey, firstDayOfMonth), [firstDayOfMonth, rangeKey]);
     const spanKey = spanKeyOr(search.period, today, { firstDayOfMonth, firstWeekday });
     const span = useMemo(() => periodOf(spanKey, firstDayOfMonth), [firstDayOfMonth, spanKey]);
     return useMemo(
@@ -60,8 +64,9 @@ export function useFilters(search: DashboardSearch, ledger: Ledger): DashboardFi
             category: categories.length === 1 ? (categories[0] ?? null) : null,
             currentKey,
             period,
+            range,
             span,
         }),
-        [accounts, categories, currentKey, period, span]
+        [accounts, categories, currentKey, period, range, span]
     );
 }

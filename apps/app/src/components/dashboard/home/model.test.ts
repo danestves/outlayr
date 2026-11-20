@@ -1,14 +1,17 @@
+import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { describe, expect, it } from "vite-plus/test";
 
 import type { LedgerBooks } from "@/lib/ledger-books";
 
 import type { CategoryBudget } from "../../../lib/dashboard-series";
 import { prepareLedger } from "../../../lib/dashboard-series-ledger";
+import { periodOf } from "../../../lib/dashboard-series-period";
 import {
     budgetRows,
     categoryChoices,
     categorySpend,
     everyDay,
+    rangeBudgets,
     setupState,
     snapWhatIf,
     sparks,
@@ -147,6 +150,22 @@ describe("everyDay", () => {
         expect(days.average).toBe(3);
         expect(days.top?.day).toBe("2026-10-02");
         expect(days.runnerUp).toBeNull();
+    });
+
+    it("skips the top day's repeats in a quarter, so rent each month is not its own runner up", () => {
+        const books = {
+            ...ledger.books,
+            transactions: [
+                entry(1, "2026-08-01", "rent", 70),
+                entry(2, "2026-09-01", "rent", 70),
+                entry(3, "2026-10-01", "rent", 70),
+                entry(4, "2026-10-02", "food", 30),
+            ],
+        } as unknown as LedgerBooks;
+        const days = everyDay(prepareLedger(books, NOW), periodOf("2026-10/quarter", 1), SCOPE, []);
+
+        expect(days.top).toMatchObject({ amount: 70, day: "2026-08-01" });
+        expect(days.runnerUp).toMatchObject({ amount: 30, day: "2026-10-02" });
     });
 });
 
@@ -303,5 +322,40 @@ describe("what-if amounts", () => {
 
     it("keeps cents clean on small steps", () => {
         expect(snapWhatIf(0.30000000000000004, 0.1, 10)).toBe(0.3);
+    });
+});
+
+describe("rangeBudgets", () => {
+    const books = {
+        ...ledger.books,
+        budgets: [
+            {
+                ...envelope("food-limit", 1),
+                amount: 100,
+                amountUsd: 100,
+                categoryId: "food",
+                currency: "USD",
+                dateCreated: 0,
+                green: false,
+                name: null,
+                rollover: false,
+                startDate: Date.parse("2026-08-01T00:00:00Z"),
+                type: BUDGET_TYPE.month,
+            },
+        ],
+        transactions: [
+            entry(1, "2026-08-10", "food", 50),
+            entry(2, "2026-09-10", "food", 120),
+            entry(3, "2026-10-02", "food", 30),
+        ],
+    } as unknown as LedgerBooks;
+    const food = (key: string) => rangeBudgets(prepareLedger(books, NOW), periodOf(key, 1)).get("food");
+
+    it("sums each month's limit and spending, so one bad month does not flag the quarter", () => {
+        expect(food("2026-10/quarter")).toMatchObject({ limit: 300, overBudget: false, remaining: 100, spent: 200 });
+    });
+
+    it("leaves months that have not started out of the limit", () => {
+        expect(food("2026-12/quarter")).toMatchObject({ limit: 100, spent: 30 });
     });
 });

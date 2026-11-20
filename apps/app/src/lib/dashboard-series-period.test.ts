@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { periodKeyIn, periodKeyOf, periodOf, priorSlice, shiftPeriodKey } from "./dashboard-series-period";
+import { periodKeyIn, periodKeyOf, periodOf, priorSlice, rangeKindOf, shiftPeriodKey } from "./dashboard-series-period";
 
 describe("periodOf", () => {
     it("spans the calendar month when the month starts on the 1st", () => {
@@ -53,6 +53,33 @@ describe("priorSlice", () => {
 
     it("never runs past a shorter previous month", () => {
         expect(priorSlice(periodOf("2026-03", 1), "2026-03-30", 1).to).toBe("2026-02-28");
+    });
+});
+
+describe("dashboard ranges", () => {
+    it("reads a quarter as the three months ending on its month, across a year", () => {
+        expect(periodOf("2026-02/quarter", 1)).toMatchObject({ days: 90, from: "2025-12-01", to: "2026-02-28" });
+    });
+
+    it("reads a year as January through its month, on the ledger's first day", () => {
+        expect(periodOf("2026-10/year", 15)).toMatchObject({ from: "2026-01-15", to: "2026-11-14" });
+    });
+
+    it("compares a quarter with the quarter before and a year with the same months a year earlier", () => {
+        expect(shiftPeriodKey("2026-02/quarter", -1)).toBe("2025-11/quarter");
+        expect(shiftPeriodKey("2026-10/year", -1)).toBe("2025-10/year");
+    });
+
+    it("cuts the year before at the same day while this one is running", () => {
+        expect(priorSlice(periodOf("2026-11/year", 1), "2026-11-19", 1)).toMatchObject({
+            from: "2025-01-01",
+            to: "2025-11-19",
+        });
+    });
+
+    it("leaves a month or a malformed key without a range", () => {
+        expect(rangeKindOf("2026-10")).toBeNull();
+        expect(rangeKindOf("2026-13/quarter")).toBeNull();
     });
 });
 

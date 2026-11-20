@@ -6,19 +6,83 @@ import type { CategoryBudget } from "../../../lib/dashboard-series";
 import { endOfDay, rowsBetween, round, startOfDay, total } from "../../../lib/dashboard-series-ledger";
 import type { Ledger, LedgerRow, Scope } from "../../../lib/dashboard-series-ledger";
 import { netWorthPoints } from "../../../lib/dashboard-series-net-worth";
-import { daysFrom, periodOf, priorSlice, shiftPeriodKey } from "../../../lib/dashboard-series-period";
+import { daysFrom, lastMonthOf, periodOf, priorSlice, shiftPeriodKey } from "../../../lib/dashboard-series-period";
 import type { Period } from "../../../lib/dashboard-series-period";
-import { foldFees } from "./rows";
+import { figureOf, foldFees } from "./rows";
+import type { FoldedRow } from "./rows";
 
 const SPARK_PERIODS = 12;
+const MONTHS_IN_YEAR = 12;
 const WHAT_IF_STOPS = 400;
 const NICE_STEPS = [1, 2, 5, 10];
 const CENT = 0.01;
 
+// Monthly for every range, so a quarter or a year still draws a year of points.
 const sparkPeriods = (ledger: Ledger, period: Period) =>
     Array.from({ length: SPARK_PERIODS }, (_, index) =>
-        periodOf(shiftPeriodKey(period.key, index + 1 - SPARK_PERIODS), ledger.firstDayOfMonth)
+        periodOf(shiftPeriodKey(lastMonthOf(period.key), index + 1 - SPARK_PERIODS), ledger.firstDayOfMonth)
     );
+
+export function monthsOf(ledger: Pick<Ledger, "firstDayOfMonth">, range: Period) {
+    const last = lastMonthOf(range.key);
+    const months = [periodOf(last, ledger.firstDayOfMonth)];
+    while ((months[0]?.from ?? "") > range.from) {
+        months.unshift(periodOf(shiftPeriodKey(months[0]?.key ?? last, -1), ledger.firstDayOfMonth));
+    }
+    return months;
+}
+
+export function rangeBudgets(ledger: Ledger, range: Period): ReadonlyMap<string, CategoryBudget> {
+    const months = monthsOf(ledger, range).filter((month) => month.from <= ledger.today);
+    if (months.length <= 1) {
+        return categoryBudgets(ledger, months[0] ?? range);
+    }
+    const sums = new Map<string, CategoryBudget>();
+    for (const month of months) {
+        for (const [id, standing] of categoryBudgets(ledger, month)) {
+            const sum = sums.get(id);
+            const limit = round(ledger, (sum?.effectiveLimit ?? 0) + standing.effectiveLimit);
+            const spent = round(ledger, (sum?.spent ?? 0) + standing.spent);
+            sums.set(id, {
+                ...standing,
+                effectiveLimit: limit,
+                from: sum?.from ?? standing.from,
+                limit,
+                overBudget: spent > limit,
+                remaining: round(ledger, limit - spent),
+                runOut: null,
+                spent,
+            });
+        }
+    }
+    return sums;
+}
+
+export function everyMonth(ledger: Ledger, range: Period, scope: Scope, categories: readonly string[]) {
+    const picked = new Set(categories);
+    const through = ledger.today < range.to ? ledger.today : range.to;
+    const months = monthsOf(ledger, range).map((month) => {
+        const rows = rowsBetween(ledger, scope, month.from, month.to < through ? month.to : through, false).filter(
+            (row) => picked.size === 0 || picked.has(row.topId)
+        );
+        return { amount: total(ledger, rows), key: month.key, started: month.from <= through };
+    });
+    const year = range.key.slice(0, 4);
+    const rest = Array.from({ length: MONTHS_IN_YEAR - months.length }, (_, index) => ({
+        amount: 0,
+        key: shiftPeriodKey(lastMonthOf(range.key), index + 1),
+        started: false,
+    })).filter((month) => month.key.startsWith(year));
+    const spent = months.filter((month) => month.started && month.amount > 0);
+    const ranked = spent.toSorted((a, b) => b.amount - a.amount);
+    const elapsed = daysFrom(range.from, through).length;
+    return {
+        average: elapsed > 0 ? round(ledger, spent.reduce((sum, month) => sum + month.amount, 0) / elapsed) : 0,
+        highest: ranked[0] ?? null,
+        lowest: ranked.length > 1 ? (ranked.at(-1) ?? null) : null,
+        months: [...months, ...rest],
+    };
+}
 
 export function categorySpend(ledger: Ledger, period: Period, scope: Scope, categories: readonly string[]) {
     const picked = new Set(categories);
@@ -106,7 +170,8 @@ export function everyDay(ledger: Ledger, period: Period, scope: Scope, categorie
         const amount = total(ledger, dayRows);
         return { amount, day, level: levelOf(amount, average), topId: biggestCategory(dayRows) };
     });
-    const [first, second] = cells.filter((cell) => cell.amount > 0).toSorted((a, b) => b.amount - a.amount);
+    const [first, ...rest] = cells.filter((cell) => cell.amount > 0).toSorted((a, b) => b.amount - a.amount);
+    const second = first && rest.find((cell) => cell.topId !== first.topId || cell.amount !== first.amount);
     return {
         average,
         cells,
@@ -116,6 +181,18 @@ export function everyDay(ledger: Ledger, period: Period, scope: Scope, categorie
         runnerUp: second ?? null,
         top: first ?? null,
     };
+}
+
+const isEntry = (row: FoldedRow): row is FoldedRow & LedgerRow => !("fromId" in row);
+
+export function dayEntries(ledger: Ledger, day: string, scope: Scope, categories: readonly string[]) {
+    const picked = new Set(categories);
+    const rows = foldFees(
+        rowsBetween(ledger, scope, day, day, false).filter((row) => picked.size === 0 || picked.has(row.topId))
+    ).filter(isEntry);
+    return rows
+        .map((row) => ({ amount: figureOf(ledger, row).amount, id: row.id, note: row.note, topId: row.topId }))
+        .toSorted((a, b) => b.amount - a.amount);
 }
 
 function biggestCategory(rows: readonly LedgerRow[]) {
@@ -212,9 +289,10 @@ export function homeCovered(ledger: Ledger, period: Period) {
     return (
         earliest !== undefined &&
         reaches(earliest.from) &&
+        reaches(period.from) &&
         recent >= SETUP_ENTRY_LIMIT &&
         !carries &&
-        [...categoryBudgets(ledger, period).values()].every((standing) => reaches(standing.from))
+        [...rangeBudgets(ledger, period).values()].every((standing) => reaches(standing.from))
     );
 }
 

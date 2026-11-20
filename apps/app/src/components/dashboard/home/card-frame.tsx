@@ -7,6 +7,7 @@ export function CardFrame({
     className = "",
     footer,
     headerClassName = "",
+    highlighted = false,
     panelClassName = "",
     stackAction = false,
     title,
@@ -16,20 +17,21 @@ export function CardFrame({
     className?: string;
     footer?: ReactNode;
     headerClassName?: string;
+    highlighted?: boolean;
     panelClassName?: string;
     stackAction?: boolean;
     title: ReactNode;
 }) {
     return (
-        <Frame className={`min-w-0 rounded-2xl ${className}`} variant="band">
+        <Frame
+            className={`rounded-app-xl min-w-0 ${highlighted ? "ring-app-tint ring-1" : ""} ${className}`}
+            variant="band"
+        >
             <Frame.Header
                 className={`min-h-10 has-data-[slot=frame-action]:grid-cols-[auto_minmax(0,1fr)] ${stackAction ? "max-sm:grid-cols-[minmax(0,1fr)]! sm:[&>[data-slot=frame-title]]:row-span-2" : ""} ${headerClassName}`}
             >
-                <Frame.Title
-                    as="h2"
-                    className="text-[15px] leading-5 font-semibold tracking-[-0.01em] whitespace-nowrap"
-                >
-                    {title}
+                <Frame.Title as="h2" className="whitespace-nowrap">
+                    <span className="text-app-title font-semibold">{title}</span>
                 </Frame.Title>
                 {action ? (
                     <Frame.Action
@@ -41,13 +43,13 @@ export function CardFrame({
             </Frame.Header>
             {children ? (
                 <Frame.Panel
-                    className={`relative flex-1 group-data-[variant=band]/frame:rounded-[10px] dark:group-data-[variant=band]/frame:shadow-[0_1px_2px_#0003] ${panelClassName}`}
+                    className={`group-data-[variant=band]/frame:rounded-app-md relative flex-1 dark:group-data-[variant=band]/frame:shadow-(--shadow-app-panel) ${panelClassName}`}
                 >
                     {children}
                 </Frame.Panel>
             ) : null}
             {footer ? (
-                <Frame.Footer className="min-h-11 flex-wrap text-sm group-data-[variant=band]/frame:pe-2 group-data-[variant=band]/frame:pt-[7px] group-data-[variant=band]/frame:pb-[3px]">
+                <Frame.Footer className="text-app-body min-h-11 flex-wrap group-data-[variant=band]/frame:py-1 group-data-[variant=band]/frame:pe-2">
                     {footer}
                 </Frame.Footer>
             ) : null}

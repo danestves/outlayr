@@ -64,6 +64,9 @@
     --text-app-title--line-height: 20px;
     --text-app-heading: 18px;
     --text-app-heading--line-height: 24px;
+    --text-app-figure: 24px;
+    --text-app-figure--line-height: 32px;
+    --text-app-figure--letter-spacing: -0.04em;
 
     --radius-app-xs: 6px;
     --radius-app-sm: 8px;

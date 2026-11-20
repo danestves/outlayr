@@ -1,3 +1,4 @@
+import Analytics01Icon from "@hugeicons/core-free-icons/Analytics01Icon";
 import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
@@ -11,22 +12,24 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { kpis } from "@/lib/dashboard-series";
 import { round } from "@/lib/dashboard-series-ledger";
-import { periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
+import { lastMonthOf, periodOf, rangeKindOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
+import type { Period } from "@/lib/dashboard-series-period";
 import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { CardFrame } from "./card-frame";
+import { Empty } from "./empty";
 import { categoryTone, percentChange, useDateFormat } from "./format";
 import { categorySpend, snapWhatIf, whatIfStep } from "./model";
 import type { SetupState } from "./model";
-import { Cover, GhostRuler, LATE_FADE, QuietBars } from "./setup";
 
 const PERCENT = 100;
 const NO_INCOME_MAX = 1;
 const OVER_TONE = "[--pu-color:var(--destructive)] [--pu-on-color:var(--color-app-float)]";
 const WHAT_IF_TONE = "[--pu-color:var(--muted-foreground)] [--pu-on-color:var(--color-app-float)]";
 
-const TREND = "dash-figure flex h-auto rounded-full border-0 px-2 py-0.5 text-xs leading-4 font-medium";
+const TREND = "dash-figure text-app-caption flex h-auto rounded-full border-0 px-2 py-0.5 font-medium";
 const TREND_FLAT = `${TREND} bg-app-fill text-muted-foreground`;
 const TREND_POOR = `${TREND} text-app-spend bg-[color-mix(in_oklab,var(--color-app-spend)_16%,transparent)]!`;
 const TREND_GOOD = `${TREND} text-app-income bg-[color-mix(in_oklab,var(--color-app-income)_14%,transparent)]!`;
@@ -75,21 +78,16 @@ function SpentSetup({ spent }: { spent: number }) {
     const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-home");
     const { money } = useDisplayFormat();
-    const shown = (value: number) => money(value, ledger.currency);
-    const { title } = copy.spentOfIncome;
     return (
-        <CardFrame className="min-h-[363px]" title={title}>
-            <div className="px-4">
-                <GhostRuler />
-            </div>
+        <CardFrame title={copy.spentOfIncome.title}>
             {spent > 0 ? (
-                <Cover
-                    fade={LATE_FADE}
+                <Empty
+                    icon={Analytics01Icon}
                     line={copy.setup.logIncome}
-                    title={copy.setup.spent({ amount: shown(spent) })}
+                    title={copy.setup.spent({ amount: money(spent, ledger.currency) })}
                 />
             ) : (
-                <Cover fade={LATE_FADE} line={copy.setup.fillsIn} title={copy.setup.spentTitle} />
+                <Empty icon={Analytics01Icon} line={copy.setup.fillsIn} title={copy.setup.spentTitle} />
             )}
         </CardFrame>
     );
@@ -99,26 +97,20 @@ function SpentQuiet() {
     const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-home");
     const { money } = useDisplayFormat();
-    const shown = (value: number) => money(value, ledger.currency);
-    const { title } = copy.spentOfIncome;
     return (
         <CardFrame
             footer={
                 <>
-                    <span className="text-muted-foreground text-[13px] leading-5">{copy.kpi.kept}</span>
-                    <span className="dash-figure font-medium">{shown(0)}</span>
+                    <span className="text-muted-foreground">{copy.kpi.kept}</span>
+                    <span className="dash-figure font-medium">{money(0, ledger.currency)}</span>
                     <Badge className={TREND_FLAT} size="sm" variant="secondary">
                         0%
                     </Badge>
                 </>
             }
-            title={title}
+            title={copy.spentOfIncome.title}
         >
-            <div className="dash-empty relative isolate min-h-[248px] justify-end pt-0 pb-7">
-                <QuietBars />
-                <b className="text-[15px] font-semibold">{copy.quiet.spentTitle}</b>
-                <p className="text-muted-foreground mb-2.5 text-[13px]">{copy.quiet.spentLine}</p>
-            </div>
+            <Empty icon={Analytics01Icon} line={copy.quiet.spentLine} title={copy.quiet.spentTitle} />
         </CardFrame>
     );
 }
@@ -167,7 +159,7 @@ function SpentFooter({
     const keptShare = income > 0 ? kept / income : null;
     return (
         <>
-            <span className="text-muted-foreground text-[13px] leading-5 whitespace-nowrap">
+            <span className="text-muted-foreground whitespace-nowrap">
                 {picked ? copy.spentOfIncome.shareOfSpent : null}
                 {!picked && previewing ? copy.spentOfIncome.wouldKeep : null}
                 {!picked && !previewing ? copy.kpi.kept : null}
@@ -192,9 +184,9 @@ function SpentFooter({
                 </Badge>
             )}
             <Button
-                className={`[&_svg]:text-muted-foreground ml-auto gap-1.5 rounded-[6px] ${previewing ? "max-[480px]:hidden" : ""}`}
+                className={`[&_svg]:text-muted-foreground rounded-app-xs ml-auto gap-1.5 ${previewing ? "max-[480px]:hidden" : ""}`}
                 nativeButton={false}
-                render={<Link to="/insights" />}
+                render={<Link to="/insights" viewTransition={viewTransition("push-left")} />}
                 size="sm"
                 variant="outline"
             >
@@ -205,12 +197,29 @@ function SpentFooter({
     );
 }
 
+function useCompareLabels(period: Period, firstDayOfMonth: number) {
+    const copy = useIntlayer("dashboard-home").spentOfIncome;
+    const date = useDateFormat();
+    const year = lastMonthOf(period.key).slice(0, 4);
+    switch (rangeKindOf(period.key)) {
+        case "quarter": {
+            return { now: copy.thisQuarter.value, prior: copy.previousQuarter.value };
+        }
+        case "year": {
+            return { now: year, prior: copy.sameMonths({ year: String(Number(year) - 1) }).value };
+        }
+        default: {
+            const prior = periodOf(shiftPeriodKey(period.key, -1), firstDayOfMonth).key;
+            return { now: capitalize(date.month(period.key)), prior: capitalize(date.month(prior)) };
+        }
+    }
+}
+
 export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { filters, ledger } = useDashboard();
     const copy = useIntlayer("dashboard-home");
-    const date = useDateFormat();
     const { money } = useDisplayFormat();
-    const { period } = filters;
+    const period = filters.range;
     const figures = useMemo(
         () => kpis(ledger, period, { accounts: filters.accounts }),
         [filters.accounts, ledger, period]
@@ -229,13 +238,13 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
     const { amount: whatIf, slider } = useWhatIf(income);
     const shown = (value: number) => money(value, ledger.currency);
     const { title } = copy.spentOfIncome;
+    const labels = useCompareLabels(period, ledger.firstDayOfMonth);
     if (setup && (income === 0 || spent === 0)) {
         return <SpentSetup spent={spent} />;
     }
     if (quiet) {
         return <SpentQuiet />;
     }
-    const priorMonth = periodOf(shiftPeriodKey(period.key, -1), ledger.firstDayOfMonth).key;
     const hasIncome = income > 0;
     const over = hasIncome && spent > income;
     const previewing = whatIf !== null;
@@ -281,20 +290,20 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
                     {...(hasIncome && !picked ? slider : {})}
                 />
                 <RangeMeter.Scale
-                    className="dash-figure mt-3.5 text-[13px]"
+                    className="dash-figure text-app-label mt-3.5"
                     end={hasIncome ? shown(income) : copy.spentOfIncome.noIncome}
                     start={moneyIn(0, ledger.currency, "auto", false)}
                 />
-                <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
-                    <span className="text-muted-foreground flex items-center gap-2 text-[13px] leading-5">
-                        <u aria-hidden className="bg-foreground block size-[7px] rotate-45 rounded-[1px]" />
-                        {capitalize(date.month(priorMonth))}
+                <div className="text-app-body mt-6 flex flex-wrap items-baseline justify-between gap-x-3">
+                    <span className="text-muted-foreground text-app-label flex items-center gap-2">
+                        <u aria-hidden className="bg-foreground block size-2 rotate-45 rounded-xs" />
+                        {labels.prior}
                     </span>
                     <span className="dash-figure ml-auto whitespace-nowrap">{shown(prior)}</span>
                 </div>
-                <div className="mt-1.5 flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
-                    <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-[13px] leading-5">
-                        {capitalize(date.month(period.key))}
+                <div className="text-app-body mt-1.5 flex flex-wrap items-baseline justify-between gap-x-3">
+                    <span className="text-muted-foreground text-app-label flex flex-wrap items-center gap-x-2">
+                        {labels.now}
                         {overBy ? <span className="text-app-spend">{overBy}</span> : null}
                     </span>
                     <span className="dash-figure ml-auto whitespace-nowrap">{shown(spent)}</span>
