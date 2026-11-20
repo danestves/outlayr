@@ -14,7 +14,9 @@ export const openrouter: TextProvider = {
             Option.map(
                 (apiKey) => (modelId: string) =>
                     // SAFETY: env picks the id; one the provider does not serve fails as a provider error.
-                    createOpenRouterText(modelId as Model, Redacted.value(apiKey))
+                    createOpenRouterText(modelId as Model, Redacted.value(apiKey), {
+                        retryConfig: { strategy: "none" },
+                    })
             )
         )
     ),

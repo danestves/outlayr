@@ -1,12 +1,11 @@
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
+import { generateObject } from "@outlayr/ai/generate";
+import type { TextModel } from "@outlayr/ai/model";
 import { isPickableCurrency } from "@outlayr/money/currency";
-import { generateText, Output } from "ai";
-import type { LanguageModel } from "ai";
 import * as Effect from "effect/Effect";
 
 import { components } from "../convex/_generated/api";
 import { MAX_NAME_LENGTH } from "./lib/ledgerPrompt";
-import { modelCallError, modelSchema } from "./lib/modelCall";
 import { NotificationRead } from "./notificationRead.spec";
 import type { DebtInstallment, ReadResult, ReadStatus } from "./notificationRead.spec";
 
@@ -17,8 +16,6 @@ const REQUEST_TIMEOUT_MS = 7000;
 export function failure(status: Exclude<ReadStatus, "ok">): ReadResult {
     return { read: null, status };
 }
-
-const modelOutputSchema = modelSchema(NotificationRead);
 
 function buildPrompt(text: string, language: string | undefined): string {
     return [
@@ -67,19 +64,12 @@ export function cleanRead(output: NotificationRead): NotificationRead {
     };
 }
 
-/** Exported so tests can inject a fake `LanguageModel`. */
+/** Exported so tests can inject a fake `TextModel`. */
 export const readNotification = Effect.fn("NotificationRead.readNotification")(
-    function* readNotification(model: LanguageModel, text: string, language: string | undefined) {
-        const { output } = yield* Effect.tryPromise({
-            catch: modelCallError,
-            try: () =>
-                generateText({
-                    abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-                    maxRetries: 0,
-                    model,
-                    output: Output.object({ schema: modelOutputSchema }),
-                    prompt: buildPrompt(text, language),
-                }),
+    function* readNotification(model: TextModel, text: string, language: string | undefined) {
+        const output = yield* generateObject(model, NotificationRead, {
+            messages: [{ content: buildPrompt(text, language), role: "user" }],
+            timeout: REQUEST_TIMEOUT_MS,
         });
         const result: ReadResult = { read: cleanRead(output), status: "ok" };
         return result;

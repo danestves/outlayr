@@ -21,6 +21,7 @@ export const openaiCompatible: TextProvider = {
                             api: "chat-completions",
                             apiKey: Option.match(apiKey, { onNone: () => KEYLESS, onSome: Redacted.value }),
                             baseURL: url,
+                            maxRetries: 0,
                             name: "openai-compatible",
                         })
                 )

@@ -2,6 +2,10 @@
 
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import workpoolTest from "@convex-dev/workpool/test";
+import type { TextModel } from "@outlayr/ai/model";
+import { answers, fails, fakeModel } from "@outlayr/ai/testing";
+import type { FakeResponseStep } from "@outlayr/ai/testing";
+import type { Route } from "@outlayr/model-router/route";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import { MockLanguageModelV3 } from "ai/test";
@@ -9,13 +13,13 @@ import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import { describe, expect, it } from "vite-plus/test";
 
 import { api, internal } from "../convex/_generated/api";
 import type { Doc } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
 import { resolveJob } from "./enrichmentQueue";
-import { CLAUDE_FAST_MODEL_ID, CLAUDE_MODEL_ID } from "./lib/models";
 import { authenticatedAs, seedAuthUser, seedProUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");
@@ -38,19 +42,14 @@ function setup() {
     return t;
 }
 
-function fastModel(payload: unknown) {
-    return new MockLanguageModelV3({
-        doGenerate: async () => ({
-            content: [{ text: JSON.stringify(payload), type: "text" }],
-            finishReason: { raw: undefined, unified: "stop" },
-            usage: {
-                inputTokens: { cacheRead: undefined, cacheWrite: undefined, noCache: undefined, total: undefined },
-                outputTokens: { reasoning: undefined, text: undefined, total: undefined },
-            },
-            warnings: [],
-        }),
-    });
+function tiered(...responses: FakeResponseStep[]) {
+    const { model, requests } = fakeModel(responses, { repeat: true });
+    const fast = (chosen: Route) =>
+        Effect.succeed(Option.some<TextModel>({ ...model, modelId: `fake-${chosen.model}`, route: chosen }));
+    return { fast, requests };
 }
+
+const fastModel = (payload: unknown) => tiered(answers(payload)).fast;
 
 function queuedRow(overrides: Partial<Doc<"enrichmentJobs">>): Doc<"enrichmentJobs"> {
     return {
@@ -124,11 +123,7 @@ describe(resolveJob, () => {
                 tags: ["luggage"],
             })
         );
-        const silent = new MockLanguageModelV3({
-            doGenerate: () => {
-                throw new Error("no model call expected");
-            },
-        });
+        const silent = tiered(fails("no model call expected")).fast;
 
         const answer = await t.action((ctx) =>
             Effect.runPromise(resolveJob(ctx, queuedRow({ grounded: true }), { fast: silent }))
@@ -260,39 +255,30 @@ describe("model route", () => {
     };
 
     it("retries a new-category answer on Sonnet while the budget is open", async () => {
-        await expect(sharedModelId(setup())).resolves.toBe(CLAUDE_MODEL_ID);
+        await expect(sharedModelId(setup())).resolves.toBe("fake-standard");
     });
 
     it("keeps the Haiku answer when the Sonnet retry fails", async () => {
         const t = setup();
-        const haiku = fastModel({
+        const haiku = answers({
             brand: "Care4Bag",
             categoryName: "Luggage",
             domain: null,
             isNewCategory: true,
             tags: [],
         });
-        let calls = 0;
-        const fast = new MockLanguageModelV3({
-            doGenerate: async (options) => {
-                calls += 1;
-                if (calls > 1) {
-                    throw new Error("overloaded");
-                }
-                return haiku.doGenerate(options);
-            },
-        });
+        const { fast, requests } = tiered(haiku, fails("overloaded"));
 
         const answer = await t.action((ctx) =>
             Effect.runPromise(resolveJob(ctx, queuedRow({ categoryTree: [] }), { fast }))
         );
 
-        expect(calls).toBe(2);
+        expect(requests).toHaveLength(2);
         expect(answer).toMatchObject({ categoryName: "Luggage", isNewCategory: true, merchantName: "Care4Bag" });
     });
 
     it("keeps a background job off Sonnet once GROUNDED_BUDGET_MICROS closes the budget", async () => {
-        await expect(sharedModelId(setup(), { GROUNDED_BUDGET_MICROS: "0" })).resolves.toBe(CLAUDE_FAST_MODEL_ID);
+        await expect(sharedModelId(setup(), { GROUNDED_BUDGET_MICROS: "0" })).resolves.toBe("fake-fast");
     });
 });
 

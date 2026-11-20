@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import { MockLanguageModelV3 } from "ai/test";
+import { fakeModel } from "@outlayr/ai/testing";
 import { convexTest } from "convex-test";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -16,19 +16,7 @@ afterEach(() => {
     vi.unstubAllEnvs();
 });
 
-function mockModel(text: string) {
-    return new MockLanguageModelV3({
-        doGenerate: async () => ({
-            content: [{ text, type: "text" }],
-            finishReason: { raw: undefined, unified: "stop" },
-            usage: {
-                inputTokens: { cacheRead: undefined, cacheWrite: undefined, noCache: undefined, total: undefined },
-                outputTokens: { reasoning: undefined, text: undefined, total: undefined },
-            },
-            warnings: [],
-        }),
-    });
-}
+const mockModel = (text: string) => fakeModel([{ text }]).model;
 
 const SITEGROUND =
     "Your transaction was successful\nYour SiteGround transaction in the amount of USD 22.99 on Nov 02 2026, 20:44 CST was approved on the card ending with 7909.";

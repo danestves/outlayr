@@ -1,8 +1,8 @@
 import { DAY, HOUR, RateLimiter } from "@convex-dev/rate-limiter";
+import { generateObject } from "@outlayr/ai/generate";
+import type { TextModel } from "@outlayr/ai/model";
 import { isPickableCurrency } from "@outlayr/money/currency";
 import { knowledgeKey } from "@outlayr/money/merchant-key";
-import { generateText, Output } from "ai";
-import type { LanguageModel } from "ai";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -14,7 +14,6 @@ import { categoryChoiceLines, placeCategory } from "./lib/categoryChoice";
 import { LANGUAGE_PATTERN } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { fixedBurst } from "./lib/limits";
-import { modelCallError, modelSchema } from "./lib/modelCall";
 import { DOMAIN_PATTERN, MAX_DOMAIN_LENGTH, MAX_TAG_LENGTH, MAX_TAGS, PICTOGRAPHIC } from "./lib/sanitizeLimits";
 
 export const MIN_NAME_LENGTH = 3;
@@ -59,8 +58,6 @@ const ModelOutput = Schema.Struct({
     parentCategoryName: Schema.optionalKey(Schema.NullOr(Schema.String)),
     tags: Schema.Array(Schema.String),
 });
-
-const modelOutputSchema = modelSchema(ModelOutput);
 
 /** Keyed by `identity.tokenIdentifier`, never a client argument; checked before the sharded global limit. */
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
@@ -233,22 +230,19 @@ export function applyToTree(tree: readonly CategoryBranch[], candidate: TreeCand
 
 /** Exported so tests can inject a fake model. */
 export const runSuggest = Effect.fn("Enrichment.runSuggest")(function* runSuggest(
-    model: LanguageModel,
+    model: TextModel,
     args: RunSuggestArgs
 ) {
     const tree = args.categoryTree.slice(0, MAX_KNOWN_CATEGORY_NAMES);
 
-    const { output } = yield* Effect.tryPromise({
-        catch: modelCallError,
-        try: () =>
-            generateText({
-                abortSignal: AbortSignal.timeout(args.timeoutMs ?? REQUEST_TIMEOUT_MS),
-                // The SDK's 2 default retries alone would outlast the client's 9s abort.
-                maxRetries: 0,
-                model,
-                output: Output.object({ schema: modelOutputSchema }),
-                prompt: buildPrompt(args.name, args.income, args.locale, args.regionCode, args.currency, tree),
-            }),
+    const output = yield* generateObject(model, ModelOutput, {
+        messages: [
+            {
+                content: buildPrompt(args.name, args.income, args.locale, args.regionCode, args.currency, tree),
+                role: "user",
+            },
+        ],
+        timeout: args.timeoutMs ?? REQUEST_TIMEOUT_MS,
     });
 
     const suggestion: Suggestion = {

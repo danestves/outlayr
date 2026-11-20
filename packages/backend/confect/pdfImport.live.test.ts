@@ -1,17 +1,14 @@
-/** Opt-in (RUN_LIVE_MODEL_TESTS=1, ANTHROPIC_API_KEY): spends tokens. */
+/** Opt-in (RUN_LIVE_MODEL_TESTS=1 plus the configured provider's key): spends tokens. */
 
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { liveModel } from "@outlayr/ai/testing";
+import { route } from "@outlayr/model-router/route";
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
-import { CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { readStatement } from "./pdfImport";
 import { statementPdf } from "./test.helpers";
 
-const apiKey = process.env.ANTHROPIC_API_KEY ?? "";
-const enabled = process.env.RUN_LIVE_MODEL_TESTS === "1" && apiKey !== "";
-
-const MODEL_ID = process.env.CLAUDE_FAST_MODEL_ID ?? CLAUDE_FAST_MODEL_ID;
+const model = await liveModel(route({ feature: "pdf_import" }));
 
 // Debits and credits in separate columns with a running balance beside them, and dates with no year: the hard layout.
 const STATEMENT = statementPdf([
@@ -27,10 +24,13 @@ const STATEMENT = statementPdf([
     ["Pagina 1 de 1", "", "", "", ""],
 ]);
 
-describe.skipIf(!enabled)("readStatement against the live model", () => {
+describe.skipIf(model === undefined)("readStatement against the live model", () => {
     it("reads signs from the columns, finds the year in the header and skips the balances", async () => {
+        if (model === undefined) {
+            throw new Error("no live model");
+        }
         const result = await Effect.runPromise(
-            readStatement(createAnthropic({ apiKey })(MODEL_ID), STATEMENT, {
+            readStatement(model, STATEMENT, {
                 regionCode: "ES",
                 today: "2026-04-02",
             })

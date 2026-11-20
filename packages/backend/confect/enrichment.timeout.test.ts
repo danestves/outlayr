@@ -1,10 +1,13 @@
 /// <reference types="vite/client" />
 
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { resolveTextModel } from "@outlayr/ai/model";
+import { fails, fakeModel } from "@outlayr/ai/testing";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
-import { MockLanguageModelV4 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
@@ -12,25 +15,10 @@ import schema from "../convex/schema";
 import { EMPTY } from "./enrichment";
 import { authenticatedAs, seedProUser } from "./test.helpers";
 
-vi.mock(import("@ai-sdk/anthropic"), async (importOriginal) => {
-    const original = await importOriginal();
-    return {
-        ...original,
-        createAnthropic: (options) =>
-            Object.assign(
-                () =>
-                    new MockLanguageModelV4({
-                        doGenerate: () =>
-                            Promise.reject(
-                                Object.assign(new Error("The operation was aborted due to timeout"), {
-                                    name: "TimeoutError",
-                                })
-                            ),
-                    }),
-                original.createAnthropic(options)
-            ),
-    };
-});
+vi.mock(import("@outlayr/ai/model"), async (importOriginal) => ({
+    ...(await importOriginal()),
+    resolveTextModel: vi.fn<typeof resolveTextModel>(),
+}));
 
 const modules = import.meta.glob("../convex/**/*.ts");
 
@@ -48,7 +36,9 @@ async function scheduledGroundedRuns(t: ReturnType<typeof convexTest>) {
 }
 
 beforeEach(() => {
-    vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
+    vi.mocked(resolveTextModel).mockImplementation((route) =>
+        Effect.succeed(Option.some(fakeModel([fails("The operation was aborted due to timeout")], { route }).model))
+    );
 });
 
 describe("an inline call that timed out", () => {

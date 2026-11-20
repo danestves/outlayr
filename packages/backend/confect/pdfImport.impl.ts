@@ -1,7 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { TextModel } from "@outlayr/ai/model";
 import { route } from "@outlayr/model-router/route";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
-import type { LanguageModel } from "ai";
 import type { UserIdentity } from "convex/server";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
@@ -107,7 +107,7 @@ interface SuggestArgs {
     distinctId: string | undefined;
     groundedLookup: boolean;
     labels: readonly string[];
-    model: LanguageModel;
+    model: TextModel;
     regionCode: string | undefined;
     tokenIdentifier: string;
 }

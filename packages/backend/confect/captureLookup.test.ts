@@ -2,8 +2,9 @@
 
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import workpoolTest from "@convex-dev/workpool/test";
+import type { TextModel } from "@outlayr/ai/model";
+import { answers, fails, fakeModel } from "@outlayr/ai/testing";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
-import { MockLanguageModelV3 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import * as Effect from "effect/Effect";
@@ -48,27 +49,14 @@ async function deviceWithKey(t: TestClient) {
     return user;
 }
 
-function model(payload: unknown) {
-    return new MockLanguageModelV3({
-        doGenerate: async () => ({
-            content: [{ text: JSON.stringify(payload), type: "text" }],
-            finishReason: { raw: undefined, unified: "stop" },
-            usage: {
-                inputTokens: { cacheRead: undefined, cacheWrite: undefined, noCache: undefined, total: undefined },
-                outputTokens: { reasoning: undefined, text: undefined, total: undefined },
-            },
-            warnings: [],
-        }),
-    });
-}
+const model = (payload: unknown) => fakeModel([answers(payload)]).model;
 
-const unreachable = new MockLanguageModelV3({
-    doGenerate: () => {
-        throw new Error("model unreachable");
-    },
-});
-
-async function capture(t: TestClient, body: unknown, fast: MockLanguageModelV3 = unreachable, key = KEY) {
+async function capture(
+    t: TestClient,
+    body: unknown,
+    fast: TextModel = fakeModel([fails("model unreachable")]).model,
+    key = KEY
+) {
     return await t.action(async (ctx) => {
         const response = await Effect.runPromise(
             captureEnrich(

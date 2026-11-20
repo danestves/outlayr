@@ -4,30 +4,30 @@ import { writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { resolveTextModel } from "@outlayr/ai/model";
+import type { TextModel } from "@outlayr/ai/model";
+import { liveModel } from "@outlayr/ai/testing";
+import { route } from "@outlayr/model-router/route";
 import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
-import { wrapLanguageModel } from "ai";
-import type { LanguageModelMiddleware } from "ai";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import { describe, it } from "vite-plus/test";
 
 import { runSuggest } from "./enrichment";
-import { routeMiddleware } from "./lib/modelRoute";
 
-// Opt-in: RUN_LIVE_MODEL_TESTS=1 plus ANTHROPIC_API_KEY. Spends about $2 per full run; feeds
-// packages/model-router/scripts/score-eval.ts, which fits and scores the routing rules.
-const apiKey = process.env.ANTHROPIC_API_KEY ?? "";
-const enabled = process.env.RUN_LIVE_MODEL_TESTS === "1" && apiKey !== "";
+// Opt-in: RUN_LIVE_MODEL_TESTS=1 plus the configured provider's key. Spends about $2 per full run on Anthropic;
+// feeds packages/model-router/scripts/score-eval.ts, which fits and scores the routing rules.
+const enabled = (await liveModel(route({ feature: "background_suggest" }))) !== undefined;
 const OUT = process.env.EVAL_OUT ?? join(tmpdir(), "model-route-eval.json");
 const SET = process.env.EVAL_SET ?? "all";
 
 const ARMS = [
-    { effort: "low", model: "claude-sonnet-5-5", runs: Number(process.env.EVAL_RUNS_SONNET ?? "2") },
-    { effort: "low", model: "claude-haiku-5-5", runs: Number(process.env.EVAL_RUNS_HAIKU ?? "3") },
-    { effort: "medium", model: "claude-haiku-5-5", runs: Number(process.env.EVAL_RUNS_HAIKU ?? "3") },
+    { effort: "low", model: "standard", runs: Number(process.env.EVAL_RUNS_SONNET ?? "2") },
+    { effort: "low", model: "fast", runs: Number(process.env.EVAL_RUNS_HAIKU ?? "3") },
+    { effort: "medium", model: "fast", runs: Number(process.env.EVAL_RUNS_HAIKU ?? "3") },
 ] as const;
 
-type Effort = (typeof ARMS)[number]["effort"];
+type Arm = (typeof ARMS)[number];
 
 const canonical = (income: boolean) =>
     CANONICAL_CATEGORY_NAMES[income ? "income" : "expense"].map((name) => ({ children: [], name }));
@@ -344,14 +344,21 @@ interface Usage {
     outputTokens: number;
 }
 
-const usageProbe = (sink: Usage): LanguageModelMiddleware => ({
-    wrapGenerate: async ({ doGenerate }) => {
-        const result = await doGenerate();
-        sink.inputTokens += result.usage.inputTokens.total ?? 0;
-        sink.outputTokens += result.usage.outputTokens.total ?? 0;
-        return result;
+type Middleware = ReturnType<NonNullable<TextModel["middleware"]>>[number];
+
+const usageProbe = (sink: Usage): Middleware => ({
+    onFinish: (_ctx, { usage }) => {
+        sink.inputTokens += usage?.promptTokens ?? 0;
+        sink.outputTokens += usage?.completionTokens ?? 0;
     },
 });
+
+const armModel = async ({ effort, model }: Arm) => {
+    const resolved = await Effect.runPromise(
+        resolveTextModel({ ...route({ feature: "background_suggest" }), effort, model })
+    );
+    return Option.getOrThrow(resolved);
+};
 
 function grade(testCase: Case, suggestion: Awaited<ReturnType<typeof suggestOnce>>["suggestion"]) {
     const category = suggestion.categoryName;
@@ -377,15 +384,12 @@ function grade(testCase: Case, suggestion: Awaited<ReturnType<typeof suggestOnce
     return { brandOk, categoryOk, domainGrade };
 }
 
-async function suggestOnce(modelId: string, effort: Effort, testCase: Case) {
+async function suggestOnce(armed: TextModel, testCase: Case) {
     const income = testCase.income ?? false;
     const trees = { MX: VE_LEDGER, NV: NESTED, US: canonical(income), VE: VE_LEDGER };
     const tree = trees[testCase.place];
     const usage: Usage = { inputTokens: 0, outputTokens: 0 };
-    const model = wrapLanguageModel({
-        middleware: [routeMiddleware({ effort, maxTokens: null }), usageProbe(usage)],
-        model: createAnthropic({ apiKey })(modelId),
-    });
+    const model: TextModel = { ...armed, middleware: () => [usageProbe(usage)] };
     const suggestion = await Effect.runPromise(
         runSuggest(model, {
             ...PLACE[testCase.place],
@@ -398,10 +402,10 @@ async function suggestOnce(modelId: string, effort: Effort, testCase: Case) {
     return { suggestion, usage };
 }
 
-async function runOne(modelId: string, effort: Effort, testCase: Case) {
+async function runOne(armed: TextModel, testCase: Case) {
     const started = performance.now();
     try {
-        const { suggestion, usage } = await suggestOnce(modelId, effort, testCase);
+        const { suggestion, usage } = await suggestOnce(armed, testCase);
         return {
             ...grade(testCase, suggestion),
             ms: Math.round(performance.now() - started),
@@ -441,15 +445,20 @@ describe.skipIf(!enabled)("routing arms on runSuggest", () => {
         const queue = ARMS.flatMap((arm) =>
             Array.from({ length: arm.runs }, (_, run) => cases.map((testCase) => ({ arm, run, testCase }))).flat()
         );
+        const armed = new Map(await Promise.all(ARMS.map(async (arm) => [arm, await armModel(arm)] as const)));
         const results: unknown[] = [];
         await Promise.all(
             Array.from({ length: 6 }, async () => {
                 for (let job = queue.shift(); job !== undefined; job = queue.shift()) {
-                    const result = await runOne(job.arm.model, job.arm.effort, job.testCase);
+                    const model = armed.get(job.arm);
+                    if (model === undefined) {
+                        throw new Error("arm without a model");
+                    }
+                    const result = await runOne(model, job.testCase);
                     results.push({
                         case: job.testCase,
                         effort: job.arm.effort,
-                        model: job.arm.model,
+                        model: model.modelId,
                         run: job.run,
                         set: setOf(job.testCase),
                         ...result,

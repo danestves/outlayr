@@ -1,13 +1,12 @@
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
-import { generateText, Output } from "ai";
-import type { LanguageModel } from "ai";
+import type { ModelCallError } from "@outlayr/ai/errors";
+import { generateObject } from "@outlayr/ai/generate";
+import type { TextModel } from "@outlayr/ai/model";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { getDocumentProxy } from "unpdf";
 
 import { components } from "../convex/_generated/api";
-import { modelCallError, modelSchema } from "./lib/modelCall";
-import type { ModelCallError } from "./lib/modelCall";
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import type { PdfImportResult, PdfImportStatus, StatementRow } from "./pdfImport.spec";
 
@@ -200,8 +199,6 @@ const ModelOutput = Schema.Struct({
     ),
 });
 
-const modelOutputSchema = modelSchema(ModelOutput);
-
 export interface StatementContext {
     regionCode: string | undefined;
     today: string;
@@ -260,21 +257,14 @@ function sanitizeRow(row: ModelRow, today: string): StatementRow | null {
 }
 
 const extractChunk = Effect.fn("PdfImport.extractChunk")(function* extractChunk(
-    model: LanguageModel,
+    model: TextModel,
     chunk: string,
     header: string | null,
     context: StatementContext
 ) {
-    const { output } = yield* Effect.tryPromise({
-        catch: modelCallError,
-        try: () =>
-            generateText({
-                abortSignal: AbortSignal.timeout(CHUNK_TIMEOUT_MS),
-                maxRetries: 0,
-                model,
-                output: Output.object({ schema: modelOutputSchema }),
-                prompt: buildPrompt(chunk, header, context),
-            }),
+    const output = yield* generateObject(model, ModelOutput, {
+        messages: [{ content: buildPrompt(chunk, header, context), role: "user" }],
+        timeout: CHUNK_TIMEOUT_MS,
     });
     return output.rows;
 });
@@ -300,7 +290,7 @@ export function unreadPageNumbers(pages: readonly string[]): number[] {
 /** Takes the model so tests can fake it. One failed chunk fails the read: a partial statement looks whole. */
 export const readStatement = Effect.fn("PdfImport.readStatement")(
     function* readStatement(
-        model: LanguageModel,
+        model: TextModel,
         bytes: Uint8Array,
         context: StatementContext
     ): Effect.fn.Return<ReadStatement, ModelCallError | PdfTooLarge | PdfUnreadable> {

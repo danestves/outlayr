@@ -1,7 +1,7 @@
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
+import { generateObject } from "@outlayr/ai/generate";
+import type { TextModel } from "@outlayr/ai/model";
 import { merchantKey } from "@outlayr/money/merchant-key";
-import { generateText, Output } from "ai";
-import type { LanguageModel } from "ai";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -12,7 +12,6 @@ import type { GroundedScheduleCtx } from "./enrichment";
 import { CATEGORY_REUSE_TEST, placeCategory } from "./lib/categoryChoice";
 import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
-import { modelCallError, modelSchema } from "./lib/modelCall";
 
 export const MAX_LABELS = 200;
 /** The action's own budget under the client's 15s hard `Promise.race` abort. */
@@ -31,8 +30,6 @@ const ModelOutput = Schema.Struct({
         })
     ),
 });
-
-const modelOutputSchema = modelSchema(ModelOutput);
 
 export interface RunClassifyArgs {
     categoryTree: readonly CategoryBranch[];
@@ -60,20 +57,12 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
     },
 });
 
-/** Exported so tests can inject a fake `LanguageModel`. */
+/** Exported so tests can inject a fake `TextModel`. */
 export const classify = Effect.fn("CsvImport.classify")(
-    function* classify(model: LanguageModel, args: RunClassifyArgs) {
-        const { output } = yield* Effect.tryPromise({
-            catch: modelCallError,
-            try: () =>
-                generateText({
-                    abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-                    // The SDK's 2 default retries alone would outlast the client's 15s abort.
-                    maxRetries: 0,
-                    model,
-                    output: Output.object({ schema: modelOutputSchema }),
-                    prompt: buildPrompt(args),
-                }),
+    function* classify(model: TextModel, args: RunClassifyArgs) {
+        const output = yield* generateObject(model, ModelOutput, {
+            messages: [{ content: buildPrompt(args), role: "user" }],
+            timeout: REQUEST_TIMEOUT_MS,
         });
 
         const suggestions: LabelSuggestion[] = [];

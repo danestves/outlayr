@@ -1,5 +1,5 @@
 import { chat } from "@tanstack/ai";
-import type { ChatMiddleware, JSONSchema, ModelMessage } from "@tanstack/ai";
+import type { JSONSchema, ModelMessage } from "@tanstack/ai";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -9,8 +9,7 @@ import type { TextModel } from "./model";
 
 interface Prompt {
     readonly messages: readonly ModelMessage[];
-    readonly middleware?: readonly ChatMiddleware[] | undefined;
-    readonly system: string;
+    readonly system?: string | undefined;
     readonly timeout: Duration.Input;
 }
 
@@ -25,10 +24,10 @@ const callOptions = (model: TextModel, prompt: Prompt, abortController: AbortCon
     abortController,
     adapter: model.adapter,
     messages: [...prompt.messages],
-    middleware: prompt.middleware === undefined ? undefined : [...prompt.middleware],
+    middleware: model.middleware === undefined ? undefined : [...model.middleware()],
     modelOptions: model.modelOptions,
     reasoning: model.route.effort ?? undefined,
-    systemPrompts: [prompt.system],
+    systemPrompts: prompt.system === undefined ? [] : [prompt.system],
     threadId: crypto.randomUUID(),
 });
 
@@ -49,12 +48,15 @@ const call = <A>(prompt: Prompt, run: (abortController: AbortController) => Prom
         },
     });
 
+export function closedJsonSchema(schema: Schema.Decoder<unknown>): JSONSchema {
+    const { definitions, schema: root } = Schema.toJsonSchemaDocument(schema, { onExcessProperty: "error" });
+    return Object.keys(definitions).length === 0 ? root : { ...root, $defs: definitions };
+}
+
 export const generateObject = Effect.fn("Ai.generateObject")(function* generateObject<
     S extends Schema.Decoder<unknown>,
 >(model: TextModel, schema: S, prompt: Prompt) {
-    const outputSchema: JSONSchema = Schema.toStandardJSONSchemaV1(schema)["~standard"].jsonSchema.input({
-        target: "draft-07",
-    });
+    const outputSchema = closedJsonSchema(schema);
     const answer = yield* call(prompt, (abortController) =>
         chat({ ...callOptions(model, prompt, abortController), outputSchema, stream: false })
     );

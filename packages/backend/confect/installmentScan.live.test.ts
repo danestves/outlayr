@@ -1,25 +1,26 @@
 import { readFile } from "node:fs/promises";
 
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { liveModel } from "@outlayr/ai/testing";
+import { route } from "@outlayr/model-router/route";
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
 import { readInstallmentPlan } from "./installmentScan";
-import { CLAUDE_MODEL_ID } from "./lib/models";
 
 const PLAN_PATHS = (process.env.INSTALLMENT_PLAN_PATHS ?? "").split(",").filter((path) => path.length > 0);
-const live =
-    process.env.RUN_LIVE_MODEL_TESTS === "1" && Boolean(process.env.ANTHROPIC_API_KEY) && PLAN_PATHS.length > 0;
+const model = PLAN_PATHS.length > 0 ? await liveModel(route({ feature: "installment_scan" })) : undefined;
 
-describe.skipIf(!live)("installment scan, live", () => {
+describe.skipIf(model === undefined)("installment scan, live", () => {
     it.each(PLAN_PATHS)(
         "%s reads as a Cashea plan of equal cuotas after a paid upfront",
         async (path) => {
+            if (model === undefined) {
+                throw new Error("no live model");
+            }
             const bytes = await readFile(path);
-            const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
             const result = await Effect.runPromise(
                 readInstallmentPlan(
-                    anthropic(process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID),
+                    model,
                     [bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)],
                     {
                         accounts: ["Cashea", "Visa"],

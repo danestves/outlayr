@@ -954,6 +954,9 @@ importers:
       '@convex-dev/workpool':
         specifier: ^0.4.16
         version: 0.4.16(@standard-schema/spec@1.1.0)(convex-helpers@0.1.129(@standard-schema/spec@1.1.0)(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7))(convex@1.50.0(patch_hash=46380968c426d250dd97a88b19b93e63b29e5fb295a3ecaaf1cc7b008c51cd82)(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+      '@outlayr/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@outlayr/email':
         specifier: workspace:*
         version: link:../email

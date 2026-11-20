@@ -1,16 +1,10 @@
+import { failedCall } from "@outlayr/ai/errors";
+import type { ModelCallError, ModelCallFailure } from "@outlayr/ai/errors";
 import { jsonSchema, NoObjectGeneratedError, NoTranscriptGeneratedError, TypeValidationError } from "ai";
 import type { JSONSchema7, Schema as ModelSchema } from "ai";
 import * as Predicate from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
-
-export const ModelCallFailure = Schema.Literals(["invalidResponse", "noTranscript", "providerError"]);
-
-export class ModelCallError extends Schema.TaggedError<ModelCallError>()("ModelCallError", {
-    cause: Schema.Defect(),
-    message: Schema.String,
-    reason: ModelCallFailure,
-}) {}
 
 export function modelCallError(cause: unknown): ModelCallError {
     let reason: typeof ModelCallFailure.Type = "providerError";
@@ -19,7 +13,7 @@ export function modelCallError(cause: unknown): ModelCallError {
     } else if (NoTranscriptGeneratedError.isInstance(cause)) {
         reason = "noTranscript";
     }
-    return new ModelCallError({ cause, message: `Model call failed: ${reason}`, reason });
+    return failedCall(reason, cause);
 }
 
 type Definition = NonNullable<JSONSchema7["anyOf"]>[number];
