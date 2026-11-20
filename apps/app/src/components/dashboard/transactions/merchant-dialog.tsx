@@ -94,6 +94,29 @@ function useShareWebsite() {
     };
 }
 
+function LogoStatus({ domain }: { domain: string | null }) {
+    const copy = useIntlayer("dashboard-merchant");
+    if (domain === null) {
+        return (
+            <div className="border-border rounded-app-md flex items-center gap-3 border p-3">
+                <span className="bg-muted text-muted-foreground rounded-app-sm flex size-8 shrink-0 items-center justify-center">
+                    <HugeiconsIcon icon={Image01Icon} size={16} strokeWidth={2} />
+                </span>
+                <span className="min-w-0">
+                    <span className="text-app-body block font-medium">{copy.missing}</span>
+                    <span className="text-muted-foreground text-app-label block">{copy.missingHint}</span>
+                </span>
+            </div>
+        );
+    }
+    return (
+        <div className="border-border rounded-app-md flex items-center gap-3 border p-3">
+            <img alt="" className="rounded-app-sm size-8 shrink-0 bg-white object-cover" src={logoUrl(domain)} />
+            <span className="text-app-body min-w-0 font-medium">{copy.found({ domain })}</span>
+        </div>
+    );
+}
+
 interface MerchantFormProps {
     doc: Doc;
     onDone: () => void;
@@ -130,6 +153,7 @@ function MerchantForm({ doc, onDone, onSaved }: MerchantFormProps) {
     const shared = current !== "";
     const spreads = shared && everywhere;
     const newName = name.trim();
+    const nameMissing = tried && newName === "";
     const renaming = newName !== "" && newName !== current;
     const foundDomain = lookup?.state === "found" ? lookup.domain : null;
     const newDomain = foundDomain !== null && foundDomain !== startDomain ? foundDomain : null;
@@ -189,15 +213,16 @@ function MerchantForm({ doc, onDone, onSaved }: MerchantFormProps) {
 
     const lookupLine = () => {
         if (lookup?.state === "checking") {
-            return <p className="text-muted-foreground text-app-label">{copy.checking}</p>;
+            return { text: copy.checking, tone: "text-muted-foreground" };
         }
         if (lookup?.state === "missing" && lookup.domain !== "") {
-            return <p className="text-destructive text-app-label">{copy.noLogoThere}</p>;
+            return { text: copy.noLogoThere, tone: "text-destructive" };
         }
-        return newDomain === null ? null : (
-            <p className="text-muted-foreground text-app-label">{copy.shared({ merchant: newName || shownName })}</p>
-        );
+        return newDomain === null
+            ? null
+            : { text: copy.shared({ merchant: newName || shownName }), tone: "text-muted-foreground" };
     };
+    const line = lookupLine();
 
     return (
         <form
@@ -219,7 +244,7 @@ function MerchantForm({ doc, onDone, onSaved }: MerchantFormProps) {
             <Dialog.Body className="flex flex-col gap-4">
                 <div className="flex items-end gap-3">
                     <MerchantTile imageUrl={preview()} name={newName || shownName} size="xl" />
-                    <Field className="min-w-0 flex-1" invalid={tried && newName === ""}>
+                    <Field className="min-w-0 flex-1" invalid={nameMissing}>
                         <Field.Label>{copy.name}</Field.Label>
                         <Input
                             autoFocus
@@ -228,7 +253,7 @@ function MerchantForm({ doc, onDone, onSaved }: MerchantFormProps) {
                             placeholder={shownName}
                             value={name}
                         />
-                        <Field.Error match>{copy.nameRequired}</Field.Error>
+                        {nameMissing ? <Field.Error match>{copy.nameRequired}</Field.Error> : null}
                     </Field>
                 </div>
                 <Tabs
@@ -241,29 +266,7 @@ function MerchantForm({ doc, onDone, onSaved }: MerchantFormProps) {
                         <Tabs.Trigger value="photo">{copy.photo}</Tabs.Trigger>
                     </Tabs.List>
                     <Tabs.Content className="flex flex-col gap-3" value="logo">
-                        <div className="border-border rounded-app-md flex items-center gap-3 border p-3">
-                            {foundDomain === null ? (
-                                <span className="bg-muted text-muted-foreground rounded-app-sm flex size-8 shrink-0 items-center justify-center">
-                                    <HugeiconsIcon icon={Image01Icon} size={16} strokeWidth={2} />
-                                </span>
-                            ) : (
-                                <img
-                                    alt=""
-                                    className="rounded-app-sm size-8 shrink-0 bg-white object-cover"
-                                    src={logoUrl(foundDomain)}
-                                />
-                            )}
-                            <span className="min-w-0">
-                                <span className="text-app-body block font-medium">
-                                    {foundDomain === null ? copy.missing : copy.found({ domain: foundDomain })}
-                                </span>
-                                {foundDomain === null ? (
-                                    <span className="text-muted-foreground text-app-label block">
-                                        {copy.missingHint}
-                                    </span>
-                                ) : null}
-                            </span>
-                        </div>
+                        <LogoStatus domain={foundDomain} />
                         <Field>
                             <Field.Label>{copy.website}</Field.Label>
                             <Input.Group>
@@ -295,7 +298,10 @@ function MerchantForm({ doc, onDone, onSaved }: MerchantFormProps) {
                                 </Input.Addon>
                             </Input.Group>
                         </Field>
-                        {lookupLine()}
+                        {/* Holds its line while empty, so the centred dialog does not jump when a lookup settles. */}
+                        <p aria-live="polite" className={`text-app-label min-h-lh ${line?.tone ?? ""}`}>
+                            {line?.text}
+                        </p>
                     </Tabs.Content>
                     <Tabs.Content className="flex flex-col gap-2" value="photo">
                         <Button onClick={() => fileInput.current?.click()} type="button" variant="outline">
