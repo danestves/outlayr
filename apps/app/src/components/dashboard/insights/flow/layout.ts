@@ -6,6 +6,9 @@ const BOTTOM = { drill: 20, flow: 8 } as const;
 const HUB_HEAD = 38;
 /** How many bars the right side keeps before the smallest fold into one, so every label has room. */
 const MOST_TARGETS = 12;
+/** A bar's two-line label is centred on it, so a thinner bar still takes this much height. */
+const LABEL_ROOM = 18;
+const slot = (size: number) => Math.max(size, LABEL_ROOM);
 const SETTINGS = {
     drill: { gap: 32, left: 86, top: 20 },
     flow: { gap: 20, left: 112, top: 6 },
@@ -48,24 +51,31 @@ export function sankeyLayout(
     const room = height - top - BOTTOM[mode];
     const whole = Math.max(sum(sources), sum(targets));
     const spare = Math.max(gap * Math.max(targets.length - 1, 0), 2 * (HUB_HEAD - top));
-    const scale = whole > 0 ? Math.max(room - spare, 0) / whole : 0;
+    const fitted = whole > 0 ? Math.max(room - spare, 0) / whole : 0;
+    const padding = (nodes: readonly Sized[]) =>
+        nodes.reduce((all, node) => all + Math.max(LABEL_ROOM - node.amount * fitted, 0), 0);
+    const reserved = Math.max(padding(sources), padding(targets));
+    const scale = whole > 0 ? Math.max(room - spare - reserved, 0) / whole : 0;
     const hubHeight = whole * scale;
     const hubY = top + (room - hubHeight) / 2;
     const hubX = Math.round(width * HUB_AT);
-    const stacked = sum(sources) * scale + gap * Math.max(sources.length - 1, 0);
+    const stacked =
+        sources.reduce((all, node) => all + slot(node.amount * scale), 0) + gap * Math.max(sources.length - 1, 0);
     let sourceY = top + (room - stacked) / 2;
     let attach = hubY;
     const placedSources = sources.map((node): Placed => {
-        const placed = { height: node.amount * scale, hubY: attach, id: node.id, y: sourceY };
-        sourceY += placed.height + gap;
+        const size = node.amount * scale;
+        const placed = { height: size, hubY: attach, id: node.id, y: sourceY + (slot(size) - size) / 2 };
+        sourceY += slot(size) + gap;
         attach += placed.height;
         return placed;
     });
     let targetY = top;
     attach = hubY;
     const placedTargets = targets.map((node): Placed => {
-        const placed = { height: node.amount * scale, hubY: attach, id: node.id, y: targetY };
-        targetY += placed.height + gap;
+        const size = node.amount * scale;
+        const placed = { height: size, hubY: attach, id: node.id, y: targetY + (slot(size) - size) / 2 };
+        targetY += slot(size) + gap;
         attach += placed.height;
         return placed;
     });

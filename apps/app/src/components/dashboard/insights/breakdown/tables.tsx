@@ -34,6 +34,18 @@ const COLUMN_WIDTHS = {
     tag: [169, 296, 265, 157, 227, 44],
 } as const satisfies Record<Dimension, readonly number[]>;
 
+// Frame widths in px, laid out as shares so the table fits whatever width its card gets.
+function Columns({ widths }: { widths: readonly number[] }) {
+    const sum = widths.reduce((total, width) => total + width, 0);
+    return (
+        <colgroup>
+            {widths.map((width, index) => (
+                <col key={index} style={{ width: `${(width / sum) * PERCENT}%` }} />
+            ))}
+        </colgroup>
+    );
+}
+
 export interface TableFormat {
     amount: (value: number) => string;
     categoryName: (row: BreakdownRow) => string;
@@ -261,11 +273,7 @@ export function GroupTable({
     const widths = baseTotal === null ? columns.toSpliced(-2, 1) : columns;
     return (
         <Table className="table-fixed">
-            <colgroup>
-                {widths.map((width, index) => (
-                    <col key={index} style={{ width }} />
-                ))}
-            </colgroup>
+            <Columns widths={widths} />
             <thead>
                 <Row>
                     <th className={`${head} text-left`}>{named}</th>
@@ -299,7 +307,7 @@ export function GroupTable({
                                     <span
                                         className={`truncate font-medium ${tagName ? FIGURE : ""} ${untagged ? "text-muted-foreground" : ""}`}
                                     >
-                                        {format.categoryName(row)}
+                                        {tagName ? `#${format.categoryName(row)}` : format.categoryName(row)}
                                     </span>
                                 </button>
                             </td>
@@ -325,12 +333,14 @@ export function GroupTable({
                             ) : null}
                             {merchants ? null : (
                                 <td className={cell}>
-                                    <Track
-                                        className="bg-muted h-1.5! w-full"
-                                        color={row.color}
-                                        max={largest}
-                                        value={Math.abs(row.amount)}
-                                    />
+                                    {untagged ? null : (
+                                        <Track
+                                            className="bg-muted h-1.5! w-full"
+                                            color={row.color}
+                                            max={largest}
+                                            value={Math.abs(row.amount)}
+                                        />
+                                    )}
                                 </td>
                             )}
                             <td className={`${cell} ${NUM} text-muted-foreground`}>{row.count}</td>
@@ -415,11 +425,7 @@ export function CompareTable({ baseLabel, baseTotal, currentLabel, format, metri
     };
     return (
         <Table className="table-fixed">
-            <colgroup>
-                {COMPARE_COLUMNS.map((width, index) => (
-                    <col key={index} style={{ width }} />
-                ))}
-            </colgroup>
+            <Columns widths={COMPARE_COLUMNS} />
             <thead>
                 <Row>
                     <th className={`${HEAD} h-9.75 text-left`}>{table.category}</th>
