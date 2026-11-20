@@ -5695,12 +5695,12 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "None of the seven is invoicing software. In Mexico a factura (CFDI) comes from the SAT's portal or a facturación service, not from an expense tracker. What these seven do is the other half: what left the account, in which currency, and on which day, so your accountant has the whole picture.",
-                                es: "Ninguna de las siete es un software de facturación. En México la factura (CFDI) sale del portal del SAT o de un servicio de facturación, no de una app de gastos. Lo que hacen las siete es la otra mitad: qué salió de la cuenta, en qué moneda y qué día, para que tu contador tenga el panorama completo.",
+                                en: "To deduct a business expense in Mexico, the supplier has to issue you a CFDI, so ask for it when you pay. An expense tracker doesn't replace it. What these apps do is the other half: what left the account, in which currency, and on which day, so your accountant has the whole picture.",
+                                es: "Para deducir un gasto de tu negocio en México, el proveedor tiene que emitirte un CFDI, así que pídelo al pagar. Una app de gastos no lo reemplaza. Lo que hacen estas apps es la otra mitad: qué salió de la cuenta, en qué moneda y qué día, para que tu contador tenga el panorama completo.",
                             }),
                             t({
-                                en: "For a small business in Mexico, Mobills fits if you carry credit cards with a limit to watch, Outlayr if you pay in pesos and dollars and want the rate of the day kept on every entry, and Finy if most of your money moves through Mercado Pago. Check three things before you choose: it takes MXN, it exports to CSV or Excel, and it keeps the receipt image.",
-                                es: "Para una pyme en México, Mobills sirve si cargas tarjetas de crédito con límite que vigilar, Outlayr si pagas en pesos y dólares y quieres la tasa del día guardada en cada registro, y Finy si la mayor parte de tu dinero se mueve por Mercado Pago. Revisa tres cosas antes de elegir: que acepte MXN, que exporte a CSV o Excel y que guarde la imagen del recibo.",
+                                en: "For a small business in Mexico, Mobills fits if you carry credit cards with a limit to watch, Outlayr if you pay in pesos and dollars and want each purchase counted at that day's rate, and Finy if you pay with Mercado Pago and want those payments to sync on their own. Check three things before you choose: it takes MXN, it exports to CSV or Excel, and it keeps the receipt image.",
+                                es: "Para una pyme en México, Mobills sirve si necesitas vigilar el límite de tus tarjetas de crédito, Outlayr si pagas en pesos y dólares y quieres cada compra contada a la tasa de ese día, y Finy si pagas con Mercado Pago y quieres que esos pagos se sincronicen solos. Revisa tres cosas antes de elegir: que acepte MXN, que exporte a CSV o Excel y que guarde la imagen del recibo.",
                             }),
                         ],
                         id: "small-business-mexico",
