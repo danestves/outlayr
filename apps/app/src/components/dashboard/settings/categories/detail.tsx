@@ -186,7 +186,11 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                         {copy.allTime({ count: figures.allTime })}
                     </Figure>
                 </Kpi.Group>
-                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+                <div
+                    className={
+                        category.parentId === null ? "grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]" : "grid gap-4"
+                    }
+                >
                     <SettingsCard title={copy.last5}>
                         <div className="px-4 py-3" style={barColors}>
                             <BarChart aspectRatio={2.4} data={months} label={copy.last5.value} stacked xDataKey="key">

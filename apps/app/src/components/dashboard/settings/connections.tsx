@@ -194,29 +194,6 @@ export function Connections() {
                         <Frame className="min-w-0">
                             <Frame.Panel>
                                 <div>
-                                    <div aria-hidden className="divide-y">
-                                        {["head", "first", "second", "third"].map((row) => (
-                                            <div
-                                                className="flex items-center justify-between gap-3 px-4 py-3"
-                                                key={row}
-                                            >
-                                                <span className="flex w-1/3 items-center gap-2">
-                                                    {row === "head" ? null : (
-                                                        <span className="border-border rounded-app-sm size-6.5 border" />
-                                                    )}
-                                                    <span className="border-border h-2 w-16 rounded-full border" />
-                                                </span>
-                                                <span
-                                                    className={
-                                                        row === "head"
-                                                            ? "border-border h-2 w-12 rounded-full border"
-                                                            : "border-border rounded-app-sm h-6 w-24 border"
-                                                    }
-                                                />
-                                                <span className="border-border h-2 w-12 rounded-full border" />
-                                            </div>
-                                        ))}
-                                    </div>
                                     <Empty
                                         action={
                                             <Button onClick={() => setConnecting(true)}>

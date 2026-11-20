@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
 import type { Condition } from "@/lib/rules";
 
 import { useCategoryName } from "../home/format";
@@ -34,7 +35,19 @@ export function useCategoryLook() {
     const categoryName = useCategoryName();
     return (id: string) => {
         const category = ledger.categories.get(id);
-        return category ? { color: category.color, name: categoryName(category) } : null;
+        if (category) {
+            return { color: category.color, name: categoryName(category) };
+        }
+        const { categories } = ledger.books;
+        const row = categories.find((candidate) => candidate.localId === id && candidate.deletedAt === null);
+        if (!row) {
+            return null;
+        }
+        const parent = categories.find((candidate) => candidate.localId === row.parentId);
+        return {
+            color: row.color ?? parent?.color ?? NEUTRAL_COLOR,
+            name: categoryName({ id: row.localId, name: row.name ?? "" }),
+        };
     };
 }
 
