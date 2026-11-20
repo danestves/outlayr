@@ -220,7 +220,7 @@ function feeOfRate({ amountText, currency }: EntryValues, rate: number) {
     return roundMoney(parseAmount(amountText, decimals) * rate, decimals);
 }
 
-const focusAmount = (node: HTMLDivElement | null) => {
+export const focusAmount = (node: HTMLDivElement | null) => {
     node?.querySelector("input")?.focus();
 };
 

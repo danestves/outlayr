@@ -3,7 +3,7 @@ import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Field } from "panelui-web/field";
 import { Switch } from "panelui-web/switch";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -34,6 +34,7 @@ function NameForm({ except, filters, initial, onCancel, onSubmit, submit, title,
     const [name, setName] = useState(initial);
     const [keepSort, setKeepSort] = useState(true);
     const [tried, setTried] = useState(false);
+    const formId = useId();
     const empty = viewName(name) === "";
     const taken = !empty && nameTaken(views, name, except);
     const errorOf = () => {
@@ -44,6 +45,7 @@ function NameForm({ except, filters, initial, onCancel, onSubmit, submit, title,
     };
     return (
         <form
+            id={formId}
             onSubmit={(event) => {
                 event.preventDefault();
                 setTried(true);
@@ -89,7 +91,7 @@ function NameForm({ except, filters, initial, onCancel, onSubmit, submit, title,
                 <Button onClick={onCancel} type="button" variant="outline">
                     {words.cancel}
                 </Button>
-                <Button disabled={taken} type="submit">
+                <Button disabled={taken} form={formId} type="submit">
                     {submit}
                 </Button>
             </Dialog.Footer>

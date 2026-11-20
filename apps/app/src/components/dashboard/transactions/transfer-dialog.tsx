@@ -1,19 +1,23 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import ArrowDataTransferHorizontalIcon from "@hugeicons/core-free-icons/ArrowDataTransferHorizontalIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { decimalsFor } from "@outlayr/money/currency";
 import { accountLook } from "@outlayr/money/ledger-log";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
+import { Field } from "panelui-web/field";
 import { Input } from "panelui-web/input";
 import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { AmountInput, FlowDialog } from "@/components/dashboard/accounts/fields";
+import { FlowDialog } from "@/components/dashboard/accounts/fields";
 import { accountRows, isCard, statementOf } from "@/components/dashboard/accounts/model";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
+import { MoneyField } from "@/components/ui/money-field";
+import { parseAmount } from "@/lib/account-writes";
 import { wallInstant, wallText } from "@/lib/entry-writes";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import {
@@ -29,11 +33,11 @@ import {
 } from "@/lib/transfer-create";
 import type { NewTransferProblem, NewTransferValues } from "@/lib/transfer-create";
 
-import { DateRow, Pick, Slot } from "./entry-form";
+import { DateRow, focusAmount, Pick, Slot } from "./entry-form";
 import { TransferExchange } from "./transfer-exchange";
 
 function Balance({ children }: { children: ReactNode }) {
-    return <p className="dash-figure text-muted-foreground mt-1.5 text-xs">{children}</p>;
+    return <p className="text-muted-foreground text-app-caption mt-1.5 font-mono tabular-nums">{children}</p>;
 }
 
 export function TransferDialog({ accountId, onClose }: { accountId: string; onClose: () => void }) {
@@ -66,6 +70,8 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
         ledger.books.accounts.find((row) => row.localId === id)?.currency ?? ledger.currency;
     const [fromCurrency, toCurrency] = [currencyOf(values.fromId), currencyOf(values.toId)];
     const crossed = fromCurrency !== toCurrency;
+    const typedSent = values.sentText.trim();
+    const sentAmount = typedSent === "" ? null : parseAmount(typedSent, decimalsFor(fromCurrency));
     const input = newTransferInput(ledger, values);
     const balanceLine = (id: string | null, delta: number) => {
         const held = rows.find((row) => row.id === id);
@@ -129,29 +135,29 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
                                 values={values}
                             />
                             {problem === "amount" ? (
-                                <p className="text-destructive text-[13px]" role="alert">
+                                <p className="text-destructive text-app-label" role="alert">
                                     {form.amountRequired}
                                 </p>
                             ) : null}
                         </>
                     ) : (
                         <>
-                            <Slot
-                                error={problem === "amount" ? form.amountRequired : null}
-                                label={flows.youSend}
-                                quiet={false}
-                            >
-                                <div className="[&_input]:font-semibold!">
-                                    <AmountInput
-                                        autoFocus
-                                        currency={fromCurrency}
-                                        key={round}
-                                        onText={(text) => change(withSent(ledger, values, text))}
-                                        text={values.sentText}
-                                        unit={fromCurrency}
-                                    />
-                                </div>
-                            </Slot>
+                            <Field className="min-w-0" invalid={problem === "amount"}>
+                                <MoneyField
+                                    className={problem === "amount" ? "border-destructive" : undefined}
+                                    codes={[fromCurrency]}
+                                    key={round}
+                                    label={flows.youSend}
+                                    onValueChange={(next) =>
+                                        change(
+                                            withSent(ledger, values, next.amount === null ? "" : String(next.amount))
+                                        )
+                                    }
+                                    ref={focusAmount}
+                                    value={{ amount: sentAmount, code: fromCurrency }}
+                                />
+                                {problem === "amount" ? <Field.Error match>{form.amountRequired}</Field.Error> : null}
+                            </Field>
                             <div className="grid grid-cols-[minmax(0,1fr)_32px_minmax(0,1fr)] items-start gap-2">
                                 <Slot
                                     error={problem === "accounts" ? flows.transferNeedsAccounts : null}
@@ -194,7 +200,7 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
                             </div>
                         </>
                     )}
-                    <div className="grid grid-cols-1 gap-3.5 min-[481px]:grid-cols-[3fr_2fr]">
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-[3fr_2fr]">
                         <Slot
                             error={
                                 (problem === "date" && form.dateRequired) ||
@@ -212,7 +218,7 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
                         </Slot>
                         <Slot label={detail.fee} quiet={false}>
                             <Input
-                                className="dash-figure"
+                                className="font-mono tabular-nums"
                                 inputMode="decimal"
                                 onChange={(event) =>
                                     change(repriced(ledger, { ...values, feeText: event.target.value }))

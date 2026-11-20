@@ -139,6 +139,7 @@ export function BulkBar({ list, onClear, onDelete, picked }: BulkBarProps) {
     return (
         <div className="pointer-events-none fixed inset-x-0 bottom-21 z-20 flex justify-center px-4">
             <Toolbar
+                hidden={confirming}
                 aria-label={bulk.selected({ count }).value}
                 className="pointer-events-auto shadow-(--shadow-app-popover)"
             >

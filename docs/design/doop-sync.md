@@ -149,6 +149,18 @@ From the canvas page `Web · Dashboard`, under `components/dashboard/home`:
 - **Loading:** `home-pending.tsx` draws static `bg-app-fill` blocks in the real layout, with the real labels and column headers.
 - **Empty:** `home/empty.tsx` is the web-app-v2 empty pattern: one icon tile, a title, one line, then the actions. No illustrations.
 
+## Transactions
+
+From the canvas page `Web · Transactions`, under `components/dashboard/transactions`:
+
+- **Tabs:** All, Expenses, Income, Transfers, To review and Uncategorized share one period and one set of filters; a tab only narrows what they return (`model.ts` `inTab`). Saved views follow as `view:` tabs. The list under the tabs dissolves on a swap.
+- **Saved views:** `saved-views.ts` keeps them in the ledger's `appMeta` as JSON (`webSavedViews`), so they sync with the account. A view holds its filters, and, with "Keep sort and columns", the sort and the column layout.
+- **Columns:** density and hidden columns are per browser (`columns.ts`, localStorage). The frame's drag handles are drawn but rows don't reorder.
+- **Date:** the period chip opens the dashboard's `PeriodPicker` in a scoped context that writes the page's own `span`, `from` and `to`, so the list's coverage check keeps working.
+- **Pages:** 15 rows a page with a footer that totals the tab (In, Out and Net on All; per day and Spent on Expenses; Moved and Fees on Transfers).
+- **Drawer:** the entry sheet's amount is MoneyField. A recurring entry links to its schedule (`/recurring?item=`), an installment payment to its plan.
+- **Loading:** the real screen over the sampled ledger inside a static skullet skeleton.
+
 ## Primitives
 
 | Part         | Use                                                    | Notes                                                                                                   |
@@ -172,9 +184,9 @@ The shell is on the primitives: the account menu and the period menu use `MenuCo
 
 These still use `AmountInput` (`components/dashboard/accounts/fields.tsx`) or a bare `inputMode="decimal"` input. Each one moves in its screen's phase:
 
-- `AmountInput`: `recurring/dialogs.tsx` (2), `recurring/schedule-form.tsx`, `transactions/entry-form.tsx` (the entry sheet's editor only; the Add entry dialog is on MoneyField), `transactions/transfer-dialog.tsx` (the sent amount, whose currency the account fixes), `accounts/check-dialog.tsx`, `accounts/purchase-form.tsx`
+- `AmountInput`: `recurring/dialogs.tsx` (2), `recurring/schedule-form.tsx`, `accounts/check-dialog.tsx`, `accounts/purchase-form.tsx`
 - Bare decimal inputs: `debts/fields.tsx`, `debts/debt-dialogs.tsx`, `budgets/budget-dialogs.tsx`, `accounts/account-form.tsx`, `accounts/account-detail.tsx`, `onboarding/first-entry.tsx`, `import/money-manager/overview.tsx`, `import/file-done.tsx`, `settings/plan.tsx`
-- Not amount entry, so they stay as they are: `transactions/toolbar.tsx` (a filter) and `settings/currency-converter.tsx` (a converter, closer to Exchange). The transfer flow already uses Exchange.
+- Not amount entry, so they stay as they are: `transactions/filter-row.tsx` (the amount filter) and `settings/currency-converter.tsx` (a converter, closer to Exchange). The transfer flow already uses Exchange.
 
 ## Off contract
 
@@ -185,7 +197,7 @@ These are known and left for the screen phases:
 - **Hard-coded colours:** 42 hex colours in 21 non-test source files, such as the recap share card and the insights samples.
 - **Raw controls:** 35 files with a raw `<button>` and 14 with a raw `<input>`. The account sheet's sign-out row stays a raw `<button>` until there is a row part, because Button's ghost hover and weight would change the row.
 - **Spinners:** Button `loading` draws a spinner in `settings/invite.tsx`, `settings/plan.tsx`, `settings/account.tsx` and `settings/about/suggest.tsx`.
-- **Menu timing:** every menu except the account, period and dashboard filter menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
+- **Menu timing:** every menu except the account, period, dashboard filter and Transactions menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
 - **Hand-placed scope:** 74 files put `app-shell ph-no-capture` on portaled content by hand. `DialogContent`, `SheetContent` and `MenuContent` replace that.
 - **Accent inside the shell:** `accentCss` (`lib/accent.ts`) writes the tint and on-tint on `:root`. The shell scope sets `--color-app-on-tint` again in both themes, and `--color-app-tint` again in dark, so inside the shell a non-default accent shows as vermilion in dark and keeps the default on-tint. This was already the case before this phase.
 - **Pages outside the shell:** `login` and `connect`, and any portal without `app-shell`, read the phone's dark palette from `:root`. So does `html` itself, whose background is `--color-app-bg`.

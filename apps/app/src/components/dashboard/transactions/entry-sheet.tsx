@@ -19,6 +19,7 @@ import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile, FeeTile, MerchantTile } from "@/components/ledger/tiles";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { MenuContent } from "@/components/ui/menu-content";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { isFinanced } from "@/lib/entry-writes";
 import { useDisplayFormat } from "@/lib/ledger-settings";
@@ -151,7 +152,7 @@ function MoreMenu({ id, onDelete, onLogAgain }: { id: string; onDelete: () => vo
             <Menu.Trigger aria-label={detail.more.value} render={<Button size="icon-sm" variant="ghost" />}>
                 <HugeiconsIcon icon={MoreVerticalIcon} size={18} />
             </Menu.Trigger>
-            <Menu.Content className="app-shell ph-no-capture z-60 transition-none" sideOffset={6}>
+            <MenuContent className="z-60" sideOffset={6}>
                 <Menu.Item onClick={copyLink}>
                     <HugeiconsIcon icon={Link01Icon} size={15} />
                     {detail.copyLink}
@@ -167,7 +168,7 @@ function MoreMenu({ id, onDelete, onLogAgain }: { id: string; onDelete: () => vo
                     <HugeiconsIcon icon={Delete02Icon} size={15} />
                     {bulk.delete}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -329,6 +330,19 @@ function ReadTop({
     );
 }
 
+function RecurringLink({ id }: { id: string }) {
+    const { drawer } = useIntlayer("dashboard-ledger");
+    return (
+        <Link
+            className="border-border text-app-body text-app-tint flex min-h-11 items-center justify-end border-b py-2 font-medium"
+            search={{ item: id, tab: "all" }}
+            to="/recurring"
+        >
+            {drawer.openRecurring}
+        </Link>
+    );
+}
+
 function InstallmentLine({ installmentId, rowId }: { installmentId: string | null | undefined; rowId: string }) {
     const { ledger } = useDashboard();
     const { detail, installmentOf } = useIntlayer("dashboard-transactions");
@@ -375,7 +389,6 @@ function ReadEntry({
     const { ledger } = useDashboard();
     const { transactions: copy } = useIntlayer("dashboard-home");
     const words = useIntlayer("dashboard-transactions");
-    const { drawer } = useIntlayer("dashboard-ledger");
     const { bulk, detail, form } = words;
     const categoryName = useCategoryName();
     const { money } = useDisplayFormat();
@@ -431,15 +444,7 @@ function ReadEntry({
                         {Object.entries(repeatNames).find(([type]) => Number(type) === repeat)?.[1] ?? repeatNames[0]}
                     </span>
                 </Line>
-                {repeat > 0 ? (
-                    <Link
-                        className="border-border text-app-body text-app-tint flex min-h-11 items-center justify-end border-b py-2 font-medium"
-                        search={{ item: row.id, tab: "all" }}
-                        to="/recurring"
-                    >
-                        {drawer.openRecurring}
-                    </Link>
-                ) : null}
+                {repeat > 0 ? <RecurringLink id={row.id} /> : null}
                 <InstallmentLine installmentId={raw?.installmentId} rowId={row.id} />
                 {raw?.details?.trim() ? (
                     <Line label={detail.note}>
@@ -567,16 +572,19 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
         return (
             <Chrome
                 body={
-                    <EntryEditor
-                        accountTrigger={accountTrigger}
-                        categoryTrigger={categoryTrigger}
-                        doc={doc}
-                        imageUrl={imageUrl}
-                        key={doc.localId}
-                        onDelete={remove}
-                        onLogAgain={() => logAgain?.()}
-                        total={total}
-                    />
+                    <>
+                        <EntryEditor
+                            accountTrigger={accountTrigger}
+                            categoryTrigger={categoryTrigger}
+                            doc={doc}
+                            imageUrl={imageUrl}
+                            key={doc.localId}
+                            onDelete={remove}
+                            onLogAgain={() => logAgain?.()}
+                            total={total}
+                        />
+                        {(raw?.recurringType ?? 0) > 0 ? <RecurringLink id={row.id} /> : null}
+                    </>
                 }
                 categoryHint
                 foot={

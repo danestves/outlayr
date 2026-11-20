@@ -406,7 +406,7 @@ export function FilterRow({
                     }}
                     placeholder={transfers ? words.searchTransfers.value : words.search.value}
                     ref={searchField}
-                    type="search"
+                    enterKeyHint="search"
                     value={query.q}
                 />
                 <Input.Addon align="end" className="pointer-coarse:hidden">
