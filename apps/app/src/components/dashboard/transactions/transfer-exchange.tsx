@@ -74,7 +74,7 @@ export function TransferAmounts({
             <span className="sr-only">{name}</span>
             <Pick onPick={leg.onPick} options={options} quiet value={leg.id} />
             {leg.error ? (
-                <span className="text-destructive text-[13px]" role="alert">
+                <span className="text-destructive text-app-label" role="alert">
                     {leg.error}
                 </span>
             ) : null}
@@ -140,7 +140,7 @@ export function TransferExchange({
             {priced ? (
                 <Slot label={detail.rate} quiet={false}>
                     <div className="flex min-h-9 items-center justify-between gap-3">
-                        <span className="dash-figure flex min-w-0 flex-wrap gap-x-2 text-sm">
+                        <span className="text-app-body flex min-w-0 flex-wrap gap-x-2 font-mono tabular-nums">
                             <span className="whitespace-nowrap">{perUnit(arrived / sent)}</span>
                             {values.arrivedByHand && official !== null ? (
                                 <span className="text-muted-foreground whitespace-nowrap">

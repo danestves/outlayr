@@ -20,7 +20,7 @@ import { useEffect, useEffectEvent, useId, useMemo, useRef, useState } from "rea
 import type { ReactNode, RefObject } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { AmountInput, CurrencyField, FlowDialog, QUIET_ROW } from "@/components/dashboard/accounts/fields";
+import { FlowDialog, QUIET_ROW } from "@/components/dashboard/accounts/fields";
 import type { AccountFlow } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
@@ -57,7 +57,7 @@ const REPEATS = [
     RECURRING_TYPE.yearly,
 ] as const;
 
-const POPUP = "app-shell z-[60]";
+const POPUP = "app-shell z-60";
 const NO_ACCOUNT = "none";
 export const QUIET_INPUT = "border-transparent! bg-transparent! text-right shadow-none! focus-visible:border-ring!";
 
@@ -155,7 +155,9 @@ export function DateRow({ onChange, quiet, text }: { onChange: (text: string) =>
         <div className={`relative flex items-center ${quiet ? "-me-2 ml-auto w-fit" : "w-full"}`}>
             <Button
                 aria-label={form.pickDate.value}
-                className={quiet ? "dash-figure" : "dash-figure w-full justify-between font-normal"}
+                className={
+                    quiet ? "font-mono tabular-nums" : "w-full justify-between font-mono font-normal tabular-nums"
+                }
                 onClick={() => input.current?.showPicker()}
                 size={quiet ? "sm" : "md"}
                 type="button"
@@ -218,43 +220,9 @@ function feeOfRate({ amountText, currency }: EntryValues, rate: number) {
     return roundMoney(parseAmount(amountText, decimals) * rate, decimals);
 }
 
-const focusAmount = (node: HTMLDivElement | null) => {
+export const focusAmount = (node: HTMLDivElement | null) => {
     node?.querySelector("input")?.focus();
 };
-
-function AmountField({
-    amountKey,
-    onChange,
-    problem,
-    quiet,
-    values,
-}: {
-    amountKey?: number;
-    onChange: (patch: Partial<EntryValues>) => void;
-    problem: EntryProblem | null;
-    quiet: boolean;
-    values: EntryValues;
-}) {
-    const { form } = useIntlayer("dashboard-transactions");
-    const sign = values.income ? "+" : "-";
-    return (
-        <Field className="min-w-0 flex-1" invalid={problem === "amount"}>
-            <Field.Label className={quiet ? "sr-only" : undefined}>{form.amount}</Field.Label>
-            <div className="[&_[data-slot=input-addon]]:text-2xl! [&_[data-slot=input-addon]]:font-semibold! [&_input]:ps-0! [&_input]:text-2xl! [&_input]:font-semibold!">
-                <AmountInput
-                    autoFocus={!quiet}
-                    currency={values.currency}
-                    key={amountKey}
-                    onText={(amountText) => onChange({ amountText })}
-                    sign={quiet ? sign : undefined}
-                    size="lg"
-                    text={values.amountText}
-                />
-            </div>
-            {problem === "amount" ? <Field.Error match>{form.amountRequired}</Field.Error> : null}
-        </Field>
-    );
-}
 
 function DialogAmount({
     amountKey,
@@ -394,9 +362,7 @@ function EntryFields({
             });
         }
     };
-    const amount = quiet ? (
-        <AmountField amountKey={amountKey} onChange={onChange} problem={problem} quiet={quiet} values={values} />
-    ) : (
+    const amount = (
         <DialogAmount
             amountKey={amountKey}
             codes={[...inUse, ...PICKABLE_CURRENCY_CODES.filter((code) => !inUse.includes(code))]}
@@ -418,10 +384,8 @@ function EntryFields({
                         <Field.Label className="sr-only">{form.name}</Field.Label>
                         <div className="min-w-0 flex-1">{name}</div>
                     </Field>
-                    <div className="flex items-start gap-3">
-                        {amount}
-                        <div className="flex-none pt-1">{kinds}</div>
-                    </div>
+                    {kinds}
+                    {amount}
                 </div>
             ) : (
                 <div className="flex flex-col gap-4 pb-4">
@@ -429,7 +393,7 @@ function EntryFields({
                     {amount}
                 </div>
             )}
-            <div className={quiet ? undefined : "grid grid-cols-1 gap-x-3 gap-y-4 min-[481px]:grid-cols-2"}>
+            <div className={quiet ? undefined : "grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2"}>
                 {quiet ? null : (
                     <Slot label={form.name} quiet={quiet}>
                         {name}
@@ -484,21 +448,14 @@ function EntryFields({
                         text={values.dateText}
                     />
                 </Slot>
-                {quiet ? (
-                    <CurrencyField
-                        inUse={inUse}
-                        label={form.currency}
-                        onPick={pickCurrency}
-                        quiet={quiet}
-                        value={values.currency}
-                    />
-                ) : null}
                 {values.income || values.accountId === null ? null : (
                     <Slot label={form.fee} quiet={quiet}>
                         <div className="flex min-w-0 items-center justify-end">
-                            {quiet && feeShown ? <span className="dash-figure font-medium">+{feeShown}</span> : null}
+                            {quiet && feeShown ? (
+                                <span className="font-mono font-medium tabular-nums">+{feeShown}</span>
+                            ) : null}
                             <Input
-                                className={`dash-figure ${quiet ? `${QUIET_INPUT} text-muted-foreground w-14 px-1.5!` : ""}`}
+                                className={`font-mono tabular-nums ${quiet ? `${QUIET_INPUT} text-muted-foreground w-14 px-1.5!` : ""}`}
                                 inputMode="decimal"
                                 onChange={(event) => onChange({ feeText: event.target.value })}
                                 placeholder={form.feePlaceholder.value}
@@ -537,7 +494,7 @@ function EntryFields({
                 {values.currency !== "USD" && values.rateType === "custom" ? (
                     <Slot error={problem === "rate" ? form.rateRequired : null} label={form.ratePerUsd} quiet={quiet}>
                         <Input
-                            className={`dash-figure ${quiet ? QUIET_INPUT : ""}`}
+                            className={`font-mono tabular-nums ${quiet ? QUIET_INPUT : ""}`}
                             inputMode="decimal"
                             onChange={(event) => onChange({ rateText: event.target.value })}
                             value={values.rateText}
@@ -743,8 +700,8 @@ export function EntryEditor({
                     <HugeiconsIcon icon={Delete02Icon} size={14} />
                     {bulk.delete}
                 </Button>
-                <span className="text-muted-foreground ml-auto text-[13px]">
-                    {form.total} <span className="dash-figure text-foreground">{total}</span>
+                <span className="text-muted-foreground text-app-label ml-auto">
+                    {form.total} <span className="text-foreground font-mono tabular-nums">{total}</span>
                 </span>
             </div>
         </div>

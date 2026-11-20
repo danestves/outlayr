@@ -3,9 +3,8 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import type { TransactionSort } from "../home/rows";
-import { ENTRY_TYPES, SPANS } from "./model";
-import type { EntryType, LedgerQuery, Range, Span } from "./model";
+import { SORTS, SPANS, TABS } from "./model";
+import type { LedgerQuery, Range, Sort, Span, Tab } from "./model";
 
 const Param = Schema.UndefinedOr(Schema.String).pipe(
     Schema.catchDecoding(() => Effect.succeed(Option.some(undefined)))
@@ -16,11 +15,14 @@ const Search = Schema.Struct({
     from: Schema.optional(Param),
     max: Schema.optional(Param),
     min: Schema.optional(Param),
+    merchant: Schema.optional(Param),
     q: Schema.optional(Param),
     sort: Schema.optional(Param),
     span: Schema.optional(Param),
+    tags: Schema.optional(Param),
     to: Schema.optional(Param),
     type: Schema.optional(Param),
+    view: Schema.optional(Param),
 });
 
 export const transactionsSearch = Schema.toStandardSchemaV1(Search);
@@ -31,7 +33,6 @@ export type PageSearch = typeof Search.Type;
 export type SearchPatch = { [Key in keyof PageSearch | "accounts" | "category" | "period"]?: string | null };
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/u;
-const SORTS = ["oldest", "largest"] as const;
 
 const oneOf = <const Value extends string>(values: readonly Value[], value: string | undefined) =>
     values.find((each) => each === value);
@@ -41,11 +42,24 @@ const amountOf = (value: string | undefined) => {
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 };
 
-export interface PageQuery extends Omit<LedgerQuery, "accounts" | "categories" | "range"> {
+export interface PageQuery extends Omit<LedgerQuery, "accounts" | "categories" | "range" | "sort" | "type"> {
     custom: Partial<Range>;
+    merchants: readonly string[];
+    sort: Sort;
     span: Span | undefined;
-    type: EntryType | undefined;
+    tab: Tab;
+    tags: readonly string[];
 }
+
+const decoded = (value: string) => {
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        return value;
+    }
+};
+
+const listOf = (value: string | undefined) => value?.split(",").filter((each) => each !== "") ?? [];
 
 const realDay = (value: string) => {
     const time = wallMidnight(value);
@@ -63,12 +77,17 @@ export function pageQueryOf(search: PageSearch): PageQuery {
         custom: { ...(from !== undefined && { from }), ...(to !== undefined && { to }) },
         max: amountOf(search.max),
         min: amountOf(search.min),
+        merchants: listOf(search.merchant).map(decoded),
         q: search.q ?? "",
-        sort: oneOf(SORTS, search.sort) ?? ("newest" satisfies TransactionSort),
+        sort: oneOf(SORTS, search.sort) ?? "newest",
         span: oneOf(SPANS, search.span),
-        type: oneOf(ENTRY_TYPES, search.type),
+        tab: oneOf(TABS, search.type) ?? "all",
+        tags: listOf(search.tags),
     };
 }
+
+export const merchantParam = (names: readonly string[]) =>
+    names.length === 0 ? null : names.map(encodeURIComponent).join(",");
 
 /** Patches the page's params; `null` or an empty string drops one from the URL. */
 export const patched = <Search extends PageSearch>(search: Search, patch: SearchPatch) => ({
