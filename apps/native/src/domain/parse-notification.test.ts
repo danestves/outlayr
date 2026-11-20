@@ -77,6 +77,23 @@ describe("parseNotification", () => {
         ).toMatchObject({ amount: 14.22, merchant: "UBR* PENDING.UBER.COM" });
     });
 
+    it("logs a Payoneer payment once, as income from the sender when it is deposited", () => {
+        const onItsWay = "Payment update\nA 150.00 USD payment from Jane Marie Doe Smith is on its way to you";
+        expect(parseNotification(onItsWay)).toBeNull();
+        expect(hasChargeAmount(onItsWay)).toBe(false);
+        expect(parseNotification("$12.00 at On The Way Market")).toMatchObject({ amount: 12 });
+        expect(
+            parseNotification(
+                "Payment update\n150.00 USD from Jane Marie Doe Smith was deposited into your Payoneer account"
+            )
+        ).toStrictEqual({
+            amount: 150,
+            amountText: "150.00 USD",
+            income: true,
+            merchant: "Jane Marie Doe Smith",
+        });
+    });
+
     it("names no merchant when the payee is only a card", () => {
         expect(parseNotification("A charge of 5.00 USD was made to your card XXXX-3111")).toMatchObject({
             amount: 5,
