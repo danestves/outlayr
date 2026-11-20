@@ -1,8 +1,6 @@
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import type { ResolvedReceipt } from "./receipt-scan";
-
 const StoredReceipt = Schema.Struct({
     items: Schema.NonEmptyArray(Schema.Struct({ name: Schema.String, price: Schema.Finite, quantity: Schema.Finite })),
     subtotal: Schema.NullOr(Schema.Finite),
@@ -19,7 +17,7 @@ export function serializeReceipt({
     subtotal,
     tax,
     tip,
-}: Pick<ResolvedReceipt, "items" | "subtotal" | "tax" | "tip">): string | null {
+}: Omit<StoredReceipt, "items"> & { items: readonly StoredReceipt["items"][number][] }): string | null {
     if (items.length === 0) {
         return null;
     }

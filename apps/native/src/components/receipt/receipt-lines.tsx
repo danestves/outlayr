@@ -1,9 +1,9 @@
+import type { StoredReceipt } from "@outlayr/money/receipt";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { formatAmount } from "@/domain/money";
-import type { StoredReceipt } from "@/domain/receipt-items";
 import { formatQuantity } from "@/domain/receipt-scan";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";

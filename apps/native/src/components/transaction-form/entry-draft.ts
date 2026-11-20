@@ -1,11 +1,11 @@
 import type { CardFeeInput } from "@outlayr/money/card-fee";
+import type { Allocation } from "@outlayr/money/split";
+import { isRealSplit } from "@outlayr/money/split-draft";
 
 import type { IdentitySelection } from "@/components/identity-picker-shared";
 import { minorUnitsFor, roundToMinorUnits } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
 import type { PaidVia } from "@/domain/paid-via";
-import type { Allocation } from "@/domain/split";
-import { isRealSplit } from "@/domain/split-draft";
 import type { EntryCommit, EntryDraft } from "@/state/entry-commit";
 
 import { entryRateOf } from "./entry-rate";

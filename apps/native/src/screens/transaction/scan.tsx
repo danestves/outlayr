@@ -1,6 +1,7 @@
 import Camera01Icon from "@hugeicons-pro/core-stroke-rounded/Camera01Icon";
 import Image01Icon from "@hugeicons-pro/core-stroke-rounded/Image01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import { serializeReceipt } from "@outlayr/money/receipt";
 import type { RateTable } from "@outlayr/money/valuation";
 import * as Effect from "effect/Effect";
 import { Image } from "expo-image";
@@ -33,7 +34,6 @@ import type { AuthGate } from "@/domain/auth-gate";
 import { formatRelativeDay } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import { paywallHref } from "@/domain/paywall-trigger";
-import { serializeReceipt } from "@/domain/receipt-items";
 import { conversionOf, resolveReceipt, savableReceipt } from "@/domain/receipt-scan";
 import type { Conversion, ResolvedReceipt } from "@/domain/receipt-scan";
 import { formatRateFigure, pairQuotedInverse, pairUnitSymbols, quotePairRate } from "@/domain/transaction-entry-rate";

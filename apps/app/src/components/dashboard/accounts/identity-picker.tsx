@@ -2,9 +2,7 @@ import { Popover } from "@base-ui/react/popover";
 import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
 import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
-import { api } from "@outlayr/backend/convex/_generated/api";
 import { searchInstitutions } from "@outlayr/money/institution-map";
-import { useRouteContext } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Input } from "panelui-web/input";
 import { Tabs } from "panelui-web/tabs";
@@ -13,6 +11,7 @@ import type { ChangeEvent, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
+import { useUploadPhoto } from "@/lib/photo-upload";
 
 import { Glyph } from "./glyph";
 
@@ -124,27 +123,11 @@ async function squarePhoto(file: File) {
     });
 }
 
-function useUploadPhoto() {
-    const convex = useRouteContext({ from: "/_account/_app", select: (context) => context.convexQueryClient });
+function useUploadSquare() {
+    const upload = useUploadPhoto();
     return async (file: File) => {
-        if (!convex) {
-            throw new Error("Photos need a connection");
-        }
-        const client = convex.convexClient;
         const body = await squarePhoto(file);
-        const { key, url } = await client.mutation(api.photos.requestUpload, {
-            name: `web-${crypto.randomUUID()}.jpg`,
-        });
-        const response = await fetch(url, { body, headers: { "Content-Type": "image/jpeg" }, method: "PUT" });
-        if (!response.ok) {
-            throw new Error(`Photo upload failed: ${response.status}`);
-        }
-        // SAFETY: Convex storage answers with `{ storageId }`, and R2 with an empty body that lands in the catch.
-        const { storageId } = (await response.json().catch(() => ({}))) as {
-            storageId?: Parameters<typeof client.action<typeof api.photos.confirmUpload>>[1]["storageId"];
-        };
-        await client.action(api.photos.confirmUpload, storageId ? { key, storageId } : { key });
-        return { key, preview: URL.createObjectURL(body) };
+        return { key: await upload(body, "image/jpeg"), preview: URL.createObjectURL(body) };
     };
 }
 
@@ -202,7 +185,7 @@ export function IdentityPicker({
     const [tab, setTab] = useState<Tab>(() => startTab(identity, handPicked));
     const [query, setQuery] = useState("");
     const [failed, setFailed] = useState(false);
-    const upload = useUploadPhoto();
+    const upload = useUploadSquare();
     const trigger = useRef<HTMLButtonElement>(null);
     const fileInput = useRef<HTMLInputElement>(null);
     const found = searchInstitutions(query).slice(0, 6);

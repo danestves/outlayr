@@ -152,22 +152,19 @@ export function SavedReceipt({
 }) {
     const { subtitle, title } = useReceiptTitle(merchant, receipt);
     return (
-        <section className="mt-5 flex flex-col gap-2">
-            <FilesLabel />
-            <details className="group">
-                <summary className={`${CARD} hover:bg-muted/40 cursor-pointer list-none transition-colors`}>
-                    <ReceiptTile />
-                    <CardText subtitle={subtitle} title={title} />
-                    <HugeiconsIcon
-                        className="text-muted-foreground flex-none group-open:rotate-180"
-                        icon={ArrowDown01Icon}
-                        size={16}
-                    />
-                </summary>
-                <div className="mt-2">
-                    <ReceiptLines currency={currency} receipt={receipt} />
-                </div>
-            </details>
-        </section>
+        <details className="group">
+            <summary className={`${CARD} hover:bg-muted/40 cursor-pointer list-none transition-colors`}>
+                <ReceiptTile />
+                <CardText subtitle={subtitle} title={title} />
+                <HugeiconsIcon
+                    className="text-muted-foreground flex-none group-open:rotate-180"
+                    icon={ArrowDown01Icon}
+                    size={16}
+                />
+            </summary>
+            <div className="mt-2">
+                <ReceiptLines currency={currency} receipt={receipt} />
+            </div>
+        </details>
     );
 }

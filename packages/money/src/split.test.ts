@@ -25,8 +25,10 @@ describe("attributing an entry", () => {
     it("does not hand back the caller's own array to mutate", () => {
         const explicit: Allocation[] = [{ amount: 40, categoryId: "food" }];
         const result = allocationsFor(entry("t1", 40, "food"), explicit);
-        result[0].amount = 999;
-        expect(explicit[0].amount).toBe(40);
+        for (const one of result) {
+            one.amount = 999;
+        }
+        expect(explicit[0]?.amount).toBe(40);
     });
 });
 
@@ -41,11 +43,11 @@ describe("whether a split adds up", () => {
                 ],
                 2
             )
-        ).toBe(true);
+        ).toBeTruthy();
     });
 
     it("refuses parts that fall short", () => {
-        expect(isBalanced(40, [{ amount: 25, categoryId: "a" }], 2)).toBe(false);
+        expect(isBalanced(40, [{ amount: 25, categoryId: "a" }], 2)).toBeFalsy();
     });
 
     it("reports how far off a split is, with a sign", () => {
@@ -77,24 +79,24 @@ describe("editing one part of a split", () => {
             { amount: 5.005, categoryId: "a" },
             { amount: 5, categoryId: "b" },
         ]);
-        expect(isBalanced(10.005, parts, 3)).toBe(true);
+        expect(isBalanced(10.005, parts, 3)).toBeTruthy();
     });
 
     it("takes the difference out of another part so it stays balanced", () => {
         const next = rebalance(40, two, 0, 30, 2);
         expect(next.map((part) => part.amount)).toStrictEqual([30, 10]);
-        expect(isBalanced(40, next, 2)).toBe(true);
+        expect(isBalanced(40, next, 2)).toBeTruthy();
     });
 
     it("absorbs into an earlier part when the last one is being edited", () => {
         const next = rebalance(40, two, 1, 30, 2);
         expect(next.map((part) => part.amount)).toStrictEqual([10, 30]);
-        expect(isBalanced(40, next, 2)).toBe(true);
+        expect(isBalanced(40, next, 2)).toBeTruthy();
     });
 
     it("refuses to make a part negative", () => {
         const next = rebalance(40, two, 0, -5, 2);
-        expect(next[0].amount).toBe(0);
+        expect(next[0]?.amount).toBe(0);
     });
 
     it("leaves a lone part alone rather than balancing against nothing", () => {

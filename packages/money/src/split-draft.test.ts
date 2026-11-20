@@ -11,7 +11,7 @@ describe("opening a split", () => {
     });
 
     it("is not yet a split, because one part says what the entry already says", () => {
-        expect(isRealSplit(openDraft(TOTAL, "groceries", 2))).toBe(false);
+        expect(isRealSplit(openDraft(TOTAL, "groceries", 2))).toBeFalsy();
     });
 });
 
@@ -25,7 +25,7 @@ describe("adding a category", () => {
     });
 
     it("counts as a split once there are two parts", () => {
-        expect(isRealSplit(addPart(openDraft(TOTAL, "groceries", 2), "home"))).toBe(true);
+        expect(isRealSplit(addPart(openDraft(TOTAL, "groceries", 2), "home"))).toBeTruthy();
     });
 });
 
@@ -34,8 +34,8 @@ describe("typing an amount", () => {
         let draft = addPart(addPart(openDraft(TOTAL, "groceries", 2), "home"), "pets");
         draft = setPartAmount(TOTAL, draft, 1, 24, 2);
 
-        expect(draft.every((one) => one.amount >= 0)).toBe(true);
-        expect(isBalanced(TOTAL, draft, 2)).toBe(false);
+        expect(draft.every((one) => one.amount >= 0)).toBeTruthy();
+        expect(isBalanced(TOTAL, draft, 2)).toBeFalsy();
         expect(unallocated(TOTAL, draft, 2)).toBe(-24);
     });
 });
@@ -52,7 +52,7 @@ describe("removing a category", () => {
             { amount: 50, categoryId: "groceries" },
             { amount: 34, categoryId: "pets" },
         ]);
-        expect(isBalanced(TOTAL, without, 2)).toBe(true);
+        expect(isBalanced(TOTAL, without, 2)).toBeTruthy();
     });
 
     it("ignores an index that is not there", () => {

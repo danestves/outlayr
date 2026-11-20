@@ -244,7 +244,7 @@ export const mainBudget = sqliteTable(
 );
 
 /**
- * An entry with no rows here is attributed wholly to its own `categoryId` (`domain/split.ts`). Parts must sum to
+ * An entry with no rows here is attributed wholly to its own `categoryId` (`@outlayr/money/split`). Parts must sum to
  * the entry's amount; SQLite cannot enforce it, so the write path checks `isBalanced`.
  */
 export const transactionSplits = sqliteTable(

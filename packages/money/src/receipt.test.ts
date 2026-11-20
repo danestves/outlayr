@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { parseReceipt, serializeReceipt } from "./receipt-items";
+import { parseReceipt, serializeReceipt } from "./receipt";
 
 const SCANNED = {
     items: [
