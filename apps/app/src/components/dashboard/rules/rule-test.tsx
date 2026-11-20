@@ -1,3 +1,4 @@
+import SearchRemoveIcon from "@hugeicons/core-free-icons/SearchRemoveIcon";
 import { Button } from "panelui-web/button";
 import { Table } from "panelui-web/table";
 import { useIntlayer } from "react-intlayer";
@@ -8,11 +9,11 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 import { photoSrc } from "@/lib/photo-src";
 import type { Rule, Run } from "@/lib/rules";
 
-import { QuietTable } from "../home/setup";
+import { Empty } from "../home/empty";
 import type { RulesData } from "./data";
 import { CategoryBadge, FIGURE, HEAD, LIT, TagMarks, useShortDay } from "./parts";
 
-const CELL = "h-[52px] px-3 py-0 align-middle first:ps-6 last:pe-6";
+const CELL = "h-13 px-3 py-0 align-middle first:ps-6 last:pe-6";
 const TOP = `${HEAD} first:ps-6 last:pe-6`;
 
 function Stat({
@@ -26,10 +27,8 @@ function Stat({
 }) {
     return (
         <div className="border-border border-l pt-3 pl-3 first:border-0 first:pl-0">
-            <small className="text-muted-foreground block text-xs leading-4">{label}</small>
-            <b className={`dash-figure text-[15px] leading-[22px] font-medium ${warn ? "text-app-warn" : ""}`}>
-                {children}
-            </b>
+            <small className="text-muted-foreground text-app-caption block">{label}</small>
+            <b className={`dash-figure text-app-title font-medium ${warn ? "text-app-warn" : ""}`}>{children}</b>
         </div>
     );
 }
@@ -44,22 +43,24 @@ export function RuleTest({ data, onBack, rule, run }: { data: RulesData; onBack:
         const named = rule.conditions.length === 1 && only && only.field !== "amount" && only.value !== "";
         const count = String(data.entries.length);
         return (
-            <div className="dash-empty relative isolate min-h-0 flex-1 justify-center">
-                <QuietTable />
-                <b className="text-[15px] font-semibold">{test.emptyTitle}</b>
-                <p className="text-muted-foreground max-w-sm text-[13px]">
-                    {named
+            <Empty
+                action={
+                    <Button onClick={onBack} size="sm" variant="outline">
+                        {test.back}
+                    </Button>
+                }
+                icon={SearchRemoveIcon}
+                line={
+                    named
                         ? test.emptyHas({
                               count,
                               field: only.field === "merchant" ? test.fieldMerchant.value : test.fieldDescription.value,
                               value: only.value,
                           })
-                        : test.emptyLine({ count })}
-                </p>
-                <Button onClick={onBack} size="sm" variant="outline">
-                    {test.back}
-                </Button>
-            </div>
+                        : test.emptyLine({ count })
+                }
+                title={test.emptyTitle}
+            />
         );
     }
     const changes = new Map(run.changes.map((change) => [change.entry.id, change]));
@@ -92,17 +93,19 @@ export function RuleTest({ data, onBack, rule, run }: { data: RulesData; onBack:
                         const change = changes.get(entry.id);
                         return (
                             <Table.Row className={`border-0 ${change ? LIT : "hover:bg-transparent"}`} key={entry.id}>
-                                <Table.Cell className={`${CELL} ${FIGURE} text-muted-foreground text-[13px]`}>
-                                    {shortDay(entry.day)}
+                                <Table.Cell className={`${CELL} ${FIGURE} text-muted-foreground`}>
+                                    <span className="text-app-label">{shortDay(entry.day)}</span>
                                 </Table.Cell>
                                 <Table.Cell className={CELL}>
-                                    <div className="flex items-center gap-2.5 text-sm font-medium">
+                                    <div className="text-app-body flex items-center gap-2.5 font-medium">
                                         <MerchantTile imageUrl={photoSrc(entry.imageKey)} name={entry.note} />
                                         <span className="max-w-44 truncate">{entry.note}</span>
                                     </div>
                                 </Table.Cell>
-                                <Table.Cell align="end" className={`${CELL} ${FIGURE} text-[13px]`}>
-                                    {money(entry.income ? entry.amount : -entry.amount, entry.currency)}
+                                <Table.Cell align="end" className={`${CELL} ${FIGURE}`}>
+                                    <span className="text-app-label">
+                                        {money(entry.income ? entry.amount : -entry.amount, entry.currency)}
+                                    </span>
                                 </Table.Cell>
                                 <Table.Cell className={CELL}>
                                     <CategoryBadge id={entry.categoryId} />
@@ -116,7 +119,7 @@ export function RuleTest({ data, onBack, rule, run }: { data: RulesData; onBack:
                                             <TagMarks ids={change.tagIds} names={data.tagNames} />
                                         </div>
                                     ) : (
-                                        <span className="text-muted-foreground text-[13px]">{test.noChange}</span>
+                                        <span className="text-muted-foreground text-app-label">{test.noChange}</span>
                                     )}
                                 </Table.Cell>
                             </Table.Row>

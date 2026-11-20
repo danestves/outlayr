@@ -21,6 +21,7 @@ import { useIntlayer } from "react-intlayer";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
+import { DialogContent } from "@/components/ui/dialog-content";
 import { LedgerSettingsContext, useDisplayFormat, useMeta } from "@/lib/ledger-settings";
 
 import { CurrencyConverter } from "./currency-converter";
@@ -47,7 +48,7 @@ export function Currency() {
                             hint={main.name}
                             label={currency}
                             leading={
-                                <span className="bg-app-fill text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg text-[13px] font-medium">
+                                <span className="bg-app-fill text-app-muted text-app-label rounded-app-sm flex size-8 shrink-0 items-center justify-center font-medium">
                                     {main.symbol}
                                 </span>
                             }
@@ -55,18 +56,18 @@ export function Currency() {
                             <MainPicker current={currency} />
                         </Row>
                         <Row label={text.format}>
-                            <span className="font-mono text-sm tabular-nums">{money(SAMPLE_AMOUNT, currency)}</span>
+                            <span className="text-app-body font-mono tabular-nums">
+                                {money(SAMPLE_AMOUNT, currency)}
+                            </span>
                         </Row>
                         <Row hint={text.totalsHint} label={text.totals} />
                     </SettingsCard>
                     <SettingsCard
-                        action={
-                            <span className="text-muted-foreground font-mono text-[13px]">{money(net, currency)}</span>
-                        }
+                        action={<span className="text-app-muted text-app-label font-mono">{money(net, currency)}</span>}
                         title={text.byCurrency}
                     >
                         {accounts.length === 0 ? (
-                            <p className="text-muted-foreground px-4 py-4 text-sm">{text.noAccounts}</p>
+                            <p className="text-app-muted text-app-body px-4 py-4">{text.noAccounts}</p>
                         ) : (
                             <Table framed aria-label={text.byCurrency.value} maxHeight="none">
                                 <Table.Header className="in-data-[sticky]:bg-card">
@@ -79,13 +80,13 @@ export function Currency() {
                                 <Table.Body>
                                     {accounts.map((account, index) => (
                                         <Table.Row key={`${account.name}-${index}`}>
-                                            <Table.Cell className="max-w-[200px]">
+                                            <Table.Cell className="max-w-50">
                                                 <span className="flex min-w-0 items-center gap-2.5 font-medium">
                                                     <AccountTile account={account.look} />
                                                     <span className="truncate">{account.name}</span>
                                                 </span>
                                             </Table.Cell>
-                                            <Table.Cell className="dash-figure text-muted-foreground">
+                                            <Table.Cell className="dash-figure text-app-muted">
                                                 {account.currency}
                                             </Table.Cell>
                                             <Table.Cell align="end" className="dash-figure">
@@ -119,14 +120,14 @@ function Favourites({ books, currency }: { books: Parameters<typeof usdRates>[0]
             <SettingsCard
                 action={
                     latest ? (
-                        <span className="text-muted-foreground font-mono text-[13px]">
+                        <span className="text-app-muted text-app-label font-mono">
                             {text.rateDate({ date: date.day(latest) })}
                         </span>
                     ) : undefined
                 }
                 footer={
                     <div className="flex w-full items-center justify-between gap-3">
-                        <span className="text-muted-foreground text-[13px]">{text.starHint}</span>
+                        <span className="text-app-muted text-app-label">{text.starHint}</span>
                         <CurrencyPicker
                             action={(code) => text.addCode({ code }).value}
                             initial={null}
@@ -166,9 +167,7 @@ function Favourites({ books, currency }: { books: Parameters<typeof usdRates>[0]
                             return (
                                 <Table.Row key={code}>
                                     <Table.Cell className="dash-figure font-medium">{code}</Table.Cell>
-                                    <Table.Cell className="text-muted-foreground">
-                                        {currencyDisplayFor(code).name}
-                                    </Table.Cell>
+                                    <Table.Cell className="text-app-muted">{currencyDisplayFor(code).name}</Table.Cell>
                                     <Table.Cell align="end" className="dash-figure">
                                         {value === null ? "-" : formatRate(value)}
                                     </Table.Cell>
@@ -180,7 +179,7 @@ function Favourites({ books, currency }: { books: Parameters<typeof usdRates>[0]
                                             size="icon-sm"
                                             variant="ghost"
                                         >
-                                            <HugeiconsIcon className="text-primary" icon={StarIcon} size={16} />
+                                            <HugeiconsIcon className="text-app-tint" icon={StarIcon} size={16} />
                                         </Button>
                                     </Table.Cell>
                                 </Table.Row>
@@ -228,7 +227,7 @@ function CurrencyPicker({
     return (
         <Dialog onOpenChange={setOpen} open={open}>
             <Dialog.Trigger render={trigger} />
-            <Dialog.Content className="app-shell">
+            <DialogContent>
                 <Dialog.Header>
                     <Dialog.Title>{label}</Dialog.Title>
                 </Dialog.Header>
@@ -241,7 +240,7 @@ function CurrencyPicker({
                         setOpen(false);
                     }}
                 />
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }
@@ -286,7 +285,7 @@ function PickerBody({
                         size="icon-sm"
                         variant="ghost"
                     >
-                        <HugeiconsIcon className={starred ? "text-primary" : undefined} icon={StarIcon} size={16} />
+                        <HugeiconsIcon className={starred ? "text-app-tint" : undefined} icon={StarIcon} size={16} />
                     </Button>
                 }
                 onSelect={() => setPicked(code)}
@@ -295,7 +294,7 @@ function PickerBody({
             >
                 <span className="flex items-center gap-3">
                     <span className="dash-figure w-9 font-medium">{code}</span>
-                    <span className="text-muted-foreground">{currencyDisplayFor(code).name}</span>
+                    <span className="text-app-muted">{currencyDisplayFor(code).name}</span>
                 </span>
             </Command.Item>
         );

@@ -33,7 +33,7 @@ export function Uncategorized({ draft, onBack, onChoices }: Props) {
     return (
         <ImportPage>
             <MmBar onBack={onBack} title={copy.title}>
-                <span className="text-muted-foreground text-[13px]">
+                <span className="text-muted-foreground text-app-label">
                     {fill(copy.subtitle.value, {
                         expense: analysis.uncategorized.expense.toLocaleString(),
                         income: analysis.uncategorized.income.toLocaleString(),
@@ -70,7 +70,7 @@ export function Uncategorized({ draft, onBack, onChoices }: Props) {
                             ))}
                         </DataTable>
                         {pairs.length > PAIR_ROWS ? (
-                            <p className="text-muted-foreground px-4 py-3 text-[13px]">
+                            <p className="text-muted-foreground text-app-label px-4 py-3">
                                 {fill(copy.more.value, { n: pairs.length - PAIR_ROWS })}
                             </p>
                         ) : null}
@@ -118,7 +118,7 @@ export function Budgets({ draft, onBack, onChoices }: Props) {
                 <Button onClick={onBack}>{bar.done}</Button>
             </MmBar>
             <Card
-                action={<span className="text-muted-foreground text-xs">{copy.hint}</span>}
+                action={<span className="text-muted-foreground text-app-caption">{copy.hint}</span>}
                 footer={
                     <span className="text-muted-foreground">
                         {fill(copy.total.value, { amount: whole(broughtTotal), n: brought.length })}
@@ -259,7 +259,7 @@ export function Start({ draft, onChoices, onDone }: Omit<Props, "onBack"> & { on
                 rail={
                     <>
                         <Card title={copy.both.value.replace("{day}", day)}>
-                            <ul className="divide-border divide-y text-sm">
+                            <ul className="divide-border text-app-body divide-y">
                                 <li className="flex justify-between px-4 py-2.5">
                                     <span>{copy.inMm}</span>
                                     <b className="dash-figure font-medium">
@@ -279,7 +279,7 @@ export function Start({ draft, onChoices, onDone }: Omit<Props, "onBack"> & { on
                             </ul>
                         </Card>
                         <Card title={copy.why}>
-                            <p className="text-muted-foreground px-4 py-3 text-[13px] leading-5">{copy.whyBody}</p>
+                            <p className="text-muted-foreground text-app-label px-4 py-3 leading-5">{copy.whyBody}</p>
                         </Card>
                     </>
                 }

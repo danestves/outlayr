@@ -1,6 +1,5 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "panelui-web/button";
 import { Input } from "panelui-web/input";
 import { Tabs } from "panelui-web/tabs";
@@ -9,33 +8,31 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { IconButton } from "@/components/ui/icon-button";
 import { TAG_NAME_LIMIT } from "@/lib/rule-writes";
 import type { Rule, ruleProblems } from "@/lib/rules";
 
+import { Glyph } from "../accounts/glyph";
 import { Pick, useCategoryOptions } from "../transactions/entry-form";
 import { FIELDS, blankAction, blankCondition, fieldChanged, opsOf } from "./draft";
 import type { Draft, DraftAction, DraftCondition } from "./draft";
 import { FIGURE, NOTE } from "./parts";
 
-const LABEL = "mt-[18px] mb-2 flex items-center gap-2 text-[13px] leading-5 font-medium";
-const ERROR = "text-destructive -mt-0.5 mb-2 text-xs leading-4";
-const PICKS = "[&_button]:text-[13px] [&_button]:font-medium";
-const REMOVE = "text-muted-foreground hover:text-foreground -mx-1.5 size-[30px]";
+const LABEL = "text-app-label mt-4.5 mb-2 flex items-center gap-2 font-medium";
+const ERROR = "text-destructive text-app-caption -mt-0.5 mb-2";
+const PICKS = "[&_button]:text-app-label [&_button]:font-medium";
+const REMOVE = "text-muted-foreground hover:text-foreground -mx-1.5";
 
 type Problems = ReturnType<typeof ruleProblems>;
 
 function Remove({ label, onClick }: { label: string; onClick: () => void }) {
-    return (
-        <Button aria-label={label} className={REMOVE} onClick={onClick} size="icon-sm" variant="ghost">
-            <HugeiconsIcon icon={Cancel01Icon} size={16} />
-        </Button>
-    );
+    return <IconButton className={REMOVE} icon={Cancel01Icon} label={label} onClick={onClick} size="sm" />;
 }
 
 function Add({ children, onClick }: { children: ReactNode; onClick: () => void }) {
     return (
         <Button onClick={onClick} size="sm" variant="outline">
-            <HugeiconsIcon icon={Add01Icon} size={14} />
+            <Glyph icon={Add01Icon} size={14} />
             {children}
         </Button>
     );
@@ -56,7 +53,7 @@ function ConditionRow({
     const amount = row.field === "amount";
     return (
         <>
-            <div className={`${PICKS} mb-2 grid grid-cols-[128px_118px_minmax(0,1fr)_18px] items-center gap-2`}>
+            <div className={`${PICKS} mb-2 grid grid-cols-[128px_118px_minmax(0,1fr)_20px] items-center gap-2`}>
                 <Pick
                     onPick={(value) => {
                         const field = FIELDS.find((each) => each === value);
@@ -82,7 +79,7 @@ function ConditionRow({
                 <Input
                     aria-invalid={problem || undefined}
                     aria-label={fields[row.field].value}
-                    className={`${FIGURE} text-[13px]`}
+                    className={`${FIGURE} text-app-label!`}
                     inputMode={amount ? "decimal" : undefined}
                     onChange={(event) => onChange({ ...row, text: event.target.value })}
                     placeholder={amount ? "0.00" : sheet.valuePlaceholder.value}
@@ -120,7 +117,7 @@ function ActionRow({
     ];
     return (
         <>
-            <div className={`${PICKS} mb-2 grid grid-cols-[150px_minmax(0,1fr)_18px] items-center gap-2`}>
+            <div className={`${PICKS} mb-2 grid grid-cols-[150px_minmax(0,1fr)_20px] items-center gap-2`}>
                 <Pick
                     onPick={(value) => {
                         if (value === row.type) {
@@ -169,7 +166,7 @@ export function BandRow({ children, line, title }: { children: ReactNode; line: 
     return (
         <div className="border-border -mx-6 flex min-h-16 items-center gap-4 border-t px-6 py-3">
             <div className="flex min-w-0 flex-col">
-                <b className="text-sm leading-5 font-medium">{title}</b>
+                <b className="text-app-body font-medium">{title}</b>
                 <span className={NOTE}>{line}</span>
             </div>
             <div className="ml-auto flex-none">{children}</div>
@@ -232,10 +229,10 @@ export function RuleForm({
                     variant="segmented"
                 >
                     <Tabs.List className="h-7 p-0.5">
-                        <Tabs.Trigger className="h-6 px-2.5 text-xs" value="all">
+                        <Tabs.Trigger className="text-app-caption! h-6 px-2.5" value="all">
                             {sheet.all}
                         </Tabs.Trigger>
-                        <Tabs.Trigger className="h-6 px-2.5 text-xs" value="any">
+                        <Tabs.Trigger className="text-app-caption! h-6 px-2.5" value="any">
                             {sheet.any}
                         </Tabs.Trigger>
                     </Tabs.List>

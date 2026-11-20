@@ -47,7 +47,7 @@ function MoneyCard() {
     const save = useSaveSettings();
     return (
         <SettingsCard
-            action={<span className="text-muted-foreground font-mono text-sm">{money(SAMPLE_AMOUNT, currency)}</span>}
+            action={<span className="text-app-muted text-app-label font-mono">{money(SAMPLE_AMOUNT, currency)}</span>}
             title={copy.title}
         >
             <ToggleRow
@@ -193,7 +193,7 @@ function PrivacyCard() {
 }
 
 const HELP_ROW =
-    "border-border hover:bg-accent/40 flex min-h-14 w-full items-center gap-3 border-t px-4 text-left text-sm font-medium first:border-t-0";
+    "border-app-rule hover:bg-app-hover min-h-app-row text-app-body flex w-full items-center gap-3 border-t px-4 text-left font-medium first:border-t-0";
 
 function HelpCard() {
     const { help: copy } = useIntlayer("dashboard-settings");
@@ -203,11 +203,11 @@ function HelpCard() {
         <SettingsCard title={copy.title}>
             <SiteLink className={HELP_ROW} rel="noreferrer" target="_blank" to="/support">
                 <span className="min-w-0 flex-1">{copy.contact}</span>
-                <HugeiconsIcon icon={ArrowUpRight01Icon} className="text-muted-foreground size-4" />
+                <HugeiconsIcon icon={ArrowUpRight01Icon} className="text-app-muted size-4" />
             </SiteLink>
             <button className={HELP_ROW} onClick={() => setSuggesting(true)} type="button">
                 <span className="min-w-0 flex-1">{about.suggest}</span>
-                <HugeiconsIcon icon={ArrowRight01Icon} className="text-muted-foreground size-[18px]" />
+                <HugeiconsIcon icon={ArrowRight01Icon} className="text-app-muted size-4.5" />
             </button>
             <SuggestDialog onClose={() => setSuggesting(false)} open={suggesting} />
         </SettingsCard>

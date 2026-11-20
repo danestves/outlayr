@@ -14,6 +14,7 @@ import { outlayrLedgerState } from "@/lib/money-manager/ledger-state";
 import { readBackupFile } from "@/lib/money-manager/read-backup";
 import { moneyManagerRows, undoMoneyManagerRows } from "@/lib/money-manager/writes";
 import type { MoneyManagerImported } from "@/lib/money-manager/writes";
+import { viewTransition } from "@/lib/motion";
 
 import { takeHandOff } from "../hand-off";
 import { importStore } from "../store";
@@ -46,7 +47,7 @@ export function MoneyManagerImport() {
     const [phase, setPhase] = useState<Phase>({ kind: "intro" });
     const record = useRef<string | null>(null);
 
-    const leave = () => navigate({ to: "/import" });
+    const leave = () => navigate({ to: "/import", viewTransition: viewTransition("push-left", { back: true }) });
 
     const read = async (file: File) => {
         setPhase({ kind: "reading", name: file.name, size: file.size });

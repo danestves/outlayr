@@ -2,7 +2,6 @@ import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
 import CheckmarkCircle02Icon from "@hugeicons/core-free-icons/CheckmarkCircle02Icon";
 import Undo02Icon from "@hugeicons/core-free-icons/Undo02Icon";
 import { Link } from "@tanstack/react-router";
-import { AlertDialog } from "panelui-web/alert-dialog";
 import { Button } from "panelui-web/button";
 import { Table } from "panelui-web/table";
 import { useState } from "react";
@@ -14,6 +13,7 @@ import { accountRows } from "@/components/dashboard/accounts/model";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { money } from "@/lib/ledger";
 import type { MoneyManagerImported } from "@/lib/money-manager/writes";
 
@@ -36,7 +36,9 @@ export function Importing({ draft }: { draft: Draft }) {
     return (
         <ImportPage>
             <MmBar title={importing.heading}>
-                <Button disabled>{importing.title}</Button>
+                <Button aria-busy disabled>
+                    {importing.title}
+                </Button>
             </MmBar>
             <Columns
                 rail={
@@ -44,7 +46,7 @@ export function Importing({ draft }: { draft: Draft }) {
                         <ul className="divide-border divide-y">
                             {steps.map(([label, count]) => (
                                 <li
-                                    className="flex min-h-9 items-center justify-between gap-3 px-4 text-[13px]"
+                                    className="text-app-label flex min-h-9 items-center justify-between gap-3 px-4"
                                     key={label.value}
                                 >
                                     <span className="text-muted-foreground">{label}</span>
@@ -57,7 +59,7 @@ export function Importing({ draft }: { draft: Draft }) {
             >
                 <Card title={importing.writing}>
                     <div className="p-5">
-                        <div className="flex h-105 items-center justify-center rounded-xl border px-4 text-center text-sm">
+                        <div className="rounded-app-lg text-app-body flex h-105 items-center justify-center border px-4 text-center">
                             {fill(importing.body.value, { n: planSize(plan).toLocaleString() })}
                         </div>
                     </div>
@@ -152,7 +154,7 @@ export function Done({ at, entryCount, imported, onUndo, undone }: DoneProps) {
             <Columns
                 rail={
                     <Card title={done.undoTitle}>
-                        <p className="text-muted-foreground px-4 py-3 text-[13px] leading-5">
+                        <p className="text-muted-foreground text-app-label px-4 py-3 leading-5">
                             {fill(done.undoBody.value, { day, n: entryCount.toLocaleString() })}
                         </p>
                         <div className="px-4 pb-4">
@@ -174,7 +176,7 @@ export function Done({ at, entryCount, imported, onUndo, undone }: DoneProps) {
                     <Card
                         action={
                             matching === checks.length ? (
-                                <span className="text-app-income flex items-center gap-1.5 text-xs">
+                                <span className="text-app-income text-app-caption flex items-center gap-1.5">
                                     <span aria-hidden className="bg-app-income size-1.5 rounded-full" />
                                     {done.matchesMm}
                                 </span>
@@ -213,22 +215,20 @@ export function Done({ at, entryCount, imported, onUndo, undone }: DoneProps) {
                     </Card>
                 ) : (
                     <Card>
-                        <p className="text-muted-foreground px-4 py-3 text-[13px]">{done.noCheck}</p>
+                        <p className="text-muted-foreground text-app-label px-4 py-3">{done.noCheck}</p>
                     </Card>
                 )}
             </Columns>
-            <AlertDialog onOpenChange={setAsking} open={asking}>
-                <AlertDialog.Content className="app-shell" tone="destructive">
-                    <AlertDialog.Title>{done.undoConfirm}</AlertDialog.Title>
-                    <AlertDialog.Description>
-                        {fill(done.undoBody.value, { day, n: entryCount.toLocaleString() })}
-                    </AlertDialog.Description>
-                    <AlertDialog.Footer>
-                        <AlertDialog.Cancel>{bar.cancel}</AlertDialog.Cancel>
-                        <AlertDialog.Action onClick={confirm}>{done.undo}</AlertDialog.Action>
-                    </AlertDialog.Footer>
-                </AlertDialog.Content>
-            </AlertDialog>
+            <ConfirmDialog
+                action={done.undo}
+                body={fill(done.undoBody.value, { day, n: entryCount.toLocaleString() })}
+                cancel={bar.cancel}
+                onAction={confirm}
+                onOpenChange={setAsking}
+                open={asking}
+                title={done.undoConfirm}
+                tone="destructive"
+            />
         </ImportPage>
     );
 }

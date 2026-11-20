@@ -1,5 +1,6 @@
 import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
+import Invoice01Icon from "@hugeicons/core-free-icons/Invoice01Icon";
 import PencilEdit02Icon from "@hugeicons/core-free-icons/PencilEdit02Icon";
 import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -12,6 +13,7 @@ import { useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { Empty } from "@/components/dashboard/home/empty";
 import { useDateFormat, usePeriodTitle } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
@@ -19,6 +21,7 @@ import { liveCategories } from "@/lib/category-writes";
 import { categoryBudget } from "@/lib/dashboard-series";
 import { periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { SettingsCard } from "../parts";
 import { CategoryEditor } from "./editor";
@@ -28,7 +31,7 @@ import { categoryFigures } from "./model";
 const ENTRIES_SHOWN = 10;
 const PERCENT = 100;
 const CELL = "whitespace-nowrap";
-const FIGURE_NOTE = "text-muted-foreground min-w-0 truncate text-[13px] leading-5";
+const FIGURE_NOTE = "text-muted-foreground text-app-label min-w-0 truncate";
 const TWO_BY_TWO =
     "max-lg:grid max-lg:grid-cols-2 max-lg:gap-y-5 max-lg:divide-x-0 max-lg:*:odd:border-e max-lg:*:odd:ps-0 max-lg:*:odd:pe-3 max-lg:*:even:ps-3 max-lg:*:even:pe-0";
 
@@ -49,7 +52,7 @@ function Figure({
                 <Kpi.Title>{label}</Kpi.Title>
             </Kpi.Header>
             <Kpi.Value
-                className={`dash-figure text-2xl leading-8 font-semibold tracking-[-0.04em] wrap-anywhere ${quiet ? "text-muted-foreground" : ""}`}
+                className={`dash-figure text-app-figure font-semibold wrap-anywhere ${quiet ? "text-muted-foreground" : ""}`}
             >
                 {value}
             </Kpi.Value>
@@ -82,7 +85,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
         <Button
             aria-label={parent?.name ?? copy.title.value}
             className="text-muted-foreground -ml-2"
-            render={<Link to="/settings/categories" />}
+            render={<Link to="/settings/categories" viewTransition={viewTransition("push-left", { back: true })} />}
             size="sm"
             variant="ghost"
         >
@@ -94,7 +97,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
         return (
             <>
                 <div className="flex min-h-16 items-center">{back}</div>
-                <p className="text-muted-foreground py-8 text-center text-sm">{copy.notFound}</p>
+                <p className="text-muted-foreground text-app-body py-8 text-center">{copy.notFound}</p>
             </>
         );
     }
@@ -126,7 +129,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
             <div className="flex min-h-16 flex-wrap items-center gap-2 py-2">
                 {back}
                 <LookTile look={category} size="lg" />
-                <h1 className="mr-auto min-w-0 truncate text-lg font-semibold tracking-[-0.02em]">{category.name}</h1>
+                <h1 className="text-app-heading mr-auto min-w-0 truncate font-semibold">{category.name}</h1>
                 <div className="flex items-center gap-1">
                     <Button
                         aria-label={copy.previousMonth.value}
@@ -136,7 +139,9 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                     >
                         <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
                     </Button>
-                    <span className="dash-figure text-[13px] font-medium whitespace-nowrap">{periodTitle(period)}</span>
+                    <span className="dash-figure text-app-label font-medium whitespace-nowrap">
+                        {periodTitle(period)}
+                    </span>
                     <Button
                         aria-label={copy.nextMonth.value}
                         disabled={key >= filters.currentKey}
@@ -153,7 +158,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                 </Button>
             </div>
             <div className="flex flex-col gap-4">
-                <Kpi.Group className={`rounded-2xl ${TWO_BY_TWO}`} surface>
+                <Kpi.Group className={`rounded-app-2xl ${TWO_BY_TWO}`} surface>
                     <Figure
                         label={category.income ? copy.earned : copy.spent}
                         value={money(figures.spent, ledger.currency)}
@@ -181,7 +186,11 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                         {copy.allTime({ count: figures.allTime })}
                     </Figure>
                 </Kpi.Group>
-                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+                <div
+                    className={
+                        category.parentId === null ? "grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]" : "grid gap-4"
+                    }
+                >
                     <SettingsCard title={copy.last5}>
                         <div className="px-4 py-3" style={barColors}>
                             <BarChart aspectRatio={2.4} data={months} label={copy.last5.value} stacked xDataKey="key">
@@ -201,10 +210,11 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                         <SettingsCard title={copy.subcategories}>
                             {children.map((child) => (
                                 <Link
-                                    className="border-border flex h-11 items-center gap-2.5 border-b px-4 text-[13px]"
+                                    className="border-border text-app-label flex h-11 items-center gap-2.5 border-b px-4"
                                     key={child.localId}
                                     params={{ categoryId: child.localId }}
                                     to="/settings/categories/$categoryId"
+                                    viewTransition={viewTransition("push-left")}
                                 >
                                     <LookTile look={child} />
                                     <span className="min-w-0 flex-1 truncate font-medium">{child.name}</span>
@@ -214,7 +224,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                                 </Link>
                             ))}
                             {children.length > 0 ? (
-                                <div className="border-border text-muted-foreground flex h-11 items-center justify-between border-b px-4 text-[13px]">
+                                <div className="border-border text-muted-foreground text-app-label flex h-11 items-center justify-between border-b px-4">
                                     <span>{copy.notInSub}</span>
                                     <span className="dash-figure">{money(unfiled, ledger.currency)}</span>
                                 </div>
@@ -252,7 +262,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                     title={copy.entries}
                 >
                     {shown.length === 0 ? (
-                        <p className="text-muted-foreground px-5 py-8 text-center text-sm">{copy.noEntries}</p>
+                        <Empty icon={Invoice01Icon} title={copy.noEntries} />
                     ) : (
                         <Table framed aria-label={copy.entries.value} maxHeight="none">
                             <Table.Header className="in-data-[sticky]:bg-card">
@@ -266,13 +276,13 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                             <Table.Body>
                                 {shown.map((row) => (
                                     <Table.Row key={row.id}>
-                                        <Table.Cell className={`${CELL} max-w-[260px]`}>
+                                        <Table.Cell className={`${CELL} max-w-64`}>
                                             <span className="flex min-w-0 items-center gap-2">
                                                 <span className="truncate font-medium">
                                                     {row.note.trim() || category.name}
                                                 </span>
                                                 {row.categoryId && row.categoryId !== category.localId ? (
-                                                    <span className="text-muted-foreground truncate text-xs">
+                                                    <span className="text-muted-foreground text-app-caption truncate">
                                                         {names.get(row.categoryId)?.name}
                                                     </span>
                                                 ) : null}
@@ -284,8 +294,8 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                                         <Table.Cell className={`${CELL} dash-figure text-muted-foreground`}>
                                             {date.day(row.day)}
                                         </Table.Cell>
-                                        <Table.Cell align="end" className={`${CELL} dash-figure text-sm font-medium`}>
-                                            {money(row.amount, ledger.currency)}
+                                        <Table.Cell align="end" className={`${CELL} dash-figure font-medium`}>
+                                            <span className="text-app-body">{money(row.amount, ledger.currency)}</span>
                                         </Table.Cell>
                                     </Table.Row>
                                 ))}

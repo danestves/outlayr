@@ -18,9 +18,11 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { DialogContent } from "@/components/ui/dialog-content";
 import { authClient } from "@/lib/auth-client";
 import { convexClient } from "@/lib/convex";
 import { csvFromArchive, csvFromNotionTables, isZip } from "@/lib/import-archive";
+import { viewTransition } from "@/lib/motion";
 
 import { handOff } from "./hand-off";
 import { FilePicker } from "./parts";
@@ -61,7 +63,7 @@ function useStartFile() {
     const navigate = useNavigate();
     return (csv: string, name: string) => {
         handOff(new File([csv], `${name}.csv`, { type: "text/csv" }), "notion");
-        void navigate({ search: { kind: "csv" }, to: "/import/file" });
+        void navigate({ search: { kind: "csv" }, to: "/import/file", viewTransition: viewTransition("push-left") });
     };
 }
 
@@ -86,7 +88,7 @@ export function useExportUpload(onError: (message: string) => void) {
 
 function Failure({ children }: { children: ReactNode }) {
     return (
-        <p className="text-destructive pt-3 text-[13px] leading-5" role="alert">
+        <p className="text-destructive text-app-label pt-3 leading-5" role="alert">
             {children}
         </p>
     );
@@ -101,7 +103,7 @@ function ConnectBody({ onClose }: { onClose: () => void }) {
         <>
             <Dialog.Header>
                 <Dialog.Title>{notion.title}</Dialog.Title>
-                <Dialog.Description className="text-[13px] leading-5">{notion.text}</Dialog.Description>
+                <Dialog.Description className="text-app-label! leading-5">{notion.text}</Dialog.Description>
             </Dialog.Header>
             <Dialog.Body>
                 <RadioGroup
@@ -166,7 +168,7 @@ function MoreRow({
 }) {
     return (
         <button
-            className={`hover:bg-app-fill/60 flex h-11 w-full items-center gap-2.5 border-t text-start text-[13px] font-medium ${tone}`}
+            className={`hover:bg-app-fill/60 text-app-label flex h-11 w-full items-center gap-2.5 border-t text-start font-medium ${tone}`}
             onClick={onClick}
             type="button"
         >
@@ -238,7 +240,7 @@ function DatabasesBody({ notion: state, onClose }: { notion: ReturnType<typeof u
                 <Dialog.Title>{data?.workspaceName ?? notion.workspace}</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body className="gap-0">
-                <div className="flex h-8 items-center border-b text-[13px] font-medium">
+                <div className="text-app-label flex h-8 items-center border-b font-medium">
                     {notion.databases}
                     {ledgers.length > 0 ? (
                         <span className="dash-figure text-muted-foreground ml-auto">
@@ -246,7 +248,7 @@ function DatabasesBody({ notion: state, onClose }: { notion: ReturnType<typeof u
                         </span>
                     ) : null}
                 </div>
-                {isPending ? <p className="text-muted-foreground py-4 text-[13px]">{notion.loading}</p> : null}
+                {isPending ? <p className="text-muted-foreground text-app-label py-4">{notion.loading}</p> : null}
                 {trouble ? (
                     <div className="flex items-center gap-3 py-3">
                         <Failure>{notion.error[trouble]}</Failure>
@@ -261,7 +263,7 @@ function DatabasesBody({ notion: state, onClose }: { notion: ReturnType<typeof u
                     </div>
                 ) : null}
                 {data && sources.length === 0 ? (
-                    <p className="text-muted-foreground py-4 text-[13px]">{notion.noDatabases}</p>
+                    <p className="text-muted-foreground text-app-label py-4">{notion.noDatabases}</p>
                 ) : null}
                 <ul className="max-h-72 overflow-y-auto">
                     {sources.map((source) => (
@@ -277,8 +279,8 @@ function DatabasesBody({ notion: state, onClose }: { notion: ReturnType<typeof u
                                     onCheckedChange={() => flip(source.id)}
                                 />
                                 <span className="min-w-0">
-                                    <b className="block truncate text-sm font-medium">{source.title}</b>
-                                    <small className="text-muted-foreground block truncate text-[13px]">
+                                    <b className="text-app-body block truncate font-medium">{source.title}</b>
+                                    <small className="text-muted-foreground text-app-label block truncate">
                                         {source.ledger ? source.columns.join(", ") : notion.noDateAmount}
                                     </small>
                                 </span>
@@ -286,7 +288,7 @@ function DatabasesBody({ notion: state, onClose }: { notion: ReturnType<typeof u
                         </li>
                     ))}
                 </ul>
-                <p className="mt-4 flex h-8 items-center text-[13px] font-medium">{notion.more}</p>
+                <p className="text-app-label mt-4 flex h-8 items-center font-medium">{notion.more}</p>
                 <MoreRow icon={LinkSquare02Icon} onClick={() => connect()}>
                     {notion.shareMore}
                 </MoreRow>
@@ -306,7 +308,7 @@ function DatabasesBody({ notion: state, onClose }: { notion: ReturnType<typeof u
                 <Button onClick={onClose} variant="secondary">
                     {cancel}
                 </Button>
-                <Button disabled={busy || chosen.size === 0} onClick={() => read()}>
+                <Button aria-busy={busy} disabled={busy || chosen.size === 0} onClick={() => read()}>
                     {importLabel}
                 </Button>
             </Dialog.Footer>
@@ -318,13 +320,13 @@ export function NotionDialog({ onClose, open }: { onClose: () => void; open: boo
     const notion = useNotion();
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open}>
-            <Dialog.Content className="app-shell" size={notion.connected ? "lg" : "md"}>
+            <DialogContent size={notion.connected ? "lg" : "md"}>
                 {notion.connected ? (
                     <DatabasesBody notion={notion} onClose={onClose} />
                 ) : (
                     <ConnectBody onClose={onClose} />
                 )}
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }

@@ -254,6 +254,45 @@ From the canvas page `Web · Insights`, under `components/dashboard/insights`:
 - **Loading:** `insights-pending.tsx` draws the real screen over the sampled ledger inside a static skullet skeleton.
 - **Raw controls:** the row and stretched-link targets stay raw buttons: a part would add chrome the frames do not draw.
 
+## Settings
+
+From the canvas page `Web · Settings`, under `components/dashboard/settings`:
+
+- **Chrome:** the nav column is 208 wide (`w-52`) and `SectionHead` is the Settings header, with an `IconButton` back on narrow screens. Rows are `min-h-app-row` on `border-app-rule`.
+- **Busy buttons:** a server call keeps its button's variant, disables it, sets `aria-busy` and swaps the label for the progress copy ("Saving…", "Sending…", "Claiming…", "Opening…"), as the Data export frame draws "Preparing the file…". Button `loading` is gone from Settings.
+- **Dialogs:** the account, invite, suggest, currency picker, category editor, symbol picker, connect and erase dialogs are on `DialogContent`. Unlink a sign-in, delete the account, disconnect an agent and replace the ledger are destructive `ConfirmDialog`s. Deleting a category stays immediate with an undo toast.
+- **Sheets:** the license detail is a `SheetContent`.
+- **Menus:** the categories and connections row menus are 240 wide on `MenuContent`. Selects (language, month start, time, the category parent) stay PanelUI `Select`.
+- **Motion:** a category row and a subcategory push left and the detail's back reverses. The Expense and Income swap, the Data tabs and the About tabs dissolve.
+- **Empty:** no categories on a side, a category with no entries, no friends yet, no agents and nothing recently deleted use the dashboard's one-icon `Empty`. The frames' ghost rows are not drawn.
+- **Loading:** sections render inside the shell's `Sampled` skeleton, and live data sits in skullet `Skeleton`s.
+- **Not built:** frames with no web code keep the current screens: the second delete row, the sign-out confirm and the email link flow on Account, Number entry on Preferences, the subscription and installment cards on Notifications, the category move and delete-entries dialogs and the manage subcategories dialog, and every Connections source but agents (bank, Apple Pay, Google Wallet, the source picker, agent detail and codes).
+
+## Import
+
+From the canvas page `Web · Import`, under `components/dashboard/import`:
+
+- **Chrome:** `ImportBar`, the `Stepper`, the `DROPZONE` and `MmBar` are the chrome guide's parts, on contract tokens. The notice bands are the app's own `Banner`.
+- **Motion:** source choice to a file or Money Manager pushes left, and cancel or leave reverses. The New and History tabs and the review filter tabs dissolve. Match, resolve, review and importing are state swaps inside one route, so they do not animate.
+- **Menus:** the category, account and record menus are 240 wide on `MenuContent`, and history's row action is an `IconButton`.
+- **Progress:** reading is the static two-step bar with a `1/2` or `2/2` figure. Importing is a single await, so it shows no bar and no invented count.
+- **Empty:** no imports yet and a match with no preview use the dashboard's one-icon `Empty`. The ghost history and ghost preview are gone, and so are `.dash-gl` and `.dash-gx`.
+- **Loading:** `import-pending.tsx` is a skullet `Skeleton` over the real source rows, drop zone and tabs.
+- **Undo:** the undo dialog stays a raw `AlertDialog` at 422 with its fact rows, because `ConfirmDialog` has no slot between the description and the footer. It still puts `app-shell` on by hand.
+
+## Rules
+
+From the canvas page `Web · Rules`, under `components/dashboard/rules`:
+
+- **Header:** the Page bar (`AccountsBar`).
+- **Editor:** create, edit and test share one right `SheetContent` (a full bottom sheet on narrow screens), as the frames and the sheet guide draw it. Rule and Test dissolve inside it.
+- **Confirms:** run on past entries (`md`) and delete (`sm`) stay a Dialog on `DialogContent`, and delete ends in an undo toast.
+- **Menus:** the row menu is 240 wide on `MenuContent`. The drag handle and the condition remove buttons are `IconButton`s.
+- **Motion:** the All, Suggested and Conflicts tabs dissolve. The sheet slides up and down, and menus and dialogs are instant.
+- **Empty:** no rules, no suggestions, no conflicts and a test with no matches use the dashboard's one-icon `Empty`. `.dash-empty` and the ghost table are gone.
+- **Categories:** a rule that sets a subcategory reads its name and colour from the ledger's category rows, falling back to the parent's colour.
+- **Loading:** `rules-pending.tsx` is unchanged.
+
 ## Primitives
 
 | Part         | Use                                                    | Notes                                                                                                   |
@@ -278,20 +317,20 @@ The shell is on the primitives: the account menu and the period menu use `MenuCo
 These still use `AmountInput` (`components/dashboard/accounts/fields.tsx`) or a bare `inputMode="decimal"` input. Each one moves in its screen's phase:
 
 - `AmountInput`: `transactions/transfer-editor.tsx`
-- Bare decimal inputs: `onboarding/first-entry.tsx`, `import/money-manager/overview.tsx`, `import/file-done.tsx`, `settings/plan.tsx`
-- Not amount entry, so they stay as they are: `transactions/filter-row.tsx` (the amount filter) and `settings/currency-converter.tsx` (a converter, closer to Exchange). The transfer flow already uses Exchange.
+- Bare decimal inputs: `onboarding/first-entry.tsx`
+- Not amount entry, so they stay as they are: `transactions/filter-row.tsx` (the amount filter), `settings/currency-converter.tsx` (a converter, closer to Exchange) and the unreadable-amount fix in `import/file-done.tsx` (raw cell text the parser reads again, inside a 128 wide table cell). The transfer flow already uses Exchange.
+- `settings/plan.tsx` and `import/money-manager/overview.tsx` had no decimal input left to move.
 
 ## Off contract
 
 These are known and left for the screen phases:
 
-- **Hand-drawn classes:** 20 `.dash-*` classes in `apps/app/src/index.css` (`dash-btn`, `dash-seg`, `dash-menu`, `dash-chip`, `dash-check` and others) redraw parts PanelUI has. Their shadows now read the tokens.
+- **Hand-drawn classes:** 17 `.dash-*` classes in `apps/app/src/index.css` (`dash-btn`, `dash-seg`, `dash-menu`, `dash-chip`, `dash-check` and others) redraw parts PanelUI has. Their shadows now read the tokens.
 - **Arbitrary values:** about 1,360 arbitrary Tailwind values and 245 inline `style={...}` props under `apps/app/src`.
-- **Hard-coded colours:** 20 hex colours in 11 non-test source files, such as the identity picker and the provider icons.
+- **Hard-coded colours:** 19 hex colours in 10 non-test source files, such as the identity picker and the provider icons.
 - **Raw controls:** 35 files with a raw `<button>` and 14 with a raw `<input>`. The account sheet's sign-out row stays a raw `<button>` until there is a row part, because Button's ghost hover and weight would change the row.
-- **Spinners:** Button `loading` draws a spinner in `settings/invite.tsx`, `settings/plan.tsx`, `settings/account.tsx` and `settings/about/suggest.tsx`.
-- **Menu timing:** every menu except the account, period, dashboard filter, Transactions, Accounts, Goals, Recurring, Debts, Installments and Insights menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
-- **Hand-placed scope:** 74 files put `app-shell ph-no-capture` on portaled content by hand. `DialogContent`, `SheetContent` and `MenuContent` replace that.
+- **Menu timing:** every menu except the account, period, dashboard filter, Transactions, Accounts, Goals, Recurring, Debts, Installments, Insights, Settings, Import and Rules menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
+- **Hand-placed scope:** 28 files outside `components/ui` still put `app-shell` on portaled content by hand. `DialogContent`, `SheetContent` and `MenuContent` replace that.
 - **Accent inside the shell:** `accentCss` (`lib/accent.ts`) writes the tint and on-tint on `:root`. The shell scope sets `--color-app-on-tint` again in both themes, and `--color-app-tint` again in dark, so inside the shell a non-default accent shows as vermilion in dark and keeps the default on-tint. This was already the case before this phase.
 - **Pages outside the shell:** `login` and `connect`, and any portal without `app-shell`, read the phone's dark palette from `:root`. So does `html` itself, whose background is `--color-app-bg`.
 - **What syncs:** `settings/sync.tsx` lists what syncs and what stays on each phone. No frame has it yet: it fills the Sync frames' right column, where the canvas draws a Devices table the app doesn't have.

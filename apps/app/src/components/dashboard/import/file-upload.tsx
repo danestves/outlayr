@@ -124,7 +124,7 @@ function ProblemRail({ kind }: { kind: Kind }) {
             <div className="pt-4 [&>div]:border-t [&>div]:border-b-0">
                 {rows.map(([label, hint]) => (
                     <div
-                        className="flex min-h-9 items-center gap-3 border-b px-4 text-[13px] last:border-0"
+                        className="text-app-label flex min-h-9 items-center gap-3 border-b px-4 last:border-0"
                         key={label.value}
                     >
                         <span className="text-muted-foreground">{label}</span>
@@ -193,17 +193,20 @@ export function UploadStep({
             return (
                 <div className="w-full max-w-110 text-start">
                     <div className="flex items-center gap-3">
-                        <span className="bg-app-fill text-primary flex size-10 flex-none items-center justify-center rounded-[10px]">
+                        <span className="bg-app-fill text-primary rounded-app-md flex size-10 flex-none items-center justify-center">
                             <Glyph icon={kind === "pdf" ? Pdf02Icon : Note01Icon} size={18} />
                         </span>
-                        <div className="min-w-0">
-                            <b className="block truncate text-sm font-semibold">
+                        <div className="min-w-0 flex-1">
+                            <b className="text-app-body block truncate font-semibold">
                                 {state.phase === "uploading" ? upload.uploading : upload.reading}
                             </b>
-                            <small className="text-muted-foreground block truncate text-[13px]">
+                            <small className="text-muted-foreground text-app-label block truncate">
                                 {state.file.name}
                             </small>
                         </div>
+                        <span className="dash-figure text-app-label flex-none">
+                            {state.phase === "uploading" ? "1/2" : "2/2"}
+                        </span>
                     </div>
                     <div aria-hidden className="mt-4 grid grid-cols-2 gap-1">
                         <i className="bg-primary h-1.5 rounded-full" />
@@ -211,7 +214,7 @@ export function UploadStep({
                             className={`h-1.5 rounded-full ${state.phase === "reading" ? "bg-primary" : "bg-app-fill"}`}
                         />
                     </div>
-                    <p className="text-muted-foreground mt-3 text-[13px] leading-5">{upload.readingNote}</p>
+                    <p className="text-muted-foreground text-app-label mt-3 leading-5">{upload.readingNote}</p>
                 </div>
             );
         }
@@ -221,8 +224,8 @@ export function UploadStep({
             return (
                 <>
                     <DropTile bad={state.problem !== "aiOff"} icon={SparklesIcon} />
-                    <b className="text-[15px] leading-5 font-semibold">{text.title}</b>
-                    <p className="text-muted-foreground mt-1.5 max-w-90 text-[13px] leading-5">{text.hint}</p>
+                    <b className="text-app-title leading-5 font-semibold">{text.title}</b>
+                    <p className="text-muted-foreground text-app-label mt-1.5 max-w-90 leading-5">{text.hint}</p>
                     <div className="mt-4 flex flex-wrap justify-center gap-2">
                         {offerCsv ? (
                             <Button onClick={onCsvInstead} size="sm" variant="outline">
@@ -243,8 +246,8 @@ export function UploadStep({
         return (
             <>
                 <DropTile over={drop.over} />
-                <b className="text-[15px] leading-5 font-semibold">{dropTitle}</b>
-                <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
+                <b className="text-app-title leading-5 font-semibold">{dropTitle}</b>
+                <p className="text-muted-foreground text-app-label mt-1.5 leading-5">
                     {kind === "pdf" ? upload.dropPdfHint : upload.dropCsvHint}
                 </p>
                 <div className={drop.over ? "hidden" : "mt-4"}>

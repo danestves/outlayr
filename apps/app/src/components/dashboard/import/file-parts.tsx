@@ -12,6 +12,7 @@ import { useCategoryLook, useShortDay } from "@/components/dashboard/rules/parts
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { Pick, useCategoryOptions } from "@/components/dashboard/transactions/entry-form";
 import { AccountTile } from "@/components/ledger/tiles";
+import { MenuContent } from "@/components/ui/menu-content";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import type { CategoryChoice } from "@/lib/import-plan";
 
@@ -63,7 +64,7 @@ export function AccountShown({ id }: { id: string | null }) {
     const options = useAccountOptions();
     const option = options.find((each) => each.value === id);
     return (
-        <span className="flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium">
+        <span className="rounded-app-sm text-app-body flex h-9 items-center gap-2 border px-3 font-medium">
             {option?.icon}
             <span className="truncate">{option?.label ?? match.none}</span>
         </span>
@@ -71,7 +72,7 @@ export function AccountShown({ id }: { id: string | null }) {
 }
 
 const CHIP =
-    "inline-flex h-6 max-w-full items-center gap-1.5 rounded-md border px-2 text-xs font-medium whitespace-nowrap";
+    "inline-flex h-6 max-w-full items-center gap-1.5 rounded-app-xs border px-2 text-app-caption font-medium whitespace-nowrap";
 
 export function CategoryChip({
     choice,
@@ -124,7 +125,7 @@ export function CategoryChip({
                 {face}
                 <Glyph className="text-muted-foreground flex-none" icon={ArrowDown01Icon} size={12} />
             </Menu.Trigger>
-            <Menu.Content className="app-shell ph-no-capture z-[60] max-h-80 overflow-y-auto">
+            <MenuContent className="z-60 max-h-80 w-60 overflow-y-auto">
                 {options.map((option) => (
                     <Menu.Item key={option.value} onClick={() => onPick({ id: option.value, kind: "existing" })}>
                         {option.icon}
@@ -144,7 +145,7 @@ export function CategoryChip({
                         {resolve.noCategory}
                     </Menu.Item>
                 )}
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -186,7 +187,7 @@ export function Pager({
                 <span className="flex gap-1.5">
                     <button
                         aria-label={review.previous.value}
-                        className="hover:bg-app-fill flex size-8 items-center justify-center rounded-lg border disabled:opacity-40"
+                        className="hover:bg-app-fill rounded-app-sm flex size-8 items-center justify-center border disabled:opacity-40"
                         disabled={page === 0}
                         onClick={onPrevious}
                         type="button"
@@ -195,7 +196,7 @@ export function Pager({
                     </button>
                     <button
                         aria-label={review.next.value}
-                        className="hover:bg-app-fill flex size-8 items-center justify-center rounded-lg border disabled:opacity-40"
+                        className="hover:bg-app-fill rounded-app-sm flex size-8 items-center justify-center border disabled:opacity-40"
                         disabled={page >= pages - 1}
                         onClick={onNext}
                         type="button"

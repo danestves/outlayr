@@ -148,7 +148,7 @@ export function Accounts({ draft, onBack, onChoices }: Props) {
                         </Card>
                     );
                 })}
-                <p className="text-muted-foreground text-[13px] leading-5">{copy.note}</p>
+                <p className="text-muted-foreground text-app-label leading-5">{copy.note}</p>
             </div>
         </ImportPage>
     );

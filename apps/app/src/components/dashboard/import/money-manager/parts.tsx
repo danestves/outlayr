@@ -10,17 +10,15 @@ import { useIntlayer } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { KpiBand } from "@/components/dashboard/accounts/parts";
+import { IconButton } from "@/components/ui/icon-button";
+import { MenuContent } from "@/components/ui/menu-content";
 
 export function MmBar({ children, onBack, title }: { children?: ReactNode; onBack?: () => void; title: ReactNode }) {
     const { bar } = useIntlayer("dashboard-import-mm");
     return (
         <div className="flex min-h-16 flex-wrap items-center gap-x-3 gap-y-2 py-3">
-            {onBack ? (
-                <Button aria-label={bar.back.value} onClick={onBack} size="icon" variant="ghost">
-                    <Glyph icon={ArrowLeft01Icon} size={16} />
-                </Button>
-            ) : null}
-            <h1 className="text-lg leading-6 font-semibold tracking-[-0.02em]">{title}</h1>
+            {onBack ? <IconButton icon={ArrowLeft01Icon} label={bar.back.value} onClick={onBack} /> : null}
+            <h1 className="text-app-heading leading-6 font-semibold">{title}</h1>
             <div className="ml-auto flex items-center gap-2">{children}</div>
         </div>
     );
@@ -28,7 +26,7 @@ export function MmBar({ children, onBack, title }: { children?: ReactNode; onBac
 
 export function Tile({ icon }: { icon: Parameters<typeof Glyph>[0]["icon"] }) {
     return (
-        <span className="bg-app-fill text-muted-foreground flex size-9 flex-none items-center justify-center rounded-lg">
+        <span className="bg-app-fill text-muted-foreground rounded-app-sm flex size-9 flex-none items-center justify-center">
             <Glyph icon={icon} size={18} />
         </span>
     );
@@ -36,7 +34,7 @@ export function Tile({ icon }: { icon: Parameters<typeof Glyph>[0]["icon"] }) {
 
 export function ValueRow({ label, value }: { label: ReactNode; value: ReactNode }) {
     return (
-        <div className="flex items-center justify-between gap-3 px-4 py-2.5 text-xs leading-4">
+        <div className="text-app-caption flex items-center justify-between gap-3 px-4 py-2.5 leading-4">
             <span className="text-muted-foreground">{label}</span>
             <span className="dash-figure">{value}</span>
         </div>
@@ -61,9 +59,9 @@ export function NavRow({
         <>
             {leading}
             <span className="min-w-0 flex-1">
-                <b className="block truncate text-sm leading-5 font-medium">{title}</b>
+                <b className="text-app-body block truncate leading-5 font-medium">{title}</b>
                 {detail ? (
-                    <small className={`block truncate text-xs leading-4 ${tone || "text-muted-foreground"}`}>
+                    <small className={`text-app-caption block truncate leading-4 ${tone || "text-muted-foreground"}`}>
                         {detail}
                     </small>
                 ) : null}
@@ -93,7 +91,7 @@ export interface PickGroup {
     title?: ReactNode;
 }
 
-const CAPTION = "text-muted-foreground px-2 pt-1.5 pb-1 text-xs leading-4";
+const CAPTION = "text-muted-foreground px-2 pt-1.5 pb-1 text-app-caption leading-4";
 
 export function Pick({ groups, label }: { groups: readonly PickGroup[]; label: ReactNode }) {
     return (
@@ -106,7 +104,7 @@ export function Pick({ groups, label }: { groups: readonly PickGroup[]; label: R
                     </Button>
                 }
             />
-            <Menu.Content align="end" className="app-shell max-h-80 w-60 overflow-y-auto" sideOffset={6}>
+            <MenuContent align="end" className="max-h-80 w-60 overflow-y-auto" sideOffset={6}>
                 {groups.map((group, index) => (
                     <div key={index}>
                         {index > 0 ? <Menu.Separator /> : null}
@@ -119,7 +117,7 @@ export function Pick({ groups, label }: { groups: readonly PickGroup[]; label: R
                         ))}
                     </div>
                 ))}
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -147,8 +145,8 @@ export function RadioLine({
                 type="radio"
             />
             <span className="min-w-0 flex-1">
-                <b className="block text-sm leading-5 font-medium">{children}</b>
-                {hint ? <small className="text-muted-foreground block text-xs leading-4">{hint}</small> : null}
+                <b className="text-app-body block leading-5 font-medium">{children}</b>
+                {hint ? <small className="text-muted-foreground text-app-caption block leading-4">{hint}</small> : null}
             </span>
         </label>
     );
@@ -163,7 +161,7 @@ export function Figures({ items }: { items: readonly { label: ReactNode; value: 
                         <Kpi.Header>
                             <Kpi.Title>{label}</Kpi.Title>
                         </Kpi.Header>
-                        <Kpi.Value className="dash-figure mt-2 mb-0.5 truncate leading-7 font-semibold tracking-[-0.04em]">
+                        <Kpi.Value className="dash-figure mt-2 mb-0.5 truncate leading-7 font-semibold">
                             {value.toLocaleString()}
                         </Kpi.Value>
                     </Kpi>

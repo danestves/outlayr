@@ -7,6 +7,8 @@ import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { SheetContent } from "@/components/ui/sheet-content";
+
 import licenses from "../../../../../../native/src/screens/settings/licenses.json";
 
 const NAMED = ["MIT", "Apache-2.0", "ISC"] as const;
@@ -62,7 +64,7 @@ export function LicensesTab() {
                         <Table.Body>
                             {rows.map((row) => (
                                 <Table.Row key={row.name}>
-                                    <Table.Cell className="max-w-[260px] truncate font-medium">
+                                    <Table.Cell className="max-w-65 truncate font-medium">
                                         <button
                                             className="truncate text-left hover:underline"
                                             onClick={() => setOpen(row)}
@@ -71,8 +73,8 @@ export function LicensesTab() {
                                             {row.name}
                                         </button>
                                     </Table.Cell>
-                                    <Table.Cell className="dash-figure text-muted-foreground">{row.version}</Table.Cell>
-                                    <Table.Cell align="end" className="text-muted-foreground">
+                                    <Table.Cell className="dash-figure text-app-muted">{row.version}</Table.Cell>
+                                    <Table.Cell align="end" className="text-app-muted">
                                         {row.license}
                                     </Table.Cell>
                                 </Table.Row>
@@ -82,7 +84,7 @@ export function LicensesTab() {
                 </Frame.Panel>
                 <Frame.Footer className="text-sm">
                     <div className="flex w-full items-center justify-between">
-                        <span className="dash-figure text-muted-foreground">
+                        <span className="dash-figure text-app-muted">
                             {copy.ofTotal({ shown: rows.length, total: shown.length })}
                         </span>
                         {shown.length > COLLAPSED ? (
@@ -94,26 +96,26 @@ export function LicensesTab() {
                 </Frame.Footer>
             </Frame>
             <Sheet onOpenChange={(next) => next || setOpen(null)} open={open !== null} side="right">
-                <Sheet.Content className="app-shell">
+                <SheetContent>
                     <Sheet.Header>
                         <Sheet.Title>{open?.name}</Sheet.Title>
                     </Sheet.Header>
                     <Sheet.Body>
-                        <dl className="border-border mb-3 border-b text-[13px]">
-                            <div className="border-border flex justify-between border-t py-2.5">
-                                <dt className="text-muted-foreground">{copy.versionColumn}</dt>
+                        <dl className="border-app-rule text-app-label mb-3 border-b">
+                            <div className="border-app-rule flex justify-between border-t py-2.5">
+                                <dt className="text-app-muted">{copy.versionColumn}</dt>
                                 <dd className="dash-figure">{open?.version}</dd>
                             </div>
-                            <div className="border-border flex justify-between border-t py-2.5">
-                                <dt className="text-muted-foreground">{copy.license}</dt>
+                            <div className="border-app-rule flex justify-between border-t py-2.5">
+                                <dt className="text-app-muted">{copy.license}</dt>
                                 <dd className="font-medium">{open?.license}</dd>
                             </div>
                         </dl>
-                        <p className="text-muted-foreground text-[13px] leading-5 wrap-anywhere whitespace-pre-wrap">
+                        <p className="text-app-muted text-app-label wrap-anywhere whitespace-pre-wrap">
                             {open?.text || copy.noText}
                         </p>
                     </Sheet.Body>
-                </Sheet.Content>
+                </SheetContent>
             </Sheet>
         </div>
     );

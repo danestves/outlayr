@@ -1,18 +1,20 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
+import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
-import { Table } from "panelui-web/table";
 import { Tabs } from "panelui-web/tabs";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { Empty } from "@/components/dashboard/home/empty";
 import { SuggestDialog } from "@/components/dashboard/settings/about/suggest";
+import { viewTransition } from "@/lib/motion";
 
 import { handOff, kindOf, routeOf } from "./hand-off";
-import { CELL, HEAD, HistoryKpis, HistoryTable, ImportTable, LastImportCard } from "./history";
+import { HistoryKpis, HistoryTable, ImportTable, LastImportCard } from "./history";
 import { NotionDialog, useExportUpload, useNotion } from "./notion";
 import { Card, Columns, DROPZONE, FilePicker, ImportBar, ImportPage, NOTE, SourceTile, useFileDrop } from "./parts";
 import { useImportHistory } from "./store";
@@ -42,11 +44,15 @@ function useOpenFile() {
         }
         handOff(file);
         const to = routeOf(file);
-        void navigate(to === "/import/file" ? { search: { kind: kindOf(file) }, to } : { to });
+        void navigate(
+            to === "/import/file"
+                ? { search: { kind: kindOf(file) }, to, viewTransition: viewTransition("push-left") }
+                : { to, viewTransition: viewTransition("push-left") }
+        );
     };
 }
 
-function ImportTabs({ count, onTab, tab }: { count: number; onTab: (tab: Tab) => void; tab: Tab }) {
+export function ImportTabs({ count, onTab, tab }: { count: number; onTab: (tab: Tab) => void; tab: Tab }) {
     const { tabs } = useIntlayer("dashboard-import");
     return (
         <Tabs
@@ -66,7 +72,7 @@ function ImportTabs({ count, onTab, tab }: { count: number; onTab: (tab: Tab) =>
     );
 }
 
-function SourceRow({
+export function SourceRow({
     hint,
     onClick,
     source,
@@ -85,8 +91,8 @@ function SourceRow({
         >
             <SourceTile size="md" source={source} />
             <span className="min-w-0 flex-1">
-                <b className="block truncate text-sm leading-5 font-medium">{title}</b>
-                <small className="text-muted-foreground block truncate text-[13px] leading-5">{hint}</small>
+                <b className="text-app-body block truncate leading-5 font-medium">{title}</b>
+                <small className="text-muted-foreground text-app-label block truncate leading-5">{hint}</small>
             </span>
             <Glyph className="text-muted-foreground flex-none" icon={ArrowRight01Icon} size={16} />
         </button>
@@ -106,30 +112,44 @@ function Sources({ onNotion }: { onNotion: () => void }) {
     return (
         <div className="grid grid-cols-1 border-b @3xl:grid-cols-2 @3xl:divide-x">
             <div className={column}>
-                <h3 className="text-muted-foreground flex h-11 items-center border-b px-4 text-[13px] font-medium">
+                <h3 className="text-muted-foreground text-app-label flex h-11 items-center border-b px-4 font-medium">
                     {sources.fromApp}
                 </h3>
                 <SourceRow
                     hint={sources.moneyManagerHint}
-                    onClick={() => navigate({ to: "/import/money-manager" })}
+                    onClick={() =>
+                        navigate({ to: "/import/money-manager", viewTransition: viewTransition("push-left") })
+                    }
                     source="moneyManager"
                     title={sources.moneyManager}
                 />
                 <SourceRow hint={notionHint} onClick={onNotion} source="notion" title={sources.notion} />
             </div>
             <div className={`${column} @max-3xl:border-t`}>
-                <h3 className="text-muted-foreground flex h-11 items-center border-b px-4 text-[13px] font-medium">
+                <h3 className="text-muted-foreground text-app-label flex h-11 items-center border-b px-4 font-medium">
                     {sources.fromFile}
                 </h3>
                 <SourceRow
                     hint={sources.csvHint}
-                    onClick={() => navigate({ search: { kind: "csv" }, to: "/import/file" })}
+                    onClick={() =>
+                        navigate({
+                            search: { kind: "csv" },
+                            to: "/import/file",
+                            viewTransition: viewTransition("push-left"),
+                        })
+                    }
                     source="csv"
                     title={sources.csv}
                 />
                 <SourceRow
                     hint={sources.pdfHint}
-                    onClick={() => navigate({ search: { kind: "pdf" }, to: "/import/file" })}
+                    onClick={() =>
+                        navigate({
+                            search: { kind: "pdf" },
+                            to: "/import/file",
+                            viewTransition: viewTransition("push-left"),
+                        })
+                    }
                     source="pdf"
                     title={sources.pdf}
                 />
@@ -138,13 +158,13 @@ function Sources({ onNotion }: { onNotion: () => void }) {
     );
 }
 
-function DropAnywhere({ over, onFile }: { over: boolean; onFile: (file: File) => void }) {
+export function DropAnywhere({ over, onFile }: { over: boolean; onFile: (file: File) => void }) {
     const { home } = useIntlayer("dashboard-import");
     return (
         <div className="p-5">
-            <div className={`${DROPZONE} h-[131px] ${over ? "border-primary bg-primary/6" : ""}`}>
-                <b className="text-[15px] leading-5 font-semibold">{over ? home.dropHere : home.dropAnywhere}</b>
-                <p className="text-muted-foreground mt-1 text-[13px] leading-5">{home.dropAnywhereHint}</p>
+            <div className={`${DROPZONE} h-32.75 ${over ? "border-primary bg-primary/6" : ""}`}>
+                <b className="text-app-title leading-5 font-semibold">{over ? home.dropHere : home.dropAnywhere}</b>
+                <p className="text-muted-foreground text-app-label mt-1 leading-5">{home.dropAnywhereHint}</p>
                 <FilePicker accept={ACCEPT} onFile={onFile}>
                     {(open) => (
                         <Button className="mt-3" onClick={open} size="sm" variant="outline">
@@ -175,55 +195,6 @@ function RailNotes() {
             </Card>
             <SuggestDialog onClose={() => setSuggesting(false)} open={suggesting} />
         </>
-    );
-}
-
-const GHOST_CELL = CELL.replace("h-[51px]", "h-[42px]");
-const GHOST_ROWS = [92, 86, 62, 74, 88, 64, 76, 82, 90] as const;
-
-function GhostHistory() {
-    return (
-        <div aria-hidden className="relative max-h-[410px] overflow-hidden">
-            <Table>
-                <Table.Header>
-                    <Table.Row className="border-b-0">
-                        {[46, 44, 46, 40, 38, 42].map((width, index) => (
-                            <Table.Head align={index === 5 ? "end" : "start"} className={HEAD} key={width + index}>
-                                <i className="dash-gl inline-block" style={{ width }} />
-                            </Table.Head>
-                        ))}
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {GHOST_ROWS.map((width, index) => (
-                        <Table.Row key={width + index}>
-                            <Table.Cell className={GHOST_CELL}>
-                                <i className="dash-gl inline-block w-9" />
-                            </Table.Cell>
-                            <Table.Cell className={GHOST_CELL}>
-                                <span className="flex items-center gap-2.5">
-                                    <i className="dash-gx size-7 rounded-lg" />
-                                    <i className="dash-gl" style={{ width }} />
-                                </span>
-                            </Table.Cell>
-                            <Table.Cell className={GHOST_CELL}>
-                                <i className="dash-gl inline-block" style={{ width: 48 + (index % 3) * 12 }} />
-                            </Table.Cell>
-                            <Table.Cell className={GHOST_CELL}>
-                                <i className="dash-gl inline-block w-10" />
-                            </Table.Cell>
-                            <Table.Cell className={GHOST_CELL}>
-                                <i className="dash-gl inline-block" style={{ width: 32 + (index % 2) * 10 }} />
-                            </Table.Cell>
-                            <Table.Cell align="end" className={GHOST_CELL}>
-                                <i className="dash-gl inline-block" style={{ width: 52 + (index % 4) * 6 }} />
-                            </Table.Cell>
-                        </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table>
-            <div className="to-card absolute inset-x-0 bottom-0 h-16 bg-linear-to-b from-transparent" />
-        </div>
     );
 }
 
@@ -271,16 +242,12 @@ export function ImportHome({
                     </div>
                 ) : (
                     <Card className="flex-1" head={tabs}>
-                        <GhostHistory />
-                        <div className="flex flex-col items-center px-4 pt-6 pb-10 text-center">
-                            <b className="text-[15px] leading-5 font-semibold">{history.noImports}</b>
-                            <p className="text-muted-foreground mt-1.5 max-w-80 text-[13px] leading-5">
-                                {history.noImportsHint}
-                            </p>
-                            <div className="mt-4">
-                                <NewImportButton onClick={() => onTab("new")} />
-                            </div>
-                        </div>
+                        <Empty
+                            action={<NewImportButton onClick={() => onTab("new")} />}
+                            icon={Upload04Icon}
+                            line={history.noImportsHint}
+                            title={history.noImports}
+                        />
                     </Card>
                 )}
             </ImportPage>

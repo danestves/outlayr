@@ -8,7 +8,6 @@ import PauseIcon from "@hugeicons/core-free-icons/PauseIcon";
 import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
 import PlayIcon from "@hugeicons/core-free-icons/PlayIcon";
 import TestTubeIcon from "@hugeicons/core-free-icons/TestTubeIcon";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "panelui-web/button";
 import { Menu } from "panelui-web/menu";
 import { Switch } from "panelui-web/switch";
@@ -17,9 +16,12 @@ import { useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { IconButton } from "@/components/ui/icon-button";
+import { MenuContent } from "@/components/ui/menu-content";
 import { categoryOf, tagsOf } from "@/lib/rules";
 import type { Rule } from "@/lib/rules";
 
+import { Glyph } from "../accounts/glyph";
 import type { RulesData } from "./data";
 import { CELL, CategoryBadge, ConditionChip, FIGURE, HEAD, LIT, NAME, TagMarks, useShortDay } from "./parts";
 
@@ -40,7 +42,7 @@ export interface Moving {
 
 const ABOVE = "[&>td]:shadow-[inset_0_2px_0_var(--color-app-tint)]";
 const BELOW = "[&>td]:shadow-[inset_0_-2px_0_var(--color-app-tint)]";
-const OVER = "relative z-[1]";
+const OVER = "relative z-1";
 
 function RowMenu({
     actions,
@@ -58,40 +60,40 @@ function RowMenu({
                 aria-label={menu.more({ name: rule.name }).value}
                 render={<Button className={`text-muted-foreground ${OVER}`} size="icon-sm" variant="ghost" />}
             >
-                <HugeiconsIcon icon={MoreVerticalIcon} size={16} />
+                <Glyph icon={MoreVerticalIcon} size={16} />
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell ph-no-capture w-60" sideOffset={6}>
+            <MenuContent align="end" className="w-60" sideOffset={6}>
                 <Menu.Item onClick={() => actions.onEdit(rule)}>
-                    <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
+                    <Glyph icon={PencilEdit01Icon} size={16} />
                     {menu.edit}
                 </Menu.Item>
                 <Menu.Item onClick={() => actions.onTest(rule)}>
-                    <HugeiconsIcon icon={TestTubeIcon} size={16} />
+                    <Glyph icon={TestTubeIcon} size={16} />
                     {menu.test}
                 </Menu.Item>
                 <Menu.Item onClick={() => actions.onRun(rule)}>
-                    <HugeiconsIcon icon={PlayIcon} size={16} />
+                    <Glyph icon={PlayIcon} size={16} />
                     {runPast}
                 </Menu.Item>
                 <Menu.Item onClick={() => actions.onDuplicate(rule)}>
-                    <HugeiconsIcon icon={Copy01Icon} size={16} />
+                    <Glyph icon={Copy01Icon} size={16} />
                     {menu.duplicate}
                 </Menu.Item>
                 <Menu.Separator />
                 <Menu.Item onClick={() => actions.onMove(rule, 0)}>
-                    <HugeiconsIcon icon={ArrowUp02Icon} size={16} />
+                    <Glyph icon={ArrowUp02Icon} size={16} />
                     {menu.top}
                 </Menu.Item>
                 <Menu.Item onClick={() => actions.onToggle(rule, !rule.on)}>
-                    <HugeiconsIcon icon={rule.on ? PauseIcon : PlayIcon} size={16} />
+                    <Glyph icon={rule.on ? PauseIcon : PlayIcon} size={16} />
                     {rule.on ? menu.disable : menu.enable}
                 </Menu.Item>
                 <Menu.Separator />
                 <Menu.Item onClick={() => actions.onDelete(rule)} variant="destructive">
-                    <HugeiconsIcon icon={Delete02Icon} size={16} />
+                    <Glyph icon={Delete02Icon} size={16} />
                     {menu.delete}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -229,17 +231,15 @@ export function RuleList({
                         >
                             <Table.Cell className={CELL}>
                                 <div className={`flex items-center gap-1 ${dim}`}>
-                                    <Button
-                                        aria-label={menu.move({ name: rule.name }).value}
+                                    <IconButton
                                         className={`-mx-1.5 cursor-grab touch-none active:cursor-grabbing ${OVER} ${lifted ? "text-app-tint" : "text-muted-foreground"}`}
+                                        icon={DragDropVerticalIcon}
+                                        label={menu.move({ name: rule.name }).value}
                                         onKeyDown={(event) => keyMove(event, rule, index)}
                                         onPointerDown={(event) => start(event, rule)}
-                                        size="icon-sm"
-                                        variant="ghost"
-                                    >
-                                        <HugeiconsIcon icon={DragDropVerticalIcon} size={16} />
-                                    </Button>
-                                    <span className={`${FIGURE} text-muted-foreground text-sm`}>{index + 1}</span>
+                                        size="sm"
+                                    />
+                                    <span className={`${FIGURE} text-muted-foreground text-app-body`}>{index + 1}</span>
                                 </div>
                             </Table.Cell>
                             <Table.Cell className={CELL}>
@@ -252,11 +252,7 @@ export function RuleList({
                                         {rule.name}
                                     </button>
                                     {conflicted.has(rule.id) ? (
-                                        <HugeiconsIcon
-                                            className="text-app-warn flex-none"
-                                            icon={AlertCircleIcon}
-                                            size={14}
-                                        />
+                                        <Glyph className="text-app-warn flex-none" icon={AlertCircleIcon} size={14} />
                                     ) : null}
                                 </span>
                             </Table.Cell>
@@ -276,11 +272,11 @@ export function RuleList({
                                     <TagMarks ids={tagsOf(rule)} names={data.tagNames} />
                                 </div>
                             </Table.Cell>
-                            <Table.Cell align="end" className={`${CELL} ${FIGURE} text-sm`}>
-                                <span className={dim}>{stat?.count ?? 0}</span>
+                            <Table.Cell align="end" className={`${CELL} ${FIGURE}`}>
+                                <span className={`text-app-body ${dim}`}>{stat?.count ?? 0}</span>
                             </Table.Cell>
-                            <Table.Cell className={`${CELL} ${FIGURE} text-muted-foreground text-sm`}>
-                                <span className={dim}>{day ? shortDay(day) : ""}</span>
+                            <Table.Cell className={`${CELL} ${FIGURE} text-muted-foreground`}>
+                                <span className={`text-app-body ${dim}`}>{day ? shortDay(day) : ""}</span>
                             </Table.Cell>
                             <Table.Cell className={CELL}>
                                 <Switch

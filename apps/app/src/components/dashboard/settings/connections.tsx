@@ -6,7 +6,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { LEDGER_MCP_ORIGIN } from "@outlayr/shared/urls";
 import { useQuery } from "@tanstack/react-query";
-import { AlertDialog } from "panelui-web/alert-dialog";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Frame } from "panelui-web/frame";
@@ -17,6 +16,10 @@ import { useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
+import { Empty } from "@/components/dashboard/home/empty";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DialogContent } from "@/components/ui/dialog-content";
+import { MenuContent } from "@/components/ui/menu-content";
 import { connectionsQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 
@@ -51,7 +54,7 @@ function ServerLine() {
     return (
         <span className="flex min-w-0 items-center gap-2">
             <span className="text-muted-foreground">{copy.server}</span>
-            <span className="min-w-0 truncate font-mono text-[13px] select-all">{SERVER}</span>
+            <span className="text-app-label min-w-0 truncate font-mono select-all">{SERVER}</span>
             <Button aria-label={copy.copyServer.value} onClick={write} size="icon-sm" variant="ghost">
                 <HugeiconsIcon icon={Copy01Icon} size={15} />
             </Button>
@@ -70,7 +73,7 @@ function ConnectBody() {
             </Dialog.Header>
             <Dialog.Body>
                 <Row
-                    hint={<span className="font-mono text-[13px] break-all select-all">{SERVER}</span>}
+                    hint={<span className="text-app-label font-mono break-all select-all">{SERVER}</span>}
                     label={copy.server}
                 >
                     <Button aria-label={copy.copyServer.value} onClick={write} size="icon-sm" variant="outline">
@@ -88,24 +91,10 @@ function ConnectBody() {
 function ConnectDialog({ onClose, open }: { onClose: () => void; open: boolean }) {
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open}>
-            <Dialog.Content className="app-shell">
+            <DialogContent>
                 <ConnectBody />
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
-    );
-}
-
-function DisconnectBody({ agent, onConfirm }: { agent: Agent; onConfirm: () => void }) {
-    const copy = useIntlayer("dashboard-connections");
-    return (
-        <>
-            <AlertDialog.Title>{copy.disconnectTitle({ name: agent.name ?? copy.agent.value })}</AlertDialog.Title>
-            <AlertDialog.Description>{copy.disconnectBody}</AlertDialog.Description>
-            <AlertDialog.Footer>
-                <AlertDialog.Cancel>{copy.cancel}</AlertDialog.Cancel>
-                <AlertDialog.Action onClick={onConfirm}>{copy.disconnect}</AlertDialog.Action>
-            </AlertDialog.Footer>
-        </>
     );
 }
 
@@ -120,12 +109,22 @@ function DisconnectDialog({
     onConfirm: (agent: Agent) => void;
     open: boolean;
 }) {
+    const copy = useIntlayer("dashboard-connections");
     return (
-        <AlertDialog onOpenChange={(next) => next || onClose()} open={open}>
-            <AlertDialog.Content className="app-shell" tone="destructive">
-                {agent ? <DisconnectBody agent={agent} onConfirm={() => onConfirm(agent)} /> : null}
-            </AlertDialog.Content>
-        </AlertDialog>
+        <ConfirmDialog
+            action={copy.disconnect}
+            body={copy.disconnectBody}
+            cancel={copy.cancel}
+            onAction={() => {
+                if (agent) {
+                    onConfirm(agent);
+                }
+            }}
+            onOpenChange={(next) => next || onClose()}
+            open={open}
+            title={copy.disconnectTitle({ name: agent?.name ?? copy.agent.value })}
+            tone="destructive"
+        />
     );
 }
 
@@ -195,39 +194,17 @@ export function Connections() {
                         <Frame className="min-w-0">
                             <Frame.Panel>
                                 <div>
-                                    <div aria-hidden className="divide-y">
-                                        {["head", "first", "second", "third"].map((row) => (
-                                            <div
-                                                className="flex items-center justify-between gap-3 px-4 py-3"
-                                                key={row}
-                                            >
-                                                <span className="flex w-1/3 items-center gap-2">
-                                                    {row === "head" ? null : (
-                                                        <span className="border-border size-[26px] rounded-lg border" />
-                                                    )}
-                                                    <span className="border-border h-2 w-16 rounded-full border" />
-                                                </span>
-                                                <span
-                                                    className={
-                                                        row === "head"
-                                                            ? "border-border h-2 w-12 rounded-full border"
-                                                            : "border-border h-6 w-24 rounded-lg border"
-                                                    }
-                                                />
-                                                <span className="border-border h-2 w-12 rounded-full border" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="flex flex-col items-center px-5 pt-6 pb-8 text-center">
-                                        <b className="text-sm font-semibold">{copy.emptyTitle}</b>
-                                        <p className="text-muted-foreground mt-1 text-[13px] leading-5">
-                                            {copy.emptyBody}
-                                        </p>
-                                        <Button className="mt-4" onClick={() => setConnecting(true)}>
-                                            <HugeiconsIcon icon={BotIcon} size={16} />
-                                            {copy.connect}
-                                        </Button>
-                                    </div>
+                                    <Empty
+                                        action={
+                                            <Button onClick={() => setConnecting(true)}>
+                                                <HugeiconsIcon icon={BotIcon} size={16} />
+                                                {copy.connect}
+                                            </Button>
+                                        }
+                                        icon={BotIcon}
+                                        line={copy.emptyBody}
+                                        title={copy.emptyTitle}
+                                    />
                                 </div>
                             </Frame.Panel>
                         </Frame>
@@ -251,10 +228,10 @@ export function Connections() {
                                         <Table.Row key={agent.id}>
                                             <Table.Cell>
                                                 <span className="flex items-center gap-2.5 font-medium">
-                                                    <span className="bg-app-fill text-muted-foreground grid size-[26px] shrink-0 place-items-center rounded-lg">
+                                                    <span className="bg-app-fill text-muted-foreground rounded-app-sm grid size-6.5 shrink-0 place-items-center">
                                                         <HugeiconsIcon icon={BotIcon} size={15} />
                                                     </span>
-                                                    <span className="ph-no-capture max-w-[220px] truncate">{name}</span>
+                                                    <span className="ph-no-capture max-w-56 truncate">{name}</span>
                                                 </span>
                                             </Table.Cell>
                                             <Table.Cell>{access(agent.scopes)}</Table.Cell>
@@ -278,11 +255,7 @@ export function Connections() {
                                                     >
                                                         <HugeiconsIcon icon={MoreVerticalIcon} size={17} />
                                                     </Menu.Trigger>
-                                                    <Menu.Content
-                                                        align="end"
-                                                        className="app-shell w-[200px]"
-                                                        sideOffset={4}
-                                                    >
+                                                    <MenuContent align="end" className="w-60" sideOffset={4}>
                                                         <Menu.Item
                                                             onClick={() => {
                                                                 setTarget(agent);
@@ -293,7 +266,7 @@ export function Connections() {
                                                             <HugeiconsIcon icon={Unlink01Icon} size={16} />
                                                             {copy.disconnect}
                                                         </Menu.Item>
-                                                    </Menu.Content>
+                                                    </MenuContent>
                                                 </Menu>
                                             </Table.Cell>
                                         </Table.Row>

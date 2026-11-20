@@ -1,4 +1,4 @@
-import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
+import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 import CalendarCheckIn01Icon from "@hugeicons/core-free-icons/CalendarCheckIn01Icon";
 import FlashIcon from "@hugeicons/core-free-icons/FlashIcon";
 import InformationCircleIcon from "@hugeicons/core-free-icons/InformationCircleIcon";
@@ -22,6 +22,8 @@ import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
+import { DialogContent } from "@/components/ui/dialog-content";
+import { IconButton } from "@/components/ui/icon-button";
 import { limitsQuery, notionQuery, planQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 import { useLedgerBooks } from "@/lib/ledger-db";
@@ -62,7 +64,7 @@ const isManagedStore = (store: string | null): store is keyof typeof STORE_URL =
     store === "app_store" || store === "play_store";
 
 function Figure({ children }: { children: ReactNode }) {
-    return <span className="font-mono text-[13px] tabular-nums">{children}</span>;
+    return <span className="text-app-label font-mono tabular-nums">{children}</span>;
 }
 
 function useFormat() {
@@ -93,19 +95,17 @@ function usePortal() {
 }
 
 function ConfirmCancelBody({ expiresAtMs, onClose }: { expiresAtMs: number; onClose: () => void }) {
-    const { confirm, keepPro } = useIntlayer("plan");
+    const { confirm, keepPro, opening } = useIntlayer("plan");
     const { date } = useFormat();
     const portal = usePortal();
     return (
         <>
             <Dialog.Header className="gap-3 pr-5 pb-6">
                 <Dialog.Title>{confirm.title}</Dialog.Title>
-                <Dialog.Description className="text-[13px] leading-[19px]">
-                    {confirm.body({ date: date(expiresAtMs) })}
-                </Dialog.Description>
+                <Dialog.Description>{confirm.body({ date: date(expiresAtMs) })}</Dialog.Description>
             </Dialog.Header>
             <Dialog.Body className="px-0 pb-1.5">
-                <Table className="text-[13px]" density="compact" framed>
+                <Table density="compact" framed>
                     <Table.Body>
                         {[
                             [confirm.sync, confirm.off],
@@ -113,7 +113,7 @@ function ConfirmCancelBody({ expiresAtMs, onClose }: { expiresAtMs: number; onCl
                             [confirm.budgets, <Figure key="budgets">{FREE.budgets}</Figure>],
                         ].map(([label, value], index) => (
                             <Table.Row className="h-10" key={index}>
-                                <Table.Cell className="text-muted-foreground">{label}</Table.Cell>
+                                <Table.Cell className="text-app-muted">{label}</Table.Cell>
                                 <Table.Cell align="end">{value}</Table.Cell>
                             </Table.Row>
                         ))}
@@ -124,9 +124,14 @@ function ConfirmCancelBody({ expiresAtMs, onClose }: { expiresAtMs: number; onCl
                 <Button onClick={onClose} variant="outline">
                     {keepPro}
                 </Button>
-                <Button loading={portal.isPending} onClick={() => portal.mutate()} variant="destructive">
-                    {confirm.toStripe}
-                    <HugeiconsIcon icon={LinkSquare02Icon} size={16} />
+                <Button
+                    aria-busy={portal.isPending}
+                    disabled={portal.isPending}
+                    onClick={() => portal.mutate()}
+                    variant="destructive"
+                >
+                    {portal.isPending ? opening : confirm.toStripe}
+                    {portal.isPending ? null : <HugeiconsIcon icon={LinkSquare02Icon} size={16} />}
                 </Button>
             </Dialog.Footer>
         </>
@@ -144,17 +149,17 @@ function ConfirmCancel({
 }) {
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open && expiresAtMs !== null}>
-            <Dialog.Content className="app-shell">
+            <DialogContent>
                 {expiresAtMs === null ? null : <ConfirmCancelBody expiresAtMs={expiresAtMs} onClose={onClose} />}
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }
 
 function Fact({ children, label }: { children?: ReactNode; label: ReactNode }) {
     return (
-        <Frame.Row className="min-h-11 gap-3 px-4 py-3 text-[13px] leading-[19px]">
-            <Frame.Content className="text-muted-foreground">{label}</Frame.Content>
+        <Frame.Row className="min-h-app-row text-app-label gap-3 px-4 py-3">
+            <Frame.Content className="text-app-muted">{label}</Frame.Content>
             {children ? <Frame.Actions className="gap-2.5">{children}</Frame.Actions> : null}
         </Frame.Row>
     );
@@ -163,7 +168,7 @@ function Fact({ children, label }: { children?: ReactNode; label: ReactNode }) {
 function Footer({ action, children }: { action?: ReactNode; children: ReactNode }) {
     return (
         <div className="flex w-full items-center gap-3 max-sm:flex-wrap">
-            <span className="text-muted-foreground mr-auto text-[13px]">{children}</span>
+            <span className="text-app-muted text-app-label mr-auto">{children}</span>
             {action}
         </div>
     );
@@ -260,8 +265,13 @@ function Term({ plan }: { plan: Held }) {
                     <Footer
                         action={
                             stripe ? (
-                                <Button loading={portal.isPending} onClick={() => portal.mutate()} size="sm">
-                                    {copy.keepPro}
+                                <Button
+                                    aria-busy={portal.isPending}
+                                    disabled={portal.isPending}
+                                    onClick={() => portal.mutate()}
+                                    size="sm"
+                                >
+                                    {portal.isPending ? copy.opening : copy.keepPro}
                                 </Button>
                             ) : null
                         }
@@ -324,9 +334,9 @@ function Term({ plan }: { plan: Held }) {
                 title={copy.pro}
             >
                 {trial && plan.expiresAtMs !== null ? (
-                    <div className="px-4 py-3 text-[13px]">
+                    <div className="text-app-label px-4 py-3">
                         <p className="font-medium">{trialEnds}</p>
-                        <p className="text-muted-foreground">{copy.trialBody({ date: day(plan.expiresAtMs) })}</p>
+                        <p className="text-app-muted">{copy.trialBody({ date: day(plan.expiresAtMs) })}</p>
                     </div>
                 ) : null}
                 {nameRow}
@@ -346,7 +356,7 @@ function Term({ plan }: { plan: Held }) {
                     <Fact label={copy.billedBy}>
                         {copy.store.stripe}
                         <Button
-                            className="text-primary h-auto p-0 text-[13px] font-medium"
+                            className="text-app-tint h-auto p-0 font-medium"
                             disabled={portal.isPending}
                             onClick={() => portal.mutate()}
                             variant="link"
@@ -386,10 +396,10 @@ function Usage({ endsSoon }: { endsSoon: boolean }) {
                 <Table.Header>
                     <Table.Row>
                         <Table.Head aria-hidden="true" />
-                        <Table.Head align="end" className="w-[120px] max-sm:w-20">
+                        <Table.Head align="end" className="w-30 max-sm:w-20">
                             {use.using}
                         </Table.Head>
-                        <Table.Head align="end" className="w-[120px] max-sm:w-20">
+                        <Table.Head align="end" className="w-30 max-sm:w-20">
                             {use.limit}
                         </Table.Head>
                     </Table.Row>
@@ -401,7 +411,7 @@ function Usage({ endsSoon }: { endsSoon: boolean }) {
                             <Tooltip>
                                 <Tooltip.Trigger
                                     aria-label={use.autoLogOnPhone.value}
-                                    className="text-muted-foreground hover:text-foreground inline-flex size-5 items-center justify-center rounded-md align-middle"
+                                    className="text-app-muted hover:text-app-ink rounded-app-xs inline-flex size-5 items-center justify-center align-middle"
                                 >
                                     <HugeiconsIcon icon={InformationCircleIcon} size={14} />
                                 </Tooltip.Trigger>
@@ -411,7 +421,7 @@ function Usage({ endsSoon }: { endsSoon: boolean }) {
                             </Tooltip>
                         </Table.Cell>
                         <Table.Cell align="end">
-                            <span className="text-muted-foreground font-mono text-[13px] tabular-nums">
+                            <span className="text-app-muted text-app-label font-mono tabular-nums">
                                 {FREE_AUTO_LOG}
                             </span>
                         </Table.Cell>
@@ -428,7 +438,7 @@ function Usage({ endsSoon }: { endsSoon: boolean }) {
                                         {use.over}
                                     </Badge>
                                 ) : null}
-                                <span className="text-muted-foreground font-mono text-[13px] tabular-nums">{free}</span>
+                                <span className="text-app-muted text-app-label font-mono tabular-nums">{free}</span>
                             </Table.Cell>
                         </Table.Row>
                     ))}
@@ -436,7 +446,7 @@ function Usage({ endsSoon }: { endsSoon: boolean }) {
                         <Table.Row key={label.value}>
                             <Table.Cell>{label}</Table.Cell>
                             <Table.Cell align="end">{on !== undefined && (on ? use.on : use.off)}</Table.Cell>
-                            <Table.Cell align="end" className="text-muted-foreground text-[13px]">
+                            <Table.Cell align="end" className="text-app-muted">
                                 {use.off}
                             </Table.Cell>
                         </Table.Row>
@@ -458,12 +468,12 @@ function AlsoGives() {
                 { hint: also.syncHint, icon: RefreshIcon, label: also.sync },
             ].map(({ hint, icon, label }) => (
                 <div className="flex items-center gap-3 px-4 py-3" key={label.value}>
-                    <span className="bg-app-fill text-muted-foreground flex size-[30px] shrink-0 items-center justify-center rounded-[9px]">
+                    <span className="bg-app-fill text-app-muted rounded-app-md flex size-7.5 shrink-0 items-center justify-center">
                         <HugeiconsIcon icon={icon} size={15} />
                     </span>
                     <div className="min-w-0">
-                        <p className="text-[13px] leading-[18px] font-medium">{label}</p>
-                        <p className="text-muted-foreground text-xs">{hint}</p>
+                        <p className="text-app-label font-medium">{label}</p>
+                        <p className="text-app-muted text-app-caption">{hint}</p>
                     </div>
                 </div>
             ))}
@@ -477,7 +487,7 @@ function StoreManaged({ lifetime, store }: { lifetime: boolean; store: keyof typ
     if (lifetime) {
         return (
             <SettingsCard title={copy.lifetime.title}>
-                <p className="text-muted-foreground px-4 py-3 text-[13px]">{copy.lifetime.body}</p>
+                <p className="text-app-muted text-app-label px-4 py-3">{copy.lifetime.body}</p>
             </SettingsCard>
         );
     }
@@ -494,10 +504,10 @@ function StoreManaged({ lifetime, store }: { lifetime: boolean; store: keyof typ
             }
             title={copy.title}
         >
-            <p className="text-muted-foreground px-5 py-3 text-[13px]">{copy.body}</p>
+            <p className="text-app-muted text-app-label px-5 py-3">{copy.body}</p>
             {[copy.step1, copy.step2, stores.step3].map((step, index) => (
-                <div className="flex items-center gap-3 px-5 py-3 text-[13px]" key={step.value}>
-                    <span className="bg-app-fill text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-md font-mono text-xs">
+                <div className="text-app-label flex items-center gap-3 px-5 py-3" key={step.value}>
+                    <span className="bg-app-fill text-app-muted text-app-caption rounded-app-xs flex size-6 shrink-0 items-center justify-center font-mono">
                         {index + 1}
                     </span>
                     {step}
@@ -532,12 +542,13 @@ function Payments({ plan }: { plan: Held }) {
                     <Footer
                         action={
                             <Button
-                                loading={restore.isPending}
+                                aria-busy={restore.isPending}
+                                disabled={restore.isPending}
                                 onClick={() => restore.mutate()}
                                 size="sm"
                                 variant="outline"
                             >
-                                {copy.restore}
+                                {restore.isPending ? copy.restoring : copy.restore}
                             </Button>
                         }
                     >
@@ -582,22 +593,26 @@ export function Plan() {
     return (
         <div className="flex flex-col">
             <div className="flex h-16 items-center gap-2 max-lg:h-12">
-                <Button
-                    aria-label={settings.value}
-                    className="text-muted-foreground -ml-2"
+                <IconButton
+                    className="text-app-muted -ml-2"
+                    icon={ArrowLeft01Icon}
+                    label={settings.value}
                     render={<Link to="/settings" />}
-                    size="icon-sm"
-                    variant="ghost"
-                >
-                    <HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
-                </Button>
-                <h1 className="text-lg font-semibold tracking-[-0.02em]">{copy.title}</h1>
+                    size="sm"
+                />
+                <h1 className="text-app-heading font-semibold">{copy.title}</h1>
             </div>
             {held === null ? (
                 <SettingsCard title={copy.pro}>
                     <Fact label={copy.couldNotLoad}>
-                        <Button loading={plan.isFetching} onClick={() => plan.refetch()} size="sm" variant="outline">
-                            {copy.tryAgain}
+                        <Button
+                            aria-busy={plan.isFetching}
+                            disabled={plan.isFetching}
+                            onClick={() => plan.refetch()}
+                            size="sm"
+                            variant="outline"
+                        >
+                            {plan.isFetching ? copy.loadingPlan : copy.tryAgain}
                         </Button>
                     </Fact>
                 </SettingsCard>
