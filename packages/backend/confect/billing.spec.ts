@@ -51,7 +51,7 @@ export default GroupSpec.make()
                         ),
                         plan: Schema.NullOr(Plan),
                         price: Schema.NullOr(Schema.Struct({ amount: Schema.Number, currency: Schema.String })),
-                        state: ProState,
+                        state: Schema.Union([ProState, Schema.Literals(["granted", "unbilled"])]),
                         store: Schema.NullOr(Schema.String),
                         trialAvailable: Schema.Boolean,
                     })

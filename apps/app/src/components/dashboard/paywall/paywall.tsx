@@ -611,6 +611,7 @@ function Layout({
 
 export function Paywall() {
     const copy = useIntlayer("paywall");
+    const planCopy = useIntlayer("plan");
     const format = useDate();
     const { session } = useRouteContext({ from: "/_account/_app" });
     const { checkout, restore: restored } = useSearch({ from: "/_account/_app" });
@@ -717,6 +718,17 @@ export function Paywall() {
                 restoring={restoring}
                 retrying={plan.isFetching}
                 text={restoreMessage ?? copy.plansUnavailable}
+            />
+        );
+    }
+    if (plan.data.state === "unbilled") {
+        return frame(
+            <Stuck
+                onRestore={onRestore}
+                onRetry={() => window.location.reload()}
+                restoring={restoring}
+                retrying={false}
+                text={planCopy.unbilled.footer}
             />
         );
     }

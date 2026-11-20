@@ -9,10 +9,10 @@ import databaseSchema from "./_generated/schema";
 import { ActionCtx, MutationRunner } from "./_generated/services";
 import spec from "./billing.spec";
 import { authComponent } from "./lib/betterAuth";
-import { siteUrl } from "./lib/config";
+import { revenueCatSecretKey, siteUrl } from "./lib/config";
 import { outboundHttp } from "./lib/http";
 import { decodeProSubscriber, planOfStoreProduct, proTermOf } from "./proTerm";
-import { listsPro, storeSubscriber, syncLimiter } from "./revenuecat";
+import { isPro, listsPro, storeSubscriber, syncLimiter } from "./revenuecat";
 import {
     catalogPrice,
     createCheckoutSession,
@@ -55,6 +55,22 @@ const mirrorFromStore = Effect.fn("Billing.mirrorFromStore")(function* mirrorFro
 const readProSubscriber = Effect.fn("Billing.readProSubscriber")(function* readProSubscriber(userId: string) {
     const subscriber = yield* storeSubscriber(userId);
     return subscriber === null ? null : Option.getOrNull(decodeProSubscriber(subscriber));
+});
+
+const unbilledPlan = Effect.fn("Billing.unbilledPlan")(function* unbilledPlan(userId: string) {
+    if (Option.isSome(yield* revenueCatSecretKey)) {
+        return null;
+    }
+    const pro = yield* isPro(yield* ActionCtx, userId);
+    return {
+        expiresAtMs: null,
+        payments: [],
+        plan: null,
+        price: null,
+        state: pro ? ("granted" as const) : ("unbilled" as const),
+        store: null,
+        trialAvailable: false,
+    };
 });
 
 const createCheckout = FunctionImpl.make(
@@ -185,7 +201,7 @@ const plan = FunctionImpl.make(
             }
             const stored = yield* readProSubscriber(user.id);
             if (stored === null) {
-                return null;
+                return yield* unbilledPlan(user.id);
             }
             const isStripe = proTermOf(stored, Date.now()).store === "stripe";
             const customerId = isStripe ? yield* findCustomer(user.id) : null;
