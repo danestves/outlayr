@@ -123,6 +123,8 @@
     --color-success: var(--color-app-income);
     --color-info: var(--color-app-info);
     --color-warning: var(--color-app-warning-fill);
+    --color-app-count: color-mix(in oklab, var(--color-app-tint) 18%, var(--color-app-bg));
+    --color-app-on-count: color-mix(in oklab, var(--color-app-tint), var(--color-app-ink) 35%);
 }
 
 .app-shell,
@@ -154,7 +156,7 @@
     font-family: var(--font-sans);
     /* Translucent ink, not the fill: a tray is painted with the fill and would hide its bones. */
     --skullet-base: color-mix(in oklab, var(--color-app-ink) 7%, transparent);
-    --skullet-animation: pulse;
+    --skullet-animation: none;
 }
 
 .app-shell:where(:not([data-slot], [role="dialog"])) {
@@ -781,4 +783,22 @@ html:active-view-transition-type(dissolve)::view-transition-old(app-content) {
 
 html:active-view-transition-type(dissolve)::view-transition-new(app-content) {
     animation: app-dissolve-in var(--duration-app-dissolve) var(--ease-app-dissolve) both;
+}
+
+div:has(> * > .app-palette) > * {
+    transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0s !important;
+        transition-duration: 0s !important;
+    }
+}
+
+@utility app-chip-row {
+    scrollbar-width: none;
+    mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
 }

@@ -26,7 +26,10 @@ import { authClient } from "@/lib/auth-client";
 import { announceSessionChange } from "@/lib/session";
 import { forgetLedger } from "@/lib/unsent";
 
+import { leaveSession } from "./status";
+
 export async function signOut() {
+    leaveSession();
     Skullet.forgetShapes();
     await authClient.signOut();
     announceSessionChange();

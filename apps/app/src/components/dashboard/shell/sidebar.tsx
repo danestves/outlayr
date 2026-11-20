@@ -20,6 +20,8 @@ import { useIntlayer } from "react-intlayer";
 import { LogoMark } from "@/components/logo-mark";
 
 import { UserMenu } from "./account-menu";
+import { setPaletteOpen } from "./palette-open";
+import { useReviewCount } from "./review-count";
 
 type Path =
     | "/"
@@ -34,7 +36,20 @@ type Path =
     | "/rules"
     | "/transactions";
 
-function Destination({ icon, label, to }: { icon: IconSvgElement; label: string; to: Path }) {
+const COUNT =
+    "h-4.5 min-w-4.5 rounded-app-xs! bg-app-count font-app-mono leading-4.5 text-app-on-count group-data-[active]/item:bg-app-count group-data-[active]/item:text-app-on-count";
+
+function Destination({
+    count = null,
+    icon,
+    label,
+    to,
+}: {
+    count?: number | null;
+    icon: IconSvgElement;
+    label: string;
+    to: Path;
+}) {
     const active = useLocation({
         select: ({ pathname }) => (to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`)),
     });
@@ -46,21 +61,25 @@ function Destination({ icon, label, to }: { icon: IconSvgElement; label: string;
             render={<Link to={to} />}
         >
             {label}
+            {count ? <NavRail.Badge className={COUNT}>{count}</NavRail.Badge> : null}
         </NavRail.Item>
     );
 }
 
-function Search() {
+function Search({ onOpen }: { onOpen: () => void }) {
     const { nav } = useIntlayer("dashboard");
     return (
         <NavRail.Item
-            aria-disabled
             className="[&_[data-slot=nav-rail-label]]:flex [&_[data-slot=nav-rail-label]]:items-center"
             icon={<HugeiconsIcon icon={Search01Icon} size={18} strokeWidth={1.5} />}
             label={nav.search.value}
+            onClick={() => {
+                onOpen();
+                setPaletteOpen(true);
+            }}
         >
             {nav.search}
-            <kbd className="border-border bg-app-fill ml-auto rounded-[4px] border px-1.5 font-mono text-xs leading-4 pointer-coarse:hidden">
+            <kbd className="border-border bg-app-fill rounded-app-xs text-app-caption ml-auto border px-1.5 font-mono pointer-coarse:hidden">
                 ⌘K
             </kbd>
         </NavRail.Item>
@@ -80,6 +99,7 @@ function Fold() {
 export function Sidebar() {
     const { nav } = useIntlayer("dashboard");
     const { collapsed, mobile, setMobileOpen } = useNavRail();
+    const toReview = useReviewCount();
     const close = () => setMobileOpen(false);
     return (
         <NavRail
@@ -99,10 +119,15 @@ export function Sidebar() {
                 <Fold />
             </NavRail.Header>
             <NavRail.Content>
-                <Search />
+                <Search onOpen={close} />
                 <NavRail.Group label={nav.label.value}>
                     <Destination icon={DashboardSquare01Icon} label={nav.dashboard.value} to="/" />
-                    <Destination icon={TransactionHistoryIcon} label={nav.transactions.value} to="/transactions" />
+                    <Destination
+                        count={toReview}
+                        icon={TransactionHistoryIcon}
+                        label={nav.transactions.value}
+                        to="/transactions"
+                    />
                     <Destination icon={CreditCardIcon} label={nav.accounts.value} to="/accounts" />
                     <Destination icon={Analytics01Icon} label={nav.insights.value} to="/insights" />
                 </NavRail.Group>

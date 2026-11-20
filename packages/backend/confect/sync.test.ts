@@ -1056,3 +1056,54 @@ describe("push during account deletion", () => {
         ).rejects.toThrow("being deleted");
     });
 });
+
+describe("review flag", () => {
+    it("keeps the flag through an edit from a build that predates it, and pulls it back", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+
+        await pushAs(t, owner, DEVICE_A, [transactionRow("t1", 100, { fields: { unreviewed: true } })]);
+        const result = await pushAs(t, owner, DEVICE_B, [transactionRow("t1", 200, { fields: { note: "renamed" } })]);
+
+        expect(result.accepted).toBe(1);
+        const page = await pullAs(t, owner, 0);
+        expect(page.rows[0].fields).toMatchObject({ note: "renamed", unreviewed: true });
+    });
+
+    it("clears the flag for every reader once a newer write marks the entry reviewed", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+
+        await pushAs(t, owner, DEVICE_A, [transactionRow("t1", 100, { fields: { unreviewed: true } })]);
+        await pushAs(t, owner, DEVICE_B, [transactionRow("t1", 200, { fields: { unreviewed: false } })]);
+
+        const page = await pullAs(t, owner, 0);
+        expect(page.rows[0].fields).toMatchObject({ unreviewed: false });
+    });
+
+    it("still settles a pending custom policy tie when only one side knows the flag", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        await pushAs(t, owner, DEVICE_A, [
+            transactionRow("t1", 100, {
+                fields: {
+                    amountUsd: null,
+                    currency: "VES",
+                    exchangeRate: null,
+                    exchangeRateType: "custom",
+                    unreviewed: false,
+                },
+            }),
+        ]);
+
+        const result = await pushAs(t, owner, DEVICE_B, [
+            transactionRow("t1", 100, {
+                fields: { amountUsd: 2.5, currency: "VES", exchangeRate: 40, exchangeRateType: "official" },
+            }),
+        ]);
+
+        expect(result.skipped).toBe(1);
+        const [stored] = await t.run((ctx) => ctx.db.query("transactions").collect());
+        expect(stored).toMatchObject({ exchangeRateType: "custom", unreviewed: false });
+    });
+});

@@ -303,15 +303,41 @@ export const transactionsRepo = {
         return id;
     }),
 
-    markReviewed: Effect.fn("Transactions.markReviewed")(function* markReviewed(db: Database, ids: readonly string[]) {
+    markReviewed: Effect.fn("Transactions.markReviewed")(function* markReviewed(
+        db: Database,
+        ids: readonly string[],
+        now: Date = new Date()
+    ) {
         if (ids.length === 0) {
-            return;
+            return [];
         }
-        yield* query("update", () =>
-            db
-                .update(transactions)
-                .set({ unreviewed: false })
-                .where(inArray(transactions.id, [...ids]))
+        return yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                const flagged = yield* query("update", () =>
+                    db
+                        .select({ id: transactions.id, updatedAt: transactions.updatedAt })
+                        .from(transactions)
+                        .where(and(inArray(transactions.id, [...ids]), eq(transactions.unreviewed, true)))
+                );
+                const reviewed: { from: Date; id: string; updatedAt: Date }[] = [];
+                for (const row of flagged) {
+                    const updatedAt = new Date(Math.max(now.getTime(), row.updatedAt.getTime() + 1));
+                    yield* refreshLogoCandidate(db, row.id, updatedAt.getTime());
+                    const written = yield* query("update", () =>
+                        db
+                            .update(transactions)
+                            .set({ unreviewed: false, updatedAt })
+                            .where(and(eq(transactions.id, row.id), eq(transactions.updatedAt, row.updatedAt)))
+                            .returning({ id: transactions.id })
+                    );
+                    if (written.length > 0) {
+                        reviewed.push({ from: row.updatedAt, id: row.id, updatedAt });
+                    }
+                }
+                return reviewed;
+            }),
+            failedAt("update")
         );
     }),
 

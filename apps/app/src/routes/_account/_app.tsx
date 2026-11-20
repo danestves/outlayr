@@ -21,19 +21,22 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { Muted, SOLID_PILL, Screen } from "@/components/account/parts";
 import { AccountFlowsProvider } from "@/components/dashboard/accounts/flows";
 import { DashboardPending } from "@/components/dashboard/pending";
+import { CommandPalette } from "@/components/dashboard/shell/command-palette";
 import { DashboardContext, useFilters } from "@/components/dashboard/shell/dashboard";
 import { dashboardSearch, searchPatch } from "@/components/dashboard/shell/filters";
 import type { FilterPatch } from "@/components/dashboard/shell/filters";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
+import { SessionExpired, SyncCard, leaveSession } from "@/components/dashboard/shell/status";
 import { offerProfile, warmAccountState } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { watchKeyboardInset } from "@/lib/keyboard-inset";
 import type { LedgerBooks } from "@/lib/ledger-books";
 import { ledgerCommitter } from "@/lib/ledger-committer";
-import { ledgerSync, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
+import { ledgerSync, markLanded, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
 import { serverLedger } from "@/lib/ledger-server";
 import { lightPathOf, viewCovered } from "@/lib/light-views";
+import { viewTransition } from "@/lib/motion";
 import { onboardingDue, readProgress, subscribeProgress } from "@/lib/onboarding";
 import { currentToken, onSessionChange, userOf } from "@/lib/session";
 import { watchSync } from "@/lib/sync-status";
@@ -206,6 +209,7 @@ function useLiveLedger(userId: string | undefined, onLanded: (outcome: "landed" 
         warmAccountState(queryClient);
         const landing = preloadLedger(dbClient).then(async () => {
             await ledgerSync(dbClient).landed();
+            markLanded(dbClient);
             onLanded("landed");
         });
         landing.catch(async (error) => {
@@ -217,7 +221,10 @@ function useLiveLedger(userId: string | undefined, onLanded: (outcome: "landed" 
             onLanded(error instanceof Error ? error : new Error("The ledger did not land", { cause: error }));
         });
         const stops = [
-            onSessionChange(() => forgetLedger().finally(() => window.location.reload())),
+            onSessionChange(() => {
+                leaveSession();
+                return forgetLedger().finally(() => window.location.reload());
+            }),
             watchSync(convexClient()),
             watchKeyboardInset(),
         ];
@@ -255,13 +262,23 @@ function LiveDashboard({ books, children }: { books: LedgerBooks; children: Reac
             overview,
             strand: () => setStranded(true),
             setFilters: (patch: FilterPatch) =>
-                navigate({ resetScroll: false, search: (prev) => ({ ...prev, ...searchPatch(patch) }), to: "." }),
+                navigate({
+                    resetScroll: false,
+                    search: (prev) => ({ ...prev, ...searchPatch(patch) }),
+                    to: ".",
+                    viewTransition: "period" in patch ? viewTransition("dissolve") : undefined,
+                }),
         }),
         [filters, ledger, navigate, overview]
     );
     return (
         <DashboardContext value={dashboard}>
-            <AccountFlowsProvider>{waiting ? <DashboardPending /> : children}</AccountFlowsProvider>
+            <AccountFlowsProvider>
+                {waiting ? <DashboardPending /> : children}
+                <CommandPalette />
+                <SyncCard />
+                <SessionExpired />
+            </AccountFlowsProvider>
         </DashboardContext>
     );
 }

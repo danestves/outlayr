@@ -99,7 +99,8 @@ export const SYNCED_SPECS = {
     transactions: synced(transactions, transactions.id, {
         // No `imageUri`: a peer cannot resolve the device-local path, nulls it, and pushes that null back over the
         // original photo. `imageKey` replicates; the bytes travel via `photos.ts`.
-        deviceLocal: ["imageUri", "reminderLeadDays", "unreviewed"],
+        deviceLocal: ["imageUri", "reminderLeadDays"],
+        defaults: { unreviewed: false },
     }),
     budgets: synced(budgets, budgets.id),
     mainBudget: synced(mainBudget, mainBudget.id),

@@ -6,6 +6,7 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 import { routerWithDbClient } from "@tanstack/react-router-with-db";
 import { ConvexHttpClient } from "convex/browser";
 
+import { CrashPage } from "@/components/error-page";
 import { convexClient, convexConfigured, serverConvexUrl } from "@/lib/convex";
 import { ledgerDependencies, serverDependencies } from "@/lib/db";
 import type { Session } from "@/lib/session";
@@ -36,6 +37,7 @@ export function getRouter() {
     const session: Session = { token: null };
     const router = createRouter({
         context: { convexQueryClient, dbClient, queryClient, session },
+        defaultErrorComponent: CrashPage,
         defaultPreload: "intent",
         routeTree,
         scrollRestoration: true,

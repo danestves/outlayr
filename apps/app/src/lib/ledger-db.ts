@@ -303,6 +303,30 @@ export function ledgerSeed(
     ];
 }
 
+const landedClients = new WeakSet<DbClient>();
+const landingListeners = new Set<() => void>();
+
+export function markLanded(db: DbClient) {
+    landedClients.add(db);
+    for (const listener of landingListeners) {
+        listener();
+    }
+}
+
+const watchLanding = (changed: () => void) => {
+    landingListeners.add(changed);
+    return () => {
+        landingListeners.delete(changed);
+    };
+};
+
+const notLanded = () => false;
+
+export function useLanded() {
+    const db = useDbClient();
+    return useSyncExternalStore(watchLanding, () => landedClients.has(db), notLanded);
+}
+
 export const preloadLedger = (db: DbClient) =>
     Promise.all([load(db.collection(ledgerCollections.exchangeRates)), ...openers.map((open) => start(open(db)))]);
 

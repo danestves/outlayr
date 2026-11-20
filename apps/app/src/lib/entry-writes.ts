@@ -351,6 +351,7 @@ export function editedEntry(ledger: Ledger, doc: Doc, draft: EntryDraft, at: num
             recurringCoefficient: row.recurringCoefficient,
             recurringEndDate: row.recurringEndDate?.getTime() ?? null,
             recurringType: row.recurringType,
+            unreviewed: false,
         },
         at
     );

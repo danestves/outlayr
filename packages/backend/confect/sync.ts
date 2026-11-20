@@ -154,6 +154,9 @@ function transactionFieldsEqual(
     if (TRANSACTION_LEGACY_OPTIONAL_NULLABLE_FIELDS.has(field)) {
         return Object.is(stored ?? null, incoming ?? null);
     }
+    if (field === "unreviewed") {
+        return Object.is(stored ?? false, incoming ?? stored ?? false);
+    }
     return Object.is(stored, incoming);
 }
 

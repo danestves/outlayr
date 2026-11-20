@@ -17,13 +17,14 @@ import { useIntlayer } from "react-intlayer";
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile, FeeTile, MerchantTile } from "@/components/ledger/tiles";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { isFinanced } from "@/lib/entry-writes";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { photoSrc } from "@/lib/photo-src";
 
 import { useCatalog } from "../home/catalog";
-import { timeOfDay, useCategoryName } from "../home/format";
+import { timeOfDay, useCategoryName, useDateFormat } from "../home/format";
 import { figureOf } from "../home/rows";
 import type { FoldedRow } from "../home/rows";
 import { useWide } from "../insights/use-wide";
@@ -187,28 +188,95 @@ export function EntrySheet({ onClose, onDelete, onStep, row, start }: EntrySheet
     const wide = useWide();
     // The sheet slides out after row clears, and it should carry the entry with it.
     const [shown, setShown] = useState(row);
+    const [doomed, setDoomed] = useState<FoldedRow | null>(null);
     if (row && row !== shown) {
         setShown(row);
     }
     return (
-        <Sheet
+        <>
+            <DeleteDialog
+                onClose={() => setDoomed(null)}
+                onDelete={() => {
+                    if (doomed) {
+                        onDelete(doomed);
+                    }
+                }}
+                row={doomed}
+            />
+            <Sheet
+                onOpenChange={(open) => (open ? undefined : onClose())}
+                open={row !== null}
+                side={wide ? "right" : "bottom"}
+            >
+                <Sheet.Content className="app-shell ph-no-capture" showGrabber={false} size={wide ? "auto" : "full"}>
+                    {shown ? (
+                        <EntryBody
+                            key={shown.id}
+                            onClose={onClose}
+                            onDelete={setDoomed}
+                            onStep={onStep}
+                            row={shown}
+                            start={start}
+                        />
+                    ) : null}
+                </Sheet.Content>
+            </Sheet>
+        </>
+    );
+}
+
+function DeleteDialog({
+    onClose,
+    onDelete,
+    row,
+}: {
+    onClose: () => void;
+    onDelete: () => void;
+    row: FoldedRow | null;
+}) {
+    const { ledger } = useDashboard();
+    const { confirm: copy } = useIntlayer("dashboard-shell");
+    const categoryName = useCategoryName();
+    const date = useDateFormat();
+    const { money } = useDisplayFormat();
+    const [shown, setShown] = useState(row);
+    if (row && row !== shown) {
+        setShown(row);
+    }
+    const body = () => {
+        if (!shown) {
+            return null;
+        }
+        const { amount } = figureOf(ledger, shown);
+        if ("fromId" in shown) {
+            const name = `${ledger.accounts.get(shown.fromId)?.name ?? ""} → ${ledger.accounts.get(shown.toId)?.name ?? ""}`;
+            return `${copy.summary({ amount: money(amount, ledger.currency), date: date.day(shown.day), name }).value} ${copy.transfer.value}`;
+        }
+        const category = ledger.categories.get(shown.topId);
+        const name = shown.note.trim() || (category ? categoryName(category) : "");
+        const summary = copy.summary({
+            amount: money(shown.income ? amount : -amount, ledger.currency, "always"),
+            date: date.day(shown.day),
+            name,
+        }).value;
+        const account = shown.accountId === null ? undefined : ledger.accounts.get(shown.accountId)?.name;
+        if (account === undefined) {
+            return summary;
+        }
+        const balance = shown.income ? copy.balanceDown({ account }) : copy.balanceUp({ account });
+        return `${summary} ${balance.value}`;
+    };
+    return (
+        <ConfirmDialog
+            action={copy.delete}
+            body={body()}
+            cancel={copy.cancel}
+            onAction={onDelete}
             onOpenChange={(open) => (open ? undefined : onClose())}
             open={row !== null}
-            side={wide ? "right" : "bottom"}
-        >
-            <Sheet.Content className="app-shell ph-no-capture" showGrabber={false} size={wide ? "auto" : "full"}>
-                {shown ? (
-                    <EntryBody
-                        key={shown.id}
-                        onClose={onClose}
-                        onDelete={onDelete}
-                        onStep={onStep}
-                        row={shown}
-                        start={start}
-                    />
-                ) : null}
-            </Sheet.Content>
-        </Sheet>
+            title={copy.title}
+            tone="destructive"
+        />
     );
 }
 
