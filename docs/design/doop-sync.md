@@ -238,6 +238,22 @@ From the canvas page `Web · Installments`, under `components/dashboard/installm
 - **Empty:** no orders uses the dashboard's one-icon `Empty` with Import a screenshot and New purchase. The frame's ghost table is not drawn.
 - **Loading:** `installments-pending.tsx` draws the real screen over the sampled ledger inside a static skullet skeleton.
 
+## Insights
+
+From the canvas page `Web · Insights`, under `components/dashboard/insights`:
+
+- **Tabs:** the bar is PanelUI Tabs (`underline`) whose triggers are router links, where it was hand-built links. A tab swap, a period step, a Breakdown view and a Reports choice dissolve.
+- **Motion:** a row, a card's onward link, a sankey node and a Year month push left, and the cash flow drill's back link reverses.
+- **Menus:** the Reports toolbar, saved and library menus are 240 wide on `MenuContent`. The toolbar's submenus keep the shell scope and open instant by hand.
+- **Dialogs:** save, rename, export and share a report are `md` (448) on `DialogContent`. The recap share dialog is 680, as the frame draws it. Deleting a report is a destructive `ConfirmDialog`.
+- **Empty:** a quiet cash flow, a quiet drill, a young year, nothing to break down, no recap, a quiet standout, no reports and a report with no data use the dashboard's one-icon `Empty`. The frames' ghost charts and tables are not drawn. The history card stays: it shows how far the ledger is from a usual, not an empty panel.
+- **Recap card:** the canvas card reads its colours from the shell's tokens when it is drawn, so it follows the theme it was opened in. A category with no colour gets `--color-app-muted`.
+- **Samples:** the sample overview takes its category colours from the suggested category presets, where it had hand-set hex.
+- **Tables:** Breakdown's columns are the frame's widths as shares of the card, so the last column and the chevrons stay inside it. Tags read `#name`, and the untagged row has no bar.
+- **Sankey:** a bar thinner than its two-line label still gets 18px of height, so labels do not overlap.
+- **Loading:** `insights-pending.tsx` draws the real screen over the sampled ledger inside a static skullet skeleton.
+- **Raw controls:** the row and stretched-link targets stay raw buttons: a part would add chrome the frames do not draw.
+
 ## Primitives
 
 | Part         | Use                                                    | Notes                                                                                                   |
@@ -269,12 +285,12 @@ These still use `AmountInput` (`components/dashboard/accounts/fields.tsx`) or a 
 
 These are known and left for the screen phases:
 
-- **Hand-drawn classes:** 22 `.dash-*` classes in `apps/app/src/index.css` (`dash-btn`, `dash-seg`, `dash-menu`, `dash-chip`, `dash-check` and others) redraw parts PanelUI has. Their shadows now read the tokens.
+- **Hand-drawn classes:** 20 `.dash-*` classes in `apps/app/src/index.css` (`dash-btn`, `dash-seg`, `dash-menu`, `dash-chip`, `dash-check` and others) redraw parts PanelUI has. Their shadows now read the tokens.
 - **Arbitrary values:** about 1,360 arbitrary Tailwind values and 245 inline `style={...}` props under `apps/app/src`.
-- **Hard-coded colours:** 42 hex colours in 21 non-test source files, such as the recap share card and the insights samples.
+- **Hard-coded colours:** 20 hex colours in 11 non-test source files, such as the identity picker and the provider icons.
 - **Raw controls:** 35 files with a raw `<button>` and 14 with a raw `<input>`. The account sheet's sign-out row stays a raw `<button>` until there is a row part, because Button's ghost hover and weight would change the row.
 - **Spinners:** Button `loading` draws a spinner in `settings/invite.tsx`, `settings/plan.tsx`, `settings/account.tsx` and `settings/about/suggest.tsx`.
-- **Menu timing:** every menu except the account, period, dashboard filter, Transactions, Accounts, Goals, Recurring, Debts and Installments menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
+- **Menu timing:** every menu except the account, period, dashboard filter, Transactions, Accounts, Goals, Recurring, Debts, Installments and Insights menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
 - **Hand-placed scope:** 74 files put `app-shell ph-no-capture` on portaled content by hand. `DialogContent`, `SheetContent` and `MenuContent` replace that.
 - **Accent inside the shell:** `accentCss` (`lib/accent.ts`) writes the tint and on-tint on `:root`. The shell scope sets `--color-app-on-tint` again in both themes, and `--color-app-tint` again in dark, so inside the shell a non-default accent shows as vermilion in dark and keeps the default on-tint. This was already the case before this phase.
 - **Pages outside the shell:** `login` and `connect`, and any portal without `app-shell`, read the phone's dark palette from `:root`. So does `html` itself, whose background is `--color-app-bg`.
