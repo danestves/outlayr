@@ -8,10 +8,10 @@ import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
+import { AiConsentActions, AiConsentPrompt } from "@/components/dashboard/ai-consent-prompt";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
-import { SiteLink } from "@/components/site-link";
 import { parseAmount } from "@/lib/account-writes";
 import { allowAi, useAiConsent } from "@/lib/ai-consent";
 import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
@@ -39,35 +39,14 @@ function Line({ children, label }: { children: ReactNode; label: ReactNode }) {
 const LINKED_FAILURE = { notEntitled: "/settings/plan", quotaExceeded: "/settings/usage" } as const;
 
 function Consent({ onAllow, onClose }: { onAllow: () => void; onClose: () => void }) {
-    const { consent } = useIntlayer("dashboard-installments");
     const voice = useIntlayer("dashboard-voice");
     return (
         <>
             <Sheet.Body className="pt-2">
-                <div className="text-app-label flex flex-col gap-3">
-                    <h3 className="text-app-title font-semibold">{consent.title}</h3>
-                    <div className="border-y py-2.5">
-                        <p className="font-medium">{voice.title}</p>
-                        <p className="text-muted-foreground">{voice.voiceSends}</p>
-                    </div>
-                    <p className="text-muted-foreground">
-                        {voice.fine}{" "}
-                        <SiteLink
-                            className="text-foreground underline underline-offset-2"
-                            hash={consent.privacyHash.value}
-                            target="_blank"
-                            to="/privacy"
-                        >
-                            {consent.privacy}
-                        </SiteLink>
-                    </p>
-                </div>
+                <AiConsentPrompt feature={voice.title} fine={voice.fine} sends={voice.voiceSends} />
             </Sheet.Body>
             <Sheet.Footer className="flex-row *:flex-1">
-                <Button onClick={onClose} variant="outline">
-                    {consent.notNow}
-                </Button>
-                <Button onClick={onAllow}>{consent.allow}</Button>
+                <AiConsentActions onAllow={onAllow} onDecline={onClose} />
             </Sheet.Footer>
         </>
     );

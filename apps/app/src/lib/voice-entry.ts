@@ -1,5 +1,5 @@
 import type { CategoryBranch } from "@outlayr/backend/confect/lib/ledgerPrompt";
-import type { ProposedDraft, VoiceDraft } from "@outlayr/backend/confect/voiceEntry";
+import type { ProposedDraft, VoiceDraft } from "@outlayr/backend/confect/lib/voiceDraft";
 import { decimalsFor } from "@outlayr/money/currency";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { roundMoney } from "@outlayr/money/round";

@@ -1,4 +1,4 @@
-import type { VoiceDraft, VoiceQuote } from "@outlayr/backend/confect/voiceEntry";
+import type { VoiceDraft, VoiceQuote } from "@outlayr/backend/confect/lib/voiceDraft";
 import type { SpeakStatus } from "@outlayr/backend/confect/voiceEntry.spec";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";

@@ -1,5 +1,5 @@
 import { namesWithinBudget } from "@outlayr/backend/confect/lib/ledgerPrompt";
-import type { VoiceDraft } from "@outlayr/backend/confect/voiceEntry";
+import type { VoiceDraft } from "@outlayr/backend/confect/lib/voiceDraft";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
