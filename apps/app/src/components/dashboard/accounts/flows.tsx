@@ -8,9 +8,11 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { DialogContent } from "@/components/ui/dialog-content";
 import type { Notice, NoticeHost } from "@/lib/commit-notices";
+import type { EntryValues } from "@/lib/entry-writes";
 import type { PurchaseSeed } from "@/lib/installment-scan";
 import { writeSettings } from "@/lib/ledger-settings";
 import type { ScannedEntry } from "@/lib/receipt-scan";
+import type { NewTransferValues } from "@/lib/transfer-create";
 
 import type { AccountValues } from "./account-form";
 import type { AccountSort } from "./model";
@@ -25,8 +27,8 @@ export type AccountFlow =
     | { accountId?: string; draft?: PurchaseValues; kind: "purchase"; seed?: PurchaseSeed }
     | { accountId?: string; kind: "scan" }
     | { accountId?: string; file?: File; kind: "receipt" }
-    | { accountId?: string; kind: "transfer" }
-    | { accountId?: string; from?: string; kind: "entry"; note?: string; scanned?: ScannedEntry };
+    | { accountId?: string; kind: "transfer"; seed?: NewTransferValues }
+    | { accountId?: string; from?: string; kind: "entry"; note?: string; scanned?: ScannedEntry; seed?: EntryValues };
 
 interface AccountFlows {
     open: (flow: AccountFlow) => void;
