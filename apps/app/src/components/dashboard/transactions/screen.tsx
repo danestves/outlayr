@@ -496,7 +496,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
             ) : (
                 <>
                     {transfers ? kpis() : null}
-                    <section className="rounded-app-xl bg-card flex min-w-0 flex-col overflow-hidden border">
+                    <section className="rounded-app-xl bg-card flex min-w-0 flex-1 flex-col overflow-hidden border">
                         <ViewTabs
                             counts={counts}
                             onSave={() => setDialog({ filters: applied.map((chip) => chip.label), kind: "save" })}
@@ -546,7 +546,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                                 </Button>
                             </div>
                         ) : null}
-                        <div className="border-t" data-motion="dissolve" key={view?.id ?? query.tab}>
+                        <div className="flex-1 border-t" data-motion="dissolve" key={view?.id ?? query.tab}>
                             {rows.length === 0 ? (
                                 empty()
                             ) : (

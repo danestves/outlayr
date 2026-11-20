@@ -85,7 +85,7 @@ export function RowMenu({ name, onDelete, onOpen, reviewing, row, writes }: RowM
                 aria-label={words.menu({ name }).value}
                 render={
                     <Button
-                        className="opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 data-popup-open:opacity-100 pointer-coarse:opacity-100"
+                        className="-my-2 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 data-popup-open:opacity-100 pointer-coarse:opacity-100"
                         size="icon-sm"
                         variant="ghost"
                     />

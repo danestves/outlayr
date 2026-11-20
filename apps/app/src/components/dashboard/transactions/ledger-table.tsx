@@ -204,7 +204,7 @@ export function LedgerTable({
                             className="bg-app-tint absolute -start-3 size-1.5 rounded-full"
                         />
                     ) : null}
-                    {fee ? <FeeTile /> : <MerchantTile imageUrl={photoSrc(raw?.imageKey)} name={name} size="md" />}
+                    {fee ? <FeeTile /> : <MerchantTile imageUrl={photoSrc(raw?.imageKey)} name={name} size="lg" />}
                     {opener(row, name)}
                     {(raw?.recurringType ?? 0) > 0 ? (
                         <HugeiconsIcon

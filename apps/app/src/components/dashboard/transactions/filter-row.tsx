@@ -392,7 +392,7 @@ export function FilterRow({
     const { filters: words, review } = useIntlayer("dashboard-ledger");
     return (
         <div className="flex min-w-0 flex-wrap items-center gap-2 px-3 py-2.5">
-            <Input.Group className="w-64 max-w-full" size="sm">
+            <Input.Group className="w-48 max-w-full" size="sm">
                 <Input.Addon>
                     <HugeiconsIcon icon={Search01Icon} size={14} strokeWidth={2} />
                 </Input.Addon>
