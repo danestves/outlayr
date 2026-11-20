@@ -106,6 +106,7 @@ async function readPdf(
             step: "resolve",
             suggestions: answer.suggestions,
             targets: STATEMENT_TARGETS,
+            unreadPages: answer.unreadPages,
         }),
         ok: true,
     };

@@ -1374,6 +1374,31 @@ const dashboardImport = {
                     pt: "Importações demais nesta hora.",
                 }),
             },
+            unreadPages: insert(
+                t({
+                    en: "Some pages weren't read: {{pages}}.",
+                    de: "Einige Seiten wurden nicht gelesen: {{pages}}.",
+                    es: "Algunas páginas no se leyeron: {{pages}}.",
+                    fr: "Certaines pages n'ont pas été lues : {{pages}}.",
+                    pt: "Algumas páginas não foram lidas: {{pages}}.",
+                })
+            ),
+            unreadPagesMore: insert(
+                t({
+                    en: "{{pages}} and {{count}} more",
+                    de: "{{pages}} und {{count}} weitere",
+                    es: "{{pages}} y {{count}} más",
+                    fr: "{{pages}} et {{count}} de plus",
+                    pt: "{{pages}} e mais {{count}}",
+                })
+            ),
+            unreadPagesWhy: t({
+                en: "They had no text to read, likely scans. Check them, since any transactions on them are missing.",
+                de: "Sie hatten keinen lesbaren Text, vermutlich Scans. Prüf sie, denn Buchungen darauf fehlen.",
+                es: "No tenían texto que leer, probablemente escaneadas. Revísalas, porque los movimientos que tengan no se importaron.",
+                fr: "Elles n'avaient pas de texte à lire, sans doute des scans. Vérifiez-les : leurs éventuelles opérations n'ont pas été importées.",
+                pt: "Não tinham texto para ler, provavelmente digitalizadas. Confira essas páginas, porque as transações delas não foram importadas.",
+            }),
         },
         review: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
