@@ -11,6 +11,8 @@ import { useId, useState } from "react";
 import type { FormEvent } from "react";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DialogContent } from "@/components/ui/dialog-content";
 
 import type { Definition, Report } from "./model";
 import { MAX_ROLLING_MONTHS, monthsIn, spanOf } from "./model";
@@ -98,7 +100,7 @@ export function SaveDialog({ currentKey, definition, name, onClose, onSave, open
     };
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open}>
-            <Dialog.Content className="app-shell">
+            <DialogContent size="md">
                 <Dialog.Header>
                     <Dialog.Title>{copy.saving.title}</Dialog.Title>
                 </Dialog.Header>
@@ -141,14 +143,14 @@ export function SaveDialog({ currentKey, definition, name, onClose, onSave, open
                         />
                     </div>
                 </NameForm>
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }
 
 function Summary({ caption, value }: { caption?: string; value: string }) {
     return (
-        <span className="border-border inline-flex h-[26px] items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium">
+        <span className="border-border text-app-caption inline-flex h-6.5 items-center gap-1.5 rounded-full border px-2.5 font-medium">
             {caption ? <span className="text-muted-foreground font-normal">{caption}</span> : null}
             {value}
         </span>
@@ -164,7 +166,7 @@ interface RenameDialogProps extends ModalProps {
 export function RenameDialog({ name, onClose, onRename, open, words }: RenameDialogProps) {
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open}>
-            <Dialog.Content className="app-shell">
+            <DialogContent size="md">
                 <Dialog.Header>
                     <Dialog.Title>{words.copy.renaming.title}</Dialog.Title>
                 </Dialog.Header>
@@ -175,7 +177,7 @@ export function RenameDialog({ name, onClose, onRename, open, words }: RenameDia
                     onSubmit={onRename}
                     words={words}
                 />
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }
@@ -189,24 +191,16 @@ interface DeleteDialogProps extends ModalProps {
 export function DeleteDialog({ name, onClose, onDelete, open, words }: DeleteDialogProps) {
     const { deleting } = words.copy;
     return (
-        <Dialog onOpenChange={(next) => next || onClose()} open={open}>
-            <Dialog.Content className="app-shell w-[420px]" role="alertdialog">
-                <Dialog.Header>
-                    <Dialog.Title>{deleting.title({ name })}</Dialog.Title>
-                </Dialog.Header>
-                <Dialog.Body>
-                    <p className="m-0 text-[15px] leading-[22px]">{deleting.body}</p>
-                </Dialog.Body>
-                <Dialog.Footer>
-                    <Button autoFocus onClick={onClose} type="button" variant="secondary">
-                        {deleting.cancel}
-                    </Button>
-                    <Button onClick={onDelete} type="button" variant="destructive">
-                        {deleting.confirm}
-                    </Button>
-                </Dialog.Footer>
-            </Dialog.Content>
-        </Dialog>
+        <ConfirmDialog
+            action={deleting.confirm}
+            body={deleting.body}
+            cancel={deleting.cancel}
+            onAction={onDelete}
+            onOpenChange={(next) => next || onClose()}
+            open={open}
+            title={deleting.title({ name })}
+            tone="destructive"
+        />
     );
 }
 
@@ -224,10 +218,10 @@ const option = (
     note: string,
     props: { checked: boolean; disabled?: boolean; onChange?: (on: boolean) => void }
 ) => (
-    <label className="flex h-8 items-center gap-2.5 text-[13px]">
+    <label className="text-app-label flex h-8 items-center gap-2.5">
         <Checkbox checked={props.checked} disabled={props.disabled} onCheckedChange={props.onChange} />
         <span className="flex-1">{label}</span>
-        <span className="text-muted-foreground text-xs leading-4">{note}</span>
+        <span className="text-muted-foreground text-app-caption leading-4">{note}</span>
     </label>
 );
 
@@ -241,7 +235,7 @@ interface ExportDialogProps extends ModalProps {
 }
 
 const TILE =
-    "border-border hover:bg-muted/50 group aria-pressed:border-app-tint aria-pressed:bg-app-tint/10 focus-visible:ring-ring flex min-w-0 flex-1 items-start gap-2.5 rounded-xl border p-3 text-start outline-none focus-visible:ring-2";
+    "border-border hover:bg-muted/50 group aria-pressed:border-app-tint aria-pressed:bg-app-tint/10 focus-visible:ring-ring flex min-w-0 flex-1 items-start gap-2.5 rounded-app-lg border p-3 text-start outline-none focus-visible:ring-2";
 
 export function ExportDialog({
     columnsName,
@@ -265,14 +259,14 @@ export function ExportDialog({
         <button aria-pressed={format === value} className={TILE} onClick={() => setFormat(value)} type="button">
             <Glyph className="text-muted-foreground group-aria-pressed:text-app-tint shrink-0" icon={icon} size={20} />
             <span className="min-w-0">
-                <span className="block text-sm font-medium">{title}</span>
-                <span className="text-muted-foreground block text-xs leading-4">{note}</span>
+                <span className="text-app-body block font-medium">{title}</span>
+                <span className="text-muted-foreground text-app-caption block leading-4">{note}</span>
             </span>
         </button>
     );
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open}>
-            <Dialog.Content className="app-shell">
+            <DialogContent size="md">
                 <Dialog.Header>
                     <Dialog.Title>{exporting.title({ name })}</Dialog.Title>
                 </Dialog.Header>
@@ -332,7 +326,7 @@ export function ExportDialog({
                         {exporting.run({ format: exporting[format].value })}
                     </Button>
                 </Dialog.Footer>
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }

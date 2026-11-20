@@ -7,7 +7,7 @@ import { useIntlayer } from "react-intlayer";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { MerchantTile } from "@/components/ledger/tiles";
 
-import { Change, FIGURE, Flat, Swatch, Track } from "../parts";
+import { Change, FIGURE, Flat, Pill, Swatch, toneOf, Track } from "../parts";
 import type { BreakdownRow, Dimension, Metric } from "./model";
 import { CELL, CELL_BASE, HEAD, HEAD_BASE, NUM, Row, Table } from "./parts";
 
@@ -15,10 +15,10 @@ const SHOWN_ROWS = 6;
 export const UNTAGGED_ID = "untagged";
 const PERCENT = 100;
 const ROW_HEIGHT = {
-    category: "h-[34px]",
-    merchant: "h-[37px]",
-    subcategory: "h-[34px]",
-    tag: "h-[46px]",
+    category: "h-8.5",
+    merchant: "h-9.25",
+    subcategory: "h-8.5",
+    tag: "h-11.5",
 } as const satisfies Record<Dimension, string>;
 
 const HEAD_HEIGHT = { category: "h-8", merchant: "h-8", subcategory: "h-8", tag: "h-10" } as const satisfies Record<
@@ -33,6 +33,18 @@ const COLUMN_WIDTHS = {
     subcategory: [162, 161, 244, 197, 138, 212, 44],
     tag: [169, 296, 265, 157, 227, 44],
 } as const satisfies Record<Dimension, readonly number[]>;
+
+// Frame widths in px, laid out as shares so the table fits whatever width its card gets.
+function Columns({ widths }: { widths: readonly number[] }) {
+    const sum = widths.reduce((total, width) => total + width, 0);
+    return (
+        <colgroup>
+            {widths.map((width, index) => (
+                <col key={index} style={{ width: `${(width / sum) * PERCENT}%` }} />
+            ))}
+        </colgroup>
+    );
+}
 
 export interface TableFormat {
     amount: (value: number) => string;
@@ -80,28 +92,21 @@ function Delta({
                     {format.delta(row.delta)}
                 </span>
             )}
-            {fresh ? <Flat>{table.fresh}</Flat> : <Pill delta={row.percent ?? 0} metric={metric} whole={!total} />}
+            {fresh ? (
+                <Flat>{table.fresh}</Flat>
+            ) : (
+                <ChangePill delta={row.percent ?? 0} metric={metric} whole={!total} />
+            )}
         </>
     );
 }
 
-const toneOf = (delta: number, metric: Metric) => {
-    if (delta === 0) {
-        return "flat";
-    }
-    return delta > 0 === (goodFor(metric) === "up") ? "good" : "poor";
-};
-
-function Pill({ delta, metric, whole }: { delta: number | null; metric: Metric; whole: boolean }) {
+function ChangePill({ delta, metric, whole }: { delta: number | null; metric: Metric; whole: boolean }) {
     if (delta === null) {
         return null;
     }
     const percent = whole ? Math.round(delta * PERCENT) : Math.round(delta * PERCENT * 10) / 10;
-    return (
-        <span className="dash-trend" data-tone={toneOf(percent, metric)}>
-            {`${percent > 0 ? "+" : ""}${percent}%`}
-        </span>
-    );
+    return <Pill tone={toneOf(percent, goodFor(metric))}>{`${percent > 0 ? "+" : ""}${percent}%`}</Pill>;
 }
 
 /** The rows a collapsed table leaves out, read as one. */
@@ -268,11 +273,7 @@ export function GroupTable({
     const widths = baseTotal === null ? columns.toSpliced(-2, 1) : columns;
     return (
         <Table className="table-fixed">
-            <colgroup>
-                {widths.map((width, index) => (
-                    <col key={index} style={{ width }} />
-                ))}
-            </colgroup>
+            <Columns widths={widths} />
             <thead>
                 <Row>
                     <th className={`${head} text-left`}>{named}</th>
@@ -306,13 +307,13 @@ export function GroupTable({
                                     <span
                                         className={`truncate font-medium ${tagName ? FIGURE : ""} ${untagged ? "text-muted-foreground" : ""}`}
                                     >
-                                        {format.categoryName(row)}
+                                        {tagName ? `#${format.categoryName(row)}` : format.categoryName(row)}
                                     </span>
                                 </button>
                             </td>
                             {merchants ? (
                                 <td className={cell}>
-                                    <span className="border-border inline-flex h-6 items-center gap-1.5 rounded-md border px-2 align-middle text-xs leading-none font-medium whitespace-nowrap">
+                                    <span className="border-border rounded-app-xs text-app-caption inline-flex h-6 items-center gap-1.5 border px-2 align-middle leading-none font-medium whitespace-nowrap">
                                         <span
                                             aria-hidden
                                             className="size-1.5 rounded-full"
@@ -332,12 +333,14 @@ export function GroupTable({
                             ) : null}
                             {merchants ? null : (
                                 <td className={cell}>
-                                    <Track
-                                        className="bg-muted h-1.5! w-full"
-                                        color={row.color}
-                                        max={largest}
-                                        value={Math.abs(row.amount)}
-                                    />
+                                    {untagged ? null : (
+                                        <Track
+                                            className="bg-muted h-1.5! w-full"
+                                            color={row.color}
+                                            max={largest}
+                                            value={Math.abs(row.amount)}
+                                        />
+                                    )}
                                 </td>
                             )}
                             <td className={`${cell} ${NUM} text-muted-foreground`}>{row.count}</td>
@@ -399,7 +402,7 @@ export function GroupTable({
 }
 
 const COMPARE_COLUMNS = [323, 229, 229, 209, 170] as const;
-const CELL_ROW = `h-[46px] ${CELL_BASE}`;
+const CELL_ROW = `h-11.5 ${CELL_BASE}`;
 
 interface CompareTableProps {
     baseLabel: string;
@@ -422,18 +425,14 @@ export function CompareTable({ baseLabel, baseTotal, currentLabel, format, metri
     };
     return (
         <Table className="table-fixed">
-            <colgroup>
-                {COMPARE_COLUMNS.map((width, index) => (
-                    <col key={index} style={{ width }} />
-                ))}
-            </colgroup>
+            <Columns widths={COMPARE_COLUMNS} />
             <thead>
                 <Row>
-                    <th className={`${HEAD} h-[39px] text-left`}>{table.category}</th>
-                    <th className={`${HEAD} h-[39px] text-right`}>{baseLabel}</th>
-                    <th className={`${HEAD} h-[39px] text-right`}>{currentLabel}</th>
-                    <th className={`${HEAD} h-[39px] text-right`}>{table.change}</th>
-                    <th className={`${HEAD} h-[39px] text-right`}>{table.percent}</th>
+                    <th className={`${HEAD} h-9.75 text-left`}>{table.category}</th>
+                    <th className={`${HEAD} h-9.75 text-right`}>{baseLabel}</th>
+                    <th className={`${HEAD} h-9.75 text-right`}>{currentLabel}</th>
+                    <th className={`${HEAD} h-9.75 text-right`}>{table.change}</th>
+                    <th className={`${HEAD} h-9.75 text-right`}>{table.percent}</th>
                 </Row>
             </thead>
             <tbody>

@@ -1,4 +1,5 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import { SUGGESTED_CATEGORY_PRESETS } from "@outlayr/money/category-rules";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { useIntlayer } from "react-intlayer";
@@ -6,6 +7,7 @@ import { useIntlayer } from "react-intlayer";
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
 
 import { InsightsBar } from "../bar";
 import { useInsightsFormat } from "../format";
@@ -19,14 +21,17 @@ const SPENT = 3210;
 const BEFORE = 3420;
 const INCOME = 4200;
 const WOBBLE = 14;
-const CATEGORIES = [
-    { color: "#B26C43", delta: 0, id: "rent", spent: 1800 },
-    { color: "#53915A", delta: -20, id: "groceries", spent: 640 },
-    { color: "#B16482", delta: -140, id: "shopping", spent: 280 },
-    { color: "#A97332", delta: -20, id: "dining", spent: 190 },
-    { color: "#4D84BD", delta: -10, id: "transport", spent: 160 },
-    { color: "#7C76BC", delta: -20, id: "subscriptions", spent: 140 },
-] as const;
+const PRESET_COLORS = new Map(SUGGESTED_CATEGORY_PRESETS.expense.map((preset) => [preset.name, preset.color]));
+const CATEGORIES = (
+    [
+        { delta: 0, id: "rent", preset: "Rent", spent: 1800 },
+        { delta: -20, id: "groceries", preset: "Groceries", spent: 640 },
+        { delta: -140, id: "shopping", preset: "Shopping", spent: 280 },
+        { delta: -20, id: "dining", preset: "Dining Out", spent: 190 },
+        { delta: -10, id: "transport", preset: "Transport", spent: 160 },
+        { delta: -20, id: "subscriptions", preset: "Subscriptions", spent: 140 },
+    ] as const
+).map((category) => ({ ...category, color: PRESET_COLORS.get(category.preset) ?? NEUTRAL_COLOR }));
 
 const climb = (index: number, end: number) => {
     const edge = index === 0 || index === DAYS - 1;
@@ -58,9 +63,9 @@ export function SampleOverview() {
                 <Badge dot variant="warning">
                     {copy.sample.badge}
                 </Badge>
-                <span className={`${FIGURE} ml-1 text-[13px] font-medium`}>{march}</span>
+                <span className={`${FIGURE} text-app-label ml-1 font-medium`}>{march}</span>
             </InsightsBar>
-            <Tray className="mt-4 min-h-[72px] flex-row items-center gap-3 py-3 pr-4 pl-5">
+            <Tray className="mt-4 min-h-18 flex-row items-center gap-3 py-3 pr-4 pl-5">
                 <div className="min-w-0 flex-1">
                     <h2 className={STATEMENT}>{copy.sample.title}</h2>
                     <p className={NOTE}>{copy.sample.line}</p>
@@ -128,24 +133,24 @@ export function SampleOverview() {
                     title={copy.where.title}
                 >
                     {CATEGORIES.map((category) => (
-                        <div className="border-border border-t px-5 py-[7px] first:border-t-0" key={category.id}>
-                            <div className="flex items-center text-[13px] font-medium">
+                        <div className="border-border border-t px-5 py-1.75 first:border-t-0" key={category.id}>
+                            <div className="text-app-label flex items-center font-medium">
                                 <span
                                     aria-hidden
-                                    className="mr-[9px] size-2 rounded-xs"
+                                    className="mr-2.25 size-2 rounded-xs"
                                     style={{ background: category.color }}
                                 />
                                 {copy.sample.categories[category.id]}
                                 <span className={`${FIGURE} ml-auto font-normal`}>{fmt.whole(category.spent)}</span>
                                 <span
-                                    className={`${FIGURE} ml-2.5 w-12 text-right text-xs font-normal ${category.delta === 0 ? "text-muted-foreground" : "text-(--color-app-income)"}`}
+                                    className={`${FIGURE} text-app-caption ml-2.5 w-12 text-right font-normal ${category.delta === 0 ? "text-muted-foreground" : "text-app-income"}`}
                                 >
                                     {category.delta === 0 ? "0" : fmt.signedWhole(category.delta)}
                                 </span>
                             </div>
                             <span
                                 aria-hidden
-                                className="mt-[7px] block h-1.5 overflow-hidden rounded-full"
+                                className="mt-1.75 block h-1.5 overflow-hidden rounded-full"
                                 style={{ background: `color-mix(in oklab, ${category.color} 18%, transparent)` }}
                             >
                                 <span

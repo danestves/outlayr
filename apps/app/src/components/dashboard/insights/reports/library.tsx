@@ -1,13 +1,16 @@
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import Link01Icon from "@hugeicons/core-free-icons/Link01Icon";
 import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
+import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Menu } from "panelui-web/menu";
 import { Table } from "panelui-web/table";
 import { useDeferredValue, useMemo, useState } from "react";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { MenuContent } from "@/components/ui/menu-content";
 
+import { BADGE } from "../parts";
 import type { SharedLink } from "./links";
 import { buildReport, spanOf } from "./model";
 import { RowMenu } from "./saved";
@@ -16,12 +19,11 @@ import type { SavedReport } from "./store";
 import { dimensionIcon } from "./toolbar";
 import type { ReportWords } from "./words";
 
-const HEAD = "text-muted-foreground h-10 px-3 text-xs font-medium first:ps-4 last:pe-4";
-const CELL = "h-[57px] px-3 py-0 text-sm first:ps-4 last:pe-4";
+const HEAD = "text-muted-foreground h-10 px-3 text-app-caption font-medium first:ps-4 last:pe-4";
+const CELL = "h-14.25 px-3 py-0 text-app-body first:ps-4 last:pe-4";
 const CHIP =
-    "data-[popup-open]:bg-muted data-[popup-open]:border-app-strong h-8 gap-1.5 rounded-full px-3 text-[13px] font-medium";
-const CHIP_ON =
-    "border-[color-mix(in_oklab,var(--color-app-tint)_40%,var(--color-app-bg))] bg-[color-mix(in_oklab,var(--color-app-tint)_20%,var(--color-app-bg))] text-[color-mix(in_oklab,var(--color-app-tint),var(--color-app-ink)_35%)]";
+    "data-[popup-open]:bg-muted data-[popup-open]:border-app-strong h-8 gap-1.5 rounded-full px-3 text-app-label font-medium";
+const CHIP_ON = "border-app-tint/40 bg-app-count text-app-on-count";
 const SHARING = ["all", "shared", "private"] as const;
 
 type Sharing = (typeof SHARING)[number];
@@ -84,8 +86,8 @@ export function Library({ actions, books, currentKey, ledger, links, now, onForg
     };
     return (
         <div className="flex flex-1 flex-col">
-            <div className="flex h-[60px] shrink-0 items-center gap-2">
-                <label className="border-input bg-input/30 text-muted-foreground flex h-8 w-[300px] max-w-full items-center gap-2 rounded-full border px-3 text-[13px]">
+            <div className="flex h-15 shrink-0 items-center gap-2">
+                <label className="border-input bg-input/30 text-muted-foreground text-app-label flex h-8 w-75 max-w-full items-center gap-2 rounded-full border px-3">
                     <Glyph icon={Search01Icon} size={16} />
                     <input
                         aria-label={copy.library.search.value}
@@ -111,7 +113,7 @@ export function Library({ actions, books, currentKey, ledger, links, now, onForg
                             size={14}
                         />
                     </Menu.Trigger>
-                    <Menu.Content align="start" className="app-shell ph-no-capture w-[200px]" sideOffset={6}>
+                    <MenuContent align="start" className="w-60" sideOffset={6}>
                         <Menu.RadioGroup
                             onValueChange={(next) => setSharing(SHARING.find((each) => each === next) ?? "all")}
                             value={sharing}
@@ -127,17 +129,17 @@ export function Library({ actions, books, currentKey, ledger, links, now, onForg
                                 </Menu.RadioItem>
                             ))}
                         </Menu.RadioGroup>
-                    </Menu.Content>
+                    </MenuContent>
                 </Menu>
-                <span className="dash-figure text-muted-foreground ms-auto text-[13px]">
+                <span className="dash-figure text-muted-foreground text-app-label ms-auto">
                     {reports.length === 1
                         ? copy.library.countOne
                         : copy.library.count({ count: String(reports.length) })}
                 </span>
             </div>
-            <section className="bg-card border-border flex min-w-0 flex-none flex-col overflow-hidden rounded-3xl border">
+            <section className="bg-card border-border rounded-app-3xl flex min-w-0 flex-none flex-col overflow-hidden border">
                 {shown.length === 0 ? (
-                    <p className="text-muted-foreground px-5 py-8 text-center text-[13px]">
+                    <p className="text-muted-foreground text-app-label px-5 py-8 text-center">
                         {needle === "" && sharing !== "all" ? copy.library.sharing.none : copy.library.noMatch}
                     </p>
                 ) : (
@@ -170,7 +172,7 @@ export function Library({ actions, books, currentKey, ledger, links, now, onForg
                                             onClick={() => actions.open(report.id)}
                                             type="button"
                                         >
-                                            <span className="bg-muted text-muted-foreground grid size-[26px] shrink-0 place-items-center rounded-lg">
+                                            <span className="bg-muted text-muted-foreground rounded-app-sm grid size-6.5 shrink-0 place-items-center">
                                                 <Glyph icon={dimensionIcon(report.definition.rows)} size={14} />
                                             </span>
                                             {report.name}
@@ -190,10 +192,9 @@ export function Library({ actions, books, currentKey, ledger, links, now, onForg
                                     </Table.Cell>
                                     <Table.Cell className={`${CELL} text-muted-foreground`}>
                                         {shared.has(report.id) ? (
-                                            <span className="dash-badge h-6 px-2" data-tone="good">
-                                                <u />
+                                            <Badge className={BADGE} dot variant="success">
                                                 {copy.library.sharing.linkOn}
-                                            </span>
+                                            </Badge>
                                         ) : (
                                             copy.library.sharing.private
                                         )}
@@ -211,7 +212,7 @@ export function Library({ actions, books, currentKey, ledger, links, now, onForg
                 )}
             </section>
             {elsewhere.length === 0 ? null : (
-                <p className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-2 px-1 text-[13px]">
+                <p className="text-muted-foreground text-app-label mt-3 flex flex-wrap items-center gap-x-2 px-1">
                     {elsewhere.length === 1
                         ? copy.library.sharing.elsewhereOne
                         : copy.library.sharing.elsewhere({ count: String(elsewhere.length) })}

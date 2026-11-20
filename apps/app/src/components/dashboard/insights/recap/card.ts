@@ -10,7 +10,7 @@ export const SIZE_NAMES = Object.keys(CARD_SIZES).filter((name): name is CardSiz
 
 export interface CardCategory {
     amount: string | null;
-    color: string;
+    color: string | null;
     fraction: number;
     name: string;
     percent: string;
@@ -25,14 +25,36 @@ export interface CardInput {
     url: string;
 }
 
-const PALETTE = {
-    background: "#1b1812",
-    border: "#322d23",
-    foreground: "#f5f1e8",
-    muted: "#a39d8f",
-    tint: "#e2643f",
-    track: "#2a251c",
-};
+const TOKENS = {
+    background: "--color-app-group",
+    border: "--color-app-rule",
+    foreground: "--color-app-ink",
+    muted: "--color-app-muted",
+    tint: "--color-app-tint",
+    track: "--color-app-track",
+} as const;
+
+type Palette = Record<keyof typeof TOKENS, string>;
+
+// A canvas cannot read var(), so each token is resolved to a computed colour under the shell's theme.
+function paletteOf(host: Element): Palette {
+    const probe = document.createElement("span");
+    host.append(probe);
+    const resolve = (token: string) => {
+        probe.style.color = `var(${token})`;
+        return getComputedStyle(probe).color;
+    };
+    const palette: Palette = {
+        background: resolve(TOKENS.background),
+        border: resolve(TOKENS.border),
+        foreground: resolve(TOKENS.foreground),
+        muted: resolve(TOKENS.muted),
+        tint: resolve(TOKENS.tint),
+        track: resolve(TOKENS.track),
+    };
+    probe.remove();
+    return palette;
+}
 const PAD = 72;
 const RADIUS = 56;
 const HEADLINE_SIZE = 96;
@@ -71,6 +93,7 @@ function loadImage(source: string) {
 /** The recap as a PNG: the month, one headline, the split by category and where it came from. */
 export async function renderCard(input: CardInput, size: CardSize, logo: string | null): Promise<Blob> {
     const [width, height] = CARD_SIZES[size];
+    const palette = paletteOf(document.querySelector(".app-shell") ?? document.body);
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
@@ -79,20 +102,20 @@ export async function renderCard(input: CardInput, size: CardSize, logo: string 
         throw new Error("A canvas is not available here");
     }
     await document.fonts.ready;
-    context.fillStyle = PALETTE.background;
+    context.fillStyle = palette.background;
     context.beginPath();
     context.roundRect(0, 0, width, height, RADIUS);
     context.fill();
-    context.strokeStyle = PALETTE.border;
+    context.strokeStyle = palette.border;
     context.lineWidth = 2;
     context.stroke();
 
     context.textBaseline = "alphabetic";
-    context.fillStyle = PALETTE.foreground;
+    context.fillStyle = palette.foreground;
     context.font = `500 42px ${SANS}`;
     context.fillText(input.monthLabel, PAD, PAD + 40);
     if (logo !== null) {
-        const mark = await loadImage(logo);
+        const mark = await loadImage(logoSource(logo, palette.tint));
         context.drawImage(mark, width - PAD - LOGO_SIZE, PAD - 6, LOGO_SIZE, LOGO_SIZE);
     }
 
@@ -104,18 +127,18 @@ export async function renderCard(input: CardInput, size: CardSize, logo: string 
         y += HEADLINE_LEADING;
     }
     if (input.total !== null) {
-        context.fillStyle = PALETTE.tint;
+        context.fillStyle = palette.tint;
         context.font = `600 56px ${MONO}`;
         context.fillText(input.total, PAD, y);
         y += 70;
     }
-    context.fillStyle = PALETTE.muted;
+    context.fillStyle = palette.muted;
     context.font = `400 40px ${SANS}`;
     context.fillText(input.daysLine, PAD, y);
     y += 90;
 
     const barWidth = width - PAD * 2;
-    context.fillStyle = PALETTE.track;
+    context.fillStyle = palette.track;
     context.beginPath();
     context.roundRect(PAD, y, barWidth, BAR_HEIGHT, BAR_HEIGHT / 2);
     context.fill();
@@ -126,7 +149,7 @@ export async function renderCard(input: CardInput, size: CardSize, logo: string 
     context.clip();
     for (const category of input.categories) {
         const part = category.fraction * barWidth;
-        context.fillStyle = category.color;
+        context.fillStyle = category.color ?? palette.muted;
         context.fillRect(x, y, Math.max(part - GAP, 1), BAR_HEIGHT);
         x += part;
     }
@@ -135,11 +158,11 @@ export async function renderCard(input: CardInput, size: CardSize, logo: string 
 
     const room = Math.floor((height - PAD * 2 - 60 - y + 56) / ROW_HEIGHT);
     for (const category of input.categories.slice(0, Math.max(room, 1))) {
-        context.fillStyle = category.color;
+        context.fillStyle = category.color ?? palette.muted;
         context.beginPath();
         context.roundRect(PAD + 4, y - 26, 26, 26, 7);
         context.fill();
-        context.fillStyle = PALETTE.foreground;
+        context.fillStyle = palette.foreground;
         context.font = `500 46px ${SANS}`;
         context.fillText(category.name, PAD + 64, y);
         context.textAlign = "right";
@@ -149,7 +172,7 @@ export async function renderCard(input: CardInput, size: CardSize, logo: string 
         y += ROW_HEIGHT;
     }
 
-    context.fillStyle = PALETTE.muted;
+    context.fillStyle = palette.muted;
     context.font = `400 38px ${MONO}`;
     context.fillText(input.url, PAD, height - PAD);
 
@@ -158,10 +181,7 @@ export async function renderCard(input: CardInput, size: CardSize, logo: string 
     });
 }
 
-/** The logo markup as an image source in the tint. */
-export function logoSource(markup: string) {
-    const tinted = markup
-        .replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"')
-        .replaceAll("currentColor", PALETTE.tint);
+function logoSource(markup: string, tint: string) {
+    const tinted = markup.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"').replaceAll("currentColor", tint);
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(tinted)}`;
 }

@@ -4,6 +4,7 @@ import type { KeyboardEvent } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { viewTransition } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import { useInsightsFormat } from "../format";
@@ -60,6 +61,7 @@ export function MonthChart({ average, months }: Props) {
         navigate({
             search: (prev) => ({ accounts: prev.accounts, period: month.key }),
             to: "/insights",
+            viewTransition: viewTransition("push-left"),
         });
     const move = (event: KeyboardEvent<SVGGElement>, month: YearMonth) => {
         if (event.key === "Enter") {
@@ -78,13 +80,13 @@ export function MonthChart({ average, months }: Props) {
     const tipLeft = Math.min(Math.max(LEFT + (lit ?? 0) * gap + gap / 2 - TIP_WIDTH / 2, 0), width - TIP_WIDTH);
     const tipTop = tipped ? Math.max(y(tipped.spent) - TIP_HEIGHT - 8, 0) : 0;
     return (
-        <div className="relative px-5 pb-[18px]" ref={ref}>
+        <div className="relative px-5 pb-4.5" ref={ref}>
             {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- the bars inside are focusable, so it is a group. */}
             <svg aria-label={copy.chartLabel.value} className="block" height={HEIGHT} role="group" width={width}>
                 {Array.from({ length: TICKS + 1 }, (_, index) => index * step).map((value) => (
                     <g key={value}>
                         <path d={`M${LEFT} ${y(value)}H${width}`} style={{ stroke: "var(--color-border)" }} />
-                        <text className="dash-figure fill-muted-foreground text-[11px]" x={0} y={y(value) + 4}>
+                        <text className="dash-figure fill-muted-foreground text-app-micro" x={0} y={y(value) + 4}>
                             {value === 0 ? "0" : fmt.axis(value)}
                         </text>
                     </g>
@@ -113,7 +115,7 @@ export function MonthChart({ average, months }: Props) {
                                     y={y(step)}
                                 />
                                 <text
-                                    className="dash-figure fill-app-ghost text-[11px]"
+                                    className="dash-figure fill-app-ghost text-app-micro"
                                     style={{ textAnchor: "middle" }}
                                     x={centre}
                                     y={HEIGHT - 5}
@@ -143,7 +145,7 @@ export function MonthChart({ average, months }: Props) {
                             <rect
                                 className={cn(
                                     "transition-opacity duration-150",
-                                    over ? "fill-(--color-app-tint)" : "fill-app-strong"
+                                    over ? "fill-app-tint" : "fill-app-strong"
                                 )}
                                 height={Math.max(floor - top, 0)}
                                 opacity={lit !== null && lit !== index ? 0.55 : 1}
@@ -153,7 +155,7 @@ export function MonthChart({ average, months }: Props) {
                                 y={top}
                             />
                             <text
-                                className={cn("dash-figure text-[11px]", over ? "fill-black" : "fill-foreground")}
+                                className={cn("dash-figure text-app-micro", over ? "fill-black" : "fill-foreground")}
                                 style={{ textAnchor: "middle" }}
                                 x={centre}
                                 y={top + (inside ? LABEL_DROP : -6)}
@@ -161,7 +163,7 @@ export function MonthChart({ average, months }: Props) {
                                 {month.spent < MILLION ? tenths(month.spent) : fmt.axis(month.spent)}
                             </text>
                             <text
-                                className="dash-figure fill-muted-foreground text-[11px]"
+                                className="dash-figure fill-muted-foreground text-app-micro"
                                 style={{ textAnchor: "middle" }}
                                 x={centre}
                                 y={HEIGHT - 5}
@@ -182,17 +184,15 @@ export function MonthChart({ average, months }: Props) {
             </svg>
             {tipped ? (
                 <div
-                    className="bg-popover border-border pointer-events-none absolute z-10 flex flex-col rounded-xl border px-3.5 py-3 shadow-lg"
+                    className="bg-popover border-border rounded-app-lg pointer-events-none absolute z-10 flex flex-col border px-3.5 py-3 shadow-lg"
                     style={{ left: tipLeft + PAD, top: tipTop, width: TIP_WIDTH }}
                 >
-                    <span className="text-[13px] font-medium">{fmt.longMonth(`${tipped.key}-15`)}</span>
-                    <span className="dash-figure mt-1 text-lg leading-[26px] font-semibold tracking-[-0.03em]">
-                        {fmt.amount(tipped.spent)}
-                    </span>
+                    <span className="text-app-label font-medium">{fmt.longMonth(`${tipped.key}-15`)}</span>
+                    <span className="dash-figure text-app-heading mt-1 font-semibold">{fmt.amount(tipped.spent)}</span>
                     {tipped.budget === null ? null : (
-                        <span className="text-muted-foreground mt-1 flex justify-between text-[13px] leading-5">
+                        <span className="text-muted-foreground text-app-label mt-1 flex justify-between leading-5">
                             <span>{copy.tip.budget}</span>
-                            <span className={cn("dash-figure", tipped.over && "text-(--color-app-spend)")}>
+                            <span className={cn("dash-figure", tipped.over && "text-app-spend")}>
                                 {fmt.whole(tipped.budget.spent)} / {fmt.whole(tipped.budget.limit)}
                             </span>
                         </span>

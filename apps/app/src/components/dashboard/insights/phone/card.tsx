@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { FIGURE } from "../parts";
 
-export const MONO = `${FIGURE} text-[13.5px]`;
+export const MONO = `${FIGURE} text-app-label`;
 
 interface PhoneCardProps {
     aside?: ReactNode;
@@ -16,19 +16,19 @@ interface PhoneCardProps {
 export function PhoneCard({ aside, children, className = "", title }: PhoneCardProps) {
     return (
         <Frame
-            className={`border-border min-w-0 border px-[7px] pt-0 pb-[7px] ${className}`}
+            className={`border-border min-w-0 border px-1.75 pt-0 pb-1.75 ${className}`}
             render={<section />}
             variant="band"
         >
-            <Frame.Header className="h-[43px] group-data-[variant=band]/frame:py-0">
+            <Frame.Header className="h-10.75 group-data-[variant=band]/frame:py-0">
                 <Frame.Title as="h2" className="group-data-[variant=band]/frame:text-muted-foreground truncate">
                     {title}
                 </Frame.Title>
                 {aside ? (
-                    <Frame.Action className="row-span-1 text-[13px] whitespace-nowrap">{aside}</Frame.Action>
+                    <Frame.Action className="text-app-label row-span-1 whitespace-nowrap">{aside}</Frame.Action>
                 ) : null}
             </Frame.Header>
-            <Frame.Panel className="relative flex-1 group-data-[variant=band]/frame:rounded-2xl group-data-[variant=band]/frame:shadow-none">
+            <Frame.Panel className="group-data-[variant=band]/frame:rounded-app-xl relative flex-1 group-data-[variant=band]/frame:shadow-none">
                 {children}
             </Frame.Panel>
         </Frame>
@@ -46,7 +46,7 @@ export function Aside({ label, value }: { label?: string; value: string }) {
 }
 
 export function Nothing({ children }: { children: ReactNode }) {
-    return <p className="text-muted-foreground px-[15px] py-3.5 text-sm">{children}</p>;
+    return <p className="text-muted-foreground text-app-body px-3.75 py-3.5">{children}</p>;
 }
 
 /** The frame's 8px key, smaller than the tabs' swatch. */

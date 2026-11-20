@@ -74,26 +74,25 @@ function Gradient({ id, color, stops }: { color: string; id: string; stops: read
 
 function Tip({ color, tip }: { color: string; tip: ChartTip }) {
     return (
-        <div className="bg-popover border-border pointer-events-none flex flex-col rounded-xl border px-3.5 py-3 shadow-lg">
-            <div className="flex items-center gap-2 text-[13px] font-medium">
-                <span aria-hidden className="size-2.5 shrink-0 rounded-[3px]" style={{ background: color }} />
+        <div className="bg-popover border-border rounded-app-lg pointer-events-none flex flex-col border px-3.5 py-3 shadow-lg">
+            <div className="text-app-label flex items-center gap-2 font-medium">
+                <span aria-hidden className="size-2.5 shrink-0 rounded-xs" style={{ background: color }} />
                 {tip.title}
             </div>
-            <div className="dash-figure mt-1.5 text-lg leading-[26px] font-semibold tracking-[-0.03em]">
-                {tip.value}
-            </div>
+            <div className="dash-figure text-app-heading mt-1.5 font-semibold">{tip.value}</div>
             <div className="mt-1 flex flex-col">
                 {tip.rows.map((row) => (
-                    <div className="text-muted-foreground flex justify-between text-[13px] leading-5" key={row.label}>
+                    <div
+                        className="text-muted-foreground text-app-label flex justify-between leading-5"
+                        key={row.label}
+                    >
                         <span>{row.label}</span>
-                        <span className={cn("dash-figure", row.tone === "poor" && "text-(--color-app-spend)")}>
-                            {row.value}
-                        </span>
+                        <span className={cn("dash-figure", row.tone === "poor" && "text-app-spend")}>{row.value}</span>
                     </div>
                 ))}
             </div>
             {tip.open ? (
-                <div className="border-app-strong mt-2 flex items-center justify-between border-t pt-2 text-[13px] leading-5">
+                <div className="border-app-strong text-app-label mt-2 flex items-center justify-between border-t pt-2 leading-5">
                     <span>{tip.open}</span>
                     <Glyph className="text-muted-foreground" icon={ArrowRight02Icon} size={14} />
                 </div>
@@ -160,7 +159,7 @@ export function Sankey({ active, drawnOn, hub, label, mode, onActive, onOpen, so
         const anchor = source ? "end" : "start";
         const openable = !source && onOpen !== undefined && node.tone === "category";
         const text = dimmed && !on ? "fill-muted-foreground" : "fill-foreground";
-        const named = node.tone === "savings" && !dimmed ? "fill-(--color-app-spend)" : text;
+        const named = node.tone === "savings" && !dimmed ? "fill-app-spend" : text;
         return (
             <g
                 aria-label={`${node.name}, ${node.note}`}
@@ -197,7 +196,7 @@ export function Sankey({ active, drawnOn, hub, label, mode, onActive, onOpen, so
                 />
                 <text
                     className={cn(
-                        "font-sans text-[13px] transition-colors duration-150",
+                        "text-app-label font-sans transition-colors duration-150",
                         named,
                         on ? "font-semibold" : "font-medium"
                     )}
@@ -208,7 +207,7 @@ export function Sankey({ active, drawnOn, hub, label, mode, onActive, onOpen, so
                     {node.name}
                 </text>
                 <text
-                    className="dash-figure fill-muted-foreground text-xs transition-opacity duration-150"
+                    className="dash-figure fill-muted-foreground text-app-caption transition-opacity duration-150"
                     opacity={dimmed && !on ? 0.6 : 1}
                     style={{ textAnchor: anchor }}
                     x={textX}
@@ -220,14 +219,14 @@ export function Sankey({ active, drawnOn, hub, label, mode, onActive, onOpen, so
         );
     };
     return (
-        <div className="absolute top-0 bottom-[27px] left-5 w-[760px] max-w-[calc(100%-38px)]" ref={ref}>
+        <div className="absolute top-0 bottom-6.75 left-5 w-190 max-w-[calc(100%-38px)]" ref={ref}>
             {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- the bars inside are focusable, so it is a group. */}
             <svg aria-label={label} className="block" height={height} role="group" width={width}>
                 {sources.map((node, index) => render("source", node, index))}
                 {targets.map((node, index) => render("target", node, index))}
                 <rect fill={hub.color} height={bar.height} rx={3} width={NODE_WIDTH} x={bar.x} y={bar.y} />
                 <text
-                    className="fill-foreground font-sans text-[13px] font-medium"
+                    className="fill-foreground text-app-label font-sans font-medium"
                     style={{ textAnchor: "middle" }}
                     x={bar.x + NODE_WIDTH / 2}
                     y={bar.y - HUB_NAME_LIFT}
@@ -235,7 +234,7 @@ export function Sankey({ active, drawnOn, hub, label, mode, onActive, onOpen, so
                     {hub.label}
                 </text>
                 <text
-                    className="dash-figure fill-muted-foreground text-xs"
+                    className="dash-figure fill-muted-foreground text-app-caption"
                     style={{ textAnchor: "middle" }}
                     x={bar.x + NODE_WIDTH / 2}
                     y={bar.y - HUB_NOTE_LIFT}

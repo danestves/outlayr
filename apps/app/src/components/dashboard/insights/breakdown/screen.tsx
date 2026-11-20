@@ -1,6 +1,7 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
+import ChartColumnIcon from "@hugeicons/core-free-icons/ChartColumnIcon";
 import GitCompareIcon from "@hugeicons/core-free-icons/GitCompareIcon";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
@@ -11,6 +12,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useCategoryName } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { categoryBudgets } from "@/lib/dashboard-series";
@@ -21,6 +23,7 @@ import type { Period, PeriodKind } from "@/lib/dashboard-series-period";
 import { daysBetween } from "@/lib/ledger";
 import { useTagBooks } from "@/lib/ledger-db";
 import { LedgerSettingsContext } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { InsightsBar, PeriodControls } from "../bar";
 import { useInsightsFormat } from "../format";
@@ -40,7 +43,7 @@ import {
     weeksOf,
 } from "./model";
 import type { Basis, BreakdownRow, Dimension, Metric } from "./model";
-import { Ghost, OpenButton, Strip } from "./parts";
+import { OpenButton, Strip } from "./parts";
 import type { StripFigure } from "./parts";
 import { patched, viewOf } from "./search";
 import type { ViewPatch } from "./search";
@@ -84,7 +87,12 @@ function useView() {
     const search = route.useSearch();
     const navigate = route.useNavigate();
     const setView = (patch: ViewPatch) =>
-        navigate({ replace: true, resetScroll: false, search: (prev) => patched(prev, patch) });
+        navigate({
+            replace: true,
+            resetScroll: false,
+            search: (prev) => patched(prev, patch),
+            viewTransition: viewTransition("dissolve"),
+        });
     return { setView, view: viewOf(search) };
 }
 
@@ -136,7 +144,7 @@ function Controls({ setView, view }: ReturnType<typeof useView>) {
                     pressed
                     size="lg"
                 >
-                    <span aria-hidden className="size-2 shrink-0 rounded-[2px]" style={{ background: chosen.color }} />
+                    <span aria-hidden className="size-2 shrink-0 rounded-xs" style={{ background: chosen.color }} />
                     {categoryName({ id: chosen.id, name: chosen.name })}
                     <Glyph icon={Cancel01Icon} size={14} />
                     <span className="sr-only">{copy.cards.clearCategory}</span>
@@ -265,21 +273,26 @@ function Nothing({ metric }: { metric: Metric }) {
                     ]}
                 />
             </div>
-            <Card className="mt-4 lg:min-h-[714px]" panelClassName="p-0">
-                <div className="dash-empty relative isolate min-h-[420px] justify-end pb-[228px] lg:min-h-[692px]">
-                    <Ghost />
-                    <p className="text-[15px] font-semibold">{copy.empty.title}</p>
-                    <p className="text-muted-foreground text-[13px]">{line}</p>
-                    {metric === "spent" && income > 0 ? (
-                        <p className="text-muted-foreground -mt-1.5 text-[13px]">
-                            {copy.empty.income({ amount: fmt.amount(income) })}
-                        </p>
-                    ) : null}
-                    <Button onClick={() => open({ kind: "entry" })}>
-                        <Glyph icon={Add01Icon} size={16} />
-                        {copy.empty.add}
-                    </Button>
-                </div>
+            <Card className="mt-4 lg:min-h-178.5" panelClassName="p-0">
+                <Empty
+                    action={
+                        <Button onClick={() => open({ kind: "entry" })}>
+                            <Glyph icon={Add01Icon} size={16} />
+                            {copy.empty.add}
+                        </Button>
+                    }
+                    icon={ChartColumnIcon}
+                    line={
+                        metric === "spent" && income > 0 ? (
+                            <>
+                                {line} {copy.empty.income({ amount: fmt.amount(income) })}
+                            </>
+                        ) : (
+                            line
+                        )
+                    }
+                    title={copy.empty.title}
+                />
             </Card>
         </>
     );
@@ -606,19 +619,19 @@ function Comparing({
         <>
             <Card
                 action={
-                    <span className="text-muted-foreground flex items-center gap-4 text-xs">
+                    <span className="text-muted-foreground text-app-caption flex items-center gap-4">
                         <span className="flex items-center gap-1.5">
-                            <span className="bg-app-strong size-2.5 rounded-[3px]" />
+                            <span className="bg-app-strong size-2.5 rounded-xs" />
                             {against}
                         </span>
                         <span className="flex items-center gap-1.5">
-                            <span className="bg-foreground size-2.5 rounded-[3px]" />
+                            <span className="bg-foreground size-2.5 rounded-xs" />
                             {copy.compare.current({ period: span })}
                         </span>
                     </span>
                 }
                 className="mt-4"
-                panelClassName="px-5 pt-0 pb-[13px]"
+                panelClassName="px-5 pt-0 pb-3.25"
                 title={copy.compare.title({ base: against, current: span })}
             >
                 <CompareChart
@@ -687,11 +700,11 @@ function Daily({
         <Card
             action={
                 action ? (
-                    <span className={`${FIGURE} text-muted-foreground text-[13px] leading-6`}>{action}</span>
+                    <span className={`${FIGURE} text-muted-foreground text-app-label leading-6`}>{action}</span>
                 ) : null
             }
             className="mt-4"
-            panelClassName="px-5 pt-0 pb-[11px]"
+            panelClassName="px-5 pt-0 pb-2.75"
             title={kind === "year" ? copy.cards.byMonth : copy.cards.byDay}
         >
             <StackedChart
@@ -706,7 +719,7 @@ function Daily({
                         </p>
                         {slot.parts.map((part) => (
                             <p className="flex items-center gap-2" key={part.id}>
-                                <span className="size-2 rounded-[2px]" style={{ background: part.color }} />
+                                <span className="size-2 rounded-xs" style={{ background: part.color }} />
                                 <span className="truncate">{part.name}</span>
                                 <span className={`${FIGURE} ml-auto pl-3`}>{money(part.value)}</span>
                             </p>
@@ -840,12 +853,18 @@ function TagBody({ against, baseline, data, fmt, format, setView, view }: TagBod
                             <Card
                                 action={
                                     <OpenButton
-                                        render={<Link search={onwardSearch("/transactions")} to="/transactions" />}
+                                        render={
+                                            <Link
+                                                viewTransition={viewTransition("push-left")}
+                                                search={onwardSearch("/transactions")}
+                                                to="/transactions"
+                                            />
+                                        }
                                     >
                                         {copy.cards.openTag}
                                     </OpenButton>
                                 }
-                                panelClassName="px-5 pt-0 pb-[15px]"
+                                panelClassName="px-5 pt-0 pb-3.75"
                                 title={copy.cards.tagByWeek({ tag: `#${chosen.name}` })}
                             >
                                 <TagWeeks

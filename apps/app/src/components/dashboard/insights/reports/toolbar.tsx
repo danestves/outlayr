@@ -19,6 +19,7 @@ import { Menu } from "panelui-web/menu";
 import type { ReactNode } from "react";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { MenuContent } from "@/components/ui/menu-content";
 import { shiftPeriodKey } from "@/lib/dashboard-series-period";
 
 import type { Definition, Dimension, Grouping, Measure, ReportRange, Span } from "./model";
@@ -66,17 +67,17 @@ const MEASURE_ORDER = ["spending", "income", "net", "count", "average"] as const
 export const dimensionIcon = (dimension: Dimension) => DIMENSION_ICONS[dimension];
 
 const CHIP =
-    "data-[popup-open]:bg-muted data-[popup-open]:border-app-strong h-8 gap-1.5 rounded-full px-3 text-sm font-medium [&_svg]:size-3.5!";
+    "data-[popup-open]:bg-muted data-[popup-open]:border-app-strong h-8 gap-1.5 rounded-full px-3 text-app-body font-medium [&_svg]:size-3.5!";
 const RADIO = "data-[checked]:bg-muted [&_svg]:text-app-tint";
 const LIST = "max-h-72 overflow-y-auto";
-const CAPTION = "text-muted-foreground px-2 pt-1.5 pb-0.5 text-xs leading-4";
+const CAPTION = "text-muted-foreground px-2 pt-1.5 pb-0.5 text-app-caption leading-4";
 const CHEVRON = <Glyph className="text-muted-foreground" icon={ArrowDown01Icon} size={14} />;
 
 function ChipFace({ caption, children, icon }: { caption?: ReactNode; children: ReactNode; icon?: Icon }) {
     return (
         <>
             {icon ? <Glyph className="text-muted-foreground" icon={icon} size={14} /> : null}
-            {caption ? <span className="text-muted-foreground text-[13px] font-normal">{caption}</span> : null}
+            {caption ? <span className="text-muted-foreground text-app-label font-normal">{caption}</span> : null}
             {children}
             {CHEVRON}
         </>
@@ -105,7 +106,7 @@ function ChoiceMenu<Value extends string>({ caption, choices, onChange, value, w
             <Menu.Trigger render={<Button className={CHIP} variant="outline" />}>
                 <ChipFace caption={caption}>{shown?.name}</ChipFace>
             </Menu.Trigger>
-            <Menu.Content align="start" className={`app-shell ph-no-capture ${width}`} sideOffset={6}>
+            <MenuContent align="start" className={width} sideOffset={6}>
                 <div className={CAPTION}>{caption}</div>
                 <Menu.RadioGroup
                     onValueChange={(next) => {
@@ -126,7 +127,7 @@ function ChoiceMenu<Value extends string>({ caption, choices, onChange, value, w
                         </div>
                     ))}
                 </Menu.RadioGroup>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -161,10 +162,10 @@ function RangeMenu({ bounds, onChange, range, words }: RangeMenuProps) {
     ];
     const edge = (side: keyof Span, label: string) => (
         <Menu.Sub>
-            <Menu.SubTrigger end={<span className="dash-figure text-xs">{words.fmt.month(span[side])}</span>}>
+            <Menu.SubTrigger end={<span className="dash-figure text-app-caption">{words.fmt.month(span[side])}</span>}>
                 {label}
             </Menu.SubTrigger>
-            <Menu.SubContent className={`app-shell ${LIST} w-44`}>
+            <Menu.SubContent className={`app-shell transition-none ${LIST} w-60`}>
                 <Menu.RadioGroup
                     onValueChange={(next) => {
                         const from = side === "from" ? next : span.from;
@@ -189,7 +190,7 @@ function RangeMenu({ bounds, onChange, range, words }: RangeMenuProps) {
                     <span>{words.rangeName(span)}</span>
                 </ChipFace>
             </Menu.Trigger>
-            <Menu.Content align="start" className="app-shell ph-no-capture w-[230px]" sideOffset={6}>
+            <MenuContent align="start" className="w-60" sideOffset={6}>
                 {presets.map((preset) => (
                     <Menu.Item key={preset.name} onClick={() => onChange(preset.range)}>
                         {preset.name}
@@ -198,7 +199,7 @@ function RangeMenu({ bounds, onChange, range, words }: RangeMenuProps) {
                 <Menu.Separator />
                 {edge("from", copy.range.from.value)}
                 {edge("to", copy.range.to.value)}
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -224,7 +225,7 @@ function AccountsMenu({ accounts, chosen, onChange, words }: AccountsMenuProps) 
             <Menu.Trigger render={<Button className={CHIP} variant="outline" />}>
                 <ChipFace icon={CreditCardIcon}>{name}</ChipFace>
             </Menu.Trigger>
-            <Menu.Content align="start" className="app-shell ph-no-capture w-[240px]" sideOffset={6}>
+            <MenuContent align="start" className="w-60" sideOffset={6}>
                 <Menu.Item closeOnClick={false} onClick={() => onChange([])}>
                     {copy.accounts.all}
                 </Menu.Item>
@@ -242,7 +243,7 @@ function AccountsMenu({ accounts, chosen, onChange, words }: AccountsMenuProps) 
                         </Menu.CheckboxItem>
                     ))}
                 </div>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -267,10 +268,10 @@ function FilterMenu({ chosen, onChange, tags, words }: FilterMenuProps) {
                 <Glyph className="text-muted-foreground" icon={Add01Icon} size={14} />
                 {chips.filter}
             </Menu.Trigger>
-            <Menu.Content align="start" className="app-shell ph-no-capture w-[240px]" sideOffset={6}>
+            <MenuContent align="start" className="w-60" sideOffset={6}>
                 <div className={CAPTION}>{chips.tags}</div>
                 {tags.length === 0 ? (
-                    <p className="text-muted-foreground px-2 py-1.5 text-[13px]">{chips.tagsNone}</p>
+                    <p className="text-muted-foreground text-app-label px-2 py-1.5">{chips.tagsNone}</p>
                 ) : (
                     <div className={LIST}>
                         {tags.map((tag) => (
@@ -287,7 +288,7 @@ function FilterMenu({ chosen, onChange, tags, words }: FilterMenuProps) {
                         ))}
                     </div>
                 )}
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -325,20 +326,20 @@ export function Toolbar({ accounts, bounds, definition, onAccounts, onPatch, tag
     }));
     const chosenTags = tags.filter((tag) => definition.tags.includes(tag.id));
     return (
-        <div className="flex min-h-[60px] shrink-0 flex-wrap items-center gap-2 py-3.5">
+        <div className="flex min-h-15 shrink-0 flex-wrap items-center gap-2 py-3.5">
             <ChoiceMenu
                 caption={copy.chips.rows.value}
                 choices={dimensions}
                 onChange={(rows) => change({ rows })}
                 value={definition.rows}
-                width="w-[250px]"
+                width="w-62.5"
             />
             <ChoiceMenu
                 caption={copy.chips.columns.value}
                 choices={groupings}
                 onChange={(columns) => change({ columns })}
                 value={definition.columns}
-                width="w-[210px]"
+                width="w-60"
             />
             <RangeMenu bounds={bounds} onChange={(range) => change({ range })} range={definition.range} words={words} />
             <AccountsMenu accounts={accounts} chosen={definition.accounts} onChange={onAccounts} words={words} />
@@ -367,7 +368,7 @@ export function Toolbar({ accounts, bounds, definition, onAccounts, onPatch, tag
                     choices={measures}
                     onChange={(measure) => change({ measure })}
                     value={definition.measure}
-                    width="w-[270px]"
+                    width="w-67.5"
                 />
             </div>
         </div>

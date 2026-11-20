@@ -176,7 +176,7 @@ function StandoutSlot({ card, className, model, spanName }: StandoutSlotProps) {
     );
 }
 
-const ROW_HEIGHT = "lg:min-h-[312px]";
+const ROW_HEIGHT = "lg:min-h-78";
 
 function Overview() {
     const { filters, ledger } = useDashboard();
@@ -216,7 +216,7 @@ function Overview() {
             <div className={`${GRID} mt-4`}>
                 <PaceCard
                     aspectRatio={PACE_RATIO}
-                    className="lg:col-span-2 lg:min-h-[388px]"
+                    className="lg:col-span-2 lg:min-h-97"
                     headline={words.headline}
                     label={copy.pace.chart.value}
                     line={words.line}

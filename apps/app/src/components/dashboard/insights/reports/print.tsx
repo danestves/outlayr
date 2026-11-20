@@ -6,7 +6,7 @@ const PRINT_CSS = `
 #rp-print { position: fixed; top: 0; left: -10000px; width: 1000px; visibility: hidden; pointer-events: none; }
 @media print {
     body > *:not(#rp-print) { display: none !important; }
-    #rp-print { position: static; width: auto; visibility: visible; padding: 24px; color: #111; background: #fff; }
+    #rp-print { position: static; width: auto; visibility: visible; padding: 24px; color: var(--color-app-ink); background: var(--color-app-float); }
     @page { margin: 12mm; }
 }`;
 

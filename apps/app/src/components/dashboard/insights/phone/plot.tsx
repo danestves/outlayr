@@ -4,7 +4,7 @@ import { stretch } from "@/components/dashboard/accounts/parts";
 
 import { FIGURE } from "../parts";
 
-export const AXIS = `${FIGURE} text-muted-foreground text-[12.5px] leading-[17px] whitespace-nowrap`;
+export const AXIS = `${FIGURE} text-muted-foreground text-app-label leading-4.25 whitespace-nowrap`;
 export const AXIS_NOW = "text-foreground font-semibold";
 
 export interface Gridline {
@@ -32,7 +32,7 @@ export function Plot({ children, gutter, height, lines }: PlotProps) {
                     key={line.at}
                     style={{ top: Math.floor(line.at) }}
                 >
-                    <span className={`${AXIS} absolute -top-[9px] right-full mr-2`}>{line.label}</span>
+                    <span className={`${AXIS} absolute -top-2.25 right-full mr-2`}>{line.label}</span>
                 </div>
             ))}
             {children}

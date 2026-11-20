@@ -4,16 +4,17 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useCategoryName } from "@/components/dashboard/home/format";
 import { usePlan } from "@/components/dashboard/settings/plan";
+import { viewTransition } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import type { useInsightsFormat } from "../format";
-import { Card } from "../parts";
+import { Card, Pill } from "../parts";
 import type { Kept, YearCategory, YearChange, YearMonth } from "./model";
 
 const PERCENT = 100;
-const LINE = "border-border flex h-11 items-center gap-2 border-t px-5 text-[13px] font-medium first:border-t-0";
+const LINE = "border-border flex h-11 items-center gap-2 border-t px-5 text-app-label font-medium first:border-t-0";
 const GOOD = "text-app-income";
-const POOR = "text-(--color-app-spend)";
+const POOR = "text-app-spend";
 const WHERE_ROWS = 6;
 
 type Fmt = ReturnType<typeof useInsightsFormat>;
@@ -34,30 +35,30 @@ export function WhereItWent({ categories, choice, fmt, label }: WhereProps) {
     const top = categories[0]?.share ?? 0;
     return (
         <Card
-            action={<span className="dash-figure text-muted-foreground text-[13px] font-normal">{label}</span>}
+            action={<span className="dash-figure text-muted-foreground text-app-label font-normal">{label}</span>}
             panelClassName="p-0"
             title={copy.card.where}
         >
             {categories.slice(0, WHERE_ROWS).map((category) => {
                 const body = (
                     <>
-                        <span className="flex items-center text-[13px] font-medium">
+                        <span className="text-app-label flex items-center font-medium">
                             <span
                                 aria-hidden
-                                className="mr-[9px] size-2 shrink-0 rounded-[2px]"
+                                className="mr-2.25 size-2 shrink-0 rounded-xs"
                                 style={{ background: category.color }}
                             />
                             <span className="min-w-0 truncate">
                                 {categoryName({ id: category.id, name: category.label })}
                             </span>
                             <span className="dash-figure ml-auto font-normal">{fmt.whole(category.value)}</span>
-                            <span className="dash-figure text-muted-foreground ml-2.5 w-[30px] text-right text-xs font-normal">
+                            <span className="dash-figure text-muted-foreground text-app-caption ml-2.5 w-7.5 text-right font-normal">
                                 {percent(category.share)}
                             </span>
                         </span>
                         <span
                             aria-hidden
-                            className="mt-[7px] block h-1.5 overflow-hidden rounded-full"
+                            className="mt-1.75 block h-1.5 overflow-hidden rounded-full"
                             style={{ background: `color-mix(in oklab, ${category.color} 18%, transparent)` }}
                         >
                             <span
@@ -70,13 +71,14 @@ export function WhereItWent({ categories, choice, fmt, label }: WhereProps) {
                         </span>
                     </>
                 );
-                const row = "border-border flex h-[57px] flex-col justify-center border-t px-5 first:border-t-0";
+                const row = "border-border flex h-14.25 flex-col justify-center border-t px-5 first:border-t-0";
                 return choice === null ? (
                     <div className={row} key={category.id}>
                         {body}
                     </div>
                 ) : (
                     <Link
+                        viewTransition={viewTransition("push-left")}
                         className={cn(
                             row,
                             "hover:bg-foreground/[0.04] focus-visible:bg-foreground/[0.04] transition-colors duration-150 outline-none"
@@ -117,7 +119,7 @@ function Bar({
 }) {
     return (
         <>
-            <div className="text-muted-foreground flex justify-between text-[13px] leading-5">
+            <div className="text-muted-foreground text-app-label flex justify-between leading-5">
                 <span>{label}</span>
                 <span className="dash-figure">{value}</span>
             </div>
@@ -210,10 +212,10 @@ function PlanFooter() {
     }
     return (
         <div className="mt-auto flex items-center gap-2 px-4 pt-3 pb-3.5">
-            <span className="text-muted-foreground text-[13px] leading-[17px]">{line}</span>
+            <span className="text-muted-foreground text-app-label leading-4.25">{line}</span>
             <Button
-                className="ml-auto h-[30px] px-2.5"
-                render={<Link to="/settings/plan" />}
+                className="ml-auto h-7.5 px-2.5"
+                render={<Link viewTransition={viewTransition("push-left")} to="/settings/plan" />}
                 size="sm"
                 variant="outline"
             >
@@ -227,17 +229,13 @@ export function KeptCard({ choiceLabel, fmt, here, pro, recent }: KeptProps) {
     const copy = useIntlayer("dashboard-insights-year");
     return (
         <Card panelClassName="p-0" title={copy.card.kept}>
-            <div className="dash-figure flex items-baseline gap-2 px-5 pb-3.5 text-[28px] leading-[34px] font-semibold tracking-[-0.04em]">
+            <div className="dash-figure text-app-figure flex items-baseline gap-2 px-5 pb-3.5 font-semibold">
                 {here === null ? (
-                    <span className="text-muted-foreground text-base">{copy.noBudgets}</span>
+                    <span className="text-muted-foreground text-app-body">{copy.noBudgets}</span>
                 ) : (
                     fmt.whole(here.kept)
                 )}
-                {pro && choiceLabel === null ? (
-                    <span className="bg-app-income/15 text-app-income rounded-full px-2 py-0.5 text-xs leading-4 font-medium tracking-[-0.02em]">
-                        {`${pro.times}x`}
-                    </span>
-                ) : null}
+                {pro && choiceLabel === null ? <Pill tone="good">{`${pro.times}x`}</Pill> : null}
             </div>
             {here === null ? null : (
                 <div className="px-4 pt-4">
@@ -270,9 +268,9 @@ export function BelowAverage({
     return (
         <Card
             action={
-                <span className="dash-figure flex items-baseline gap-2 text-[13px] font-medium">
+                <span className="dash-figure text-app-label flex items-baseline gap-2 font-medium">
                     {latest === null ? null : (
-                        <span className="text-muted-foreground text-xs font-normal">{fmt.month(latest)}</span>
+                        <span className="text-muted-foreground text-app-caption font-normal">{fmt.month(latest)}</span>
                     )}
                     {saved > 0 ? <span className={GOOD}>{fmt.whole(saved)}</span> : null}
                 </span>
@@ -316,7 +314,9 @@ export function HighsAndLows({ average, biggest, fmt, highest, judged, lowest, o
     const month = (value: YearMonth | null) =>
         value === null ? null : (
             <>
-                <small className="dash-figure text-muted-foreground mr-2 text-xs">{fmt.month(value.key)}</small>
+                <small className="dash-figure text-muted-foreground text-app-caption mr-2">
+                    {fmt.month(value.key)}
+                </small>
                 {fmt.whole(value.spent)}
             </>
         );
@@ -334,7 +334,7 @@ export function HighsAndLows({ average, biggest, fmt, highest, judged, lowest, o
             label: copy.biggest,
             value: biggest ? (
                 <>
-                    <small className="dash-figure text-muted-foreground mr-2 text-xs">
+                    <small className="dash-figure text-muted-foreground text-app-caption mr-2">
                         {categoryName({ id: biggest.id, name: biggest.label })}
                     </small>
                     {percent(biggest.share)}

@@ -86,15 +86,15 @@ export function ChangesCard({ model }: { model: InsightsModel }) {
     };
     return (
         <PhoneCard aside={<Aside value={fmt.whole(changes.usual)} />} title={title}>
-            <ol className="flex flex-col gap-[13px] pt-5 pr-[15px] pb-[23px]">
+            <ol className="flex flex-col gap-3.25 pt-5 pr-3.75 pb-5.75">
                 {steps.map((step) => (
-                    <li className="relative flex h-5 items-center text-[13.5px]" key={step.id}>
+                    <li className="text-app-label relative flex h-5 items-center" key={step.id}>
                         <span className="w-24 shrink-0 truncate text-right">
                             {step.kind === "move"
                                 ? (ledger.categories.get(step.id)?.name ?? named.get("other"))
                                 : named.get(step.id)}
                         </span>
-                        <span aria-hidden className="absolute inset-y-0 right-1 left-[107px]">
+                        <span aria-hidden className="absolute inset-y-0 right-1 left-26.75">
                             <span
                                 className="absolute inset-y-0 rounded"
                                 style={{
@@ -137,7 +137,7 @@ export function MonthsCard({ model }: { model: InsightsModel }) {
             aside={average > 0 ? <Aside label={copy.months.averageLabel.value} value={fmt.whole(average)} /> : null}
             title={copy.months.title}
         >
-            <Chart className="h-[221px]" label={copy.months.title.value}>
+            <Chart className="h-55.25" label={copy.months.title.value}>
                 <Plot
                     gutter={GUTTER}
                     height={BARS_HEIGHT}
@@ -150,15 +150,13 @@ export function MonthsCard({ model }: { model: InsightsModel }) {
                         {months.map((month, index) => (
                             <div className="relative flex min-w-0 flex-1 items-end justify-center" key={month.key}>
                                 <span
-                                    className="w-[55.56%] max-w-10 rounded-[3px]"
+                                    className="w-5/9 max-w-10 rounded-xs"
                                     style={{
                                         background: index === last ? NOW_BAR : KEPT_COLOR,
                                         height: percent(month.spent / axis.top),
                                     }}
                                 />
-                                <span
-                                    className={`${AXIS} absolute top-full mt-[5px] ${index === last ? AXIS_NOW : ""}`}
-                                >
+                                <span className={`${AXIS} absolute top-full mt-1.25 ${index === last ? AXIS_NOW : ""}`}>
                                     {fmt.month(month.key)}
                                 </span>
                             </div>
@@ -216,7 +214,7 @@ export function IncomeSpendingCard({ model }: { model: InsightsModel }) {
             aside={kept === null ? null : <Aside label={copy.measures.kept.value} value={`${kept}%`} />}
             title={copy.trend.title}
         >
-            <Chart className="h-[250px]" label={copy.trend.title.value}>
+            <Chart className="h-62.5" label={copy.trend.title.value}>
                 <Plot
                     gutter={GUTTER}
                     height={MIRROR_HEIGHT}
@@ -236,7 +234,7 @@ export function IncomeSpendingCard({ model }: { model: InsightsModel }) {
                         <span className="bg-muted-foreground absolute inset-y-0 right-0 w-px" />
                         {ends.map((end) => (
                             <span
-                                className="border-card absolute right-0 size-[8.5px] translate-x-1/2 -translate-y-1/2 rounded-full border-[1.5px]"
+                                className="border-card absolute right-0 size-2.5 translate-x-1/2 -translate-y-1/2 rounded-full border-2"
                                 key={end.color}
                                 style={{ background: end.color, top: end.y }}
                             />
@@ -283,7 +281,7 @@ export function NetWorthCard({ model }: { model: InsightsModel }) {
     const shown = labelled(values.length);
     return (
         <PhoneCard aside={<Aside value={fmt.whole(worth)} />} title={copy.netWorth.title}>
-            <Chart className="h-[230px]" label={copy.netWorth.title.value}>
+            <Chart className="h-57.5" label={copy.netWorth.title.value}>
                 <Plot
                     gutter={WORTH_GUTTER}
                     height={WORTH_HEIGHT}

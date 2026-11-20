@@ -5,6 +5,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LedgerSettingsContext } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import type { Standout } from "./answers";
 import { KEPT_COLOR } from "./flow";
@@ -14,8 +15,8 @@ import { FIGURE, NOTE } from "./parts";
 import { Key, Nothing, PhoneCard } from "./phone/card";
 
 const ITEM =
-    "group/row relative not-first:before:bg-border not-first:before:absolute not-first:before:inset-x-[15px] not-first:before:top-0 not-first:before:h-px";
-const ROW = "block px-[15px] pt-4 pb-[5px] group-first/row:pt-3.5";
+    "group/row relative not-first:before:bg-border not-first:before:absolute not-first:before:inset-x-3.75 not-first:before:top-0 not-first:before:h-px";
+const ROW = "block px-3.75 pt-4 pb-1.25 group-first/row:pt-3.5";
 
 type Copy = ReturnType<typeof useIntlayer<"dashboard-insights">>;
 type Format = ReturnType<typeof useInsightsFormat>;
@@ -61,7 +62,7 @@ interface LinesProps {
 function Lines({ color, figure, name, note, tone }: LinesProps) {
     return (
         <>
-            <span className="flex h-5 items-center gap-[9px] text-sm font-medium">
+            <span className="text-app-body flex h-5 items-center gap-2.25 font-medium">
                 <Key color={color} />
                 <span className="min-w-0 truncate">{name}</span>
                 <span className={`${FIGURE} ml-auto pl-2 whitespace-nowrap ${tone}`}>{figure}</span>
@@ -81,6 +82,7 @@ function StandoutRow({ card, closed }: { card: Standout; closed: boolean }) {
     return (
         <li className={ITEM}>
             <Link
+                viewTransition={viewTransition("push-left")}
                 className={`${ROW} hover:bg-app-hover`}
                 search={(previous) => ({ ...previous, category: target?.topId ?? card.categoryId })}
                 to="/"
@@ -146,7 +148,7 @@ export function StandoutsCard({ model }: { model: InsightsModel }) {
             {empty ? (
                 <Nothing>{copy.standsOut.empty}</Nothing>
             ) : (
-                <ul className="pb-[17px]">
+                <ul className="pb-4.25">
                     {cards.map((card) => (
                         <StandoutRow card={card} closed={model.closed} key={`${card.kind}:${card.categoryId}`} />
                     ))}

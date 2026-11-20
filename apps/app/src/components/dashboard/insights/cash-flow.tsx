@@ -4,6 +4,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LedgerSettingsContext } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { KEPT_COLOR, flowOf } from "./flow";
 import type { Band, FlowRow } from "./flow";
@@ -31,7 +32,7 @@ function bandName(band: Band, copy: Copy) {
 function Legend({ bands, fmt }: { bands: readonly Band[]; fmt: Format }) {
     const copy = useIntlayer("dashboard-insights");
     return (
-        <ul className="text-muted-foreground mx-[15px] flex flex-wrap gap-x-1.5 gap-y-1 text-[13px] leading-5">
+        <ul className="text-muted-foreground text-app-label mx-3.75 flex flex-wrap gap-x-1.5 gap-y-1 leading-5">
             {bands.map((band) => (
                 <li className="flex min-w-0 items-center gap-2" key={band.id}>
                     <Key color={band.color} />
@@ -65,11 +66,12 @@ function CategoryRow({ fmt, model, row }: { fmt: Format; model: InsightsModel; r
     const { ledger } = useDashboard();
     const category = ledger.categories.get(row.id);
     return (
-        <tr className="group/row hover:bg-app-hover relative h-[38px]">
+        <tr className="group/row hover:bg-app-hover relative h-9.5">
             <th className={NAME} scope="row">
-                <span className="flex min-w-0 items-center gap-[9px]">
+                <span className="flex min-w-0 items-center gap-2.25">
                     <Key color={category?.color ?? KEPT_COLOR} />
                     <Link
+                        viewTransition={viewTransition("push-left")}
                         className="truncate before:absolute before:inset-0"
                         search={(previous) => ({ ...previous, category: row.id })}
                         to="/"
@@ -88,9 +90,9 @@ function KeptRow({ fmt, model, row }: { fmt: Format; model: InsightsModel; row: 
     const { measures } = useIntlayer("dashboard-insights");
     const share = model.flow.income > 0 ? Math.round((row.amount / model.flow.income) * 100) : 0;
     return (
-        <tr className="group/row h-[38px]">
+        <tr className="group/row h-9.5">
             <th className={NAME} scope="row">
-                <span className="flex min-w-0 items-center gap-[9px]">
+                <span className="flex min-w-0 items-center gap-2.25">
                     <Key color={KEPT_COLOR} />
                     <span className="truncate">{measures.kept}</span>
                 </span>
@@ -104,17 +106,14 @@ function KeptRow({ fmt, model, row }: { fmt: Format; model: InsightsModel; row: 
 function FlowTable({ fmt, model, rows }: { fmt: Format; model: InsightsModel; rows: readonly FlowRow[] }) {
     const { table } = useIntlayer("dashboard-insights");
     return (
-        <div className="px-[15px]">
-            <table className="w-full border-separate border-spacing-0 text-sm">
+        <div className="px-3.75">
+            <table className="text-app-body w-full border-separate border-spacing-0">
                 <thead>
-                    <tr className="text-muted-foreground h-7 text-[13px]">
+                    <tr className="text-muted-foreground text-app-label h-7">
                         <th className="border-border w-full border-b p-0 text-left font-normal" scope="col">
                             {table.category}
                         </th>
-                        <th
-                            className="border-border min-w-[90px] border-b p-0 pl-2.5 text-right font-normal"
-                            scope="col"
-                        >
+                        <th className="border-border min-w-22.5 border-b p-0 pl-2.5 text-right font-normal" scope="col">
                             {table.spent}
                         </th>
                         <th className="border-border min-w-24 border-b p-0 pl-2.5 text-right font-normal" scope="col">
@@ -122,7 +121,7 @@ function FlowTable({ fmt, model, rows }: { fmt: Format; model: InsightsModel; ro
                         </th>
                     </tr>
                 </thead>
-                <tbody className="before:block before:h-[5px]">
+                <tbody className="before:block before:h-1.25">
                     {rows.map((row) =>
                         row.kind === "kept" ? (
                             <KeptRow fmt={fmt} key={row.id} model={model} row={row} />
@@ -175,7 +174,7 @@ export function CashFlowCard({ model }: { model: InsightsModel }) {
         >
             <div className="pt-3.5 pb-3">
                 <Legend bands={sources} fmt={fmt} />
-                <div className="mt-[18px] mb-[27px]">
+                <div className="mt-4.5 mb-6.75">
                     <Sankey label={copy.cashFlow.title.value} sources={sources} targets={targets} />
                 </div>
                 <FlowTable fmt={fmt} model={model} rows={rows} />

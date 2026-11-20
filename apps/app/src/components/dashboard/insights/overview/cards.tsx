@@ -7,6 +7,7 @@ import { SkeletonBox } from "skullet/react";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile, MerchantTile } from "@/components/ledger/tiles";
+import { viewTransition } from "@/lib/motion";
 import { photoSrc } from "@/lib/photo-src";
 
 import { useInsightsFormat } from "../format";
@@ -28,7 +29,7 @@ export function SubscriptionsCard({ className, subscriptions }: { className?: st
             className={className}
             footer={
                 <>
-                    <span className="text-muted-foreground min-w-0 flex-1 text-xs leading-4">
+                    <span className="text-muted-foreground text-app-caption min-w-0 flex-1 leading-4">
                         {next
                             ? copy.foot({
                                   amount: fmt.whole(perYear),
@@ -90,11 +91,11 @@ export function WhereCard({ className, rows }: { className?: string; rows: reado
 }
 
 const ELSE_ROW =
-    "hover:bg-muted/60 focus-visible:bg-muted/60 after:border-border relative -mx-4 flex h-[43px] items-center gap-2.5 px-4 text-[13px] font-medium outline-none after:absolute after:inset-x-4 after:top-0 after:border-t first:after:hidden";
+    "hover:bg-muted/60 focus-visible:bg-muted/60 after:border-border relative -mx-4 flex h-10.75 items-center gap-2.5 px-4 text-app-label font-medium outline-none after:absolute after:inset-x-4 after:top-0 after:border-t first:after:hidden";
 
 function ElseRow({ children, to, value }: { children: ReactNode; to: Onward; value?: ReactNode }) {
     return (
-        <Link className={ELSE_ROW} search={onwardSearch(to)} to={to}>
+        <Link viewTransition={viewTransition("push-left")} className={ELSE_ROW} search={onwardSearch(to)} to={to}>
             <span className="min-w-0 truncate">{children}</span>
             <span className={`${FIGURE} text-muted-foreground ml-auto font-normal whitespace-nowrap`}>{value}</span>
             <Glyph className="text-muted-foreground shrink-0" icon={ArrowRight01Icon} size={16} />
@@ -150,7 +151,7 @@ export function AnswerBones() {
             }
         >
             <Bones>
-                <span className="flex h-[200px] items-end gap-2.5">
+                <span className="flex h-50 items-end gap-2.5">
                     {BONE_BARS.map((height) => (
                         <SkeletonBox className="flex-1" height={height} key={height} />
                     ))}
@@ -191,21 +192,21 @@ export function HistoryCard({ className = "", line, slots }: HistoryCardProps) {
                 <path d={GHOST} stroke="var(--color-app-ghost)" strokeDasharray="3 4" strokeWidth={1.4} />
             </svg>
             <div className="flex flex-1 flex-col items-center justify-end gap-1.5 px-5 pt-6 pb-7 text-center">
-                <b className="text-[15px] font-semibold">{history.title}</b>
+                <b className="text-app-title font-semibold">{history.title}</b>
                 <p className={`${NOTE} mb-2.5 max-w-80`}>{line}</p>
                 <div className="mt-1.5 grid w-full grid-cols-3 gap-2">
                     {slots.map((slot) => (
                         <div
-                            className={`flex h-16 min-w-0 flex-col items-center justify-center rounded-[10px] text-xs ${
+                            className={`rounded-app-md text-app-caption flex h-16 min-w-0 flex-col items-center justify-center ${
                                 slot.started
-                                    ? "bg-[color-mix(in_oklab,var(--color-app-tint)_22%,transparent)] font-medium"
-                                    : "text-muted-foreground border border-dashed border-(--color-app-strong)"
+                                    ? "bg-app-tint/22 font-medium"
+                                    : "text-muted-foreground border-app-strong border border-dashed"
                             }`}
                             key={slot.span.key}
                         >
                             {fmt.spanTick(slot.span)}
                             {slot.started ? (
-                                <small className={`${FIGURE} text-[11px] leading-4 font-normal`}>
+                                <small className={`${FIGURE} text-app-micro leading-4 font-normal`}>
                                     {slot.entries === 1
                                         ? history.entry
                                         : history.entries({ count: String(slot.entries) })}

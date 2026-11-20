@@ -9,6 +9,7 @@ import { Button } from "panelui-web/button";
 import { Menu } from "panelui-web/menu";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { MenuContent } from "@/components/ui/menu-content";
 
 import { PANEL, TRAY } from "./card";
 import { monthsIn, spanOf } from "./model";
@@ -51,7 +52,7 @@ export function RowMenu({
             >
                 <Glyph icon={MoreVerticalIcon} size={16} />
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell ph-no-capture w-[220px]" sideOffset={4}>
+            <MenuContent align="end" className="w-60" sideOffset={4}>
                 <Menu.Item onClick={() => actions.open(report.id)}>
                     <Glyph icon={LinkSquare02Icon} size={16} />
                     {rowMenu.open}
@@ -78,7 +79,7 @@ export function RowMenu({
                     <Glyph icon={Delete02Icon} size={16} />
                     {rowMenu.delete}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -108,19 +109,19 @@ export function SavedList({ actions, activeId, currentKey, onAll, reports, words
     const { saved } = words.copy;
     return (
         <aside className={`${TRAY} self-stretch max-lg:hidden`}>
-            <h2 className="text-muted-foreground min-h-[42px] px-4 pt-2.5 pb-3 text-sm leading-5 font-medium">
+            <h2 className="text-muted-foreground text-app-body min-h-10.5 px-4 pt-2.5 pb-3 font-medium">
                 {saved.title}
             </h2>
             <div className={PANEL}>
                 {reports.length === 0 ? (
-                    <p className="text-muted-foreground px-4 py-3 text-[13px] leading-5">{saved.none}</p>
+                    <p className="text-muted-foreground text-app-label px-4 py-3 leading-5">{saved.none}</p>
                 ) : (
                     <ul className="m-0 flex list-none flex-col px-2 py-1">
                         {reports.map((report) => (
                             <li className="group relative" key={report.id}>
                                 <button
                                     aria-current={report.id === activeId ? "true" : undefined}
-                                    className="text-muted-foreground hover:bg-muted/60 aria-[current=true]:bg-muted aria-[current=true]:text-foreground focus-visible:ring-ring flex h-9 w-full items-center gap-2 rounded-lg px-2.5 text-start text-[13px] font-medium outline-none focus-visible:ring-2"
+                                    className="text-muted-foreground hover:bg-muted/60 aria-[current=true]:bg-muted aria-[current=true]:text-foreground focus-visible:ring-ring rounded-app-sm text-app-label flex h-9 w-full items-center gap-2 px-2.5 text-start font-medium outline-none focus-visible:ring-2"
                                     onClick={() => actions.open(report.id)}
                                     type="button"
                                 >
@@ -131,7 +132,7 @@ export function SavedList({ actions, activeId, currentKey, onAll, reports, words
                                     />
                                     <span className="min-w-0 flex-1 truncate">{report.name}</span>
                                     {report.id === activeId ? null : (
-                                        <span className="dash-figure text-[11px] leading-4 font-normal group-focus-within:invisible group-hover:invisible">
+                                        <span className="dash-figure text-app-micro leading-4 font-normal group-focus-within:invisible group-hover:invisible">
                                             {rangeTag(report, currentKey, words)}
                                         </span>
                                     )}

@@ -55,9 +55,9 @@ export function Sankey({ label, sources, targets }: SankeyProps) {
         >
             <Bars bands={left} className="w-2.5 rounded-xs" />
             <Ribbons bands={left} grow={116} into />
-            <span className="w-[2.5px] shrink-0" style={{ background: HUB_COLOR }} />
+            <span className="w-0.5 shrink-0" style={{ background: HUB_COLOR }} />
             <Ribbons bands={right} grow={179.5} into={false} />
-            <Bars bands={right} className="w-1.5 rounded-[1.5px]" />
+            <Bars bands={right} className="w-1.5 rounded-xs" />
         </div>
     );
 }

@@ -7,6 +7,7 @@ import { useId, useState } from "react";
 import { useLocale } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { DialogContent } from "@/components/ui/dialog-content";
 
 import { lifetimeOf, sharedUrl } from "./links";
 import type { Lifetime, SharedLink } from "./links";
@@ -14,8 +15,8 @@ import type { ReportWords } from "./words";
 
 const COPIED_MS = 2000;
 const LIFETIMES = ["week", "month", "never"] as const satisfies readonly Lifetime[];
-const ROW = "border-border flex items-center justify-between gap-3 border-t px-4 py-3 text-sm leading-6";
-const NOTE = "text-muted-foreground text-xs leading-4";
+const ROW = "border-border flex items-center justify-between gap-3 border-t px-4 py-3 text-app-body leading-6";
+const NOTE = "text-muted-foreground text-app-caption leading-4";
 
 export interface ShareOptions {
     amounts: boolean;
@@ -103,7 +104,7 @@ export function ShareDialog({
 
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open}>
-            <Dialog.Content className="app-shell sm:max-w-[448px]">
+            <DialogContent size="md">
                 <Dialog.Header>
                     <Dialog.Title>{sharing.title({ name })}</Dialog.Title>
                 </Dialog.Header>
@@ -111,7 +112,7 @@ export function ShareDialog({
                     <div className="mb-3 flex gap-2">
                         <output
                             aria-label={sharing.url.value}
-                            className={`dash-figure border-input bg-input/30 flex h-9 min-w-0 flex-1 items-center overflow-hidden rounded-lg border px-3 text-[13px] whitespace-nowrap shadow-xs ${
+                            className={`dash-figure border-input bg-input/30 rounded-app-sm text-app-label flex h-9 min-w-0 flex-1 items-center overflow-hidden border px-3 whitespace-nowrap shadow-xs ${
                                 on ? "" : "text-muted-foreground"
                             }`}
                         >
@@ -158,7 +159,7 @@ export function ShareDialog({
                         </Tabs>
                     </div>
                     {failed ? (
-                        <p className="text-destructive px-4 pb-2 text-[13px]" role="alert">
+                        <p className="text-destructive text-app-label px-4 pb-2" role="alert">
                             {sharing.failed}
                         </p>
                     ) : null}
@@ -168,7 +169,7 @@ export function ShareDialog({
                         {sharing.done}
                     </Button>
                 </Dialog.Footer>
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }

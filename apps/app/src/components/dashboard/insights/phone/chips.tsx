@@ -14,6 +14,7 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { toggledAccounts } from "@/components/dashboard/shell/filters";
 import { usePeriodKeys } from "@/components/dashboard/shell/period-keys";
 import { AccountTile } from "@/components/ledger/tiles";
+import { SheetContent } from "@/components/ui/sheet-content";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { periodOf } from "@/lib/dashboard-series-period";
 import { useDisplayFormat } from "@/lib/ledger-settings";
@@ -23,8 +24,8 @@ import { FIGURE } from "../parts";
 
 // The pill is 34px tall; the pseudo-element takes the tap out to 44.
 const CHIP =
-    "border-border hover:bg-app-hover relative flex h-[34px] shrink-0 items-center gap-1.5 rounded-full border px-[13px] text-sm font-medium whitespace-nowrap after:absolute after:inset-x-0 after:-inset-y-[5px]";
-const ROW = "hover:bg-app-hover flex h-11 w-full shrink-0 items-center gap-2 rounded-lg px-2 text-sm";
+    "border-border hover:bg-app-hover relative flex h-8.5 shrink-0 items-center gap-1.5 rounded-full border px-3.25 text-app-body font-medium whitespace-nowrap after:absolute after:inset-x-0 after:-inset-y-1.25";
+const ROW = "hover:bg-app-hover flex h-11 w-full shrink-0 items-center gap-2 rounded-app-sm px-2 text-app-body";
 
 function Chevron() {
     return <HugeiconsIcon className="text-muted-foreground" icon={ArrowDown01Icon} size={16} strokeWidth={2} />;
@@ -45,7 +46,7 @@ export function PeriodChip() {
                 {titled(fmt.spanName(filters.period), locale)}
                 <Chevron />
             </Sheet.Trigger>
-            <Sheet.Content className="app-shell ph-no-capture max-h-[60dvh]">
+            <SheetContent className="max-h-[60dvh]">
                 <Sheet.Header title={copy.period} />
                 <Sheet.Body className="px-2">
                     {keys.map((key) => {
@@ -74,7 +75,7 @@ export function PeriodChip() {
                         );
                     })}
                 </Sheet.Body>
-            </Sheet.Content>
+            </SheetContent>
         </Sheet>
     );
 }
@@ -102,7 +103,7 @@ export function AccountsChip({ quiet }: { quiet: boolean }) {
                 {chosen.length === 0 ? copy.allAccounts : named}
                 <Chevron />
             </Sheet.Trigger>
-            <Sheet.Content className="app-shell ph-no-capture">
+            <SheetContent>
                 <Sheet.Header title={copy.accountsChip} />
                 <Sheet.Body className="px-2">
                     {accounts.map((account) => (
@@ -116,7 +117,7 @@ export function AccountsChip({ quiet }: { quiet: boolean }) {
                             <AccountTile account={accountLook(account)} size="sm" />
                             <span className="min-w-0 truncate">{account.name}</span>
                             <span
-                                className={`${FIGURE} text-muted-foreground ml-auto pl-2 text-[13px] whitespace-nowrap`}
+                                className={`${FIGURE} text-muted-foreground text-app-label ml-auto pl-2 whitespace-nowrap`}
                             >
                                 {money(balances.get(account.localId) ?? 0, ledger.currency)}
                             </span>
@@ -129,7 +130,7 @@ export function AccountsChip({ quiet }: { quiet: boolean }) {
                         {copy.clear}
                     </Button>
                 </Sheet.Footer>
-            </Sheet.Content>
+            </SheetContent>
         </Sheet>
     );
 }

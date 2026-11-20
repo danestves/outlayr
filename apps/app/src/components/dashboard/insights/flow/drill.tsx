@@ -1,6 +1,7 @@
 import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
+import FlowConnectionIcon from "@hugeicons/core-free-icons/FlowConnectionIcon";
 import { Link } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Table } from "panelui-web/table";
@@ -8,11 +9,13 @@ import { useMemo, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { Empty } from "@/components/dashboard/home/empty";
 import { useCategoryName } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { MerchantTile } from "@/components/ledger/tiles";
 import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
 import { periodKindOf } from "@/lib/dashboard-series-period";
+import { viewTransition } from "@/lib/motion";
 
 import { PeriodStepper } from "../bar";
 import { OTHER_COLOR } from "../flow";
@@ -91,6 +94,7 @@ function Header({ categoryId, name }: { categoryId: string; name: string }) {
                 nativeButton={false}
                 render={
                     <Link
+                        viewTransition={viewTransition("push-left", { back: true })}
                         search={(prev) => ({ accounts: prev.accounts, period: prev.period })}
                         to="/insights/cash-flow"
                     />
@@ -100,15 +104,21 @@ function Header({ categoryId, name }: { categoryId: string; name: string }) {
             >
                 <Glyph icon={ArrowLeft02Icon} size={16} />
             </Button>
-            <span className="text-muted-foreground text-[13px] font-medium">{tabs.cashFlow}</span>
+            <span className="text-muted-foreground text-app-label font-medium">{tabs.cashFlow}</span>
             <Glyph className="text-muted-foreground -mx-px" icon={ArrowRight01Icon} size={16} />
-            <h1 className="min-w-0 truncate text-lg leading-6 font-semibold tracking-[-0.02em]">{name}</h1>
+            <h1 className="text-app-heading min-w-0 truncate font-semibold">{name}</h1>
             <div className="ml-auto flex items-center gap-2">
                 <PeriodStepper span={filters.span} />
                 <Button
-                    className="ml-0.5 h-[30px] px-2.5"
+                    className="ml-0.5 h-7.5 px-2.5"
                     nativeButton={false}
-                    render={<Link params={{ categoryId }} to="/settings/categories/$categoryId" />}
+                    render={
+                        <Link
+                            viewTransition={viewTransition("push-left")}
+                            params={{ categoryId }}
+                            to="/settings/categories/$categoryId"
+                        />
+                    }
                     size="sm"
                     variant="outline"
                 >
@@ -134,6 +144,7 @@ function Entries({ categoryId, drill }: { categoryId: string; drill: DrillModel 
                     nativeButton={false}
                     render={
                         <Link
+                            viewTransition={viewTransition("push-left")}
                             search={(prev) => ({
                                 accounts: prev.accounts,
                                 category: categoryId,
@@ -143,7 +154,7 @@ function Entries({ categoryId, drill }: { categoryId: string; drill: DrillModel 
                             to="/transactions"
                         />
                     }
-                    className="my-px h-[30px] px-2.5"
+                    className="my-px h-7.5 px-2.5"
                     size="sm"
                     variant="outline"
                 >
@@ -254,21 +265,22 @@ export function Drill({ categoryId }: { categoryId: string }) {
                 <Strip cells={cells} />
             </div>
             {drill.spent === 0 ? (
-                <Card className="mt-4 xl:h-[752px]" panelClassName="dash-empty" title={copy.chart}>
-                    <b className="text-[15px] font-semibold">{copy.drill.emptyTitle({ category: name })}</b>
-                    <p className="text-muted-foreground max-w-80 text-[13px]">
-                        {copy.drill.empty({ category: name, span: fmt.spanName(span) })}
-                    </p>
+                <Card className="mt-4 xl:h-188" title={copy.chart}>
+                    <Empty
+                        icon={FlowConnectionIcon}
+                        line={copy.drill.empty({ category: name, span: fmt.spanName(span) })}
+                        title={copy.drill.emptyTitle({ category: name })}
+                    />
                 </Card>
             ) : (
-                <div className="mt-4 grid grid-cols-1 gap-4 xl:h-[752px] xl:grid-cols-[minmax(0,1fr)_480px]">
+                <div className="mt-4 grid grid-cols-1 gap-4 xl:h-188 xl:grid-cols-[minmax(0,1fr)_480px]">
                     <Card
                         action={
-                            <span className="dash-figure text-muted-foreground text-[13px] font-normal">
+                            <span className="dash-figure text-muted-foreground text-app-label font-normal">
                                 {copy.drill.of({ amount: whole })}
                             </span>
                         }
-                        className="min-h-[560px]"
+                        className="min-h-140"
                         panelClassName="relative overflow-hidden p-0"
                         title={copy.chart}
                     >

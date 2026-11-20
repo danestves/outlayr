@@ -1,8 +1,10 @@
+import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import { proPrice } from "@outlayr/money/pro-prices";
 import { Tabs } from "panelui-web/tabs";
 import { useMemo } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { Empty } from "@/components/dashboard/home/empty";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { periodKindOf } from "@/lib/dashboard-series-period";
 
@@ -15,7 +17,6 @@ import { BelowAverage, HighsAndLows, KeptCard, WhereItWent } from "./cards";
 import { MonthChart } from "./chart";
 import { proMultiple, runsOf, yearOf, yearsWithData } from "./model";
 import type { YearModel } from "./model";
-import { QuietYear } from "./quiet";
 
 const MONTHS_IN_YEAR = 12;
 const RECENT = "recent";
@@ -161,23 +162,23 @@ function Grid({ choice, fmt, model }: { choice: string | null; fmt: Fmt; model: 
         <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3 xl:grid-rows-[424px_300px]">
             <Card
                 action={
-                    <span className="text-muted-foreground flex items-center gap-3.5 text-xs font-normal">
+                    <span className="text-muted-foreground text-app-caption flex items-center gap-3.5 font-normal">
                         <span className="dash-figure">{copy.legend.average({ amount: fmt.whole(model.average) })}</span>
                         {judged === 0 ? null : (
                             <>
                                 <span className="flex items-center gap-1.5">
-                                    <span aria-hidden className="size-2 rounded-[2px] bg-(--color-app-tint)" />
+                                    <span aria-hidden className="bg-app-tint size-2 rounded-xs" />
                                     {copy.legend.over}
                                 </span>
                                 <span className="flex items-center gap-1.5">
-                                    <span aria-hidden className="bg-app-strong size-2 rounded-[2px]" />
+                                    <span aria-hidden className="bg-app-strong size-2 rounded-xs" />
                                     {copy.legend.under}
                                 </span>
                             </>
                         )}
                     </span>
                 }
-                className="min-h-[360px] xl:col-span-2"
+                className="min-h-90 xl:col-span-2"
                 panelClassName="p-0"
                 title={copy.card.month}
             >
@@ -204,7 +205,7 @@ function Young({ fmt, model }: { fmt: Fmt; model: YearModel }) {
     return (
         <>
             <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-                <Card className="min-h-[360px]" panelClassName="p-0" title={copy.card.month}>
+                <Card className="min-h-90" panelClassName="p-0" title={copy.card.month}>
                     <MonthChart average={null} months={model.months} />
                 </Card>
                 <WhereItWent
@@ -215,13 +216,11 @@ function Young({ fmt, model }: { fmt: Fmt; model: YearModel }) {
                 />
             </div>
             <Card className="mt-4" panelClassName="p-0">
-                <div className="dash-empty relative isolate min-h-[295px] justify-end pb-7">
-                    <QuietYear />
-                    <b className="text-[15px] font-semibold">{copy.empty.title}</b>
-                    <p className="text-muted-foreground text-[13px] leading-[17px]">
-                        {copy.empty.line({ count: model.monthsLogged })}
-                    </p>
-                </div>
+                <Empty
+                    icon={Calendar03Icon}
+                    line={copy.empty.line({ count: model.monthsLogged })}
+                    title={copy.empty.title}
+                />
             </Card>
         </>
     );

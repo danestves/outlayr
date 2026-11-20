@@ -8,15 +8,17 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import type { DashboardSearch } from "@/components/dashboard/shell/filters";
+import { viewTransition } from "@/lib/motion";
 
 const PERCENT = 100;
 const TENTHS = 10;
 
 export const FIGURE = "dash-figure";
-export const NOTE = "text-muted-foreground text-[13px] leading-5";
-export const STATEMENT = "text-[15px] leading-5 font-semibold tracking-[-0.01em]";
+export const NOTE = "text-muted-foreground text-app-label leading-5";
+export const STATEMENT = "text-app-title font-semibold";
+export const BADGE = "text-app-caption! h-6 rounded-app-xs px-2 font-medium";
 export const GRID = "grid grid-cols-1 gap-4 lg:grid-cols-3";
-export const ROW = "border-border flex h-[38px] items-center gap-2.5 border-t text-[13px] font-medium first:border-t-0";
+export const ROW = "border-border flex h-9.5 items-center gap-2.5 border-t text-app-label font-medium first:border-t-0";
 
 interface CardProps extends Omit<ComponentProps<"section">, "title"> {
     action?: ReactNode;
@@ -98,12 +100,10 @@ export function KpiStrip({ figures }: { figures: readonly Figure[] }) {
             {figures.map((figure, index) => (
                 <Kpi className="min-w-0 gap-0" key={index}>
                     <Kpi.Title>{figure.label}</Kpi.Title>
-                    <Kpi.Value
-                        className={`${FIGURE} mt-1 truncate text-2xl leading-8 font-semibold tracking-[-0.04em]`}
-                    >
+                    <Kpi.Value className={`${FIGURE} text-app-figure mt-2 truncate font-semibold`}>
                         {figure.value}
                     </Kpi.Value>
-                    <div className="mt-1 flex h-[22px] min-w-0 items-center gap-2">{figure.foot}</div>
+                    <Kpi.Footer className="text-app-caption mt-1 h-5 min-w-0 gap-2">{figure.foot}</Kpi.Footer>
                 </Kpi>
             ))}
         </Kpi.Group>
@@ -115,11 +115,30 @@ const signedPercent = (delta: number) => {
     return `${percent > 0 ? "+" : ""}${percent}%`;
 };
 
-function toneOf(delta: number, goodDirection: KpiGoodDirection) {
+export type Tone = "bad" | "flat" | "good";
+
+/** What a change means: up is good when more is better, and no change is flat. */
+export function toneOf(delta: number, goodDirection: KpiGoodDirection): Tone {
     if (delta === 0 || goodDirection === "none") {
         return "flat";
     }
-    return delta > 0 === (goodDirection === "up") ? "good" : "poor";
+    return delta > 0 === (goodDirection === "up") ? "good" : "bad";
+}
+
+const DIRECTION = { bad: "down", flat: "none", good: "up" } as const satisfies Record<Tone, KpiGoodDirection>;
+
+/** The frames' trend pill, label as written. The frames draw it without Kpi.Trend's arrow. */
+export function Pill({ children, tone }: { children: string; tone: Tone }) {
+    return (
+        <Kpi.Trend
+            aria-label={children}
+            className={`${FIGURE} [&_svg]:hidden`}
+            format={() => children}
+            goodDirection={DIRECTION[tone]}
+            value={tone === "flat" ? 0 : 1}
+            variant="badge"
+        />
+    );
 }
 
 /** A change against another span as a signed percent, coloured by whether that direction is good. */
@@ -127,20 +146,12 @@ export function Change({ delta, goodDirection = "up" }: { delta: number | null; 
     if (delta === null) {
         return null;
     }
-    return (
-        <span className="dash-trend" data-tone={toneOf(delta, goodDirection)}>
-            {signedPercent(delta)}
-        </span>
-    );
+    return <Pill tone={toneOf(delta, goodDirection)}>{signedPercent(delta)}</Pill>;
 }
 
 /** A plain figure in the same pill as a change, for a share that is neither good nor bad. */
-export function Flat({ children }: { children: ReactNode }) {
-    return (
-        <span className="dash-trend" data-tone="flat">
-            {children}
-        </span>
-    );
+export function Flat({ children }: { children: string }) {
+    return <Pill tone="flat">{children}</Pill>;
 }
 
 export function Note({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -148,7 +159,7 @@ export function Note({ children, className = "" }: { children: ReactNode; classN
 }
 
 export function Swatch({ color }: { color: string }) {
-    return <span aria-hidden className="size-2.5 shrink-0 rounded-[3px]" style={{ background: color }} />;
+    return <span aria-hidden className="size-2.5 shrink-0 rounded-xs" style={{ background: color }} />;
 }
 
 /** A filled share of a track. `value` and `max` are amounts; a track with no max is empty. */
@@ -194,8 +205,8 @@ export const onwardSearch =
 export function OnwardButton({ category, children, to }: { category?: string; children: ReactNode; to: Onward }) {
     return (
         <Button
-            className="h-[30px] px-2.5"
-            render={<Link search={onwardSearch(to, category)} to={to} />}
+            className="h-7.5 px-2.5"
+            render={<Link viewTransition={viewTransition("push-left")} search={onwardSearch(to, category)} to={to} />}
             size="sm"
             variant="outline"
         >
