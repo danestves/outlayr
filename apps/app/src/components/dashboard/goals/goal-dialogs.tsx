@@ -430,7 +430,7 @@ function GoalForm({
                             value={name}
                         />
                     </Field>
-                    <div className="grid grid-cols-2 items-start gap-3">
+                    <div className="grid gap-3">
                         <Field invalid={shown.includes("amount")}>
                             <MoneyField
                                 className={shown.includes("amount") ? "border-destructive max-w-none" : "max-w-none"}

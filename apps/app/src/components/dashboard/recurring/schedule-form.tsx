@@ -481,17 +481,29 @@ function FormView({
                         </Tabs.List>
                     </Tabs>
                 )}
-                <Slot error={problems.has("name") ? errors.name : null} label={copy.fields.name}>
-                    <Input
-                        aria-invalid={problems.has("name") || undefined}
-                        autoFocus={schedule === null}
-                        onChange={(event) => set({ note: event.target.value })}
-                        placeholder={copy.form.namePlaceholder.value}
-                        value={values.note}
-                    />
-                </Slot>
                 <div className="grid gap-3 gap-y-3.5 sm:grid-cols-2">
-                    <Field className="min-w-0" invalid={problems.has("amount")}>
+                    <Slot error={problems.has("name") ? errors.name : null} label={copy.fields.name}>
+                        <Input
+                            aria-invalid={problems.has("name") || undefined}
+                            autoFocus={schedule === null}
+                            onChange={(event) => set({ note: event.target.value })}
+                            placeholder={copy.form.namePlaceholder.value}
+                            value={values.note}
+                        />
+                    </Slot>
+                    <Slot error={problems.has("category") ? errors.category : null} label={copy.fields.category}>
+                        <Pick
+                            invalid={problems.has("category")}
+                            onPick={(categoryId) => set({ categoryId })}
+                            options={categoryOptions}
+                            placeholder={copy.form.pickCategory.value}
+                            quiet={false}
+                            value={values.categoryId}
+                        />
+                    </Slot>
+                </div>
+                <div className="grid gap-3 gap-y-3.5 sm:grid-cols-2">
+                    <Field className="min-w-0 sm:col-span-2" invalid={problems.has("amount")}>
                         <MoneyField
                             className={problems.has("amount") ? "border-destructive max-w-none" : "max-w-none"}
                             codes={[currency]}
@@ -505,16 +517,6 @@ function FormView({
                             <Field.Error match>{errors.amount({ zero: amountText(0, currency) })}</Field.Error>
                         ) : null}
                     </Field>
-                    <Slot error={problems.has("category") ? errors.category : null} label={copy.fields.category}>
-                        <Pick
-                            invalid={problems.has("category")}
-                            onPick={(categoryId) => set({ categoryId })}
-                            options={categoryOptions}
-                            placeholder={copy.form.pickCategory.value}
-                            quiet={false}
-                            value={values.categoryId}
-                        />
-                    </Slot>
                     <Slot label={copy.fields.account}>
                         <AccountPick onPick={(accountId) => set({ accountId })} value={values.accountId} />
                     </Slot>

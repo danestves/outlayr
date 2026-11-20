@@ -193,7 +193,7 @@ export function LogDialog({
                 <Dialog.Body className="gap-3.5">
                     <p className="text-muted-foreground text-app-body">{line}</p>
                     <div className="grid gap-3 sm:grid-cols-2">
-                        <Field invalid={!valid}>
+                        <Field className="sm:col-span-2" invalid={!valid}>
                             <MoneyField
                                 className={valid ? "max-w-none" : "border-destructive max-w-none"}
                                 codes={[currency]}
@@ -206,11 +206,11 @@ export function LogDialog({
                             <Field.Label>{copy.fields.paidOn}</Field.Label>
                             <DayField label={copy.fields.paidOn.value} onChange={setDay} value={day} />
                         </Field>
+                        <Field>
+                            <Field.Label>{copy.fields.account}</Field.Label>
+                            <AccountPick onPick={setAccountId} value={accountId} />
+                        </Field>
                     </div>
-                    <Field>
-                        <Field.Label>{copy.fields.account}</Field.Label>
-                        <AccountPick onPick={setAccountId} value={accountId} />
-                    </Field>
                 </Dialog.Body>
                 <Dialog.Footer>
                     <Button className="me-auto" onClick={onSkip} variant="outline">
@@ -363,7 +363,7 @@ export function ConfirmDialog({
             <FlowDialog head={<CandidateTile candidate={candidate} />} label={candidate.name}>
                 <Dialog.Body className="gap-3.5">
                     <div className="grid gap-3 gap-y-3.5 sm:grid-cols-2">
-                        <Field invalid={amount === null || amount <= 0}>
+                        <Field className="sm:col-span-2" invalid={amount === null || amount <= 0}>
                             <MoneyField
                                 className={
                                     amount !== null && amount > 0 ? "max-w-none" : "border-destructive max-w-none"
@@ -394,18 +394,18 @@ export function ConfirmDialog({
                             <Field.Label>{copy.fields.account}</Field.Label>
                             <AccountPick onPick={setAccountId} value={accountId} />
                         </Field>
+                        <Field>
+                            <Field.Label>{copy.fields.category}</Field.Label>
+                            <Pick
+                                invalid={categoryId === null}
+                                onPick={setCategoryId}
+                                options={categoryOptions}
+                                placeholder={copy.form.pickCategory.value}
+                                quiet={false}
+                                value={categoryId}
+                            />
+                        </Field>
                     </div>
-                    <Field>
-                        <Field.Label>{copy.fields.category}</Field.Label>
-                        <Pick
-                            invalid={categoryId === null}
-                            onPick={setCategoryId}
-                            options={categoryOptions}
-                            placeholder={copy.form.pickCategory.value}
-                            quiet={false}
-                            value={categoryId}
-                        />
-                    </Field>
                     {past.length > 0 ? (
                         <div className="rounded-app-md flex items-center justify-between gap-4 border px-4 py-3">
                             <label className="text-app-label" htmlFor={switchId}>
