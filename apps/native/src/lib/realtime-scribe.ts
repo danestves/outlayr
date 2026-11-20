@@ -1,6 +1,7 @@
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
+import { ENV } from "@/env";
 import { languageSubtag, SUPPORTED_LANGUAGES } from "@/i18n/languages";
 
 import { pcmToBase64, TranscriptStreamError } from "./transcript-stream";
@@ -8,7 +9,7 @@ import type { TranscriptEvent, TranscriptFailureReason, TranscriptProtocol } fro
 
 const SCRIBE_SAMPLE_RATE = 16_000;
 // apps/voice-relay forwards the socket so ElevenLabs never sees the phone, as the privacy policy says.
-const SCRIBE_RELAY = "wss://voice.tryoutlayr.com";
+const SCRIBE_RELAY = ENV.EXPO_PUBLIC_VOICE_RELAY_URL;
 const SCRIBE_LANGUAGES = [...new Set(SUPPORTED_LANGUAGES.map(languageSubtag))];
 const CURRENCY_KEYTERMS = [
     "dollars",
