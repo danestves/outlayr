@@ -24,7 +24,6 @@ import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { isFinanced } from "@/lib/entry-writes";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { photoSrc } from "@/lib/photo-src";
-import { parseReceipt } from "@/lib/receipt-scan";
 
 import { useCatalog } from "../home/catalog";
 import { timeOfDay, useCategoryName, useDateFormat } from "../home/format";
@@ -32,8 +31,8 @@ import { figureOf } from "../home/rows";
 import type { FoldedRow } from "../home/rows";
 import { useWide } from "../insights/use-wide";
 import { EntryEditor, useRepeatNames } from "./entry-form";
+import { EntryRecord } from "./entry-record";
 import { installmentTags, transferMoves } from "./model";
-import { SavedReceipt } from "./receipt-card";
 import { TransferEditor } from "./transfer-editor";
 import { useWeekday } from "./use-day-title";
 
@@ -369,15 +368,6 @@ function InstallmentLine({ installmentId, rowId }: { installmentId: string | nul
     );
 }
 
-function EntryReceipt({ raw }: { raw: ReturnType<ReturnType<typeof useCatalog>["transaction"]> }) {
-    const { ledger } = useDashboard();
-    const receipt = parseReceipt(raw?.receipt);
-    if (!raw || !receipt) {
-        return null;
-    }
-    return <SavedReceipt currency={raw.currency ?? ledger.currency} merchant={raw.note.trim()} receipt={receipt} />;
-}
-
 function ReadEntry({
     imageUrl,
     onDelete,
@@ -463,7 +453,7 @@ function ReadEntry({
                     </Line>
                 ) : null}
             </div>
-            <EntryReceipt raw={raw} />
+            {raw ? <EntryRecord editable={onEdit !== undefined} entry={raw} merchant={merchant} /> : null}
             <div className="mt-5 flex flex-col gap-2 pb-4">
                 <div className="flex gap-2 *:flex-1">
                     {onLogAgain ? (
@@ -547,6 +537,7 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
     const wide = useWide();
     const weekday = useWeekday();
     const { clockTime, money } = useDisplayFormat();
+    const categoryName = useCategoryName();
     const catalog = useCatalog(ledger);
     const raw = "fromId" in row ? undefined : catalog.transaction(row.id);
     const figure = figureOf(ledger, row);
@@ -572,6 +563,8 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
     }
     const doc = editableDoc(ledger, row);
     const imageUrl = photoSrc(raw?.imageKey);
+    const top = ledger.categories.get(row.topId);
+    const merchantName = row.note.trim() || (top ? categoryName(top) : "");
     const total = money(row.income ? figure.amount : -figure.amount, ledger.currency, "always");
     const logAgain = doc
         ? () => {
@@ -589,13 +582,14 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
                             accountTrigger={accountTrigger}
                             categoryTrigger={categoryTrigger}
                             doc={doc}
-                            files={<EntryReceipt raw={raw} />}
                             imageUrl={imageUrl}
                             key={doc.localId}
                             onDelete={remove}
                             onLogAgain={() => logAgain?.()}
                             total={total}
-                        />
+                        >
+                            <EntryRecord editable entry={doc} merchant={merchantName} />
+                        </EntryEditor>
                         {(raw?.recurringType ?? 0) > 0 ? <RecurringLink id={row.id} /> : null}
                     </>
                 }

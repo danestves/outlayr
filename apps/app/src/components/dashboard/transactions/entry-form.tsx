@@ -650,8 +650,8 @@ export function EntryDialog({
 export function EntryEditor({
     accountTrigger,
     categoryTrigger,
+    children,
     doc,
-    files,
     imageUrl,
     onDelete,
     onLogAgain,
@@ -659,8 +659,8 @@ export function EntryEditor({
 }: {
     accountTrigger?: RefObject<HTMLButtonElement | null>;
     categoryTrigger?: RefObject<HTMLButtonElement | null>;
+    children?: ReactNode;
     doc: Doc;
-    files?: ReactNode;
     imageUrl?: string;
     onDelete: () => void;
     onLogAgain: () => void;
@@ -701,25 +701,27 @@ export function EntryEditor({
     // oxlint-disable-next-line outlayr/react-effect-budget -- Esc and J K unmount this with no blur to save on.
     useEffect(() => () => flush(), []);
     return (
-        <div onBlur={() => save(values)}>
-            <EntryFields
-                accountTrigger={accountTrigger}
-                categoryTrigger={categoryTrigger}
-                imageUrl={imageUrl}
-                layout="drawer"
-                onChange={(patch) => {
-                    setValues((current) => ({ ...current, ...patch }));
-                    setProblem(null);
-                }}
-                onPick={(patch) => {
-                    const next = { ...values, ...patch };
-                    setValues(next);
-                    save(next);
-                }}
-                problem={problem}
-                values={values}
-            />
-            {files}
+        <>
+            <div onBlur={() => save(values)}>
+                <EntryFields
+                    accountTrigger={accountTrigger}
+                    categoryTrigger={categoryTrigger}
+                    imageUrl={imageUrl}
+                    layout="drawer"
+                    onChange={(patch) => {
+                        setValues((current) => ({ ...current, ...patch }));
+                        setProblem(null);
+                    }}
+                    onPick={(patch) => {
+                        const next = { ...values, ...patch };
+                        setValues(next);
+                        save(next);
+                    }}
+                    problem={problem}
+                    values={values}
+                />
+            </div>
+            {children}
             <div className="flex flex-wrap items-center gap-2 py-4">
                 <Button onClick={onLogAgain} size="sm" variant="outline">
                     <HugeiconsIcon icon={Copy01Icon} size={14} />
@@ -733,6 +735,6 @@ export function EntryEditor({
                     {form.total} <span className="text-foreground font-mono tabular-nums">{total}</span>
                 </span>
             </div>
-        </div>
+        </>
     );
 }
