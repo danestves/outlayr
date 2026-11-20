@@ -13,6 +13,7 @@ import { kpis } from "@/lib/dashboard-series";
 import { periodOf } from "@/lib/dashboard-series-period";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { AccountsBar, Card, Cell, DataTable, EmptyAccounts, INCOME, MUTED, PERCENT, SPEND } from "./accounts-screen";
 import { Glyph } from "./glyph";
@@ -68,7 +69,7 @@ function Note({ children, pill }: { children?: ReactNode; pill: ReactNode }) {
     return (
         <span className="flex min-w-0 items-center gap-2">
             {pill}
-            <span className="text-muted-foreground truncate text-[13px]">{children}</span>
+            <span className="text-muted-foreground text-app-label truncate">{children}</span>
         </span>
     );
 }
@@ -160,10 +161,10 @@ function zeroDomain(values: readonly number[]) {
 
 function Legend({ color, label, line = false }: { color: string; label: ReactNode; line?: boolean }) {
     return (
-        <span className="text-muted-foreground inline-flex items-center gap-1.5 text-[13px] font-normal">
+        <span className="text-muted-foreground text-app-label inline-flex items-center gap-1.5 font-normal">
             <i
                 aria-hidden
-                className={line ? "h-0.5 w-3 rounded-full" : "size-2 rounded-[2px]"}
+                className={line ? "h-0.5 w-3 rounded-full" : "size-2 rounded-xs"}
                 style={{ background: color }}
             />
             {label}
@@ -195,7 +196,7 @@ function HaveOweCard({ model, range }: { model: NetWorthModel; range: WorthRange
                 </span>
             }
         >
-            <div className="px-4 pt-4 pb-3.5">
+            <div className="px-4 pt-4 pb-3.5" data-motion="dissolve" key={range}>
                 <Plot
                     aspectRatio={ratio}
                     curve="linear"
@@ -211,7 +212,7 @@ function HaveOweCard({ model, range }: { model: NetWorthModel; range: WorthRange
                     <Plot.Line color="var(--color-foreground)" dataKey="net" strokeWidth={2} />
                     <Plot.Dots color="var(--color-foreground)" dataKey="net" ringWidth={0} size={3} />
                     <Plot.XAxis
-                        className="dash-figure text-[11px]"
+                        className="text-app-micro font-mono tabular-nums"
                         format={(datum) => (monthly ? month(String(datum.day)) : date.day(String(datum.day)))}
                         ticks={monthly ? data.length : DAILY_TICKS}
                     />
@@ -254,7 +255,7 @@ function MonthsCard({ model }: { model: NetWorthModel }) {
                     const change = point.net - started;
                     return (
                         <Table.Row key={key}>
-                            <Cell className="dash-figure">
+                            <Cell className="font-mono tabular-nums">
                                 {key.startsWith(year) ? name : `${name} ${key.slice(0, 4)}`}
                             </Cell>
                             <Cell className="font-normal" figure>
@@ -296,7 +297,9 @@ export function NetWorthScreen() {
                         <Button
                             aria-label={detail.back.value}
                             nativeButton={false}
-                            render={<Link to="/accounts" />}
+                            render={
+                                <Link to="/accounts" viewTransition={viewTransition("push-left", { back: true })} />
+                            }
                             size="icon"
                             variant="outline"
                         >

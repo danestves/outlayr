@@ -753,6 +753,13 @@ const dashboardAccounts = {
                 fr: "Votre banque affiche-t-elle",
                 pt: "Seu banco mostra",
             }),
+            negativeBalance: t({
+                en: "Negative balance",
+                de: "Negativer Saldo",
+                es: "Saldo negativo",
+                fr: "Solde négatif",
+                pt: "Saldo negativo",
+            }),
             checkShows: insert(
                 t({
                     en: "What {{name}} shows",

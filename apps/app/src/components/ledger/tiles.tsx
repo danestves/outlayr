@@ -14,6 +14,7 @@ export const NEUTRAL_TILE = "#767676";
 
 const SIZES = {
     xl: { box: "size-11 rounded-xl", glyph: 22, initial: "text-base", emoji: "text-xl" },
+    logo: { box: "size-8.5 rounded-app-md border", glyph: 18, initial: "text-app-label", emoji: "text-base" },
     lg: { box: "size-[26px] rounded-lg", glyph: 14, initial: "text-[11px]", emoji: "text-sm" },
     md: { box: "size-6 rounded-md", glyph: 14, initial: "text-[11px]", emoji: "text-sm" },
     sm: { box: "size-5 rounded-[5px]", glyph: 12, initial: "text-[10px]", emoji: "text-xs" },

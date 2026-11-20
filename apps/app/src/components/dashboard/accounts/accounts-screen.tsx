@@ -27,13 +27,16 @@ import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
+import { Empty } from "@/components/dashboard/home/empty";
 import { useDateFormat, useWholeMoney, titled } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile, LookTile } from "@/components/ledger/tiles";
+import { MenuContent } from "@/components/ui/menu-content";
 import { archivedAccount } from "@/lib/account-writes";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 
 import { useAccountFlows } from "./flows";
 import { Glyph } from "./glyph";
@@ -70,7 +73,6 @@ import {
     SortMenu,
     Spark,
     Trend,
-    stretch,
     useChartRatio,
     useCheckedText,
 } from "./parts";
@@ -87,9 +89,9 @@ export const PERCENT = 100;
 const LIST_CHART = 778 / 200;
 const LINE_CHART = 778 / 190;
 const TINT = "var(--color-app-tint)";
-export const ROW = "flex h-11 items-center gap-2.5 border-b text-[13px] font-medium last:border-0";
+export const ROW = "text-app-label flex h-11 items-center gap-2.5 border-b font-medium last:border-0";
 export const ICON_TILE =
-    "bg-app-fill text-muted-foreground flex size-[26px] shrink-0 items-center justify-center rounded-lg";
+    "bg-app-fill text-muted-foreground rounded-app-sm flex size-6.5 shrink-0 items-center justify-center";
 
 /** A tray with its count beside the title and a quiet figure, the action or both at the end. */
 export function Card({
@@ -119,7 +121,7 @@ export function Card({
                 <Frame.Title as="h2" className="flex items-center whitespace-nowrap">
                     {title}
                     {count === undefined ? null : (
-                        <span className="dash-figure ms-3 text-[13px] font-normal">{count}</span>
+                        <span className="text-app-label ms-3 font-mono font-normal tabular-nums">{count}</span>
                     )}
                 </Frame.Title>
                 {aside || action ? (
@@ -127,7 +129,9 @@ export function Card({
                         className={`min-w-0 justify-self-end ${stackAction ? "max-sm:col-start-1 max-sm:row-start-2 max-sm:mt-2 max-sm:justify-self-start" : ""}`}
                     >
                         <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:justify-end">
-                            {aside ? <span className="dash-figure min-w-0 truncate text-[13px]">{aside}</span> : null}
+                            {aside ? (
+                                <span className="text-app-label min-w-0 truncate font-mono tabular-nums">{aside}</span>
+                            ) : null}
                             {action}
                         </span>
                     </Frame.Action>
@@ -200,7 +204,7 @@ export function Cell({
     return (
         <Table.Cell
             align={figure ? "end" : "start"}
-            className={`whitespace-nowrap last:text-end ${figure ? "dash-figure text-sm font-medium" : ""} ${className}`}
+            className={`whitespace-nowrap last:text-end ${figure ? "font-mono text-sm font-medium tabular-nums" : ""} ${className}`}
         >
             {children}
         </Table.Cell>
@@ -229,7 +233,7 @@ function useListModel() {
 type ListModel = ReturnType<typeof useListModel>;
 
 const quietNote = (children: ReactNode) => (
-    <span className="text-muted-foreground truncate text-[13px] leading-5">{children}</span>
+    <span className="text-muted-foreground text-app-label truncate">{children}</span>
 );
 
 function Kpis({ model }: { model: ListModel }) {
@@ -325,7 +329,7 @@ function Kpis({ model }: { model: ListModel }) {
                     value={`${credit.exact ? "" : "~"}${money(credit.available, ledger.currency)}`}
                 >
                     <Badge
-                        className="dash-figure text-muted-foreground h-5 rounded-full px-2 text-xs font-medium"
+                        className="text-muted-foreground h-5 rounded-full px-2 font-mono text-xs font-medium tabular-nums"
                         variant="secondary"
                     >
                         {kpi.of({ amount: `${credit.exact ? "" : "~"}${whole(credit.limit)}` })}
@@ -361,7 +365,7 @@ function WorthLine({ data, label }: { data: readonly WorthDatum[]; label: string
                 {(datum) => (
                     <>
                         <div className="text-muted-foreground">{date.day(String(datum.day))}</div>
-                        <div className="dash-figure">{money(Number(datum.value), ledger.currency)}</div>
+                        <div className="font-mono tabular-nums">{money(Number(datum.value), ledger.currency)}</div>
                     </>
                 )}
             </Plot.Tooltip>
@@ -404,10 +408,14 @@ function WorthCard({ model }: { model: ListModel }) {
             stackAction
             title={
                 <span className="flex min-w-0 items-center gap-3">
-                    <Link className="hover:text-foreground" to="/accounts/net-worth">
+                    <Link
+                        className="hover:text-foreground"
+                        to="/accounts/net-worth"
+                        viewTransition={viewTransition("push-left")}
+                    >
                         {kpi.netWorth}
                     </Link>
-                    <span className="dash-figure truncate text-[13px] font-normal">
+                    <span className="text-app-label truncate font-mono font-normal tabular-nums">
                         {model.multi
                             ? list.inSixMonths({ currency: ledger.currency })
                             : list.inPeriod({
@@ -418,7 +426,7 @@ function WorthCard({ model }: { model: ListModel }) {
                 </span>
             }
         >
-            <div className="flex-1 p-4 pb-3.5">
+            <div className="flex-1 p-4 pb-3.5" data-motion="dissolve" key={range}>
                 {model.multi ? (
                     <WorthLine data={data} label={kpi.netWorth.value} />
                 ) : (
@@ -452,9 +460,9 @@ function InMain({ row }: { row: AccountRow }) {
 function CurrencyCell({ row }: { row: AccountRow }) {
     return (
         <Cell>
-            <span className="dash-figure">{row.currency}</span>
+            <span className="font-mono tabular-nums">{row.currency}</span>
             {row.exact ? null : (
-                <Badge className="dash-figure text-muted-foreground ms-1" variant="outline">
+                <Badge className="text-muted-foreground ms-1 font-mono tabular-nums" variant="outline">
                     {row.currency}?
                 </Badge>
             )}
@@ -527,7 +535,7 @@ function AssetsCard({ model, sort }: { model: ListModel; sort: AccountSort }) {
                                 </Cell>
                                 <Cell>
                                     <Spark
-                                        className="w-[120px]"
+                                        className="w-30"
                                         color={(line.at(-1) ?? 0) >= (line[0] ?? 0) ? "success" : "destructive"}
                                         height={26}
                                         values={line}
@@ -559,7 +567,12 @@ function CheckedNote({ row }: { row: AccountRow }) {
 
 function AccountLink({ children, row }: { children: ReactNode; row: AccountRow }) {
     return (
-        <Link className="block rounded-lg outline-offset-4" params={{ accountId: row.id }} to="/accounts/$accountId">
+        <Link
+            className="rounded-app-sm block outline-offset-4"
+            params={{ accountId: row.id }}
+            to="/accounts/$accountId"
+            viewTransition={viewTransition("push-left")}
+        >
             {children}
         </Link>
     );
@@ -584,7 +597,7 @@ export function useStatementText() {
         }
         return (
             <span className={overdue ? "text-app-spend" : ""}>
-                <span className="dash-figure">{money(due, row.currency)}</span>{" "}
+                <span className="font-mono tabular-nums">{money(due, row.currency)}</span>{" "}
                 <span className={overdue ? "" : "text-muted-foreground"}>
                     {overdue
                         ? card.overdue({ date: date.day(cycle.dueOn) })
@@ -604,8 +617,8 @@ function UsedCell({ row }: { row: AccountRow }) {
     const used = Math.min(1, Math.max(0, -row.balance / row.creditLimit));
     return (
         <Cell>
-            <Meter className="w-[120px]" max={1} value={used} />
-            <small className="dash-figure text-muted-foreground mt-1 block text-xs leading-4">
+            <Meter className="w-30" max={1} value={used} />
+            <small className="text-muted-foreground mt-1 block font-mono text-xs leading-4 tabular-nums">
                 {card.available({
                     amount: money(Math.max(0, row.creditLimit + row.balance), row.currency),
                 })}
@@ -701,7 +714,7 @@ export function UpcomingCard({ accountId, showEmpty = false }: { accountId?: str
     if (rows.length === 0) {
         return showEmpty ? (
             <Card title={list.upcoming}>
-                <p className="text-muted-foreground p-4 text-[13px]">{list.nothingScheduled}</p>
+                <p className="text-muted-foreground text-app-label p-4">{list.nothingScheduled}</p>
             </Card>
         ) : null;
     }
@@ -725,12 +738,12 @@ export function UpcomingCard({ accountId, showEmpty = false }: { accountId?: str
                         <UpcomingLead row={row} />
                         <span className="min-w-0 truncate">{titleOf(row)}</span>
                         <span
-                            className={`dash-figure font-normal whitespace-nowrap ${row.day < ledger.today ? "text-app-spend" : "text-muted-foreground"}`}
+                            className={`font-mono font-normal whitespace-nowrap tabular-nums ${row.day < ledger.today ? "text-app-spend" : "text-muted-foreground"}`}
                         >
                             {date.day(row.day)}
                         </span>
                         <span
-                            className={`dash-figure ml-auto whitespace-nowrap ${row.income ? "text-app-income" : ""} ${row.day < ledger.today ? "text-app-spend" : ""}`}
+                            className={`ml-auto font-mono whitespace-nowrap tabular-nums ${row.income ? "text-app-income" : ""} ${row.day < ledger.today ? "text-app-spend" : ""}`}
                         >
                             {money(row.amount, row.currency)}
                         </span>
@@ -761,9 +774,9 @@ function GoalsCard({ model }: { model: ListModel }) {
             <div className="flex flex-col gap-4 p-4">
                 {goals.map((goal) => (
                     <div key={goal.id}>
-                        <div className="flex items-baseline gap-2 text-[13px] font-medium">
+                        <div className="text-app-label flex items-baseline gap-2 font-medium">
                             <span className="min-w-0 truncate">{goal.name}</span>
-                            <span className="dash-figure ml-auto whitespace-nowrap">
+                            <span className="ml-auto font-mono whitespace-nowrap tabular-nums">
                                 {goal.exact ? "" : "~"}
                                 {whole(goal.saved)}
                                 <span className="text-muted-foreground font-normal">
@@ -813,10 +826,10 @@ function TransfersCard() {
                         <span className="min-w-0 truncate">
                             {list.transferTo({ name: ledger.accounts.get(transfer.toId)?.name ?? "" })}
                         </span>
-                        <span className="dash-figure text-muted-foreground font-normal whitespace-nowrap">
+                        <span className="text-muted-foreground font-mono font-normal whitespace-nowrap tabular-nums">
                             {date.day(transfer.day)}
                         </span>
-                        <span className="dash-figure ml-auto whitespace-nowrap">
+                        <span className="ml-auto font-mono whitespace-nowrap tabular-nums">
                             {money(transfer.sent, transfer.sentCurrency)}
                         </span>
                     </div>
@@ -851,15 +864,15 @@ function CurrencyCard({ model }: { model: ListModel }) {
                 <div className="mt-2">
                     {shares.map((share, index) => (
                         <div
-                            className="flex h-10 items-center gap-2 border-b text-[13px] last:border-0"
+                            className="text-app-label flex h-10 items-center gap-2 border-b last:border-0"
                             key={share.code}
                         >
                             <i
                                 className="size-2 rounded-full"
                                 style={{ background: share.value > 0 ? shade(index) : SPEND }}
                             />
-                            <span className="dash-figure">{share.code}</span>
-                            <span className="dash-figure ml-auto">
+                            <span className="font-mono tabular-nums">{share.code}</span>
+                            <span className="ml-auto font-mono tabular-nums">
                                 {share.exact ? "" : "~"}
                                 {money(share.value, ledger.currency)}
                             </span>
@@ -892,7 +905,7 @@ function RatesCard({ model }: { model: ListModel }) {
             <div className="p-4">
                 {rates.map((rate) => (
                     <div
-                        className="dash-figure flex h-10 items-center border-b text-[13px] last:border-0"
+                        className="text-app-label flex h-10 items-center border-b font-mono tabular-nums last:border-0"
                         key={`${rate.from}${rate.to}`}
                     >
                         {list.rateTo({ from: rate.from, to: rate.to })}
@@ -900,7 +913,7 @@ function RatesCard({ model }: { model: ListModel }) {
                     </div>
                 ))}
                 {missing.length > 0 ? (
-                    <p className="text-muted-foreground mt-3 text-[13px] leading-5">
+                    <p className="text-muted-foreground text-app-label mt-3">
                         {list.noRate({ codes: missing.join(", ") })}
                     </p>
                 ) : null}
@@ -909,68 +922,23 @@ function RatesCard({ model }: { model: ListModel }) {
     );
 }
 
-const GHOST_LINE =
-    "M0 34L22 33.4L44 32.2L66 32.8L88 32.8L110 32.2L128 31L150 32.2L172 32.2L194 32.8L216 31.6L238 30.4L260 29.8L282 29.8L304 29.2L326 28.6L348 28.6L370 29.2L392 29.2L414 28.6L436 27.4L458 26.8L480 26.8L500 26.8";
-const GHOST_SPARK = "M0 9L14 8L26 10L40 6L54 7L68 5L82 7L96 9L110 5L124 6L138 3L152 6L166 4L184 5";
-const GHOST_TABLE = [
-    [82, 40, 48],
-    [76, 40, 64],
-    [56, 34, 64],
-] as const;
-const GHOST_GRID = "grid grid-cols-[34%_22%_1fr_auto] items-center px-5";
-function GhostSpark() {
-    return (
-        <svg className="block h-3.5 w-[184px] max-w-full" ref={stretch} viewBox="0 0 184 14">
-            <path className="stroke-app-ghost" d={GHOST_SPARK} fill="none" strokeDasharray="2 3" />
-        </svg>
-    );
-}
-
 export function EmptyAccounts() {
     const { actions, empty } = useIntlayer("dashboard-accounts");
     const { open } = useAccountFlows();
     return (
-        <Frame className="min-h-[760px] min-w-0 flex-1" variant="plain">
-            <Frame.Panel className="flex-1 divide-y-0">
-                <div aria-hidden className="px-5 pt-3">
-                    <svg
-                        className="block h-[196px] w-full [&_*]:[vector-effect:non-scaling-stroke]"
-                        ref={stretch}
-                        viewBox="0 0 500 40"
-                    >
-                        {[0.5, 13.5, 26.5, 39.5].map((y) => (
-                            <line className="stroke-border" key={y} x1={0} x2={500} y1={y} y2={y} />
-                        ))}
-                        <path className="stroke-app-ghost" d={GHOST_LINE} fill="none" strokeDasharray="2 3" />
-                    </svg>
-                </div>
-                <div aria-hidden className={`${GHOST_GRID} mt-4 h-9 border-b`}>
-                    <i className="dash-gl w-[52px]" />
-                    <i className="dash-gl w-[38px]" />
-                    <i className="dash-gl w-[46px]" />
-                    <i className="dash-gl w-[40px]" />
-                </div>
-                <div aria-hidden className="[mask-image:linear-gradient(#000_40%,transparent)]">
-                    {GHOST_TABLE.map(([name, change, balance]) => (
-                        <div className={`${GHOST_GRID} h-[42px] border-b last:border-0`} key={name}>
-                            <span className="flex items-center gap-2.5">
-                                <i className="dash-gx" />
-                                <i className="dash-gl" style={{ width: name }} />
-                            </span>
-                            <GhostSpark />
-                            <i className="dash-gl" style={{ width: change }} />
-                            <i className="dash-gl" style={{ width: balance }} />
-                        </div>
-                    ))}
-                </div>
-                <div className="flex flex-col items-center gap-1.5 px-6 pt-3.5 pb-10 text-center">
-                    <b className="text-[15px] leading-[22px] font-semibold">{empty.title}</b>
-                    <p className="text-muted-foreground text-[13px]">{empty.line}</p>
-                    <Button className="mt-2.5" onClick={() => open({ kind: "create", type: "bank" })}>
-                        <Glyph icon={Add01Icon} size={16} />
-                        {actions.addAccount}
-                    </Button>
-                </div>
+        <Frame className="min-w-0 flex-1" variant="plain">
+            <Frame.Panel className="flex flex-1 flex-col">
+                <Empty
+                    action={
+                        <Button onClick={() => open({ kind: "create", type: "bank" })}>
+                            <Glyph icon={Add01Icon} size={16} />
+                            {actions.addAccount}
+                        </Button>
+                    }
+                    icon={BankIcon}
+                    line={empty.line}
+                    title={empty.title}
+                />
             </Frame.Panel>
         </Frame>
     );
@@ -998,7 +966,7 @@ function ArchivedMenu({ row }: { row: ArchivedRow }) {
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" alignOffset={-4} className="app-shell ph-no-capture w-[220px]" sideOffset={4}>
+            <MenuContent align="end" alignOffset={-4} className="w-55" sideOffset={4}>
                 <Menu.Item onClick={restore}>
                     <Glyph icon={InboxUploadIcon} size={16} />
                     {flows.restore}
@@ -1012,7 +980,7 @@ function ArchivedMenu({ row }: { row: ArchivedRow }) {
                     <Glyph icon={Delete02Icon} size={16} />
                     {actions.delete}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -1032,10 +1000,10 @@ function ArchivedRows({ rows }: { rows: readonly ArchivedRow[] }) {
                     <Cell>
                         <div className="flex min-w-0 items-center gap-2.5">
                             <span className="shrink-0 opacity-60">
-                                <AccountTile account={row.look} size="lg" />
+                                <AccountTile account={row.look} size="logo" />
                             </span>
                             <div className="min-w-0">
-                                <b className="text-muted-foreground block truncate text-sm leading-[18px] font-medium">
+                                <b className="text-muted-foreground text-app-label block truncate font-medium">
                                     {row.name}
                                 </b>
                                 <small className="text-muted-foreground block truncate text-xs leading-4">
@@ -1044,7 +1012,7 @@ function ArchivedRows({ rows }: { rows: readonly ArchivedRow[] }) {
                             </div>
                         </div>
                     </Cell>
-                    <Cell className="dash-figure text-muted-foreground">
+                    <Cell className="text-muted-foreground font-mono tabular-nums">
                         {row.lastDay === null ? "" : date.full(row.lastDay ?? row.archivedDay)}
                     </Cell>
                     <Cell className="text-muted-foreground" figure>
@@ -1084,8 +1052,8 @@ function ArchivedCard() {
             <Frame className="min-w-0" variant="plain">
                 <Frame.Panel className="h-12 flex-row items-center gap-2 divide-y-0 ps-5 pe-3">
                     <Glyph icon={Archive02Icon} className="text-muted-foreground shrink-0" size={16} />
-                    <h2 className="text-[13px] font-medium">{flows.archived}</h2>
-                    <span className="dash-figure text-muted-foreground text-[13px]">{rows.length}</span>
+                    <h2 className="text-app-label font-medium">{flows.archived}</h2>
+                    <span className="text-muted-foreground text-app-label font-mono tabular-nums">{rows.length}</span>
                     <span className="ms-auto">{toggle}</span>
                 </Frame.Panel>
             </Frame>
@@ -1120,7 +1088,7 @@ function AddAccountMenu() {
                 <Glyph icon={Add01Icon} size={16} />
                 {actions.addAccount}
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell ph-no-capture w-[232px]" sideOffset={4}>
+            <MenuContent align="end" className="w-58" sideOffset={4}>
                 <Menu.Item onClick={() => open({ kind: "create", type: "bank" })}>
                     <Glyph icon={BankIcon} size={16} />
                     {columns.account}
@@ -1133,7 +1101,7 @@ function AddAccountMenu() {
                     <Glyph icon={CalendarCheckIn01Icon} size={16} />
                     {flows.purchaseInInstallments}
                 </Menu.Item>
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -1141,7 +1109,7 @@ function AddAccountMenu() {
 export function AccountsBar({ children, title }: { children?: ReactNode; title: ReactNode }) {
     return (
         <div className="flex min-h-16 flex-wrap items-center gap-2 py-3">
-            <h1 className="mr-auto text-lg leading-6 font-semibold tracking-[-0.02em]">{title}</h1>
+            <h1 className="text-app-heading mr-auto font-semibold">{title}</h1>
             {children}
         </div>
     );

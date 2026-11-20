@@ -53,8 +53,8 @@ const imageIn = (items: Iterable<{ getAsFile?: () => File | null; type: string }
 function Consent() {
     const { consent } = useIntlayer("dashboard-installments");
     return (
-        <div className="flex flex-col gap-3 text-[13px] leading-5">
-            <h3 className="text-[15px] leading-[22px] font-semibold">{consent.title}</h3>
+        <div className="text-app-label flex flex-col gap-3">
+            <h3 className="text-app-title font-semibold">{consent.title}</h3>
             <div className="border-y py-2.5">
                 <p className="font-medium">{consent.planScan}</p>
                 <p className="text-muted-foreground">{consent.planScanSends}</p>
@@ -76,7 +76,7 @@ function Consent() {
 
 function FileBox({ file }: { file: File }) {
     return (
-        <div className="bg-muted/40 flex h-40 items-center justify-center gap-2 rounded-xl border px-4 text-[13px]">
+        <div className="bg-muted/40 text-app-label rounded-app-lg flex h-40 items-center justify-center gap-2 border px-4">
             <Glyph className="text-muted-foreground flex-none" icon={Image01Icon} size={18} />
             <span className="truncate">{file.name}</span>
         </div>
@@ -88,7 +88,7 @@ function Reading({ file }: { file: File }) {
     return (
         <div className="flex flex-col gap-3">
             <FileBox file={file} />
-            <output className="text-[13px]">{scan.reading}</output>
+            <output className="text-app-label">{scan.reading}</output>
             <div className="bg-muted h-1.5 overflow-hidden rounded-full">
                 <div className="bg-primary h-full w-[92%] rounded-full transition-[width] duration-[18s] ease-out starting:w-[6%]" />
             </div>
@@ -101,7 +101,7 @@ function DropZone({ onChoose, onFile }: { onChoose: () => void; onFile: (file: F
     const [over, setOver] = useState(false);
     return (
         <div
-            className={`flex h-[220px] flex-col items-center justify-center rounded-xl border border-dashed px-6 text-center transition-colors ${over ? "border-primary bg-primary/5" : "bg-muted/30"}`}
+            className={`rounded-app-lg flex h-55 flex-col items-center justify-center border border-dashed px-6 text-center transition-colors ${over ? "border-primary bg-primary/5" : "bg-muted/30"}`}
             onDragLeave={() => setOver(false)}
             onDragOver={(event) => {
                 event.preventDefault();
@@ -117,7 +117,7 @@ function DropZone({ onChoose, onFile }: { onChoose: () => void; onFile: (file: F
             }}
         >
             <Glyph className="text-muted-foreground" icon={ImageAdd01Icon} size={24} />
-            <p className="mt-2.5 text-[13px] font-medium">{scan.intro}</p>
+            <p className="text-app-label mt-2.5 font-medium">{scan.intro}</p>
             <p className="text-muted-foreground mt-1 text-xs">{scan.drop}</p>
             <Button className="mt-4" onClick={onChoose} size="sm" variant="outline">
                 {scan.choose}
@@ -149,7 +149,7 @@ function AccountPick({
                     {chosen ? <AccountTile account={accountLook(chosen)} size="sm" /> : null}
                     <Select.Value />
                 </Select.Trigger>
-                <Select.Content className="app-shell z-[60]">
+                <Select.Content className="app-shell z-60">
                     {cards.map((row) => (
                         <Select.Item key={row.localId} value={row.localId}>
                             {row.name}
@@ -285,7 +285,7 @@ export function ScanDialog({
     if (phase.kind === "consent") {
         body = <Consent />;
     } else if (cards.length === 0) {
-        body = <p className="text-muted-foreground text-[13px]">{scan.noCard}</p>;
+        body = <p className="text-muted-foreground text-app-label">{scan.noCard}</p>;
     } else if (phase.kind === "pick") {
         body = (
             <div className="flex flex-col gap-4">

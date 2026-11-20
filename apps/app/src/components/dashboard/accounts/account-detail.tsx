@@ -22,6 +22,7 @@ import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
 import SafeIcon from "@hugeicons/core-free-icons/SafeIcon";
 import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
+import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistoryIcon";
 import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
 import { entryLook } from "@outlayr/money/ledger-log";
 import { Link } from "@tanstack/react-router";
@@ -36,6 +37,7 @@ import { Fragment, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { Empty } from "@/components/dashboard/home/empty";
 import { timeOfDay, titled, useDateFormat, useMonthYear, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { EntrySheet, editableDoc } from "@/components/dashboard/transactions/entry-sheet";
@@ -43,9 +45,11 @@ import type { EntryStart } from "@/components/dashboard/transactions/entry-sheet
 import { rowOf } from "@/components/dashboard/transactions/model";
 import { deleteToasts, useDeleteEntries } from "@/components/dashboard/transactions/use-delete";
 import { AccountTile, LookTile, MerchantTile } from "@/components/ledger/tiles";
+import { MenuContent } from "@/components/ui/menu-content";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 import { photoSrc } from "@/lib/photo-src";
 
 import {
@@ -87,10 +91,8 @@ import { WorthChart } from "./worth-chart";
 
 const DETAIL_CHART = 778 / 172;
 const FOREIGN_CHART = 778 / 256;
-const IN_MAIN = "#7C76BC";
-const FIELD = "flex h-9 items-center justify-between gap-3 border-b text-[13px] last:border-0";
-
-const BAR_MENU_OVERHANG = -23;
+const IN_MAIN = "var(--color-app-info)";
+const FIELD = "text-app-label flex h-9 items-center justify-between gap-3 border-b last:border-0";
 
 const monthBack = (key: string, back: number) => {
     const [year, month] = key.split("-").map(Number);
@@ -121,16 +123,16 @@ function DetailBar({ row }: { row: AccountRow }) {
                         aria-label={detail.back.value}
                         className="mr-1"
                         nativeButton={false}
-                        render={<Link to="/accounts" />}
+                        render={<Link to="/accounts" viewTransition={viewTransition("push-left", { back: true })} />}
                         size="icon"
                         variant="outline"
                     >
                         <Glyph icon={ArrowLeft02Icon} className="text-muted-foreground" />
                     </Button>
-                    <AccountTile account={row.look} size="lg" />
+                    <AccountTile account={row.look} size="logo" />
                     <span className="truncate">{row.name}</span>
                     {row.currency === ledger.currency ? null : (
-                        <Badge className="dash-figure ml-1 shrink-0" variant="outline">
+                        <Badge className="ml-1 shrink-0 font-mono tabular-nums" variant="outline">
                             {row.currency}
                         </Badge>
                     )}
@@ -160,12 +162,7 @@ function DetailBar({ row }: { row: AccountRow }) {
                 >
                     <Glyph icon={MoreVerticalIcon} className="text-muted-foreground" />
                 </Menu.Trigger>
-                <Menu.Content
-                    align="end"
-                    alignOffset={BAR_MENU_OVERHANG}
-                    className={`app-shell ph-no-capture ${card ? "w-[230px]" : "w-[198px]"}`}
-                    sideOffset={4}
-                >
+                <MenuContent align="end" className={card ? "w-58" : "w-50"} sideOffset={4}>
                     <Menu.Item className="sm:hidden" onClick={() => open({ accountId: row.id, kind: "edit" })}>
                         <Glyph icon={PencilEdit01Icon} size={16} />
                         {actions.edit}
@@ -200,7 +197,7 @@ function DetailBar({ row }: { row: AccountRow }) {
                         <Glyph icon={Delete02Icon} size={16} />
                         {actions.delete}
                     </Menu.Item>
-                </Menu.Content>
+                </MenuContent>
             </Menu>
             <Button onClick={() => open({ accountId: row.id, kind: "entry" })}>
                 <Glyph icon={Add01Icon} size={16} />
@@ -211,7 +208,7 @@ function DetailBar({ row }: { row: AccountRow }) {
 }
 
 const note = (children: ReactNode, tone = "text-muted-foreground") => (
-    <span className={`${tone} min-w-0 truncate text-[13px] leading-5`}>{children}</span>
+    <span className={`${tone} text-app-label min-w-0 truncate`}>{children}</span>
 );
 
 function BankKpis({ row }: { row: AccountRow }) {
@@ -363,7 +360,7 @@ function CardKpis({ row }: { row: AccountRow }) {
                 {limit > 0 ? (
                     <>
                         <Meter className="min-w-10 flex-1" max={1} value={used} />
-                        <span className="dash-figure text-muted-foreground shrink-0 text-xs">
+                        <span className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums">
                             {detail.ofLimit({ limit: whole(limit), percent: Math.round(used * PERCENT) })}
                         </span>
                     </>
@@ -415,7 +412,7 @@ function HistoryCard({ row }: { row: AccountRow }) {
                 </span>
             }
         >
-            <div className="p-4 pb-3.5">
+            <div className="p-4 pb-3.5" data-motion="dissolve" key={range}>
                 <WorthChart
                     aspectRatio={row.currency === ledger.currency ? DETAIL_CHART : FOREIGN_CHART}
                     currency={row.currency}
@@ -466,9 +463,9 @@ function EntryMenu({
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="center" className="app-shell ph-no-capture w-[215px]" side="left" sideOffset={-6}>
+            <MenuContent align="center" className="w-55" side="left" sideOffset={-6}>
                 <EntryActions entry={entry} onDelete={onDelete} onOpen={onOpen} />
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -490,9 +487,9 @@ function ChipMenu({
                 {icon}
                 {label}
             </Menu.Trigger>
-            <Menu.Content className="app-shell ph-no-capture max-h-80 w-[200px] overflow-y-auto" sideOffset={6}>
+            <MenuContent className="max-h-80 w-50 overflow-y-auto" sideOffset={6}>
                 {children}
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -662,7 +659,7 @@ function TransactionsCard({ row }: { row: AccountRow }) {
             title={detail.transactions}
         >
             {shown.length === 0 ? (
-                <p className="text-muted-foreground px-5 py-8 text-center text-[13px]">
+                <p className="text-muted-foreground text-app-label px-5 py-8 text-center">
                     {detail.nothingIn({ period: date.month(month) })}
                 </p>
             ) : (
@@ -697,7 +694,7 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                                 {checkedHere ? (
                                     <Table.Row>
                                         <Table.Cell
-                                            className="text-muted-foreground py-2! ps-3.5! text-xs!"
+                                            className="text-muted-foreground text-app-caption! py-2! ps-3.5!"
                                             colSpan={foreign ? 6 : 5}
                                         >
                                             <span className="flex items-center gap-2">
@@ -714,7 +711,7 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                                     <Cell>
                                         <span className="flex min-w-0 items-center gap-2.5 text-sm font-medium">
                                             <EntryTile entry={entry} imageUrl={photoSrc(entry.imageKey)} />
-                                            <span className="max-w-[120px] truncate sm:max-w-[260px]">{title}</span>
+                                            <span className="max-w-30 truncate sm:max-w-65">{title}</span>
                                         </span>
                                     </Cell>
                                     <Cell>
@@ -736,7 +733,9 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                                             </Badge>
                                         )}
                                     </Cell>
-                                    <Cell className="dash-figure text-muted-foreground">{date.day(entry.day)}</Cell>
+                                    <Cell className="text-muted-foreground font-mono tabular-nums">
+                                        {date.day(entry.day)}
+                                    </Cell>
                                     <Cell className={`font-normal ${entry.value > 0 ? "text-app-income" : ""}`} figure>
                                         {money(entry.value, row.currency, "always")}
                                     </Cell>
@@ -774,55 +773,28 @@ function TransactionsCard({ row }: { row: AccountRow }) {
     );
 }
 
-const GHOST_ROWS = [
-    [68, 88, 74, 40, 56],
-    [78, 78, 58, 40, 70],
-    [68, 70, 70, 34, 66],
-    [44, 84, 76, 34, 50],
-    [90, 80, 52, 36, 66],
-    [88, 90, 64, 30, 50],
-    [94, 88, 50, 34, 56],
-] as const;
-const GHOST_COLUMNS = "grid grid-cols-[30%_18%_17%_1fr_auto] items-center px-5";
-
 function EmptyEntries({ accountId }: { accountId: string }) {
     const { open } = useAccountFlows();
     const { detail } = useIntlayer("dashboard-accounts");
     return (
         <Card className="flex-1" title={detail.transactions}>
-            <div aria-hidden className={`${GHOST_COLUMNS} h-[50px] border-b pt-3.5`}>
-                {[48, 44, 42, 40, 40].map((width, index) => (
-                    <i className={`dash-gl ${index === 4 ? "justify-self-end" : ""}`} key={index} style={{ width }} />
-                ))}
-            </div>
-            <div aria-hidden className="[mask-image:linear-gradient(#000_80%,transparent)]">
-                {GHOST_ROWS.map(([name, badge, day, amount, right], index) => (
-                    <div className={`${GHOST_COLUMNS} h-[42px] border-b last:border-0`} key={index}>
-                        <span className="flex items-center gap-2.5">
-                            <i className="dash-gx" />
-                            <i className="dash-gl" style={{ width: name }} />
-                        </span>
-                        <i className="dash-gl h-[22px]! rounded-md!" style={{ width: badge }} />
-                        <i className="dash-gl" style={{ width: day }} />
-                        <i className="dash-gl" style={{ width: amount }} />
-                        <i className="dash-gl justify-self-end" style={{ width: right }} />
-                    </div>
-                ))}
-            </div>
-            <div className="flex flex-col items-center gap-1.5 px-6 pt-4 pb-10 text-center">
-                <b className="text-[15px] leading-[22px] font-semibold">{detail.emptyTitle}</b>
-                <p className="text-muted-foreground text-[13px]">{detail.emptyBody}</p>
-                <div className="mt-3 flex flex-wrap justify-center gap-2">
-                    <Button onClick={() => open({ accountId, kind: "entry" })}>
-                        <Glyph icon={Add01Icon} size={16} />
-                        {detail.addEntry}
-                    </Button>
-                    <PhoneAction size="sm">
-                        <Glyph icon={Upload04Icon} className="text-muted-foreground" size={16} />
-                        {detail.importEntries}
-                    </PhoneAction>
-                </div>
-            </div>
+            <Empty
+                action={
+                    <>
+                        <Button onClick={() => open({ accountId, kind: "entry" })}>
+                            <Glyph icon={Add01Icon} size={16} />
+                            {detail.addEntry}
+                        </Button>
+                        <PhoneAction size="sm">
+                            <Glyph icon={Upload04Icon} className="text-muted-foreground" size={16} />
+                            {detail.importEntries}
+                        </PhoneAction>
+                    </>
+                }
+                icon={TransactionHistoryIcon}
+                line={detail.emptyBody}
+                title={detail.emptyTitle}
+            />
         </Card>
     );
 }
@@ -838,11 +810,11 @@ function CheckCard({ row }: { row: AccountRow }) {
     const age = checkedAge(row.checkedAt, ledger);
     const fresh = age.state === "today" || age.state === "yesterday" || age.state === "daysAgo";
     const stale = !fresh && age.state !== "never";
-    let tone = "var(--color-app-tint)";
+    let tone = "bg-app-tint/16 text-app-tint";
     if (fresh) {
-        tone = INCOME;
+        tone = "bg-app-income/14 text-app-income";
     } else if (age.state === "never") {
-        tone = MUTED;
+        tone = "bg-app-muted/16 text-app-muted";
     }
     let line: ReactNode = null;
     if (stale) {
@@ -858,20 +830,14 @@ function CheckCard({ row }: { row: AccountRow }) {
         <Frame className="min-w-0" variant="plain">
             <Frame.Panel>
                 <Frame.Row className="py-3.5 pr-3 pl-4">
-                    <Frame.Media
-                        className="size-8 rounded-[10px]"
-                        style={{
-                            background: `color-mix(in oklab, ${tone} ${fresh ? 14 : 16}%, transparent)`,
-                            color: tone,
-                        }}
-                    >
+                    <Frame.Media className={`rounded-app-md size-8 ${tone}`}>
                         <Glyph icon={stale ? Clock01Icon : Tick02Icon} size={17} />
                     </Frame.Media>
                     <Frame.Content className="gap-0">
-                        <Frame.Title className={`leading-[18px] ${stale ? "text-app-tint!" : ""}`}>
+                        <Frame.Title className={stale ? "text-app-tint!" : undefined}>
                             {age.state === "never" ? detail.checkTitle : titled(checked(age), locale)}
                         </Frame.Title>
-                        {line ? <Frame.Description className="text-xs leading-4">{line}</Frame.Description> : null}
+                        {line ? <Frame.Description className="text-app-caption">{line}</Frame.Description> : null}
                     </Frame.Content>
                     <Frame.Actions>
                         <Button onClick={() => open({ accountId: row.id, kind: "check" })} size="sm" variant="outline">
@@ -907,21 +873,21 @@ function InstallmentsCard({ row }: { row: AccountRow }) {
                         const [before, after] = list.planLeft({ amount }).value.split(amount);
                         return (
                             <Link
-                                className="hover:bg-muted/50 -m-2 block rounded-lg p-2 transition-colors"
+                                className="hover:bg-muted/50 rounded-app-sm -m-2 block p-2 transition-colors"
                                 key={plan.id}
                                 params={{ planId: plan.id }}
                                 to="/installments/$planId"
                             >
-                                <div className="flex items-baseline gap-2 text-[13px] font-medium">
+                                <div className="text-app-label flex items-baseline gap-2 font-medium">
                                     <span className="min-w-0 truncate">{plan.name || list.planFallback}</span>
-                                    <span className="dash-figure ml-auto whitespace-nowrap">
+                                    <span className="ml-auto font-mono whitespace-nowrap tabular-nums">
                                         <span className="text-muted-foreground font-normal">{before}</span>
                                         {amount}
                                         <span className="text-muted-foreground font-normal">{after}</span>
                                     </span>
                                 </div>
                                 <Meter className="mt-2" max={1} value={plan.fraction} />
-                                <div className="dash-figure text-muted-foreground mt-2 flex text-xs leading-4">
+                                <div className="text-muted-foreground text-app-caption mt-2 flex font-mono tabular-nums">
                                     {plan.count} x {money(plan.each, plan.currency)}
                                     <span className="ml-auto">{list.planPaid({ count: plan.paidCount })}</span>
                                 </div>
@@ -951,10 +917,10 @@ function SpentCard({ row }: { row: AccountRow }) {
                     {shares.map((share) => (
                         <div className={FIELD} key={share.id}>
                             <span className="text-muted-foreground flex min-w-0 items-center gap-2">
-                                <i className="size-2 shrink-0 rounded-[2px]" style={{ background: share.color }} />
+                                <i className="size-2 shrink-0 rounded-xs" style={{ background: share.color }} />
                                 <span className="truncate">{share.name}</span>
                             </span>
-                            <span className="dash-figure">{money(share.value, row.currency)}</span>
+                            <span className="font-mono tabular-nums">{money(share.value, row.currency)}</span>
                         </div>
                     ))}
                 </div>
@@ -980,7 +946,7 @@ function SpentCard({ row }: { row: AccountRow }) {
                                 <i className="size-2 shrink-0 rounded-full" style={{ background: share.color }} />
                                 <span className="truncate">{share.name}</span>
                             </span>
-                            <span className="dash-figure">
+                            <span className="font-mono tabular-nums">
                                 {whole(share.value)}
                                 <span className="text-muted-foreground ml-1.5">
                                     {Math.round((share.value / total) * PERCENT)}%
@@ -1051,7 +1017,11 @@ function DetailsCard({ row }: { row: AccountRow }) {
                 {fields.map(([label, value, words], index) => (
                     <div className={FIELD} key={index}>
                         <span className="text-muted-foreground">{label}</span>
-                        <span className={words ? "" : `dash-figure ${count > 0 ? "text-muted-foreground" : ""}`}>
+                        <span
+                            className={
+                                words ? "" : `font-mono tabular-nums ${count > 0 ? "text-muted-foreground" : ""}`
+                            }
+                        >
                             {value}
                         </span>
                     </div>
@@ -1075,7 +1045,11 @@ export function AccountDetail({ accountId }: { accountId: string }) {
                 <AccountsBar title={detail.details} />
                 <p className="text-muted-foreground py-6 text-sm">
                     {detail.notFound}{" "}
-                    <Link className="text-foreground underline" to="/accounts">
+                    <Link
+                        className="text-foreground underline"
+                        to="/accounts"
+                        viewTransition={viewTransition("push-left", { back: true })}
+                    >
                         {detail.back}
                     </Link>
                 </p>
