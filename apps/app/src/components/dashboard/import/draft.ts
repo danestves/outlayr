@@ -52,7 +52,7 @@ const Draft = Schema.Struct({
     targets: Schema.Array(Schema.Literals([...FIELDS, "skip"])),
     /** New rows the user unticked. */
     unticked: Schema.Array(Schema.Number),
-    /** Statement pages with no text to read, so their rows never reached the model. */
+    /** Statement pages with almost no text to read, likely scans, so the import may be missing rows. */
     unreadPages: Schema.Array(Schema.Number).pipe(Schema.withDecodingDefaultKey(Effect.succeed([]))),
 });
 export type Draft = typeof Draft.Type;
