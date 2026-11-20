@@ -13,6 +13,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
+import { SheetContent } from "@/components/ui/sheet-content";
 import { nextCharges } from "@/lib/recurring";
 import type { HistoryEntry, RecurringModel, Schedule } from "@/lib/recurring";
 
@@ -31,7 +32,7 @@ const CENT = 0.005;
 
 function Row({ children, label }: { children: ReactNode; label: ReactNode }) {
     return (
-        <div className="flex min-h-[38px] items-center gap-3 border-b text-[13px]">
+        <div className="text-app-label flex min-h-9.5 items-center gap-3 border-b">
             <span className="text-muted-foreground">{label}</span>
             <span className="ml-auto flex min-w-0 items-center gap-2 text-right">{children}</span>
         </div>
@@ -41,7 +42,7 @@ function Row({ children, label }: { children: ReactNode; label: ReactNode }) {
 function Section({ children, title }: { children: ReactNode; title: ReactNode }) {
     return (
         <section className="mt-4">
-            <h3 className="text-muted-foreground mb-1.5 text-xs">{title}</h3>
+            <h3 className="text-muted-foreground text-app-caption mb-1.5">{title}</h3>
             {children}
         </section>
     );
@@ -63,7 +64,7 @@ function HistoryBars({ entries, months }: { entries: readonly HistoryEntry[]; mo
         <div aria-hidden className="flex h-10 items-end gap-1">
             {totals.map((total, index) => (
                 <i
-                    className={`flex-1 rounded-[3px] ${index === lastFilled ? "bg-app-tint" : "bg-border"}`}
+                    className={`flex-1 rounded-xs ${index === lastFilled ? "bg-app-tint" : "bg-border"}`}
                     key={months[index]}
                     style={{ height: max > 0 && total > 0 ? `${Math.max(0.2, total / max) * 100}%` : "6%" }}
                 />
@@ -114,7 +115,7 @@ function Body({
     return (
         <>
             <Sheet.Header className="h-16 flex-row items-center gap-1 border-b px-5 py-0">
-                <Sheet.Title className="me-auto text-[15px] font-semibold">{copy.drawer.title}</Sheet.Title>
+                <Sheet.Title className="text-app-title! me-auto font-semibold">{copy.drawer.title}</Sheet.Title>
                 {onStep ? (
                     <>
                         <Button
@@ -148,19 +149,19 @@ function Body({
                     <Glyph icon={Cancel01Icon} size={17} />
                 </Button>
             </Sheet.Header>
-            <Sheet.Body className="px-5 pt-[18px] pb-6">
+            <Sheet.Body className="px-5 pt-4.5 pb-6">
                 <div className="flex items-center gap-4 pt-1">
                     <ScheduleTile name={schedule.name} seed={seed} size="xl" />
                     <div className="min-w-0">
                         <p className="flex items-center gap-2.5">
-                            <span className="truncate text-[15px] font-semibold">{schedule.name}</span>
+                            <span className="text-app-title truncate font-semibold">{schedule.name}</span>
                             {state === "active" ? null : <HeldBadge state={state} />}
                         </p>
-                        <p className="text-muted-foreground truncate text-[13px]">{subtitle()}</p>
+                        <p className="text-muted-foreground text-app-label truncate">{subtitle()}</p>
                     </div>
                 </div>
                 <p
-                    className={`dash-figure mt-3 mb-2.5 text-2xl leading-8 font-semibold tracking-[-0.04em] ${state === "active" ? "" : "text-muted-foreground"}`}
+                    className={`dash-figure text-app-figure mt-3 mb-2.5 font-semibold ${state === "active" ? "" : "text-muted-foreground"}`}
                 >
                     {cash.signed(schedule.worth, seed.income)}
                 </p>
@@ -204,7 +205,10 @@ function Body({
                 {state === "active" ? (
                     <Section title={copy.fields.nextCharges}>
                         {nextCharges(schedule, ledger, NEXT_SHOWN).map((charge) => (
-                            <div className="flex h-8 items-center border-b text-[13px] last:border-0" key={charge.day}>
+                            <div
+                                className="text-app-label flex h-8 items-center border-b last:border-0"
+                                key={charge.day}
+                            >
                                 <span className="dash-figure">{dayText(charge.day)}</span>
                                 <span className="dash-figure text-muted-foreground ml-auto">
                                     {cash.plain(schedule.worth)}
@@ -216,10 +220,10 @@ function Body({
                 <Section title={state === "paused" ? copy.drawer.historyAll : copy.drawer.history}>
                     {state === "paused" ? null : <HistoryBars entries={recent} months={months} />}
                     {shown.length === 0 ? (
-                        <p className="text-muted-foreground py-3 text-[13px]">{copy.drawer.noHistory}</p>
+                        <p className="text-muted-foreground text-app-label py-3">{copy.drawer.noHistory}</p>
                     ) : null}
                     {state !== "paused" && shown.length > 0 ? (
-                        <div className="text-muted-foreground mt-2 flex h-8 items-center text-[13px]">
+                        <div className="text-muted-foreground text-app-label mt-2 flex h-8 items-center">
                             {shown.length === 1 ? copy.chargesOne : copy.charges({ count: String(shown.length) })}
                             <span className="dash-figure text-foreground ml-auto font-medium">
                                 {cash.plain(shown.reduce((sum, entry) => sum + entry.worth, 0))}
@@ -231,12 +235,12 @@ function Body({
                         const change = older ? entry.worth - older.worth : 0;
                         return (
                             <div
-                                className="flex h-8 items-center gap-3 border-b text-[13px] last:border-0"
+                                className="text-app-label flex h-8 items-center gap-3 border-b last:border-0"
                                 key={entry.id}
                             >
                                 <span className="dash-figure">{dayText(entry.day)}</span>
                                 {Math.abs(change) > CENT ? (
-                                    <span className="rounded-md border px-2 py-0.5 text-xs font-medium">
+                                    <span className="text-app-caption rounded-md border px-2 py-0.5 font-medium">
                                         {change > 0
                                             ? copy.drawer.priceUp({ amount: cash.plain(change) })
                                             : copy.drawer.priceDown({ amount: cash.plain(-change) })}
@@ -309,15 +313,16 @@ export function ScheduleDrawer({
             open={schedule !== null}
             side={wide ? "right" : "bottom"}
         >
-            <Sheet.Content
-                className={`app-shell ph-no-capture ${wide ? "sm:w-[min(384px,calc(100vw-2*var(--sheet-gap)))]" : ""}`}
+            <SheetContent
+                className={wide ? "sm:w-[min(24rem,calc(100vw-2*var(--sheet-gap)))]" : undefined}
+                showClose={false}
                 showGrabber={false}
                 size={wide ? "auto" : "full"}
             >
                 {shown ? (
                     <Body actions={actions} model={model} onClose={onClose} onStep={onStep} schedule={shown} />
                 ) : null}
-            </Sheet.Content>
+            </SheetContent>
         </Sheet>
     );
 }

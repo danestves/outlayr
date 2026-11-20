@@ -11,13 +11,15 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { DialogContent } from "@/components/ui/dialog-content";
+import { MoneyField } from "@/components/ui/money-field";
 import { parseAmount } from "@/lib/account-writes";
 import { addDays, nextCharges } from "@/lib/recurring";
 import type { Candidate, Charge, Schedule } from "@/lib/recurring";
 import { resumeCharge } from "@/lib/recurring-writes";
 import type { PauseMode, ScheduleDraft } from "@/lib/recurring-writes";
 
-import { AmountInput, amountText, FlowDialog } from "../accounts/fields";
+import { amountText, FlowDialog } from "../accounts/fields";
 import { Pick, useCategoryOptions } from "../transactions/entry-form";
 import { StateBadge } from "./all";
 import { ScheduleTile, useChargeMoney, useDay, useRepeatText } from "./parts";
@@ -28,15 +30,18 @@ const PAUSE_MODES = ["next", "until", "open"] as const satisfies readonly PauseM
 const UNTIL_STEPS = 3;
 const UNTIL_FALLBACK_DAYS = 60;
 
-function Shell({ children, onClose, width }: { children: ReactNode; onClose: () => void; width: string }) {
+function Shell({ children, onClose, width }: { children: ReactNode; onClose: () => void; width?: string }) {
     return (
         <Dialog onOpenChange={(open) => (open ? undefined : onClose())} open>
-            <Dialog.Content className={`app-shell ph-no-capture ${width}`} size="md">
+            <DialogContent className={width} size="md">
                 {children}
-            </Dialog.Content>
+            </DialogContent>
         </Dialog>
     );
 }
+
+const roundedAmount = (amount: number, currency: string) =>
+    parseAmount(amountText(amount, currency), decimalsFor(currency));
 
 function DateText({ label, onChange, value }: { label: string; onChange: (day: string) => void; value: string }) {
     const days = useDay();
@@ -44,7 +49,7 @@ function DateText({ label, onChange, value }: { label: string; onChange: (day: s
     return (
         <span className="relative">
             <button
-                className="dash-figure text-muted-foreground hover:text-foreground text-[13px] underline-offset-4 hover:underline"
+                className="dash-figure text-muted-foreground hover:text-foreground text-app-label underline-offset-4 hover:underline"
                 onClick={(event) => {
                     event.preventDefault();
                     input.current?.showPicker();
@@ -92,7 +97,7 @@ export function PauseDialog({
     const trailing = (each: PauseMode) => {
         if (each === "next") {
             return schedule.next ? (
-                <span className="dash-figure text-muted-foreground text-[13px]">
+                <span className="dash-figure text-muted-foreground text-app-label">
                     {days.day(schedule.next.day, ledger.today)}
                 </span>
             ) : null;
@@ -101,7 +106,7 @@ export function PauseDialog({
     };
     const resumes = resumeCharge(ledger, schedule, mode, until);
     return (
-        <Shell onClose={onClose} width="max-w-[420px]">
+        <Shell onClose={onClose} width="max-w-105">
             <FlowDialog label={copy.pause.title({ name: schedule.name })}>
                 <Dialog.Body className="gap-2">
                     <div aria-label={copy.pause.title({ name: schedule.name }).value} role="radiogroup">
@@ -109,7 +114,7 @@ export function PauseDialog({
                             const on = mode === each;
                             return (
                                 <label
-                                    className={`mb-2 flex min-h-11 cursor-pointer items-center gap-2.5 rounded-[10px] border px-3 text-sm font-medium transition-colors has-disabled:cursor-default has-disabled:opacity-50 ${on ? "border-app-tint/45 bg-app-tint/10" : "hover:bg-muted/40"}`}
+                                    className={`rounded-app-md text-app-body mb-2 flex min-h-11 cursor-pointer items-center gap-2.5 border px-3 font-medium transition-colors has-disabled:cursor-default has-disabled:opacity-50 ${on ? "border-app-tint/45 bg-app-tint/10" : "hover:bg-muted/40"}`}
                                     key={each}
                                 >
                                     <input
@@ -127,7 +132,7 @@ export function PauseDialog({
                         })}
                     </div>
                     {schedule.perMonth > 0 ? (
-                        <p className="text-muted-foreground text-[13px]">
+                        <p className="text-muted-foreground text-app-label">
                             {copy.pause.leaves({ amount: cash.plain(schedule.perMonth) })}
                         </p>
                     ) : null}
@@ -170,13 +175,12 @@ export function LogDialog({
     const currency = schedule.seed.currency ?? ledger.currency;
     const [day, setDay] = useState(charge.day);
     const [accountId, setAccountId] = useState(schedule.seed.accountId);
-    const [text, setText] = useState(() => amountText(schedule.seed.amount, currency));
-    const amount = parseAmount(text, decimalsFor(currency));
-    const valid = Number.isFinite(amount) && amount > 0;
+    const [amount, setAmount] = useState<number | null>(() => roundedAmount(schedule.seed.amount, currency));
+    const valid = amount !== null && amount > 0;
     const line =
         charge.day === ledger.today ? copy.log.dueToday : copy.log.dueOn({ date: days.day(charge.day, ledger.today) });
     return (
-        <Shell onClose={onClose} width="max-w-[440px]">
+        <Shell onClose={onClose} width="max-w-110">
             <FlowDialog
                 head={<ScheduleTile name={schedule.name} seed={schedule.seed} size="md" />}
                 label={
@@ -187,26 +191,26 @@ export function LogDialog({
                 }
             >
                 <Dialog.Body className="gap-3.5">
-                    <p className="text-muted-foreground text-sm">{line}</p>
+                    <p className="text-muted-foreground text-app-body">{line}</p>
                     <div className="grid gap-3 sm:grid-cols-2">
-                        <Field invalid={!valid}>
-                            <Field.Label>{copy.fields.amount}</Field.Label>
-                            <AmountInput
-                                currency={currency}
-                                label={copy.fields.amount.value}
-                                onText={setText}
-                                text={text}
+                        <Field className="sm:col-span-2" invalid={!valid}>
+                            <MoneyField
+                                className={valid ? "max-w-none" : "border-destructive max-w-none"}
+                                codes={[currency]}
+                                label={copy.fields.amount}
+                                onValueChange={(next) => setAmount(next.amount)}
+                                value={{ amount, code: currency }}
                             />
                         </Field>
                         <Field>
                             <Field.Label>{copy.fields.paidOn}</Field.Label>
                             <DayField label={copy.fields.paidOn.value} onChange={setDay} value={day} />
                         </Field>
+                        <Field>
+                            <Field.Label>{copy.fields.account}</Field.Label>
+                            <AccountPick onPick={setAccountId} value={accountId} />
+                        </Field>
                     </div>
-                    <Field>
-                        <Field.Label>{copy.fields.account}</Field.Label>
-                        <AccountPick onPick={setAccountId} value={accountId} />
-                    </Field>
                 </Dialog.Body>
                 <Dialog.Footer>
                     <Button className="me-auto" onClick={onSkip} variant="outline">
@@ -219,7 +223,11 @@ export function LogDialog({
                     </Button>
                     <Button
                         disabled={!valid}
-                        onClick={() => onLog({ accountId, amount, date: fromWall(wallNoon(day), ledger.offsetAt) })}
+                        onClick={() => {
+                            if (amount !== null) {
+                                onLog({ accountId, amount, date: fromWall(wallNoon(day), ledger.offsetAt) });
+                            }
+                        }}
                     >
                         {copy.actions.logIt}
                     </Button>
@@ -250,12 +258,12 @@ export function DeleteDialog({
         return count === 1 ? copy.remove.bodyOne : copy.remove.body({ count: String(count) });
     };
     return (
-        <Shell onClose={onClose} width="max-w-[420px]">
+        <Shell onClose={onClose} width="max-w-105">
             <FlowDialog label={copy.remove.title({ name: schedule.name })}>
                 <Dialog.Body className="gap-3">
-                    <p className="text-muted-foreground text-sm">{body()}</p>
+                    <p className="text-muted-foreground text-app-body">{body()}</p>
                     {count > 0 ? (
-                        <label className="flex min-h-8 items-center gap-2.5 text-[13px]">
+                        <label className="text-app-label flex min-h-8 items-center gap-2.5">
                             <Checkbox checked={also} onCheckedChange={setAlso} />
                             {count === 1 ? copy.remove.alsoOne : copy.remove.also({ count: String(count) })}
                         </label>
@@ -301,17 +309,16 @@ export function ConfirmDialog({
     const days = useDay();
     const repeat = useRepeatText();
     const categoryOptions = useCategoryOptions(ledger, candidate.income);
-    const original = amountText(candidate.amount, candidate.currency);
+    const original = roundedAmount(candidate.amount, candidate.currency);
     const cadenceAtFirst = repeatKey(candidate.type, candidate.every);
-    const [text, setText] = useState(original);
+    const [amount, setAmount] = useState<number | null>(original);
     const [cadence, setCadence] = useState(cadenceAtFirst);
     const [day, setDay] = useState(candidate.next.day);
     const [accountId, setAccountId] = useState(candidate.accountId);
     const [categoryId, setCategoryId] = useState(candidate.categoryId);
     const [link, setLink] = useState(true);
     const switchId = useId();
-    const amount = parseAmount(text, decimalsFor(candidate.currency));
-    const valid = Number.isFinite(amount) && amount > 0 && categoryId !== null;
+    const valid = amount !== null && amount > 0 && categoryId !== null;
     const past = candidate.entries.toSorted((a, b) => a.at - b.at);
     const first = past.at(0);
     const last = past.at(-1);
@@ -319,7 +326,7 @@ export function ConfirmDialog({
     const repeats = known ? [...REPEATS] : [...REPEATS, { every: candidate.every, type: candidate.type }];
     const picked = repeats.find((each) => repeatKey(each.type, each.every) === cadence);
     const changed =
-        text !== original ||
+        amount !== original ||
         day !== candidate.next.day ||
         accountId !== candidate.accountId ||
         categoryId !== candidate.categoryId ||
@@ -335,7 +342,7 @@ export function ConfirmDialog({
     };
     const confirm = () => {
         const draft: ScheduleDraft | null =
-            changed && picked
+            changed && picked && amount !== null
                 ? {
                       accountId,
                       amount,
@@ -352,17 +359,19 @@ export function ConfirmDialog({
         onConfirm(link, draft);
     };
     return (
-        <Shell onClose={onClose} width="max-w-md">
+        <Shell onClose={onClose}>
             <FlowDialog head={<CandidateTile candidate={candidate} />} label={candidate.name}>
                 <Dialog.Body className="gap-3.5">
                     <div className="grid gap-3 gap-y-3.5 sm:grid-cols-2">
-                        <Field>
-                            <Field.Label>{copy.fields.amount}</Field.Label>
-                            <AmountInput
-                                currency={candidate.currency}
-                                label={copy.fields.amount.value}
-                                onText={setText}
-                                text={text}
+                        <Field className="sm:col-span-2" invalid={amount === null || amount <= 0}>
+                            <MoneyField
+                                className={
+                                    amount !== null && amount > 0 ? "max-w-none" : "border-destructive max-w-none"
+                                }
+                                codes={[candidate.currency]}
+                                label={copy.fields.amount}
+                                onValueChange={(next) => setAmount(next.amount)}
+                                value={{ amount, code: candidate.currency }}
                             />
                         </Field>
                         <Field>
@@ -385,21 +394,21 @@ export function ConfirmDialog({
                             <Field.Label>{copy.fields.account}</Field.Label>
                             <AccountPick onPick={setAccountId} value={accountId} />
                         </Field>
+                        <Field>
+                            <Field.Label>{copy.fields.category}</Field.Label>
+                            <Pick
+                                invalid={categoryId === null}
+                                onPick={setCategoryId}
+                                options={categoryOptions}
+                                placeholder={copy.form.pickCategory.value}
+                                quiet={false}
+                                value={categoryId}
+                            />
+                        </Field>
                     </div>
-                    <Field>
-                        <Field.Label>{copy.fields.category}</Field.Label>
-                        <Pick
-                            invalid={categoryId === null}
-                            onPick={setCategoryId}
-                            options={categoryOptions}
-                            placeholder={copy.form.pickCategory.value}
-                            quiet={false}
-                            value={categoryId}
-                        />
-                    </Field>
                     {past.length > 0 ? (
-                        <div className="flex items-center justify-between gap-4 rounded-[10px] border px-4 py-3">
-                            <label className="text-[13px]" htmlFor={switchId}>
+                        <div className="rounded-app-md flex items-center justify-between gap-4 border px-4 py-3">
+                            <label className="text-app-label" htmlFor={switchId}>
                                 {linkText()}
                             </label>
                             <Switch checked={link} id={switchId} onCheckedChange={setLink} />

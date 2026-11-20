@@ -15,9 +15,11 @@ import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { MenuContent } from "@/components/ui/menu-content";
 import type { RecurringModel, Schedule, ScheduleState } from "@/lib/recurring";
 
 import { Glyph } from "../accounts/glyph";
+import { Empty } from "../home/empty";
 import type { ScheduleActions } from "./menu";
 import { ScheduleMenu } from "./menu";
 import {
@@ -53,7 +55,7 @@ export function StateBadge({ schedule }: { schedule: Schedule }) {
     }
     return (
         <Badge
-            className={`h-6 rounded-md px-2 text-xs font-medium ${missed ? "bg-destructive/12 text-destructive" : "bg-app-warn/14 text-app-warn"}`}
+            className={`text-app-caption! h-6 rounded-md px-2 font-medium ${missed ? "bg-destructive/12 text-destructive" : "bg-app-warn/14 text-app-warn"}`}
             variant="secondary"
         >
             {missed ? badge.missed : badge.today}
@@ -65,7 +67,7 @@ export function HeldBadge({ state }: { state: ScheduleState }) {
     const { badge } = useIntlayer("dashboard-recurring");
     return (
         <Badge
-            className={`h-6 rounded-md px-2 text-xs font-medium ${state === "paused" ? "bg-app-warn/14 text-app-warn" : "text-muted-foreground"}`}
+            className={`text-app-caption! h-6 rounded-md px-2 font-medium ${state === "paused" ? "bg-app-warn/14 text-app-warn" : "text-muted-foreground"}`}
             variant="secondary"
         >
             {state === "paused" ? badge.paused : badge.stopped}
@@ -101,7 +103,7 @@ function FilterMenu({
                 <Glyph icon={icon} className="text-muted-foreground" size={16} />
                 <span className="max-w-36 truncate">{picked?.label ?? label}</span>
             </Menu.Trigger>
-            <Menu.Content align="start" className="app-shell ph-no-capture max-h-80 w-[220px]" sideOffset={4}>
+            <MenuContent align="start" className="max-h-80 w-60" sideOffset={4}>
                 {options.map((option) => (
                     <Menu.Item key={option.value} onClick={() => onPick(option.value === value ? null : option.value)}>
                         <span className="truncate">{option.label}</span>
@@ -118,7 +120,7 @@ function FilterMenu({
                         <Menu.Item onClick={() => onPick(null)}>{all.clear}</Menu.Item>
                     </>
                 ) : null}
-            </Menu.Content>
+            </MenuContent>
         </Menu>
     );
 }
@@ -203,7 +205,7 @@ export function AllTable({
     return (
         <>
             <div className="flex flex-wrap items-center gap-2 border-b px-5 py-3">
-                <Input.Group className="w-full sm:w-[278px]">
+                <Input.Group className="w-full sm:w-70">
                     <Input.Addon>
                         <Glyph icon={Search01Icon} className="text-muted-foreground" size={16} />
                     </Input.Addon>
@@ -241,7 +243,7 @@ export function AllTable({
                         <Glyph icon={Sorting05Icon} className="text-muted-foreground" size={16} />
                         {copy.all.sort[sort]}
                     </Menu.Trigger>
-                    <Menu.Content align="end" className="app-shell ph-no-capture w-[188px]" sideOffset={4}>
+                    <MenuContent align="end" className="w-60" sideOffset={4}>
                         {ALL_SORTS.map((each) => (
                             <Menu.Item key={each} onClick={() => setSearch({ sort: each === "next" ? null : each })}>
                                 {copy.all.sort[each]}
@@ -252,20 +254,23 @@ export function AllTable({
                                 />
                             </Menu.Item>
                         ))}
-                    </Menu.Content>
+                    </MenuContent>
                 </Menu>
             </div>
             {groups.length === 0 ? (
-                <div className="text-muted-foreground flex flex-col items-center gap-3 py-16 text-[13px]">
-                    {copy.all.noMatch}
-                    <Button
-                        onClick={() => setSearch({ account: null, category: null, q: null, repeats: null })}
-                        size="sm"
-                        variant="outline"
-                    >
-                        {copy.all.clear}
-                    </Button>
-                </div>
+                <Empty
+                    action={
+                        <Button
+                            onClick={() => setSearch({ account: null, category: null, q: null, repeats: null })}
+                            size="sm"
+                            variant="outline"
+                        >
+                            {copy.all.clear}
+                        </Button>
+                    }
+                    icon={Search01Icon}
+                    title={copy.all.noMatch}
+                />
             ) : (
                 <Table className="w-full table-fixed" containerClassName="overflow-x-auto">
                     <Table.Header className="in-data-[sticky]:bg-card">
@@ -320,13 +325,13 @@ export function AllTable({
                                             </Table.Cell>
                                             <Table.Cell
                                                 align="end"
-                                                className={`${CELL} ${FIGURE} text-sm font-medium max-sm:hidden ${schedule.state === "active" ? "" : "text-muted-foreground"}`}
+                                                className={`${CELL} ${FIGURE} text-app-body! font-medium max-sm:hidden ${schedule.state === "active" ? "" : "text-muted-foreground"}`}
                                             >
                                                 {cash.plain(schedule.worth)}
                                             </Table.Cell>
                                             <Table.Cell
                                                 align="end"
-                                                className={`${CELL} ${FIGURE} text-sm font-medium ${schedule.perMonth > 0 ? "" : "text-muted-foreground"}`}
+                                                className={`${CELL} ${FIGURE} text-app-body! font-medium ${schedule.perMonth > 0 ? "" : "text-muted-foreground"}`}
                                             >
                                                 {cash.plain(schedule.perMonth)}
                                             </Table.Cell>

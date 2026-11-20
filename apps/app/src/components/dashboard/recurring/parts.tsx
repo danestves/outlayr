@@ -16,9 +16,9 @@ import type { Candidate, Seed } from "@/lib/recurring";
 
 import { useCategoryName } from "../home/format";
 
-export const CELL = "h-[39px] px-3 py-0 align-middle first:ps-4 last:pe-3";
-export const HEAD = "h-8 px-3 text-xs leading-4 font-medium first:ps-4 last:pe-3";
-export const GROUP = "text-muted-foreground h-8 px-4 text-xs font-medium";
+export const CELL = "h-9.75 px-3 py-0 align-middle first:ps-4 last:pe-3";
+export const HEAD = "text-app-caption! h-8 px-3 font-medium first:ps-4 last:pe-3";
+export const GROUP = "text-muted-foreground text-app-caption! h-8 px-4 font-medium first:ps-4";
 export const FIGURE = "dash-figure whitespace-nowrap";
 export const MUTED = "text-muted-foreground whitespace-nowrap";
 
@@ -44,7 +44,7 @@ export function NameCell({ name, seed }: { name: string; seed: TileSeed }) {
     return (
         <span className="flex min-w-0 items-center gap-3">
             <ScheduleTile name={name} seed={seed} />
-            <span className="truncate text-sm font-medium">{name}</span>
+            <span className="text-app-body truncate font-medium">{name}</span>
         </span>
     );
 }
@@ -194,10 +194,13 @@ export function CategoryBadge({ id }: { id: string | null }) {
     const { test } = useIntlayer("dashboard-rules");
     const found = look(id);
     if (!found) {
-        return <span className="text-muted-foreground text-[13px] whitespace-nowrap">{test.noCategory}</span>;
+        return <span className="text-muted-foreground text-app-label whitespace-nowrap">{test.noCategory}</span>;
     }
     return (
-        <Badge className="h-6 gap-1.5 rounded-md px-2 text-xs font-medium whitespace-nowrap" variant="outline">
+        <Badge
+            className="text-app-caption! h-6 gap-1.5 rounded-md px-2 font-medium whitespace-nowrap"
+            variant="outline"
+        >
             <i className="size-1.5 flex-none rounded-full" style={{ backgroundColor: found.color }} />
             {found.name}
         </Badge>

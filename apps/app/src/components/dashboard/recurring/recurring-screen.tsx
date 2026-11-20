@@ -1,5 +1,6 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
+import RepeatIcon from "@hugeicons/core-free-icons/RepeatIcon";
 import TickDouble02Icon from "@hugeicons/core-free-icons/TickDouble02Icon";
 import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
 import { decimalsFor } from "@outlayr/money/currency";
@@ -33,9 +34,10 @@ import {
 } from "@/lib/recurring-writes";
 import type { ScheduleDraft } from "@/lib/recurring-writes";
 
+import { AccountsBar } from "../accounts/accounts-screen";
 import { Glyph } from "../accounts/glyph";
 import { KpiBand, Trend } from "../accounts/parts";
-import { QuietTable } from "../home/setup";
+import { Empty } from "../home/empty";
 import { csvOf } from "../transactions/model";
 import { AllTable, nextDayOf } from "./all";
 import { CalendarGrid, CalendarSide } from "./calendar";
@@ -89,17 +91,18 @@ function Figure({
             <Kpi.Header>
                 <Kpi.Title>{label}</Kpi.Title>
             </Kpi.Header>
-            <Kpi.Value
-                className={`dash-figure mt-1 truncate leading-[30px] font-semibold tracking-[-0.04em] ${muted ? "text-muted-foreground" : ""}`}
-            >
+            <Kpi.Value className={`dash-figure mt-1 truncate font-semibold ${muted ? "text-muted-foreground" : ""}`}>
                 {children}
             </Kpi.Value>
-            <div className="text-muted-foreground mt-2 flex h-5 min-w-0 items-center gap-2 truncate text-xs">{sub}</div>
+            <div className="text-muted-foreground text-app-caption mt-2 flex h-5 min-w-0 items-center gap-2 truncate">
+                {sub}
+            </div>
         </Kpi>
     );
 }
 
-const FLAT_CHIP = "dash-figure bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium";
+const FLAT_CHIP = "dash-figure bg-muted text-muted-foreground text-app-caption rounded-full px-2 py-0.5 font-medium";
+const DUE_BADGE = "text-app-caption! h-6 rounded-md px-2 font-medium tracking-normal";
 
 function Kpis({ data, tab }: { data: RecurringData; tab: RecurringTab }) {
     const copy = useIntlayer("dashboard-recurring");
@@ -135,15 +138,12 @@ function Kpis({ data, tab }: { data: RecurringData; tab: RecurringTab }) {
     const dueBadges = (
         <>
             {kpis.missed > 0 ? (
-                <Badge className="h-6 rounded-md px-2 text-xs font-medium tracking-normal" variant="destructive">
+                <Badge className={DUE_BADGE} variant="destructive">
                     {copy.kpi.missed({ count: String(kpis.missed) })}
                 </Badge>
             ) : null}
             {kpis.today > 0 ? (
-                <Badge
-                    className="bg-app-warn/14 text-app-warn h-6 rounded-md px-2 text-xs font-medium tracking-normal"
-                    variant="secondary"
-                >
+                <Badge className={`bg-app-warn/14 text-app-warn ${DUE_BADGE}`} variant="secondary">
                     {copy.kpi.today({ count: String(kpis.today) })}
                 </Badge>
             ) : null}
@@ -198,28 +198,30 @@ function Count({ pill, value }: { pill: boolean; value: number }) {
     if (pill) {
         return <Tabs.Badge className="dash-figure">{value}</Tabs.Badge>;
     }
-    return <span className="dash-figure text-muted-foreground text-xs">{value}</span>;
+    return <span className="dash-figure text-muted-foreground text-app-caption">{value}</span>;
 }
 
-function Empty({ onAdd }: { onAdd: () => void }) {
+function NothingYet({ onAdd }: { onAdd: () => void }) {
     const copy = useIntlayer("dashboard-recurring");
     const navigate = useNavigate();
     return (
-        <div className="dash-empty relative isolate h-full min-h-[299px]">
-            <QuietTable />
-            <b className="text-[15px] font-semibold">{copy.empty.title}</b>
-            <p className="text-muted-foreground max-w-sm text-[13px]">{copy.empty.line}</p>
-            <div className="mt-3 flex flex-wrap justify-center gap-2">
-                <Button onClick={onAdd}>
-                    <Glyph icon={Add01Icon} size={17} />
-                    {copy.add}
-                </Button>
-                <Button onClick={() => navigate({ to: "/settings/data" })} variant="outline">
-                    <Glyph icon={Upload04Icon} size={16} />
-                    {copy.empty.import}
-                </Button>
-            </div>
-        </div>
+        <Empty
+            action={
+                <>
+                    <Button onClick={onAdd}>
+                        <Glyph icon={Add01Icon} size={16} />
+                        {copy.add}
+                    </Button>
+                    <Button onClick={() => navigate({ to: "/settings/data" })} variant="outline">
+                        <Glyph icon={Upload04Icon} size={16} />
+                        {copy.empty.import}
+                    </Button>
+                </>
+            }
+            icon={RepeatIcon}
+            line={copy.empty.line}
+            title={copy.empty.title}
+        />
     );
 }
 
@@ -488,7 +490,7 @@ export function RecurringScreen({ data, search, setSearch, writes }: ScreenProps
     };
     const body = () => {
         if (fresh && (tab === "upcoming" || tab === "all")) {
-            return <Empty onAdd={() => setSearch({ edit: NEW_SCHEDULE })} />;
+            return <NothingYet onAdd={() => setSearch({ edit: NEW_SCHEDULE })} />;
         }
         if (tab === "calendar") {
             return <CalendarGrid {...calendar} />;
@@ -520,8 +522,7 @@ export function RecurringScreen({ data, search, setSearch, writes }: ScreenProps
 
     return (
         <main className="@container flex h-[calc(100dvh-52px-env(safe-area-inset-top))] min-w-0 flex-col px-4 pb-5 sm:px-6 lg:h-dvh">
-            <div className="flex min-h-16 flex-wrap items-center gap-2 py-3">
-                <h1 className="mr-auto text-lg leading-6 font-semibold tracking-[-0.02em]">{copy.title}</h1>
+            <AccountsBar title={copy.title}>
                 {fresh ? null : (
                     <>
                         <Button onClick={exportCsv} variant="outline">
@@ -529,29 +530,35 @@ export function RecurringScreen({ data, search, setSearch, writes }: ScreenProps
                             <span className="max-sm:hidden">{copy.export}</span>
                         </Button>
                         <Button onClick={() => setSearch({ edit: NEW_SCHEDULE })}>
-                            <Glyph icon={Add01Icon} size={17} />
+                            <Glyph icon={Add01Icon} size={16} />
                             {copy.add}
                         </Button>
                     </>
                 )}
-            </div>
+            </AccountsBar>
             <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto lg:overflow-visible">
                 {tab === "calendar" ? null : <Kpis data={data} tab={tab} />}
                 <div className="flex min-h-0 flex-1 gap-4 max-lg:flex-col">
                     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
                         <Frame
-                            className={`flex min-w-0 flex-col ${hugs ? "max-h-[50%] shrink-0" : "min-h-0 flex-1"}`}
+                            className={`flex min-w-0 flex-col ${hugs ? "max-h-1/2 shrink-0" : "min-h-0 flex-1"}`}
                             variant="plain"
                         >
-                            <Frame.Panel className="min-h-0 flex-1 rounded-2xl">
+                            <Frame.Panel className="rounded-app-xl min-h-0 flex-1">
                                 <div className="border-border border-b">{tabs}</div>
-                                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{body()}</div>
+                                <div
+                                    className="flex min-h-0 flex-1 flex-col overflow-y-auto"
+                                    data-motion="dissolve"
+                                    key={tab}
+                                >
+                                    {body()}
+                                </div>
                             </Frame.Panel>
                         </Frame>
                         {hugs ? <CandidateDetail candidate={picked} /> : null}
                     </div>
                     {side ? (
-                        <aside className="flex min-h-0 shrink-0 flex-col gap-4 overflow-y-auto lg:w-[300px]">
+                        <aside className="flex min-h-0 shrink-0 flex-col gap-4 overflow-y-auto lg:w-75">
                             {tab === "calendar" ? (
                                 <CalendarSide {...calendar} />
                             ) : (
