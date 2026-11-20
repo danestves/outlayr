@@ -651,6 +651,7 @@ export function EntryEditor({
     accountTrigger,
     categoryTrigger,
     doc,
+    files,
     imageUrl,
     onDelete,
     onLogAgain,
@@ -659,6 +660,7 @@ export function EntryEditor({
     accountTrigger?: RefObject<HTMLButtonElement | null>;
     categoryTrigger?: RefObject<HTMLButtonElement | null>;
     doc: Doc;
+    files?: ReactNode;
     imageUrl?: string;
     onDelete: () => void;
     onLogAgain: () => void;
@@ -717,6 +719,7 @@ export function EntryEditor({
                 problem={problem}
                 values={values}
             />
+            {files}
             <div className="flex flex-wrap items-center gap-2 py-4">
                 <Button onClick={onLogAgain} size="sm" variant="outline">
                     <HugeiconsIcon icon={Copy01Icon} size={14} />

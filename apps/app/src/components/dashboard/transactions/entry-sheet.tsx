@@ -589,6 +589,7 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
                             accountTrigger={accountTrigger}
                             categoryTrigger={categoryTrigger}
                             doc={doc}
+                            files={<EntryReceipt raw={raw} />}
                             imageUrl={imageUrl}
                             key={doc.localId}
                             onDelete={remove}
@@ -596,7 +597,6 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
                             total={total}
                         />
                         {(raw?.recurringType ?? 0) > 0 ? <RecurringLink id={row.id} /> : null}
-                        <EntryReceipt raw={raw} />
                     </>
                 }
                 categoryHint
