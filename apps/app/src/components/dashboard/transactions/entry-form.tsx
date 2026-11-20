@@ -289,6 +289,25 @@ export function NoteSlot({
     );
 }
 
+function EntryTile({ imageUrl, name, onEdit }: { imageUrl?: string; name: string; onEdit?: () => void }) {
+    const merchant = useIntlayer("dashboard-merchant");
+    const tile = <MerchantTile imageUrl={imageUrl} name={name} size="xl" />;
+    if (!onEdit) {
+        return tile;
+    }
+    return (
+        <button
+            aria-label={merchant.edit.value}
+            className="focus-visible:ring-ring/30 shrink-0 rounded-xl outline-none focus-visible:ring-3"
+            onClick={onEdit}
+            title={merchant.edit.value}
+            type="button"
+        >
+            {tile}
+        </button>
+    );
+}
+
 function EntryFields({
     accountTrigger,
     amountKey,
@@ -297,6 +316,7 @@ function EntryFields({
     layout,
     onChange,
     onCreateAccount,
+    onEditMerchant,
     onPick,
     problem,
     values,
@@ -308,6 +328,7 @@ function EntryFields({
     layout: "dialog" | "drawer";
     onChange: (patch: Partial<EntryValues>) => void;
     onCreateAccount?: () => void;
+    onEditMerchant?: () => void;
     onPick: (patch: Partial<EntryValues>) => void;
     problem: EntryProblem | null;
     values: EntryValues;
@@ -381,7 +402,11 @@ function EntryFields({
             {quiet ? (
                 <div className="flex flex-col gap-3 pb-3">
                     <Field className="flex-row! items-center gap-3">
-                        <MerchantTile imageUrl={imageUrl} name={values.note || (category?.name ?? "")} size="xl" />
+                        <EntryTile
+                            imageUrl={imageUrl}
+                            name={values.note || (category?.name ?? "")}
+                            onEdit={onEditMerchant}
+                        />
                         <Field.Label className="sr-only">{form.name}</Field.Label>
                         <div className="min-w-0 flex-1">{name}</div>
                     </Field>
@@ -654,6 +679,7 @@ export function EntryEditor({
     doc,
     imageUrl,
     onDelete,
+    onEditMerchant,
     onLogAgain,
     total,
 }: {
@@ -663,6 +689,7 @@ export function EntryEditor({
     doc: Doc;
     imageUrl?: string;
     onDelete: () => void;
+    onEditMerchant?: () => void;
     onLogAgain: () => void;
     total: ReactNode;
 }) {
@@ -708,6 +735,7 @@ export function EntryEditor({
                     categoryTrigger={categoryTrigger}
                     imageUrl={imageUrl}
                     layout="drawer"
+                    onEditMerchant={onEditMerchant}
                     onChange={(patch) => {
                         setValues((current) => ({ ...current, ...patch }));
                         setProblem(null);

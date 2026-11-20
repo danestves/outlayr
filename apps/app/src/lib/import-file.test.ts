@@ -1,7 +1,18 @@
 import { fixedOffset } from "@outlayr/money/ledger-zone";
+import { renamedMerchant } from "@outlayr/money/merchant-names";
 import { describe, expect, it } from "vite-plus/test";
 
-import { matchDuplicates, readCsvText, readDates, readRows, repairRow, statementOf, tidyLabel } from "./import-file";
+import {
+    groupKey,
+    matchDuplicates,
+    readCsvText,
+    readDates,
+    readRows,
+    repairRow,
+    resolveOnDevice,
+    statementOf,
+    tidyLabel,
+} from "./import-file";
 import type { ExistingEntry, FaultyRow, Target } from "./import-file";
 
 const HOUR = 3_600_000;
@@ -187,5 +198,34 @@ describe("tidyLabel", () => {
 
     it("returns on a label of many code marks instead of hanging the tab", () => {
         expect(tidyLabel(`${"#".repeat(40)} a b`)).toBe(`${"#".repeat(40)}a b`);
+    });
+});
+
+describe("resolveOnDevice", () => {
+    const groups = [
+        {
+            fromCategory: false,
+            income: false,
+            key: groupKey({ category: null, label: "COSTCO" }),
+            label: "COSTCO",
+            rows: 3,
+        },
+    ];
+    const categories = [{ id: "groceries", income: false, name: "Groceries" }];
+    const past = [{ categoryId: "groceries", note: "Costco Wholesale" }];
+    const noRule = () => null;
+
+    it("a merchant renamed everywhere still finds its past entries, under the new name", () => {
+        const renames = renamedMerchant({}, "Costco", "Costco Wholesale");
+
+        expect(resolveOnDevice(groups, categories, past, noRule, renames).get(groups[0]?.key ?? "")).toStrictEqual({
+            categoryId: "groceries",
+            foundBy: "entries",
+            name: "Costco Wholesale",
+        });
+        expect(resolveOnDevice(groups, categories, past, noRule).get(groups[0]?.key ?? "")).toMatchObject({
+            foundBy: "none",
+            name: null,
+        });
     });
 });

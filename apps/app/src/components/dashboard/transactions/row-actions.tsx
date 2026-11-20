@@ -3,6 +3,7 @@ import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import MoreHorizontalIcon from "@hugeicons/core-free-icons/MoreHorizontalIcon";
 import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
 import SquareArrowUpRightIcon from "@hugeicons/core-free-icons/SquareArrowUpRightIcon";
+import Store01Icon from "@hugeicons/core-free-icons/Store01Icon";
 import TickDouble02Icon from "@hugeicons/core-free-icons/TickDouble02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "panelui-web/button";
@@ -70,14 +71,17 @@ export type RowWrites = ReturnType<typeof useRowWrites>;
 interface RowMenuProps {
     name: string;
     onDelete: () => void;
+    /** Absent for transfers and card fees, which take their name from what they belong to. */
+    onEditMerchant?: () => void;
     onOpen: () => void;
     reviewing: boolean;
     row: FoldedRow;
     writes: RowWrites;
 }
 
-export function RowMenu({ name, onDelete, onOpen, reviewing, row, writes }: RowMenuProps) {
+export function RowMenu({ name, onDelete, onEditMerchant, onOpen, reviewing, row, writes }: RowMenuProps) {
     const { review, row: words } = useIntlayer("dashboard-ledger");
+    const merchant = useIntlayer("dashboard-merchant");
     const entry = !("fromId" in row);
     return (
         <Menu>
@@ -108,6 +112,12 @@ export function RowMenu({ name, onDelete, onOpen, reviewing, row, writes }: RowM
                     <Menu.Item onClick={() => writes.reviewed([row.id])}>
                         <HugeiconsIcon icon={TickDouble02Icon} strokeWidth={2} />
                         {review.mark}
+                    </Menu.Item>
+                ) : null}
+                {onEditMerchant ? (
+                    <Menu.Item onClick={onEditMerchant}>
+                        <HugeiconsIcon icon={Store01Icon} strokeWidth={2} />
+                        {merchant.edit}
                     </Menu.Item>
                 ) : null}
                 <Menu.Separator />

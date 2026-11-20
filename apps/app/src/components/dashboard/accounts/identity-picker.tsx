@@ -123,7 +123,7 @@ async function squarePhoto(file: File) {
     });
 }
 
-function useUploadSquare() {
+export function useUploadSquare() {
     const upload = useUploadPhoto();
     return async (file: File) => {
         const body = await squarePhoto(file);

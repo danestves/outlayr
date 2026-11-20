@@ -11,6 +11,8 @@ import type { DecimalSeparator } from "@outlayr/money/csv-read";
 import { fromWall, isoDay } from "@outlayr/money/ledger-zone";
 import type { OffsetAt } from "@outlayr/money/ledger-zone";
 import { merchantKey } from "@outlayr/money/merchant-key";
+import { renameFor } from "@outlayr/money/merchant-names";
+import type { MerchantNames } from "@outlayr/money/merchant-names";
 
 /** Folded, so "Food" and "food " name one category. */
 export const categoryKey = (value: string) => capitalizeCategoryName(value).toLowerCase();
@@ -474,12 +476,16 @@ const byName = (categories: readonly KnownCategory[], name: string, income: bool
     return (named.find((category) => income === null || category.income === income) ?? named[0])?.id ?? null;
 };
 
-/** What the device settles without asking anyone: the file's own category, then your past entries, then a rule. */
+/**
+ * What the device settles without asking anyone: the file's own category, then your past entries, then a rule. A
+ * merchant you renamed takes its new name and finds the entries already carrying it.
+ */
 export function resolveOnDevice(
     groups: readonly LabelGroup[],
     categories: readonly KnownCategory[],
     past: readonly PastEntry[],
-    rule: RuleMatch
+    rule: RuleMatch,
+    renames: MerchantNames = {}
 ): Map<string, Resolution> {
     const history = new Map<string, { counts: Map<string, number>; name: string }>();
     for (const entry of past) {
@@ -499,16 +505,19 @@ export function resolveOnDevice(
             resolved.set(group.key, { categoryId: id, foundBy: id === null ? "none" : "file", name: null });
             continue;
         }
-        const seen = history.get(group.key.slice(2));
+        const renamed = renameFor(renames, scrubLabel(group.label));
+        const seen =
+            history.get(group.key.slice(2)) ??
+            (renamed === null ? undefined : history.get(merchantKey(scrubLabel(renamed))));
         const usual = seen
             ? [...seen.counts].filter(([id]) => known.has(id)).toSorted((a, b) => b[1] - a[1])[0]?.[0]
             : undefined;
         if (seen && usual !== undefined) {
-            resolved.set(group.key, { categoryId: usual, foundBy: "entries", name: seen.name });
+            resolved.set(group.key, { categoryId: usual, foundBy: "entries", name: renamed ?? seen.name });
             continue;
         }
         const ruled = rule(group.label, group.income);
-        resolved.set(group.key, { categoryId: ruled, foundBy: ruled === null ? "none" : "rule", name: null });
+        resolved.set(group.key, { categoryId: ruled, foundBy: ruled === null ? "none" : "rule", name: renamed });
     }
     return resolved;
 }
@@ -539,7 +548,7 @@ export function withSuggestions(
             next.set(group.key, {
                 categoryId: id,
                 foundBy: "ai",
-                name: answer.domain === null ? null : domainName(answer.domain),
+                name: current.name ?? (answer.domain === null ? null : domainName(answer.domain)),
             });
         }
     }

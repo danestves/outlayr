@@ -28,6 +28,7 @@ import type { PickOption } from "./filter-row";
 import { InlineCell, amountDraft, useInlineWrites } from "./inline-edit";
 import type { Editing, InlineField } from "./inline-edit";
 import { LedgerTable } from "./ledger-table";
+import { MerchantDialog } from "./merchant-dialog";
 import { NO_TAG, csvOf, exportLines, inTab, pageOf, queryRows, tabCounts, tally } from "./model";
 import type { Tab } from "./model";
 import { PageBar } from "./page-bar";
@@ -120,6 +121,8 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const inline = useInlineWrites();
     const tabNames = useTabNames();
     const deleteEntries = useDeleteEntries();
+    const [merchantFor, setMerchantFor] = useState<string | null>(null);
+    const [merchantSaves, setMerchantSaves] = useState(0);
     const view = saved.views.find((each) => each.id === search.view) ?? null;
     const transfers = query.tab === "transfers";
 
@@ -659,6 +662,11 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                                         <RowMenu
                                             name={list.names.merchant(row)}
                                             onDelete={() => deleteEntries([row.id])}
+                                            onEditMerchant={
+                                                "fromId" in row || row.feeFor !== null
+                                                    ? undefined
+                                                    : () => setMerchantFor(row.id)
+                                            }
                                             onOpen={() => setSearch({ entry: row.id })}
                                             reviewing={list.review.has(row.id)}
                                             row={row}
@@ -771,8 +779,15 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                     setSearch({ entry: null });
                     deleteEntries([row.id]);
                 }}
+                onEditMerchant={setMerchantFor}
                 onStep={step}
+                revision={merchantSaves}
                 row={selected}
+            />
+            <MerchantDialog
+                entryId={merchantFor}
+                onClose={() => setMerchantFor(null)}
+                onSaved={() => setMerchantSaves((saves) => saves + 1)}
             />
         </main>
     );

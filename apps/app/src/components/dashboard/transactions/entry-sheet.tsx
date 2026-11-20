@@ -5,6 +5,7 @@ import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import Link01Icon from "@hugeicons/core-free-icons/Link01Icon";
 import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
+import Store01Icon from "@hugeicons/core-free-icons/Store01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { accountLook } from "@outlayr/money/ledger-log";
 import { Link } from "@tanstack/react-router";
@@ -141,8 +142,16 @@ function Chrome({
     );
 }
 
-function MoreMenu({ id, onDelete, onLogAgain }: { id: string; onDelete: () => void; onLogAgain?: () => void }) {
+interface MoreMenuProps {
+    id: string;
+    onDelete: () => void;
+    onEditMerchant?: () => void;
+    onLogAgain?: () => void;
+}
+
+function MoreMenu({ id, onDelete, onEditMerchant, onLogAgain }: MoreMenuProps) {
     const { bulk, detail, form } = useIntlayer("dashboard-transactions");
+    const merchant = useIntlayer("dashboard-merchant");
     const { toast } = useAccountFlows();
     const copyLink = async () => {
         await navigator.clipboard.writeText(`${window.location.origin}/transactions?entry=${id}`);
@@ -164,6 +173,12 @@ function MoreMenu({ id, onDelete, onLogAgain }: { id: string; onDelete: () => vo
                         {form.logAgain}
                     </Menu.Item>
                 ) : null}
+                {onEditMerchant ? (
+                    <Menu.Item onClick={onEditMerchant}>
+                        <HugeiconsIcon icon={Store01Icon} size={15} />
+                        {merchant.edit}
+                    </Menu.Item>
+                ) : null}
                 <Menu.Separator />
                 <Menu.Item onClick={onDelete} variant="destructive">
                     <HugeiconsIcon icon={Delete02Icon} size={15} />
@@ -179,13 +194,16 @@ export type EntryStart = "account" | "category" | "edit";
 interface EntrySheetProps {
     onClose: () => void;
     onDelete: (row: FoldedRow) => void;
+    onEditMerchant?: (id: string) => void;
+    /** Bumped when something outside the editor rewrote the entry, so the editor drops what it read before. */
+    revision?: number;
     onStep: (by: 1 | -1) => void;
     row: FoldedRow | null;
     start?: EntryStart;
 }
 
 /** One entry or transfer. On a phone it takes the whole screen, and an entry reads first with Edit below. */
-export function EntrySheet({ onClose, onDelete, onStep, row, start }: EntrySheetProps) {
+export function EntrySheet({ onClose, onDelete, onEditMerchant, onStep, revision, row, start }: EntrySheetProps) {
     const wide = useWide();
     // The sheet slides out after row clears, and it should carry the entry with it.
     const [shown, setShown] = useState(row);
@@ -215,7 +233,9 @@ export function EntrySheet({ onClose, onDelete, onStep, row, start }: EntrySheet
                             key={shown.id}
                             onClose={onClose}
                             onDelete={setDoomed}
+                            onEditMerchant={onEditMerchant}
                             onStep={onStep}
+                            revision={revision}
                             row={shown}
                             start={start}
                         />
@@ -529,7 +549,15 @@ function useOpenedPicker(trigger: RefObject<HTMLButtonElement | null> | null) {
     }, []);
 }
 
-function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetProps, "row"> & { row: FoldedRow }) {
+function EntryBody({
+    onClose,
+    onDelete,
+    onEditMerchant,
+    onStep,
+    revision = 0,
+    row,
+    start,
+}: Omit<EntrySheetProps, "row"> & { row: FoldedRow }) {
     const { ledger } = useDashboard();
     const { open } = useAccountFlows();
     const { transactions: copy } = useIntlayer("dashboard-home");
@@ -572,7 +600,8 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
               open({ from: row.id, kind: "entry" });
           }
         : undefined;
-    const more = <MoreMenu id={row.id} onDelete={remove} onLogAgain={logAgain} />;
+    const editMerchant = row.feeFor === null && onEditMerchant ? () => onEditMerchant(row.id) : undefined;
+    const more = <MoreMenu id={row.id} onDelete={remove} onEditMerchant={editMerchant} onLogAgain={logAgain} />;
     if (doc && (wide || editing)) {
         return (
             <Chrome
@@ -583,8 +612,9 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
                             categoryTrigger={categoryTrigger}
                             doc={doc}
                             imageUrl={imageUrl}
-                            key={doc.localId}
+                            key={`${doc.localId}:${revision}`}
                             onDelete={remove}
+                            onEditMerchant={editMerchant}
                             onLogAgain={() => logAgain?.()}
                             total={total}
                         >

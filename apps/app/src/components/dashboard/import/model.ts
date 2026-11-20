@@ -1,3 +1,4 @@
+import { MERCHANT_NAMES_KEY, merchantNamesOf } from "@outlayr/money/merchant-names";
 import { useMemo } from "react";
 
 import { useIncomingRules } from "@/components/dashboard/rules/incoming";
@@ -116,7 +117,8 @@ export function useFileModel(draft: Draft, asked: readonly Suggestion[]): FileMo
             groups,
             known,
             live.map((row) => ({ categoryId: row.categoryId, note: row.note })),
-            (label, income) => rule({ amount: 0, details: label, income, note: label }).categoryId
+            (label, income) => rule({ amount: 0, details: label, income, note: label }).categoryId,
+            merchantNamesOf(ledger.books.appMeta.find((row) => row.key === MERCHANT_NAMES_KEY)?.value)
         );
         const suggestions = [...(draft.suggestions ?? []), ...asked];
         const resolved = suggestions.length === 0 ? device : withSuggestions(groups, device, suggestions, known);
