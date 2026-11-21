@@ -30,6 +30,7 @@ vi.mock(import("./legal"), async (original) => {
 
 afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
     vi.useRealTimers();
 });
@@ -165,26 +166,44 @@ describe("the trial reminder", () => {
 });
 
 describe("a sign-in code", () => {
-    it("stops retrying once it expires", async () => {
+    it("leaves the outbox when it expires, even before its send starts", async () => {
         vi.useFakeTimers();
         const t = mailTest();
-        const expiresAt = Date.now() + 10 * 60_000;
-        let attempts = 0;
-        stubCloudflare(() => {
-            attempts += 1;
-            vi.setSystemTime(expiresAt);
-            return true;
-        });
+        stubCloudflare();
 
         await t.mutation(internal.emailOutbox.enqueue, {
-            expiresAt,
+            expiresAt: Date.now() + 1000,
             subject: "Your code",
             text: "123456",
             to: "code@example.com",
         });
+        await vi.advanceTimersByTimeAsync(1001);
+
+        await expect(t.run((ctx) => ctx.db.query("outboundEmails").collect())).resolves.toStrictEqual([]);
+    });
+});
+
+describe("a retried email", () => {
+    it("carries the same idempotency key on every try", async () => {
+        vi.useFakeTimers();
+        vi.stubEnv("EMAIL_PROVIDER", "resend");
+        vi.stubEnv("RESEND_API_KEY", "re_test");
+        const t = mailTest();
+        const keys: (string | null)[] = [];
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(async (_url: string, init?: RequestInit) => {
+                keys.push(new Headers(init?.headers).get("Idempotency-Key"));
+                return keys.length === 1 ? new Response("busy", { status: 502 }) : Response.json({ id: "sent" });
+            })
+        );
+
+        await t.mutation(internal.emailOutbox.enqueue, { subject: "Welcome", text: "Hi", to: "new@example.com" });
         await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-        expect(attempts).toBe(1);
+        expect(keys).toHaveLength(2);
+        expect(keys[0]).toBeTruthy();
+        expect(keys[1]).toBe(keys[0]);
     });
 });
 
@@ -239,7 +258,7 @@ describe("a policy notice", () => {
         const notify = () => t.action(internal.mailDelivery.notifyPolicy, {});
 
         await expect(notify()).resolves.toStrictEqual({ failed: 0, sent: 4 });
-        await expect(notify()).resolves.toStrictEqual({ failed: 0, sent: 0 });
+        await expect(notify()).rejects.toThrow("still sending");
         await expect(
             t.mutation(internal.emailOutbox.enqueue, {
                 notice: { keys: [`privacy:${DAY}`, `terms:${DAY}`], language: "en", userId: ana.userId },

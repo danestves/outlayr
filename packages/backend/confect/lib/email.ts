@@ -107,6 +107,10 @@ export function accountExistsEmail(language: Language): Email {
     return ACCOUNT_EXISTS_EMAIL[language];
 }
 
+export class NoticesStillSending extends Schema.TaggedError<NoticesStillSending>()("NoticesStillSending", {
+    message: Schema.String,
+}) {}
+
 export class EmailError extends Schema.TaggedError<EmailError>()("EmailError", {
     cause: Schema.optional(Schema.Defect()),
     provider: EmailProviderName,

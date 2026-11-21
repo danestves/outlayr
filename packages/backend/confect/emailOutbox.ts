@@ -59,6 +59,10 @@ const settle = Effect.fn("EmailOutbox.settled")(function* settle(
         return null;
     }
     yield* Effect.promise(() => ctx.db.delete("outboundEmails", emailId));
+    const { expiry } = row;
+    if (expiry !== undefined) {
+        yield* Effect.promise(() => ctx.scheduler.cancel(expiry));
+    }
     const failure = failureOf(result);
     if (failure === undefined) {
         return null;

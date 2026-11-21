@@ -23,6 +23,5 @@ sheet show nothing until they update.
    It sends the notices with the latest `effectiveAtMs`: when both documents change that day, each
    account gets one email covering both. The app merges everything someone hasn't seen into one sheet. It queues 50 at a time and schedules the next page itself; the counts it prints are emails queued from the
    first page, not delivered. A failed send gives its notice back once its four tries end, and a rerun
-   queues only what an account has not been given, so it retries the failures. Rerun once no `notifyPolicy` is
-   left under Schedules and the `outboundEmails` table is empty, or the rerun skips sends still trying. Follow the rest in the Convex logs
+   queues only what an account has not been given, so it retries the failures. A rerun refuses to start while emails from the last run are still sending; run it again once it stops refusing. Follow the rest in the Convex logs
    (`[mail] not sent`).

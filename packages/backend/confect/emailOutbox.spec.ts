@@ -21,4 +21,18 @@ export default GroupSpec.make()
             returns: () => Schema.NullOr(outboundEmails.Doc),
         })
     )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            args: () => ({ emailId: Id("outboundEmails") }),
+            name: "expire",
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalQuery({
+            args: () => ({}),
+            name: "noticesSending",
+            returns: () => Schema.Boolean,
+        })
+    )
     .addFunction(FunctionSpec.convexInternalMutation<typeof settled>()("settled"));

@@ -2,6 +2,8 @@ import { Table } from "@confect/core";
 import { LANGUAGES } from "@outlayr/email/language";
 import * as Schema from "effect/Schema";
 
+import { Id } from "../_generated/id";
+
 export const Notice = Schema.Struct({
     keys: Schema.Array(Schema.String),
     language: Schema.Literals(LANGUAGES),
@@ -18,4 +20,6 @@ export const OutboundEmail = Schema.Struct({
     to: Schema.String,
 });
 
-export default Table.make(() => OutboundEmail);
+export default Table.make(() =>
+    Schema.Struct({ ...OutboundEmail.fields, expiry: Schema.optional(Id("_scheduled_functions")) })
+).index("by_notice", ["notice.userId"]);

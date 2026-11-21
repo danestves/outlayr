@@ -53,7 +53,8 @@ function adapterFor(setup: SendingSetup) {
 export const deliverEmail = Effect.fn("Email.deliver")(function* deliverEmail(
     setup: SendingSetup,
     to: string,
-    { html, replyTo, subject, text }: Email
+    { html, replyTo, subject, text }: Email,
+    idempotencyKey: string
 ) {
     const { provider } = setup;
     const client = createEmailClient({ adapters: [adapterFor(setup)], telemetry: false });
@@ -74,7 +75,7 @@ export const deliverEmail = Effect.fn("Email.deliver")(function* deliverEmail(
                     text,
                     to,
                 },
-                { signal }
+                { idempotencyKey, signal }
             ),
     }).pipe(
         Effect.timeout(SEND_TIMEOUT),

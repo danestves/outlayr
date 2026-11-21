@@ -17,7 +17,7 @@ import { QueryRunner, Scheduler } from "./_generated/services";
 import { noticeKey, POLICY_NOTICES } from "./legal";
 import { siteUrl } from "./lib/config";
 import { deliverEmail } from "./lib/deliverEmail";
-import { EmailError } from "./lib/email";
+import { EmailError, NoticesStillSending } from "./lib/email";
 import { emailSetup } from "./lib/emailSetup";
 import { outboundHttp } from "./lib/http";
 import { sendEmail } from "./lib/sendEmail";
@@ -132,6 +132,12 @@ const notifyPolicy = FunctionImpl.make(
                 return yield* new EmailError({ provider, reason: "unconfigured" });
             }
             const { runQuery } = yield* QueryRunner;
+            if (cursor === undefined && (yield* runQuery(refs.internal.emailOutbox.noticesSending, {}))) {
+                return yield* new NoticesStillSending({
+                    message:
+                        "Policy emails from an earlier run are still sending; run notifyPolicy again once they finish",
+                });
+            }
             const page = yield* runQuery(refs.internal.mail.noticeRecipients, {
                 cursor: cursor ?? null,
                 keys: batch.map(noticeKey),
@@ -189,9 +195,6 @@ const deliver = FunctionImpl.make(
             if (email === null) {
                 return null;
             }
-            if (email.expiresAt !== undefined && email.expiresAt <= Date.now()) {
-                return "expired";
-            }
             const setup = yield* emailSetup;
             if (setup.provider === "log") {
                 return new EmailError({ provider: "log", reason: "unconfigured" }).message;
@@ -199,7 +202,7 @@ const deliver = FunctionImpl.make(
             if (setup.provider === "unconfigured") {
                 return new EmailError({ provider: setup.requested, reason: "unconfigured" }).message;
             }
-            return yield* deliverEmail(setup, email.to, email).pipe(
+            return yield* deliverEmail(setup, email.to, email, emailId).pipe(
                 Effect.as(null),
                 Effect.catchTags({
                     EmailError: (error) => (error.permanent ? Effect.succeed(error.message) : Effect.fail(error)),

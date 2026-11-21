@@ -9,5 +9,7 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 export default {
 ["enqueue"]: RegisteredConvexFunction.register({ ...definitions["enqueue"], handler: forward(definitions["enqueue"].handler) }),
 ["email"]: RegisteredConvexFunction.register({ ...definitions["email"], handler: forward(definitions["email"].handler) }),
+["expire"]: RegisteredConvexFunction.register({ ...definitions["expire"], handler: forward(definitions["expire"].handler) }),
+["noticesSending"]: RegisteredConvexFunction.register({ ...definitions["noticesSending"], handler: forward(definitions["noticesSending"].handler) }),
 ["settled"]: definitions["settled"].handler,
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../emailOutbox.spec")["default"]>;
