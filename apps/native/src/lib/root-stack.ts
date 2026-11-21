@@ -2,8 +2,9 @@ import type { Href } from "expo-router";
 
 import type { RootStackGroup } from "@/domain/auth-gate";
 import type { TranslationKey } from "@/i18n/catalog";
-import { ACCOUNT_DETENT, CATEGORY_DETENT, INSTALLMENT_PAY_DETENT, SUBCATEGORY_DETENT } from "@/lib/sheet-detents";
 import type { StackChrome } from "@/navigation/stack-chrome";
+
+import { ACCOUNT_DETENT, CATEGORY_DETENT, INSTALLMENT_PAY_DETENT, SUBCATEGORY_DETENT } from "./sheet-detents";
 
 type Row<Kind extends keyof StackChrome, Fields = unknown> = Fields & {
     chrome: Kind;

@@ -7,8 +7,8 @@ import Svg, { Line } from "react-native-svg";
 import { scheduleOnRN } from "react-native-worklets";
 
 import { useSetting } from "@/contexts/display-settings-context";
-import { bucketDateLabel } from "@/data/insights";
-import type { InsightsBucket, InsightsMeasure, InsightsPeriod } from "@/data/insights";
+import { bucketDateLabel } from "@/domain/insights";
+import type { InsightsBucket, InsightsMeasure, InsightsPeriod } from "@/domain/insights";
 import { amountParts, formatAmount, withCurrencySymbol } from "@/domain/money";
 import { LARGEST_STANDARD_FONT_SCALE } from "@/hooks/use-accessibility-text-size";
 import { useChartDraw } from "@/hooks/use-chart-draw";

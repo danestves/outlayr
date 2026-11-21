@@ -1,4 +1,5 @@
-import type { InsightsPeriod } from "../../data/insights";
+import type { InsightsPeriod } from "@/domain/insights";
+
 import type { Language } from "../../i18n/languages";
 import { WIDGET_PALETTE } from "../palette";
 import type { WidgetPalette } from "../palette";

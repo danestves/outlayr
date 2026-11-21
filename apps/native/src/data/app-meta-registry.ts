@@ -1,6 +1,5 @@
 import * as Schema from "effect/Schema";
 
-import { DEFAULT_ACCENT_VALUE } from "@/domain/accent-options";
 import { analyticsOnByDefault } from "@/domain/analytics-consent";
 import { INSTALLMENT_REMINDERS_DEFAULT } from "@/domain/installment-reminder";
 import {
@@ -25,6 +24,7 @@ import {
 } from "@/domain/meta-values";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import { firstLocale } from "@/i18n/device-language";
+import { DEFAULT_ACCENT_VALUE } from "@/lib/accent-options";
 
 type SyncScope = "device" | "synced";
 

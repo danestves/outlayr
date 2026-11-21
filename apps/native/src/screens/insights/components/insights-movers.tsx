@@ -5,7 +5,7 @@ import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
-import type { CategoryMover, InsightsMeasure } from "@/data/insights";
+import type { CategoryMover, InsightsMeasure } from "@/domain/insights";
 import { breakdownRiseIsFavourable } from "@/domain/insights-measure";
 import { formatAmount } from "@/domain/money";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";

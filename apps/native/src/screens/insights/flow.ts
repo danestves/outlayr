@@ -1,6 +1,6 @@
 import type { SankeyLink, SankeyNode } from "panelui-native/components/sankey-chart";
 
-import type { CategoryBreakdownEntry } from "@/data/insights";
+import type { CategoryBreakdownEntry } from "@/domain/insights";
 
 const SOURCES_SHOWN = 3;
 const TARGETS_SHOWN = 4;

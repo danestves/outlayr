@@ -5,12 +5,13 @@ import type { DeepKeys, DeepValue, UpdateMetaOptions, Updater } from "@tanstack/
 import type { IdentitySelection } from "@/components/identity-picker-shared";
 import { getAccountById, getLastUsedAccount } from "@/data/accounts-core";
 import { cardFeeFor } from "@/data/card-fees-core";
-import { getCategoryById, pendingCategoryFor } from "@/data/categories-core";
-import type { PendingCategory } from "@/data/categories-core";
+import { getCategoryById } from "@/data/categories-core";
 import type { Transaction } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { feeDraftOf } from "@/domain/card-fee";
 import type { FeeDraft } from "@/domain/card-fee";
+import { pendingCategoryFor } from "@/domain/category-presets";
+import type { PendingCategory } from "@/domain/category-presets";
 import type { InstallmentSeed } from "@/domain/installment-scan";
 import { minorUnitsFor } from "@/domain/money";
 import { numberToNumpad } from "@/domain/numpad";

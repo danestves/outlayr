@@ -2,6 +2,7 @@ import { buildRateTable } from "@outlayr/money/valuation";
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
+import { loadContributions } from "@/data/insights-contributions";
 import { migratedDatabase } from "@/db/test-database";
 
 import { settledBalanceAt } from "./accounts";
@@ -15,7 +16,6 @@ import {
     recordOutsideMove,
     recordSoldOnCredit,
 } from "./debts-core";
-import { loadContributions } from "./insights";
 import { getTransactionById } from "./transactions-core";
 import { transfersRepo } from "./transfers-core";
 

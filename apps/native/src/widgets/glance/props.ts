@@ -4,12 +4,12 @@ import * as Effect from "effect/Effect";
 
 import { settledBalanceAt } from "@/data/accounts";
 import { accountsRepo } from "@/data/accounts-core";
-import type { InsightsPeriod } from "@/data/insights";
 import type { Valuation } from "@/data/valuation-source";
 import type { Database } from "@/db/client";
 import { formatSignedAmount } from "@/domain/account-display";
 import { budgetTimeLeftLabel } from "@/domain/budget-math";
 import { formatTime, formatUpcomingDate } from "@/domain/dates";
+import type { InsightsPeriod } from "@/domain/insights";
 import { AMOUNT_MASK, formatAmount } from "@/domain/money";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { SUPPORTED_LANGUAGES } from "@/i18n/languages";

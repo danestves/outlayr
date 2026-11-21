@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as Effect from "effect/Effect";
 import { beforeAll, describe, expect, it } from "vite-plus/test";
 
+import { loadContributions } from "@/data/insights-contributions";
 import { categories, transactions } from "@/db/schema";
 
 import {
@@ -12,7 +13,6 @@ import {
     bucketRanges,
     categoryBuckets,
     elapsedSlots,
-    loadContributions,
     monthPeriodStart,
     offsetForDate,
     periodTotal,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { guessMapping } from "@/data/transfer-core";
+import { guessMapping } from "@/domain/import-header";
 
 import { resolveImportMapping } from "./import-mapping";
 

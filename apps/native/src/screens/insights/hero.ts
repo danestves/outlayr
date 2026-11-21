@@ -1,4 +1,4 @@
-import type { CategoryBreakdownEntry, InsightsBucket, InsightsMeasure } from "@/data/insights";
+import type { CategoryBreakdownEntry, InsightsBucket, InsightsMeasure } from "@/domain/insights";
 import type { InsightsTotals } from "@/domain/insights-measure";
 import {
     insightsMeasureIsIncome,
