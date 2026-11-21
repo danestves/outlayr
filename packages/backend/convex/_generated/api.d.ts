@@ -15,6 +15,7 @@ import type * as captureLookup from "../captureLookup.js";
 import type * as cotizave from "../cotizave.js";
 import type * as crons from "../crons.js";
 import type * as csvImport from "../csvImport.js";
+import type * as emailOutbox from "../emailOutbox.js";
 import type * as enrichment from "../enrichment.js";
 import type * as enrichmentQueue from "../enrichmentQueue.js";
 import type * as exchangeRates from "../exchangeRates.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   cotizave: typeof cotizave;
   crons: typeof crons;
   csvImport: typeof csvImport;
+  emailOutbox: typeof emailOutbox;
   enrichment: typeof enrichment;
   enrichmentQueue: typeof enrichmentQueue;
   exchangeRates: typeof exchangeRates;
@@ -127,4 +129,5 @@ export declare const components: {
   mcp: import("@convex-dev/mcp/_generated/component.js").ComponentApi<"mcp">;
   revenuecat: import("convex-revenuecat/_generated/component.js").ComponentApi<"revenuecat">;
   enrichmentPool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"enrichmentPool">;
+  emailPool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"emailPool">;
 };

@@ -2,6 +2,7 @@ import { componentsGeneric } from "convex/server";
 
 export type Components = {
   "betterAuth": import("@convex-dev/better-auth/_generated/component.js").ComponentApi<"betterAuth">;
+  "emailPool": import("@convex-dev/workpool/_generated/component.js").ComponentApi<"emailPool">;
   "enrichmentPool": import("@convex-dev/workpool/_generated/component.js").ComponentApi<"enrichmentPool">;
   "mcp": import("@convex-dev/mcp/_generated/component.js").ComponentApi<"mcp">;
   "r2": import("@convex-dev/r2/_generated/component.js").ComponentApi<"r2">;

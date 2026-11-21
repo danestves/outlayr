@@ -18,6 +18,7 @@ export type MailStateDoc = Document.Document<typeof schemaDefinition, "mailState
 export type MainBudgetDoc = Document.Document<typeof schemaDefinition, "mainBudget">;
 export type MerchantKnowledgeDoc = Document.Document<typeof schemaDefinition, "merchantKnowledge">;
 export type OpenStatsDoc = Document.Document<typeof schemaDefinition, "openStats">;
+export type OutboundEmailsDoc = Document.Document<typeof schemaDefinition, "outboundEmails">;
 export type OutsideMovesDoc = Document.Document<typeof schemaDefinition, "outsideMoves">;
 export type OutsidePaymentsDoc = Document.Document<typeof schemaDefinition, "outsidePayments">;
 export type PhotoObjectsDoc = Document.Document<typeof schemaDefinition, "photoObjects">;
@@ -58,6 +59,7 @@ export interface Docs {
   mainBudget: MainBudgetDoc;
   merchantKnowledge: MerchantKnowledgeDoc;
   openStats: OpenStatsDoc;
+  outboundEmails: OutboundEmailsDoc;
   outsideMoves: OutsideMovesDoc;
   outsidePayments: OutsidePaymentsDoc;
   photoObjects: PhotoObjectsDoc;

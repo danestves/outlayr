@@ -12,42 +12,17 @@ import * as Schema from "effect/Schema";
 import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
-import { DatabaseReader, DatabaseWriter, QueryCtx, Scheduler } from "./_generated/services";
-import type mailState from "./_generated/tables/mailState";
+import { QueryCtx, Scheduler } from "./_generated/services";
 import { authComponent } from "./lib/betterAuth";
+import { recordNotices, saveState, stateOf } from "./lib/mailState";
 import spec from "./mail.spec";
 
 const NOTICE_PAGE = 50;
 const ANONYMOUS_PREFIX = "$RCAnonymousID:";
 
-type MailState = typeof mailState.Doc.Type;
-
 const AuthUser = Schema.Struct({ _id: Schema.String, email: Schema.String, emailVerified: Schema.Boolean });
 const decodeAuthUser = Schema.decodeUnknownOption(AuthUser);
 const decodeProviders = Schema.decodeUnknownOption(Schema.Array(Schema.Struct({ providerId: Schema.String })));
-
-const stateOf = Effect.fn("Mail.stateOf")(function* stateOf(userId: string) {
-    const reader = yield* DatabaseReader;
-    return yield* reader
-        .table("mailState")
-        .get("by_userId", userId)
-        .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
-});
-
-const saveState = Effect.fn("Mail.saveState")(function* saveState(
-    userId: string,
-    state: MailState | null,
-    fields: Partial<Omit<MailState, "_creationTime" | "_id" | "userId">>
-) {
-    const writer = yield* DatabaseWriter;
-    if (state) {
-        yield* writer.table("mailState").patch(state._id, fields);
-        return;
-    }
-    yield* writer
-        .table("mailState")
-        .insert({ language: "en", notices: [], proSentAt: null, welcomedAt: null, ...fields, userId });
-});
 
 const verifiedUser = Effect.fn("Mail.verifiedUser")(function* verifiedUser(userId: string) {
     const ctx = yield* QueryCtx;
@@ -195,11 +170,7 @@ const recordNotice = FunctionImpl.make(
     "recordNotice",
     Effect.fn("Mail.recordNotice")(function* recordNotice({ deliveries }) {
         for (const { keys, language, userId } of deliveries) {
-            const state = yield* stateOf(userId);
-            const added = keys.filter((key) => !state?.notices.includes(key));
-            if (added.length > 0) {
-                yield* saveState(userId, state, { language, notices: [...(state?.notices ?? []), ...added] });
-            }
+            yield* recordNotices(userId, keys, language);
         }
         return null;
     }, Effect.orDie)

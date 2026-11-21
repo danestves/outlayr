@@ -13,9 +13,10 @@ import * as Option from "effect/Option";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
-import { MutationRunner, QueryRunner, Scheduler } from "./_generated/services";
+import { QueryRunner, Scheduler } from "./_generated/services";
 import { noticeKey, POLICY_NOTICES } from "./legal";
 import { siteUrl } from "./lib/config";
+import { deliverEmail } from "./lib/deliverEmail";
 import { EmailError } from "./lib/email";
 import { emailSetup } from "./lib/emailSetup";
 import { outboundHttp } from "./lib/http";
@@ -29,20 +30,6 @@ const NOTICE_CONCURRENCY = 5;
 const POLICY_REPLY_TO = "support@tryoutlayr.com";
 
 const unsent = (error: EmailError) => Console.error("[mail] not sent", error.message).pipe(Effect.as(null));
-
-const send = FunctionImpl.make(
-    databaseSchema,
-    spec,
-    "send",
-    Effect.fn("Mail.send")(
-        function* send({ to, ...email }) {
-            yield* sendEmail(to, email);
-            return null;
-        },
-        Effect.provide(ConvexConfigProvider.layer),
-        Effect.orDie
-    )
-);
 
 const sendWelcome = FunctionImpl.make(
     databaseSchema,
@@ -145,13 +132,12 @@ const notifyPolicy = FunctionImpl.make(
                 return yield* new EmailError({ provider, reason: "unconfigured" });
             }
             const { runQuery } = yield* QueryRunner;
-            const { runMutation } = yield* MutationRunner;
             const page = yield* runQuery(refs.internal.mail.noticeRecipients, {
                 cursor: cursor ?? null,
                 keys: batch.map(noticeKey),
             });
 
-            const delivered = yield* Effect.all(
+            const queued = yield* Effect.all(
                 page.recipients.map(({ email, language, pending, userId }) =>
                     Effect.promise(() =>
                         policyChangeEmail({
@@ -163,25 +149,57 @@ const notifyPolicy = FunctionImpl.make(
                             language,
                         })
                     ).pipe(
-                        Effect.flatMap((message) => sendEmail(email, { ...message, replyTo: POLICY_REPLY_TO })),
-                        Effect.as(Option.some({ keys: pending, language, userId })),
-                        Effect.catchTags({ EmailError: (error) => unsent(error).pipe(Effect.as(Option.none())) })
+                        Effect.flatMap((message) =>
+                            sendEmail(
+                                email,
+                                { ...message, replyTo: POLICY_REPLY_TO },
+                                { keys: pending, language, userId }
+                            )
+                        ),
+                        Effect.as(true),
+                        Effect.catchTags({ EmailError: (error) => unsent(error).pipe(Effect.as(false)) })
                     )
                 ),
                 { concurrency: NOTICE_CONCURRENCY }
             );
-            const deliveries = delivered.filter(Option.isSome).map(({ value }) => value);
-            if (deliveries.length > 0) {
-                yield* runMutation(refs.internal.mail.recordNotice, { deliveries });
-            }
-
             if (!page.isDone) {
                 const scheduler = yield* Scheduler;
                 yield* scheduler.runAfter(Duration.zero, refs.internal.mailDelivery.notifyPolicy, {
                     cursor: page.continueCursor,
                 });
             }
-            return { failed: delivered.length - deliveries.length, sent: deliveries.length };
+            const sent = queued.filter(Boolean).length;
+            return { failed: queued.length - sent, sent };
+        },
+        Effect.provide(ConvexConfigProvider.layer),
+        Effect.orDie
+    )
+);
+
+const deliver = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "deliver",
+    Effect.fn("Mail.deliver")(
+        function* deliver({ emailId }) {
+            const { runQuery } = yield* QueryRunner;
+            const email = yield* runQuery(refs.internal.emailOutbox.email, { emailId });
+            if (email === null) {
+                return null;
+            }
+            const setup = yield* emailSetup;
+            if (setup.provider === "log") {
+                return new EmailError({ provider: "log", reason: "unconfigured" }).message;
+            }
+            if (setup.provider === "unconfigured") {
+                return new EmailError({ provider: setup.requested, reason: "unconfigured" }).message;
+            }
+            return yield* deliverEmail(setup, email.to, email).pipe(
+                Effect.as(null),
+                Effect.catchTags({
+                    EmailError: (error) => (error.permanent ? Effect.succeed(error.message) : Effect.fail(error)),
+                })
+            );
         },
         Effect.provide(ConvexConfigProvider.layer),
         Effect.orDie
@@ -189,10 +207,10 @@ const notifyPolicy = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
-    Layer.provide(send),
     Layer.provide(sendWelcome),
     Layer.provide(sendPro),
     Layer.provide(sendTrialReminder),
     Layer.provide(notifyPolicy),
+    Layer.provide(deliver),
     GroupImpl.finalize
 );

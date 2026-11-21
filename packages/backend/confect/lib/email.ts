@@ -108,6 +108,7 @@ export class EmailError extends Schema.TaggedError<EmailError>()("EmailError", {
     cause: Schema.optional(Schema.Defect()),
     provider: EmailProviderName,
     reason: Schema.Literals(["unconfigured", "transport", "status", "rejected"]),
+    retryable: Schema.optional(Schema.Boolean),
     status: Schema.optional(Schema.Number),
 }) {
     override get message(): string {
@@ -124,5 +125,12 @@ export class EmailError extends Schema.TaggedError<EmailError>()("EmailError", {
             return `${this.provider} rejected the address`;
         }
         return `${this.provider} email request failed`;
+    }
+
+    get permanent(): boolean {
+        if (this.reason === "transport" || this.reason === "status") {
+            return this.retryable === false;
+        }
+        return true;
     }
 }

@@ -5,6 +5,7 @@ import binance from "../binance.spec";
 import captureLookup from "../captureLookup.spec";
 import cotizave from "../cotizave.spec";
 import csvImport from "../csvImport.spec";
+import emailOutbox from "../emailOutbox.spec";
 import enrichment from "../enrichment.spec";
 import enrichmentQueue from "../enrichmentQueue.spec";
 import exchangeRates from "../exchangeRates.spec";
@@ -43,6 +44,7 @@ const spec: Spec.Spec<{
   readonly captureLookup: GroupSpec.NamedAt<typeof captureLookup, "captureLookup">;
   readonly cotizave: GroupSpec.NamedAt<typeof cotizave, "cotizave">;
   readonly csvImport: GroupSpec.NamedAt<typeof csvImport, "csvImport">;
+  readonly emailOutbox: GroupSpec.NamedAt<typeof emailOutbox, "emailOutbox">;
   readonly enrichment: GroupSpec.NamedAt<typeof enrichment, "enrichment">;
   readonly enrichmentQueue: GroupSpec.NamedAt<typeof enrichmentQueue, "enrichmentQueue">;
   readonly exchangeRates: GroupSpec.NamedAt<typeof exchangeRates, "exchangeRates">;
@@ -80,6 +82,7 @@ const spec: Spec.Spec<{
   ["captureLookup"]: captureLookup,
   ["cotizave"]: cotizave,
   ["csvImport"]: csvImport,
+  ["emailOutbox"]: emailOutbox,
   ["enrichment"]: enrichment,
   ["enrichmentQueue"]: enrichmentQueue,
   ["exchangeRates"]: exchangeRates,
