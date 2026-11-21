@@ -1,18 +1,12 @@
 import { LANGUAGES } from "@outlayr/email/language";
 import type { Language } from "@outlayr/email/language";
-import * as Duration from "effect/Duration";
-import * as Effect from "effect/Effect";
-import * as HttpClient from "effect/http/HttpClient";
-import * as HttpClientRequest from "effect/http/HttpClientRequest";
-import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
-import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import { emailConfig } from "./config";
+import { EmailProviderName, REQUIRED_VARIABLES } from "./emailSetup";
 
 export const EMAIL_CODE_TTL_SECONDS = 10 * 60;
 
-interface Email {
+export interface Email {
     html?: string;
     replyTo?: string;
     subject: string;
@@ -110,65 +104,22 @@ export function accountExistsEmail(language: Language): Email {
     return ACCOUNT_EXISTS_EMAIL[language];
 }
 
-const SEND_TIMEOUT = Duration.seconds(10);
-
 export class EmailError extends Schema.TaggedError<EmailError>()("EmailError", {
     cause: Schema.optional(Schema.Defect()),
-    codes: Schema.optional(Schema.Array(Schema.Number)),
+    provider: EmailProviderName,
     reason: Schema.Literals(["unconfigured", "transport", "status"]),
     status: Schema.optional(Schema.Number),
 }) {
     override get message(): string {
+        if (this.provider === "log") {
+            return "Email goes to the log; set EMAIL_PROVIDER to send it";
+        }
         if (this.reason === "unconfigured") {
-            return "Email needs CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_EMAIL_TOKEN and EMAIL_FROM";
+            return `${this.provider} email needs ${REQUIRED_VARIABLES[this.provider]}`;
         }
         if (this.reason === "status") {
-            const codes = this.codes?.length ? ` (${this.codes.join(", ")})` : "";
-            return `Cloudflare refused the email with ${this.status}${codes}`;
+            return `${this.provider} refused the email with ${this.status ?? "an error"}`;
         }
-        return "Email request failed";
+        return `${this.provider} email request failed`;
     }
 }
-
-const transport = (cause: unknown) => new EmailError({ cause, reason: "transport" });
-
-const decodeFailure = HttpIncomingMessage.schemaBodyJson(
-    Schema.Struct({ errors: Schema.Array(Schema.Struct({ code: Schema.Number })) })
-);
-
-export const sendEmail = Effect.fn("Email.send")(function* sendEmail(
-    to: string,
-    { html, replyTo, subject, text }: Email
-) {
-    const config = yield* emailConfig;
-    if (Option.isNone(config)) {
-        return yield* new EmailError({ reason: "unconfigured" });
-    }
-    const { accountId, from, token } = config.value;
-    const request = yield* HttpClientRequest.post(
-        `https://api.cloudflare.com/client/v4/accounts/${accountId}/email/sending/send`
-    ).pipe(
-        HttpClientRequest.bearerToken(token),
-        HttpClientRequest.bodyJson({
-            from: { address: from, name: "Outlayr" },
-            html,
-            reply_to: replyTo,
-            subject,
-            text,
-            to,
-        }),
-        Effect.catchTags({ HttpBodyError: transport })
-    );
-    const response = yield* HttpClient.execute(request).pipe(
-        Effect.timeout(SEND_TIMEOUT),
-        Effect.catchTags({ HttpClientError: transport, TimeoutError: transport })
-    );
-    if (response.status < 200 || response.status >= 300) {
-        const failure = yield* decodeFailure(response).pipe(Effect.option);
-        return yield* new EmailError({
-            codes: Option.getOrUndefined(failure)?.errors.map(({ code }) => code),
-            reason: "status",
-            status: response.status,
-        });
-    }
-});

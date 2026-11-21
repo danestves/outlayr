@@ -14,9 +14,11 @@ import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import { MutationRunner, QueryRunner, Scheduler } from "./_generated/services";
 import { noticeKey, POLICY_NOTICES } from "./legal";
-import { emailConfig, siteUrl } from "./lib/config";
-import { EmailError, sendEmail } from "./lib/email";
+import { siteUrl } from "./lib/config";
+import { EmailError } from "./lib/email";
+import { emailSetup } from "./lib/emailSetup";
 import { outboundHttp } from "./lib/http";
+import { sendEmail } from "./lib/sendEmail";
 import spec from "./mailDelivery.spec";
 import { decodeProSubscriber, proTermOf } from "./proTerm";
 import { storeSubscriber } from "./revenuecat";
@@ -26,6 +28,15 @@ const NOTICE_CONCURRENCY = 5;
 const POLICY_REPLY_TO = "support@tryoutlayr.com";
 
 const unsent = (error: EmailError) => Console.error("[mail] not sent", error.message).pipe(Effect.as(null));
+
+const send = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "send",
+    Effect.fn("Mail.send")(function* send({ to, ...email }) {
+        return yield* sendEmail(to, email).pipe(Effect.as(null), Effect.catchTags({ EmailError: unsent }));
+    }, Effect.orDie)
+);
 
 const sendWelcome = FunctionImpl.make(
     databaseSchema,
@@ -38,11 +49,7 @@ const sendWelcome = FunctionImpl.make(
             return null;
         }
         const email = yield* Effect.promise(() => welcomeEmail(recipient));
-        return yield* sendEmail(recipient.email, email).pipe(
-            Effect.provide(outboundHttp),
-            Effect.as(null),
-            Effect.catchTags({ EmailError: unsent })
-        );
+        return yield* sendEmail(recipient.email, email).pipe(Effect.as(null), Effect.catchTags({ EmailError: unsent }));
     }, Effect.orDie)
 );
 
@@ -57,11 +64,7 @@ const sendPro = FunctionImpl.make(
             return null;
         }
         const email = yield* Effect.promise(() => proEmail({ ...entitlement, email: to.email, language: to.language }));
-        return yield* sendEmail(to.email, email).pipe(
-            Effect.provide(outboundHttp),
-            Effect.as(null),
-            Effect.catchTags({ EmailError: unsent })
-        );
+        return yield* sendEmail(to.email, email).pipe(Effect.as(null), Effect.catchTags({ EmailError: unsent }));
     }, Effect.orDie)
 );
 
@@ -116,8 +119,10 @@ const notifyPolicy = FunctionImpl.make(
     Effect.fn("Mail.notifyPolicy")(function* notifyPolicy({ cursor }) {
         const latestMs = Math.max(...POLICY_NOTICES.map((notice) => notice.effectiveAtMs));
         const batch = POLICY_NOTICES.filter((notice) => notice.effectiveAtMs === latestMs);
-        if (Option.isNone(yield* emailConfig)) {
-            return yield* new EmailError({ reason: "unconfigured" });
+        const setup = yield* emailSetup;
+        if (setup.provider === "log" || setup.provider === "unconfigured") {
+            const provider = setup.provider === "log" ? setup.provider : setup.requested;
+            return yield* new EmailError({ provider, reason: "unconfigured" });
         }
         const { runQuery } = yield* QueryRunner;
         const { runMutation } = yield* MutationRunner;
@@ -144,7 +149,7 @@ const notifyPolicy = FunctionImpl.make(
                 )
             ),
             { concurrency: NOTICE_CONCURRENCY }
-        ).pipe(Effect.provide(outboundHttp));
+        );
         const deliveries = delivered.filter(Option.isSome).map(({ value }) => value);
         if (deliveries.length > 0) {
             yield* runMutation(refs.internal.mail.recordNotice, { deliveries });
@@ -161,6 +166,7 @@ const notifyPolicy = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
+    Layer.provide(send),
     Layer.provide(sendWelcome),
     Layer.provide(sendPro),
     Layer.provide(sendTrialReminder),

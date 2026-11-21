@@ -182,7 +182,7 @@ describe("Notion", () => {
 interface SentEmail {
     subject: string;
     text: string;
-    to: string;
+    to: string[];
 }
 
 function stubEmail(): SentEmail[] {
@@ -201,7 +201,6 @@ function emailAuth() {
     const t = convexTest(schema, modules);
     betterAuthTest.register(t);
     rateLimiterTest.register(t);
-    // Through the HTTP route, as in production: convex-test rejects `fetch` (the email send) inside `t.run`.
     return async (path: string, body: Record<string, string>, language = "en") => {
         const response = await t.fetch(`/api/auth${path}`, {
             body: JSON.stringify(body),
@@ -231,11 +230,12 @@ describe("email sign-in", () => {
             code: "EMAIL_NOT_VERIFIED",
             status: 403,
         });
+        await vi.waitFor(() => expect(sent).toHaveLength(2));
         const verified = await post("/email-otp/verify-email", { email: credentials.email, otp: codeIn(sent.at(-1)) });
 
         expect(sent[0]).toMatchObject({
             subject: expect.stringContaining("Your Outlayr code"),
-            to: credentials.email,
+            to: [credentials.email],
         });
         expect(verified).toMatchObject({ status: 200, token: expect.any(String) });
         await vi.waitFor(() =>
@@ -251,7 +251,7 @@ describe("email sign-in", () => {
         const again = await post("/sign-up/email", { ...credentials, password: "another password" }, "es-419");
 
         expect(again).toMatchObject({ status: 200, token: null });
-        expect(sent.at(-1)?.subject).toBe("Ya tienes una cuenta de Outlayr");
+        await vi.waitFor(() => expect(sent.at(-1)?.subject).toBe("Ya tienes una cuenta de Outlayr"));
     });
 
     it("stops trying passwords for one address after ten attempts", async () => {

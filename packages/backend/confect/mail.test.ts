@@ -38,7 +38,10 @@ function stubCloudflare(refuse: (to: string) => boolean = () => false) {
     vi.stubGlobal(
         "fetch",
         vi.fn(async (_url: string, init?: RequestInit) => {
-            const { subject, to }: { subject: string; to: string } = JSON.parse(String(init?.body));
+            const {
+                subject,
+                to: [to = ""],
+            }: { subject: string; to: string[] } = JSON.parse(String(init?.body));
             if (refuse(to)) {
                 return new Response("busy", { status: 502 });
             }
@@ -118,7 +121,10 @@ describe("the trial reminder", () => {
                 if (url.hostname === "api.stripe.com") {
                     return new Response("unavailable", { status: 503 });
                 }
-                const { subject, to }: { subject: string; to: string } = JSON.parse(String(init?.body));
+                const {
+                    subject,
+                    to: [to = ""],
+                }: { subject: string; to: string[] } = JSON.parse(String(init?.body));
                 sent.push({ at: Date.now(), subject, to });
                 return Response.json({ errors: [], success: true });
             })

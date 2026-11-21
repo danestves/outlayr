@@ -19,8 +19,9 @@ import { components, internal } from "../../convex/_generated/api";
 import type { DataModel } from "../../convex/_generated/dataModel";
 import authConfig from "../../convex/auth.config";
 import { authSettings } from "./config";
-import { accountExistsEmail, codeEmail, EMAIL_CODE_TTL_SECONDS, emailLanguage, sendEmail } from "./email";
-import { outboundHttp } from "./http";
+import { accountExistsEmail, codeEmail, EMAIL_CODE_TTL_SECONDS, EmailError, emailLanguage } from "./email";
+import type { Email } from "./email";
+import { emailSetup } from "./emailSetup";
 import { AppleLifecycleError, appleCredentialLifecycle } from "./providerLifecycle";
 import { runEdge, runEdgeSync } from "./runEdge";
 import { sha256Hex } from "./sha256Hex";
@@ -104,7 +105,6 @@ function createAuth(ctx: GenericCtx<DataModel>) {
     const {
         apple: appleConfig,
         convexSiteUrl,
-        email: emailConfig,
         google: googleConfig,
         nativeAppUrl,
         notion: notionConfig,
@@ -121,6 +121,16 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                 })
             ).pipe(Effect.ignoreCause({ log: true, message: `mail.${name} failed` }))
         );
+
+    const queueEmail = Effect.fn("BetterAuth.queueEmail")(function* queueEmail(to: string, email: Email) {
+        const setup = yield* emailSetup;
+        if (setup.provider === "unconfigured") {
+            return yield* new EmailError({ provider: setup.requested, reason: "unconfigured" });
+        }
+        yield* Effect.promise(() =>
+            requireRunMutationCtx(ctx).scheduler.runAfter(0, internal.mailDelivery.send, { ...email, to })
+        );
+    });
 
     return betterAuth({
         account: {
@@ -156,13 +166,9 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         // The app uses neither: codes only confirm an address or reset a password.
         disabledPaths: ["/forget-password/email-otp", "/send-verification-email", "/sign-in/email-otp"],
         emailAndPassword: {
-            enabled: Option.isSome(emailConfig),
+            enabled: true,
             onExistingUserSignUp: ({ user }, request) =>
-                runEdge(
-                    sendEmail(user.email, accountExistsEmail(emailLanguage(request?.headers))).pipe(
-                        Effect.provide(outboundHttp)
-                    )
-                ),
+                runEdge(queueEmail(user.email, accountExistsEmail(emailLanguage(request?.headers)))),
             requireEmailVerification: true,
             revokeSessionsOnPasswordReset: true,
         },
@@ -250,8 +256,8 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                                 return;
                             }
                             const language = emailLanguage(endpoint?.request?.headers ?? endpoint?.headers);
-                            yield* sendEmail(email, codeEmail(otp, purpose, language));
-                        }).pipe(Effect.provide(outboundHttp))
+                            yield* queueEmail(email, codeEmail(otp, purpose, language));
+                        })
                     ),
                 storeOTP: "hashed",
             }),
