@@ -1,3 +1,4 @@
+import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
@@ -92,6 +93,18 @@ const fetchJson = Effect.fn("OpenStats.fetchJson")(
         )
 );
 
+export const orNull = <A, R>(effect: Effect.Effect<A, OpenStatsError, R>) =>
+    effect.pipe(
+        Effect.map(Option.some),
+        Effect.catchTags({
+            OpenStatsError: (error) =>
+                Console.error(error.message, error.cause ?? "").pipe(Effect.as(Option.none<A>())),
+        })
+    );
+
+export const optional = <C, A, R>(config: Option.Option<C>, fetch: (value: C) => Effect.Effect<A, OpenStatsError, R>) =>
+    Option.isSome(config) ? orNull(fetch(config.value)) : Effect.succeed(Option.none<A>());
+
 export const monthKey = (ms: number) => new Date(ms).toISOString().slice(0, 7);
 
 export function recentMonths(now: number): string[] {
@@ -148,11 +161,14 @@ WHERE timestamp >= toStartOfMonth(now() - INTERVAL ${MONTHS - 1} MONTH) AND even
 GROUP BY month
 ORDER BY month`;
 
-export const fetchPostHogStats = Effect.fn("OpenStats.fetchPostHogStats")(function* fetchPostHogStats(config: {
+interface PostHogConfig {
     personalApiKey: Redacted.Redacted;
     projectId: string;
-}) {
-    const query = <S extends Schema.Constraint>(hogql: string, schema: S) =>
+}
+
+const postHogQuery =
+    (config: PostHogConfig) =>
+    <S extends Schema.Constraint>(hogql: string, schema: S) =>
         HttpClientRequest.post(
             `https://us.posthog.com/api/projects/${encodeURIComponent(config.projectId)}/query/`
         ).pipe(
@@ -160,6 +176,11 @@ export const fetchPostHogStats = Effect.fn("OpenStats.fetchPostHogStats")(functi
             HttpClientRequest.bodyJsonUnsafe({ query: { kind: "HogQLQuery", query: hogql } }),
             (request) => fetchJson("posthog", request, schema)
         );
+
+export const fetchPostHogStats = Effect.fn("OpenStats.fetchPostHogStats")(function* fetchPostHogStats(
+    config: PostHogConfig
+) {
+    const query = postHogQuery(config);
     const [weekly, monthly] = yield* Effect.all([query(weeklyQuery, WeeklyRows), query(monthlyQuery, MonthlyRows)], {
         concurrency: "unbounded",
     });
@@ -173,6 +194,26 @@ const OverviewMetrics = Schema.Struct({
     metrics: Schema.Array(Schema.Struct({ id: Schema.String, value: Schema.Number })),
 });
 
+interface RevenueCatConfig {
+    projectId: string;
+    secretKey: Redacted.Redacted;
+}
+
+const revenueCatRequest = (config: RevenueCatConfig, path: string, params: Record<string, string>) =>
+    HttpClientRequest.get(
+        `https://api.revenuecat.com/v2/projects/${encodeURIComponent(config.projectId)}/metrics/${path}`
+    ).pipe(
+        HttpClientRequest.bearerToken(Redacted.value(config.secretKey)),
+        HttpClientRequest.setUrlParams({ currency: "USD", ...params })
+    );
+
+const fetchRevenueMetrics = Effect.fn("OpenStats.fetchRevenueMetrics")(function* fetchRevenueMetrics(
+    config: RevenueCatConfig
+) {
+    const overview = yield* fetchJson("revenuecat", revenueCatRequest(config, "overview", {}), OverviewMetrics);
+    return overview.metrics;
+});
+
 export function monthDates(month: string, now: number) {
     const [year, monthIndex] = month.split("-").map(Number);
     const lastDay = Date.UTC(year ?? 0, monthIndex ?? 0, 0);
@@ -180,19 +221,11 @@ export function monthDates(month: string, now: number) {
 }
 
 export const fetchRevenueStats = Effect.fn("OpenStats.fetchRevenueStats")(function* fetchRevenueStats(
-    config: { projectId: string; secretKey: Redacted.Redacted },
+    config: RevenueCatConfig,
     now: number
 ) {
-    const base = `https://api.revenuecat.com/v2/projects/${encodeURIComponent(config.projectId)}/metrics`;
     const get = <S extends Schema.Constraint>(path: string, params: Record<string, string>, schema: S) =>
-        fetchJson(
-            "revenuecat",
-            HttpClientRequest.get(`${base}/${path}`).pipe(
-                HttpClientRequest.bearerToken(Redacted.value(config.secretKey)),
-                HttpClientRequest.setUrlParams({ currency: "USD", ...params })
-            ),
-            schema
-        );
+        fetchJson("revenuecat", revenueCatRequest(config, path, params), schema);
     const overview = yield* get("overview", {}, OverviewMetrics);
     const months = yield* Effect.all(
         recentMonths(now).map((month) => {
@@ -210,6 +243,51 @@ export const fetchRevenueStats = Effect.fn("OpenStats.fetchRevenueStats")(functi
         return yield* new OpenStatsError({ reason: "contract", source: "revenuecat" });
     }
     return { activeSubscriptions: paid.value + trials.value, months };
+});
+
+const REACH_WINDOW_WEEKS = 4;
+const REACH_WINDOW_MS = REACH_WINDOW_WEEKS * WEEK_MS;
+
+const ReachRows = Schema.Struct({ results: Schema.Array(Schema.Tuple([Schema.Number, Schema.Number])) });
+
+const reachQuery = `
+SELECT
+    uniqIf(person_id, event = '${APP_OPENED}') AS people,
+    countIf(event = '${ENTRY_SAVED}') AS entries
+FROM events
+WHERE timestamp > now() - INTERVAL ${REACH_WINDOW_WEEKS} WEEK AND event IN ('${APP_OPENED}', '${ENTRY_SAVED}')`;
+
+const fetchReachCounts = Effect.fn("OpenStats.fetchReachCounts")(function* fetchReachCounts(config: PostHogConfig) {
+    const { results } = yield* postHogQuery(config)(reachQuery, ReachRows);
+    const [people = 0, entries = 0] = results[0] ?? [];
+    return { entries, people };
+});
+
+export const fetchReach = Effect.fn("OpenStats.fetchReach")(function* fetchReach(
+    posthog: Option.Option<PostHogConfig>,
+    revenueCat: Option.Option<RevenueCatConfig>,
+    syncedAt: readonly number[],
+    now: number
+) {
+    const [metrics, counts] = yield* Effect.all(
+        [optional(revenueCat, fetchRevenueMetrics), optional(posthog, fetchReachCounts)],
+        {
+            concurrency: "unbounded",
+        }
+    );
+    const entries: [string, number][] = [
+        ["accounts_new_28d", syncedAt.filter((at) => at >= now - REACH_WINDOW_MS).length],
+        ["accounts_total", syncedAt.length],
+    ];
+    if (Option.isSome(metrics)) {
+        for (const { id, value } of metrics.value) {
+            entries.push([`rc_${id}`, value]);
+        }
+    }
+    if (Option.isSome(counts)) {
+        entries.push(["posthog_active_28d", counts.value.people], ["posthog_entries_28d", counts.value.entries]);
+    }
+    return Object.fromEntries(entries);
 });
 
 const PullPage = Schema.Array(Schema.Struct({ merged_at: Schema.NullOr(Schema.String) }));
