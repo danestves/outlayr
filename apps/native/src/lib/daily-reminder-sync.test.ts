@@ -77,6 +77,9 @@ describe("daily reminder sync", () => {
             .select({ rowId: sql<number>`rowid` })
             .from(appMeta)
             .where(eq(appMeta.key, key));
+        if (row === undefined) {
+            throw new Error("expected the setting row");
+        }
         for (const listener of mockChangeListeners) {
             listener({ rowId: row.rowId, tableName: "appMeta" });
         }

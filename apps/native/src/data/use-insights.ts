@@ -130,7 +130,7 @@ export function useInsights(
     const valued = valueDatedRowsIn(txData, displayCurrency, rates);
     const rows: InsightsContribution[] = txData.map((row, index) => ({
         // `amount` is the valued amount from here down, not the row's stored one.
-        amount: valued[index],
+        amount: valued[index] ?? 0,
         categoryId: row.categoryId,
         date: row.date,
         income: row.income,

@@ -120,6 +120,9 @@ describe("scheduleSuccessor", () => {
             exchangeRateType: "custom",
         });
         const [carrier] = await db.select().from(transactions).where(eq(transactions.id, id));
+        if (carrier === undefined) {
+            throw new Error("expected carrier");
+        }
 
         const successor = await Effect.runPromise(scheduleSuccessor(db, carrier, NOW));
 
@@ -144,6 +147,9 @@ describe("scheduleSuccessor", () => {
         });
         await seedRate(db, "VES", "official", "2025-07-01", 70);
         const [carrier] = await db.select().from(transactions).where(eq(transactions.id, id));
+        if (carrier === undefined) {
+            throw new Error("expected carrier");
+        }
 
         const successor = await Effect.runPromise(scheduleSuccessor(db, carrier, NOW));
 
@@ -166,6 +172,9 @@ describe("scheduleSuccessor", () => {
         });
         await seedRate(db, "VES", "eur_reference", "2025-07-01", 80);
         const [carrier] = await db.select().from(transactions).where(eq(transactions.id, id));
+        if (carrier === undefined) {
+            throw new Error("expected carrier");
+        }
 
         const successor = await Effect.runPromise(scheduleSuccessor(db, carrier, NOW));
 
@@ -266,6 +275,9 @@ describe("backfillRecurring", () => {
         await Effect.runPromise(rememberLogoCandidates(probe, [id], NOW.getTime(), Number.POSITIVE_INFINITY));
         await Effect.runPromise(backfillRecurring(probe, id, NOW));
         const [first] = await generatedRows(probe, id);
+        if (first === undefined) {
+            throw new Error("expected first");
+        }
         await db.insert(transactions).values(first);
 
         await Effect.runPromise(backfillRecurring(db, id, NOW));
@@ -655,6 +667,9 @@ describe("transactionsRepo.remove over a schedule carrier", () => {
 
         await expect(allRows(db)).resolves.toHaveLength(0);
         const [tombstone] = await everyRow(db);
+        if (tombstone === undefined) {
+            throw new Error("expected tombstone");
+        }
         expect(tombstone?.recurringType).toBe(RECURRING_TYPE.none);
     });
 
@@ -744,6 +759,9 @@ describe("transactionsRepo.stopRecurring", () => {
         await Effect.runPromise(transactionsRepo.stopRecurring(db, id, NOW));
 
         const [row] = await allRows(db);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row?.onceRecurring).toBe(true);
     });
 
@@ -754,6 +772,9 @@ describe("transactionsRepo.stopRecurring", () => {
         await Effect.runPromise(transactionsRepo.stopRecurring(db, id, NOW));
 
         const [tombstone] = await everyRow(db);
+        if (tombstone === undefined) {
+            throw new Error("expected tombstone");
+        }
         expect(tombstone?.recurringType).toBe(RECURRING_TYPE.monthly);
     });
 });
@@ -865,6 +886,9 @@ describe("repairOrphanedRecurrence", () => {
 
         await expect(allRows(db)).resolves.toHaveLength(0);
         const [tombstone] = await everyRow(db);
+        if (tombstone === undefined) {
+            throw new Error("expected tombstone");
+        }
         expect(tombstone?.recurringType).toBe(RECURRING_TYPE.none);
     });
 });
@@ -893,6 +917,9 @@ describe("occurrence identity across devices", () => {
         await seedSource(solo, { date: at(2025, 3, 15) });
         await Effect.runPromise(backfillRecurring(solo, "src", NOW));
         const [replicated] = await generatedRows(solo, "src");
+        if (replicated === undefined) {
+            throw new Error("expected replicated");
+        }
 
         // The peer's copy of the first charge, pulled in before this device swept.
         await db.insert(transactions).values({ ...replicated, note: "from-peer" });
@@ -911,6 +938,9 @@ describe("occurrence identity across devices", () => {
         await seedSource(solo, { date: at(2025, 3, 15) });
         await Effect.runPromise(backfillRecurring(solo, "src", NOW));
         const [replicated] = await generatedRows(solo, "src");
+        if (replicated === undefined) {
+            throw new Error("expected replicated");
+        }
 
         await db.insert(transactions).values({ ...replicated, deletedAt: NOW, updatedAt: NOW });
         await Effect.runPromise(backfillRecurring(db, "src", NOW));

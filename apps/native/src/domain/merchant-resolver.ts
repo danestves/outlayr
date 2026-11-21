@@ -29,21 +29,28 @@ function boundedLevenshtein(a: string, b: string, earlyExitAt: number): number {
         return earlyExitAt + 1;
     }
     let previous = Array.from({ length: b.length + 1 }, (_, col) => col);
+    let distance = b.length;
     for (let row = 1; row <= a.length; row += 1) {
         const current: number[] = [row];
         let rowMin = row;
-        for (let col = 1; col <= b.length; col += 1) {
-            const cost = a[row - 1] === b[col - 1] ? 0 : 1;
-            const value = Math.min(previous[col] + 1, current[col - 1] + 1, previous[col - 1] + cost);
+        let left = row;
+        const [first = earlyExitAt + 1] = previous;
+        let diagonal = first;
+        for (const [offset, up] of previous.slice(1).entries()) {
+            const cost = a.charAt(row - 1) === b.charAt(offset) ? 0 : 1;
+            const value = Math.min(up + 1, left + 1, diagonal + cost);
             current.push(value);
             rowMin = Math.min(rowMin, value);
+            diagonal = up;
+            left = value;
         }
         if (rowMin > earlyExitAt) {
             return earlyExitAt + 1;
         }
+        distance = left;
         previous = current;
     }
-    return previous[b.length];
+    return distance;
 }
 
 function resolveFuzzy(key: string): MerchantEntry | null {
@@ -63,7 +70,11 @@ function resolveFuzzy(key: string): MerchantEntry | null {
             matches.add(entry);
         }
     }
-    return matches.size === 1 ? [...matches][0] : null;
+    if (matches.size !== 1) {
+        return null;
+    }
+    const [only] = matches;
+    return only ?? null;
 }
 
 function toMatch(entry: MerchantEntry, domain: string | null): MerchantMatch {

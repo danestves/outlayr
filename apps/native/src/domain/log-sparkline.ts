@@ -70,8 +70,11 @@ export function sparklineSeries(
         let running = 0;
         let index = 0;
         return sampled.edges.map((edge) => {
-            while (index < sorted.length && sorted[index].date.getTime() < edge.getTime()) {
+            for (;;) {
                 const row = sorted[index];
+                if (row === undefined || row.date.getTime() >= edge.getTime()) {
+                    break;
+                }
                 running += row.income ? row.amount : -row.amount;
                 index += 1;
             }
@@ -83,8 +86,11 @@ export function sparklineSeries(
     let index = 0;
     return sampled.edges.map((edge) => {
         let bucket = 0;
-        while (index < sorted.length && sorted[index].date.getTime() < edge.getTime()) {
+        for (;;) {
             const row = sorted[index];
+            if (row === undefined || row.date.getTime() >= edge.getTime()) {
+                break;
+            }
             if (row.income === wantIncome && row.date.getTime() > windowStart) {
                 bucket += row.amount;
             }

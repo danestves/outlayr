@@ -12,13 +12,13 @@ const MIN_REST_SHARE = 0.06;
 
 function rowWorst(areas: readonly number[], start: number, end: number, side: number): number {
     let sum = 0;
-    for (let index = start; index < end; index += 1) {
-        sum += areas[index];
+    for (const area of areas.slice(start, end)) {
+        sum += area;
     }
     const thickness = sum / side;
     let worst = 0;
-    for (let index = start; index < end; index += 1) {
-        const length = areas[index] / thickness;
+    for (const area of areas.slice(start, end)) {
+        const length = area / thickness;
         worst = Math.max(worst, thickness / length, length / thickness);
     }
     return worst;
@@ -40,14 +40,14 @@ export function squarify(values: readonly number[], width: number, height: numbe
             end += 1;
         }
         let rowArea = 0;
-        for (let index = start; index < end; index += 1) {
-            rowArea += areas[index];
+        for (const area of areas.slice(start, end)) {
+            rowArea += area;
         }
         const thickness = rowArea / side;
         const vertical = box.width >= box.height;
         let offset = 0;
-        for (let index = start; index < end; index += 1) {
-            const length = areas[index] / thickness;
+        for (const area of areas.slice(start, end)) {
+            const length = area / thickness;
             rects.push(
                 vertical
                     ? { height: length, width: thickness, x: box.x, y: box.y + offset }
@@ -76,7 +76,10 @@ export function layoutBlocks(entries: readonly CategoryBreakdownEntry[], width: 
             values.push(Math.max(restAmount, total * MIN_REST_SHARE));
         }
         const rects = squarify(values, width, height);
-        const thin = shown.findIndex((_, index) => Math.min(rects[index].width, rects[index].height) < MIN_SIDE);
+        const thin = shown.findIndex((_, index) => {
+            const rect = rects[index];
+            return rect !== undefined && Math.min(rect.width, rect.height) < MIN_SIDE;
+        });
         if (thin === -1 || width <= 0 || height <= 0) {
             return { rects, rest, shown };
         }

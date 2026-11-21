@@ -13,12 +13,18 @@ describe("currencyTotals", () => {
 
     it("files a row with no currency of its own under the global one", () => {
         const [bucket] = currencyTotals([entry(10)], "USD");
+        if (bucket === undefined) {
+            throw new Error("expected bucket");
+        }
         expect(bucket.currencyCode).toBe("USD");
         expect(bucket.amount).toBe(-10);
     });
 
     it("signs income up and expense down inside each bucket", () => {
         const [bucket] = currencyTotals([entry(40), entry(15, true)], "USD");
+        if (bucket === undefined) {
+            throw new Error("expected bucket");
+        }
         expect(bucket.amount).toBe(-25);
     });
 
@@ -30,12 +36,12 @@ describe("currencyTotals", () => {
 
     it("ranks by transaction count first", () => {
         const buckets = currencyTotals([entry(1, false, "EUR"), entry(1, false, "EUR"), entry(999)], "USD");
-        expect(buckets[0].currencyCode).toBe("EUR");
+        expect(itemAt(buckets, 0).currencyCode).toBe("EUR");
     });
 
     it("breaks a count tie in the user's own currency's favour", () => {
         const buckets = currencyTotals([entry(1, false, "EUR"), entry(1, false, "USD")], "USD");
-        expect(buckets[0].currencyCode).toBe("USD");
+        expect(itemAt(buckets, 0).currencyCode).toBe("USD");
     });
 
     it("breaks a remaining tie alphabetically rather than arbitrarily", () => {
@@ -57,11 +63,22 @@ function priced(amount: number, currency: string, amountUsd: number | null, date
     return { amount, amountUsd, currency, date, income };
 }
 
+function itemAt<T>(values: readonly T[], index: number): T {
+    const value = values[index];
+    if (value === undefined) {
+        throw new Error(`expected item ${index}`);
+    }
+    return value;
+}
+
 describe("currencyTotals with rates", () => {
     it("excludes pending custom from valueCell in another currency", () => {
         const [cell] = toCells([
             { ...priced(40, "VES", null, JULY_5), exchangeRate: null, exchangeRateType: "custom" },
         ]);
+        if (cell === undefined) {
+            throw new Error("expected a cell");
+        }
         expect(valueCell(cell, "EUR", eurRates)).toBe(0);
     });
 
@@ -69,6 +86,9 @@ describe("currencyTotals with rates", () => {
         const [cell] = toCells([
             { ...priced(40, "VES", null, JULY_5), exchangeRate: null, exchangeRateType: "custom" },
         ]);
+        if (cell === undefined) {
+            throw new Error("expected a cell");
+        }
         expect(valueCell(cell, "EUR")).toBe(0);
     });
 
@@ -89,9 +109,9 @@ describe("currencyTotals with rates", () => {
             eurRates
         );
         expect(buckets).toHaveLength(1);
-        expect(buckets[0].currencyCode).toBe("EUR");
+        expect(itemAt(buckets, 0).currencyCode).toBe("EUR");
         // 50 + 90 + 5.76
-        expect(buckets[0].amount).toBe(-145.76);
+        expect(itemAt(buckets, 0).amount).toBe(-145.76);
     });
 
     it("leaves an entry with no frozen USD value in its own currency", () => {
@@ -129,7 +149,7 @@ describe("currencyTotals with rates", () => {
             priced(0.1, "USD", 0.1, JULY_5),
         ]);
         expect(cells).toHaveLength(1);
-        expect(cells[0].amountUsd).toBe(0.30000000000000004);
+        expect(itemAt(cells, 0).amountUsd).toBe(0.30000000000000004);
         expect(cellTotals(cells, "EUR", eurRates)).toStrictEqual([
             { amount: -0.27, currencyCode: "EUR", transactionCount: 3 },
         ]);

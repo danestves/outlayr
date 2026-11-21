@@ -21,7 +21,7 @@ import type { Account } from "@/data/accounts-core";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import type { Database } from "@/db/client";
 import { debtChoices, debtStanding } from "@/domain/debt-choices";
-import type { DebtStanding } from "@/domain/debt-choices";
+import type { DebtChoice, DebtStanding } from "@/domain/debt-choices";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
@@ -59,10 +59,13 @@ export function PersonHero({ account, balance, plan, showCents }: PersonHeroProp
     const t = useTranslation();
     const m3 = useMaterialColors();
     const standing = debtStanding(balance, account.currency);
-    const [first, second] = debtChoices(standing).map((choice) => ({
+    const [firstChoice, secondChoice] = debtChoices(standing);
+    const buttonFor = (choice: DebtChoice) => ({
         label: t(choice.labelKey),
         onPress: () => router.push({ params: { personId: account.id, verb: choice.verb }, pathname: "/debts/new" }),
-    }));
+    });
+    const first = buttonFor(firstChoice);
+    const second = buttonFor(secondChoice);
 
     return (
         <View className="items-center gap-1 pt-6 pb-4">

@@ -77,7 +77,8 @@ function uniqueExact(key: string, keyed: readonly { id: string; key: string }[])
     if (exact.length === 0) {
         return undefined;
     }
-    return exact.length === 1 ? exact[0].id : null;
+    const [only] = exact;
+    return exact.length === 1 && only !== undefined ? only.id : null;
 }
 
 /**
@@ -94,7 +95,8 @@ function matchKey(cardKey: string, keyed: readonly { id: string; key: string }[]
         (account) => containsTokens(cardKey, account.key) || containsTokens(account.key, cardKey)
     );
     if (contained.length > 0) {
-        return contained.length === 1 ? contained[0].id : null;
+        const [only] = contained;
+        return contained.length === 1 && only !== undefined ? only.id : null;
     }
 
     const institution = resolveInstitutionDomain(cardKey);
@@ -105,5 +107,6 @@ function matchKey(cardKey: string, keyed: readonly { id: string; key: string }[]
     if (sameBank.length === 0) {
         return undefined;
     }
-    return sameBank.length === 1 ? sameBank[0].id : null;
+    const [only] = sameBank;
+    return sameBank.length === 1 && only !== undefined ? only.id : null;
 }

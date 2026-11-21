@@ -39,5 +39,8 @@ export function goalBalanceSeries(
 
 function localMidnightOf(dateKey: string): number {
     const [year, month, day] = dateKey.split("-").map(Number);
+    if (year === undefined || month === undefined || day === undefined) {
+        return Number.NaN;
+    }
     return new Date(year, month - 1, day).getTime();
 }

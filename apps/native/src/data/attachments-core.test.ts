@@ -37,6 +37,9 @@ describe("attachmentsRepo.writeFor", () => {
     it("tombstones only what the draft dropped, keeping its key, and adds what it gained", async () => {
         const db = await seeded();
         const [receipt] = await attachmentsForQuery(db, "tx");
+        if (receipt === undefined) {
+            throw new Error("expected an attachment");
+        }
 
         await Effect.runPromise(
             attachmentsRepo.writeFor(

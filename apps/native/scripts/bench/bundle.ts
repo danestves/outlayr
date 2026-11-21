@@ -28,13 +28,13 @@ const { values: args } = parseArgs({
 
 // The last `node_modules` segment wins, so pnpm's `.pnpm/<name>@<ver>/node_modules/<name>` resolves to `<name>`.
 function ownerOf(source: string): string {
-    const packaged = /node_modules\/(@[^/]+\/[^/]+|[^/]+)(?!.*node_modules)/.exec(source);
-    if (packaged) {
-        return packaged[1];
+    const [, packaged] = /node_modules\/(@[^/]+\/[^/]+|[^/]+)(?!.*node_modules)/.exec(source) ?? [];
+    if (packaged !== undefined) {
+        return packaged;
     }
-    const workspace = /(?:^|\/)(packages\/[^/]+)\//.exec(source);
-    if (workspace) {
-        return workspace[1];
+    const [, workspace] = /(?:^|\/)(packages\/[^/]+)\//.exec(source) ?? [];
+    if (workspace !== undefined) {
+        return workspace;
     }
     const local = source.split("apps/native/")[1] ?? source;
     return local.split("/").slice(0, 2).join("/");
@@ -111,7 +111,7 @@ function print(report: Report, baseline: Report | null): void {
     if (baseline !== null) {
         const gone = Object.keys(baseline.byOwner).filter((owner) => !(owner in report.byOwner));
         for (const owner of gone) {
-            console.log(`${kb(0)}         ${owner}  ${signedKb(-baseline.byOwner[owner])}`);
+            console.log(`${kb(0)}         ${owner}  ${signedKb(-(baseline.byOwner[owner] ?? 0))}`);
         }
     }
 }

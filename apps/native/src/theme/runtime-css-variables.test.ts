@@ -28,7 +28,11 @@ function runtimeReads(): { file: string; name: string }[] {
     const seen = new Map<string, { file: string; name: string }>();
     for (const file of sourceFiles(join(nativeRoot, "src"))) {
         for (const match of readFileSync(file, "utf-8").matchAll(NAME)) {
-            const read = { file: relative(nativeRoot, file), name: match[1] };
+            const [, name] = match;
+            if (name === undefined) {
+                continue;
+            }
+            const read = { file: relative(nativeRoot, file), name };
             seen.set(`${read.file} ${read.name}`, read);
         }
     }

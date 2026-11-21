@@ -113,8 +113,12 @@ describe("eraseLedger", () => {
 
         const replicable = await db.select().from(transactions);
         expect(replicable).toHaveLength(1);
-        expect(replicable[0].id).toBe("tx-1");
-        expect(replicable[0].deletedAt).not.toBeNull();
+        const [firstReplicable] = replicable;
+        if (firstReplicable === undefined) {
+            throw new Error("expected a transaction");
+        }
+        expect(firstReplicable.id).toBe("tx-1");
+        expect(firstReplicable.deletedAt).not.toBeNull();
     });
 
     it("drops auto-logged charges held over the free cap so going Pro can't bring them back", async () => {
@@ -155,6 +159,9 @@ describe("eraseLedger", () => {
         await Effect.runPromise(eraseLedger(db, "transactions"));
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.amount).toBe(0);
         expect(row.income).toBe(false);
         expect(row.currency).toBeNull();
@@ -215,10 +222,19 @@ describe("eraseLedger", () => {
             db.select().from(installmentPlans).where(isNull(installmentPlans.deletedAt))
         ).resolves.toStrictEqual([]);
         const [row] = await db.select().from(installments);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row).toMatchObject({ amount: 0, deletedAt: expect.any(Date) });
         const [outside] = await db.select().from(outsidePayments);
+        if (outside === undefined) {
+            throw new Error("expected outside");
+        }
         expect(outside).toMatchObject({ amount: 0, amountUsd: null, deletedAt: expect.any(Date) });
         const [move] = await db.select().from(outsideMoves);
+        if (move === undefined) {
+            throw new Error("expected move");
+        }
         expect(move).toMatchObject({ amount: 0, amountUsd: null, deletedAt: expect.any(Date), note: "" });
     });
 
@@ -235,6 +251,9 @@ describe("eraseLedger", () => {
         await Effect.runPromise(eraseLedger(db, "transactions"));
 
         const [row] = await db.select().from(transactionAttachments);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row).toMatchObject({ deletedAt: expect.any(Date), imageKey: null, imageUri: null, name: null });
     });
 
@@ -253,6 +272,9 @@ describe("eraseLedger", () => {
         await Effect.runPromise(eraseLedger(db, "transactions"));
 
         const [row] = await db.select().from(accounts).where(eq(accounts.id, "acct-1"));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row).toMatchObject({ checkedAt: null, deletedAt: null });
         expect(row?.updatedAt.getTime()).toBeGreaterThan(AUTHORED.getTime());
     });
@@ -272,6 +294,9 @@ describe("eraseLedger", () => {
         await Effect.runPromise(eraseLedger(db, "everything"));
 
         const [budget] = await db.select().from(budgets);
+        if (budget === undefined) {
+            throw new Error("expected budget");
+        }
         expect(budget.deletedAt).not.toBeNull();
         expect(budget.name).toBeNull();
         expect(budget.amount).toBe(0);
@@ -284,6 +309,9 @@ describe("eraseLedger", () => {
         expect(budget.categoryId).toBeNull();
 
         const [main] = await db.select().from(mainBudget);
+        if (main === undefined) {
+            throw new Error("expected main");
+        }
         expect(main.deletedAt).not.toBeNull();
         expect(main.name).toBeNull();
         expect(main.amount).toBe(0);
@@ -295,6 +323,9 @@ describe("eraseLedger", () => {
         expect(main.green).toBe(false);
 
         const [plan] = await db.select().from(budgetPlans);
+        if (plan === undefined) {
+            throw new Error("expected plan");
+        }
         expect(plan.deletedAt).not.toBeNull();
         expect(plan.amount).toBeNull();
         expect(plan.currency).toBeNull();
@@ -314,7 +345,11 @@ describe("eraseLedger", () => {
         });
         const live = await db.select().from(budgets).where(isNull(budgets.deletedAt));
         expect(live).toHaveLength(1);
-        expect(live[0].id).toBe("bud-2");
+        const [onlyLive] = live;
+        if (onlyLive === undefined) {
+            throw new Error("expected a budget");
+        }
+        expect(onlyLive.id).toBe("bud-2");
     });
 
     it("keeps categories untouched under either scope", async () => {
@@ -322,8 +357,12 @@ describe("eraseLedger", () => {
 
         const live = await db.select().from(categories).where(isNull(categories.deletedAt));
         expect(live).toHaveLength(1);
-        expect(live[0].name).toBe("Coffee");
-        expect(live[0].updatedAt.getTime()).toBe(AUTHORED.getTime());
+        const [onlyLive] = live;
+        if (onlyLive === undefined) {
+            throw new Error("expected a category");
+        }
+        expect(onlyLive.name).toBe("Coffee");
+        expect(onlyLive.updatedAt.getTime()).toBe(AUTHORED.getTime());
     });
 
     it("does not re-stamp a tombstone it already wrote", async () => {
@@ -335,10 +374,10 @@ describe("eraseLedger", () => {
 
         const second = await db.select().from(transactions);
         expect(second).toHaveLength(1);
-        expect(second[0].deletedAt?.getTime()).toBe(first[0].deletedAt?.getTime());
-        expect(second[0].updatedAt.getTime()).toBe(first[0].updatedAt.getTime());
+        expect(second.at(0)?.deletedAt?.getTime()).toBe(first.at(0)?.deletedAt?.getTime());
+        expect(second.at(0)?.updatedAt.getTime()).toBe(first.at(0)?.updatedAt.getTime());
 
         const secondBudget = await db.select().from(budgets);
-        expect(secondBudget[0].updatedAt.getTime()).toBe(firstBudget[0].updatedAt.getTime());
+        expect(secondBudget.at(0)?.updatedAt.getTime()).toBe(firstBudget.at(0)?.updatedAt.getTime());
     });
 });

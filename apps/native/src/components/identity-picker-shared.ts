@@ -46,7 +46,8 @@ export function initialIdentityTab(value: IdentitySelection, tabs: readonly Iden
     if (value.photoUri && tabs.includes("photo")) {
         return "photo";
     }
-    return tabs[0];
+    const [first] = tabs;
+    return first ?? "icons";
 }
 
 export function withEmoji(value: IdentitySelection, emoji: string): IdentitySelection {

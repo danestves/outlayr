@@ -76,7 +76,13 @@ const cases = SEEDS.flatMap((seed) =>
 );
 
 function failures(label: string, variables: Record<string, string>): string[] {
-    const value = (token: string) => variables[`--${token}`];
+    const value = (token: string) => {
+        const found = variables[`--${token}`];
+        if (found === undefined) {
+            throw new Error(`missing --${token}`);
+        }
+        return found;
+    };
     const found: string[] = [];
     const measure = (text: string, ground: string, textValue = value(text), groundValue = value(ground)) => {
         const ratio = contrastRatio(textValue, groundValue);
@@ -116,7 +122,11 @@ function themeTokens(theme: MaterialTheme): Map<string, string> {
         depth += Number(stylesheet[index] === "{") - Number(stylesheet[index] === "}");
         if (depth === 0) {
             const body = stylesheet.slice(open + 1, index);
-            return new Map([...body.matchAll(/--([\w-]+):\s*([^;]+);/g)].map((match) => [match[1], match[2].trim()]));
+            return new Map(
+                [...body.matchAll(/--([\w-]+):\s*([^;]+);/g)].flatMap(([, name, raw]) =>
+                    name === undefined || raw === undefined ? [] : [[name, raw.trim()] as const]
+                )
+            );
         }
     }
     throw new Error(`global.css no longer declares @variant ${theme}`);

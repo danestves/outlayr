@@ -22,7 +22,7 @@ describe("support email body", () => {
 describe("support mailto", () => {
     it("percent-encodes the body so newlines never truncate the link", () => {
         const url = supportMailto("help@example.com", "Support Email", INFO);
-        const [, body] = url.split("&body=");
+        const [, body = ""] = url.split("&body=");
         expect(body).toBeTruthy();
         expect(body).not.toMatch(/\n/);
         expect(decodeURIComponent(body)).toBe(supportBody(INFO));

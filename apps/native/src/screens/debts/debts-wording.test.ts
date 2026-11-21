@@ -29,7 +29,11 @@ function cards(...balances: number[]) {
 describe("a card's line on Debts", () => {
     it("says an overpaid card is in your favor, since its row shows the amount unsigned", () => {
         const debts = cards(3322.28);
-        expect(debtSubtitle(debts.youOwe[0], debts, wording)).toStrictEqual({
+        const [row] = debts.youOwe;
+        if (row === undefined) {
+            throw new Error("expected a card");
+        }
+        expect(debtSubtitle(row, debts, wording)).toStrictEqual({
             text: "debts.card.inFavor",
             tone: "income",
         });
@@ -37,6 +41,10 @@ describe("a card's line on Debts", () => {
 
     it("stays quiet for a card you owe on", () => {
         const debts = cards(-6222.08);
-        expect(debtSubtitle(debts.youOwe[0], debts, wording)).toStrictEqual({ text: null, tone: "muted" });
+        const [row] = debts.youOwe;
+        if (row === undefined) {
+            throw new Error("expected a card");
+        }
+        expect(debtSubtitle(row, debts, wording)).toStrictEqual({ text: null, tone: "muted" });
     });
 });

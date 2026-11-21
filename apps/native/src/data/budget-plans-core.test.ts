@@ -43,6 +43,9 @@ describe("setPlanMonths", () => {
             .where(eq(budgetPlans.id, id));
         await plan([[202_703, 300]]);
         const [row] = await db.select().from(budgetPlans).where(eq(budgetPlans.id, id));
+        if (row === undefined) {
+            throw new Error("expected a plan");
+        }
         expect(row.deletedAt).toBeNull();
         expect(row.amount).toBe(300);
         expect(row.restoredAt?.getTime()).toBeGreaterThan(5);

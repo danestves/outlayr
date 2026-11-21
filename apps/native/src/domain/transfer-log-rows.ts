@@ -181,6 +181,9 @@ export function mergeByRecency<T extends Recent>(left: readonly T[], right: read
     while (l < left.length && r < right.length) {
         const a = left[l];
         const b = right[r];
+        if (a === undefined || b === undefined) {
+            break;
+        }
         const byDay = b.day.getTime() - a.day.getTime();
         const takeLeft = byDay === 0 ? a.date.getTime() >= b.date.getTime() : byDay < 0;
         if (takeLeft) {

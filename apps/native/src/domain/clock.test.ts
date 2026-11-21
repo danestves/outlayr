@@ -56,6 +56,9 @@ describe("next clock tick", () => {
             [2026, 2, 8, 0],
             [2026, 2, 9, 0],
         ]);
+        if (before === undefined || after === undefined) {
+            throw new Error("expected two ticks");
+        }
 
         expect(before.offset).not.toBe(after.offset);
         expect(before.tick).toBe(23 * HOUR_MS);
@@ -66,6 +69,9 @@ describe("next clock tick", () => {
             [2026, 10, 1, 0],
             [2026, 10, 2, 0],
         ]);
+        if (before === undefined || after === undefined) {
+            throw new Error("expected two ticks");
+        }
 
         expect(before.offset).not.toBe(after.offset);
         expect(before.tick).toBe(25 * HOUR_MS);

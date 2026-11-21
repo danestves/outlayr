@@ -23,8 +23,12 @@ export const previewFiles = Effect.fn("FilePreview.previewFiles")(function* prev
     files: readonly PreviewFile[],
     index: number
 ) {
+    const selected = files[index];
+    if (selected === undefined) {
+        return;
+    }
     if (filePreview === null) {
-        yield* duringHandoff(Effect.tryPromise({ catch: previewFailed, try: () => shareAsync(files[index].uri) }));
+        yield* duringHandoff(Effect.tryPromise({ catch: previewFailed, try: () => shareAsync(selected.uri) }));
         return;
     }
     yield* Effect.tryPromise({

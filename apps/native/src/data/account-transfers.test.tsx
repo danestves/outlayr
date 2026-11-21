@@ -101,7 +101,7 @@ describe("an account's transfers", () => {
         await addTransfer(db, { fromAccountId: "checking", id: "tr1", toAccountId: "savings" });
 
         const rows = await readTransfers(db, "savings");
-        expect(rows[0].note).toBe("Checking → Savings");
+        expect(rows.at(0)?.note).toBe("Checking → Savings");
     });
 
     it("states what left and what arrived when the source paid a fee", async () => {

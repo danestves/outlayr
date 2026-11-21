@@ -51,7 +51,7 @@ export const loadContributions = Effect.fn("Insights.loadContributions")(functio
         (row, index) =>
             ({
                 // `amount` is the valued amount from here down, not the row's stored one.
-                amount: valued[index],
+                amount: valued[index] ?? 0,
                 categoryId: row.categoryId,
                 date: row.date,
                 id: row.id,

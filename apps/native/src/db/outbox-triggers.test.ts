@@ -17,6 +17,14 @@ function declaredTriggers(sqlite: BetterSqlite3.Database): Record<string, string
 
 const QUOTED = /'([^']+)'/g;
 
+function itemAt<T>(values: readonly T[], index: number): T {
+    const value = values[index];
+    if (value === undefined) {
+        throw new Error(`expected item ${index}`);
+    }
+    return value;
+}
+
 interface OutboxRow {
     localId: string;
     seq: number;
@@ -126,23 +134,23 @@ describe("outbox triggers", () => {
             sqlite.prepare("UPDATE transactions SET note = ?").run(note);
             const rows = outbox(sqlite);
             expect(rows).toHaveLength(1);
-            seqs.push(rows[0].seq);
+            seqs.push(itemAt(rows, 0).seq);
         }
 
-        expect(seqs[0] < seqs[1] && seqs[1] < seqs[2]).toBeTruthy();
+        expect(itemAt(seqs, 0) < itemAt(seqs, 1) && itemAt(seqs, 1) < itemAt(seqs, 2)).toBeTruthy();
     });
 
     it("keeps accepting a setting while its queue entry is still waiting", () => {
         enableSync(sqlite);
 
         setMeta(sqlite, "showCents", "false");
-        const first = outbox(sqlite)[0].seq;
+        const first = itemAt(outbox(sqlite), 0).seq;
         setMeta(sqlite, "showCents", "true");
 
         expect(sqlite.prepare("SELECT value FROM appMeta WHERE key = 'showCents'").pluck().get()).toBe("true");
         const rows = outbox(sqlite);
         expect(rows).toHaveLength(1);
-        expect(rows[0].seq > first).toBeTruthy();
+        expect(itemAt(rows, 0).seq > first).toBeTruthy();
     });
 
     it("holds one row per row a bulk write touches, however often it runs", () => {
@@ -202,11 +210,11 @@ describe("outbox triggers", () => {
         enableSync(sqlite);
         sqlite.prepare("UPDATE transactions SET note = 'first'").run();
 
-        const drained = outbox(sqlite)[0].seq;
+        const drained = itemAt(outbox(sqlite), 0).seq;
         sqlite.prepare("DELETE FROM outbox").run();
         sqlite.prepare("UPDATE transactions SET note = 'second'").run();
 
-        expect(outbox(sqlite)[0].seq > drained).toBeTruthy();
+        expect(itemAt(outbox(sqlite), 0).seq > drained).toBeTruthy();
     });
 
     it("drops the queue entry when a row is hard-deleted", () => {
@@ -245,7 +253,7 @@ describe("outbox triggers", () => {
         const declared = declaredTriggers(shipped);
         const [allowList = "", syncGate = ""] = (declared.outbox_after_insert_appMeta ?? "").split(" AND (SELECT");
         expect(syncGate).not.toBe("");
-        const shippedKeys = [...allowList.matchAll(QUOTED)].map(([, key]) => key);
+        const shippedKeys = [...allowList.matchAll(QUOTED)].flatMap(([, key]) => (key === undefined ? [] : [key]));
 
         const built = new Map(
             outboxTriggers({

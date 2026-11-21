@@ -25,11 +25,11 @@ const WHITE = "#ffffff";
 
 /** `getMaterialColors` returns opaque `#RRGGBBAA`, so the alpha byte carries nothing. */
 export function hexFromRgba(value: string): string {
-    const match = RGBA_HEX.exec(value);
-    if (!match) {
+    const hex = RGBA_HEX.exec(value)?.[1];
+    if (hex === undefined) {
         throw new Error(`not a #RRGGBB(AA) hex: ${value}`);
     }
-    return `#${match[1].toLowerCase()}`;
+    return `#${hex.toLowerCase()}`;
 }
 
 function channels(hex: string): number[] {
@@ -37,12 +37,14 @@ function channels(hex: string): number[] {
     return [1, 3, 5].map((offset) => Number.parseInt(value.slice(offset, offset + 2), 16));
 }
 
+const linear = (channel: number) => {
+    const v = channel / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+};
+
 function relativeLuminance(hex: string): number {
-    return channels(hex).reduce((sum, channel, index) => {
-        const v = channel / 255;
-        const linear = v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-        return sum + CHANNEL_WEIGHTS[index] * linear;
-    }, 0);
+    const [red = 0, green = 0, blue = 0] = channels(hex);
+    return CHANNEL_WEIGHTS[0] * linear(red) + CHANNEL_WEIGHTS[1] * linear(green) + CHANNEL_WEIGHTS[2] * linear(blue);
 }
 
 export function contrastRatio(a: string, b: string): number {
@@ -52,10 +54,11 @@ export function contrastRatio(a: string, b: string): number {
 }
 
 export function mixOver(top: string, ground: string, alpha: number): string {
-    const [over, under] = [channels(top), channels(ground)];
+    const over = channels(top);
+    const under = channels(ground);
     return `#${over
         .map((channel, index) =>
-            Math.round(alpha * channel + (1 - alpha) * under[index])
+            Math.round(alpha * channel + (1 - alpha) * (under[index] ?? 0))
                 .toString(16)
                 .padStart(2, "0")
         )
@@ -162,16 +165,24 @@ export const BRAND_TOKENS = {
 
 type Tokens = Record<string, string>;
 
+function readToken(tokens: Tokens, name: string): string {
+    const value = tokens[name];
+    if (value === undefined) {
+        throw new Error(`missing design token: ${name}`);
+    }
+    return value;
+}
+
 /** Fills go first so text over them meets their final value; grounds never move, or every pair they hold would. */
 function enforce(tokens: Tokens, pairs: Record<string, readonly string[]>, fixed: ReadonlySet<string>): void {
     const fills = new Set(Object.values(pairs).flat());
     // Not `toSorted`: nothing else in the app relies on Hermes having it.
-    const order = Object.keys(pairs).sort((a, b) => Number(!fills.has(a)) - Number(!fills.has(b)));
-    for (const text of order) {
+    const order = Object.entries(pairs).sort(([a], [b]) => Number(!fills.has(a)) - Number(!fills.has(b)));
+    for (const [text, pair] of order) {
         if (!fixed.has(text)) {
             tokens[text] = ensureContrast(
-                tokens[text],
-                pairs[text].map((fill) => tokens[fill])
+                readToken(tokens, text),
+                pair.map((fill) => readToken(tokens, fill))
             );
         }
     }
@@ -179,7 +190,9 @@ function enforce(tokens: Tokens, pairs: Record<string, readonly string[]>, fixed
 
 function enforceWashes(tokens: Tokens): void {
     for (const [text, tone] of Object.entries(ON_WASH)) {
-        tokens[text] = ensureContrast(tokens[text], [mixOver(tokens[tone], tokens.background, WASH_ALPHA)]);
+        tokens[text] = ensureContrast(readToken(tokens, text), [
+            mixOver(readToken(tokens, tone), readToken(tokens, "background"), WASH_ALPHA),
+        ]);
     }
 }
 

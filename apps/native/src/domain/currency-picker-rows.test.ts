@@ -34,7 +34,11 @@ describe("the currency picker's rows", () => {
         const rows = currencyPickerRows(["USD"], "");
         const favourites = rows.filter((row) => row.kind === "currency" && row.favourite);
         expect(favourites).toHaveLength(1);
-        expect(favourites[0].kind === "currency" && favourites[0].code).toBe("USD");
+        const [favourite] = favourites;
+        if (favourite === undefined || favourite.kind !== "currency") {
+            throw new Error("expected a favourite currency row");
+        }
+        expect(favourite.code).toBe("USD");
     });
 
     it("holds the order the favourites were added in", () => {
