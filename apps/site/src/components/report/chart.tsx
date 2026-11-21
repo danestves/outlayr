@@ -99,14 +99,7 @@ export function Chart({ grouping, label, report, words }: ChartProps) {
     const hover = hovered === null ? null : columns[hovered];
     return (
         <div className="relative" ref={holder}>
-            <svg
-                aria-label={label}
-                className="block"
-                height={height}
-                // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- an img element cannot hold the drawn chart, so the container is named by role.
-                role="img"
-                width={width}
-            >
+            <svg aria-label={label} className="block" height={height} role="img" width={width}>
                 {ticks.map((value) => (
                     <g key={value}>
                         <path className="stroke-border" d={`M${LEFT} ${y(value)}H${width}`} />

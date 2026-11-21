@@ -167,7 +167,9 @@ function Facts() {
     };
     const copy = () => {
         const text = rows.map((row) => `${row.label}: ${row.text}`).join("\n");
-        return navigator.clipboard ? navigator.clipboard.writeText(text).then(onCopied, selectSheet) : selectSheet();
+        return navigator.clipboard
+            ? navigator.clipboard.writeText(text).then(onCopied).catch(selectSheet)
+            : selectSheet();
     };
     return (
         <section className={SECTION}>

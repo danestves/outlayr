@@ -92,10 +92,8 @@ export function useCategoryWrites() {
             void held.flush();
         };
         const settle = async () => {
-            const plans = await budgetPlansOf(id).then(
-                (found) => deletedPlans(found, now),
-                () => null
-            );
+            const found = await budgetPlansOf(id).catch(() => null);
+            const plans = found === null ? null : deletedPlans(found, now);
             if (plans === null) {
                 held.undo();
                 committer.notify({ failed: true, text: copy.deleteFailed.value });

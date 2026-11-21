@@ -5,6 +5,7 @@ import { qrModules } from "@/lib/qr";
 const DOWNLOAD_URL = `${SITE_URL}/download`;
 
 let downloadPath: { d: string; size: number } | null = null;
+const downloadPathOnce = () => (downloadPath ??= pathOf(DOWNLOAD_URL));
 
 function pathOf(text: string) {
     const modules = qrModules(text);
@@ -13,8 +14,7 @@ function pathOf(text: string) {
 }
 
 export function DownloadQr({ className, label }: { className?: string; label?: string }) {
-    downloadPath ??= pathOf(DOWNLOAD_URL);
-    const { d, size } = downloadPath;
+    const { d, size } = downloadPathOnce();
     return (
         <svg
             aria-hidden={label === undefined ? true : undefined}

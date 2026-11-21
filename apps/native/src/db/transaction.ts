@@ -29,7 +29,7 @@ export async function withTransaction(db: Database, task: () => Promise<void>): 
     const previous = queue.get(db) ?? Promise.resolve();
     const run = previous.then(() => runTransaction(db, task));
     // Only settled links queue, so a failed transaction never blocks later ones; `run` still rejects for its caller.
-    const settled = run.then(noop, noop);
+    const settled = run.catch(noop);
     queue.set(db, settled);
     try {
         await run;

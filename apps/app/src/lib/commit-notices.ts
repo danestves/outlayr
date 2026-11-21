@@ -78,7 +78,7 @@ export function noticedCommits(committer: Pick<LedgerCommitter, "commit">, host:
             }
         });
         if (copy.after) {
-            void copy.after.then(offer, offer);
+            void copy.after.finally(offer).catch(() => undefined);
         } else {
             offer();
         }
