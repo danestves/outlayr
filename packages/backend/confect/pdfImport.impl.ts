@@ -88,7 +88,7 @@ const requestUpload = FunctionImpl.make(
 );
 
 // Statements stay in Convex file storage whatever the deployment's bucket is: the privacy policy keeps them on
-// our servers.
+// our servers. Their own component instance lets the sweep drop any unconfirmed file without touching photos.
 const startUpload = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -102,7 +102,7 @@ const startUpload = FunctionImpl.make(
         const key = statementKeyFor(gate.identity.subject, crypto.randomUUID());
         yield* scheduleSweep(key);
         const { url } = yield* Effect.promise(() =>
-            ctx.runMutation(components.storage.objects.uploadUrl, { key, provider: { kind: "convex" } })
+            ctx.runMutation(components.statementStorage.objects.uploadUrl, { key, provider: { kind: "convex" } })
         );
         return { key, status: "ok" as const, url };
     }, Effect.orDie)
@@ -119,7 +119,7 @@ const uploadContentType = FunctionImpl.make(
     }, Effect.orDie)
 );
 
-// Statements are always PDFs. A PDF still unconfirmed minutes after upload is abandoned, whichever feature sent it.
+// App storage gets no new photos, so a PDF there is a statement; the statement instance holds nothing else.
 const sweepUploads = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -140,16 +140,10 @@ const sweepUploads = FunctionImpl.make(
         }
         if (key !== undefined) {
             yield* Effect.promise(() =>
-                ctx.runMutation(components.storage.objects.remove, { key, provider: { kind: "convex" } })
+                ctx.runMutation(components.statementStorage.objects.remove, { key, provider: { kind: "convex" } })
             );
         }
-        yield* Effect.promise(() =>
-            ctx.runMutation(components.storage.objects.sweepUnbound, {
-                contentType: PDF_CONTENT_TYPE,
-                from,
-                to,
-            })
-        );
+        yield* Effect.promise(() => ctx.runMutation(components.statementStorage.objects.sweepUnbound, { from, to }));
         return null;
     }, Effect.orDie)
 );
@@ -222,7 +216,7 @@ const readKeyedUpload = Effect.fn("PdfImport.readKeyedUpload")(function* readKey
     const ctx = yield* ActionCtx;
     const provider = { kind: "convex" as const };
     const confirmed = yield* Effect.promise(() =>
-        ctx.runAction(components.storage.objects.confirmUpload, {
+        ctx.runAction(components.statementStorage.objects.confirmUpload, {
             key: upload.key,
             provider,
             storageId: upload.storageId,
@@ -232,7 +226,7 @@ const readKeyedUpload = Effect.fn("PdfImport.readKeyedUpload")(function* readKey
         return null;
     }
     const read = yield* Effect.promise(() =>
-        ctx.runAction(components.storage.objects.read, { key: upload.key, maxBytes: MAX_PDF_BYTES })
+        ctx.runAction(components.statementStorage.objects.read, { key: upload.key, maxBytes: MAX_PDF_BYTES })
     );
     return read.kind === "stored" ? new Uint8Array(read.bytes) : null;
 });
@@ -254,7 +248,10 @@ function cleanupUpload(
 ) {
     if (upload !== undefined) {
         return Effect.promise(() =>
-            ctx.runMutation(components.storage.objects.remove, { key: upload.key, provider: { kind: "convex" } })
+            ctx.runMutation(components.statementStorage.objects.remove, {
+                key: upload.key,
+                provider: { kind: "convex" },
+            })
         );
     }
     return storageId === undefined ? Effect.void : Effect.promise(() => ctx.storage.delete(storageId));

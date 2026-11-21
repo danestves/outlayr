@@ -125,6 +125,7 @@ export declare const internal: FilterApi<
 export declare const components: {
   betterAuth: import("@convex-dev/better-auth/_generated/component.js").ComponentApi<"betterAuth">;
   storage: import("@outlayr/storage/_generated/component.js").ComponentApi<"storage">;
+  statementStorage: import("@outlayr/storage/_generated/component.js").ComponentApi<"statementStorage">;
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
   mcp: import("@convex-dev/mcp/_generated/component.js").ComponentApi<"mcp">;
   revenuecat: import("convex-revenuecat/_generated/component.js").ComponentApi<"revenuecat">;

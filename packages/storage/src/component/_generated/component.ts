@@ -51,7 +51,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "action",
         "internal",
         { key: string; maxBytes: number },
-        { bytes: ArrayBuffer; kind: "stored" } | { kind: "missing" } | { kind: "tooLarge" },
+        | { bytes: ArrayBuffer; kind: "stored" }
+        | { kind: "missing" }
+        | { kind: "tooLarge" },
         Name
       >;
       remove: FunctionReference<
@@ -77,7 +79,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       sweepUnbound: FunctionReference<
         "mutation",
         "internal",
-        { contentType: string; from: number; to: number },
+        { from: number; to: number },
         null,
         Name
       >;

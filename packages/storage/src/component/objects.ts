@@ -137,16 +137,15 @@ export const read = action({
 
 // Unconfirmed uploads never get a row, so only this scan can tell them apart from a bound file.
 export const sweepUnbound = mutation({
-    args: { contentType: v.string(), from: v.number(), to: v.number() },
+    args: { from: v.number(), to: v.number() },
     returns: v.null(),
     handler: async (ctx, args) => {
         const files = await ctx.db.system
             .query("_storage")
             .withIndex("by_creation_time", (q) => q.gte("_creationTime", args.from).lte("_creationTime", args.to))
             .collect();
-        const contentFiles = files.filter((file) => file.contentType === args.contentType);
         await Promise.all(
-            contentFiles.map(async (file) => {
+            files.map(async (file) => {
                 const bound = await ctx.db
                     .query("objects")
                     .withIndex("by_storageId", (q) => q.eq("storageId", file._id))

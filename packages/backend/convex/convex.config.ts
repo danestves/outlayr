@@ -9,6 +9,7 @@ import { defineApp } from "convex/server";
 const app = defineApp();
 app.use(betterAuth);
 app.use(storage);
+app.use(storage, { name: "statementStorage" });
 app.use(rateLimiter);
 app.use(mcp);
 app.use(revenuecat);
