@@ -13,5 +13,4 @@ export default {
 ["claimPro"]: RegisteredConvexFunction.register({ ...definitions["claimPro"], handler: forward(definitions["claimPro"].handler) }),
 ["recipient"]: RegisteredConvexFunction.register({ ...definitions["recipient"], handler: forward(definitions["recipient"].handler) }),
 ["noticeRecipients"]: RegisteredConvexFunction.register({ ...definitions["noticeRecipients"], handler: forward(definitions["noticeRecipients"].handler) }),
-["recordNotice"]: RegisteredConvexFunction.register({ ...definitions["recordNotice"], handler: forward(definitions["recordNotice"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../mail.spec")["default"]>;

@@ -5,8 +5,10 @@ import * as Schema from "effect/Schema";
 import { EmailProviderName, REQUIRED_VARIABLES } from "./emailSetup";
 
 export const EMAIL_CODE_TTL_SECONDS = 10 * 60;
+const CODE_SEND_MARGIN_SECONDS = 60;
 
 export interface Email {
+    expiresAt?: number;
     html?: string;
     replyTo?: string;
     subject: string;
@@ -71,6 +73,7 @@ const CODE_EMAIL = {
 export function codeEmail(otp: string, purpose: "change" | "verify" | "reset", language: Language): Email {
     const copy = CODE_EMAIL[language];
     return {
+        expiresAt: Date.now() + (EMAIL_CODE_TTL_SECONDS - CODE_SEND_MARGIN_SECONDS) * 1000,
         subject: copy.subject(otp),
         text: `${copy[purpose]}\n\n${otp}\n\n${copy.expiry(EMAIL_CODE_TTL_SECONDS / 60)}`,
     };
@@ -104,10 +107,15 @@ export function accountExistsEmail(language: Language): Email {
     return ACCOUNT_EXISTS_EMAIL[language];
 }
 
+export class NoticesStillSending extends Schema.TaggedError<NoticesStillSending>()("NoticesStillSending", {
+    message: Schema.String,
+}) {}
+
 export class EmailError extends Schema.TaggedError<EmailError>()("EmailError", {
     cause: Schema.optional(Schema.Defect()),
     provider: EmailProviderName,
     reason: Schema.Literals(["unconfigured", "transport", "status", "rejected"]),
+    retryable: Schema.optional(Schema.Boolean),
     status: Schema.optional(Schema.Number),
 }) {
     override get message(): string {
@@ -124,5 +132,12 @@ export class EmailError extends Schema.TaggedError<EmailError>()("EmailError", {
             return `${this.provider} rejected the address`;
         }
         return `${this.provider} email request failed`;
+    }
+
+    get permanent(): boolean {
+        if (this.reason === "transport" || this.reason === "status") {
+            return this.retryable === false;
+        }
+        return true;
     }
 }

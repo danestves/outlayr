@@ -2,6 +2,7 @@
 
 import betterAuthTest from "@convex-dev/better-auth/test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import workpoolTest from "@convex-dev/workpool/test";
 import { isDynamicBaseURLConfig, resolveDynamicBaseURL } from "better-auth";
 import { verifyProviderIdToken } from "better-auth/oauth2";
 import { apple as appleProvider } from "better-auth/social-providers";
@@ -54,6 +55,7 @@ afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
+    vi.useRealTimers();
 });
 
 describe("auth base url", () => {
@@ -199,10 +201,13 @@ function stubEmail(): SentEmail[] {
 }
 
 function emailAuth() {
+    vi.useFakeTimers();
     const t = convexTest(schema, modules);
     betterAuthTest.register(t);
     rateLimiterTest.register(t);
-    return async (path: string, body: Record<string, string>, language = "en") => {
+    workpoolTest.register(t, "emailPool");
+    const drain = () => t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(1000));
+    const post = async (path: string, body: Record<string, string>, language = "en") => {
         const response = await t.fetch(`/api/auth${path}`, {
             body: JSON.stringify(body),
             headers: {
@@ -215,32 +220,42 @@ function emailAuth() {
         const json: { code?: string; token?: string | null } = await response.json();
         return { ...json, status: response.status };
     };
+    return { drain, post };
 }
 
 const codeIn = (email: SentEmail | undefined) => email?.text.match(/\d{6}/)?.[0] ?? "";
+
+async function nthCode(drain: () => Promise<void>, sent: SentEmail[], count: number) {
+    await drain();
+    expect(sent).toHaveLength(count);
+    return codeIn(sent.at(-1));
+}
 
 describe("email sign-in", () => {
     const credentials = { email: "ana@example.com", name: "", password: "correct horse" };
 
     it("confirms the address with a code before it opens a session", async () => {
         const sent = stubEmail();
-        const post = emailAuth();
+        const { drain, post } = emailAuth();
 
         await expect(post("/sign-up/email", credentials)).resolves.toMatchObject({ status: 200, token: null });
+        await nthCode(drain, sent, 1);
         await expect(post("/sign-in/email", credentials)).resolves.toMatchObject({
             code: "EMAIL_NOT_VERIFIED",
             status: 403,
         });
-        const verified = await post("/email-otp/verify-email", { email: credentials.email, otp: codeIn(sent.at(-1)) });
+        const verified = await post("/email-otp/verify-email", {
+            email: credentials.email,
+            otp: await nthCode(drain, sent, 2),
+        });
 
         expect(sent[0]).toMatchObject({
             subject: expect.stringContaining("Your Outlayr code"),
             to: [credentials.email],
         });
         expect(verified).toMatchObject({ status: 200, token: expect.any(String) });
-        await vi.waitFor(() =>
-            expect(sent.map(({ subject }) => subject).slice(2)).toStrictEqual(["Your Outlayr account is ready"])
-        );
+        await drain();
+        expect(sent.map(({ subject }) => subject).slice(2)).toStrictEqual(["Your Outlayr account is ready"]);
     });
 
     it("signs up with no email provider by logging the code", async () => {
@@ -250,7 +265,7 @@ describe("email sign-in", () => {
         const network = vi.fn();
         vi.stubGlobal("fetch", network);
         const log = vi.spyOn(console, "log").mockReturnValue(undefined);
-        const post = emailAuth();
+        const { post } = emailAuth();
 
         await expect(post("/sign-up/email", credentials)).resolves.toMatchObject({ status: 200, token: null });
         const logged = log.mock.calls.map(([line]) => String(line)).find((line) => line.includes("Your Outlayr code"));
@@ -266,7 +281,7 @@ describe("email sign-in", () => {
     it("refuses to start a code when the email provider is half set up", async () => {
         const sent = stubEmail();
         vi.stubEnv("EMAIL_PROVIDER", "smtp");
-        const post = emailAuth();
+        const { drain, post } = emailAuth();
 
         await expect(post("/sign-up/email", credentials)).resolves.toMatchObject({ status: 503 });
         await expect(post("/email-otp/request-password-reset", { email: credentials.email })).resolves.toMatchObject({
@@ -274,17 +289,19 @@ describe("email sign-in", () => {
         });
         vi.stubEnv("EMAIL_PROVIDER", "cloudflare");
         await expect(post("/sign-up/email", credentials)).resolves.toMatchObject({ status: 200, token: null });
+        await drain();
         expect(sent.map(({ subject }) => subject)).toStrictEqual([expect.stringContaining("Your Outlayr code")]);
     });
 
     it("keeps verified password sign-in while email is broken, without sending codes", async () => {
         const sent = stubEmail();
-        const post = emailAuth();
+        const { drain, post } = emailAuth();
         const pending = { ...credentials, email: "bea@example.com" };
         await post("/sign-up/email", credentials);
-        await post("/email-otp/verify-email", { email: credentials.email, otp: codeIn(sent.at(-1)) });
+        await post("/email-otp/verify-email", { email: credentials.email, otp: await nthCode(drain, sent, 1) });
         await post("/sign-up/email", pending);
-        await vi.waitFor(() => expect(sent).toHaveLength(3));
+        await drain();
+        expect(sent).toHaveLength(3);
         vi.stubEnv("EMAIL_PROVIDER", "sendgrid");
 
         await expect(post("/sign-in/email", credentials)).resolves.toMatchObject({
@@ -305,18 +322,19 @@ describe("email sign-in", () => {
 
     it("answers a taken address like a new one and tells its owner instead", async () => {
         const sent = stubEmail();
-        const post = emailAuth();
+        const { drain, post } = emailAuth();
 
         await post("/sign-up/email", credentials);
         const again = await post("/sign-up/email", { ...credentials, password: "another password" }, "es-419");
 
         expect(again).toMatchObject({ status: 200, token: null });
+        await drain();
         expect(sent.at(-1)?.subject).toBe("Ya tienes una cuenta de Outlayr");
     });
 
     it("stops trying passwords for one address after ten attempts", async () => {
         stubEmail();
-        const post = emailAuth();
+        const { post } = emailAuth();
         const statuses: number[] = [];
 
         for (let attempt = 0; attempt < 11; attempt += 1) {

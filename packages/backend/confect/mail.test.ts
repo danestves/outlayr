@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 
+import workpoolTest from "@convex-dev/workpool/test";
 import { convexTest } from "convex-test";
 import type { FunctionArgs } from "convex/server";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
@@ -12,7 +13,7 @@ import { seedAuthUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");
 
-const DAY = Date.UTC(2026, 10, 4);
+const DAY = vi.hoisted(() => Date.UTC(2026, 10, 4));
 
 vi.mock(import("./legal"), async (original) => {
     const legal = await original();
@@ -29,9 +30,17 @@ vi.mock(import("./legal"), async (original) => {
 
 afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
     vi.useRealTimers();
 });
+
+function mailTest() {
+    const t = convexTest(schema, modules);
+    workpoolTest.register(t, "emailPool");
+    workpoolTest.register(t, "noticePool");
+    return t;
+}
 
 function stubCloudflare(refuse: (to: string) => boolean = () => false, bounce: (to: string) => boolean = () => false) {
     const sent: { subject: string; to: string }[] = [];
@@ -58,7 +67,7 @@ function stubCloudflare(refuse: (to: string) => boolean = () => false, bounce: (
 describe("the Pro email", () => {
     it("goes out once per account, however often activation fires, and never for a sandbox purchase", async () => {
         vi.useFakeTimers();
-        const t = convexTest(schema, modules);
+        const t = mailTest();
         const owner = await seedAuthUser(t);
         const sent = stubCloudflare();
         const activation: FunctionArgs<typeof internal.mail.claimPro> = {
@@ -80,7 +89,7 @@ describe("the Pro email", () => {
     });
 
     it("is skipped, not crashed, when the RevenueCat app user ID is not an auth user ID", async () => {
-        const t = convexTest(schema, modules);
+        const t = mailTest();
         vi.spyOn(authComponent, "getAnyUserById").mockRejectedValue(
             new Error("Unable to decode ID: Invalid ID length 39")
         );
@@ -97,7 +106,7 @@ describe("the trial reminder", () => {
         const startedAt = Date.UTC(2027, 1, 1, 12);
         const chargeAt = startedAt + 7 * 86_400_000;
         vi.useFakeTimers({ now: startedAt });
-        const t = convexTest(schema, modules);
+        const t = mailTest();
         const keeps = await seedAuthUser(t);
         const cancels = await seedAuthUser(t);
         const sent: { at: number; subject: string; to: string }[] = [];
@@ -148,7 +157,7 @@ describe("the trial reminder", () => {
         const reminders = sent.filter(({ subject }) => subject.includes("trial"));
         expect(reminders).toStrictEqual([
             {
-                at: chargeAt - 2 * 86_400_000,
+                at: expect.closeTo(chargeAt - 2 * 86_400_000, -6),
                 subject: "Your Outlayr Pro trial ends on 8 February 2027",
                 to: keeps.email,
             },
@@ -156,9 +165,72 @@ describe("the trial reminder", () => {
     });
 });
 
+describe("a sign-in code", () => {
+    it("leaves the outbox when it expires, even before its send starts", async () => {
+        vi.useFakeTimers();
+        const t = mailTest();
+        stubCloudflare();
+
+        await t.mutation(internal.emailOutbox.enqueue, {
+            expiresAt: Date.now() + 1000,
+            subject: "Your code",
+            text: "123456",
+            to: "code@example.com",
+        });
+        await vi.advanceTimersByTimeAsync(1001);
+
+        await expect(t.run((ctx) => ctx.db.query("outboundEmails").collect())).resolves.toStrictEqual([]);
+    });
+});
+
+describe("a retried email", () => {
+    it("carries the same idempotency key on every try", async () => {
+        vi.useFakeTimers();
+        vi.stubEnv("EMAIL_PROVIDER", "resend");
+        vi.stubEnv("RESEND_API_KEY", "re_test");
+        const t = mailTest();
+        const keys: (string | null)[] = [];
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(async (_url: string, init?: RequestInit) => {
+                keys.push(new Headers(init?.headers).get("Idempotency-Key"));
+                return keys.length === 1 ? new Response("busy", { status: 502 }) : Response.json({ id: "sent" });
+            })
+        );
+
+        await t.mutation(internal.emailOutbox.enqueue, { subject: "Welcome", text: "Hi", to: "new@example.com" });
+        await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+        expect(keys).toHaveLength(2);
+        expect(keys[0]).toBeTruthy();
+        expect(keys[1]).toBe(keys[0]);
+    });
+
+    it("is never sent once its code expired, even before the expiry job deletes it", async () => {
+        vi.stubEnv("EMAIL_PROVIDER", "resend");
+        vi.stubEnv("RESEND_API_KEY", "re_test");
+        const t = mailTest();
+        const send = vi.fn(async () => Response.json({ id: "sent" }));
+        vi.stubGlobal("fetch", send);
+        const emailId = await t.run((ctx) =>
+            ctx.db.insert("outboundEmails", {
+                expiresAt: Date.now() - 1,
+                subject: "Your code",
+                text: "123456",
+                to: "late@example.com",
+            })
+        );
+
+        await t.action(internal.mailDelivery.deliver, { emailId });
+
+        expect(send).not.toHaveBeenCalled();
+    });
+});
+
 describe("a policy notice", () => {
-    it("sends one email per account for every document changing that day, skipping ones it already got, and retries failures", async () => {
-        const t = convexTest(schema, modules);
+    it("queues one email per account for every document changing that day, and again only for a bounced one", async () => {
+        vi.useFakeTimers();
+        const t = mailTest();
         const ana = await seedAuthUser(t);
         const ben = await seedAuthUser(t);
         const cleo = await seedAuthUser(t);
@@ -178,25 +250,55 @@ describe("a policy notice", () => {
             })
         );
         await t.mutation(internal.mail.rememberLanguage, { language: "es", userId: ana.userId });
-        await t.mutation(internal.mail.recordNotice, {
-            deliveries: [{ keys: [`privacy:${DAY}`], language: "en", userId: cleo.userId }],
-        });
-        let benReachable = false;
+        await t.run((ctx) =>
+            ctx.db.insert("mailState", {
+                language: "en",
+                notices: [`privacy:${DAY}`],
+                proSentAt: null,
+                welcomedAt: null,
+                userId: cleo.userId,
+            })
+        );
+        let benRefused = false;
+        const bounced: string[] = [];
         const sent = stubCloudflare(
-            (to) => to === ben.email && !benReachable,
-            (to) => to === dana.email
+            (to) => {
+                const refuse = to === ben.email && !benRefused;
+                benRefused ||= refuse;
+                return refuse;
+            },
+            (to) => {
+                const bounce = to === dana.email;
+                if (bounce) {
+                    bounced.push(to);
+                }
+                return bounce;
+            }
         );
         const notify = () => t.action(internal.mailDelivery.notifyPolicy, {});
 
-        await expect(notify()).resolves.toStrictEqual({ failed: 2, sent: 2 });
-        benReachable = true;
-        await expect(notify()).resolves.toStrictEqual({ failed: 1, sent: 1 });
-        await expect(notify()).resolves.toStrictEqual({ failed: 1, sent: 0 });
+        await expect(notify()).resolves.toStrictEqual({ failed: 0, sent: 4 });
+        await expect(notify()).rejects.toThrow("still sending");
+        await expect(
+            t.mutation(internal.emailOutbox.enqueue, {
+                notice: { keys: [`privacy:${DAY}`, `terms:${DAY}`], language: "en", userId: ana.userId },
+                subject: "stale run",
+                text: "stale run",
+                to: ana.email,
+            })
+        ).resolves.toBeFalsy();
+        await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-        expect(sent).toStrictEqual([
-            { subject: "Cambios en nuestra Política de privacidad y nuestros Términos de uso", to: ana.email },
-            { subject: "Updates to our Terms of Use", to: cleo.email },
-            { subject: "Updates to our Privacy Policy and Terms of Use", to: ben.email },
-        ]);
+        expect(sent).toHaveLength(3);
+        expect(sent).toStrictEqual(
+            expect.arrayContaining([
+                { subject: "Cambios en nuestra Política de privacidad y nuestros Términos de uso", to: ana.email },
+                { subject: "Updates to our Terms of Use", to: cleo.email },
+                { subject: "Updates to our Privacy Policy and Terms of Use", to: ben.email },
+            ])
+        );
+        expect(bounced).toStrictEqual([dana.email]);
+        await expect(t.run((ctx) => ctx.db.query("outboundEmails").collect())).resolves.toStrictEqual([]);
+        await expect(notify()).resolves.toStrictEqual({ failed: 0, sent: 1 });
     });
 });

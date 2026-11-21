@@ -90,15 +90,4 @@ export default GroupSpec.make()
                     ),
                 }),
         })
-    )
-    .addFunction(
-        FunctionSpec.internalMutation({
-            name: "recordNotice",
-            args: () => ({
-                deliveries: Schema.Array(
-                    Schema.Struct({ keys: Schema.Array(Schema.String), language: Language, userId: Schema.String })
-                ),
-            }),
-            returns: () => Schema.Null,
-        })
     );

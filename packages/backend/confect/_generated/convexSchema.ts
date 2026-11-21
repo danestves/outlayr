@@ -18,6 +18,7 @@ import mailState from "./tables/mailState";
 import mainBudget from "./tables/mainBudget";
 import merchantKnowledge from "./tables/merchantKnowledge";
 import openStats from "./tables/openStats";
+import outboundEmails from "./tables/outboundEmails";
 import outsideMoves from "./tables/outsideMoves";
 import outsidePayments from "./tables/outsidePayments";
 import photoObjects from "./tables/photoObjects";
@@ -58,6 +59,7 @@ export default $defineSchema({
   mainBudget: $Table.tableDefinition(mainBudget),
   merchantKnowledge: $Table.tableDefinition(merchantKnowledge),
   openStats: $Table.tableDefinition(openStats),
+  outboundEmails: $Table.tableDefinition(outboundEmails),
   outsideMoves: $Table.tableDefinition(outsideMoves),
   outsidePayments: $Table.tableDefinition(outsidePayments),
   photoObjects: $Table.tableDefinition(photoObjects),

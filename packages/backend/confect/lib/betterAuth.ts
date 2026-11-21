@@ -1,4 +1,5 @@
 import { expo } from "@better-auth/expo";
+import * as MutationRunner from "@confect/server/MutationRunner";
 import { createClient } from "@convex-dev/better-auth";
 import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
@@ -25,6 +26,7 @@ import type { Email } from "./email";
 import { emailSetup } from "./emailSetup";
 import { AppleLifecycleError, appleCredentialLifecycle } from "./providerLifecycle";
 import { runEdge, runEdgeSync } from "./runEdge";
+import { sendEmail } from "./sendEmail";
 import { sha256Hex } from "./sha256Hex";
 
 function allowedHosts(webOrigins: readonly string[], convexSiteUrl: Option.Option<string>) {
@@ -139,8 +141,9 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         );
 
     const deliverEmail = (to: string, email: Email) =>
-        Effect.promise(() => requireActionCtx(ctx).runAction(internal.mailDelivery.send, { ...email, to })).pipe(
-            Effect.asVoid
+        sendEmail(to, email).pipe(
+            Effect.asVoid,
+            Effect.provide(MutationRunner.layer(requireActionCtx(ctx).runMutation))
         );
 
     return betterAuth({

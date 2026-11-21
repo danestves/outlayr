@@ -13,5 +13,7 @@ app.use(rateLimiter);
 app.use(mcp);
 app.use(revenuecat);
 app.use(workpool, { name: "enrichmentPool" });
+app.use(workpool, { name: "emailPool" });
+app.use(workpool, { name: "noticePool" });
 
 export default app;

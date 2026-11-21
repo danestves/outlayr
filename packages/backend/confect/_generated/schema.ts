@@ -17,6 +17,7 @@ import mailState from "./tables/mailState";
 import mainBudget from "./tables/mainBudget";
 import merchantKnowledge from "./tables/merchantKnowledge";
 import openStats from "./tables/openStats";
+import outboundEmails from "./tables/outboundEmails";
 import outsideMoves from "./tables/outsideMoves";
 import outsidePayments from "./tables/outsidePayments";
 import photoObjects from "./tables/photoObjects";
@@ -57,6 +58,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly mainBudget: typeof mainBudget;
   readonly merchantKnowledge: typeof merchantKnowledge;
   readonly openStats: typeof openStats;
+  readonly outboundEmails: typeof outboundEmails;
   readonly outsideMoves: typeof outsideMoves;
   readonly outsidePayments: typeof outsidePayments;
   readonly photoObjects: typeof photoObjects;
@@ -96,6 +98,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   mainBudget,
   merchantKnowledge,
   openStats,
+  outboundEmails,
   outsideMoves,
   outsidePayments,
   photoObjects,
