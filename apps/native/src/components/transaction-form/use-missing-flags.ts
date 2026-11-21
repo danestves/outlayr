@@ -1,8 +1,8 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { AccessibilityInfo } from "react-native";
 
 import { useTranslation } from "@/i18n/context";
-import { useOnUnmount } from "@/lib/lifecycle";
+import { useTimers } from "@/lib/lifecycle";
 import { useHaptics } from "@/lib/use-haptics";
 
 const SHAKE_MS = 500;
@@ -22,13 +22,7 @@ export function useMissingFlags() {
     const haptics = useHaptics();
     const [flagged, setFlagged] = useState({ amount: false, category: false });
     const [shaking, setShaking] = useState({ amount: false, category: false, rate: false });
-    const timers = useRef(new Map<MissingSlot, ReturnType<typeof setTimeout>>());
-
-    useOnUnmount(() => {
-        for (const timer of timers.current.values()) {
-            clearTimeout(timer);
-        }
-    });
+    const timers = useTimers();
 
     const flag = (slot: MissingSlot, announce = true) => {
         haptics("error");
@@ -39,10 +33,7 @@ export function useMissingFlags() {
             setFlagged((current) => ({ ...current, [slot]: true }));
         }
         setShaking((current) => ({ ...current, [slot]: true }));
-        timers.current.set(
-            slot,
-            setTimeout(() => setShaking((current) => ({ ...current, [slot]: false })), SHAKE_MS)
-        );
+        timers.after(SHAKE_MS, () => setShaking((current) => ({ ...current, [slot]: false })));
     };
 
     const clear = (slot: "amount" | "category") => {

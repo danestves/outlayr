@@ -8,7 +8,8 @@ import { MODE_FRAMES, resolvePreset } from "thinking-orbs/engine";
 import type { OrbSize, OrbState } from "thinking-orbs/engine";
 
 import { useAppForeground } from "@/lib/app-state";
-import { useMirror } from "@/lib/lifecycle";
+import { useMirror, useTimers } from "@/lib/lifecycle";
+import type { Cleanup } from "@/lib/lifecycle";
 
 const REDUCED_MOTION_T = 0.6;
 const FRAME_MS = 1000 / 30;
@@ -28,6 +29,7 @@ export function ThinkingOrb({ size = 20, state }: { size?: OrbSize; state: OrbSt
     const dark = useTheme().theme === "dark";
     const reduced = useReducedMotion();
     const active = useAppForeground();
+    const timers = useTimers();
     const [empty] = useState(() => createPicture(noop));
     const picture = useSharedValue<SkPicture>(empty);
     const [ink] = useState(makeInk);
@@ -72,17 +74,17 @@ export function ThinkingOrb({ size = 20, state }: { size?: OrbSize; state: OrbSt
         if (!active) {
             return;
         }
-        let frameId = 0;
+        let stop: Cleanup | undefined;
         let drawnAt = 0;
         const loop = (now: number) => {
             if (now - drawnAt >= FRAME_MS) {
                 drawnAt = now;
                 record((performance.now() / 1000) * speed);
             }
-            frameId = requestAnimationFrame(loop);
+            stop = timers.frame(loop);
         };
-        frameId = requestAnimationFrame(loop);
-        return () => cancelAnimationFrame(frameId);
+        stop = timers.frame(loop);
+        return () => stop?.();
     });
 
     return (

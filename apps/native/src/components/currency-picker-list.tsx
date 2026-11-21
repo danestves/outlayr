@@ -16,7 +16,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { currencyPickerRows } from "@/domain/currency-picker-rows";
 import type { CurrencyCode, CurrencyPickerRow } from "@/domain/currency-picker-rows";
 import { FAVOURITE_CURRENCY_LIMIT } from "@/domain/favourite-currencies";
-import { useMirror } from "@/lib/lifecycle";
+import { useMirror, useTimers } from "@/lib/lifecycle";
 
 import { CurrencyHint, CurrencyRow, CurrencyRowCopy, CurrencySectionHeader } from "./currency-picker-row";
 
@@ -79,6 +79,7 @@ export function CurrencyPickerList({
     const wrapperRef = useRef<ViewInstance>(null);
     const [travel, setTravel] = useState<Travel | null>(null);
     const travelled = useSharedValue(0);
+    const timers = useTimers();
 
     const travelStyle = useAnimatedStyle(() => ({
         transform: [{ translateY: travelled.value }],
@@ -107,7 +108,7 @@ export function CurrencyPickerList({
                     wrapperTop,
                 };
                 setTravel(departing);
-                setTimeout(() => setTravel((current) => (current === departing ? null : current)), TRAVEL_ABANDON_MS);
+                timers.after(TRAVEL_ABANDON_MS, () => setTravel((current) => (current === departing ? null : current)));
             });
         });
     };
@@ -117,7 +118,7 @@ export function CurrencyPickerList({
             return;
         }
         // A frame after the commit, so the containers have taken their new places.
-        const frame = requestAnimationFrame(() => {
+        return timers.frame(() => {
             const state = listRef.current?.getState();
             const index = rows.findIndex((row) => row.key === travel.code);
             // Legend List's own visible range: outside it there is nothing to fly to.
@@ -138,7 +139,6 @@ export function CurrencyPickerList({
                 });
             });
         });
-        return () => cancelAnimationFrame(frame);
     });
 
     const toggleFavourite =

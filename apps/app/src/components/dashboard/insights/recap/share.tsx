@@ -1,7 +1,7 @@
 import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
 import Share08Icon from "@hugeicons/core-free-icons/Share08Icon";
-import { useMirror } from "@outlayr/shared/lifecycle";
+import { useMirror, useTimers } from "@outlayr/shared/lifecycle";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Switch } from "panelui-web/switch";
@@ -77,6 +77,7 @@ function useCardInput(
 
 export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
     const { dialog } = useIntlayer("dashboard-insights-recap");
+    const timers = useTimers();
     const [amounts, setAmounts] = useState(false);
     const [size, setSize] = useState<CardSize>("4:5");
     const [made, setMade] = useState<{ blob: Blob; of: object; url: string } | null>(null);
@@ -130,7 +131,7 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
         }
         await navigator.clipboard.write([new ClipboardItem({ "image/png": ready.blob })]);
         setCopied(true);
-        setTimeout(() => setCopied(false), COPIED_MS);
+        timers.after(COPIED_MS, () => setCopied(false));
     };
     const download = () => {
         if (ready === null || file === null) {

@@ -1,4 +1,5 @@
 import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { useTimers } from "@outlayr/shared/lifecycle";
 import { APP_STORE_URL, APP_URL, PLAY_STORE_URL, SITE_URL, SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
@@ -95,6 +96,7 @@ function bareUrl(url: string) {
 function Facts() {
     const { facts } = useIntlayer("brand");
     const { locale } = useLocale();
+    const timers = useTimers();
     const [copied, setCopied] = useState(false);
     const sheet = useRef<HTMLDListElement>(null);
     const prices = proPrices(null, "en");
@@ -158,7 +160,7 @@ function Facts() {
     ];
     const onCopied = () => {
         setCopied(true);
-        setTimeout(() => setCopied(false), COPIED_MS);
+        timers.after(COPIED_MS, () => setCopied(false));
     };
     const selectSheet = () => {
         if (sheet.current) {

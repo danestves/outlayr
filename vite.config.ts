@@ -438,12 +438,14 @@ export default defineConfig({
                         { rules: ["outlayr/locked-rules", "outlayr/no-manual-memo", "outlayr/no-react-effects"] },
                     ],
                     "outlayr/no-react-effects": "error",
+                    "outlayr/no-raw-timers": "error",
                 },
             },
             {
                 files: ["apps/native/src/lib/lifecycle.ts", "packages/shared/src/lifecycle.ts"],
                 rules: {
                     "outlayr/no-react-effects": "off",
+                    "outlayr/no-raw-timers": "off",
                 },
             },
             {
