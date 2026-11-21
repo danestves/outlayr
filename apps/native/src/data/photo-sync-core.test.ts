@@ -270,6 +270,27 @@ describe("uploadPhotos", () => {
         expect(bucket.confirmed).toStrictEqual([`transaction-photos/${USER}/a.jpg`]);
     });
 
+    it("uploads with the method the server minted", async () => {
+        const db = makeDb();
+        const files = new FakeFiles(DIRECTORY, [["a.jpg", "PHOTO"]]);
+        let used: string | null = null;
+        const { transport } = fakeTransport(undefined, {
+            async put(_url, _bytes, method) {
+                used = method;
+                return null;
+            },
+            async requestUpload(name) {
+                return { key: `transaction-photos/${USER}/${name}`, method: "POST", url: "https://convex.test/put" };
+            },
+        });
+        await insert(db, "t1", { imageUri: `${DIRECTORY}/a.jpg` });
+
+        await Effect.runPromise(uploadPhotos(db, files, transport, NOW));
+
+        // Convex file storage answers a PUT with a 405, so the minted method has to reach the transport.
+        expect(used).toBe("POST");
+    });
+
     it("bumps updatedAt so the key is not outranked by an older peer edit", async () => {
         const db = makeDb();
         const files = new FakeFiles(DIRECTORY, [["a.jpg", "PHOTO"]]);

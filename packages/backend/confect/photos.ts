@@ -1,15 +1,9 @@
-import { R2 } from "@convex-dev/r2";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { components } from "../convex/_generated/api";
-
-// Photo bytes travel outside sync.ts, to R2 when all four R2_* vars are set and Convex storage otherwise. The key
-// is the same either way, so a row resolves through whichever backend stored it and turning R2 on later is safe.
-export const r2 = new R2(components.r2);
-
-// Read per call, so a deployment that gains its R2 variables uses them on the next call, not the next cold start.
-export { r2Configured as usingR2 } from "./lib/config";
+// Photo bytes travel outside sync.ts through the storage component, to a bucket when the deployment configured one
+// and Convex file storage otherwise. The key is the same either way, so a row resolves through whichever backend
+// stored it and turning a bucket on later is safe.
 
 // Above the 900s default so a backlog download outlives no url; far below 7 days, as the url guards a leaked link.
 export const PHOTO_URL_TTL_SECONDS = 3600;

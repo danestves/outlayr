@@ -4,14 +4,14 @@ import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
 import * as Schema from "effect/Schema";
 
-import type { PhotoTransport } from "@/data/photo-sync-core";
+import type { PhotoTransport, PhotoUploadMethod } from "@/data/photo-sync-core";
 
 import { CloudError } from "./cloud-error";
 import { cloudAction, cloudMutation } from "./convex";
 
 const UploadReceipt = Schema.Struct({ storageId: Schema.optional(Schema.String) });
 
-/** Convex file storage answers the PUT with the id it allocated; R2 sends nothing. */
+/** Only Convex file storage answers with the id it allocated; a bucket sends nothing. */
 const decodeUploadReceipt = HttpIncomingMessage.schemaBodyJson(UploadReceipt);
 
 const isOk = (status: number) => status >= 200 && status < 300;
@@ -37,20 +37,28 @@ export const photoTransport = Effect.fn("Cloud.photoTransport")(function* photoT
         return new Uint8Array(bytes);
     });
 
-    const put = Effect.fn("Cloud.photoPut")(function* put(url: string, bytes: Uint8Array) {
+    const put = Effect.fn("Cloud.photoPut")(function* put(url: string, bytes: Uint8Array, method: PhotoUploadMethod) {
+        const request = (method === "POST" ? HttpClientRequest.post : HttpClientRequest.put)(url).pipe(
+            HttpClientRequest.bodyUint8Array(bytes, "image/jpeg")
+        );
         const response = yield* client
-            .execute(HttpClientRequest.put(url).pipe(HttpClientRequest.bodyUint8Array(bytes, "image/jpeg")))
+            .execute(request)
             .pipe(Effect.catchTags({ HttpClientError: (cause) => Effect.fail(failed("upload", cause)) }));
         if (!isOk(response.status)) {
             return yield* failed("upload", new Error(`Photo upload failed: ${response.status}`));
         }
-        return yield* decodeUploadReceipt(response).pipe(
+        const storageId = yield* decodeUploadReceipt(response).pipe(
             Effect.map((receipt) => receipt.storageId ?? null),
             Effect.catchTags({
                 HttpClientError: () => Effect.succeed(null),
                 SchemaError: () => Effect.succeed(null),
             })
         );
+        // Convex file storage binds bytes to a key only through this id, so confirming without it loses the photo.
+        if (method === "POST" && !storageId) {
+            return yield* failed("upload", new Error("Photo upload returned no storage id"));
+        }
+        return storageId;
     });
 
     return {

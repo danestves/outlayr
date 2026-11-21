@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "moduleResolution": "Bundler",
+        "skipLibCheck": true,
+        "allowSyntheticDefaultImports": true,
+        "types": ["vite/client"],
+        "target": "ESNext",
+        "lib": ["ES2023", "dom"],
+        "forceConsistentCasingInFileNames": true,
+        "module": "ESNext",
+        "isolatedModules": true,
+        "noEmit": true
+    },
+    "include": ["src"]
+}

@@ -1,13 +1,10 @@
-import { R2 } from "@convex-dev/r2";
 import * as Effect from "effect/Effect";
 
 import { components } from "../../convex/_generated/api";
 import type { MutationCtx } from "../../convex/_generated/server";
-import { usingR2 } from "../photos";
 import { COPY_BATCH } from "../sharedReports";
+import { componentProvider, storageSetup } from "./storageSetup";
 import { SYNCED_TABLES } from "./syncTables";
-
-const r2 = new R2(components.r2);
 
 /** Bounded by a mutation's document budget; the caller re-runs until done. */
 export const PURGE_BATCH = 200;
@@ -199,7 +196,8 @@ const releaseObject = Effect.fn("Account.releaseObject")(function* releaseObject
         yield* Effect.promise(() => ctx.storage.delete(mapping.storageId));
         return;
     }
-    if (yield* usingR2) {
-        yield* Effect.promise(() => r2.deleteObject(ctx, key));
-    }
+    const setup = yield* storageSetup;
+    yield* Effect.promise(() =>
+        ctx.runMutation(components.storage.objects.remove, { key, provider: componentProvider(setup) })
+    );
 });

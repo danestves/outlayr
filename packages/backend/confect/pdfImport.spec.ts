@@ -16,6 +16,12 @@ export const UploadTicket = Schema.Struct({
     url: Schema.NullOr(Schema.String),
 });
 
+export const KeyedUploadTicket = Schema.Struct({
+    key: Schema.NullOr(Schema.String),
+    status: UploadStatus,
+    url: Schema.NullOr(Schema.String),
+});
+
 export const pdfImportArgs = {
     aiConsent: Schema.optional(Schema.Number),
     categoryTree: Schema.Array(Schema.Struct({ children: Schema.Array(Schema.String), name: Schema.String })),
@@ -23,9 +29,12 @@ export const pdfImportArgs = {
     groundedLookup: Schema.optional(Schema.Boolean),
     regionCode: Schema.optional(Schema.String),
     shareAnalytics: Schema.optional(Schema.Boolean),
-    storageId: Id("_storage"),
+    /** Legacy app `_storage` id, for clients that have not switched to `upload`. */
+    storageId: Schema.optional(Id("_storage")),
     /** `YYYY-MM-DD` in the device's local calendar, so a statement's yearless dates resolve. */
     today: Schema.String,
+    /** A component storage id, not an app `_storage` id, so it stays a plain string. */
+    upload: Schema.optional(Schema.Struct({ key: Schema.String, storageId: Schema.String })),
 };
 
 export const StatementRow = Schema.Struct({
@@ -69,6 +78,9 @@ export type PdfImportResult = typeof PdfImportResult.Type;
 export default GroupSpec.make()
     .addFunction(FunctionSpec.publicMutation({ args: () => ({}), name: "requestUpload", returns: () => UploadTicket }))
     .addFunction(
+        FunctionSpec.publicMutation({ args: () => ({}), name: "startUpload", returns: () => KeyedUploadTicket })
+    )
+    .addFunction(
         FunctionSpec.internalQuery({
             args: () => ({ storageId: Id("_storage") }),
             name: "uploadContentType",
@@ -77,7 +89,7 @@ export default GroupSpec.make()
     )
     .addFunction(
         FunctionSpec.internalMutation({
-            args: () => ({ from: Schema.Number, to: Schema.Number }),
+            args: () => ({ from: Schema.Number, key: Schema.optional(Schema.String), to: Schema.Number }),
             name: "sweepUploads",
             returns: () => Schema.Null,
         })

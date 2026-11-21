@@ -9,18 +9,23 @@ import { isMerchantKey, merchantKeyOfFile, PHOTO_TABLES, photoFileName, photoUri
 import type { PhotoFiles } from "./photo-store-core";
 import type { PhotoTable } from "./sync-tables";
 
-// Bytes land BEFORE the key is recorded: a key naming an object never PUT fails on every device forever, while bytes
-// with no key are reused next pass. The key lands BEFORE the local path, which is device-local and derived from it.
+export type PhotoUploadMethod = "POST" | "PUT";
+
+// Bytes land BEFORE the key is recorded: a key naming an object never uploaded fails on every device forever,
+// while bytes with no key are reused next pass. The key lands BEFORE the local path, which is device-local and
+// derived from it.
 export interface PhotoTransport {
-    /** `storageId` is what Convex file storage's PUT returns; R2 addresses by key and returns none. */
+    /** `storageId` is what Convex file storage's upload answers with; a bucket addresses by key and returns none. */
     confirmUpload: (key: string, storageId: string | null) => Effect.Effect<void, CloudError>;
     /** Null for a missing object: a 404 is a delete racing this fetch, not a failure. */
     get: (url: string) => Effect.Effect<Uint8Array | null, CloudError>;
-    put: (url: string, bytes: Uint8Array) => Effect.Effect<string | null, CloudError>;
+    put: (url: string, bytes: Uint8Array, method: PhotoUploadMethod) => Effect.Effect<string | null, CloudError>;
     /** A key the account does not own is not returned. */
     readUrls: (keys: readonly string[]) => Effect.Effect<{ key: string; url: string }[], CloudError>;
     release: (key: string) => Effect.Effect<void, CloudError>;
-    requestUpload: (name: string) => Effect.Effect<{ key: string; url: string }, CloudError>;
+    requestUpload: (
+        name: string
+    ) => Effect.Effect<{ key: string; method?: PhotoUploadMethod; url: string }, CloudError>;
 }
 
 const PhotoTransferOperation = Schema.Literals(["download", "release", "rows", "upload"]);
@@ -146,8 +151,9 @@ export const uploadPhotos = Effect.fn("PhotoSync.uploadPhotos")(function* upload
             }
 
             const superseded = row.imageKey;
-            const { key, url } = yield* remote("upload", transport.requestUpload(name));
-            const storageId = yield* remote("upload", transport.put(url, bytes));
+            const { key, url, method } = yield* remote("upload", transport.requestUpload(name));
+            // Older servers minted PUT-only urls and sent no method.
+            const storageId = yield* remote("upload", transport.put(url, bytes, method ?? "PUT"));
             yield* remote("upload", transport.confirmUpload(key, storageId));
 
             yield* transfer("upload", () =>

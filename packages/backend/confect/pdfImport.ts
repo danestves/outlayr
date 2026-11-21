@@ -37,6 +37,24 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
     pdfImportGlobal: { kind: "fixed window", period: HOUR, rate: 60, shards: 10 },
 });
 
+const STATEMENT_KEY_PREFIX = "statements";
+const STATEMENT_NAME = /^[A-Za-z0-9-]{1,64}\.pdf$/;
+
+export function statementKeyFor(userId: string, id: string): string {
+    return `${STATEMENT_KEY_PREFIX}/${userId}/${id}.pdf`;
+}
+
+export function ownsStatementKey(userId: string, key: string): boolean {
+    const [prefix, owner, name, ...rest] = key.split("/");
+    return (
+        rest.length === 0 &&
+        prefix === STATEMENT_KEY_PREFIX &&
+        owner === userId &&
+        name !== undefined &&
+        STATEMENT_NAME.test(name)
+    );
+}
+
 const MASK = "****";
 // No closing \b: text glued to the last group would otherwise back the match off a group and leak those digits.
 const IBAN_LIKE = /\b[A-Z]{2}\d{2}(?:[ -]?[A-Z0-9]{2,4}){3,8}/g;

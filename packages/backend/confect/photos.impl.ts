@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 
+import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import {
@@ -20,6 +21,7 @@ import {
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
 import { isPhotoName, merchantLogoUrl, ownsPhotoKey, photoKeyFor, photoOwnerFromKey } from "./lib/photoKeys";
+import { componentProvider, storageSetup } from "./lib/storageSetup";
 import { IMAGE_KEY_TABLES } from "./lib/syncTables";
 import {
     NotAPhotoName,
@@ -30,10 +32,8 @@ import {
     PhotoQuotaExceeded,
     PhotoReadTooLarge,
     PhotoUploadsUnconfirmed,
-    r2,
     UNCONFIRMED_UPLOAD_LIMIT,
     UploadBoundElsewhere,
-    usingR2,
 } from "./photos";
 import spec from "./photos.spec";
 import { requirePro } from "./revenuecat";
@@ -47,20 +47,32 @@ const storageIdFor = Effect.fn("Photos.storageIdFor")(function* storageIdFor(key
     return row ? row.storageId : null;
 });
 
-const photoUrl = Effect.fn("Photos.photoUrl")(function* photoUrl(key: string) {
-    const storageId = yield* storageIdFor(key);
-    if (storageId) {
-        const storage = yield* StorageReader;
-        return yield* storage.getUrl(storageId).pipe(
-            Effect.map((url) => url.href),
-            Effect.catchTags({ BlobNotFoundError: () => Effect.succeed(null) })
-        );
-    }
-    return (yield* usingR2) ? yield* Effect.promise(() => r2.getUrl(key, { expiresIn: PHOTO_URL_TTL_SECONDS })) : null;
+// Keys written before the component still carry the app's own `_storage` id, so they resolve here, never in a bucket.
+const legacyUrls = Effect.fn("Photos.legacyUrls")(function* legacyUrls(keys: readonly string[]) {
+    const storage = yield* StorageReader;
+    const stored = yield* Effect.all(
+        keys.map((key) => storageIdFor(key).pipe(Effect.map((storageId) => ({ key, storageId })))),
+        { concurrency: "unbounded" }
+    );
+    const urls = yield* Effect.all(
+        stored.map(({ key, storageId }) =>
+            storageId === null
+                ? Effect.succeed(null)
+                : storage.getUrl(storageId).pipe(
+                      Effect.map((url) => ({ key, url: url.href })),
+                      Effect.catchTags({ BlobNotFoundError: () => Effect.succeed(null) })
+                  )
+        ),
+        { concurrency: "unbounded" }
+    );
+    return {
+        unmapped: stored.flatMap(({ key, storageId }) => (storageId === null ? [key] : [])),
+        urls: urls.filter((entry): entry is { key: string; url: string } => entry !== null),
+    };
 });
 
-// Refused before a url is minted: once a client holds a signed PUT the bytes are R2's problem. It bounds what is
-// already stored, because this upload's size is unknown until the bytes exist.
+// Refused before a url is minted: once a client holds a signed upload url the bytes are the store's problem. It
+// bounds what is already stored, because this upload's size is unknown until the bytes exist.
 const checkPhotoQuota = Effect.fn("Photos.checkPhotoQuota")(function* checkPhotoQuota(userId: string) {
     const reader = yield* DatabaseReader;
     const stored = yield* reader
@@ -94,8 +106,9 @@ const reserveUploadKey = Effect.fn("Photos.reserveUploadKey")(function* reserveU
     yield* writer.table("photoSizes").insert({ bytes: 0, key, userId });
 });
 
-// The key derives from the file name, so a retried PUT lands on the same key: R2 has nothing to roll back. It is
-// recorded at 0 bytes before the url goes out, so a never-confirmed upload stays findable for purge and quota.
+// The key derives from the file name, so a retried upload lands on the same key and a bucket has nothing to roll
+// back. It is recorded at 0 bytes before the url goes out, so a never-confirmed upload stays findable for purge and
+// quota.
 const requestUpload = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -108,15 +121,18 @@ const requestUpload = FunctionImpl.make(
             if (!isPhotoName(args.name)) {
                 return yield* new NotAPhotoName({ name: args.name });
             }
+            const setup = yield* storageSetup;
+            // A half-set bucket must not silently start storing photos somewhere else.
+            if (setup.kind === "unconfigured") {
+                return yield* Effect.die(new ConvexError({ code: "STORAGE_UNCONFIGURED" }));
+            }
             yield* checkPhotoQuota(userId);
             const key = photoKeyFor(userId, args.name);
             yield* reserveUploadKey(userId, key);
-            if (yield* usingR2) {
-                return yield* Effect.promise(() => r2.generateUploadUrl(key));
-            }
-            const storage = yield* StorageWriter;
-            const url = yield* storage.generateUploadUrl;
-            return { key, url: url.href };
+            const { method, url } = yield* Effect.promise(() =>
+                ctx.runMutation(components.storage.objects.uploadUrl, { key, provider: setup })
+            );
+            return { key, method, url };
         },
         Effect.catchTags({
             NotAPhotoName: dieAsConvexError,
@@ -145,8 +161,8 @@ const callerId = FunctionImpl.make(
     )
 );
 
-// An action because `syncMetadata` reads the object back out of R2. A crash before this call leaves a durable photo
-// with no accounting, which the next upload of the same key repairs.
+// An action because the component reads the object back out of the bucket. A crash before this call leaves a durable
+// photo with no accounting, which the next upload of the same key repairs.
 const confirmUpload = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -160,18 +176,20 @@ const confirmUpload = FunctionImpl.make(
             if (!ownsPhotoKey(userId, args.key)) {
                 return yield* new PhotoNotOwned();
             }
-            if (args.storageId) {
-                yield* runMutation(refs.internal.photos.mapStorageId, {
-                    key: args.key,
-                    storageId: args.storageId,
-                });
-                return null;
+            const setup = yield* storageSetup;
+            const request = { key: args.key, provider: componentProvider(setup) };
+            const upload = yield* Effect.promise(() =>
+                ctx.runAction(
+                    components.storage.objects.confirmUpload,
+                    args.storageId === undefined ? request : { ...request, storageId: args.storageId }
+                )
+            );
+            if (upload.kind === "boundElsewhere") {
+                return yield* new UploadBoundElsewhere();
             }
-            yield* Effect.promise(() => r2.syncMetadata(ctx, args.key));
-            // Read after the sync, or there is no metadata row. A missing size records zero: losing a photo is worse.
-            const metadata = yield* Effect.promise(() => r2.getMetadata(ctx, args.key));
+            // A missing object records zero: losing a photo is worse than under-counting the quota.
             yield* runMutation(refs.internal.photos.recordPhotoSize, {
-                bytes: metadata?.size ?? 0,
+                bytes: upload.kind === "stored" ? upload.bytes : 0,
                 key: args.key,
             });
             return null;
@@ -222,49 +240,6 @@ const recordPhotoSize = FunctionImpl.make(
     }, Effect.orDie)
 );
 
-const mapStorageId = FunctionImpl.make(
-    databaseSchema,
-    spec,
-    "mapStorageId",
-    Effect.fn("Photos.mapStorageId")(
-        function* mapStorageId(args) {
-            const reader = yield* DatabaseReader;
-            const writer = yield* DatabaseWriter;
-            const storage = yield* StorageWriter;
-            const boundElsewhere = yield* reader
-                .table("photoObjects")
-                .index("by_storageId", (q) => q.eq("storageId", args.storageId))
-                .first();
-            if (Option.isSome(boundElsewhere) && boundElsewhere.value.key !== args.key) {
-                return yield* new UploadBoundElsewhere();
-            }
-            const existing = yield* reader
-                .table("photoObjects")
-                .get("by_key", args.key)
-                .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
-            const stored = yield* reader
-                .table("_storage")
-                .get(args.storageId)
-                .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
-            yield* writePhotoSize(args.key, stored?.size ?? 0);
-            if (existing) {
-                if (existing.storageId !== args.storageId) {
-                    yield* storage.delete(existing.storageId);
-                    yield* writer.table("photoObjects").patch(existing._id, { storageId: args.storageId });
-                }
-                return null;
-            }
-            yield* writer.table("photoObjects").insert({
-                key: args.key,
-                storageId: args.storageId,
-            });
-            return null;
-        },
-        Effect.catchTags({ UploadBoundElsewhere: dieAsConvexError }),
-        Effect.orDie
-    )
-);
-
 // A mutation though it writes nothing: Convex caches a query until its read set changes, so an expired url would
 // be served forever. An unowned key is dropped, not refused, so one stale key does not cost the whole batch.
 const readUrls = FunctionImpl.make(
@@ -280,15 +255,23 @@ const readUrls = FunctionImpl.make(
             }
 
             const owned = args.keys.filter((key) => ownsPhotoKey(userId, key));
-            const minted = yield* Effect.all(
-                owned.map((key) => photoUrl(key).pipe(Effect.map((url) => (url === null ? null : { key, url })))),
-                { concurrency: "unbounded" }
-            );
+            const legacy = yield* legacyUrls(owned);
+            let minted: readonly { key: string; url: string }[] = [];
+            if (legacy.unmapped.length > 0) {
+                const setup = yield* storageSetup;
+                minted = yield* Effect.promise(() =>
+                    ctx.runMutation(components.storage.objects.urls, {
+                        expiresIn: PHOTO_URL_TTL_SECONDS,
+                        keys: legacy.unmapped,
+                        provider: componentProvider(setup),
+                    })
+                );
+            }
             const merchants = args.keys.flatMap((key) => {
                 const url = merchantLogoUrl(key);
                 return url === null ? [] : [{ key, url }];
             });
-            return [...merchants, ...minted.filter((entry): entry is { key: string; url: string } => Boolean(entry))];
+            return [...merchants, ...legacy.urls, ...minted];
         },
         Effect.catchTags({ PhotoReadTooLarge: dieAsConvexError, Unauthenticated: dieAsConvexError }),
         Effect.orDie
@@ -311,7 +294,7 @@ const isReferenced = Effect.fn("Photos.isReferenced")(function* isReferenced(use
     return false;
 });
 
-// R2 cannot share a transaction with the tombstone, so the reference goes before the bytes: a crash leaks a
+// A bucket cannot share a transaction with the tombstone, so the reference goes before the bytes: a crash leaks a
 // reclaimable object instead of leaving a row naming missing bytes. A device mid-download gets a 404 and retries.
 const releaseUnreferenced = FunctionImpl.make(
     databaseSchema,
@@ -340,9 +323,13 @@ const releaseUnreferenced = FunctionImpl.make(
                 yield* forgetPhotoSize(args.key);
                 return { released: true };
             }
-            if (yield* usingR2) {
-                yield* Effect.promise(() => r2.deleteObject(ctx, args.key));
-            }
+            const setup = yield* storageSetup;
+            yield* Effect.promise(() =>
+                ctx.runMutation(components.storage.objects.remove, {
+                    key: args.key,
+                    provider: componentProvider(setup),
+                })
+            );
             yield* forgetPhotoSize(args.key);
             return { released: true };
         },
@@ -356,7 +343,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(callerId),
     Layer.provide(confirmUpload),
     Layer.provide(recordPhotoSize),
-    Layer.provide(mapStorageId),
     Layer.provide(readUrls),
     Layer.provide(releaseUnreferenced),
     GroupImpl.finalize

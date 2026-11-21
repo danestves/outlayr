@@ -8,6 +8,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import { ActionCtx, MutationCtx, QueryCtx, QueryRunner, Scheduler } from "./_generated/services";
@@ -18,56 +19,92 @@ import { openAiGate, proOnly, refuse, withinLimit } from "./lib/aiGate";
 import { liveIdentity } from "./lib/auth";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { fixedBurst, perUserBurst } from "./lib/limits";
-import { failure, isIsoDay, rateLimiter, readStatement } from "./pdfImport";
+import { failure, isIsoDay, ownsStatementKey, rateLimiter, readStatement, statementKeyFor } from "./pdfImport";
 import spec, { MAX_PDF_BYTES, PDF_CONTENT_TYPE } from "./pdfImport.spec";
 import { isPro } from "./revenuecat";
 
 // Convex upload urls live an hour. Extraction deletes a statement at once; this catches the client that never called.
 const UPLOAD_URL_LIFETIME = Duration.hours(1);
 const SWEEP_GRACE = Duration.minutes(15);
+// Convex checks the url before reading the body, so an upload started near expiry can land after the window closes.
+const LATE_UPLOAD = Duration.minutes(10);
 // PDF extraction has no client deadline and classifies up to 200 labels, which can outrun the CSV budget.
 const CLASSIFY_TIMEOUT = Duration.seconds(60);
+
+const gateUpload = Effect.fn("PdfImport.gateUpload")(function* gateUpload(ctx: MutationCtx) {
+    const identity = yield* liveIdentity(ctx);
+    if (identity === null) {
+        return { identity: null, status: "unauthenticated" as const };
+    }
+    if (!(yield* isPro(ctx, identity.subject))) {
+        return { identity: null, status: "notEntitled" as const };
+    }
+    // An abandoned non-PDF escapes the sweep, so this bounds what a client can store without ever extracting.
+    const uploads = yield* Effect.promise(() =>
+        rateLimiter.limit(ctx, "pdfUploadPerUser", {
+            config: fixedBurst("pdfUpload", true),
+            key: identity.tokenIdentifier,
+        })
+    );
+    if (!uploads.ok) {
+        return { identity: null, status: "rateLimited" as const };
+    }
+    const burst = yield* perUserBurst("pdfImport", true);
+    // Only a look: the token is spent by the extraction, so a failed upload costs nothing.
+    const allowance = yield* Effect.promise(() =>
+        rateLimiter.check(ctx, "pdfImportPerUser", { config: burst, key: identity.tokenIdentifier })
+    );
+    if (!allowance.ok) {
+        return { identity: null, status: "rateLimited" as const };
+    }
+    return { identity, status: "ok" as const };
+});
+
+const scheduleSweep = Effect.fn("PdfImport.scheduleSweep")(function* scheduleSweep(key?: string) {
+    const from = yield* Clock.currentTimeMillis;
+    const scheduler = yield* Scheduler;
+    const window = { from, to: from + Duration.toMillis(UPLOAD_URL_LIFETIME) };
+    yield* scheduler.runAfter(
+        Duration.sum(UPLOAD_URL_LIFETIME, SWEEP_GRACE),
+        refs.internal.pdfImport.sweepUploads,
+        key === undefined ? window : { ...window, key }
+    );
+});
 
 const requestUpload = FunctionImpl.make(
     databaseSchema,
     spec,
     "requestUpload",
     Effect.fn("PdfImport.requestUpload")(function* requestUpload() {
-        const identity = yield* liveIdentity(yield* MutationCtx);
-        if (identity === null) {
-            return { status: "unauthenticated" as const, url: null };
-        }
         const ctx = yield* MutationCtx;
-        if (!(yield* isPro(ctx, identity.subject))) {
-            return { status: "notEntitled" as const, url: null };
+        const gate = yield* gateUpload(ctx);
+        if (gate.identity === null) {
+            return { status: gate.status, url: null };
         }
-        // An abandoned non-PDF escapes the sweep, so this bounds what a client can store without ever extracting.
-        const uploads = yield* Effect.promise(() =>
-            rateLimiter.limit(ctx, "pdfUploadPerUser", {
-                config: fixedBurst("pdfUpload", true),
-                key: identity.tokenIdentifier,
-            })
-        );
-        if (!uploads.ok) {
-            return { status: "rateLimited" as const, url: null };
-        }
-        const burst = yield* perUserBurst("pdfImport", true);
-        // Only a look: the token is spent by the extraction, so a failed upload costs nothing.
-        const allowance = yield* Effect.promise(() =>
-            rateLimiter.check(ctx, "pdfImportPerUser", { config: burst, key: identity.tokenIdentifier })
-        );
-        if (!allowance.ok) {
-            return { status: "rateLimited" as const, url: null };
-        }
-        const from = yield* Clock.currentTimeMillis;
-        const scheduler = yield* Scheduler;
-        yield* scheduler.runAfter(
-            Duration.sum(UPLOAD_URL_LIFETIME, SWEEP_GRACE),
-            refs.internal.pdfImport.sweepUploads,
-            { from, to: from + Duration.toMillis(UPLOAD_URL_LIFETIME) }
-        );
+        yield* scheduleSweep();
         const url = yield* Effect.promise(() => ctx.storage.generateUploadUrl());
         return { status: "ok" as const, url };
+    }, Effect.orDie)
+);
+
+// Statements stay in Convex file storage whatever the deployment's bucket is: the privacy policy keeps them on
+// our servers. Their own component instance lets the sweep drop any unconfirmed file without touching photos.
+const startUpload = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "startUpload",
+    Effect.fn("PdfImport.startUpload")(function* startUpload() {
+        const ctx = yield* MutationCtx;
+        const gate = yield* gateUpload(ctx);
+        if (gate.identity === null) {
+            return { key: null, status: gate.status, url: null };
+        }
+        const key = statementKeyFor(gate.identity.subject, crypto.randomUUID());
+        yield* scheduleSweep(key);
+        const { url } = yield* Effect.promise(() =>
+            ctx.runMutation(components.statementStorage.objects.uploadUrl, { key, provider: { kind: "convex" } })
+        );
+        return { key, status: "ok" as const, url };
     }, Effect.orDie)
 );
 
@@ -82,13 +119,14 @@ const uploadContentType = FunctionImpl.make(
     }, Effect.orDie)
 );
 
-// A statement is only ever stored under this content type, and photos never are, so the type is what picks them out.
+// App storage gets no new photos, so a PDF there is a statement; the statement instance holds nothing else.
 const sweepUploads = FunctionImpl.make(
     databaseSchema,
     spec,
     "sweepUploads",
-    Effect.fn("PdfImport.sweepUploads")(function* sweepUploads({ from, to }) {
+    Effect.fn("PdfImport.sweepUploads")(function* sweepUploads({ from, key, to: windowEnd }) {
         const ctx = yield* MutationCtx;
+        const to = windowEnd + Duration.toMillis(LATE_UPLOAD);
         const files = yield* Effect.promise(() =>
             ctx.db.system
                 .query("_storage")
@@ -100,6 +138,12 @@ const sweepUploads = FunctionImpl.make(
                 yield* Effect.promise(() => ctx.storage.delete(file._id));
             }
         }
+        if (key !== undefined) {
+            yield* Effect.promise(() =>
+                ctx.runMutation(components.statementStorage.objects.remove, { key, provider: { kind: "convex" } })
+            );
+        }
+        yield* Effect.promise(() => ctx.runMutation(components.statementStorage.objects.sweepUnbound, { from, to }));
         return null;
     }, Effect.orDie)
 );
@@ -165,6 +209,54 @@ const readUpload = Effect.fn("PdfImport.readUpload")(function* readUpload(
     return new Uint8Array(bytes);
 });
 
+const readKeyedUpload = Effect.fn("PdfImport.readKeyedUpload")(function* readKeyedUpload(upload: {
+    key: string;
+    storageId: string;
+}) {
+    const ctx = yield* ActionCtx;
+    const provider = { kind: "convex" as const };
+    const confirmed = yield* Effect.promise(() =>
+        ctx.runAction(components.statementStorage.objects.confirmUpload, {
+            key: upload.key,
+            provider,
+            storageId: upload.storageId,
+        })
+    );
+    if (confirmed.kind !== "stored") {
+        return null;
+    }
+    const read = yield* Effect.promise(() =>
+        ctx.runAction(components.statementStorage.objects.read, { key: upload.key, maxBytes: MAX_PDF_BYTES })
+    );
+    return read.kind === "stored" ? new Uint8Array(read.bytes) : null;
+});
+
+function readStatementBytes(
+    upload: { key: string; storageId: string } | undefined,
+    storageId: Parameters<ActionCtx["storage"]["get"]>[0] | undefined
+) {
+    if (upload !== undefined) {
+        return readKeyedUpload(upload);
+    }
+    return storageId === undefined ? Effect.succeed(null) : readUpload(storageId);
+}
+
+function cleanupUpload(
+    ctx: ActionCtx,
+    upload: { key: string } | undefined,
+    storageId: Parameters<ActionCtx["storage"]["delete"]>[0] | undefined
+) {
+    if (upload !== undefined) {
+        return Effect.promise(() =>
+            ctx.runMutation(components.statementStorage.objects.remove, {
+                key: upload.key,
+                provider: { kind: "convex" },
+            })
+        );
+    }
+    return storageId === undefined ? Effect.void : Effect.promise(() => ctx.storage.delete(storageId));
+}
+
 const extract = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -172,6 +264,7 @@ const extract = FunctionImpl.make(
     Effect.fn("PdfImport.extract")(
         function* extract(args) {
             const ctx = yield* ActionCtx;
+            const { storageId, upload } = args;
             const { caller, distinctId, model } = yield* openAiGate(ctx, {
                 admit: Effect.fn("PdfImport.extractRungs")(function* extractRungs(identity: UserIdentity) {
                     if (!isIsoDay(args.today)) {
@@ -187,13 +280,23 @@ const extract = FunctionImpl.make(
                     yield* withinLimit(() => rateLimiter.limit(ctx, "pdfImportGlobal"));
                     yield* withinLimit(() => rateLimiter.limit(ctx, "pdfImportPerUser", quota));
 
-                    // Checked before anything is deleted: a client also holds the storage ids of its own photos.
-                    const { runQuery } = yield* QueryRunner;
-                    const contentType = yield* runQuery(refs.internal.pdfImport.uploadContentType, {
-                        storageId: args.storageId,
-                    });
-                    if (contentType !== PDF_CONTENT_TYPE) {
+                    if ((storageId === undefined) === (upload === undefined)) {
                         return yield* refuse("invalid");
+                    }
+                    if (upload !== undefined) {
+                        if (!ownsStatementKey(identity.subject, upload.key)) {
+                            return yield* refuse("invalid");
+                        }
+                    } else if (storageId !== undefined) {
+                        // Legacy app storage only. Checked before anything is deleted: a client also holds the
+                        // storage ids of its own photos.
+                        const { runQuery } = yield* QueryRunner;
+                        const contentType = yield* runQuery(refs.internal.pdfImport.uploadContentType, {
+                            storageId,
+                        });
+                        if (contentType !== PDF_CONTENT_TYPE) {
+                            return yield* refuse("invalid");
+                        }
                     }
                 }),
                 args,
@@ -201,7 +304,7 @@ const extract = FunctionImpl.make(
             });
 
             return yield* Effect.gen(function* readAndClassify() {
-                const bytes = yield* readUpload(args.storageId);
+                const bytes = yield* readStatementBytes(upload, storageId);
                 if (bytes === null) {
                     return failure("invalid");
                 }
@@ -224,7 +327,7 @@ const extract = FunctionImpl.make(
                 const flagged = degraded ? { ...read, degraded } : read;
                 const { unreadPages } = statement;
                 return unreadPages.length > 0 ? { ...flagged, unreadPages } : flagged;
-            }).pipe(Effect.ensuring(Effect.promise(() => ctx.storage.delete(args.storageId))));
+            }).pipe(Effect.ensuring(cleanupUpload(ctx, upload, storageId)));
         },
         Effect.catchTags({ AiRefused: ({ status }) => Effect.succeed(failure(status)) }),
         Effect.orDie
@@ -233,6 +336,7 @@ const extract = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(requestUpload),
+    Layer.provide(startUpload),
     Layer.provide(uploadContentType),
     Layer.provide(sweepUploads),
     Layer.provide(extract),

@@ -5,8 +5,10 @@ import { resolveTextModel } from "@outlayr/ai/model";
 import { answers, fails, fakeModel } from "@outlayr/ai/testing";
 import type { FakeResponseStep } from "@outlayr/ai/testing";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
+import { storageComponent } from "@outlayr/storage/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
+import type { TestConvex } from "convex-test";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
@@ -14,8 +16,16 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { perUserBurst } from "./lib/limits";
+import { photoKeyFor } from "./lib/photoKeys";
 import { runEdge } from "./lib/runEdge";
-import { chunkPages, joinPageLines, rateLimiter, readStatement, redactStatementText } from "./pdfImport";
+import {
+    chunkPages,
+    joinPageLines,
+    rateLimiter,
+    readStatement,
+    redactStatementText,
+    statementKeyFor,
+} from "./pdfImport";
 import { PDF_CONTENT_TYPE } from "./pdfImport.spec";
 import { authenticatedAs, grantPro, seedAuthUser, statementPdf, statementPdfPages } from "./test.helpers";
 
@@ -25,6 +35,61 @@ vi.mock(import("@outlayr/ai/model"), async (importOriginal) => ({
 }));
 
 const modules = import.meta.glob("../convex/**/*.ts");
+
+type TestClient = TestConvex<typeof schema>;
+
+interface ComponentObject {
+    key: string;
+    storageId: string;
+}
+
+// Components keep their own database. `runInComponent` exists at runtime but is missing from convex-test's types.
+interface StorageComponentCtx {
+    db: {
+        insert: (table: "objects", value: ComponentObject) => Promise<string>;
+        query: (table: "objects") => {
+            withIndex: (
+                index: "by_key",
+                range: (q: { eq: (field: "key", value: string) => unknown }) => unknown
+            ) => { first: () => Promise<ComponentObject | null> };
+        };
+        system: { get: (table: "_storage", id: string) => Promise<{ _creationTime: number; _id: string } | null> };
+    };
+    storage: { store: (blob: Blob) => Promise<string> };
+}
+
+interface WithRunInComponent {
+    runInComponent: <A>(path: string, handler: (ctx: StorageComponentCtx) => Promise<A>) => Promise<A>;
+}
+
+const runInStorage = <A>(
+    t: TestClient,
+    handler: (ctx: StorageComponentCtx) => Promise<A>,
+    component: "statementStorage" | "storage" = "statementStorage"
+): Promise<A> => (t as TestClient & WithRunInComponent).runInComponent(component, handler);
+
+const storeInComponent = (t: TestClient, bytes: Uint8Array = STATEMENT, type = PDF_CONTENT_TYPE) =>
+    runInStorage(t, (ctx) => ctx.storage.store(new Blob([new Uint8Array(bytes)], { type })));
+
+const componentObject = (t: TestClient, key: string) =>
+    runInStorage(t, (ctx) =>
+        ctx.db
+            .query("objects")
+            .withIndex("by_key", (q) => q.eq("key", key))
+            .first()
+    );
+
+const componentFileExists = (t: TestClient, storageId: string) =>
+    runInStorage(t, async (ctx) => (await ctx.db.system.get("_storage", storageId)) !== null);
+
+const componentCreationTime = (t: TestClient, storageId: string) =>
+    runInStorage(t, async (ctx) => {
+        const file = await ctx.db.system.get("_storage", storageId);
+        if (file === null) {
+            throw new Error(`no component file ${storageId}`);
+        }
+        return file._creationTime;
+    });
 
 afterEach(() => {
     vi.unstubAllEnvs();
@@ -289,6 +354,8 @@ async function setup({ pro = true } = {}) {
     const t = convexTest(schema, modules);
     rateLimiterTest.register(t);
     revenuecatTest.register(t);
+    t.registerComponent("storage", storageComponent.schema, storageComponent.modules);
+    t.registerComponent("statementStorage", storageComponent.schema, storageComponent.modules);
     const identity = await seedAuthUser(t);
     if (pro) {
         await grantPro(t, identity);
@@ -302,9 +369,22 @@ async function setup({ pro = true } = {}) {
         storageId,
         today: "2026-04-02",
     });
+    const uploadArgs = (key: string, storageId: string) => ({
+        aiConsent: AI_CONSENT_VERSION,
+        categoryTree: CATEGORY_TREE,
+        today: "2026-04-02",
+        upload: { key, storageId },
+    });
     const stored = (storageId: Awaited<ReturnType<typeof upload>>) =>
         t.run(async (ctx) => (await ctx.storage.get(storageId)) !== null);
-    return { args, asUser, identity, requests, stored, t, upload };
+    const startKey = async () => {
+        const ticket = await asUser.mutation(api.pdfImport.startUpload, {});
+        if (ticket.status !== "ok" || ticket.key === null) {
+            throw new Error(`startUpload returned ${ticket.status}`);
+        }
+        return ticket.key;
+    };
+    return { args, asUser, identity, requests, startKey, stored, t, upload, uploadArgs };
 }
 
 describe("pdfImport.extract", () => {
@@ -467,6 +547,75 @@ describe("pdfImport.extract", () => {
     });
 });
 
+describe("pdfImport keyed uploads", () => {
+    it("reads a statement uploaded through the component and deletes the row and the bytes", async () => {
+        const { asUser, startKey, t, uploadArgs } = await setup();
+        stubAnswers(ROWS, []);
+        const key = await startKey();
+        const storageId = await storeInComponent(t, STATEMENT);
+
+        await expect(asUser.action(api.pdfImport.extract, uploadArgs(key, storageId))).resolves.toMatchObject({
+            rows: ROWS,
+            status: "ok",
+        });
+        await expect(componentObject(t, key)).resolves.toBeNull();
+        await expect(componentFileExists(t, storageId)).resolves.toBeFalsy();
+    });
+
+    it("refuses a key under another account's prefix and keeps the bytes", async () => {
+        const { asUser, t, uploadArgs } = await setup();
+        const stranger = await seedAuthUser(t);
+        const key = statementKeyFor(stranger.subject, crypto.randomUUID());
+        const storageId = await storeInComponent(t, STATEMENT);
+
+        await expect(asUser.action(api.pdfImport.extract, uploadArgs(key, storageId))).resolves.toMatchObject({
+            status: "invalid",
+        });
+        await expect(componentFileExists(t, storageId)).resolves.toBeTruthy();
+        await expect(componentObject(t, key)).resolves.toBeNull();
+    });
+
+    it("refuses a photo's storage id and keeps the photo whole", async () => {
+        const { asUser, identity, startKey, t, uploadArgs } = await setup();
+        const key = await startKey();
+        const storageId = await runInStorage(
+            t,
+            (ctx) => ctx.storage.store(new Blob([new Uint8Array(STATEMENT)], { type: PDF_CONTENT_TYPE })),
+            "storage"
+        );
+        const photoKey = photoKeyFor(identity.userId, "receipt.pdf");
+        await asUser.action(api.photos.confirmUpload, { key: photoKey, storageId });
+
+        await expect(asUser.action(api.pdfImport.extract, uploadArgs(key, storageId))).resolves.toMatchObject({
+            status: "invalid",
+        });
+        const photo = await runInStorage(
+            t,
+            (ctx) =>
+                ctx.db
+                    .query("objects")
+                    .withIndex("by_key", (q) => q.eq("key", photoKey))
+                    .first(),
+            "storage"
+        );
+        expect(photo).toMatchObject({ key: photoKey, storageId });
+        await expect(
+            runInStorage(t, async (ctx) => (await ctx.db.system.get("_storage", storageId)) !== null, "storage")
+        ).resolves.toBeTruthy();
+    });
+
+    it("refuses when neither or both of storageId and upload are given", async () => {
+        const { asUser, startKey, t, upload, uploadArgs } = await setup();
+        const base = { aiConsent: AI_CONSENT_VERSION, categoryTree: CATEGORY_TREE, today: "2026-04-02" };
+
+        await expect(asUser.action(api.pdfImport.extract, base)).resolves.toMatchObject({ status: "invalid" });
+
+        const key = await startKey();
+        const both = { ...uploadArgs(key, await storeInComponent(t)), storageId: await upload() };
+        await expect(asUser.action(api.pdfImport.extract, both)).resolves.toMatchObject({ status: "invalid" });
+    });
+});
+
 describe("pdfImport.requestUpload", () => {
     it("gives a Pro user a url and schedules the sweep for an abandoned upload", async () => {
         const { asUser, t } = await setup();
@@ -513,6 +662,15 @@ describe("pdfImport.sweepUploads", () => {
         await expect(stored(photo)).resolves.toBeTruthy();
     });
 
+    it("deletes a statement whose upload finished just after its window closed", async () => {
+        const { stored, t, upload } = await setup();
+        const statement = await upload();
+
+        await t.mutation(internal.pdfImport.sweepUploads, { from: 0, to: Date.now() - 60_000 });
+
+        await expect(stored(statement)).resolves.toBeFalsy();
+    });
+
     it("leaves a statement uploaded outside its window", async () => {
         const { stored, t, upload } = await setup();
         const statement = await upload();
@@ -520,5 +678,33 @@ describe("pdfImport.sweepUploads", () => {
         await t.mutation(internal.pdfImport.sweepUploads, { from: 0, to: 1000 });
 
         await expect(stored(statement)).resolves.toBeTruthy();
+    });
+
+    it("removes its keyed object and every unconfirmed upload in the window, and nothing else", async () => {
+        const { identity, t } = await setup();
+        const key = statementKeyFor(identity.subject, crypto.randomUUID());
+        const otherKey = statementKeyFor(identity.subject, crypto.randomUUID());
+        const earlier = await storeInComponent(t);
+        const earlierTime = await componentCreationTime(t, earlier);
+        const bound = await storeInComponent(t);
+        const unbound = await storeInComponent(t);
+        const untyped = await storeInComponent(t, STATEMENT, "application/octet-stream");
+        const inFlight = await storeInComponent(t);
+        await runInStorage(t, (ctx) => ctx.db.insert("objects", { key, storageId: bound }));
+        await runInStorage(t, (ctx) => ctx.db.insert("objects", { key: otherKey, storageId: inFlight }));
+
+        // Creation times only differ by a fraction of a millisecond, so the window starts just after the outside file.
+        await t.mutation(internal.pdfImport.sweepUploads, {
+            from: earlierTime + 0.0005,
+            key,
+            to: Date.now() + 60_000,
+        });
+
+        await expect(componentFileExists(t, bound)).resolves.toBeFalsy();
+        await expect(componentFileExists(t, unbound)).resolves.toBeFalsy();
+        await expect(componentFileExists(t, untyped)).resolves.toBeFalsy();
+        await expect(componentFileExists(t, inFlight)).resolves.toBeTruthy();
+        await expect(componentFileExists(t, earlier)).resolves.toBeTruthy();
+        await expect(componentObject(t, key)).resolves.toBeNull();
     });
 });
