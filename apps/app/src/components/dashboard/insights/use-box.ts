@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutMirror } from "@outlayr/shared/lifecycle";
+import { useRef, useState } from "react";
 
 interface Box {
     height: number;
@@ -14,8 +15,7 @@ const NO_BOX: Box = { height: 0, width: 0 };
 export function useBox<Element extends HTMLElement = HTMLDivElement>(before: Box = NO_BOX) {
     const ref = useRef<Element>(null);
     const [box, setBox] = useState(before);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the size of an element can only be read after layout.
-    useLayoutEffect(() => {
+    useLayoutMirror([], () => {
         const element = ref.current;
         if (!element) {
             return;
@@ -30,6 +30,6 @@ export function useBox<Element extends HTMLElement = HTMLDivElement>(before: Box
         const observer = new ResizeObserver(read);
         observer.observe(element);
         return () => observer.disconnect();
-    }, []);
+    });
     return [ref, box] as const;
 }

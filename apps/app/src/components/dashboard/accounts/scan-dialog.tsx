@@ -6,12 +6,13 @@ import type { ScanStatus } from "@outlayr/backend/confect/receiptScan.spec";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { accountLook } from "@outlayr/money/ledger-log";
+import { useEventListener, useOnUnmount } from "@outlayr/shared/lifecycle";
 import { Alert } from "panelui-web/alert";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Field } from "panelui-web/field";
 import { Select } from "panelui-web/select";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -226,30 +227,28 @@ export function ScanDialog({
         onSwitch({ accountId: account.localId, kind: "purchase", seed });
     };
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- a scan still running when the dialog goes must not reopen a flow.
-    useEffect(
-        () => () => {
-            latest.current += 1;
-        },
-        []
-    );
+    // A scan still running when the dialog goes must not reopen a flow.
+    useOnUnmount(() => {
+        latest.current += 1;
+    });
 
     const takesImage = phase.kind === "pick" || phase.kind === "failed";
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the clipboard is an external system.
-    useEffect(() => {
-        if (!takesImage) {
-            return;
-        }
-        const paste = (event: ClipboardEvent) => {
+    useEventListener(
+        (listener) => {
+            window.addEventListener("paste", listener);
+            return () => window.removeEventListener("paste", listener);
+        },
+        (event: ClipboardEvent) => {
+            if (!takesImage) {
+                return;
+            }
             const file = imageIn(event.clipboardData?.items ?? null);
             if (file) {
                 event.preventDefault();
                 void read(file);
             }
-        };
-        window.addEventListener("paste", paste);
-        return () => window.removeEventListener("paste", paste);
-    });
+        }
+    );
 
     const choose = () => input.current?.click();
     const back = () => {

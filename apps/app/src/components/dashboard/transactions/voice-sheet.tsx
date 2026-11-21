@@ -1,9 +1,10 @@
 import { decimalsFor } from "@outlayr/money/currency";
 import { accountLook } from "@outlayr/money/ledger-log";
+import { useEventListener, useOnUnmount, useWhen } from "@outlayr/shared/lifecycle";
 import { Link } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Sheet } from "panelui-web/sheet";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -177,25 +178,22 @@ function useVoiceTake(start: boolean) {
         })
     );
     const phase = useSyncExternalStore(take.subscribe, take.snapshot, take.snapshot);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the microphone and the relay socket are external systems.
-    useEffect(() => {
-        if (start) {
-            take.start();
-        }
-    }, [start, take]);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- a hidden tab keeps the mic open, so the take ends with what it heard.
-    useEffect(() => {
-        const onHidden = () => {
+    useWhen(start, () => {
+        take.start();
+    });
+    // A hidden tab keeps the mic open, so the take ends with what it heard.
+    useEventListener(
+        (listener) => {
+            document.addEventListener("visibilitychange", listener);
+            return () => document.removeEventListener("visibilitychange", listener);
+        },
+        () => {
             if (document.visibilityState === "hidden") {
                 take.finish();
             }
-        };
-        document.addEventListener("visibilitychange", onHidden);
-        return () => {
-            document.removeEventListener("visibilitychange", onHidden);
-            take.dispose();
-        };
-    }, [take]);
+        }
+    );
+    useOnUnmount(() => take.dispose());
     return { phase, take };
 }
 

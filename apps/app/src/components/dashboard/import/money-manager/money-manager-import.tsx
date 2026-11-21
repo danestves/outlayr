@@ -3,8 +3,9 @@ import { analyzeSnapshot } from "@outlayr/money/money-manager/analysis";
 import { defaultChoices } from "@outlayr/money/money-manager/defaults";
 import type { MmArchiveError, MmChoices } from "@outlayr/money/money-manager/types";
 import { capture } from "@outlayr/shared/analytics";
+import { useOnMount } from "@outlayr/shared/lifecycle";
 import { useMatch, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { usePresetLabel } from "@/components/dashboard/settings/categories/preset-label";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -67,17 +68,10 @@ export function MoneyManagerImport() {
         });
     };
 
-    const handed = useRef(false);
     // A File can't travel in a URL, so the file the Import home dropped is read once on mount.
-    // oxlint-disable-next-line outlayr/react-effect-budget
-    useEffect(() => {
-        if (handed.current) {
-            return;
-        }
-        handed.current = true;
+    useOnMount(() => {
         const file = takeHandOff()?.file;
         if (file) {
-            // oxlint-disable-next-line react/set-state-in-effect -- the file is already in hand, nothing to wait on
             void read(file);
         }
     });

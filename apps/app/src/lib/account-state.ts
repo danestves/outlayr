@@ -1,8 +1,8 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@outlayr/backend/convex/_generated/api";
+import { useMirror } from "@outlayr/shared/lifecycle";
 import { queryOptions, skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
 
 import { authClient } from "./auth-client";
 import { convexClient } from "./convex";
@@ -118,12 +118,11 @@ export const useProfile = () => useQuery(profileQuery).data;
 export function useProfileMirror() {
     const client = useQueryClient();
     const { data: session } = authClient.useSession();
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the better-auth session store is an external system.
-    useEffect(() => {
+    useMirror([client, session], () => {
         if (session) {
             client.setQueryData(profileQuery.queryKey, profileOf(session));
         }
-    }, [client, session]);
+    });
 }
 
 export function seedProfile(client: QueryClient, profile: Profile | undefined) {

@@ -7,9 +7,10 @@ import { decimalsFor } from "@outlayr/money/currency";
 import { accountLook } from "@outlayr/money/ledger-log";
 import { MARKET_RATE_TYPES } from "@outlayr/money/rates";
 import type { FeeSide } from "@outlayr/money/transfer-reconcile";
+import { useOnUnmount } from "@outlayr/shared/lifecycle";
 import { Button } from "panelui-web/button";
 import { Input } from "panelui-web/input";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -108,9 +109,8 @@ export function TransferEditor({
             }
         });
     };
-    const flush = useEffectEvent(() => save(values));
-    // oxlint-disable-next-line outlayr/react-effect-budget -- Esc and J K unmount this with no blur to save on.
-    useEffect(() => () => flush(), []);
+    // Esc and J K unmount this with no blur to save on.
+    useOnUnmount(() => save(values));
 
     const pick = (next: TransferValues) => {
         setValues(next);
