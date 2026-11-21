@@ -210,7 +210,7 @@ export function Paywall() {
                 </View>
             ) : null}
 
-            <LegalRow disabled={busy !== null} onRestore={restore} restoring={busy === "restore"} />
+            <LegalRow disabled={busy !== null} noCloud={noCloud} onRestore={restore} restoring={busy === "restore"} />
         </>
     );
     return (

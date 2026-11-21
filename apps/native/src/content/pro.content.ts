@@ -405,6 +405,14 @@ const pro = {
             pt: "Metrô",
             "pt-PT": "Metro",
         }),
+        "pro.legal.guest": t({
+            en: "No account needed. Your purchase is kept under an anonymous ID until you sign in.",
+            de: "Kein Konto nötig. Dein Kauf wird unter einer anonymen ID gespeichert, bis du dich anmeldest.",
+            es: "No necesitas cuenta. Tu compra queda guardada con un ID anónimo hasta que inicies sesión.",
+            fr: "Pas besoin de compte. Votre achat est conservé sous un identifiant anonyme jusqu'à ce que vous vous connectiez.",
+            pt: "Não precisa de conta. Sua compra fica salva com um ID anônimo até você iniciar sessão.",
+            "pt-PT": "Não precisa de conta. A sua compra fica guardada com um ID anónimo até iniciar sessão.",
+        }),
         "pro.legal.privacy": t({
             en: "Privacy",
             de: "Datenschutz",

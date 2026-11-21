@@ -228,7 +228,12 @@ export function PaywallRedesign() {
     const footer = (
         <>
             {flow.isPro ? proFooter : purchaseFooter}
-            <LegalRow disabled={flow.busy !== null} onRestore={flow.restore} restoring={flow.busy === "restore"} />
+            <LegalRow
+                disabled={flow.busy !== null}
+                noCloud={flow.noCloud}
+                onRestore={flow.restore}
+                restoring={flow.busy === "restore"}
+            />
         </>
     );
 
