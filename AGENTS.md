@@ -14,7 +14,7 @@ Most issues are automatically fixable. See `docs/internals/linting.md` for which
 
 ## Documentation
 
-`docs/` is markdown only. `docs/internals/` keeps decisions, constraints and traps the source does not explain; `docs/operations/` keeps runbooks. Most changes need neither. Design mocks, screenshots and implementation plans are review material: share them in the PR or a rendered preview, never commit them. List a new doc in `docs/README.md`.
+`docs/` is markdown only. `docs/internals/` keeps decisions, constraints and traps the source does not explain; `docs/operations/` keeps runbooks. Most changes need neither. Design mocks, screenshots and implementation plans are review material: share them in the PR or a rendered preview, never commit them. List a new doc in `docs/README.md`. A correction a lint rule, test or hook can enforce becomes one; prose here, in `docs/` or in agent memory holds only what no check can.
 
 Before filing a PR, merging, or deploying, run the `policy-notice` skill and report its verdict. It decides whether a change needs a policy email, in-app notice or new consent.
 
