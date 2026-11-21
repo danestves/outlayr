@@ -2,7 +2,7 @@ import { expo } from "@better-auth/expo";
 import { createClient } from "@convex-dev/better-auth";
 import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
-import { requireRunMutationCtx } from "@convex-dev/better-auth/utils";
+import { requireActionCtx, requireRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { symmetricDecrypt } from "better-auth/crypto";
@@ -19,9 +19,8 @@ import { components, internal } from "../../convex/_generated/api";
 import type { DataModel } from "../../convex/_generated/dataModel";
 import authConfig from "../../convex/auth.config";
 import { authSettings } from "./config";
-import { accountExistsEmail, codeEmail, EMAIL_CODE_TTL_SECONDS, EmailError, emailLanguage } from "./email";
+import { accountExistsEmail, codeEmail, EMAIL_CODE_TTL_SECONDS, emailLanguage } from "./email";
 import type { Email } from "./email";
-import { emailSetup } from "./emailSetup";
 import { AppleLifecycleError, appleCredentialLifecycle } from "./providerLifecycle";
 import { runEdge, runEdgeSync } from "./runEdge";
 import { sha256Hex } from "./sha256Hex";
@@ -122,15 +121,10 @@ function createAuth(ctx: GenericCtx<DataModel>) {
             ).pipe(Effect.ignoreCause({ log: true, message: `mail.${name} failed` }))
         );
 
-    const queueEmail = Effect.fn("BetterAuth.queueEmail")(function* queueEmail(to: string, email: Email) {
-        const setup = yield* emailSetup;
-        if (setup.provider === "unconfigured") {
-            return yield* new EmailError({ provider: setup.requested, reason: "unconfigured" });
-        }
-        yield* Effect.promise(() =>
-            requireRunMutationCtx(ctx).scheduler.runAfter(0, internal.mailDelivery.send, { ...email, to })
+    const deliverEmail = (to: string, email: Email) =>
+        Effect.promise(() => requireActionCtx(ctx).runAction(internal.mailDelivery.send, { ...email, to })).pipe(
+            Effect.asVoid
         );
-    });
 
     return betterAuth({
         account: {
@@ -168,7 +162,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         emailAndPassword: {
             enabled: true,
             onExistingUserSignUp: ({ user }, request) =>
-                runEdge(queueEmail(user.email, accountExistsEmail(emailLanguage(request?.headers)))),
+                runEdge(deliverEmail(user.email, accountExistsEmail(emailLanguage(request?.headers)))),
             requireEmailVerification: true,
             revokeSessionsOnPasswordReset: true,
         },
@@ -256,7 +250,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                                 return;
                             }
                             const language = emailLanguage(endpoint?.request?.headers ?? endpoint?.headers);
-                            yield* queueEmail(email, codeEmail(otp, purpose, language));
+                            yield* deliverEmail(email, codeEmail(otp, purpose, language));
                         })
                     ),
                 storeOTP: "hashed",

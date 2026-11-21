@@ -107,7 +107,7 @@ export function accountExistsEmail(language: Language): Email {
 export class EmailError extends Schema.TaggedError<EmailError>()("EmailError", {
     cause: Schema.optional(Schema.Defect()),
     provider: EmailProviderName,
-    reason: Schema.Literals(["unconfigured", "transport", "status"]),
+    reason: Schema.Literals(["unconfigured", "transport", "status", "rejected"]),
     status: Schema.optional(Schema.Number),
 }) {
     override get message(): string {
@@ -119,6 +119,9 @@ export class EmailError extends Schema.TaggedError<EmailError>()("EmailError", {
         }
         if (this.reason === "status") {
             return `${this.provider} refused the email with ${this.status ?? "an error"}`;
+        }
+        if (this.reason === "rejected") {
+            return `${this.provider} rejected the address`;
         }
         return `${this.provider} email request failed`;
     }

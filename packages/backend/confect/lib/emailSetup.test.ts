@@ -34,4 +34,30 @@ describe("emailSetup", () => {
 
         await expect(runEdge(emailSetup)).resolves.toStrictEqual({ provider: "unconfigured", requested: "cloudflare" });
     });
+
+    it("stays unconfigured when a provider is only half set", async () => {
+        vi.stubEnv("CLOUDFLARE_EMAIL_TOKEN", "");
+
+        await expect(runEdge(emailSetup)).resolves.toStrictEqual({ provider: "unconfigured", requested: "cloudflare" });
+
+        vi.stubEnv("CLOUDFLARE_ACCOUNT_ID", "");
+        vi.stubEnv("SMTP_HOST", "smtp.example.com");
+        vi.stubEnv("SMTP_USERNAME", "user");
+
+        await expect(runEdge(emailSetup)).resolves.toStrictEqual({ provider: "unconfigured", requested: "smtp" });
+    });
+
+    it("ignores an invalid SMTP_PORT when another provider is ready", async () => {
+        vi.stubEnv("SMTP_PORT", "abc");
+
+        await expect(runEdge(emailSetup)).resolves.toMatchObject({ provider: "cloudflare" });
+    });
+
+    it("stays unconfigured when SMTP_PORT is out of range", async () => {
+        vi.stubEnv("EMAIL_PROVIDER", "smtp");
+        vi.stubEnv("SMTP_HOST", "smtp.example.com");
+        vi.stubEnv("SMTP_PORT", "0");
+
+        await expect(runEdge(emailSetup)).resolves.toStrictEqual({ provider: "unconfigured", requested: "smtp" });
+    });
 });

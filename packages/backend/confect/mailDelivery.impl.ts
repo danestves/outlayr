@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import * as ConvexConfigProvider from "@confect/server/ConvexConfigProvider";
 import { policyChangeEmail } from "@outlayr/email/policy-change";
 import { proEmail } from "@outlayr/email/pro";
 import { trialEndingEmail } from "@outlayr/email/trial-ending";
@@ -33,39 +34,57 @@ const send = FunctionImpl.make(
     databaseSchema,
     spec,
     "send",
-    Effect.fn("Mail.send")(function* send({ to, ...email }) {
-        return yield* sendEmail(to, email).pipe(Effect.as(null), Effect.catchTags({ EmailError: unsent }));
-    }, Effect.orDie)
+    Effect.fn("Mail.send")(
+        function* send({ to, ...email }) {
+            yield* sendEmail(to, email);
+            return null;
+        },
+        Effect.provide(ConvexConfigProvider.layer),
+        Effect.orDie
+    )
 );
 
 const sendWelcome = FunctionImpl.make(
     databaseSchema,
     spec,
     "sendWelcome",
-    Effect.fn("Mail.sendWelcome")(function* sendWelcome({ userId }) {
-        const { runQuery } = yield* QueryRunner;
-        const recipient = yield* runQuery(refs.internal.mail.welcomeRecipient, { userId });
-        if (recipient === null) {
-            return null;
-        }
-        const email = yield* Effect.promise(() => welcomeEmail(recipient));
-        return yield* sendEmail(recipient.email, email).pipe(Effect.as(null), Effect.catchTags({ EmailError: unsent }));
-    }, Effect.orDie)
+    Effect.fn("Mail.sendWelcome")(
+        function* sendWelcome({ userId }) {
+            const { runQuery } = yield* QueryRunner;
+            const recipient = yield* runQuery(refs.internal.mail.welcomeRecipient, { userId });
+            if (recipient === null) {
+                return null;
+            }
+            const email = yield* Effect.promise(() => welcomeEmail(recipient));
+            return yield* sendEmail(recipient.email, email).pipe(
+                Effect.as(null),
+                Effect.catchTags({ EmailError: unsent })
+            );
+        },
+        Effect.provide(ConvexConfigProvider.layer),
+        Effect.orDie
+    )
 );
 
 const sendPro = FunctionImpl.make(
     databaseSchema,
     spec,
     "sendPro",
-    Effect.fn("Mail.sendPro")(function* sendPro({ userId, ...entitlement }) {
-        const { runQuery } = yield* QueryRunner;
-        const to = yield* runQuery(refs.internal.mail.recipient, { userId });
-        if (to === null) {
-            return null;
-        }
-        const email = yield* Effect.promise(() => proEmail({ ...entitlement, email: to.email, language: to.language }));
-        return yield* sendEmail(to.email, email).pipe(Effect.as(null), Effect.catchTags({ EmailError: unsent }));
-    }, Effect.orDie)
+    Effect.fn("Mail.sendPro")(
+        function* sendPro({ userId, ...entitlement }) {
+            const { runQuery } = yield* QueryRunner;
+            const to = yield* runQuery(refs.internal.mail.recipient, { userId });
+            if (to === null) {
+                return null;
+            }
+            const email = yield* Effect.promise(() =>
+                proEmail({ ...entitlement, email: to.email, language: to.language })
+            );
+            return yield* sendEmail(to.email, email).pipe(Effect.as(null), Effect.catchTags({ EmailError: unsent }));
+        },
+        Effect.provide(ConvexConfigProvider.layer),
+        Effect.orDie
+    )
 );
 
 const sendTrialReminder = FunctionImpl.make(
@@ -107,7 +126,7 @@ const sendTrialReminder = FunctionImpl.make(
             );
             return yield* sendEmail(to.email, email).pipe(Effect.as(null), Effect.catchTags({ EmailError: unsent }));
         },
-        Effect.provide(outboundHttp),
+        Effect.provide([outboundHttp, ConvexConfigProvider.layer]),
         Effect.orDie
     )
 );
@@ -116,53 +135,57 @@ const notifyPolicy = FunctionImpl.make(
     databaseSchema,
     spec,
     "notifyPolicy",
-    Effect.fn("Mail.notifyPolicy")(function* notifyPolicy({ cursor }) {
-        const latestMs = Math.max(...POLICY_NOTICES.map((notice) => notice.effectiveAtMs));
-        const batch = POLICY_NOTICES.filter((notice) => notice.effectiveAtMs === latestMs);
-        const setup = yield* emailSetup;
-        if (setup.provider === "log" || setup.provider === "unconfigured") {
-            const provider = setup.provider === "log" ? setup.provider : setup.requested;
-            return yield* new EmailError({ provider, reason: "unconfigured" });
-        }
-        const { runQuery } = yield* QueryRunner;
-        const { runMutation } = yield* MutationRunner;
-        const page = yield* runQuery(refs.internal.mail.noticeRecipients, {
-            cursor: cursor ?? null,
-            keys: batch.map(noticeKey),
-        });
-
-        const delivered = yield* Effect.all(
-            page.recipients.map(({ email, language, pending, userId }) =>
-                Effect.promise(() =>
-                    policyChangeEmail({
-                        documents: batch
-                            .filter((notice) => pending.includes(noticeKey(notice)))
-                            .map(({ changes, document }) => ({ changes: changes[language], document })),
-                        effectiveAtMs: latestMs,
-                        email,
-                        language,
-                    })
-                ).pipe(
-                    Effect.flatMap((message) => sendEmail(email, { ...message, replyTo: POLICY_REPLY_TO })),
-                    Effect.as(Option.some({ keys: pending, language, userId })),
-                    Effect.catchTags({ EmailError: (error) => unsent(error).pipe(Effect.as(Option.none())) })
-                )
-            ),
-            { concurrency: NOTICE_CONCURRENCY }
-        );
-        const deliveries = delivered.filter(Option.isSome).map(({ value }) => value);
-        if (deliveries.length > 0) {
-            yield* runMutation(refs.internal.mail.recordNotice, { deliveries });
-        }
-
-        if (!page.isDone) {
-            const scheduler = yield* Scheduler;
-            yield* scheduler.runAfter(Duration.zero, refs.internal.mailDelivery.notifyPolicy, {
-                cursor: page.continueCursor,
+    Effect.fn("Mail.notifyPolicy")(
+        function* notifyPolicy({ cursor }) {
+            const latestMs = Math.max(...POLICY_NOTICES.map((notice) => notice.effectiveAtMs));
+            const batch = POLICY_NOTICES.filter((notice) => notice.effectiveAtMs === latestMs);
+            const setup = yield* emailSetup;
+            if (setup.provider === "log" || setup.provider === "unconfigured") {
+                const provider = setup.provider === "log" ? setup.provider : setup.requested;
+                return yield* new EmailError({ provider, reason: "unconfigured" });
+            }
+            const { runQuery } = yield* QueryRunner;
+            const { runMutation } = yield* MutationRunner;
+            const page = yield* runQuery(refs.internal.mail.noticeRecipients, {
+                cursor: cursor ?? null,
+                keys: batch.map(noticeKey),
             });
-        }
-        return { failed: delivered.length - deliveries.length, sent: deliveries.length };
-    }, Effect.orDie)
+
+            const delivered = yield* Effect.all(
+                page.recipients.map(({ email, language, pending, userId }) =>
+                    Effect.promise(() =>
+                        policyChangeEmail({
+                            documents: batch
+                                .filter((notice) => pending.includes(noticeKey(notice)))
+                                .map(({ changes, document }) => ({ changes: changes[language], document })),
+                            effectiveAtMs: latestMs,
+                            email,
+                            language,
+                        })
+                    ).pipe(
+                        Effect.flatMap((message) => sendEmail(email, { ...message, replyTo: POLICY_REPLY_TO })),
+                        Effect.as(Option.some({ keys: pending, language, userId })),
+                        Effect.catchTags({ EmailError: (error) => unsent(error).pipe(Effect.as(Option.none())) })
+                    )
+                ),
+                { concurrency: NOTICE_CONCURRENCY }
+            );
+            const deliveries = delivered.filter(Option.isSome).map(({ value }) => value);
+            if (deliveries.length > 0) {
+                yield* runMutation(refs.internal.mail.recordNotice, { deliveries });
+            }
+
+            if (!page.isDone) {
+                const scheduler = yield* Scheduler;
+                yield* scheduler.runAfter(Duration.zero, refs.internal.mailDelivery.notifyPolicy, {
+                    cursor: page.continueCursor,
+                });
+            }
+            return { failed: delivered.length - deliveries.length, sent: deliveries.length };
+        },
+        Effect.provide(ConvexConfigProvider.layer),
+        Effect.orDie
+    )
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(

@@ -37,10 +37,12 @@ export type EmailSetup =
 export const REQUIRED_VARIABLES = {
     cloudflare: "CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_EMAIL_TOKEN and EMAIL_FROM",
     resend: "RESEND_API_KEY and EMAIL_FROM",
-    smtp: "SMTP_HOST and EMAIL_FROM",
+    smtp: "SMTP_HOST and EMAIL_FROM; SMTP_PORT must be valid and SMTP_USERNAME with SMTP_PASSWORD, both or neither",
 } satisfies Record<SendingProvider, string>;
 
 const DEFAULT_SMTP_PORT = 587;
+const MIN_SMTP_PORT = 1;
+const MAX_SMTP_PORT = 65_535;
 
 const setting = (name: string) =>
     Config.String(name).pipe(Config.option, Config.map(Option.filter((value) => value.trim() !== "")));
@@ -52,32 +54,72 @@ const credentials = Config.all({
     cloudflare: Config.all({
         accountId: setting("CLOUDFLARE_ACCOUNT_ID"),
         token: secret("CLOUDFLARE_EMAIL_TOKEN"),
-    }).pipe(Config.map(Option.all)),
-    resend: Config.all({ apiKey: secret("RESEND_API_KEY") }).pipe(Config.map(Option.all)),
+    }),
+    resend: Config.all({ apiKey: secret("RESEND_API_KEY") }),
     smtp: Config.all({
-        auth: Config.all({ password: secret("SMTP_PASSWORD"), username: setting("SMTP_USERNAME") }).pipe(
-            Config.map(Option.all)
-        ),
         host: setting("SMTP_HOST"),
-        port: Config.Int("SMTP_PORT").pipe(Config.withDefault(DEFAULT_SMTP_PORT)),
-    }).pipe(Config.map(({ host, ...rest }) => host.pipe(Option.map((value) => ({ ...rest, host: value }))))),
+        password: secret("SMTP_PASSWORD"),
+        port: setting("SMTP_PORT"),
+        username: setting("SMTP_USERNAME"),
+    }),
 });
 
 type Credentials = typeof credentials extends Config.Config<infer A> ? A : never;
 
 const SENDING_ORDER = ["cloudflare", "resend", "smtp"] as const satisfies readonly SendingProvider[];
 
-const sendingSetups = (found: Credentials, from: string): Record<SendingProvider, Option.Option<SendingSetup>> => ({
-    cloudflare: found.cloudflare.pipe(Option.map((value) => ({ ...value, from, provider: "cloudflare" as const }))),
-    resend: found.resend.pipe(Option.map((value) => ({ ...value, from, provider: "resend" as const }))),
-    smtp: found.smtp.pipe(Option.map((value) => ({ ...value, from, provider: "smtp" as const }))),
-});
+const anySet = (...values: readonly Option.Option<unknown>[]): boolean => values.some((value) => Option.isSome(value));
 
-function sendingSetup(requested: SendingProvider, found: Credentials, from: Option.Option<string>): EmailSetup {
-    return from.pipe(
-        Option.flatMap((address) => sendingSetups(found, address)[requested]),
-        Option.getOrElse((): EmailSetup => ({ provider: "unconfigured", requested }))
+const smtpPort = (value: Option.Option<string>): Option.Option<number> => {
+    if (Option.isNone(value)) {
+        return Option.some(DEFAULT_SMTP_PORT);
+    }
+    const port = Number(value.value);
+    return Number.isInteger(port) && port >= MIN_SMTP_PORT && port <= MAX_SMTP_PORT ? Option.some(port) : Option.none();
+};
+
+const smtpAuth = (
+    username: Option.Option<string>,
+    password: Option.Option<Redacted.Redacted>
+): Option.Option<Option.Option<SmtpAuth>> => {
+    if (Option.isSome(username) && Option.isSome(password)) {
+        return Option.some(Option.some({ password: password.value, username: username.value }));
+    }
+    return Option.isNone(username) && Option.isNone(password) ? Option.some(Option.none()) : Option.none();
+};
+
+function cloudflareSetup(found: Credentials["cloudflare"], from: Option.Option<string>): Option.Option<SendingSetup> {
+    return Option.all({ accountId: found.accountId, token: found.token }).pipe(
+        Option.flatMap(({ accountId, token }) =>
+            from.pipe(
+                Option.map((address): SendingSetup => ({ accountId, from: address, provider: "cloudflare", token }))
+            )
+        )
     );
+}
+
+function resendSetup(found: Credentials["resend"], from: Option.Option<string>): Option.Option<SendingSetup> {
+    return found.apiKey.pipe(
+        Option.flatMap((apiKey) =>
+            from.pipe(Option.map((address): SendingSetup => ({ apiKey, from: address, provider: "resend" })))
+        )
+    );
+}
+
+function smtpSetup(found: Credentials["smtp"], from: Option.Option<string>): Option.Option<SendingSetup> {
+    return Option.all({
+        auth: smtpAuth(found.username, found.password),
+        host: found.host,
+        port: smtpPort(found.port),
+    }).pipe(
+        Option.flatMap(({ auth, host, port }) =>
+            from.pipe(Option.map((address): SendingSetup => ({ auth, from: address, host, port, provider: "smtp" })))
+        )
+    );
+}
+
+function unconfigured(requested: SendingProvider): EmailSetup {
+    return { provider: "unconfigured", requested };
 }
 
 export const emailSetup: Config.Config<EmailSetup> = Config.all({
@@ -86,10 +128,25 @@ export const emailSetup: Config.Config<EmailSetup> = Config.all({
     requested: Config.schema(EmailProviderName, "EMAIL_PROVIDER").pipe(Config.option),
 }).pipe(
     Config.map(({ found, from, requested }): EmailSetup => {
+        const setups: Record<SendingProvider, Option.Option<SendingSetup>> = {
+            cloudflare: cloudflareSetup(found.cloudflare, from),
+            resend: resendSetup(found.resend, from),
+            smtp: smtpSetup(found.smtp, from),
+        };
+        const touched: Record<SendingProvider, boolean> = {
+            cloudflare: anySet(found.cloudflare.accountId, found.cloudflare.token),
+            resend: anySet(found.resend.apiKey),
+            smtp: anySet(found.smtp.host, found.smtp.password, found.smtp.port, found.smtp.username),
+        };
         if (Option.isSome(requested)) {
-            return requested.value === "log" ? { provider: "log" } : sendingSetup(requested.value, found, from);
+            const provider = requested.value;
+            return provider === "log"
+                ? { provider: "log" }
+                : Option.getOrElse(setups[provider], () => unconfigured(provider));
         }
-        const detected = SENDING_ORDER.find((provider) => Option.isSome<unknown>(found[provider]));
-        return detected === undefined ? { provider: "log" } : sendingSetup(detected, found, from);
+        const detected = SENDING_ORDER.find((provider) => touched[provider]);
+        return detected === undefined
+            ? { provider: "log" }
+            : Option.getOrElse(setups[detected], () => unconfigured(detected));
     })
 );

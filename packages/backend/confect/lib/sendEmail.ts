@@ -57,7 +57,7 @@ export const sendEmail = Effect.fn("Email.send")(function* sendEmail(
     }
     const { provider } = setup;
     const client = createEmailClient({ adapters: [adapterFor(setup)], telemetry: false });
-    yield* Effect.tryPromise({
+    const result = yield* Effect.tryPromise({
         catch: (cause) => {
             const status = refusedStatus(cause);
             return status === undefined
@@ -78,6 +78,11 @@ export const sendEmail = Effect.fn("Email.send")(function* sendEmail(
             ),
     }).pipe(
         Effect.timeout(SEND_TIMEOUT),
-        Effect.catchTags({ TimeoutError: (cause) => new EmailError({ cause, provider, reason: "transport" }) })
+        Effect.catchTags({
+            TimeoutError: (cause) => Effect.fail(new EmailError({ cause, provider, reason: "transport" })),
+        })
     );
+    if (result.rejected !== undefined && result.rejected.length > 0) {
+        return yield* new EmailError({ provider, reason: "rejected" });
+    }
 });

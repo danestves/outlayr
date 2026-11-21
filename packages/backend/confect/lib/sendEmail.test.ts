@@ -47,8 +47,22 @@ describe(sendEmail, () => {
         );
     });
 
+    it("fails when the provider permanently rejects the address", async () => {
+        stubFetch(() =>
+            Response.json({
+                result: { delivered: [], permanent_bounces: ["owner@example.com"] },
+                success: true,
+            })
+        );
+
+        await expect(runEdge(sendEmail("owner@example.com", { subject: "Hi", text: "Body" }))).rejects.toThrow(
+            "cloudflare rejected the address"
+        );
+    });
+
     it("writes the message to the log without a request when no provider is set", async () => {
         vi.stubEnv("CLOUDFLARE_ACCOUNT_ID", "");
+        vi.stubEnv("CLOUDFLARE_EMAIL_TOKEN", "");
         const requests = stubFetch(() => Response.json({}));
         const log = vi.spyOn(console, "log").mockReturnValue(undefined);
 

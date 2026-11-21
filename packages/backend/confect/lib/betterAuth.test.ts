@@ -51,6 +51,7 @@ const resolveApple = async (vars: Record<string, string>) => {
 };
 
 afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
 });
@@ -230,7 +231,6 @@ describe("email sign-in", () => {
             code: "EMAIL_NOT_VERIFIED",
             status: 403,
         });
-        await vi.waitFor(() => expect(sent).toHaveLength(2));
         const verified = await post("/email-otp/verify-email", { email: credentials.email, otp: codeIn(sent.at(-1)) });
 
         expect(sent[0]).toMatchObject({
@@ -243,6 +243,26 @@ describe("email sign-in", () => {
         );
     });
 
+    it("signs up with no email provider by logging the code", async () => {
+        vi.stubEnv("CLOUDFLARE_ACCOUNT_ID", "");
+        vi.stubEnv("CLOUDFLARE_EMAIL_TOKEN", "");
+        vi.stubEnv("EMAIL_FROM", "");
+        const network = vi.fn();
+        vi.stubGlobal("fetch", network);
+        const log = vi.spyOn(console, "log").mockReturnValue(undefined);
+        const post = emailAuth();
+
+        await expect(post("/sign-up/email", credentials)).resolves.toMatchObject({ status: 200, token: null });
+        const logged = log.mock.calls.map(([line]) => String(line)).find((line) => line.includes("Your Outlayr code"));
+        const verified = await post("/email-otp/verify-email", {
+            email: credentials.email,
+            otp: logged?.match(/\d{6}/)?.[0] ?? "",
+        });
+
+        expect(verified).toMatchObject({ status: 200, token: expect.any(String) });
+        expect(network).not.toHaveBeenCalled();
+    });
+
     it("answers a taken address like a new one and tells its owner instead", async () => {
         const sent = stubEmail();
         const post = emailAuth();
@@ -251,7 +271,7 @@ describe("email sign-in", () => {
         const again = await post("/sign-up/email", { ...credentials, password: "another password" }, "es-419");
 
         expect(again).toMatchObject({ status: 200, token: null });
-        await vi.waitFor(() => expect(sent.at(-1)?.subject).toBe("Ya tienes una cuenta de Outlayr"));
+        expect(sent.at(-1)?.subject).toBe("Ya tienes una cuenta de Outlayr");
     });
 
     it("stops trying passwords for one address after ten attempts", async () => {
