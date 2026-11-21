@@ -241,11 +241,11 @@ const brand = {
             }),
             price: insert(
                 t({
-                    en: "Free plan, no ads on any plan. Outlayr Pro is {{monthly}} a month, {{yearly}} a year with 7 days free, or {{once}} once. Prices vary by country.",
-                    de: "Gratis-Plan, in keinem Plan Werbung. Outlayr Pro kostet {{monthly}} im Monat, {{yearly}} im Jahr mit 7 Tagen gratis oder {{once}} einmalig. Die Preise variieren je nach Land.",
-                    es: "Plan gratis, sin anuncios en ningún plan. Outlayr Pro cuesta {{monthly}} al mes, {{yearly}} al año con 7 días gratis o {{once}} una sola vez. Los precios varían según el país.",
-                    pt: "Plano grátis, sem anúncios em nenhum plano. O Outlayr Pro custa {{monthly}} por mês, {{yearly}} por ano com 7 dias grátis ou {{once}} uma única vez. Os preços variam por país.",
-                    fr: "Offre gratuite, sans publicité sur aucune offre. Outlayr Pro coûte {{monthly}} par mois, {{yearly}} par an avec 7 jours offerts, ou {{once}} en une seule fois. Les prix varient selon les pays.",
+                    en: "Free plan, no ads on any plan. Outlayr Pro is {{monthly}} a month, {{yearly}} a year with 3 days free, or {{once}} once. Prices vary by country.",
+                    de: "Gratis-Plan, in keinem Plan Werbung. Outlayr Pro kostet {{monthly}} im Monat, {{yearly}} im Jahr mit 3 Tagen gratis oder {{once}} einmalig. Die Preise variieren je nach Land.",
+                    es: "Plan gratis, sin anuncios en ningún plan. Outlayr Pro cuesta {{monthly}} al mes, {{yearly}} al año con 3 días gratis o {{once}} una sola vez. Los precios varían según el país.",
+                    pt: "Plano grátis, sem anúncios em nenhum plano. O Outlayr Pro custa {{monthly}} por mês, {{yearly}} por ano com 3 dias grátis ou {{once}} uma única vez. Os preços variam por país.",
+                    fr: "Offre gratuite, sans publicité sur aucune offre. Outlayr Pro coûte {{monthly}} par mois, {{yearly}} par an avec 3 jours offerts, ou {{once}} en une seule fois. Les prix varient selon les pays.",
                 })
             ),
             title: t({

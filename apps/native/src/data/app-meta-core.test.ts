@@ -55,6 +55,7 @@ const STORED_TODAY = {
     csvImport: FILE_IMPORT,
     currency: ["EUR"],
     currencyChosen: ["true"],
+    exitOfferSeen: BOOL,
     notificationDebts: [
         JSON.stringify([
             {
@@ -151,6 +152,7 @@ const STORED_TODAY = {
     numberEntryType: ["1"],
     onboardingComplete: ["true"],
     onboardingGateMigrated: ["true"],
+    onboardingWaitingAccounts: ['[{"currency":"USD","domain":"zellepay.com","id":"zelle","label":"Zelle"}]'],
     pdfImport: FILE_IMPORT,
     pendingWriteLedger: [
         JSON.stringify([

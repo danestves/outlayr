@@ -104,9 +104,9 @@ export const logOutUser = Effect.fn("RevenueCat.logOutUser")(function* logOutUse
     return hasProEntitlement(yield* sdkCall(() => Purchases.logOut()));
 });
 
-export const getPackages = Effect.fn("RevenueCat.getPackages")(function* getPackages() {
-    const { current } = yield* sdkCall(() => Purchases.getOfferings());
-    return current?.availablePackages ?? [];
+export const getPackages = Effect.fn("RevenueCat.getPackages")(function* getPackages(offering?: string) {
+    const { all, current } = yield* sdkCall(() => Purchases.getOfferings());
+    return (offering === undefined ? current : all[offering])?.availablePackages ?? [];
 });
 
 export const eligibleForTrial = Effect.fn("RevenueCat.eligibleForTrial")(function* eligibleForTrial(

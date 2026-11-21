@@ -6,13 +6,15 @@ import { Button } from "panelui-native/components/button";
 import { Pressable, ScrollView, View } from "react-native";
 
 import { MonoLabel } from "@/components/mono-label";
-import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useMeta } from "@/data/app-meta";
 import { useLedgerStats } from "@/data/ledger-stats";
 import type { LedgerStats } from "@/data/ledger-stats";
 import { useNow } from "@/data/use-now";
 import { formatChargeDate } from "@/domain/dates";
+import type { PaywallTrigger } from "@/domain/paywall-trigger";
+import type { Plan } from "@/domain/pro-plans";
 import type { ProStatus } from "@/domain/pro-status";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -24,7 +26,9 @@ import { useColors } from "@/theme/use-colors";
 
 import { useAccountLimit } from "./account-top";
 import type { AccountTrigger } from "./account-top";
+import { ExitOfferSheet, useExitOffer } from "./exit-offer";
 import { FeatureRows } from "./feature-rows";
+import { KeepsLine } from "./keeps-line";
 import { LegalRow } from "./legal-row";
 import { MonthAhead } from "./month-ahead";
 import { daysLeftInMonth } from "./month-grid";
@@ -37,7 +41,9 @@ import { ProBand } from "./pro-band";
 import { PurchaseFailure, NoCloudNotice, UnconfirmedNotice } from "./sale-notices";
 import { StoreTerms } from "./store-terms";
 import type { TopBlock } from "./top-block";
+import { TrialTimeline } from "./trial-timeline";
 import { usePaywallFlow } from "./use-paywall-flow";
+import type { LeaveOutcome } from "./use-paywall-flow";
 
 function statsLine(stats: LedgerStats, autologged: number, t: TranslateFn): string | null {
     if (stats.entries === 0) {
@@ -66,11 +72,13 @@ function PitchBand({
     block,
     daysLeft,
     stats,
+    waitingAccounts,
 }: {
     autolog: { cap: number; total: number; used: number };
     block: TopBlock;
     daysLeft: number;
     stats: LedgerStats;
+    waitingAccounts: number;
 }) {
     const t = useTranslation();
     const band: BandCopy = {
@@ -88,6 +96,18 @@ function PitchBand({
         }
         case "first_entry": {
             return <ProBand {...band} subtitle={t("pro.top.firstEntry")} />;
+        }
+        case "onboarding": {
+            return (
+                <ProBand
+                    {...band}
+                    subtitle={
+                        waitingAccounts > 0
+                            ? t("pro.top.accountsWaiting", { count: waitingAccounts })
+                            : t("pro.top.generic")
+                    }
+                />
+            );
         }
         default: {
             return <ProBand {...band} subtitle={t("pro.subtitle")} />;
@@ -125,23 +145,31 @@ function ProStatusBand({ confirmed, status }: { confirmed: boolean; status: ProS
     );
 }
 
-function KeepsLine() {
-    const t = useTranslation();
-    const colors = useColors();
-    return (
-        <View className="flex-row items-center justify-center gap-2 pb-3">
-            <HugeiconsIcon color={colors.income} icon={Tick02Icon} size={16} />
-            <Text className="text-foreground text-body shrink">{t("pro.band.keeps")}</Text>
-        </View>
-    );
+function PitchHero({ monthLabel, now, trial }: { monthLabel: string | null; now: number; trial: Plan | null }) {
+    if (monthLabel !== null) {
+        return <MonthAhead label={monthLabel} now={now} />;
+    }
+    if (trial?.trialDays != null) {
+        return <TrialTimeline price={trial.priceString} trialDays={trial.trialDays} />;
+    }
+    return <PaywallHero />;
 }
 
-export function PaywallRedesign() {
+export function PaywallRedesign({
+    onLeave,
+    trigger,
+}: {
+    onLeave?: (outcome: LeaveOutcome) => void;
+    trigger?: typeof PaywallTrigger.Type;
+}) {
     const t = useTranslation();
+    const db = useDatabase();
     const largeText = useAccessibilityTextSize();
-    const flow = usePaywallFlow("redesign");
+    const flow = usePaywallFlow("redesign", { onLeave, trigger });
+    const exit = useExitOffer(flow);
     const now = useNow();
-    const stats = useLedgerStats(useDatabase(), now);
+    const stats = useLedgerStats(db, now);
+    const waitingAccounts = useMeta(db, "onboardingWaitingAccounts").length;
     const { manageUrl, status } = useProTerm();
     const then = thenLabel(flow.plan, t);
     const daysLeft = daysLeftInMonth(new Date(now));
@@ -186,8 +214,13 @@ export function PaywallRedesign() {
                     {then === null ? null : (
                         <MonoLabel className="pt-2 text-center">{`${then} · ${t("pro.cta.cancelAnytime")}`}</MonoLabel>
                     )}
-                    {flow.block === "autolog" || flow.block === "first_entry" ? (
-                        <Pressable accessibilityRole="button" className="items-center pt-4" onPress={flow.leave}>
+                    {flow.block === "autolog" || flow.block === "first_entry" || flow.block === "onboarding" ? (
+                        <Pressable
+                            accessibilityRole="button"
+                            className="items-center pt-4"
+                            disabled={flow.busy !== null}
+                            onPress={exit.requestLeave}
+                        >
                             <MonoLabel className="text-foreground">{t("pro.cta.notNow")}</MonoLabel>
                         </Pressable>
                     ) : null}
@@ -222,6 +255,17 @@ export function PaywallRedesign() {
                 </View>
             )}
             {flow.failure === null ? null : <PurchaseFailure message={t(flow.failure)} />}
+            {onLeave === undefined ? null : (
+                <View className="px-5 pt-5">
+                    <PaywallCta
+                        busy={false}
+                        busyLabel=""
+                        disabled={false}
+                        label={t("common.continue")}
+                        onPress={() => flow.leave("pro")}
+                    />
+                </View>
+            )}
         </>
     );
 
@@ -239,33 +283,59 @@ export function PaywallRedesign() {
 
     return (
         <View className="bg-background flex-1">
-            <View className="bg-pro absolute inset-x-0 top-0 h-1/2" />
-            <ScrollView
+            <View
+                accessibilityElementsHidden={exit.offer !== null}
                 className="flex-1"
-                contentContainerClassName={largeText ? "grow pb-4" : "grow"}
-                contentInsetAdjustmentBehavior="automatic"
+                importantForAccessibility={exit.offer === null ? "auto" : "no-hide-descendants"}
             >
-                {flow.isPro ? (
-                    <ProStatusBand confirmed={flow.isMirrored} status={status} />
-                ) : (
-                    <PitchBand autolog={flow.autolog} block={flow.block} daysLeft={daysLeft} stats={stats} />
-                )}
-                <View className="bg-background grow px-5 pb-4">
-                    {flow.isPro ? <FeatureRows /> : null}
-                    {!flow.isPro && showMonth ? <MonthAhead label={monthLabel} now={now} /> : null}
-                    {!flow.isPro && !showMonth ? <PaywallHero /> : null}
-                </View>
-                {largeText ? <View className="bg-background">{footer}</View> : null}
-            </ScrollView>
-
-            {largeText ? null : (
+                <View className="bg-pro absolute inset-x-0 top-0 h-1/2" />
                 <ScrollView
-                    bounces={false}
-                    className="bg-background shrink grow-0"
-                    contentContainerClassName="pb-safe-offset-4"
+                    className="flex-1"
+                    contentContainerClassName={largeText ? "grow pb-4" : "grow"}
+                    contentInsetAdjustmentBehavior="automatic"
                 >
-                    {footer}
+                    {flow.isPro ? (
+                        <ProStatusBand confirmed={flow.isMirrored} status={status} />
+                    ) : (
+                        <PitchBand
+                            autolog={flow.autolog}
+                            block={flow.block}
+                            daysLeft={daysLeft}
+                            stats={stats}
+                            waitingAccounts={waitingAccounts}
+                        />
+                    )}
+                    <View className="bg-background grow px-5 pb-4">
+                        {flow.isPro ? <FeatureRows /> : null}
+                        {flow.isPro ? null : (
+                            <PitchHero
+                                monthLabel={showMonth ? monthLabel : null}
+                                now={now}
+                                trial={flow.block === "onboarding" ? flow.plan : null}
+                            />
+                        )}
+                    </View>
+                    {largeText ? <View className="bg-background">{footer}</View> : null}
                 </ScrollView>
+
+                {largeText ? null : (
+                    <ScrollView
+                        bounces={false}
+                        className="bg-background shrink grow-0"
+                        contentContainerClassName="pb-safe-offset-4"
+                    >
+                        {footer}
+                    </ScrollView>
+                )}
+            </View>
+            {exit.offer === null ? null : (
+                <ExitOfferSheet
+                    busy={flow.busy === "buy"}
+                    failure={flow.failure === null ? null : t(flow.failure)}
+                    offer={exit.offer}
+                    onAccept={exit.accept}
+                    onDecline={exit.decline}
+                />
             )}
         </View>
     );

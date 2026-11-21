@@ -65,11 +65,11 @@ const pricing = {
         }),
         prices: insert(
             t({
-                en: "Outlayr is free, with no ads on any plan. Outlayr Pro costs {{monthly}} a month, {{yearly}} a year with 7 days free, or {{once}} once.",
-                de: "Outlayr ist kostenlos und hat in keinem Plan Werbung. Outlayr Pro kostet {{monthly}} im Monat, {{yearly}} im Jahr mit 7 Tagen gratis, oder {{once}} einmalig.",
-                es: "Outlayr es gratis y no tiene anuncios en ningún plan. Outlayr Pro cuesta {{monthly}} al mes, {{yearly}} al año con 7 días gratis, o {{once}} una sola vez.",
-                pt: "O Outlayr é grátis e não tem anúncios em nenhum plano. O Outlayr Pro custa {{monthly}} por mês, {{yearly}} por ano com 7 dias grátis, ou {{once}} uma única vez.",
-                fr: "Outlayr est gratuit et sans publicité, quelle que soit l'offre. Outlayr Pro coûte {{monthly}} par mois, {{yearly}} par an avec 7 jours gratuits, ou {{once}} une seule fois.",
+                en: "Outlayr is free, with no ads on any plan. Outlayr Pro costs {{monthly}} a month, {{yearly}} a year with 3 days free, or {{once}} once.",
+                de: "Outlayr ist kostenlos und hat in keinem Plan Werbung. Outlayr Pro kostet {{monthly}} im Monat, {{yearly}} im Jahr mit 3 Tagen gratis, oder {{once}} einmalig.",
+                es: "Outlayr es gratis y no tiene anuncios en ningún plan. Outlayr Pro cuesta {{monthly}} al mes, {{yearly}} al año con 3 días gratis, o {{once}} una sola vez.",
+                pt: "O Outlayr é grátis e não tem anúncios em nenhum plano. O Outlayr Pro custa {{monthly}} por mês, {{yearly}} por ano com 3 dias grátis, ou {{once}} uma única vez.",
+                fr: "Outlayr est gratuit et sans publicité, quelle que soit l'offre. Outlayr Pro coûte {{monthly}} par mois, {{yearly}} par an avec 3 jours gratuits, ou {{once}} une seule fois.",
             })
         ),
         title: t({

@@ -203,7 +203,7 @@ export function Paywall() {
                         <Text className="text-muted text-micro pt-2 text-center font-mono">{then}</Text>
                     )}
                     {block === "autolog" || block === "first_entry" ? (
-                        <Pressable accessibilityRole="button" className="items-center pt-4" onPress={leave}>
+                        <Pressable accessibilityRole="button" className="items-center pt-4" onPress={() => leave()}>
                             <MonoLabel className="text-foreground">{t("pro.cta.notNow")}</MonoLabel>
                         </Pressable>
                     ) : null}

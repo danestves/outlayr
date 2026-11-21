@@ -7,6 +7,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 import { useAutologUsage } from "@/data/autolog-cap";
 import { paywallTriggerOf } from "@/domain/paywall-trigger";
+import type { PaywallTrigger } from "@/domain/paywall-trigger";
 import type { Plan, PlanKind } from "@/domain/pro-plans";
 import { proSellable } from "@/hooks/use-pro-locked";
 import type { TranslationKey } from "@/i18n/catalog";
@@ -22,12 +23,19 @@ import { purchaseNext, restoreNext } from "./purchase-result";
 import { saleStateOf } from "./sale-state";
 import { topBlockOf } from "./top-block";
 
-function purchaseProperties(plan: Plan | null, variant: typeof PaywallVariant.Type) {
+function purchaseProperties(
+    plan: Plan | null,
+    variant: typeof PaywallVariant.Type,
+    trigger: typeof PaywallTrigger.Type,
+    exitOffer = false
+) {
     const product = plan?.offer.product;
     return {
+        exit_offer: exitOffer,
         period: product?.subscriptionPeriod ?? null,
         plan: plan?.kind ?? null,
         product_id: product?.identifier ?? null,
+        trigger,
         variant,
     };
 }
@@ -41,8 +49,16 @@ function selectedKind(pick: PlanKind | null, plans: readonly Plan[] | null): Pla
     return fallback?.kind ?? null;
 }
 
+export type LeaveOutcome = "dismissed" | "pro";
+
+export interface PaywallFlowOptions {
+    /** Replaces closing the route, for a paywall shown as a step instead of a modal. */
+    onLeave?: (outcome: LeaveOutcome) => void;
+    trigger?: typeof PaywallTrigger.Type;
+}
+
 /** Plans, purchase, restore and the entitlement states both paywall variants render. */
-export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
+export function usePaywallFlow(variant: typeof PaywallVariant.Type, options: PaywallFlowOptions = {}) {
     const router = useRouter();
     const navigation = useNavigation();
     const entitlement = useRevenueCat();
@@ -51,7 +67,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const { accountId, billingId } = useAuthSession();
     const { trigger: triggerParam } = useLocalSearchParams<{ trigger?: string }>();
     const autolog = useAutologUsage(useDatabase());
-    const trigger = paywallTriggerOf(triggerParam);
+    const trigger = options.trigger ?? paywallTriggerOf(triggerParam);
     const block = topBlockOf(trigger, autolog.used);
     const [busy, setBusy] = useState<"buy" | "confirm" | "restore" | null>(null);
     const [attempt, setAttempt] = useState(0);
@@ -62,7 +78,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const selected = selectedKind(pick, plans);
     const plan = plans?.find((candidate) => candidate.kind === selected) ?? null;
     const [failure, setFailure] = useState<TranslationKey | null>(null);
-    const sale = useRef(purchaseProperties(null, variant));
+    const sale = useRef(purchaseProperties(null, variant, trigger));
 
     const retry = () => {
         setAttempt((count) => count + 1);
@@ -72,8 +88,13 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         setPick(kind);
     };
 
-    const leave = () => {
-        if (navigation.isFocused()) {
+    // Read by the exit offer's Back guard, which must let through the removal a leave starts.
+    const left = useRef(false);
+    const leave = (outcome: LeaveOutcome = "dismissed") => {
+        left.current = true;
+        if (options.onLeave) {
+            options.onLeave(outcome);
+        } else if (navigation.isFocused()) {
             router.back();
         }
     };
@@ -106,7 +127,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
                     setFailure(next.failure);
                 }
                 if (next.leave) {
-                    leave();
+                    leave("pro");
                 }
             },
         },
@@ -123,7 +144,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
                     setFailure(next.failure);
                 }
                 if (next.leave) {
-                    leave();
+                    leave("pro");
                 }
             },
         },
@@ -136,10 +157,10 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         confirmEntitlement(billingId);
     };
 
-    const startPurchase = (target: Plan) => {
+    const startPurchase = (target: Plan, exitOffer = false) => {
         setBusy("buy");
         setFailure(null);
-        sale.current = purchaseProperties(target, variant);
+        sale.current = purchaseProperties(target, variant, trigger, exitOffer);
         posthog?.capture("purchase_started", { ...sale.current, trial_days: target.trialDays });
         buyPlan({ accountId, billingId, offer: target.offer });
     };
@@ -152,6 +173,10 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
             return;
         }
         startPurchase(plan);
+    };
+
+    const buyExitOffer = (target: Plan) => {
+        startPurchase(target, true);
     };
 
     const restore = () => {
@@ -176,8 +201,10 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     return {
         autolog,
         block,
+        billingId,
         busy,
         buy,
+        buyExitOffer,
         canBuy,
         confirm,
         empty,
@@ -185,8 +212,10 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         isMirrored,
         isPro,
         leave,
+        left,
         logsWaiting: canBuy && block === "autolog" && autolog.waiting > 0,
         noCloud,
+        ownsLeave: options.onLeave !== undefined,
         pitches,
         plan,
         plans,

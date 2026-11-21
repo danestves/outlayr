@@ -1,11 +1,11 @@
 import type { PurchasesPackage } from "react-native-purchases";
 import { describe, expect, it } from "vite-plus/test";
 
-import { heldPlan, readPlans } from "./pro-plans";
+import { heldPlan, readExitOffer, readPlans } from "./pro-plans";
 import type { Plan } from "./pro-plans";
 
 interface FakeOffer {
-    intro?: { price: number; periodNumberOfUnits: number; periodUnit: string };
+    intro?: { cycles?: number; price: number; periodNumberOfUnits: number; periodUnit: string };
     perMonth?: string | null;
     price: number;
     type: string;
@@ -98,6 +98,21 @@ describe("readPlans", () => {
             type: "ANNUAL",
         });
         expect(readPlans([discounted], new Set(["ANNUAL"]))[0]?.trialDays).toBeNull();
+    });
+});
+
+describe("readExitOffer", () => {
+    const exitAnnual = (intro: NonNullable<FakeOffer["intro"]>) =>
+        readExitOffer([offer({ intro, price: 49.99, type: "ANNUAL" })], new Set(["ANNUAL"]));
+
+    it("sells a one-year intro at its discount off the renewal", () => {
+        expect(exitAnnual({ cycles: 1, periodNumberOfUnits: 1, periodUnit: "YEAR", price: 24.99 })?.percentOff).toBe(
+            50
+        );
+    });
+
+    it("never calls a few discounted months a first year", () => {
+        expect(exitAnnual({ cycles: 3, periodNumberOfUnits: 1, periodUnit: "MONTH", price: 4.99 })).toBeNull();
     });
 });
 

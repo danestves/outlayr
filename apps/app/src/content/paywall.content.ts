@@ -219,11 +219,11 @@ const paywall = {
             pt: "Sem mais cobranças",
         }),
         startTrial: t({
-            en: "Start 7 days free",
-            de: "7 Tage gratis starten",
-            es: "Empieza 7 días gratis",
-            fr: "Essayer 7 jours gratuits",
-            pt: "Começar 7 dias grátis",
+            en: "Start 3 days free",
+            de: "3 Tage gratis starten",
+            es: "Empieza 3 días gratis",
+            fr: "Essayer 3 jours gratuits",
+            pt: "Começar 3 dias grátis",
         }),
         thenPerYear: insert(
             t({

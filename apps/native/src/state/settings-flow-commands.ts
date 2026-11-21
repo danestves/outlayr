@@ -198,6 +198,11 @@ export const buyPlanCommand = revenueCatFlow(
     })
 );
 
+export const markExitOfferSeenCommand = createCommand({
+    execute: (db: Database) => Meta.set(db, "exitOfferSeen", true),
+    label: "paywall:exit-offer-seen",
+});
+
 export const restorePlanCommand = revenueCatFlow(
     "restore",
     Effect.fn("Paywall.restore")(function* restore(revenueCat: RevenueCat["Service"], signedIn: Billed) {

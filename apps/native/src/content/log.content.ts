@@ -202,6 +202,14 @@ const log = {
             pt: "Escreva sua primeira linha",
             "pt-PT": "Escreva a sua primeira linha",
         }),
+        "log.empty.autoLog": t({
+            en: "Set up auto-log",
+            de: "Auto-Erfassung einrichten",
+            es: "Configura el registro automático",
+            fr: "Configurer la saisie auto",
+            pt: "Configurar registro automático",
+            "pt-PT": "Configurar registo automático",
+        }),
         "log.empty.body": t({
             en: "Your first entry sets the baseline everything else is measured against.",
             de: "Dein erster Eintrag setzt die Basis, an der sich alles andere misst.",
@@ -209,6 +217,14 @@ const log = {
             fr: "Votre première opération sert de référence pour tout le reste.",
             pt: "Seu primeiro lançamento define a base com que todo o resto é comparado.",
             "pt-PT": "O seu primeiro registo define a base com que todo o resto é comparado.",
+        }),
+        "log.empty.import": t({
+            en: "Bring data from another app",
+            de: "Daten aus einer anderen App holen",
+            es: "Trae tus datos de otra app",
+            fr: "Importer depuis une autre app",
+            pt: "Trazer dados de outro app",
+            "pt-PT": "Trazer dados de outra app",
         }),
         "log.empty.title": t({
             en: "Nothing logged yet",
