@@ -8,7 +8,7 @@ import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import Store01Icon from "@hugeicons/core-free-icons/Store01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { accountLook } from "@outlayr/money/ledger-log";
-import { useEventListener, useOnMount } from "@outlayr/shared/lifecycle";
+import { useEventListener, useOnMount, useTimers } from "@outlayr/shared/lifecycle";
 import { Link } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Menu } from "panelui-web/menu";
@@ -532,18 +532,22 @@ function useSheetKeys(
 }
 
 function useOpenedPicker(trigger: RefObject<HTMLButtonElement | null> | null) {
+    const timers = useTimers();
     // A picker measured mid-slide lands off its trigger.
     useOnMount(() => {
         let live = true;
-        void (async () => {
-            await new Promise(requestAnimationFrame);
-            await new Promise(requestAnimationFrame);
+        const open = async () => {
             const animations = trigger?.current?.closest("[role=dialog]")?.getAnimations() ?? [];
             await Promise.allSettled(animations.map((animation) => animation.finished));
             if (live) {
                 trigger?.current?.click();
             }
-        })();
+        };
+        timers.frame(() => {
+            timers.frame(() => {
+                void open();
+            });
+        });
         return () => {
             live = false;
         };

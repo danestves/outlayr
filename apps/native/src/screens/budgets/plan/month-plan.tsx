@@ -25,6 +25,7 @@ import { leftPerDay } from "@/domain/budget-math";
 import { formatTargetMonth, monthAbbrevTitle } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { useTimers } from "@/lib/lifecycle";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT } from "@/state/atom-command";
@@ -87,6 +88,7 @@ function MonthPlanView({
     const t = useTranslation();
     const { language } = useLanguage();
     const haptics = useHaptics();
+    const timers = useTimers();
     const { showCents } = useDisplaySettings().state;
     const { categories, currency, goals, input, projection } = plan;
     const money = (value: number) => formatAmount(value, currency, false, language);
@@ -127,11 +129,11 @@ function MonthPlanView({
 
     const openEditor = (meta: PlanCategoryMeta) => {
         setEditorTarget({ categoryId: meta.id, meta, year });
-        requestAnimationFrame(() => editorRef.current?.present());
+        timers.frame(() => editorRef.current?.present());
     };
     const openTrim = (meta: PlanCategoryMeta) => {
         setTrimTarget({ categoryId: meta.id, meta, viewedKey: month.key, year });
-        requestAnimationFrame(() => trimRef.current?.present());
+        timers.frame(() => trimRef.current?.present());
     };
     const pickCategory = (picked: Category) => {
         pickerRef.current?.dismiss();
@@ -284,7 +286,7 @@ function MonthPlanView({
                 label={incomeSide ? t("budgets.plan.addIncome") : t("budgets.plan.addSpending")}
                 onPress={() => {
                     setPickingIncome(incomeSide);
-                    requestAnimationFrame(() => pickerRef.current?.present());
+                    timers.frame(() => pickerRef.current?.present());
                 }}
                 right={right}
                 width={width}

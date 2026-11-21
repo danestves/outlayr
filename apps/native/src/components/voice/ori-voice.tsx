@@ -11,7 +11,7 @@ import type { SharedValue } from "react-native-reanimated";
 
 import oriDark from "@/assets/images/ori/voice-dark.webp";
 import oriLight from "@/assets/images/ori/voice-light.webp";
-import { useMirror } from "@/lib/lifecycle";
+import { useMirror, useTimers } from "@/lib/lifecycle";
 import { useIsDark } from "@/theme/use-is-dark";
 
 export type OriState = "idle" | "listening" | "thinking" | "settled" | "failed";
@@ -80,6 +80,7 @@ interface OriVoiceProps {
 export function OriVoice({ level, size, state }: OriVoiceProps) {
     const atlas = useImage(useIsDark() ? oriDark : oriLight);
     const reducedMotion = useReducedMotion();
+    const timers = useTimers();
     const stateValue = useDerivedValue(() => state);
     const seen = useSharedValue<OriState | null>(null);
     const clock = useSharedValue(0);
@@ -132,9 +133,9 @@ export function OriVoice({ level, size, state }: OriVoiceProps) {
         if (state !== "settled") {
             return () => setActive(false);
         }
-        const rest = setTimeout(() => setActive(false), SETTLE_MS + 50);
+        const rest = timers.after(SETTLE_MS + 50, () => setActive(false));
         return () => {
-            clearTimeout(rest);
+            rest();
             setActive(false);
         };
     });

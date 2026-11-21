@@ -6,7 +6,8 @@ import { useSharedValue } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 
 import { meterToLevel } from "@/domain/voice-entry";
-import { useLatest, useOnUnmount } from "@/lib/lifecycle";
+import { useLatest, useOnUnmount, useTimers } from "@/lib/lifecycle";
+import type { Cleanup } from "@/lib/lifecycle";
 import { openAiProtocol } from "@/lib/realtime-openai";
 import { scribeProtocol } from "@/lib/realtime-scribe";
 import { openTranscriptStream, TranscriptStreamError } from "@/lib/transcript-stream";
@@ -130,10 +131,11 @@ async function drain(session: Session, release: (session: Session) => Promise<re
 export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTranscriptOptions): RealtimeTranscript {
     const [partial, setPartial] = useState("");
     const level = useSharedValue(0);
+    const timers = useTimers();
     const sessionRef = useRef<Session | null>(null);
     /** Bumped by every start and cancel, so a start that a cancel overtook never opens the microphone. */
     const startsRef = useRef(0);
-    const frameRef = useRef<number | null>(null);
+    const frameRef = useRef<Cleanup | null>(null);
     const latestPartial = useRef("");
     const onLevelRef = useLatest(onLevel);
     const onErrorRef = useLatest(onError);
@@ -143,7 +145,7 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
         if (frameRef.current !== null) {
             return;
         }
-        frameRef.current = requestAnimationFrame(() => {
+        frameRef.current = timers.frame(() => {
             frameRef.current = null;
             setPartial(latestPartial.current);
         });
@@ -162,7 +164,7 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
 
     const reset = () => {
         if (frameRef.current !== null) {
-            cancelAnimationFrame(frameRef.current);
+            frameRef.current();
             frameRef.current = null;
         }
         latestPartial.current = "";

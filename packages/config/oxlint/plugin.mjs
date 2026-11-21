@@ -453,6 +453,13 @@ const staticMemberName = (node) => {
     return undefined;
 };
 
+const memberName = (node) => {
+    if (node.computed) {
+        return staticMemberName(node.property);
+    }
+    return node.property.type === "Identifier" ? node.property.name : undefined;
+};
+
 const noReactEffects = {
     create(context) {
         const report = (node, name) => context.report({ data: { name }, messageId: "raw", node });
@@ -504,6 +511,107 @@ const noReactEffects = {
         docs: { description: "Disallow React's effect hooks outside the lifecycle module." },
         messages: {
             raw: "`{{name}}` is banned. Derive in render, act in the handler, or use a named hook from the lifecycle module; see docs/internals/react-effects.md.",
+        },
+        type: "problem",
+    },
+};
+
+const TIMER_CALLS = new Set([
+    "cancelAnimationFrame",
+    "clearInterval",
+    "clearTimeout",
+    "requestAnimationFrame",
+    "setInterval",
+    "setTimeout",
+]);
+const REACT_NAME = /^(?:use[A-Z]|[A-Z])/u;
+
+const declaredName = (node) => {
+    if (node.id?.type === "Identifier") {
+        return node.id.name;
+    }
+    const { parent } = node;
+    if (parent?.type === "VariableDeclarator" && parent.init === node && parent.id.type === "Identifier") {
+        return parent.id.name;
+    }
+    return undefined;
+};
+
+const noRawTimers = {
+    create(context) {
+        const owners = [];
+        let globalReferences;
+        const isGlobalReference = (node) => {
+            globalReferences ??= new Set(
+                context.sourceCode.scopeManager.scopes.flatMap((scope) =>
+                    scope.references
+                        .filter((reference) => reference.resolved === null || reference.resolved.defs.length === 0)
+                        .map((reference) => reference.identifier)
+                )
+            );
+            return globalReferences.has(node);
+        };
+        const timerName = (node) => {
+            if (node.type === "Identifier") {
+                return TIMER_CALLS.has(node.name) && isGlobalReference(node) ? node.name : undefined;
+            }
+            if (node.type !== "MemberExpression" || node.object.type !== "Identifier") {
+                return undefined;
+            }
+            const { object } = node;
+            if ((object.name !== "window" && object.name !== "globalThis") || !isGlobalReference(object)) {
+                return undefined;
+            }
+            const property = memberName(node);
+            return property !== undefined && TIMER_CALLS.has(property) ? property : undefined;
+        };
+        const report = (node, name) => {
+            if (name !== undefined && owners.includes(true)) {
+                context.report({ data: { name }, messageId: "outlives", node });
+            }
+        };
+        const visit = (node) => {
+            owners.push(REACT_NAME.test(declaredName(node) ?? ""));
+        };
+        const leave = () => {
+            owners.pop();
+        };
+        return {
+            ArrowFunctionExpression: visit,
+            CallExpression(node) {
+                report(node, timerName(node.callee));
+            },
+            FunctionDeclaration: visit,
+            FunctionExpression: visit,
+            Identifier(node) {
+                if (!TIMER_CALLS.has(node.name)) {
+                    return;
+                }
+                const { parent } = node;
+                if (
+                    (parent?.type === "CallExpression" && parent.callee === node) ||
+                    (parent?.type === "MemberExpression" && parent.property === node && !parent.computed)
+                ) {
+                    return;
+                }
+                report(node, timerName(node));
+            },
+            MemberExpression(node) {
+                if (node.parent?.type === "CallExpression" && node.parent.callee === node) {
+                    return;
+                }
+                report(node, timerName(node));
+            },
+            "ArrowFunctionExpression:exit": leave,
+            "FunctionDeclaration:exit": leave,
+            "FunctionExpression:exit": leave,
+        };
+    },
+    meta: {
+        docs: { description: "Disallow raw timers inside React components and hooks." },
+        messages: {
+            outlives:
+                "`{{name}}` in a component or hook outlives it. Use `useTimers()` from the lifecycle module; see docs/internals/react-effects.md.",
         },
         type: "problem",
     },
@@ -566,6 +674,7 @@ export default {
         "no-manual-memo": noManualMemo,
         "no-misread-copy": noMisreadCopy,
         "no-polling-loop-in-tests": noPollingLoopInTests,
+        "no-raw-timers": noRawTimers,
         "no-react-effects": noReactEffects,
         "no-sheet-repaint": noSheetRepaint,
         "no-slop-comments": noSlopComments,

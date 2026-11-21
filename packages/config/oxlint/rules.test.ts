@@ -46,6 +46,78 @@ export { useEffect } from "./lifecycle-shim";
     });
 });
 
+describe("no-raw-timers", () => {
+    const timers = (source: string) => messages(lint("no-raw-timers", "apps/site/src/Panel.tsx", source));
+
+    it.each([
+        ["a component declaration", "export function Panel() {\n    setTimeout(() => {}, 10);\n}\n"],
+        ["a hook declaration", "export function usePanel() {\n    setInterval(() => {}, 10);\n}\n"],
+        ["an arrow component", "export const Panel = () => {\n    requestAnimationFrame(() => {});\n};\n"],
+        ["a function expression component", "export const Panel = function () {\n    setTimeout(() => {}, 10);\n};\n"],
+        [
+            "a nested callback",
+            "export function Panel() {\n    return items.map(() => {\n        clearTimeout(handle);\n    });\n}\n",
+        ],
+        ["a global member", "export function Panel() {\n    globalThis.clearInterval(handle);\n}\n"],
+        [
+            "a reference passed to a promise",
+            "export function Panel() {\n    return new Promise(requestAnimationFrame);\n}\n",
+        ],
+        [
+            "a global member reference",
+            "export function usePanel() {\n    return new Promise(window.requestAnimationFrame);\n}\n",
+        ],
+        [
+            "a computed member with a string key",
+            'export function Panel() {\n    window["requestAnimationFrame"](() => {});\n}\n',
+        ],
+        [
+            "a computed member with a template key",
+            "export function Panel() {\n    globalThis[`setTimeout`](() => {}, 10);\n}\n",
+        ],
+    ])("reports a timer inside %s", (_, source) => {
+        expect(timers(source)).toStrictEqual([expect.stringContaining("in a component or hook outlives it")]);
+    });
+
+    it("ignores names that resolve to a local binding", () => {
+        const source = `export function Panel({ setTimeout }) {
+    setTimeout(() => {}, 10);
+    const requestAnimationFrame = () => {};
+    return new Promise(requestAnimationFrame);
+}
+`;
+        expect(timers(source)).toStrictEqual([]);
+    });
+
+    it("reports window members", () => {
+        expect(timers("export function Panel() {\n    window.setTimeout(() => {}, 10);\n}\n")).toStrictEqual([
+            expect.stringContaining("`setTimeout` in a component or hook outlives it"),
+        ]);
+    });
+
+    it.each(["cancelAnimationFrame", "clearInterval"])("reports bare %s to the cancel path", (name) => {
+        expect(timers(`export function Panel() {\n    ${name}(handle);\n}\n`)).toStrictEqual([
+            `\`${name}\` in a component or hook outlives it. Use \`useTimers()\` from the lifecycle module; see docs/internals/react-effects.md.`,
+        ]);
+    });
+
+    it("ignores module scope, plain helpers and lifecycle timers", () => {
+        const source = `const handle = setTimeout(() => {}, 10);
+export function schedule() {
+    return setInterval(() => {}, 10);
+}
+export function Panel() {
+    const timers = useTimers();
+    timers.after(10, () => {});
+    timers.frame(() => {});
+}
+export const load = () => window.setTimeout(() => {}, 10);
+export const nextFrame = () => window.requestAnimationFrame;
+`;
+        expect(timers(source)).toStrictEqual([]);
+    });
+});
+
 describe("locked-rules", () => {
     const locked = (source: string) =>
         lint("locked-rules", "apps/site/src/Panel.tsx", source, { rules: ["outlayr/no-react-effects"] }).filter(

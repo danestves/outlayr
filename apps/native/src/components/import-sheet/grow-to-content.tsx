@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { View } from "react-native";
 import { Easing, useReducedMotion } from "react-native-reanimated";
 
+import { useTimers } from "@/lib/lifecycle";
+
 const RESIZE_MS = 320;
 const ease = Easing.out(Easing.cubic);
 
@@ -13,10 +15,10 @@ export function GrowToContent({ children, maxHeight }: { children: ReactNode; ma
     const reduced = useReducedMotion();
     const [height, setHeight] = useState<number | null>(null);
     const shown = useRef<number | null>(null);
-    const frame = useRef(0);
+    const timers = useTimers();
 
     const resizeTo = (target: number) => {
-        cancelAnimationFrame(frame.current);
+        timers.clear();
         const from = shown.current;
         if (from === null || reduced || from === target) {
             shown.current = target;
@@ -32,10 +34,10 @@ export function GrowToContent({ children, maxHeight }: { children: ReactNode; ma
             shown.current = from + (target - from) * ease(progress);
             setHeight(shown.current);
             if (progress < 1) {
-                frame.current = requestAnimationFrame(step);
+                timers.frame(step);
             }
         };
-        frame.current = requestAnimationFrame(step);
+        timers.frame(step);
     };
 
     return (
