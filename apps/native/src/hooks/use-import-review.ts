@@ -1,7 +1,6 @@
 import { deduceDateFormat, detectDecimalSeparator } from "@outlayr/money/csv-read";
 import { DrizzleQueryError, and, eq, gte, isNull, lte } from "drizzle-orm";
 import * as Cause from "effect/Cause";
-import { useEffect } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
@@ -16,6 +15,7 @@ import { importOutTotals } from "@/domain/import-totals";
 import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
 import { useProConfirmed, useProLocked } from "@/hooks/use-pro-locked";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";
+import { useMirror } from "@/lib/lifecycle";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT } from "@/state/atom-command";
 import { importWithLogosCommand } from "@/state/ledger-commands";
@@ -60,6 +60,10 @@ export function buildReviewRows(plan: ImportPlan, duplicates: ReadonlySet<number
 
 function sameMembers(a: ReadonlySet<number>, b: ReadonlySet<number>): boolean {
     return a.size === b.size && [...a].every((value) => b.has(value));
+}
+
+function membership(rows: ReadonlySet<number>): string {
+    return [...rows].sort((left, right) => left - right).join(",");
 }
 
 const EMPTY_PLAN: ImportPlan = {
@@ -254,8 +258,10 @@ export function useImportReview(): ImportReviewResult {
     const duplicates = flagDuplicates(plan.entries, fingerprintsOf(existingRows));
 
     const settled = flow.commit.phase === "writing" || flow.commit.phase === "success";
-    // oxlint-disable-next-line outlayr/react-effect-budget -- writes the ledger-derived duplicate set into the module-level import draft store that the sheet's other steps read
-    useEffect(() => {
+    // A Set compares by identity, so the mirror watches membership instead of the Set objects.
+    const flaggedRows = membership(duplicates);
+    const knownRows = membership(flow.duplicates);
+    useMirror([flaggedRows, knownRows, settled], () => {
         // After the write, every committed row exists on the ledger and would
         // re-flag as its own duplicate; the flagged set is frozen from here.
         if (settled || sameMembers(duplicates, flow.duplicates)) {
@@ -265,7 +271,7 @@ export function useImportReview(): ImportReviewResult {
             rows: duplicates,
             type: "duplicatesFlagged",
         });
-    }, [duplicates, flow.duplicates, settled]);
+    });
 
     const rows = buildReviewRows(plan, flow.duplicates);
 

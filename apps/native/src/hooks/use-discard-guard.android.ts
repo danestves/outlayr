@@ -1,11 +1,12 @@
 import { useNavigation, usePreventRemove, useRouter } from "expo-router";
 import type { NativeStackNavigationProp } from "expo-router";
 import type { ParamListBase } from "expo-router/react-navigation";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Alert } from "react-native";
 
 import { notifyEditsDiscarded } from "@/components/edits-discarded-snackbar";
 import { useTranslation } from "@/i18n/context";
+import { useEventListener, useMirror } from "@/lib/lifecycle";
 
 import type { useDiscardGuard as useDiscardGuardBase, SwipeDiscardRecovery } from "./use-discard-guard";
 
@@ -25,29 +26,25 @@ export const useDiscardGuard: typeof useDiscardGuardBase = <Draft>(
     const hidden = useRef(false);
     const leaving = useRef(false);
 
-    const offerEditsBack = useEffectEvent(() => {
-        hidden.current = true;
-        const draft = dirty ? (recovery?.snapshot() ?? null) : null;
-        if (draft !== null && recovery !== undefined) {
-            notifyEditsDiscarded(() => recovery.restore(draft));
-        }
-    });
-
-    // oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to the native stack's sheet detent changes while the screen is mounted
-    useEffect(
-        () =>
-            navigation.addListener("sheetDetentChange", ({ data: { index, stable } }) => {
-                if (!stable) {
-                    setDragging(true);
-                    return;
+    useEventListener(
+        (listener: (event: { data: { index: number; stable: boolean } }) => void) =>
+            navigation.addListener("sheetDetentChange", listener),
+        ({ data: { index, stable } }) => {
+            if (!stable) {
+                setDragging(true);
+                return;
+            }
+            if (index < 0) {
+                hidden.current = true;
+                const draft = dirty ? (recovery?.snapshot() ?? null) : null;
+                if (draft !== null && recovery !== undefined) {
+                    notifyEditsDiscarded(() => recovery.restore(draft));
                 }
-                if (index < 0) {
-                    offerEditsBack();
-                    return;
-                }
-                hidden.current = false;
-                setDragging(false);
-            }),
+                return;
+            }
+            hidden.current = false;
+            setDragging(false);
+        },
         [navigation]
     );
 
@@ -76,10 +73,9 @@ export const useDiscardGuard: typeof useDiscardGuardBase = <Draft>(
         );
     });
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- runs the exit once the lowered remove guard is committed to the navigator
-    useEffect(() => {
-        exit?.();
-    }, [exit]);
+    useMirror([exit], ([armed]) => {
+        armed?.();
+    });
 
     const leave = () => {
         if (leaving.current) {

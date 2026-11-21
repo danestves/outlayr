@@ -9,14 +9,14 @@ import {
     UIImagePickerPreferredAssetRepresentationMode,
 } from "expo-image-picker";
 import type { ImagePickerResult } from "expo-image-picker";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { localIsoDate } from "@/domain/voice-entry";
 import { trackCapturesWall } from "@/hooks/use-usage-limits";
 import { duringHandoff } from "@/lib/app-handoff";
 import { receiptScanTransport } from "@/lib/cloud-ai";
 import type { ReceiptDraft, ReceiptScanFn, ScanOutcome, ScanRefusal, ScanRequest } from "@/lib/cloud-ai";
-import { useLatest } from "@/lib/lifecycle";
+import { useLatest, useOnMount } from "@/lib/lifecycle";
 import { launchPick, pendingPick } from "@/lib/pending-pick";
 import type { PickOwner } from "@/lib/pending-pick";
 import { RECEIPT_SCAN_TIMEOUT, timedCaptureCommand } from "@/state/capture-commands";
@@ -303,26 +303,39 @@ export function useImageScan<Context, Draft>({
         selectionLimit,
         setPhase,
     };
+    // The pending-pick continuation outlives this render, so it adopts through the latest closure.
+    const adoptLatest = useLatest(adopt);
 
     // Android can tear the app down under the picker: that launch never resolves, so its photo is picked up here.
-    const adoptPending = useEffectEvent((result: ImagePickerResult, take: number) => adopt(result, take));
-    const startMounted = useEffectEvent(() => {
-        if (firstPhoto !== undefined) {
-            start(readPhoto(ports, firstPhoto, firstMore, supersedeTake()));
-        }
-        const take = takeRef.current;
-        start(
-            pendingPick(owner).pipe(
-                Effect.flatMap((result) =>
-                    Effect.sync(() => {
-                        if (result !== null) {
-                            adoptPending(result, take);
-                        }
-                    })
-                ),
-                Effect.catchCause(() => Effect.void)
-            )
-        );
+    useOnMount(() => {
+        const startMounted = () => {
+            if (firstPhoto !== undefined) {
+                start(readPhoto(ports, firstPhoto, firstMore, supersedeTake()));
+            }
+            const take = takeRef.current;
+            start(
+                pendingPick(owner).pipe(
+                    Effect.flatMap((result) =>
+                        Effect.sync(() => {
+                            if (result !== null) {
+                                adoptLatest.current(result, take);
+                            }
+                        })
+                    ),
+                    Effect.catchCause(() => Effect.void)
+                )
+            );
+        };
+        let disposed = false;
+        queueMicrotask(() => {
+            if (!disposed) {
+                startMounted();
+            }
+        });
+        return () => {
+            disposed = true;
+            supersedeTake();
+        };
     });
 
     const takePhoto = () => {
@@ -351,21 +364,6 @@ export function useImageScan<Context, Draft>({
         supersedeTake();
         setPhase({ kind: "idle" });
     };
-
-    const endScans = useEffectEvent(() => supersedeTake());
-    // oxlint-disable-next-line outlayr/react-effect-budget -- scans a handed-off photo or adopts the picker's pending result when mounted, and aborts the scan in flight when unmounted
-    useEffect(() => {
-        let disposed = false;
-        queueMicrotask(() => {
-            if (!disposed) {
-                startMounted();
-            }
-        });
-        return () => {
-            disposed = true;
-            endScans();
-        };
-    }, []);
 
     return { chooseFromLibrary, phase, reset, retry, scan, takePhoto };
 }

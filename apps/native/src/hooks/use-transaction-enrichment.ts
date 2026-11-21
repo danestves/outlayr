@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Option from "effect/Option";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { RefObject } from "react";
 
 import { findCategoryPreset, pendingCategoryFor } from "@/data/categories-core";
@@ -16,7 +16,7 @@ import { translateNow } from "@/i18n/runtime";
 import type { CloudError } from "@/lib/cloud-error";
 import { enrichmentTransport } from "@/lib/convex";
 import type { CategoryBranch, EnrichmentFn } from "@/lib/convex";
-import { useLatest } from "@/lib/lifecycle";
+import { useLatest, useOnChange, useWhen } from "@/lib/lifecycle";
 import { ENRICHMENT_TIMEOUT, timedCaptureCommand } from "@/state/capture-commands";
 import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
 import { logged } from "@/state/entry-save";
@@ -616,63 +616,49 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         );
     };
 
-    const cancel = useEffectEvent(() => {
+    const cancel = () => {
         cancelledRef.current = true;
         clearTimers(ports);
         supersedeRequest(ports);
         inFlightRef.current.clear();
-    });
+    };
 
     if (!enabled && pending) {
         setPending(false);
     }
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- cancels the debounce timers and aborts the in-flight lookup when enrichment turns off or the form unmounts
-    useEffect(() => (enabled ? () => cancel() : undefined), [enabled]);
+    useWhen(enabled, () => cancel);
 
     // The same name in another currency can be another business, and the backfill treats a saved logo as final,
     // so a currency change asks again.
-    const seenCurrencyRef = useRef(currency);
-    const restartForCurrency = useEffectEvent(() => {
-        supersedeInFlight(ports);
-        lastRemoteOutcomeRef.current = null;
-        const key = merchantKey(nameRef.current);
-        if (key.length < MIN_KEY_LENGTH) {
-            return;
-        }
-        const last = lastEmittedRef.current;
-        if (last != null && last.key === key && last.suggestion.domain != null) {
-            emit(ports, { ...last.suggestion, domain: null });
-        }
-        onNameChange(nameRef.current);
-    });
-    const seenIncomeRef = useRef(income);
-    const restartForIncome = useEffectEvent(() => {
-        supersedeInFlight(ports);
-        lastRemoteOutcomeRef.current = null;
-        if (merchantKey(nameRef.current).length < MIN_KEY_LENGTH) {
-            return;
-        }
-        onNameChange(nameRef.current);
-    });
-    // oxlint-disable-next-line outlayr/react-effect-budget -- re-arms the lookup timers and request ticket held in refs, and ends a user-asked lookup, when the currency or income a lookup is filed under changes
-    useEffect(() => {
-        const currencyChanged = seenCurrencyRef.current !== currency;
-        const incomeChanged = seenIncomeRef.current !== income;
-        seenCurrencyRef.current = currency;
-        seenIncomeRef.current = income;
+    useOnChange([currency, income], ([nextCurrency, nextIncome], [wasCurrency, wasIncome]) => {
+        const currencyChanged = wasCurrency !== nextCurrency;
+        const incomeChanged = wasIncome !== nextIncome;
         if (enabled && currencyChanged) {
-            restartForCurrency();
+            supersedeInFlight(ports);
+            lastRemoteOutcomeRef.current = null;
+            const key = merchantKey(nameRef.current);
+            if (key.length >= MIN_KEY_LENGTH) {
+                const last = lastEmittedRef.current;
+                if (last != null && last.key === key && last.suggestion.domain != null) {
+                    emit(ports, { ...last.suggestion, domain: null });
+                }
+                onNameChange(nameRef.current);
+            }
         }
         if (enabled && incomeChanged) {
-            restartForIncome();
+            supersedeInFlight(ports);
+            lastRemoteOutcomeRef.current = null;
+            if (merchantKey(nameRef.current).length >= MIN_KEY_LENGTH) {
+                onNameChange(nameRef.current);
+            }
         }
         // The hook re-asks on a currency or side change; that ask is the form's, not the user's, so the override ends
         // here.
         if (currencyChanged || incomeChanged) {
             userAskedRef.current = false;
         }
-    }, [currency, enabled, income]);
+    });
 
     return {
         lookupNow,

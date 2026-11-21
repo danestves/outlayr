@@ -1,12 +1,12 @@
 import type { StreamSession } from "@outlayr/backend/confect/voiceEntry.spec";
 import { File } from "expo-file-system";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { AudioManager, AudioRecorder, FileFormat, FilePreset } from "react-native-audio-api";
 import { useSharedValue } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 
 import { meterToLevel } from "@/domain/voice-entry";
-import { useLatest } from "@/lib/lifecycle";
+import { useLatest, useOnUnmount } from "@/lib/lifecycle";
 import { openAiProtocol } from "@/lib/realtime-openai";
 import { scribeProtocol } from "@/lib/realtime-scribe";
 import { openTranscriptStream, TranscriptStreamError } from "@/lib/transcript-stream";
@@ -273,9 +273,7 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
         return drain(session, release, reset);
     };
 
-    const cancelLatest = useLatest(cancel);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the only way to close the microphone and socket when the screen unmounts mid-recording
-    useEffect(() => () => cancelLatest.current(), [cancelLatest]);
+    useOnUnmount(cancel);
 
     return { cancel, finish, level, partial, start };
 }

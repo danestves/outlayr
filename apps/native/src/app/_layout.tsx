@@ -13,7 +13,7 @@ import { hideAsync, preventAutoHideAsync } from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { PanelUIProvider } from "panelui-native/provider";
 import { useTheme } from "panelui-native/theme";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { Pressable, useWindowDimensions, View } from "react-native";
 import { SafeAreaListener, SafeAreaProvider } from "react-native-safe-area-context";
@@ -46,6 +46,7 @@ import { cloudRuntime } from "@/lib/cloud-runtime";
 import { setCloudSession } from "@/lib/convex";
 import { DeviceResetRecovery } from "@/lib/device-reset-recovery";
 import { LedgerAdoptionProvider, useLedgerAdoption } from "@/lib/ledger-adoption";
+import { useMirror, useWhen } from "@/lib/lifecycle";
 import { useScreenTracking } from "@/lib/posthog";
 import { useAnalyticsConsent } from "@/lib/posthog-consent";
 import { usePostHogIdentity } from "@/lib/posthog-identity";
@@ -140,13 +141,12 @@ const SIGNED_OUT = "signed-out";
 function CloudAuthMirror({ session }: { session: "account" | "guest" | null }) {
     const { isAuthenticated } = useConvexAuth();
     const current = isAuthenticated ? session : null;
-    // oxlint-disable-next-line outlayr/react-effect-budget -- mirrors Convex auth state into the cloud client's session flag
-    useEffect(() => {
+    useMirror([current], () => {
         setCloudSession(current);
         return () => {
             setCloudSession(null);
         };
-    }, [current]);
+    });
     return null;
 }
 
@@ -178,12 +178,9 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
         setSplashHidden(true);
     }
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- hides the native splash screen once the error surface can render
-    useEffect(() => {
-        if (failed) {
-            hideAsync();
-        }
-    }, [failed]);
+    useWhen(failed, () => {
+        void hideAsync();
+    });
 
     const base = isDark ? DarkTheme : DefaultTheme;
 
@@ -244,12 +241,9 @@ function RouteGate({
     const { status } = useLedgerAdoption();
     const settled = routeSettled({ adoption: status, gate });
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- hides the native splash screen once the root route is settled
-    useEffect(() => {
-        if (settled) {
-            hideSplash();
-        }
-    }, [settled, hideSplash]);
+    useWhen(settled, () => {
+        hideSplash();
+    });
 
     if (!(settled || splashHidden)) {
         return null;
