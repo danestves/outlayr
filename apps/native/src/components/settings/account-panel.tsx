@@ -68,7 +68,7 @@ function Panel({ provider, state }: { provider: Provider | null; state: AccountS
             <Identity provider={provider} state={state} />
             {state.kind === "pending" ? null : (
                 <View className={cn("border-y", panelClasses.border, stacked ? "flex-col" : "flex-row")}>
-                    <PlanCell stacked={stacked} />
+                    <PlanCell signedIn={signedIn} stacked={stacked} />
                     {signedIn ? <CapturesCell stacked={stacked} /> : null}
                     {signedIn ? <SyncCell stacked={stacked} /> : <SignedOutSyncCell stacked={stacked} />}
                 </View>
@@ -206,13 +206,28 @@ function StatusValue({ active, children }: { active: boolean; children: string }
     );
 }
 
-function PlanCell({ stacked }: { stacked: boolean }) {
+function PlanCell({ signedIn, stacked }: { signedIn: boolean; stacked: boolean }) {
     const router = useRouter();
     const t = useTranslation();
     const icons = usePanelIcons();
     const isPro = useRevenueCat().kind === "pro";
     const label = t("settings.panel.plan");
     const value = isPro ? t("pro.col.pro") : t("pro.col.free");
+    if (isPro && !signedIn && authClient !== null) {
+        const hint = t("settings.panel.notOnAccount");
+        return (
+            <Cell
+                accessibilityLabel={`${label}, ${value}, ${hint}`}
+                divided={false}
+                label={label}
+                onPress={() => router.push(ACCOUNT_HREF)}
+                stacked={stacked}
+            >
+                <StatusValue active={false}>{value}</StatusValue>
+                <Text className={cn("text-subtitle", panelClasses.muted)}>{hint}</Text>
+            </Cell>
+        );
+    }
     const goPro = t("settings.panel.goPro");
     return (
         <Cell
