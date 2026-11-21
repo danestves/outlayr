@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -12,6 +13,7 @@ import { forgetUsage } from "./accountDeletion";
 import spec from "./guests.spec";
 import { purgeUserBatch } from "./lib/account";
 import { convexSiteUrl } from "./lib/config";
+import { GUEST_BUCKET_REFILL_MS, guestLimiter } from "./lib/guestLimits";
 import { outboundHttp } from "./lib/http";
 import { erasePostHogPerson } from "./lib/posthog";
 import { eraseUpstreamCustomer, revenuecat } from "./revenuecat";
@@ -90,8 +92,25 @@ const forget = FunctionImpl.make(
     }, Effect.orDie)
 );
 
+// Every allowed guest sign-in schedules this, so only the job after the caller's last one finds the bucket refilled.
+const forgetCaller = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "forgetCaller",
+    Effect.fn("Guests.forgetCaller")(function* forgetCaller({ key }) {
+        const ctx = yield* MutationCtx;
+        const { ts } = yield* Effect.promise(() => guestLimiter.getValue(ctx, "guestSignInPerCaller", { key }));
+        const now = yield* Clock.currentTimeMillis;
+        if (now - ts >= GUEST_BUCKET_REFILL_MS) {
+            yield* Effect.promise(() => guestLimiter.reset(ctx, "guestSignInPerCaller", { key }));
+        }
+        return null;
+    }, Effect.orDie)
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(retire),
     Layer.provide(forget),
+    Layer.provide(forgetCaller),
     GroupImpl.finalize
 );

@@ -6,7 +6,7 @@ import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
 import { requireActionCtx, requireRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
-import { symmetricDecrypt } from "better-auth/crypto";
+import { makeSignature, symmetricDecrypt } from "better-auth/crypto";
 import { betterAuth } from "better-auth/minimal";
 import { emailOTP } from "better-auth/plugins";
 import { anonymous } from "better-auth/plugins/anonymous";
@@ -21,10 +21,12 @@ import { importPKCS8, SignJWT } from "jose";
 import { components, internal } from "../../convex/_generated/api";
 import type { DataModel } from "../../convex/_generated/dataModel";
 import authConfig from "../../convex/auth.config";
+import { callerAddress } from "./callerAddress";
 import { authSettings } from "./config";
 import { accountExistsEmail, codeEmail, EMAIL_CODE_TTL_SECONDS, EmailError, emailLanguage } from "./email";
 import type { Email } from "./email";
 import { emailSetup } from "./emailSetup";
+import { GUEST_BUCKET_REFILL_MS, guestLimiter } from "./guestLimits";
 import { AppleLifecycleError, appleCredentialLifecycle } from "./providerLifecycle";
 import { runEdge, runEdgeSync } from "./runEdge";
 import { sendEmail } from "./sendEmail";
@@ -62,7 +64,25 @@ const emailProblem = Effect.gen(function* emailProblem() {
 
 const authLimiter = new RateLimiter(components.rateLimiter, {
     emailAuth: { capacity: 10, kind: "token bucket", period: HOUR, rate: 10 },
-    guestSignIn: { capacity: 100, kind: "token bucket", period: HOUR, rate: 100 },
+});
+
+// The limiter never deletes a bucket, so the address is stored only as an HMAC and `guests.forgetCaller` drops the
+// bucket once it has refilled: the privacy policy keeps a guest's IP address only on its sessions.
+const limitGuestCaller = Effect.fn("BetterAuth.limitGuestCaller")(function* limitGuestCaller(
+    ctx: GenericCtx<DataModel>,
+    address: string,
+    secret: string
+) {
+    const key = yield* Effect.promise(() => makeSignature(address, secret));
+    const { ok } = yield* Effect.promise(() =>
+        guestLimiter.limit(requireRunMutationCtx(ctx), "guestSignInPerCaller", { key })
+    );
+    if (ok) {
+        yield* Effect.promise(() =>
+            requireActionCtx(ctx).scheduler.runAfter(GUEST_BUCKET_REFILL_MS, internal.guests.forgetCaller, { key })
+        );
+    }
+    return ok;
 });
 
 const decodeEmailBody = Schema.decodeUnknownOption(
@@ -225,9 +245,18 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                             );
                         }
                         if (endpoint.path === "/sign-in/anonymous") {
-                            const { ok } = yield* Effect.promise(() =>
-                                authLimiter.limit(requireRunMutationCtx(ctx), "guestSignIn")
+                            const caller = callerAddress(
+                                endpoint.request?.headers ?? endpoint.headers ?? new Headers()
                             );
+                            const callerOk = yield* Option.match(caller, {
+                                onNone: () => Effect.succeed(true),
+                                onSome: (address) => limitGuestCaller(ctx, address, endpoint.context.secret),
+                            });
+                            const { ok } = callerOk
+                                ? yield* Effect.promise(() =>
+                                      guestLimiter.limit(requireRunMutationCtx(ctx), "guestSignIn")
+                                  )
+                                : { ok: false };
                             if (!ok) {
                                 return yield* Effect.fail(
                                     new APIError("TOO_MANY_REQUESTS", { message: "Too many guest sign-ins" })

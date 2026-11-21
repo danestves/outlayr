@@ -9,4 +9,5 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 export default {
 ["retire"]: RegisteredConvexFunction.register({ ...definitions["retire"], handler: forward(definitions["retire"].handler) }),
 ["forget"]: RegisteredConvexFunction.register({ ...definitions["forget"], handler: forward(definitions["forget"].handler) }),
+["forgetCaller"]: RegisteredConvexFunction.register({ ...definitions["forgetCaller"], handler: forward(definitions["forgetCaller"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../guests.spec")["default"]>;

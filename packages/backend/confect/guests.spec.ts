@@ -15,4 +15,11 @@ export default GroupSpec.make()
             args: () => ({ guestId: Schema.String }),
             returns: () => Schema.Null,
         })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            name: "forgetCaller",
+            args: () => ({ key: Schema.String }),
+            returns: () => Schema.Null,
+        })
     );
