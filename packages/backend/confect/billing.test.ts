@@ -21,19 +21,10 @@ afterEach(() => {
 });
 
 describe("billing checkout cors", () => {
-    it("lets the old web host start a checkout while LEGACY_WEB_ORIGIN is set", async () => {
+    it("never echoes another origin back", async () => {
         vi.stubEnv("SITE_URL", "https://app.tryoutlayr.com");
-        vi.stubEnv("LEGACY_WEB_ORIGIN", "https://tryoutlayr.com");
 
-        await expect(allowedOrigin("https://tryoutlayr.com")).resolves.toBe("https://tryoutlayr.com");
         await expect(allowedOrigin("https://evil.example")).resolves.toBe("https://app.tryoutlayr.com");
-    });
-
-    it("allows only the site url when LEGACY_WEB_ORIGIN is unset", async () => {
-        vi.stubEnv("SITE_URL", "https://app.tryoutlayr.com");
-        vi.stubEnv("LEGACY_WEB_ORIGIN", "");
-
-        await expect(allowedOrigin("https://tryoutlayr.com")).resolves.toBe("https://app.tryoutlayr.com");
     });
 });
 

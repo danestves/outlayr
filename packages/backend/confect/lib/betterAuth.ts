@@ -32,8 +32,8 @@ import { runEdge, runEdgeSync } from "./runEdge";
 import { sendEmail } from "./sendEmail";
 import { sha256Hex } from "./sha256Hex";
 
-function allowedHosts(webOrigins: readonly string[], convexSiteUrl: Option.Option<string>) {
-    return [...new Set([...webOrigins, ...Option.toArray(convexSiteUrl)].map((url) => new URL(url).host))];
+function allowedHosts(siteUrl: string, convexSiteUrl: Option.Option<string>) {
+    return [...new Set([siteUrl, ...Option.toArray(convexSiteUrl)].map((url) => new URL(url).host))];
 }
 
 const LONGEST_COOKIE_MAX_AGE_SECONDS = 400 * 24 * 60 * 60;
@@ -148,7 +148,6 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         nativeAppUrl,
         notion: notionConfig,
         siteUrl,
-        webOrigins,
     } = runEdgeSync(authSettings);
     const emailBlocked = runEdgeSync(emailProblem);
 
@@ -176,7 +175,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         },
         advanced: { trustedProxyHeaders: true },
         baseURL: {
-            allowedHosts: allowedHosts(webOrigins, convexSiteUrl),
+            allowedHosts: allowedHosts(siteUrl, convexSiteUrl),
             fallback: siteUrl,
             protocol: new URL(siteUrl).protocol === "http:" ? "http" : "https",
         },
@@ -400,7 +399,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                 enabled: Option.isSome(notionConfig),
             },
         },
-        trustedOrigins: [...webOrigins, nativeAppUrl, "exp://", "https://appleid.apple.com"],
+        trustedOrigins: [siteUrl, nativeAppUrl, "exp://", "https://appleid.apple.com"],
         user: {
             deleteUser: {
                 enabled: false,
