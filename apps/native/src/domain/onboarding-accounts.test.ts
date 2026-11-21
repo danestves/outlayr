@@ -21,4 +21,13 @@ describe("splitByFreeLimits", () => {
         expect(now.map((entry) => entry.id)).toStrictEqual(["venmo"]);
         expect(waiting.map((entry) => entry.id)).toStrictEqual(["cash-app"]);
     });
+
+    it("leaves installment apps out of the account cap", () => {
+        const held = [
+            { currency: "USD", kind: "liability", name: "Klarna" },
+            { currency: "USD", kind: "asset", name: "Chase" },
+            { currency: "USD", kind: "asset", name: "Wallet" },
+        ];
+        expect(splitByFreeLimits([pick("venmo", "USD")], held, true).waiting).toStrictEqual([]);
+    });
 });

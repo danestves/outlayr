@@ -4,7 +4,9 @@ import { useRef } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useTranslation } from "@/i18n/context";
 import { useAuthSession } from "@/lib/auth-session";
+import { notifyFailure } from "@/lib/notify";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { PaywallRedesign } from "@/screens/paywall/redesign";
@@ -24,6 +26,7 @@ export function useOnboardingOfferDue(): boolean {
 export function OnboardingPro() {
     const db = useDatabase();
     const haptics = useHaptics();
+    const t = useTranslation();
     const isPro = useRevenueCat().kind === "pro";
     // Continue and the purchase callback can both land; a second run would create the waiting accounts twice.
     const finishing = useRef(false);
@@ -33,6 +36,7 @@ export function OnboardingPro() {
             onFailure: (cause) => {
                 console.error("Finishing onboarding failed", Cause.squash(cause));
                 haptics("error");
+                notifyFailure({ title: t("onboarding.offer.failed") });
                 finishing.current = false;
             },
         },

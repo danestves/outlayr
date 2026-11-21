@@ -1,4 +1,4 @@
-import { institutionById } from "@outlayr/money/institution-map";
+import { institutionById, isInstallmentAppAccount } from "@outlayr/money/institution-map";
 import * as Schema from "effect/Schema";
 
 import { blocksNewCurrency, FREE_ACCOUNTS } from "@/domain/pro-limits";
@@ -78,7 +78,8 @@ export function splitByFreeLimits(picks: readonly AccountPick[], held: readonly 
     const taken: Held[] = [...held];
     for (const pick of picks) {
         const account = { currency: pick.currency, kind: "asset", name: pick.label };
-        if (locked && (taken.length >= FREE_ACCOUNTS || blocksNewCurrency(account, taken, locked))) {
+        const counted = taken.filter((other) => !isInstallmentAppAccount(other)).length;
+        if (locked && (counted >= FREE_ACCOUNTS || blocksNewCurrency(account, taken, locked))) {
             waiting.push(pick);
         } else {
             now.push(pick);

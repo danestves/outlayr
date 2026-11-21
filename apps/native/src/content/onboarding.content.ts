@@ -27,6 +27,14 @@ const onboarding = {
             pt: "Dinheiro",
             "pt-PT": "Dinheiro",
         }),
+        "onboarding.accounts.creating": t({
+            en: "Setting up your accounts…",
+            de: "Deine Konten werden angelegt…",
+            es: "Creando tus cuentas…",
+            fr: "Création de vos comptes…",
+            pt: "Criando suas contas…",
+            "pt-PT": "A criar as suas contas…",
+        }),
         "onboarding.accounts.currencies_one": t({
             en: "{count} currency",
             de: "{count} Währung",
@@ -418,6 +426,14 @@ const onboarding = {
             fr: "Comment avez-vous connu Outlayr ?",
             pt: "Como você conheceu o Outlayr?",
             "pt-PT": "Como conheceu o Outlayr?",
+        }),
+        "onboarding.offer.failed": t({
+            en: "Couldn't finish setting up. Try again.",
+            de: "Die Einrichtung konnte nicht abgeschlossen werden. Versuch es noch mal.",
+            es: "No se pudo terminar la configuración. Inténtalo de nuevo.",
+            fr: "Impossible de terminer la configuration. Réessayez.",
+            pt: "Não foi possível concluir a configuração. Tente de novo.",
+            "pt-PT": "Não foi possível concluir a configuração. Tente novamente.",
         }),
         "onboarding.rhythm.body": t({
             en: "One quiet nudge each evening. iOS isn't asked for permission until your first entry is saved.",

@@ -283,45 +283,51 @@ export function PaywallRedesign({
 
     return (
         <View className="bg-background flex-1">
-            <View className="bg-pro absolute inset-x-0 top-0 h-1/2" />
-            <ScrollView
+            <View
+                accessibilityElementsHidden={exit.offer !== null}
                 className="flex-1"
-                contentContainerClassName={largeText ? "grow pb-4" : "grow"}
-                contentInsetAdjustmentBehavior="automatic"
+                importantForAccessibility={exit.offer === null ? "auto" : "no-hide-descendants"}
             >
-                {flow.isPro ? (
-                    <ProStatusBand confirmed={flow.isMirrored} status={status} />
-                ) : (
-                    <PitchBand
-                        autolog={flow.autolog}
-                        block={flow.block}
-                        daysLeft={daysLeft}
-                        stats={stats}
-                        waitingAccounts={waitingAccounts}
-                    />
-                )}
-                <View className="bg-background grow px-5 pb-4">
-                    {flow.isPro ? <FeatureRows /> : null}
-                    {flow.isPro ? null : (
-                        <PitchHero
-                            monthLabel={showMonth ? monthLabel : null}
-                            now={now}
-                            trial={flow.block === "onboarding" ? flow.plan : null}
+                <View className="bg-pro absolute inset-x-0 top-0 h-1/2" />
+                <ScrollView
+                    className="flex-1"
+                    contentContainerClassName={largeText ? "grow pb-4" : "grow"}
+                    contentInsetAdjustmentBehavior="automatic"
+                >
+                    {flow.isPro ? (
+                        <ProStatusBand confirmed={flow.isMirrored} status={status} />
+                    ) : (
+                        <PitchBand
+                            autolog={flow.autolog}
+                            block={flow.block}
+                            daysLeft={daysLeft}
+                            stats={stats}
+                            waitingAccounts={waitingAccounts}
                         />
                     )}
-                </View>
-                {largeText ? <View className="bg-background">{footer}</View> : null}
-            </ScrollView>
-
-            {largeText ? null : (
-                <ScrollView
-                    bounces={false}
-                    className="bg-background shrink grow-0"
-                    contentContainerClassName="pb-safe-offset-4"
-                >
-                    {footer}
+                    <View className="bg-background grow px-5 pb-4">
+                        {flow.isPro ? <FeatureRows /> : null}
+                        {flow.isPro ? null : (
+                            <PitchHero
+                                monthLabel={showMonth ? monthLabel : null}
+                                now={now}
+                                trial={flow.block === "onboarding" ? flow.plan : null}
+                            />
+                        )}
+                    </View>
+                    {largeText ? <View className="bg-background">{footer}</View> : null}
                 </ScrollView>
-            )}
+
+                {largeText ? null : (
+                    <ScrollView
+                        bounces={false}
+                        className="bg-background shrink grow-0"
+                        contentContainerClassName="pb-safe-offset-4"
+                    >
+                        {footer}
+                    </ScrollView>
+                )}
+            </View>
             {exit.offer === null ? null : (
                 <ExitOfferSheet
                     busy={flow.busy === "buy"}

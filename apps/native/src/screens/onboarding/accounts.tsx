@@ -19,6 +19,7 @@ import { useGlobalCurrency } from "@/data/app-meta";
 import { accountPicksFor, CASH_PICK, splitByFreeLimits } from "@/domain/onboarding-accounts";
 import type { AccountPick } from "@/domain/onboarding-accounts";
 import { FREE_ACCOUNTS, FREE_CURRENCIES } from "@/domain/pro-limits";
+import { useLongWait } from "@/hooks/use-long-wait";
 import { useMerchantMark } from "@/hooks/use-merchant-mark";
 import { useProConfirmed } from "@/hooks/use-pro-locked";
 import { useRegionCode } from "@/hooks/use-region-code";
@@ -29,6 +30,8 @@ import { createOnboardingAccountsCommand } from "@/state/onboarding-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 
 const TILE = 28;
+
+const accountKey = (name: string, currency: string) => `${name}\u0000${currency}`;
 
 function PickMark({ domain, muted }: { domain: string | null; muted: string }) {
     const uri = useMerchantMark(null, domain);
@@ -90,13 +93,15 @@ export function OnboardingAccounts() {
     // Free limits until Pro is confirmed: a stalled store lookup must not let a Free user past both caps.
     const locked = !useProConfirmed();
     const held = useAccounts(db).filter((account) => !isPerson(account));
-    const heldNames = new Set(held.map((account) => account.name));
+    const heldKeys = new Set(held.map((account) => accountKey(account.name, account.currency)));
+    const isHeld = (pick: AccountPick) => heldKeys.has(accountKey(pick.label, pick.currency));
     const picks = accountPicksFor(region, home, t("onboarding.accounts.cash"));
     const [picked, setPicked] = useState<ReadonlySet<string>>(() => new Set([CASH_PICK]));
     const [saving, setSaving] = useState(false);
     const [failed, setFailed] = useState(false);
+    const slow = useLongWait(saving);
 
-    const fresh = picks.filter((pick) => picked.has(pick.id) && !heldNames.has(pick.label));
+    const fresh = picks.filter((pick) => picked.has(pick.id) && !isHeld(pick));
     const { now, waiting } = splitByFreeLimits(fresh, held, locked);
     const shown = [...held.map((account) => account.currency), ...fresh.map((pick) => pick.currency)];
     const accountCount = held.length + fresh.length;
@@ -138,7 +143,11 @@ export function OnboardingAccounts() {
 
     return (
         <FirstRun
-            action={{ disabled: saving, label: t("common.continue"), onPress: () => save(false) }}
+            action={{
+                disabled: saving,
+                label: slow ? t("onboarding.accounts.creating") : t("common.continue"),
+                onPress: () => save(false),
+            }}
             error={failed ? t("onboarding.accounts.failed") : null}
             eyebrow={t("onboarding.accounts.eyebrow")}
             footnote={
@@ -160,7 +169,7 @@ export function OnboardingAccounts() {
                     </MonoLabel>
                 </View>
                 {picks.map((pick, index) => {
-                    const kept = heldNames.has(pick.label);
+                    const kept = isHeld(pick);
                     return (
                         <PickRow
                             checked={kept || picked.has(pick.id)}

@@ -832,12 +832,12 @@ const pro = {
             "pt-PT": "Dia {day}",
         }),
         "pro.timeline.reminder": t({
-            en: "We remind you your trial is ending.",
-            de: "Wir erinnern dich, dass dein Test endet.",
-            es: "Te avisamos que tu prueba está por terminar.",
-            fr: "Nous vous rappelons que votre essai se termine.",
-            pt: "Avisamos que seu teste está acabando.",
-            "pt-PT": "Avisamos que o seu teste está a terminar.",
+            en: "Your trial is about to end. With notifications on, we remind you.",
+            de: "Dein Test endet bald. Mit Mitteilungen erinnern wir dich daran.",
+            es: "Tu prueba está por terminar. Con las notificaciones activas, te avisamos.",
+            fr: "Votre essai se termine bientôt. Avec les notifications, nous vous le rappelons.",
+            pt: "Seu teste está acabando. Com as notificações ativas, avisamos você.",
+            "pt-PT": "O seu teste está a terminar. Com as notificações ativas, avisamos.",
         }),
         "pro.timeline.today": t({
             en: "Every Pro feature unlocks. You pay nothing today.",
