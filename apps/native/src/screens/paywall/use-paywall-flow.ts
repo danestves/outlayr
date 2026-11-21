@@ -1,7 +1,7 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
@@ -12,6 +12,7 @@ import type { Plan, PlanKind } from "@/domain/pro-plans";
 import { proSellable } from "@/hooks/use-pro-locked";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useAuthSession } from "@/lib/auth-session";
+import { useOnUnmount } from "@/lib/lifecycle";
 import { paywallPlansAtom } from "@/lib/paywall-plans";
 import { posthog } from "@/lib/posthog";
 import type { PaywallVariant } from "@/lib/posthog";
@@ -189,14 +190,12 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type, options: Pay
     const pitches = !(isPro || noCloud);
     const canBuy = pitches;
 
-    const reportDismissed = useEffectEvent(() => {
+    useOnUnmount(() => {
         const saleState = saleStateOf({ failed, isPro, noCloud, plans });
         if (saleState !== "pro") {
             posthog?.capture("paywall_dismissed", { sale_state: saleState, trigger, variant });
         }
     });
-    // oxlint-disable-next-line outlayr/react-effect-budget -- reports the paywall closing, however it was dismissed
-    useEffect(() => () => reportDismissed(), []);
 
     return {
         autolog,

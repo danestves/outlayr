@@ -1,6 +1,6 @@
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Stack, useRouter } from "expo-router";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { CloseToolbar } from "@/components/close-toolbar";
 import { notifyEditsNotRestored } from "@/components/edits-discarded-snackbar";
@@ -18,6 +18,7 @@ import { useLeaveWhenGone } from "@/hooks/use-leave-when-gone";
 import { useRestingSheet } from "@/hooks/use-resting-sheet";
 import { useTranslation } from "@/i18n/context";
 import { createDraftStash } from "@/lib/draft-stash";
+import { useWhen } from "@/lib/lifecycle";
 import { EditTransfer } from "@/screens/transfers/edit";
 import { markReviewedCommand } from "@/state/review-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
@@ -56,19 +57,17 @@ function TransactionSheet({ initial }: { initial: Transaction }) {
     const markReviewed = useAtomCommand(markReviewedCommand);
     const opened = initial.updatedAt.getTime();
     const version = useRef(opened);
-    const review = useEffectEvent(async () => {
+    const review = async () => {
         const result = await markReviewed({ db, ids: [initial.id] });
         const reviewed = AsyncResult.isSuccess(result) ? result.value[0] : undefined;
         if (reviewed?.from.getTime() === opened) {
             version.current = reviewed.updatedAt.getTime();
         }
+    };
+    // Opening an auto-logged entry is what reviews it, and no handler runs on open.
+    useWhen(initial.unreviewed, () => {
+        void review();
     });
-    // oxlint-disable-next-line outlayr/react-effect-budget -- opening an auto-logged entry is what reviews it, and no handler runs on open
-    useEffect(() => {
-        if (initial.unreviewed) {
-            review();
-        }
-    }, [initial.unreviewed]);
     // Only edits made on this version come back: older ones would overwrite whatever changed it.
     const [restore] = useState(() => {
         const held = entryDrafts.take(initial.id);

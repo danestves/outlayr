@@ -1,6 +1,6 @@
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import * as Cause from "effect/Cause";
-import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, use, useCallback, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
@@ -12,6 +12,7 @@ import type { AdoptionChoice } from "@/domain/ledger-adoption";
 import { useProLocked, useProPending } from "@/hooks/use-pro-locked";
 import { subscribeAppState } from "@/lib/app-state";
 import { useAuthSession } from "@/lib/auth-session";
+import { useMirror } from "@/lib/lifecycle";
 import { reconcileLedgerCommand, retryLedgerReconcileCommand } from "@/state/adoption-commands";
 import { SILENT } from "@/state/atom-command";
 import { completeAdoptionCommand } from "@/state/lifecycle-commands";
@@ -84,8 +85,7 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
     }
     const retryByAccount = useRef<AdoptionSlot | null>(null);
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- runs the account's ledger reconciliation and its one foreground retry on AppState, cancelled when the account or database changes
-    useEffect(() => {
+    useMirror([db, reconcilingFor, registry], () => {
         if (reconcilingFor === null) {
             return;
         }
@@ -114,7 +114,7 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
             cancelled = true;
             unsubscribe();
         };
-    }, [db, reconcilingFor, registry]);
+    });
 
     const choose = useCallback(
         (choice: AdoptionChoice) => {

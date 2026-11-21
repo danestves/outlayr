@@ -6,7 +6,7 @@ import * as Atom from "effect/reactivity/Atom";
 import { useNavigation, useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { Shimmer } from "panelui-native/components/shimmer";
-import { use, useEffect, useState } from "react";
+import { use, useState } from "react";
 import type React from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {
@@ -64,6 +64,7 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { languageSubtag } from "@/i18n/languages";
 import type { VoiceDraft, VoiceQuote } from "@/lib/cloud-ai";
+import { useMirror } from "@/lib/lifecycle";
 import { useHaptics } from "@/lib/use-haptics";
 import { saveTransferCommand } from "@/state/accounts-commands";
 import { fromCommand, openAppSettings, voidFlowCommand } from "@/state/entry-commands";
@@ -364,13 +365,12 @@ function sentenceOf({ earlier, live, previous, resolved }: SentenceParts): Voice
 
 function useHandoffHaptics(kind: VoicePhase["kind"]) {
     const haptics = useHaptics();
-    // oxlint-disable-next-line outlayr/react-effect-budget -- plays the Taptic cue for each voice phase, which settles from recorder and Convex events with no single handler
-    useEffect(() => {
+    useMirror([kind], () => {
         const cue = HANDOFF_HAPTIC[kind];
         if (cue) {
             haptics(cue);
         }
-    }, [haptics, kind]);
+    });
 }
 
 const voiceHintSeedAtom = Atom.family((db: Database) =>

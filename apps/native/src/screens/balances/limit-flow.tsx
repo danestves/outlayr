@@ -2,7 +2,7 @@ import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import * as Cause from "effect/Cause";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { CategoryPickerSheet } from "@/components/category-picker-sheet";
 import type { CategoryPickerSheetRef } from "@/components/category-picker-sheet";
@@ -13,6 +13,7 @@ import type { Category } from "@/data/categories-core";
 import { blocksNewBudget, FREE_BUDGETS } from "@/domain/pro-limits";
 import { useOpenPaywall, useProCapped } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
+import { useMirror } from "@/lib/lifecycle";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import type { LimitCommit, LimitTarget } from "@/screens/budgets/components/budget-limit-body";
@@ -55,12 +56,12 @@ export function useLimitFlow({ allBudgets, contributions, currency, nowMs }: Lim
     const patchLimit = useAtomAction(patchBudgetCommand, saved, SILENT);
     const createLimit = useAtomAction(createBudgetCommand, saved, SILENT);
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- presents the native limit sheet once its target has rendered, after the category picker has dismissed
-    useEffect(() => {
+    // Presents the native limit sheet once its target has rendered, after the category picker has dismissed.
+    useMirror([limitTarget], () => {
         if (limitTarget) {
             limitSheetRef.current?.present();
         }
-    }, [limitTarget]);
+    });
 
     const budgetedCategoryIds = allBudgets.map((budget) => budget.categoryId).filter((id): id is string => id !== null);
 
