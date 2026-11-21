@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
@@ -89,6 +90,7 @@ const watchCloudAuthenticated: Watch<boolean> = (listener) =>
     subscribeCloudAuthenticated(() => listener(isCloudAuthenticated()));
 
 const GUEST_CLAIM_KEY = "revenuecat.guestClaim";
+const CLAIM_RETRY_MINUTES = [1, 2, 4, 8, 16, 32] as const;
 
 // `destination` is the account the first claim ran for, so a later sign-in to anyone else can't take the receipt.
 const GuestClaim = Schema.Struct({ destination: Schema.NullOr(Schema.String) });
@@ -407,6 +409,9 @@ export const make = Effect.gen(function* make() {
         const { guestClaim } = yield* SubscriptionRef.get(ref);
         const claim = target !== null && guestClaim?.destination === target && Result.isSuccess(identified);
         const answer = claim ? yield* claimGuestPurchases(identified) : identified;
+        if (claim) {
+            yield* Effect.forkIn(keepClaiming(target), scope);
+        }
         yield* transition((state) => {
             let next = state;
             if (Result.isSuccess(answer)) {
@@ -446,11 +451,11 @@ export const make = Effect.gen(function* make() {
             ];
         });
         if (requested !== null) {
+            const login = identify(target, requested.ticket);
             // Bound before the login, so a failed login can't leave the receipt to the next account signed in to.
-            if (requested.bind) {
-                yield* sdk.writeGuestClaim({ destination: target });
-            }
-            yield* enqueue(identify(target, requested.ticket));
+            yield* enqueue(
+                requested.bind ? sdk.writeGuestClaim({ destination: target }).pipe(Effect.andThen(login)) : login
+            );
         }
     }, Effect.uninterruptible);
 
@@ -572,6 +577,27 @@ export const make = Effect.gen(function* make() {
         }
         return pro;
     });
+
+    // RevenueCat deletes the guest a while after the sign-in, so a claim it wasn't ready for retries while the
+    // account stays signed in.
+    const keepClaiming: (account: string) => Effect.Effect<void> = Effect.fn("RevenueCat.keepClaiming")(
+        function* keepClaiming(account: string) {
+            for (const minutes of CLAIM_RETRY_MINUTES) {
+                yield* Effect.sleep(Duration.minutes(minutes));
+                const state = yield* SubscriptionRef.get(ref);
+                if (state.guestClaim?.destination !== account || currentSession(state)?.accountId !== account) {
+                    return;
+                }
+                const claimed = yield* reclaim(account).pipe(
+                    Effect.catchTags({ RevenueCatError: (error) => warn(error).pipe(Effect.as(false)) })
+                );
+                if (claimed) {
+                    return;
+                }
+            }
+        },
+        Effect.catchTags({ RevenueCatSessionChanged: (error) => Effect.logWarning(error.message) })
+    );
 
     const purchaseOutcome = (pack: PurchasesPackage) =>
         call("purchase", () => sdk.purchaseAndCheckPro(pack)).pipe(

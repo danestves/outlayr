@@ -378,6 +378,25 @@ describe("revenueCat", () => {
         expect(disk).toBeNull();
     });
 
+    it("keeps retrying the claim while the account stays signed in, and stops once it lands", async () => {
+        await start(null);
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
+        signIn("guest-8", true);
+        await flush();
+        signIn("user-29");
+        await flush();
+
+        await vi.advanceTimersByTimeAsync(60_000);
+        expect(sdk.syncAndCheckPro).toHaveBeenCalledTimes(2);
+
+        sdk.syncAndCheckPro.mockReturnValueOnce(Effect.succeed(true));
+        await vi.advanceTimersByTimeAsync(120_000);
+        expect(entitlement()).toMatchObject({ kind: "pro" });
+
+        await vi.advanceTimersByTimeAsync(3_600_000);
+        expect(sdk.syncAndCheckPro).toHaveBeenCalledTimes(3);
+    });
+
     it("drops the previous customer's Pro at the switch and discards every late answer about it", async () => {
         sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
         await start("user-3");
