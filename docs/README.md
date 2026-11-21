@@ -14,6 +14,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [Effect services](./internals/effect-services.md)
 - [Library traps](./internals/library-traps.md)
 - [AI providers](./internals/ai-providers.md)
+- [Email](./internals/email.md)
 - [Environment variables](./internals/env.md)
 - [What EAS Build uploads](./internals/eas-upload.md)
 - [App icon bundles pinned to the Xcode 26 schema](./internals/app-icon.md)

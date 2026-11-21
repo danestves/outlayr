@@ -33,14 +33,20 @@ afterEach(() => {
     vi.useRealTimers();
 });
 
-function stubCloudflare(refuse: (to: string) => boolean = () => false) {
+function stubCloudflare(refuse: (to: string) => boolean = () => false, bounce: (to: string) => boolean = () => false) {
     const sent: { subject: string; to: string }[] = [];
     vi.stubGlobal(
         "fetch",
         vi.fn(async (_url: string, init?: RequestInit) => {
-            const { subject, to }: { subject: string; to: string } = JSON.parse(String(init?.body));
+            const {
+                subject,
+                to: [to = ""],
+            }: { subject: string; to: string[] } = JSON.parse(String(init?.body));
             if (refuse(to)) {
                 return new Response("busy", { status: 502 });
+            }
+            if (bounce(to)) {
+                return Response.json({ result: { delivered: [], permanent_bounces: [to] }, success: true });
             }
             sent.push({ subject, to });
             return Response.json({ errors: [], success: true });
@@ -118,7 +124,10 @@ describe("the trial reminder", () => {
                 if (url.hostname === "api.stripe.com") {
                     return new Response("unavailable", { status: 503 });
                 }
-                const { subject, to }: { subject: string; to: string } = JSON.parse(String(init?.body));
+                const {
+                    subject,
+                    to: [to = ""],
+                }: { subject: string; to: string[] } = JSON.parse(String(init?.body));
                 sent.push({ at: Date.now(), subject, to });
                 return Response.json({ errors: [], success: true });
             })
@@ -153,6 +162,7 @@ describe("a policy notice", () => {
         const ana = await seedAuthUser(t);
         const ben = await seedAuthUser(t);
         const cleo = await seedAuthUser(t);
+        const dana = await seedAuthUser(t);
         await t.run((ctx) =>
             ctx.runMutation(components.betterAuth.adapter.create, {
                 input: {
@@ -172,13 +182,16 @@ describe("a policy notice", () => {
             deliveries: [{ keys: [`privacy:${DAY}`], language: "en", userId: cleo.userId }],
         });
         let benReachable = false;
-        const sent = stubCloudflare((to) => to === ben.email && !benReachable);
+        const sent = stubCloudflare(
+            (to) => to === ben.email && !benReachable,
+            (to) => to === dana.email
+        );
         const notify = () => t.action(internal.mailDelivery.notifyPolicy, {});
 
-        await expect(notify()).resolves.toStrictEqual({ failed: 1, sent: 2 });
+        await expect(notify()).resolves.toStrictEqual({ failed: 2, sent: 2 });
         benReachable = true;
-        await expect(notify()).resolves.toStrictEqual({ failed: 0, sent: 1 });
-        await expect(notify()).resolves.toStrictEqual({ failed: 0, sent: 0 });
+        await expect(notify()).resolves.toStrictEqual({ failed: 1, sent: 1 });
+        await expect(notify()).resolves.toStrictEqual({ failed: 1, sent: 0 });
 
         expect(sent).toStrictEqual([
             { subject: "Cambios en nuestra Política de privacidad y nuestros Términos de uso", to: ana.email },

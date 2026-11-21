@@ -51,6 +51,7 @@ const resolveApple = async (vars: Record<string, string>) => {
 };
 
 afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
 });
@@ -182,7 +183,7 @@ describe("Notion", () => {
 interface SentEmail {
     subject: string;
     text: string;
-    to: string;
+    to: string[];
 }
 
 function stubEmail(): SentEmail[] {
@@ -201,7 +202,6 @@ function emailAuth() {
     const t = convexTest(schema, modules);
     betterAuthTest.register(t);
     rateLimiterTest.register(t);
-    // Through the HTTP route, as in production: convex-test rejects `fetch` (the email send) inside `t.run`.
     return async (path: string, body: Record<string, string>, language = "en") => {
         const response = await t.fetch(`/api/auth${path}`, {
             body: JSON.stringify(body),
@@ -235,12 +235,72 @@ describe("email sign-in", () => {
 
         expect(sent[0]).toMatchObject({
             subject: expect.stringContaining("Your Outlayr code"),
-            to: credentials.email,
+            to: [credentials.email],
         });
         expect(verified).toMatchObject({ status: 200, token: expect.any(String) });
         await vi.waitFor(() =>
             expect(sent.map(({ subject }) => subject).slice(2)).toStrictEqual(["Your Outlayr account is ready"])
         );
+    });
+
+    it("signs up with no email provider by logging the code", async () => {
+        vi.stubEnv("CLOUDFLARE_ACCOUNT_ID", "");
+        vi.stubEnv("CLOUDFLARE_EMAIL_TOKEN", "");
+        vi.stubEnv("EMAIL_FROM", "");
+        const network = vi.fn();
+        vi.stubGlobal("fetch", network);
+        const log = vi.spyOn(console, "log").mockReturnValue(undefined);
+        const post = emailAuth();
+
+        await expect(post("/sign-up/email", credentials)).resolves.toMatchObject({ status: 200, token: null });
+        const logged = log.mock.calls.map(([line]) => String(line)).find((line) => line.includes("Your Outlayr code"));
+        const verified = await post("/email-otp/verify-email", {
+            email: credentials.email,
+            otp: logged?.match(/\d{6}/)?.[0] ?? "",
+        });
+
+        expect(verified).toMatchObject({ status: 200, token: expect.any(String) });
+        expect(network).not.toHaveBeenCalled();
+    });
+
+    it("refuses to start a code when the email provider is half set up", async () => {
+        const sent = stubEmail();
+        vi.stubEnv("EMAIL_PROVIDER", "smtp");
+        const post = emailAuth();
+
+        await expect(post("/sign-up/email", credentials)).resolves.toMatchObject({ status: 503 });
+        await expect(post("/email-otp/request-password-reset", { email: credentials.email })).resolves.toMatchObject({
+            status: 503,
+        });
+        vi.stubEnv("EMAIL_PROVIDER", "cloudflare");
+        await expect(post("/sign-up/email", credentials)).resolves.toMatchObject({ status: 200, token: null });
+        expect(sent.map(({ subject }) => subject)).toStrictEqual([expect.stringContaining("Your Outlayr code")]);
+    });
+
+    it("keeps verified password sign-in while email is broken, without sending codes", async () => {
+        const sent = stubEmail();
+        const post = emailAuth();
+        const pending = { ...credentials, email: "bea@example.com" };
+        await post("/sign-up/email", credentials);
+        await post("/email-otp/verify-email", { email: credentials.email, otp: codeIn(sent.at(-1)) });
+        await post("/sign-up/email", pending);
+        await vi.waitFor(() => expect(sent).toHaveLength(3));
+        vi.stubEnv("EMAIL_PROVIDER", "sendgrid");
+
+        await expect(post("/sign-in/email", credentials)).resolves.toMatchObject({
+            status: 200,
+            token: expect.any(String),
+        });
+        const errors = vi.spyOn(console, "error").mockReturnValue(undefined);
+        await expect(post("/sign-in/email", pending)).resolves.toMatchObject({
+            code: "EMAIL_NOT_VERIFIED",
+            status: 403,
+        });
+        expect(errors).not.toHaveBeenCalled();
+        await expect(post("/sign-up/email", { ...credentials, email: "cy@example.com" })).resolves.toMatchObject({
+            status: 503,
+        });
+        expect(sent).toHaveLength(3);
     });
 
     it("answers a taken address like a new one and tells its owner instead", async () => {

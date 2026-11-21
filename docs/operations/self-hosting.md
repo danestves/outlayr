@@ -22,7 +22,7 @@ curl -fsSL "$base/convex.env.example" -o convex.env
 ```
 
 1. In `.env`, set `APP_ORIGIN`, `CONVEX_CLOUD_ORIGIN` and `CONVEX_SITE_ORIGIN` to the addresses people will open. Change a port there if the host already uses it.
-2. In `convex.env`, set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) and uncomment one sign-in provider (see [Signing in](#signing-in)).
+2. In `convex.env`, set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) and, for Google or Apple, uncomment that provider (see [Signing in](#signing-in)).
 3. Start Convex and print an admin key:
 
     ```sh
@@ -86,7 +86,7 @@ Builds need no Hugeicons Pro token: only the native app and the marketing site u
 | Variables | Required | Enables |
 |---|---|---|
 | `BETTER_AUTH_SECRET` | Yes | Sessions. better-auth refuses to start without it. |
-| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_EMAIL_TOKEN`, `EMAIL_FROM` | One provider | Email codes and passwords. |
+| `EMAIL_PROVIDER`, `EMAIL_FROM`, and one provider's variables: `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_EMAIL_TOKEN`, `RESEND_API_KEY`, or `SMTP_HOST` (with `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`) | No | Email codes and passwords. With no provider, every email goes to the Convex function logs. See [Signing in](#signing-in). |
 | `GOOGLE_CLIENT_ID_WEB`, `GOOGLE_CLIENT_ID_IOS`, `GOOGLE_CLIENT_SECRET` | One provider | Google sign-in. |
 | `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`, `APPLE_WEB_CLIENT_ID` | One provider | Apple sign-in. `APPLE_WEB_CLIENT_ID` defaults to `APPLE_CLIENT_ID`. |
 | `JWKS` | No | Static auth signing key, see [auth-signing-key.md](./auth-signing-key.md). |
@@ -110,9 +110,9 @@ A build that sets those variables keeps them: varlock bakes a build's resolved e
 
 ## Signing in
 
-No sign-in works until `convex.env` has `BETTER_AUTH_SECRET` and at least one provider.
+No sign-in works until `convex.env` has `BETTER_AUTH_SECRET`. Google and Apple each need their variables too.
 
-- **Email.** Codes and passwords go out through Cloudflare Email Sending; there is no SMTP option. `EMAIL_FROM` must be an address that Cloudflare account may send from.
+- **Email.** Works with no provider at all: every email, codes included, goes to the Convex function logs, so the dashboard's Logs page (port 6791, signed in with the admin key) or `convex logs` shows the code. That is enough for a plain-HTTP LAN install. To send for real, set `EMAIL_PROVIDER` to `cloudflare`, `resend` or `smtp`, that provider's variables, and `EMAIL_FROM`. Cloudflare needs `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_EMAIL_TOKEN`, Resend needs `RESEND_API_KEY`, and SMTP needs `SMTP_HOST` with `SMTP_PORT` (587 by default, 465 for implicit TLS) and `SMTP_USERNAME` with `SMTP_PASSWORD`, set together or not at all. With `EMAIL_PROVIDER` unset, the first provider with any of its variables set wins, in that order. A provider with missing or malformed variables, an unknown `EMAIL_PROVIDER`, or no valid `EMAIL_FROM` makes sign-up and code requests answer 503 instead of falling back to the log; verified accounts still sign in. Only presence and format are checked here: wrong credentials, or a sender the provider does not accept, fail when the email goes out and show in the logs. SMTP credentials need a server with TLS.
 - **Google.** Create a web OAuth client with the redirect URI `<APP_ORIGIN>/api/auth/callback/google`. Google accepts only HTTPS URLs on a public domain (or `http://localhost`), so a plain-HTTP LAN address needs email sign-in instead. All three variables must be set: without an iOS client, set `GOOGLE_CLIENT_ID_IOS` to the web client ID.
 - **Apple.** Needs a Services ID, a Sign in with Apple key and an HTTPS `APP_ORIGIN`, since Apple refuses plain HTTP return URLs.
 
@@ -171,7 +171,7 @@ From a checkout, add `-f docker-compose.yml -f docker-compose.build.yml` after `
 
 - **Never localhost.** The app server calls `CONVEX_SITE_ORIGIN` for auth, and Convex fetches its own JWKS from `CONVEX_SITE_ORIGIN` while `JWKS` is empty. Inside a container, `localhost` is that container. A LAN IP or a domain works from both sides.
 - **Host firewalls.** With ufw or another default-deny firewall, containers cannot reach the host's own published ports, so the app's auth calls time out (`ConnectTimeoutError` in `docker compose logs app`). Allow the Compose network's subnet (`docker network inspect outlayr_default`) to the Convex ports, or serve the origins through a reverse proxy on ports the firewall already allows.
-- **Comment out, do not blank.** An empty line in `convex.env` sets the variable to an empty string, and an empty Cloudflare or Google variable still switches that provider on, with blank credentials.
+- **Comment out, do not blank.** An empty line in `convex.env` sets the variable to an empty string. Email treats an empty variable as unset, but an empty Google variable still switches Google sign-in on, with blank credentials.
 - **Removed lines stay.** Deleting a line from `convex.env` does not unset it. Remove it in the dashboard under Settings, Environment Variables.
 - **The admin key follows the instance secret.** Losing the volume or changing `INSTANCE_SECRET` makes a new secret, so generate a new key.
 - **Port collisions.** Home servers often hold 3000 and 3210 already. Change the host port in `.env`, and the matching origin with it.

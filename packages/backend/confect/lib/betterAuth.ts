@@ -2,13 +2,14 @@ import { expo } from "@better-auth/expo";
 import { createClient } from "@convex-dev/better-auth";
 import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
-import { requireRunMutationCtx } from "@convex-dev/better-auth/utils";
+import { requireActionCtx, requireRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { symmetricDecrypt } from "better-auth/crypto";
 import { betterAuth } from "better-auth/minimal";
 import { emailOTP } from "better-auth/plugins";
 import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -19,8 +20,9 @@ import { components, internal } from "../../convex/_generated/api";
 import type { DataModel } from "../../convex/_generated/dataModel";
 import authConfig from "../../convex/auth.config";
 import { authSettings } from "./config";
-import { accountExistsEmail, codeEmail, EMAIL_CODE_TTL_SECONDS, emailLanguage, sendEmail } from "./email";
-import { outboundHttp } from "./http";
+import { accountExistsEmail, codeEmail, EMAIL_CODE_TTL_SECONDS, EmailError, emailLanguage } from "./email";
+import type { Email } from "./email";
+import { emailSetup } from "./emailSetup";
 import { AppleLifecycleError, appleCredentialLifecycle } from "./providerLifecycle";
 import { runEdge, runEdgeSync } from "./runEdge";
 import { sha256Hex } from "./sha256Hex";
@@ -40,6 +42,20 @@ const EMAIL_LIMITED_PATHS = new Set([
     "/sign-in/email",
     "/sign-up/email",
 ]);
+
+const EMAIL_SENDING_PATHS = new Set([
+    "/email-otp/request-email-change",
+    "/email-otp/request-password-reset",
+    "/email-otp/send-verification-otp",
+    "/sign-up/email",
+]);
+
+const emailProblem = Effect.gen(function* emailProblem() {
+    const setup = yield* emailSetup;
+    return setup.provider === "unconfigured"
+        ? Option.some(new EmailError({ provider: setup.requested, reason: "unconfigured" }).message)
+        : Option.none<string>();
+}).pipe(Effect.catch((error) => Effect.succeed(Option.some(error.message))));
 
 const emailLimiter = new RateLimiter(components.rateLimiter, {
     emailAuth: { capacity: 10, kind: "token bucket", period: HOUR, rate: 10 },
@@ -104,13 +120,13 @@ function createAuth(ctx: GenericCtx<DataModel>) {
     const {
         apple: appleConfig,
         convexSiteUrl,
-        email: emailConfig,
         google: googleConfig,
         nativeAppUrl,
         notion: notionConfig,
         siteUrl,
         webOrigins,
     } = runEdgeSync(authSettings);
+    const emailBlocked = runEdgeSync(emailProblem);
 
     const recordMail = (name: "claimWelcome" | "rememberLanguage", userId: string, headers: Headers | undefined) =>
         runEdge(
@@ -120,6 +136,11 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                     userId,
                 })
             ).pipe(Effect.ignoreCause({ log: true, message: `mail.${name} failed` }))
+        );
+
+    const deliverEmail = (to: string, email: Email) =>
+        Effect.promise(() => requireActionCtx(ctx).runAction(internal.mailDelivery.send, { ...email, to })).pipe(
+            Effect.asVoid
         );
 
     return betterAuth({
@@ -156,19 +177,15 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         // The app uses neither: codes only confirm an address or reset a password.
         disabledPaths: ["/forget-password/email-otp", "/send-verification-email", "/sign-in/email-otp"],
         emailAndPassword: {
-            enabled: Option.isSome(emailConfig),
+            enabled: true,
             onExistingUserSignUp: ({ user }, request) =>
-                runEdge(
-                    sendEmail(user.email, accountExistsEmail(emailLanguage(request?.headers))).pipe(
-                        Effect.provide(outboundHttp)
-                    )
-                ),
+                runEdge(deliverEmail(user.email, accountExistsEmail(emailLanguage(request?.headers)))),
             requireEmailVerification: true,
             revokeSessionsOnPasswordReset: true,
         },
         emailVerification: {
             autoSignInAfterVerification: true,
-            sendOnSignIn: true,
+            sendOnSignIn: Option.isNone(emailBlocked),
         },
         hooks: {
             after: createAuthMiddleware(async (endpoint) => {
@@ -193,6 +210,12 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                         ) {
                             return yield* Effect.fail(
                                 new APIError("FORBIDDEN", { message: "Notion is not a sign-in method" })
+                            );
+                        }
+                        if (EMAIL_SENDING_PATHS.has(endpoint.path) && Option.isSome(emailBlocked)) {
+                            yield* Console.error(emailBlocked.value);
+                            return yield* Effect.fail(
+                                new APIError("SERVICE_UNAVAILABLE", { message: "Email is not set up on this server" })
                             );
                         }
                         const body = decodeEmailBody(endpoint.body);
@@ -241,7 +264,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
             emailOTP({
                 changeEmail: { enabled: true },
                 expiresIn: EMAIL_CODE_TTL_SECONDS,
-                overrideDefaultEmailVerification: true,
+                overrideDefaultEmailVerification: Option.isNone(emailBlocked),
                 sendVerificationOTP: ({ email, otp, type }, endpoint) =>
                     runEdge(
                         Effect.gen(function* sendVerificationOTP() {
@@ -250,8 +273,8 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                                 return;
                             }
                             const language = emailLanguage(endpoint?.request?.headers ?? endpoint?.headers);
-                            yield* sendEmail(email, codeEmail(otp, purpose, language));
-                        }).pipe(Effect.provide(outboundHttp))
+                            yield* deliverEmail(email, codeEmail(otp, purpose, language));
+                        })
                     ),
                 storeOTP: "hashed",
             }),

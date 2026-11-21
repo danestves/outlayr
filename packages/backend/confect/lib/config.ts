@@ -70,12 +70,6 @@ export const notionConfig = Config.all({
     clientSecret: secret("NOTION_CLIENT_SECRET"),
 }).pipe(Config.map(Option.all));
 
-export const emailConfig = Config.all({
-    accountId: text("CLOUDFLARE_ACCOUNT_ID"),
-    from: text("EMAIL_FROM"),
-    token: secret("CLOUDFLARE_EMAIL_TOKEN"),
-}).pipe(Config.map(Option.all));
-
 export const revenueCatSecretKey = secret("REVENUECAT_SECRET_KEY");
 
 export const proAccounts = Config.String("PRO_ACCOUNTS").pipe(
@@ -134,7 +128,6 @@ export const numberOverride = (name: string) =>
 export const authSettings = Config.all({
     apple: appleConfig,
     convexSiteUrl,
-    email: emailConfig,
     google: googleConfig,
     nativeAppUrl,
     notion: notionConfig,
