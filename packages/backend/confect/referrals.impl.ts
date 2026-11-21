@@ -24,7 +24,7 @@ import {
     QueryRunner,
     Scheduler,
 } from "./_generated/services";
-import { optionalUserId, requireUserId } from "./lib/auth";
+import { isGuest, optionalUserId, requireUserId } from "./lib/auth";
 import { authComponent } from "./lib/betterAuth";
 import { dieAsConvexError } from "./lib/convexError";
 import { outboundHttp } from "./lib/http";
@@ -297,8 +297,10 @@ const redeem = FunctionImpl.make(
     Effect.fn("Referrals.redeem")(function* redeem(args) {
         const ctx = yield* ActionCtx;
         const { runQuery } = yield* QueryRunner;
+        const identity = yield* Effect.promise(() => ctx.auth.getUserIdentity());
         const userId = yield* runQuery(refs.internal.revenuecat.sessionUserId, {});
-        if (userId === null) {
+        // Guests are free to make, so a code redeemed by one would be a reward anyone could farm.
+        if (userId === null || identity === null || isGuest(identity)) {
             return "signedOut" as const;
         }
         const allowed = yield* Effect.promise(() => referralLimiter.limit(ctx, "referralRedeem", { key: userId }));

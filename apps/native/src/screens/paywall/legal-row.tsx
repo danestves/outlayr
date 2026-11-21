@@ -12,14 +12,11 @@ function LegalDot() {
     return <Text className="text-muted text-micro">·</Text>;
 }
 
-/** Restore stays hidden until there is an account for it to restore into. */
 export function LegalRow({
-    canRestore,
     disabled,
     onRestore,
     restoring,
 }: {
-    canRestore: boolean;
     disabled: boolean;
     onRestore: () => void;
     restoring: boolean;
@@ -29,25 +26,16 @@ export function LegalRow({
     const colors = useColors();
     return (
         <View className="flex-row items-center justify-center gap-4 px-5 pt-4">
-            {canRestore ? (
-                <>
-                    <Pressable
-                        accessibilityRole="button"
-                        disabled={disabled}
-                        onPress={onRestore}
-                        testID="paywall-restore"
-                    >
-                        {restoring ? (
-                            <BusyText className={MONO_LABEL_CLASS} color={colors.foreground}>
-                                {t("pro.legal.restoring")}
-                            </BusyText>
-                        ) : (
-                            <MonoLabel>{t("pro.legal.restore")}</MonoLabel>
-                        )}
-                    </Pressable>
-                    <LegalDot />
-                </>
-            ) : null}
+            <Pressable accessibilityRole="button" disabled={disabled} onPress={onRestore} testID="paywall-restore">
+                {restoring ? (
+                    <BusyText className={MONO_LABEL_CLASS} color={colors.foreground}>
+                        {t("pro.legal.restoring")}
+                    </BusyText>
+                ) : (
+                    <MonoLabel>{t("pro.legal.restore")}</MonoLabel>
+                )}
+            </Pressable>
+            <LegalDot />
             <Pressable accessibilityRole="link" onPress={() => openInAppBrowser(legalUrl("terms", language))}>
                 <MonoLabel>{t("pro.legal.terms")}</MonoLabel>
             </Pressable>

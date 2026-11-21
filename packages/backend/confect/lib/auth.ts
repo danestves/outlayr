@@ -1,3 +1,4 @@
+import type { UserIdentity } from "convex/server";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -17,6 +18,9 @@ export const optionalUserId = Effect.fn("Auth.optionalUserId")(function* optiona
     const user = yield* Effect.promise(() => authComponent.safeGetAuthUser(ctx));
     return user ? user._id : null;
 });
+
+// Better Auth puts its user fields in the Convex token, so an anonymous user carries isAnonymous.
+export const isGuest = (identity: UserIdentity) => identity["isAnonymous"] === true;
 
 export const liveIdentity = Effect.fn("Auth.liveIdentity")(function* liveIdentity(
     ctx: ActionCtx | MutationCtx | QueryCtx

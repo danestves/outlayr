@@ -3,6 +3,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
+import * as Schema from "effect/Schema";
 import { createContext, use, useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -15,6 +16,8 @@ export interface AuthSession {
     accountId: string | null;
     activate: () => void;
     begin: () => void;
+    /** Who the store bills: the account, or the guest a signed-out purchase made. */
+    billingId: string | null;
     gate: AuthGate;
     profile: AccountProfile | null;
     reject: () => void;
@@ -30,6 +33,7 @@ const UNCONFIGURED: AuthSession = {
     accountId: null,
     activate: NOOP,
     begin: NOOP,
+    billingId: null,
     gate: "unconfigured",
     profile: null,
     reject: NOOP,
@@ -70,15 +74,18 @@ function LiveSession({ children }: { children: ReactNode }) {
 }
 
 export function sessionView(
-    session: { user: AccountProfile & { id: string } } | null | undefined,
+    session: { user: AccountProfile & { id: string; isAnonymous?: boolean | null | undefined } } | null | undefined,
     isPending: boolean,
     provisional: boolean,
     restoreExpired = false
-): Pick<AuthSession, "accountId" | "gate" | "profile"> {
-    const user = provisional || session == null ? null : session.user;
+): Pick<AuthSession, "accountId" | "billingId" | "gate" | "profile"> {
+    // A guest only holds a purchase, so everything else in the app treats it as signed out.
+    const guestId = session?.user.isAnonymous === true ? session.user.id : null;
+    const user = provisional || session == null || guestId !== null ? null : session.user;
     const accountId = user?.id ?? null;
     return {
         accountId,
+        billingId: accountId ?? guestId,
         gate: authGate({
             configured: true,
             hasSession: accountId != null,
@@ -88,3 +95,22 @@ export function sessionView(
         profile: user === null ? null : { email: user.email, name: user.name },
     };
 }
+
+export class GuestStartFailed extends Schema.TaggedError<GuestStartFailed>()("GuestStartFailed", {
+    cause: Schema.Defect(),
+}) {}
+
+export const startGuest = Effect.fn("AuthSession.startGuest")(function* startGuest() {
+    const client = authClient;
+    if (client === null) {
+        return yield* new GuestStartFailed({ cause: new Error("Cloud is not configured") });
+    }
+    const { data, error } = yield* Effect.tryPromise({
+        catch: (cause) => new GuestStartFailed({ cause }),
+        try: () => client.signIn.anonymous(),
+    });
+    if (error || !data) {
+        return yield* new GuestStartFailed({ cause: new Error(error?.message ?? "No guest was returned") });
+    }
+    return data.user.id;
+});

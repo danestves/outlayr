@@ -6,6 +6,7 @@ import * as Atom from "effect/reactivity/Atom";
 import { useDatabase } from "@/contexts/local-data-context";
 import { SyncEngineMount } from "@/data/sync-engine-mount";
 import { useProEntitled } from "@/hooks/use-pro-locked";
+import { useAuthSession } from "@/lib/auth-session";
 import { useCloudAuthenticated } from "@/lib/convex";
 
 import { BackgroundProgramMount, EnrichmentSyncMount, PhotoSyncMount } from "./background-work-mount";
@@ -31,12 +32,14 @@ export function BackgroundWork() {
     const started = AsyncResult.isSuccess(useAtomValue(idleStartAtom));
     const proEntitled = useProEntitled();
     const cloudAuthenticated = useCloudAuthenticated();
+    const { accountId } = useAuthSession();
 
     if (!started) {
         return null;
     }
     // Held down without a confirmed entitlement and session: the server refuses a lapsed customer and a missing token.
-    const cloudPaused = !proEntitled || !cloudAuthenticated;
+    // A guest's purchase opens AI but not sync, which needs an account to restore the ledger to.
+    const cloudPaused = !proEntitled || !cloudAuthenticated || accountId === null;
 
     return (
         <>

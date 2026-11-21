@@ -50,6 +50,7 @@ const sdk = {
     refreshProEntitlement: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
     restoreAndCheckPro: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
     setCustomerProfile: vi.fn<(profile: { email: string; name: string }) => Effect.Effect<void, PurchasesError>>(),
+    syncAndCheckPro: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
     watchCloudAuthenticated: cloudAuth.watch,
     watchEntitlement: customerInfo.watch,
 };
@@ -75,13 +76,15 @@ describe("revenueCat", () => {
     let registry: AtomRegistry.AtomRegistry;
     let leaveSession: (() => void) | undefined;
 
-    const signIn = (accountId: string | null) => {
+    const signIn = (accountId: string | null, guest = false) => {
         leaveSession?.();
+        const named = accountId !== null && !guest;
         leaveSession = registry.mount(
             revenueCatSessionAtom({
                 accountId,
-                email: accountId === null ? undefined : `${accountId}@example.com`,
-                name: accountId === null ? undefined : "Ana",
+                email: named ? `${accountId}@example.com` : undefined,
+                guest,
+                name: named ? "Ana" : undefined,
             })
         );
     };
@@ -132,6 +135,7 @@ describe("revenueCat", () => {
         sdk.refreshProEntitlement.mockReturnValue(Effect.succeed(false));
         sdk.restoreAndCheckPro.mockReturnValue(Effect.succeed(false));
         sdk.setCustomerProfile.mockReturnValue(Effect.succeed(undefined));
+        sdk.syncAndCheckPro.mockReturnValue(Effect.succeed(false));
     });
 
     afterEach(() => {
@@ -265,6 +269,37 @@ describe("revenueCat", () => {
         answer();
         await flush();
         expect(entitlement()).toStrictEqual({ kind: "free", pending: false });
+    });
+
+    it("hands a guest's purchase to the account it signs in to, even across the sign-in's signed-out gap", async () => {
+        await start(null);
+        signIn("guest-1", true);
+        await flush();
+        expect(sdk.syncAndCheckPro).not.toHaveBeenCalled();
+
+        signIn(null);
+        await flush();
+        sdk.syncAndCheckPro.mockReturnValueOnce(Effect.succeed(true));
+        signIn("user-20");
+        await flush();
+        expect(sdk.identifyUser).toHaveBeenLastCalledWith("user-20");
+        expect(sdk.syncAndCheckPro).toHaveBeenCalledOnce();
+        expect(entitlement()).toMatchObject({ kind: "pro" });
+
+        signIn("user-21");
+        await flush();
+        expect(sdk.syncAndCheckPro).toHaveBeenCalledOnce();
+    });
+
+    it("keeps the account's own answer when claiming the guest's purchase fails", async () => {
+        await start(null);
+        signIn("guest-2", true);
+        await flush();
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
+        sdk.syncAndCheckPro.mockReturnValueOnce(Effect.fail(new PurchasesError({ cause: new Error("offline") })));
+        signIn("user-22");
+        await flush();
+        expect(entitlement()).toMatchObject({ kind: "pro" });
     });
 
     it("drops the previous customer's Pro at the switch and discards every late answer about it", async () => {

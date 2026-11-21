@@ -68,7 +68,7 @@ const sharedCategory = Effect.fn("Enrichment.sharedCategory")(
             return args.categoryName;
         }
         const ctx = yield* ActionCtx;
-        const { model } = yield* openAiGateFor(caller, {
+        const { model } = yield* openAiGateFor(ctx, caller, {
             admit: () => withinLimit(() => rateLimiter.limit(ctx, "enrichmentGlobal")),
             args,
             route: route({ feature: "category_suggest" }),
@@ -177,7 +177,7 @@ const suggest = FunctionImpl.make(
             }
 
             const ctx = yield* ActionCtx;
-            const { distinctId, model } = yield* openAiGateFor(identity, {
+            const { distinctId, model } = yield* openAiGateFor(ctx, identity, {
                 admit: Effect.fn("Enrichment.suggestRungs")(function* suggestRungs(caller: UserIdentity) {
                     yield* withinLimit(() =>
                         rateLimiter.limit(ctx, args.background ? "enrichmentBackground" : "enrichmentPerUser", {

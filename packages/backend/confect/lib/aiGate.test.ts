@@ -2,12 +2,13 @@
 
 import { route } from "@outlayr/model-router/route";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
+import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import * as Effect from "effect/Effect";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import schema from "../../convex/schema";
-import { authenticatedAs, seedAuthUser } from "../test.helpers";
+import { authenticatedAs, grantPro, seedAuthUser } from "../test.helpers";
 import { openAiGate, refuse } from "./aiGate";
 import type { AiRefused } from "./aiGate";
 import { runEdge } from "./runEdge";
@@ -89,6 +90,23 @@ describe(openAiGate, () => {
         });
 
         await expect(outcome).resolves.toStrictEqual({ status: "rateLimited" });
+    });
+
+    it("opens AI to a guest only once it holds Pro", async () => {
+        vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
+        const t = convexTest(schema, modules);
+        revenuecatTest.register(t);
+        const seeded = await seedAuthUser(t);
+        const guest = t.withIdentity({ isAnonymous: true, sessionId: seeded.sessionId, subject: seeded.subject });
+
+        const refused = knock(guest, { aiConsent: AI_CONSENT_VERSION });
+        await expect(refused.outcome).resolves.toStrictEqual({ status: "unauthenticated" });
+        expect(refused.rungs).not.toHaveBeenCalled();
+
+        await grantPro(t, seeded);
+        await expect(knock(guest, { aiConsent: AI_CONSENT_VERSION }).outcome).resolves.toMatchObject({
+            status: "admitted",
+        });
     });
 
     it("names the caller to analytics only when they share it", async () => {

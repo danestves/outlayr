@@ -134,4 +134,9 @@ export const restoreAndCheckPro = Effect.fn("RevenueCat.restoreAndCheckPro")(fun
     return hasProEntitlement(yield* sdkCall(() => Purchases.restorePurchases()));
 });
 
+export const syncAndCheckPro = Effect.fn("RevenueCat.syncAndCheckPro")(function* syncAndCheckPro() {
+    const { customerInfo } = yield* sdkCall(() => Purchases.syncPurchasesForResult());
+    return hasProEntitlement(customerInfo);
+});
+
 export const purchaseCancelled = Schema.Struct({ userCancelled: Schema.Literal(true) });

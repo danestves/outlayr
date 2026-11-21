@@ -12,6 +12,7 @@ import exchangeRates from "../exchangeRates.spec";
 import featureRequests from "../featureRequests.spec";
 import groundedLookup from "../groundedLookup.spec";
 import groundedSpend from "../groundedSpend.spec";
+import guests from "../guests.spec";
 import installmentScan from "../installmentScan.spec";
 import ledger from "../ledger.spec";
 import ledgerCells from "../ledgerCells.spec";
@@ -51,6 +52,7 @@ const spec: Spec.Spec<{
   readonly featureRequests: GroupSpec.NamedAt<typeof featureRequests, "featureRequests">;
   readonly groundedLookup: GroupSpec.NamedAt<typeof groundedLookup, "groundedLookup">;
   readonly groundedSpend: GroupSpec.NamedAt<typeof groundedSpend, "groundedSpend">;
+  readonly guests: GroupSpec.NamedAt<typeof guests, "guests">;
   readonly installmentScan: GroupSpec.NamedAt<typeof installmentScan, "installmentScan">;
   readonly ledger: GroupSpec.NamedAt<typeof ledger, "ledger">;
   readonly ledgerCells: GroupSpec.NamedAt<typeof ledgerCells, "ledgerCells">;
@@ -89,6 +91,7 @@ const spec: Spec.Spec<{
   ["featureRequests"]: featureRequests,
   ["groundedLookup"]: groundedLookup,
   ["groundedSpend"]: groundedSpend,
+  ["guests"]: guests,
   ["installmentScan"]: installmentScan,
   ["ledger"]: ledger,
   ["ledgerCells"]: ledgerCells,

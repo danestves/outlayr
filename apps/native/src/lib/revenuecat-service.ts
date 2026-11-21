@@ -28,10 +28,12 @@ import {
     refreshProEntitlement,
     restoreAndCheckPro,
     setCustomerProfile,
+    syncAndCheckPro,
 } from "@/lib/revenuecat";
 import type { PurchasesError } from "@/lib/revenuecat";
 
 const Operation = Schema.Literals([
+    "claim",
     "configure",
     "identity",
     "profile",
@@ -44,6 +46,7 @@ const Operation = Schema.Literals([
 ]);
 
 const FAILED = {
+    claim: "RevenueCat could not claim the guest's purchases",
     configure: "RevenueCat could not be configured",
     identity: "RevenueCat identity sync failed",
     mirror: "RevenueCat entitlement mirror failed",
@@ -95,6 +98,7 @@ const revenueCatSdk = {
     refreshProEntitlement,
     restoreAndCheckPro,
     setCustomerProfile,
+    syncAndCheckPro,
     watchCloudAuthenticated,
     watchEntitlement,
 };
@@ -106,6 +110,7 @@ export const RevenueCatSdk = Context.Reference<typeof revenueCatSdk>("outlayr/li
 export interface Session {
     readonly accountId: string | null;
     readonly email: string | undefined;
+    readonly guest: boolean;
     readonly name: string | undefined;
 }
 
@@ -128,6 +133,7 @@ interface MirrorRequest {
 
 interface State {
     readonly applied: string | null | undefined;
+    readonly guestHeld: boolean;
     readonly identityPending: boolean;
     readonly identityTicket: number;
     readonly isMirrored: boolean;
@@ -167,6 +173,7 @@ export class RevenueCat extends Context.Service<
 
 const initialState: State = {
     applied: undefined,
+    guestHeld: false,
     // Starts closed: the identity sync is requested on mount, so a waiter must not see a gap first.
     identityPending: true,
     identityTicket: 0,
@@ -329,10 +336,22 @@ export const make = Effect.gen(function* make() {
             return [{ after, before, result }, after] as const;
         }).pipe(Effect.flatMap(({ after, before, result }) => react(before, after).pipe(Effect.as(result))));
 
-    const identify = Effect.fn("RevenueCat.identify")(function* identify(target: string | null, ticket: number) {
-        const answer = yield* Effect.result(
+    // The server erased the guest's customer while linking, so a sync hands its store receipt to the account.
+    const claimGuestPurchases = (identified: Result.Result<boolean, RevenueCatError>) =>
+        call("claim", sdk.syncAndCheckPro).pipe(
+            Effect.map((pro) => Result.succeed(pro)),
+            Effect.catchTags({ RevenueCatError: (error) => warn(error).pipe(Effect.as(identified)) })
+        );
+
+    const identify = Effect.fn("RevenueCat.identify")(function* identify(
+        target: string | null,
+        ticket: number,
+        claim: boolean
+    ) {
+        const identified = yield* Effect.result(
             call("identity", () => (target === null ? sdk.logOutUser() : sdk.identifyUser(target)))
         );
+        const answer = claim && Result.isSuccess(identified) ? yield* claimGuestPurchases(identified) : identified;
         yield* transition((state) => {
             let next = state;
             if (Result.isSuccess(answer)) {
@@ -358,10 +377,13 @@ export const make = Effect.gen(function* make() {
             }
             const ticket = state.identityTicket + 1;
             const reset = target === state.applied ? state : { ...withPro(state, false), isResolved: false };
+            const session = currentSession(state);
+            const claim = state.guestHeld && target !== null && session?.accountId === target && !session.guest;
             return [
-                ticket,
+                { claim, ticket },
                 {
                     ...reset,
+                    guestHeld: state.guestHeld && !claim,
                     identityPending: true,
                     identityTicket: ticket,
                     pendingRequest: { target, ticket },
@@ -370,7 +392,7 @@ export const make = Effect.gen(function* make() {
             ];
         });
         if (requested !== null) {
-            yield* enqueue(identify(target, requested));
+            yield* enqueue(identify(target, requested.ticket, requested.claim));
         }
     }, Effect.uninterruptible);
 
@@ -535,7 +557,10 @@ export const make = Effect.gen(function* make() {
     const follow = Effect.fn("RevenueCat.follow")(function* follow(session: Session) {
         const entry = { session };
         yield* Effect.acquireRelease(
-            transition((state) => [undefined, { ...state, sessions: [...state.sessions, entry] }]),
+            transition((state) => [
+                undefined,
+                { ...state, guestHeld: state.guestHeld || session.guest, sessions: [...state.sessions, entry] },
+            ]),
             () =>
                 transition((state) => [
                     undefined,

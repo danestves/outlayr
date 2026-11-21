@@ -26,7 +26,7 @@ import { PaywallCta } from "./paywall-cta";
 import { ctaLabel, thenLabel } from "./plan-copy";
 import { PlanList } from "./plan-list";
 import { PlanPicker } from "./plan-picker";
-import { PurchaseFailure, SaleBlockers, UnconfirmedNotice } from "./sale-notices";
+import { PurchaseFailure, NoCloudNotice, UnconfirmedNotice } from "./sale-notices";
 import { StoreTerms } from "./store-terms";
 import { alsoRowsFor } from "./top-block";
 import type { TopBlock } from "./top-block";
@@ -150,7 +150,6 @@ export function Paywall() {
         isPro,
         leave,
         logsWaiting,
-        needsAccount,
         noCloud,
         pitches,
         plan,
@@ -164,7 +163,7 @@ export function Paywall() {
 
     const footer = (
         <>
-            <SaleBlockers empty={empty} needsAccount={needsAccount} noCloud={noCloud} />
+            {noCloud ? <NoCloudNotice /> : null}
             {canBuy ? (
                 <View className="px-5">
                     <PlanPicker
@@ -211,12 +210,7 @@ export function Paywall() {
                 </View>
             ) : null}
 
-            <LegalRow
-                canRestore={!needsAccount}
-                disabled={busy !== null}
-                onRestore={restore}
-                restoring={busy === "restore"}
-            />
+            <LegalRow disabled={busy !== null} onRestore={restore} restoring={busy === "restore"} />
         </>
     );
     return (

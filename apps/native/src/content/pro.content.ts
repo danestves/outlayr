@@ -434,15 +434,6 @@ const pro = {
             fr: "Conditions",
             pt: "Termos",
         }),
-        "pro.needsAccount": t({
-            en: "Sign in before buying Pro, so the purchase follows your ledger to every device.",
-            de: "Melde dich vor dem Kauf von Pro an, damit der Kauf deinem Haushaltsbuch auf jedes Gerät folgt.",
-            es: "Inicia sesión antes de comprar Pro para que la compra te acompañe en todos tus dispositivos.",
-            fr: "Connectez-vous avant d'acheter Pro, pour que l'achat suive votre journal sur tous vos appareils.",
-            pt: "Entre antes de comprar o Pro, para que a compra acompanhe seus lançamentos em todos os dispositivos.",
-            "pt-PT":
-                "Inicie sessão antes de comprar o Pro, para que a compra acompanhe os seus registos em todos os dispositivos.",
-        }),
         "pro.needsCloud": t({
             en: "This build has no Outlayr account service, so most of Pro has nowhere to run. Nothing is for sale here.",
             de: "Dieser Build hat keinen Outlayr-Kontodienst, deshalb kann der Großteil von Pro nirgends laufen. Hier wird nichts verkauft.",

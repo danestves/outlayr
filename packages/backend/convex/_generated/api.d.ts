@@ -22,6 +22,7 @@ import type * as exchangeRates from "../exchangeRates.js";
 import type * as featureRequests from "../featureRequests.js";
 import type * as groundedLookup from "../groundedLookup.js";
 import type * as groundedSpend from "../groundedSpend.js";
+import type * as guests from "../guests.js";
 import type * as http from "../http.js";
 import type * as installmentScan from "../installmentScan.js";
 import type * as ledger from "../ledger.js";
@@ -69,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   featureRequests: typeof featureRequests;
   groundedLookup: typeof groundedLookup;
   groundedSpend: typeof groundedSpend;
+  guests: typeof guests;
   http: typeof http;
   installmentScan: typeof installmentScan;
   ledger: typeof ledger;
