@@ -13,7 +13,7 @@ import {
     transactionTags,
 } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
-import { parseArchive, serializeArchive } from "@/domain/archive";
+import { parseArchive, serializeArchive } from "@/lib/archive";
 
 import { Meta } from "./app-meta-core";
 import { buildArchive, restoreArchive } from "./archive-core";

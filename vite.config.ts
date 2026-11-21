@@ -80,6 +80,53 @@ const ICON_BARREL_IMPORTS = ["solid", "stroke"].map((weight) => ({
     name: `@hugeicons-pro/core-${weight}-rounded`,
 }));
 const NATIVE_RESTRICTED_IMPORTS = [LIVE_QUERY_IMPORT, HAPTICS_IMPORT, SECURE_STORE_IMPORT, ...ICON_BARREL_IMPORTS];
+const DOMAIN_RESTRICTED_PATTERNS = [
+    {
+        allowTypeImports: true,
+        group: [
+            "react",
+            "react-native",
+            "react-native-*",
+            "expo",
+            "expo-*",
+            "@expo/*",
+            "@react-native/*",
+            "@react-native-*/*",
+            "@react-navigation/*",
+        ],
+        message:
+            "domain is pure: move the platform call to lib/ or state/ and pass the value in, or make the import `import type` if it is only a type.",
+    },
+    {
+        allowTypeImports: true,
+        group: [
+            "@/components/*",
+            "@/contexts/*",
+            "@/navigation/*",
+            "@/screens/*",
+            "@/hooks/*",
+            "@/app/*",
+            "@/state/*",
+            "@/widgets/*",
+            "@/lib/*",
+            "@/data/*",
+            "@/db/*",
+            "../components/*",
+            "../contexts/*",
+            "../navigation/*",
+            "../screens/*",
+            "../hooks/*",
+            "../app/*",
+            "../state/*",
+            "../widgets/*",
+            "../lib/*",
+            "../data/*",
+            "../db/*",
+        ],
+        message:
+            "domain is pure: move the IO, data or UI concern to lib/, data/ or state/ and pass the value in. A pure helper belongs in domain; an `import type` from these layers is fine.",
+    },
+];
 
 const RUNNER_OPT_OUT = [
     "expect-expect",
@@ -249,6 +296,19 @@ export default defineConfig({
                     "outlayr/no-manual-memo": "error",
                     "outlayr/swiftui-list-grounds": "error",
                     "outlayr/widget-module-scope": "error",
+                },
+            },
+            {
+                files: ["apps/native/src/domain/**"],
+                excludeFiles: TEST_FILES,
+                rules: {
+                    "no-restricted-imports": [
+                        "error",
+                        {
+                            patterns: DOMAIN_RESTRICTED_PATTERNS,
+                            paths: NATIVE_RESTRICTED_IMPORTS,
+                        },
+                    ],
                 },
             },
             {

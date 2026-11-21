@@ -6,7 +6,7 @@ import type { LedgerCell } from "@/components/ledger-head";
 import { MonoLabel } from "@/components/mono-label";
 import { LinearGradient } from "@/components/styled";
 import { Text } from "@/components/text";
-import type { CategoryBreakdownEntry, InsightsBucket } from "@/data/insights";
+import type { CategoryBreakdownEntry, InsightsBucket } from "@/domain/insights";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";

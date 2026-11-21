@@ -5,8 +5,8 @@ import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { transaction } from "@/db/transaction";
-import { ARCHIVE_FORMAT, ARCHIVE_VERSION, decodeArchiveRow, encodeArchiveRow } from "@/domain/archive";
-import type { ArchiveDocument, TableRow } from "@/domain/archive";
+import { ARCHIVE_FORMAT, ARCHIVE_VERSION, decodeArchiveRow, encodeArchiveRow } from "@/lib/archive";
+import type { ArchiveDocument, TableRow } from "@/lib/archive";
 
 import { photoFileName } from "./photo-store-core";
 import { SYNCED_SPECS, SYNCED_TABLES } from "./sync-tables";

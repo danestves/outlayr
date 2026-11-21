@@ -1,4 +1,4 @@
-import type { CategoryBreakdownEntry } from "@/data/insights";
+import type { CategoryBreakdownEntry } from "@/domain/insights";
 
 export interface BlockRect {
     height: number;

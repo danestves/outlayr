@@ -10,8 +10,7 @@ import * as Schema from "effect/Schema";
 import { Meta } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
 import { OVERALL_BUDGET_ID } from "@/data/budgets-core";
-import { aggregateInsightsWindows, loadContributions, windowLabel } from "@/data/insights";
-import type { InsightsCalendar, InsightsContribution, InsightsPeriod, WindowTotals } from "@/data/insights";
+import { loadContributions } from "@/data/insights-contributions";
 import { writeIdsByTransaction } from "@/data/pending-writes-core";
 import { loadValuation } from "@/data/valuation-source";
 import type { Valuation } from "@/data/valuation-source";
@@ -24,6 +23,8 @@ import {
 import { budgetPeriodPhrase } from "@/domain/budget-math";
 import { compareBudgetSeverity } from "@/domain/budget-severity";
 import { dayOfMonth, formatDateHeader, formatDayHeader, formatUpcomingDate, weekdayInitial } from "@/domain/dates";
+import { aggregateInsightsWindows, windowLabel } from "@/domain/insights";
+import type { InsightsCalendar, InsightsContribution, InsightsPeriod, WindowTotals } from "@/domain/insights";
 import { formatAmount } from "@/domain/money";
 import type { TranslationKey } from "@/i18n/catalog";
 import type { Language } from "@/i18n/languages";

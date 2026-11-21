@@ -5,12 +5,12 @@ import { valueDatedRowsIn } from "@outlayr/money/valuation";
 import { useRouter } from "expo-router";
 
 import { useBudgetContributions } from "@/data/budgets";
-import { windowShortLabel, windowStart } from "@/data/insights";
-import type { CategoryMeta, InsightsCalendar, InsightsPeriod } from "@/data/insights";
 import type { SubscriptionDetail } from "@/data/use-insights-answers";
 import { useValuation } from "@/data/use-valuation";
 import type { Database } from "@/db/client";
 import { formatSentenceDate, monthAbbrevTitle } from "@/domain/dates";
+import { windowShortLabel, windowStart } from "@/domain/insights";
+import type { CategoryMeta, InsightsCalendar, InsightsPeriod } from "@/domain/insights";
 import type { AnswerCard as AnswerCardData } from "@/domain/insights-answers";
 import { useLanguage, useTranslation } from "@/i18n/context";
 

@@ -1,4 +1,4 @@
-import type { InsightsPeriod } from "@/data/insights";
+import type { InsightsPeriod } from "@/domain/insights";
 
 export function showXLabel(period: InsightsPeriod, index: number, label: string): boolean {
     if (period === "week") {

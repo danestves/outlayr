@@ -2,10 +2,10 @@ import { utcDateString } from "@outlayr/money/dates";
 import { roundMoney } from "@outlayr/money/round";
 import type { RateTable } from "@outlayr/money/valuation";
 
-import { pendingCategoryFor } from "@/data/categories-core";
-import type { PendingCategory } from "@/data/categories-core";
 import type { ReceiptDraft, ReceiptItem } from "@/lib/cloud-ai";
 
+import { pendingCategoryFor } from "./category-presets";
+import type { PendingCategory } from "./category-presets";
 import { minorUnitsFor } from "./money";
 import { foldName, spokenDateToLocal, uniqueMatch } from "./voice-entry";
 import type { AccountCandidate, CategoryCandidate } from "./voice-entry";

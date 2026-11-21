@@ -1,4 +1,4 @@
-import type { ColumnMapping } from "@/data/transfer-core";
+import type { ColumnMapping } from "./import-header";
 
 type LabelSource = "categoryColumn" | "descriptionColumn";
 export type MappingGap = "noLabelColumn" | "noDate" | "noAmount";

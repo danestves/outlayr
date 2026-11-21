@@ -1,9 +1,10 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { guessMapping, parseImportFile } from "@/data/transfer-core";
+import { parseImportFile } from "@/data/transfer-core";
 import { classifyParseFailure, HARD_PARSE_REJECT_CHARS } from "@/domain/import-diagnosis";
 import type { ImportFlowEvent } from "@/domain/import-flow";
+import { guessMapping } from "@/domain/import-header";
 import { resolveImportMapping } from "@/domain/import-mapping";
 import { pickImportFile } from "@/lib/data-transfer";
 import type { PickedFile } from "@/lib/data-transfer";

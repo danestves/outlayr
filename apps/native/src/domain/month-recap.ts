@@ -4,8 +4,8 @@ import { roundMoney } from "@outlayr/money/round";
 import { valueDatedRowsIn } from "@outlayr/money/valuation";
 import type { DatedValuable, RateTable } from "@outlayr/money/valuation";
 
-import { aggregateInsightsWindows, categoryMovers } from "@/data/insights";
-import type { CategoryBreakdownEntry, CategoryMeta, CategoryMover, InsightsContribution } from "@/data/insights";
+import { aggregateInsightsWindows, categoryMovers } from "@/domain/insights";
+import type { CategoryBreakdownEntry, CategoryMeta, CategoryMover, InsightsContribution } from "@/domain/insights";
 import type { Language } from "@/i18n/languages";
 
 import { loggedDays } from "./month-days";

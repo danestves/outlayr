@@ -3,11 +3,11 @@ import { and, gte, isNull, lte } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
+import type { CategoryMeta } from "@/domain/insights";
 import { monthRecap } from "@/domain/month-recap";
 import type { MonthRecap, RecapRow } from "@/domain/month-recap";
 import { useLanguage } from "@/i18n/context";
 
-import type { CategoryMeta } from "./insights";
 import { useLiveQuery } from "./live-query";
 import { useValuation } from "./use-valuation";
 

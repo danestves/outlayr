@@ -29,7 +29,6 @@ import {
 } from "@/data/settings-core";
 import { useCategoryCount, useDeletedCount } from "@/data/settings-counts";
 import { useValuationCoverage } from "@/data/use-valuation-coverage";
-import { ACCENT_OPTIONS, DEFAULT_ACCENT_VALUE } from "@/domain/accent-options";
 import { appIconLabel } from "@/domain/app-icons";
 import { BALANCES_ACCOUNTS } from "@/domain/balances";
 import { offeredAccentValue } from "@/domain/material-accent";
@@ -38,6 +37,7 @@ import { coverageNote } from "@/domain/valuation-coverage";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { languageLabel } from "@/i18n/languages";
 import { translateNow } from "@/i18n/runtime";
+import { ACCENT_OPTIONS, DEFAULT_ACCENT_VALUE } from "@/lib/accent-options";
 import { expectHandoff, openInAppBrowser } from "@/lib/app-handoff";
 import { alternateIconsSupported, useAppIcon } from "@/lib/app-icon";
 import { APP_BUILD, APP_VERSION } from "@/lib/app-version";

@@ -1,4 +1,4 @@
-import type { InsightsPeriod } from "@/data/insights";
+import type { InsightsPeriod } from "@/domain/insights";
 import type { TranslationKey } from "@/i18n/catalog";
 
 /** `value` is the stored `insightsTimeFrame` setting. */

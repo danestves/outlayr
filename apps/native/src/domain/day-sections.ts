@@ -4,8 +4,7 @@ import { utcDateString } from "@outlayr/money/dates";
 import { isExact, valueRowsIn } from "@outlayr/money/valuation";
 import type { RateTable } from "@outlayr/money/valuation";
 
-import { growing } from "@/lib/growing";
-
+import { growing } from "./growing";
 import { DEFAULT_CURRENCY } from "./money";
 
 export interface DayGroupable {

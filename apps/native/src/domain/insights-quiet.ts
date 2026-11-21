@@ -1,4 +1,4 @@
-import type { InsightsMeasure } from "@/data/insights";
+import type { InsightsMeasure } from "@/domain/insights";
 
 import { insightsMeasureAlternatives, insightsMeasureMagnitude, netTotal } from "./insights-measure";
 import type { InsightsTotals } from "./insights-measure";
