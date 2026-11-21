@@ -11,11 +11,14 @@ import type { MutationCtx } from "../convex/_generated/server";
 import type { Id } from "./_generated/id";
 import { runTransactionEdge } from "./lib/runEdge";
 
-export const pool = new Workpool(components.emailPool, {
+const POOL_OPTIONS = {
     defaultRetryBehavior: { base: 2, initialBackoffMs: 1000, maxAttempts: 4 },
     maxParallelism: 5,
     retryActionsByDefault: true,
-});
+};
+
+export const pool = new Workpool(components.emailPool, POOL_OPTIONS);
+export const noticePool = new Workpool(components.noticePool, POOL_OPTIONS);
 
 const decodeFailure = Schema.decodeUnknownOption(Schema.String);
 

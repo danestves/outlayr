@@ -130,4 +130,5 @@ export declare const components: {
   revenuecat: import("convex-revenuecat/_generated/component.js").ComponentApi<"revenuecat">;
   enrichmentPool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"enrichmentPool">;
   emailPool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"emailPool">;
+  noticePool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"noticePool">;
 };

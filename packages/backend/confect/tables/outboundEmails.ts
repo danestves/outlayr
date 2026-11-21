@@ -8,13 +8,13 @@ export const Notice = Schema.Struct({
     userId: Schema.String,
 });
 
-export default Table.make(() =>
-    Schema.Struct({
-        html: Schema.optional(Schema.String),
-        notice: Schema.optional(Notice),
-        replyTo: Schema.optional(Schema.String),
-        subject: Schema.String,
-        text: Schema.String,
-        to: Schema.String,
-    })
-);
+export const OutboundEmail = Schema.Struct({
+    html: Schema.optional(Schema.String),
+    notice: Schema.optional(Notice),
+    replyTo: Schema.optional(Schema.String),
+    subject: Schema.String,
+    text: Schema.String,
+    to: Schema.String,
+});
+
+export default Table.make(() => OutboundEmail);

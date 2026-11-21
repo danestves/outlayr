@@ -4,19 +4,12 @@ import * as Schema from "effect/Schema";
 import { Id } from "./_generated/id";
 import outboundEmails from "./_generated/tables/outboundEmails";
 import type { settled } from "./emailOutbox";
-import { Notice } from "./tables/outboundEmails";
+import { OutboundEmail } from "./tables/outboundEmails";
 
 export default GroupSpec.make()
     .addFunction(
         FunctionSpec.internalMutation({
-            args: () => ({
-                html: Schema.optional(Schema.String),
-                notice: Schema.optional(Notice),
-                replyTo: Schema.optional(Schema.String),
-                subject: Schema.String,
-                text: Schema.String,
-                to: Schema.String,
-            }),
+            args: () => OutboundEmail.fields,
             name: "enqueue",
             returns: () => Schema.Null,
         })

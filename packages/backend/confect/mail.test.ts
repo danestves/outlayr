@@ -37,6 +37,7 @@ afterEach(() => {
 function mailTest() {
     const t = convexTest(schema, modules);
     workpoolTest.register(t, "emailPool");
+    workpoolTest.register(t, "noticePool");
     return t;
 }
 
@@ -186,9 +187,15 @@ describe("a policy notice", () => {
             })
         );
         await t.mutation(internal.mail.rememberLanguage, { language: "es", userId: ana.userId });
-        await t.mutation(internal.mail.recordNotice, {
-            deliveries: [{ keys: [`privacy:${DAY}`], language: "en", userId: cleo.userId }],
-        });
+        await t.run((ctx) =>
+            ctx.db.insert("mailState", {
+                language: "en",
+                notices: [`privacy:${DAY}`],
+                proSentAt: null,
+                welcomedAt: null,
+                userId: cleo.userId,
+            })
+        );
         let benRefused = false;
         const bounced: string[] = [];
         const sent = stubCloudflare(
@@ -209,6 +216,12 @@ describe("a policy notice", () => {
 
         await expect(notify()).resolves.toStrictEqual({ failed: 0, sent: 4 });
         await expect(notify()).resolves.toStrictEqual({ failed: 0, sent: 0 });
+        await t.mutation(internal.emailOutbox.enqueue, {
+            notice: { keys: [`privacy:${DAY}`, `terms:${DAY}`], language: "en", userId: ana.userId },
+            subject: "stale run",
+            text: "stale run",
+            to: ana.email,
+        });
         await t.finishAllScheduledFunctions(vi.runAllTimers);
 
         expect(sent).toHaveLength(3);

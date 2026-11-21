@@ -39,4 +39,5 @@ export const recordNotices = Effect.fn("Mail.recordNotices")(function* recordNot
     if (added.length > 0) {
         yield* saveState(userId, state, { language, notices: [...(state?.notices ?? []), ...added] });
     }
+    return added;
 });

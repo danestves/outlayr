@@ -14,7 +14,7 @@ import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import { QueryCtx, Scheduler } from "./_generated/services";
 import { authComponent } from "./lib/betterAuth";
-import { recordNotices, saveState, stateOf } from "./lib/mailState";
+import { saveState, stateOf } from "./lib/mailState";
 import spec from "./mail.spec";
 
 const NOTICE_PAGE = 50;
@@ -164,18 +164,6 @@ const noticeRecipients = FunctionImpl.make(
     }, Effect.orDie)
 );
 
-const recordNotice = FunctionImpl.make(
-    databaseSchema,
-    spec,
-    "recordNotice",
-    Effect.fn("Mail.recordNotice")(function* recordNotice({ deliveries }) {
-        for (const { keys, language, userId } of deliveries) {
-            yield* recordNotices(userId, keys, language);
-        }
-        return null;
-    }, Effect.orDie)
-);
-
 export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(claimWelcome),
     Layer.provide(rememberLanguage),
@@ -183,6 +171,5 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(claimPro),
     Layer.provide(recipient),
     Layer.provide(noticeRecipients),
-    Layer.provide(recordNotice),
     GroupImpl.finalize
 );
