@@ -16,7 +16,7 @@ import { translateNow } from "@/i18n/runtime";
 import type { CloudError } from "@/lib/cloud-error";
 import { enrichmentTransport } from "@/lib/convex";
 import type { CategoryBranch, EnrichmentFn } from "@/lib/convex";
-import { useLatest } from "@/lib/use-latest";
+import { useLatest } from "@/lib/lifecycle";
 import { ENRICHMENT_TIMEOUT, timedCaptureCommand } from "@/state/capture-commands";
 import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
 import { logged } from "@/state/entry-save";

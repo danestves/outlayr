@@ -394,6 +394,13 @@ export default defineConfig({
                     "anti-slop/no-unknown-returns": "off",
                 },
             },
+            {
+                // The named hooks pass the watched values on as the dependency list, a fixed tuple per call site.
+                files: ["apps/native/src/lib/lifecycle.ts", "packages/shared/src/lifecycle.ts"],
+                rules: {
+                    "react/exhaustive-deps": "off",
+                },
+            },
         ],
         options: {
             reportUnusedDisableDirectives: "error",

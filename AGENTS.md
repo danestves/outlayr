@@ -54,6 +54,7 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 
 - Use function components over class components
 - Call hooks at the top level only, never conditionally
+- Never call `useEffect`, `useLayoutEffect` or `useInsertionEffect`; use the named hooks in `@/lib/lifecycle` (native) or `@outlayr/shared/lifecycle` (web). Read `docs/internals/react-effects.md` first
 - Specify all dependencies in hook dependency arrays correctly
 - Use the `key` prop for elements in iterables (prefer unique IDs over array indices)
 - Nest children between opening and closing tags instead of passing as props
