@@ -1,9 +1,10 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { useQueries } from "convex/react";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { projectLimit } from "@/domain/usage-limits";
 import type { LimitBucket, UsageLimits } from "@/domain/usage-limits";
+import { useMirror, useTimers } from "@/lib/lifecycle";
 import { posthog } from "@/lib/posthog";
 import { readSecondClock, subscribeSecondClock } from "@/lib/second-clock";
 
@@ -81,14 +82,13 @@ export function useLimitNotice(feature: CaptureFeature, refusal: LimitRefusal | 
         }
     }
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- arms the timer that retires the last-capture notice after its display window
-    useEffect(() => {
+    const timers = useTimers();
+    useMirror([last], () => {
         if (last === null) {
             return;
         }
-        const timer = setTimeout(() => setLast(null), LAST_NOTICE_MS);
-        return () => clearTimeout(timer);
-    }, [last]);
+        return timers.after(LAST_NOTICE_MS, () => setLast(null));
+    });
 
     let refused: LimitNotice | null = null;
     if (refusal === "rateLimited") {
