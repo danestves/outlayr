@@ -36,6 +36,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [Announcing a policy change](./operations/policy-change.md)
 - [Web billing](./operations/web-billing.md)
 - [Merchant logos](./operations/merchant-logos.md)
+- [Stuck guest retirement](./operations/guest-retirement.md)
 - [Auth signing key (JWKS)](./operations/auth-signing-key.md)
 - [Self-hosting with Docker](./operations/self-hosting.md)
 - [AI providers for a self-hosted deployment](./operations/self-hosted-ai.md)

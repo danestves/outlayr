@@ -12,7 +12,7 @@ import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationRunner, QueryRunner } from "./_generated/services";
 import { gitHubToken, postHogConfig, revenueCatMetricsConfig } from "./lib/config";
 import { outboundHttp } from "./lib/http";
-import { capturePostHogEvent } from "./lib/posthog";
+import { BACKEND_DISTINCT_ID, capturePostHogEvent } from "./lib/posthog";
 import {
     accountStats,
     fetchGitHubStats,
@@ -66,7 +66,7 @@ const refresh = FunctionImpl.make(
         );
         yield* capturePostHogEvent(
             {
-                distinct_id: "outlayr-backend",
+                distinct_id: BACKEND_DISTINCT_ID,
                 event: "reach_snapshot",
                 properties: { ...properties, $process_person_profile: false },
             },

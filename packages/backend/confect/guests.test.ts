@@ -15,6 +15,7 @@ const modules = import.meta.glob("../convex/**/*.ts");
 
 afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
 });
 
@@ -77,6 +78,31 @@ describe("retiring a guest", () => {
         const scheduled = await t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect());
         expect(scheduled.filter(({ name }) => name.includes("retire")).map(({ args }) => args[0])).toStrictEqual([
             { attempt: 1, guestId: guest.userId },
+        ]);
+    });
+
+    it("alerts without the guest id once backoff runs out, and keeps retrying daily", async () => {
+        vi.stubEnv("POSTHOG_PROJECT_TOKEN", "phc_test");
+        const fetchMock = vi.fn(async (input: URL, _init?: RequestInit) =>
+            String(input).includes("/i/v0/e/") ? Response.json({}, { status: 200 }) : Response.json({}, { status: 500 })
+        );
+        vi.stubGlobal("fetch", fetchMock);
+        const { guest, t } = await guestWithPro();
+
+        await t.action(internal.guests.retire, { attempt: 19, guestId: guest.userId });
+
+        const captured = fetchMock.mock.calls
+            .filter(([input]) => String(input).includes("/i/v0/e/"))
+            .map(([, init]) => JSON.parse(String(init?.body)));
+        expect(captured.map(({ event, properties }) => ({ event, properties }))).toStrictEqual([
+            {
+                event: "guest_retirement_stuck",
+                properties: { $process_person_profile: false, analytics: false, customer: false },
+            },
+        ]);
+        const scheduled = await t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect());
+        expect(scheduled.filter(({ name }) => name.includes("retire")).map(({ args }) => args[0])).toStrictEqual([
+            { attempt: 20, guestId: guest.userId },
         ]);
     });
 });
