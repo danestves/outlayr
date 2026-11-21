@@ -1,11 +1,12 @@
 /// <reference types="vite/client" />
 
+import { storageComponent } from "@outlayr/storage/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import type { TestConvex } from "convex-test";
 import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
-import { describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
@@ -17,8 +18,13 @@ import type { SeededIdentity } from "./test.helpers";
 function harness() {
     const t = convexTest(schema, modules);
     revenuecatTest.register(t);
+    t.registerComponent("storage", storageComponent.schema, storageComponent.modules);
     return t;
 }
+
+afterEach(() => {
+    vi.unstubAllEnvs();
+});
 
 const modules = import.meta.glob("../convex/**/*.ts");
 
@@ -170,6 +176,16 @@ describe("requestUpload", () => {
         const { key } = await authenticatedAs(t, owner).mutation(api.photos.requestUpload, { name: PHOTO });
         expect(key).toBe(photoKeyFor(owner.userId, PHOTO));
     });
+
+    it("refuses a half-set bucket instead of storing somewhere else", async () => {
+        vi.stubEnv("R2_BUCKET", "photos");
+        const t = harness();
+        const owner = await seedProUser(t);
+
+        await expect(
+            authenticatedAs(t, owner).mutation(api.photos.requestUpload, { name: PHOTO })
+        ).rejects.toMatchObject({ data: { code: "STORAGE_UNCONFIGURED" } });
+    });
 });
 
 describe("accounting for what an account stores", () => {
@@ -209,31 +225,14 @@ describe("confirmUpload", () => {
         ).rejects.toThrow(ConvexError);
     });
 
-    it("refuses a storage object already bound to another photo", async () => {
-        const t = harness();
-        const owner = await seedProUser(t);
-        const stranger = await seedProUser(t);
-        const strangersKey = photoKeyFor(stranger.userId, PHOTO);
-        const storageId = await t.run(async (ctx) => await ctx.storage.store(new Blob(["bytes"])));
-        await authenticatedAs(t, stranger).action(api.photos.confirmUpload, { key: strangersKey, storageId });
-
-        const ownKey = photoKeyFor(owner.userId, PHOTO);
-        await expect(
-            authenticatedAs(t, owner).action(api.photos.confirmUpload, { key: ownKey, storageId })
-        ).rejects.toThrow(ConvexError);
-    });
-
-    it("still lets a key rebind its own object, which a retry does", async () => {
+    it("records an object the component cannot find as zero bytes instead of failing", async () => {
         const t = harness();
         const owner = await seedProUser(t);
         const key = photoKeyFor(owner.userId, PHOTO);
-        const storageId = await t.run(async (ctx) => await ctx.storage.store(new Blob(["bytes"])));
 
-        await authenticatedAs(t, owner).action(api.photos.confirmUpload, { key, storageId });
+        await expect(authenticatedAs(t, owner).action(api.photos.confirmUpload, { key })).resolves.toBeNull();
 
-        await expect(
-            authenticatedAs(t, owner).action(api.photos.confirmUpload, { key, storageId })
-        ).resolves.toBeNull();
+        await expect(totalStored(t, owner.userId)).resolves.toBe(0);
     });
 });
 
@@ -405,56 +404,33 @@ describe("releaseUnreferenced", () => {
     });
 });
 
-// The R2 variables are absent under test, so every case above already exercises the Convex-storage fallback.
-describe("the convex storage fallback", () => {
-    it("mints a read url for a key confirmed with a storage id", async () => {
+// Nothing writes `photoObjects` any more; these rows model what a deployment stored before the component.
+describe("legacy photoObjects rows", () => {
+    async function seedLegacy(t: TestClient, key: string) {
+        const storageId = await t.run(async (ctx) => await ctx.storage.store(new Blob(["bytes"])));
+        await t.run(async (ctx) => {
+            await ctx.db.insert("photoObjects", { key, storageId });
+        });
+        return storageId;
+    }
+
+    it("mints a read url for a key that carries an app storage id", async () => {
         const t = harness();
         const owner = await seedProUser(t);
         const key = photoKeyFor(owner.userId, PHOTO);
-        const storageId = await t.run(async (ctx) => await ctx.storage.store(new Blob(["bytes"])));
+        await seedLegacy(t, key);
 
-        await authenticatedAs(t, owner).action(api.photos.confirmUpload, {
-            key,
-            storageId,
-        });
-        const urls = await authenticatedAs(t, owner).mutation(api.photos.readUrls, {
-            keys: [key],
-        });
+        const urls = await authenticatedAs(t, owner).mutation(api.photos.readUrls, { keys: [key] });
 
         expect(urls).toHaveLength(1);
         expect(urls[0]?.key).toBe(key);
-    });
-
-    it("re-uploading the same name frees the object it displaced", async () => {
-        const t = harness();
-        const owner = await seedProUser(t);
-        const key = photoKeyFor(owner.userId, PHOTO);
-        const first = await t.run(async (ctx) => await ctx.storage.store(new Blob(["one"])));
-        const second = await t.run(async (ctx) => await ctx.storage.store(new Blob(["two"])));
-
-        const confirm = (storageId: typeof first) =>
-            authenticatedAs(t, owner).action(api.photos.confirmUpload, {
-                key,
-                storageId,
-            });
-        await confirm(first);
-        await confirm(second);
-
-        const mappings = await t.run(async (ctx) => await ctx.db.query("photoObjects").collect());
-        expect(mappings).toHaveLength(1);
-        expect(mappings[0]?.storageId).toBe(second);
-        await expect(t.run(async (ctx) => await ctx.storage.getUrl(first))).resolves.toBeNull();
     });
 
     it("releasing an unreferenced key drops the mapping and the bytes", async () => {
         const t = harness();
         const owner = await seedProUser(t);
         const key = photoKeyFor(owner.userId, PHOTO);
-        const storageId = await t.run(async (ctx) => await ctx.storage.store(new Blob(["bytes"])));
-        await authenticatedAs(t, owner).action(api.photos.confirmUpload, {
-            key,
-            storageId,
-        });
+        const storageId = await seedLegacy(t, key);
 
         const released = await authenticatedAs(t, owner).mutation(api.photos.releaseUnreferenced, { key });
 

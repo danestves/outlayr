@@ -20,7 +20,7 @@ Verified against the tree, not from memory:
 |---|---|---|
 | Convex client | `apps/native/src/app/_layout.tsx` | `ConvexBetterAuthProvider`, mounted only when `cloud-runtime.ts` resolved a configured deployment |
 | Convex usage | `apps/native/src/data/sync-engine-core.ts` and the exchange-rate pull | the sync engine drains the outbox and applies `pullSince` |
-| Auth | `packages/backend/confect/lib/betterAuth.ts`, `convex/auth.config.ts`, `convex/http.ts` | Better Auth; `convex.config.ts` calls `app.use()` for betterAuth, r2, rateLimiter, agent and revenuecat |
+| Auth | `packages/backend/confect/lib/betterAuth.ts`, `convex/auth.config.ts`, `convex/http.ts` | Better Auth; `convex.config.ts` calls `app.use()` for betterAuth, storage, rateLimiter, mcp, revenuecat and workpool |
 | Source of truth | `apps/native/src/db/schema.ts` | expo-sqlite + drizzle, local-first |
 | Sync affordances already in the local schema | `src/db/schema.ts` | every user table already carries `updatedAt` **and** a soft-delete `deletedAt`, explicitly "so a future sync layer can reconcile without a schema migration" |
 | Settings row | `src/screens/settings/index.tsx` | reads live state from `useSyncStatus` |
@@ -147,7 +147,7 @@ runs against the local SQLite replica.
 | `mainBudget` singleton (`src/data/budgets-core.ts`) | ⚠️ same | Convention, not a constraint. |
 | `transactionTags` one live link per `(transactionId, tagId)` (`transactionTags_pair_idx`, partial on `deletedAt IS NULL`) | ⚠️ same | Two devices tagging the same entry offline each mint their own link id. Reconciled client-side at the write — see §4. Before `0029` made the index partial, a tombstoned link still held the slot and the second link wedged every later pull. |
 | `imageUri` (`:57`) | ❌ **never** — device-local | A `file://` path whose container uuid changes on every app update. Replicating it lost photos: the receiver could not resolve the path, its launch reconciliation nulled the column, and the resulting push tie-broke on `deviceId` back onto the *originating* device. Removed from the wire in S11. |
-| `imageKey` | ✅ verbatim | The photo's R2 object key. Not a url — `r2.getUrl` signs one with a 15-minute default lifetime, so a stored url rots; every read re-mints from the key. The bytes travel out of band (`packages/backend/confect/photos.ts`, `apps/native/src/data/photo-sync-core.ts`), never in a `push` batch. |
+| `imageKey` | ✅ verbatim | The photo's object key, in Convex file storage or the deployment's bucket. Not a url — a signed url expires, so a stored url rots; every read re-mints from the key. The bytes travel out of band (`packages/backend/confect/photos.ts`, `apps/native/src/data/photo-sync-core.ts`), never in a `push` batch. |
 | `unreviewed` | ✅ optional, absent reads as `false` | The "to review" flag behind the web sidebar badge. Builds older than the field never send it, and push patches, so their edits keep the server's value; an entry they flagged reaches the server only once a newer build pushes it. Reviewing bumps `updatedAt`, or the cleared flag would lose last-writer-wins to the stored `true`. |
 | `appMeta` key/value (`:166-169`) | partly | No `updatedAt`/`deletedAt` locally. Only the meta keys whose sync scope is `synced` in the registry (`src/data/app-meta-registry.ts`, read as `Meta.syncedNames`) sync: the currency and how the ledger reads, which belong to the person. `colorScheme` stays local because an OLED phone at night and a tablet in daylight want different answers; `numberEntryType` because a phone typed one-handed and a tablet typed with both do (syncing it let a second device reverse a choice). `biometricLock` and `notification*` describe a permission this handset holds; `sync*` and `ledgerAdoption` are this device's replication identity; `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` record this install's first run. `timeZone` is the one synced key a device writes on its own: the MCP tools need it to date entries. Each device writes it only when its own zone changes, tracked in the device-local `timeZoneMirrored`, so a zone pulled from another device is never written back and two devices in different zones don't trade it on every foreground. |
 | `exchangeRates` local replica (`:180-194`) | ❌ never | One-way server→device, wiped and replaced by `src/data/rates.ts`. Not user data. Do not sync it. |
@@ -276,9 +276,8 @@ and stall every other table behind it. So a photo is split.
   same last-write-wins rule as everything else. `transactionPhotos` holds a copy migration 0011
   backfilled once; nothing reads or writes it yet, so the device's photo pass skips it
   (`dormantPhotos` in `src/data/sync-tables.ts`) while the server still counts its keys. It is a **key, not a url** —
-  `r2.getUrl` mints a SigV4-signed url with a 15-minute default lifetime and re-signs on
-  every call, so a stored url is a reference that rots. Reads re-mint.
-- **The bytes** move device ↔ R2 directly over signed PUT/GET urls. Only the three small
+  the bucket adapter re-signs on every call, so a stored url is a reference that rots. Reads re-mint.
+- **The bytes** move device ↔ storage directly over signed POST/PUT/GET urls. Only the three small
   calls that mint and account for those urls go through Convex
   (`packages/backend/confect/photos.ts`); the payload never does.
 
@@ -299,15 +298,18 @@ will, because they cannot be made transactional with each other:
 | Tombstoned row | The object is **kept**. The undo window restores from a tombstone and a device that has not pulled the delete is still rendering it. |
 | Release crashes after the metadata row goes | An object leaks. Deliberate: a leak costs storage, the reverse order costs a photo. |
 
-Photo storage is free and ungated, matching replication. A per-account byte limit belongs in
-`checkPhotoQuota` in `photos.ts`, before an upload url is minted — the component's metadata
-table records `size` per object, so the account total is a `listMetadata` walk. Refusing at
-url-mint time is the only refusal a client cannot route around.
+Photo storage is free and ungated, matching replication. `checkPhotoQuota` in
+`photos.impl.ts` refuses before an upload url is minted, summing one `photoSizes` row per
+object because a bucket takes no prefix. Refusing at url-mint time is the only refusal a
+client cannot route around.
 
-**Deployment requires four Convex environment variables**, read by `@convex-dev/r2` itself:
-`R2_BUCKET`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`. There is no separate
-account-id variable — the component extracts it from the endpoint. The README also tells you
-to set `R2_TOKEN`; nothing in the published package reads it.
+**Deployment picks its store with Convex environment variables**, read per call by
+`lib/storageSetup.ts`: `STORAGE_PROVIDER` is `convex`, `r2` or `s3`, and unset means Convex
+file storage unless a provider variable is present. Any `R2_*` variable selects r2, which needs
+`R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and either `R2_ENDPOINT` or
+`R2_ACCOUNT_ID`. Any `S3_*` variable selects s3, which needs `S3_BUCKET` and credentials, with
+`S3_REGION` defaulting to us-east-1. Bytes go through the `@outlayr/storage` component;
+`docs/internals/storage.md` collects the traps.
 
 ---
 
@@ -515,7 +517,7 @@ and why it had to come in that order.
 | **S8** | **First-sign-in adoption.** The three-way decision from §1, the "Keep this iPhone's / the account's / both" prompt, and initial-sync progress UI. | M | **needs owner** — product copy and the destructive-choice UX |
 | **S9** | **`appMeta` preference sync.** `currency`, `currencyChosen`, and the account-scoped settings; explicit device-local deny-list. | S | unattended |
 | **S10** | **Settings Sync row.** Replace the placeholder with real status: signed-in account, last synced, pending count, sign out. | S | unattended (after S3) |
-| **S11** | **Photo sync** via Cloudflare R2 (`@convex-dev/r2`), not Convex file storage. Key replicates on the row; bytes move out of band. | M | built — **round trip unverified**, the four `R2_*` environment variables are not provisioned yet |
+| **S11** | **Photo sync** through `@outlayr/storage`: Convex file storage by default, an S3-compatible bucket when the deployment sets one. Key replicates on the row; bytes move out of band. | M | built — the `R2_*` variables are provisioned in production and storage goes through the component |
 
 Recommended build order when parallelising: **S4 and S5 can start immediately and in
 parallel with S2/S3** — they are local-only and unblock S6/S7 regardless of when auth

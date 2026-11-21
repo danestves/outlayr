@@ -107,13 +107,6 @@ export const postHogConfig = Config.all({
 export const openExchangeRatesAppId = text("OXR_APP_ID");
 export const cotizaveApiKey = secret("COTIZAVE_API_KEY");
 
-export const r2Configured = Config.all([
-    text("R2_BUCKET"),
-    text("R2_ENDPOINT"),
-    secret("R2_ACCESS_KEY_ID"),
-    secret("R2_SECRET_ACCESS_KEY"),
-]).pipe(Config.map((vars) => vars.every((value: Option.Option<unknown>) => Option.isSome(value))));
-
 export const numberOverride = (name: string) =>
     Config.String(name).pipe(
         Config.option,

@@ -93,7 +93,7 @@ Builds need no Hugeicons Pro token: only the native app and the marketing site u
 | `ANTHROPIC_API_KEY`, `AI_MODEL_ID`, `AI_FAST_MODEL_ID`, `AI_GROUNDED_MODEL_ID` | No | Scans, imports and enrichment. Model IDs default to the ones in the code. Other providers: [self-hosted-ai.md](./self-hosted-ai.md). |
 | `ELEVENLABS_API_KEY` | No | Voice entry transcription. Other providers: [self-hosted-ai.md](./self-hosted-ai.md). |
 | `OXR_APP_ID`, `COTIZAVE_API_KEY` | No | Exchange rates from Open Exchange Rates and Cotizave. |
-| `R2_BUCKET`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | No | Receipt photos, in R2 or another S3-compatible bucket. |
+| `STORAGE_PROVIDER` (`convex`, `r2`, `s3`), then `R2_BUCKET`, `R2_ENDPOINT` or `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, or `S3_BUCKET`, `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE` | No | Receipt photos. Unset keeps them in Convex file storage; any `R2_*` or `S3_*` variable selects that bucket. `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are an S3 credential fallback only. See [storage.md](../internals/storage.md). |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | No | Web push. The keys are a P-256 pair in base64url. |
 | `NOTION_CLIENT_ID`, `NOTION_CLIENT_SECRET` | No | Notion import. |
 | `REVENUECAT_SECRET_KEY`, `REVENUECAT_WEBHOOK_AUTH`, `STRIPE_SECRET_KEY`, `REVENUECAT_STRIPE_PUBLIC_KEY` | No | Pro and web billing, see [web-billing.md](./web-billing.md). |

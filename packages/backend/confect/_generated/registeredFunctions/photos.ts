@@ -11,7 +11,6 @@ export default {
 ["callerId"]: RegisteredConvexFunction.register({ ...definitions["callerId"], handler: forward(definitions["callerId"].handler) }),
 ["confirmUpload"]: RegisteredConvexFunction.register({ ...definitions["confirmUpload"], handler: forward(definitions["confirmUpload"].handler) }),
 ["recordPhotoSize"]: RegisteredConvexFunction.register({ ...definitions["recordPhotoSize"], handler: forward(definitions["recordPhotoSize"].handler) }),
-["mapStorageId"]: RegisteredConvexFunction.register({ ...definitions["mapStorageId"], handler: forward(definitions["mapStorageId"].handler) }),
 ["readUrls"]: RegisteredConvexFunction.register({ ...definitions["readUrls"], handler: forward(definitions["readUrls"].handler) }),
 ["releaseUnreferenced"]: RegisteredConvexFunction.register({ ...definitions["releaseUnreferenced"], handler: forward(definitions["releaseUnreferenced"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../photos.spec")["default"]>;

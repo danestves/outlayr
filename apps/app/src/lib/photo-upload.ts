@@ -13,14 +13,15 @@ export function useUploadPhoto() {
             throw new Error("Photos need a connection");
         }
         const client = convex.convexClient;
-        const { key, url } = await client.mutation(api.photos.requestUpload, {
+        const { key, method, url } = await client.mutation(api.photos.requestUpload, {
             name: `web-${crypto.randomUUID()}.${EXTENSIONS[type]}`,
         });
-        const response = await fetch(url, { body, headers: { "Content-Type": type }, method: "PUT" });
+        // Convex file storage takes only POST, a bucket url only PUT; an older bucket server sends no method.
+        const response = await fetch(url, { body, headers: { "Content-Type": type }, method: method ?? "PUT" });
         if (!response.ok) {
             throw new Error(`Photo upload failed: ${response.status}`);
         }
-        // SAFETY: Convex storage answers with `{ storageId }`, and R2 with an empty body that lands in the catch.
+        // SAFETY: only Convex file storage answers with an id; a bucket sends an empty body that lands in the catch.
         const { storageId } = (await response.json().catch(() => ({}))) as {
             storageId?: Parameters<typeof client.action<typeof api.photos.confirmUpload>>[1]["storageId"];
         };

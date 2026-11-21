@@ -1,8 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import * as Schema from "effect/Schema";
 
-import { Id } from "./_generated/id";
-
 const PhotoUrl = Schema.Struct({ key: Schema.String, url: Schema.String });
 
 export default GroupSpec.make()
@@ -10,7 +8,12 @@ export default GroupSpec.make()
         FunctionSpec.publicMutation({
             name: "requestUpload",
             args: () => ({ name: Schema.String }),
-            returns: () => PhotoUrl,
+            returns: () =>
+                Schema.Struct({
+                    key: Schema.String,
+                    method: Schema.Literals(["POST", "PUT"]),
+                    url: Schema.String,
+                }),
         })
     )
     .addFunction(
@@ -23,7 +26,8 @@ export default GroupSpec.make()
     .addFunction(
         FunctionSpec.publicAction({
             name: "confirmUpload",
-            args: () => ({ key: Schema.String, storageId: Schema.optional(Id("_storage")) }),
+            // A component storage id is not an app `_storage` id, so it cannot be typed as one.
+            args: () => ({ key: Schema.String, storageId: Schema.optional(Schema.String) }),
             returns: () => Schema.Null,
         })
     )
@@ -31,13 +35,6 @@ export default GroupSpec.make()
         FunctionSpec.internalMutation({
             name: "recordPhotoSize",
             args: () => ({ bytes: Schema.Number, key: Schema.String }),
-            returns: () => Schema.Null,
-        })
-    )
-    .addFunction(
-        FunctionSpec.internalMutation({
-            name: "mapStorageId",
-            args: () => ({ key: Schema.String, storageId: Id("_storage") }),
             returns: () => Schema.Null,
         })
     )

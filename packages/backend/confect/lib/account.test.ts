@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 
+import { storageComponent } from "@outlayr/storage/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import type { TestConvex } from "convex-test";
@@ -16,6 +17,7 @@ import { runEdge } from "./runEdge";
 function harness() {
     const t = convexTest(schema, modules);
     revenuecatTest.register(t);
+    t.registerComponent("storage", storageComponent.schema, storageComponent.modules);
     return t;
 }
 
@@ -160,14 +162,14 @@ describe("purging an account", () => {
     });
 
     it("frees the account's photos and forgets what they weighed", async () => {
-        // The Convex-storage path: the R2 branch needs a component convex-test cannot register.
+        // A legacy row: the app storage id is still what purge deletes itself.
         const t = harness();
         const owner = await seedProUser(t);
         const key = photoKeyFor(owner.userId, "a.jpg");
         const storageId = await t.run(async (ctx) => await ctx.storage.store(new Blob(["bytes"])));
-        await authenticatedAs(t, owner).action(api.photos.confirmUpload, {
-            key,
-            storageId,
+        await t.run(async (ctx) => {
+            await ctx.db.insert("photoObjects", { key, storageId });
+            await ctx.db.insert("photoSizes", { bytes: 5, key, userId: owner.userId });
         });
 
         await purgeAll(t, owner.userId);
@@ -175,9 +177,11 @@ describe("purging an account", () => {
         const leftovers = await t.run(async (ctx) => ({
             objects: await ctx.db.query("photoObjects").collect(),
             sizes: await ctx.db.query("photoSizes").collect(),
+            url: await ctx.storage.getUrl(storageId),
         }));
         expect(leftovers.sizes).toStrictEqual([]);
         expect(leftovers.objects).toStrictEqual([]);
+        expect(leftovers.url).toBeNull();
     });
 
     it("forgets the account's invite code, the friends it invited, its banked months and its name on an invite", async () => {
