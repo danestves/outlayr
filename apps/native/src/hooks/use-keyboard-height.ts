@@ -1,6 +1,8 @@
-import { useEffect, useEffectEvent, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import { Keyboard } from "react-native";
 import type { EmitterSubscription, KeyboardEvent, KeyboardEventName } from "react-native";
+
+import { useEventListener } from "@/lib/lifecycle";
 
 interface KeyboardHeightStore {
     getSnapshot: () => number;
@@ -66,10 +68,12 @@ export function useArrivingKeyboardHeight(): number {
 }
 
 export function useKeyboardEvent(name: KeyboardEventName, handler: (event: KeyboardEvent) => void) {
-    const onEvent = useEffectEvent(handler);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to Keyboard events while the caller is mounted
-    useEffect(() => {
-        const subscription = Keyboard.addListener(name, (event) => onEvent(event));
-        return () => subscription.remove();
-    }, [name]);
+    useEventListener(
+        (listener) => {
+            const subscription = Keyboard.addListener(name, listener);
+            return () => subscription.remove();
+        },
+        handler,
+        [name]
+    );
 }

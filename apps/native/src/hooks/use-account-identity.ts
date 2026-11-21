@@ -1,9 +1,9 @@
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import { resolveInstitutionDomain } from "@outlayr/money/institution-map";
-import { use, useEffect, useEffectEvent, useRef } from "react";
+import { use, useRef } from "react";
 
 import type { EnrichmentFn } from "@/lib/convex";
-import { useLatest } from "@/lib/lifecycle";
+import { useLatest, useOnMount } from "@/lib/lifecycle";
 import { attachAccountLogoCommand } from "@/state/identity-commands";
 import { fireAtomCommand } from "@/state/use-atom-action";
 
@@ -109,21 +109,16 @@ export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIden
     };
 
     const { initialName } = args;
-    const enrichInitialName = useEffectEvent(() => {
+    // The enrichment teardown cancels its timers but not an `attach` already past them, whose logo would land in the
+    // next editor's draft; taking the ticket on the way out makes it stale.
+    useOnMount(() => {
         if (enabled && initialName != null && initialName.trim().length > 0) {
             onNameChange(initialName);
         }
-    });
-    // The enrichment teardown cancels its timers but not an `attach` already past them, whose logo would land in the
-    // next editor's draft; taking the ticket on the way out makes it stale.
-
-    // oxlint-disable-next-line outlayr/react-effect-budget -- starts the logo lookup for the account's existing name when the editor opens and invalidates an attach in flight when it closes
-    useEffect(() => {
-        enrichInitialName();
         return () => {
             ticketRef.current += 1;
         };
-    }, []);
+    });
 
     return { onNameChange, pending };
 }

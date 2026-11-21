@@ -1,5 +1,4 @@
 import { getMaterialColors, isDynamicColorAvailable } from "@expo/ui/jetpack-compose";
-import { useLayoutEffect } from "react";
 import { Uniwind } from "uniwind";
 
 import { useSetting } from "@/contexts/display-settings-context";
@@ -7,6 +6,7 @@ import { accentForValue } from "@/domain/accent";
 import type { Accent } from "@/domain/accent";
 import { materialSeed } from "@/domain/material-accent";
 import { subscribeAppState } from "@/lib/app-state";
+import { useLayoutMirror } from "@/lib/lifecycle";
 
 import { applyMaterialScheme } from "./material-revision";
 import { MATERIAL_ROLES } from "./material-roles";
@@ -27,8 +27,7 @@ export function useAccent(): Accent {
     const value = useSetting("accentColor");
     const seedColor = materialSeed(value, isDynamicColorAvailable);
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- writes the Compose scheme into Uniwind before the first paint and again on foreground
-    useLayoutEffect(() => {
+    useLayoutMirror([seedColor], () => {
         const apply = () => {
             const schemes = THEMES.map((theme) => composeScheme(theme, seedColor));
             applyMaterialScheme(JSON.stringify(schemes), () => {
@@ -43,7 +42,7 @@ export function useAccent(): Accent {
                 apply();
             }
         });
-    }, [seedColor]);
+    });
 
     return accentForValue(value);
 }

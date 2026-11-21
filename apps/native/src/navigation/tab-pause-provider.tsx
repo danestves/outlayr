@@ -1,9 +1,10 @@
 import { useRoute } from "expo-router";
 import { useNavigationState } from "expo-router/react-navigation";
 import type { ReactNode } from "react";
-import { useLayoutEffect, useState } from "react";
+import { useState } from "react";
 
 import { createTabPause, TabPauseContext } from "@/data/tab-pause";
+import { useLayoutMirror } from "@/lib/lifecycle";
 
 /**
  * Every tab stays mounted and NativeTabs freezes none, so background live reads would re-render on every write.
@@ -15,10 +16,9 @@ export function TabPauseProvider({ children }: { children: ReactNode }) {
     const [pause] = useState(createTabPause);
 
     // Layout rather than passive, so the replay renders in the same task as the commit that selected the tab.
-    // oxlint-disable-next-line outlayr/react-effect-budget -- mirrors tab selection into the pause store
-    useLayoutEffect(() => {
+    useLayoutMirror([pause, selected], () => {
         pause.setSelected(selected);
-    }, [pause, selected]);
+    });
 
     return <TabPauseContext.Provider value={pause}>{children}</TabPauseContext.Provider>;
 }

@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Easing, useAnimatedReaction, useDerivedValue, useSharedValue, withTiming } from "react-native-reanimated";
 
+import { useMirror } from "@/lib/lifecycle";
 import { CHART_DRAW } from "@/theme/chart";
 
 const TIMING = { duration: CHART_DRAW.durationMs, easing: Easing.out(Easing.cubic) };
@@ -61,8 +62,7 @@ export function useChartPath(path: string, animated: boolean, pointCount?: numbe
     const handed = useRef(path);
     const handedPointCount = useRef(pointCount);
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- hands a new path to the Reanimated progress value, which reads the path being shown at that moment
-    useEffect(() => {
+    useMirror([animated, path, pointCount], () => {
         const recounted = handedPointCount.current !== pointCount;
         handedPointCount.current = pointCount;
         if (animated && handed.current === path) {
@@ -75,7 +75,7 @@ export function useChartPath(path: string, animated: boolean, pointCount?: numbe
         if (morph) {
             progress.set(withTiming(1, TIMING));
         }
-    }, [animated, path, progress, pointCount, transition, shown]);
+    });
 
     return shown;
 }
