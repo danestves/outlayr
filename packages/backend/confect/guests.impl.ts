@@ -17,6 +17,7 @@ import { erasePostHogPerson } from "./lib/posthog";
 import { eraseUpstreamCustomer, revenuecat } from "./revenuecat";
 
 const RETIRE_ATTEMPTS = 6;
+const FINAL_SWEEP_DELAY = Duration.minutes(15);
 
 // An unconfigured deployment has nothing upstream to erase, so only a real failure is retried.
 const settled = (label: string) => (error: { readonly reason: string }) =>
@@ -44,8 +45,11 @@ const retire = FunctionImpl.make(
         ).pipe(Effect.provide(outboundHttp));
         const { runMutation } = yield* MutationRunner;
         yield* runMutation(refs.internal.guests.forget, { guestId });
-        if ((!customer || !analytics) && attempt + 1 < RETIRE_ATTEMPTS) {
-            const scheduler = yield* Scheduler;
+        const scheduler = yield* Scheduler;
+        if (customer && analytics) {
+            // A TRANSFER webhook sent just before the delete landed can still arrive after this pass.
+            yield* scheduler.runAfter(FINAL_SWEEP_DELAY, refs.internal.guests.forget, { guestId });
+        } else if (attempt + 1 < RETIRE_ATTEMPTS) {
             yield* scheduler.runAfter(Duration.minutes(2 ** attempt), refs.internal.guests.retire, {
                 attempt: attempt + 1,
                 guestId,

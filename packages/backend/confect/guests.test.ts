@@ -14,6 +14,7 @@ import { grantPro, seedAuthUser } from "./test.helpers";
 const modules = import.meta.glob("../convex/**/*.ts");
 
 afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
 });
 
@@ -41,7 +42,8 @@ describe("retiring a guest", () => {
         await expect(t.run((ctx) => runEdge(isPro(ctx, guest.userId)))).resolves.toBeFalsy();
     });
 
-    it("stops retrying once RevenueCat reports the customer gone", async () => {
+    it("stops retrying once RevenueCat reports the customer gone, then sweeps a late transfer's mirror", async () => {
+        vi.useFakeTimers();
         vi.stubGlobal(
             "fetch",
             vi.fn(async (input: URL) =>
@@ -56,6 +58,10 @@ describe("retiring a guest", () => {
 
         const scheduled = await t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect());
         expect(scheduled.filter(({ name }) => name.includes("retire"))).toHaveLength(0);
+
+        await grantPro(t, guest);
+        await t.finishAllScheduledFunctions(vi.runAllTimers);
+        await expect(t.run((ctx) => runEdge(isPro(ctx, guest.userId)))).resolves.toBeFalsy();
     });
 
     it("drops the guest's mirror at once and retries a refused erase later", async () => {
