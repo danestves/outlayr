@@ -16,7 +16,15 @@ On mobile, Pro can be bought or restored signed out. The paywall creates a Bette
 
 `revenuecat-service` writes a claim marker to AsyncStorage once a guest holds Pro. The first sign-in after it binds the marker to that account before RevenueCat logs in, and the marker is cleared only when the sync reports Pro. A claim RevenueCat wasn't ready for retries with backoff for about an hour while the account stays signed in, and a failed login or a kill mid hand-off retries on the next launch or foreground, and a later sign-in to a different account never runs the sync.
 
+## Analytics
+
+The device never identifies as the guest. Its events, `purchase_started` and `purchase_finished` included, stay on the install's anonymous PostHog ID, and `usePostHogIdentity` calls `identify(accountId)` on sign-in, which merges that ID into the account's person. A purchase made as a guest therefore lands in the account's funnels once that install signs in with Share analytics on, as the privacy policy promises ("once you sign in, these events are linked to your Outlayr account ID"). Signed in while it was off, the SDK sends no `$identify` and the purchase stays anonymous. A guest purchase is a `purchase_finished` with `outcome = pro` and `$is_identified = false`; a later `$identify` counts sign-ins, not successful claims, and restores send no event.
+
+The PostHog person `retire` erases is the guest id itself, which only server-side AI records carry (when Share analytics is on). Signing in on another install doesn't join the purchase by itself.
+
 ## Traps
+
+- **Never `identify` or `alias` the guest id on the device.** If the guest id ever resolves to the install's or the account's person, `retire`'s `bulk_delete` on that distinct id deletes that person and all its events. It would also break the policy's promise to delete the analytics linked to the anonymous account.
 
 - **The standalone `/delete-anonymous-user` endpoint is blocked** in the auth `before` hook. It would skip `guests.retire`, and the plugin's `disableDeleteAnonymousUser` option would also stop the delete on sign-in.
 - **A failed Apple sign-in calls `signOut()`.** That ends the guest session too. The receipt stays with the store, so Restore brings Pro back on a new guest.
