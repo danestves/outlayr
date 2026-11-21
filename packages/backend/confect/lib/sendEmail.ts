@@ -14,6 +14,7 @@ import { emailSetup } from "./emailSetup";
 import type { SendingSetup } from "./emailSetup";
 
 const SEND_TIMEOUT = Duration.seconds(10);
+const SMTP_SOCKET_TIMEOUT = Duration.seconds(5);
 const SMTP_IMPLICIT_TLS_PORT = 465;
 const SENDER_NAME = "Outlayr";
 
@@ -40,6 +41,7 @@ function adapterFor(setup: SendingSetup) {
         host: setup.host,
         port: setup.port,
         secure: setup.port === SMTP_IMPLICIT_TLS_PORT,
+        timeoutMs: Duration.toMillis(SMTP_SOCKET_TIMEOUT),
     });
 }
 

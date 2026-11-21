@@ -263,6 +263,20 @@ describe("email sign-in", () => {
         expect(network).not.toHaveBeenCalled();
     });
 
+    it("refuses to start a code when the email provider is half set up", async () => {
+        const sent = stubEmail();
+        vi.stubEnv("EMAIL_PROVIDER", "smtp");
+        const post = emailAuth();
+
+        await expect(post("/sign-up/email", credentials)).resolves.toMatchObject({ status: 503 });
+        await expect(post("/email-otp/request-password-reset", { email: credentials.email })).resolves.toMatchObject({
+            status: 503,
+        });
+        vi.stubEnv("EMAIL_PROVIDER", "cloudflare");
+        await expect(post("/sign-up/email", credentials)).resolves.toMatchObject({ status: 200, token: null });
+        expect(sent.map(({ subject }) => subject)).toStrictEqual([expect.stringContaining("Your Outlayr code")]);
+    });
+
     it("answers a taken address like a new one and tells its owner instead", async () => {
         const sent = stubEmail();
         const post = emailAuth();

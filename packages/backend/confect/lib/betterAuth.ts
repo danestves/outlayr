@@ -9,6 +9,7 @@ import { symmetricDecrypt } from "better-auth/crypto";
 import { betterAuth } from "better-auth/minimal";
 import { emailOTP } from "better-auth/plugins";
 import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -19,8 +20,9 @@ import { components, internal } from "../../convex/_generated/api";
 import type { DataModel } from "../../convex/_generated/dataModel";
 import authConfig from "../../convex/auth.config";
 import { authSettings } from "./config";
-import { accountExistsEmail, codeEmail, EMAIL_CODE_TTL_SECONDS, emailLanguage } from "./email";
+import { accountExistsEmail, codeEmail, EMAIL_CODE_TTL_SECONDS, EmailError, emailLanguage } from "./email";
 import type { Email } from "./email";
+import { emailSetup } from "./emailSetup";
 import { AppleLifecycleError, appleCredentialLifecycle } from "./providerLifecycle";
 import { runEdge, runEdgeSync } from "./runEdge";
 import { sha256Hex } from "./sha256Hex";
@@ -38,6 +40,13 @@ const EMAIL_LIMITED_PATHS = new Set([
     "/email-otp/request-password-reset",
     "/email-otp/send-verification-otp",
     "/sign-in/email",
+    "/sign-up/email",
+]);
+
+const EMAIL_SENDING_PATHS = new Set([
+    "/email-otp/request-email-change",
+    "/email-otp/request-password-reset",
+    "/email-otp/send-verification-otp",
     "/sign-up/email",
 ]);
 
@@ -194,6 +203,19 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                             return yield* Effect.fail(
                                 new APIError("FORBIDDEN", { message: "Notion is not a sign-in method" })
                             );
+                        }
+                        if (EMAIL_SENDING_PATHS.has(endpoint.path)) {
+                            const setup = yield* emailSetup;
+                            if (setup.provider === "unconfigured") {
+                                yield* Console.error(
+                                    new EmailError({ provider: setup.requested, reason: "unconfigured" }).message
+                                );
+                                return yield* Effect.fail(
+                                    new APIError("SERVICE_UNAVAILABLE", {
+                                        message: "Email is not set up on this server",
+                                    })
+                                );
+                            }
                         }
                         const body = decodeEmailBody(endpoint.body);
                         if (EMAIL_LIMITED_PATHS.has(endpoint.path) && Option.isSome(body)) {
