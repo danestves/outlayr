@@ -26,6 +26,7 @@ import { authSettings } from "./config";
 import { accountExistsEmail, codeEmail, EMAIL_CODE_TTL_SECONDS, EmailError, emailLanguage } from "./email";
 import type { Email } from "./email";
 import { emailSetup } from "./emailSetup";
+import { GUEST_BUCKET_REFILL_MS, guestLimiter } from "./guestLimits";
 import { AppleLifecycleError, appleCredentialLifecycle } from "./providerLifecycle";
 import { runEdge, runEdgeSync } from "./runEdge";
 import { sendEmail } from "./sendEmail";
@@ -63,12 +64,10 @@ const emailProblem = Effect.gen(function* emailProblem() {
 
 const authLimiter = new RateLimiter(components.rateLimiter, {
     emailAuth: { capacity: 10, kind: "token bucket", period: HOUR, rate: 10 },
-    guestSignIn: { capacity: 500, kind: "token bucket", period: HOUR, rate: 500 },
-    guestSignInPerCaller: { capacity: 10, kind: "token bucket", period: HOUR, rate: 10 },
 });
 
-// The limiter never deletes a bucket, so the address is stored only as an HMAC, and the bucket is dropped once it
-// would have refilled: the privacy policy keeps a guest's IP address only on its sessions.
+// The limiter never deletes a bucket, so the address is stored only as an HMAC and `guests.forgetCaller` drops the
+// bucket once it has refilled: the privacy policy keeps a guest's IP address only on its sessions.
 const limitGuestCaller = Effect.fn("BetterAuth.limitGuestCaller")(function* limitGuestCaller(
     ctx: GenericCtx<DataModel>,
     address: string,
@@ -76,14 +75,11 @@ const limitGuestCaller = Effect.fn("BetterAuth.limitGuestCaller")(function* limi
 ) {
     const key = yield* Effect.promise(() => makeSignature(address, secret));
     const { ok } = yield* Effect.promise(() =>
-        authLimiter.limit(requireRunMutationCtx(ctx), "guestSignInPerCaller", { key })
+        guestLimiter.limit(requireRunMutationCtx(ctx), "guestSignInPerCaller", { key })
     );
     if (ok) {
         yield* Effect.promise(() =>
-            requireActionCtx(ctx).scheduler.runAfter(HOUR, components.rateLimiter.lib.resetRateLimit, {
-                key,
-                name: "guestSignInPerCaller",
-            })
+            requireActionCtx(ctx).scheduler.runAfter(GUEST_BUCKET_REFILL_MS, internal.guests.forgetCaller, { key })
         );
     }
     return ok;
@@ -258,7 +254,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                             });
                             const { ok } = callerOk
                                 ? yield* Effect.promise(() =>
-                                      authLimiter.limit(requireRunMutationCtx(ctx), "guestSignIn")
+                                      guestLimiter.limit(requireRunMutationCtx(ctx), "guestSignIn")
                                   )
                                 : { ok: false };
                             if (!ok) {

@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import schema from "../../convex/schema";
 import { createAuth } from "./betterAuth";
+import { guestLimiter } from "./guestLimits";
 
 const modules = import.meta.glob("../../convex/**/*.ts");
 
@@ -347,7 +348,9 @@ describe("email sign-in", () => {
 });
 
 describe("guest sign-in", () => {
-    it("limits each caller on its own and forgets the caller once its bucket refills", async () => {
+    const MINUTE = 60 * 1000;
+
+    function guestAuth() {
         vi.useFakeTimers();
         const t = convexTest(schema, modules);
         betterAuthTest.register(t);
@@ -364,22 +367,47 @@ describe("guest sign-in", () => {
             });
             return response.status;
         };
-        const statuses: number[] = [];
+        const signInTimes = async (address: string, count: number) => {
+            const statuses: number[] = [];
+            for (let attempt = 0; attempt < count; attempt += 1) {
+                statuses.push(await signIn(address));
+            }
+            return statuses;
+        };
+        const callerKeys = async () => {
+            const jobs = await t.run(async (ctx) => ctx.db.system.query("_scheduled_functions").collect());
+            return new Set(jobs.map((job): string => job.args[0].key));
+        };
+        const bucketTouchedAt = (key: string) =>
+            t.run(async (ctx) => (await guestLimiter.getValue(ctx, "guestSignInPerCaller", { key })).ts);
+        return { bucketTouchedAt, callerKeys, signIn, signInTimes, t };
+    }
 
-        for (let attempt = 0; attempt < 10; attempt += 1) {
-            statuses.push(await signIn("2001:db8:1:2::1"));
-        }
+    it("limits each caller on its own so one caller cannot lock out new guests", async () => {
+        const { callerKeys, signIn, signInTimes } = guestAuth();
+
+        const statuses = await signInTimes("2001:db8:1:2::1", 10);
         statuses.push(await signIn("2001:db8:1:2:ffff::9"));
 
         expect(statuses).toStrictEqual([...Array.from({ length: 10 }, () => 200), 429]);
         await expect(signIn("203.0.113.7")).resolves.toBe(200);
+        const keys = [...(await callerKeys())];
+        expect(keys).toHaveLength(2);
+        expect(keys.some((key) => key.includes("2001:db8") || key.includes("203.0.113.7"))).toBeFalsy();
+    });
 
-        await t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(60 * 60 * 1000));
-        const resets = await t.run(async (ctx) => ctx.db.system.query("_scheduled_functions").collect());
-        const keys = new Set(resets.map((job) => job.args[0].key));
+    it("drops a caller's bucket only once it has refilled", async () => {
+        const { bucketTouchedAt, callerKeys, signInTimes, t } = guestAuth();
+        await signInTimes("203.0.113.7", 1);
+        vi.advanceTimersByTime(50 * MINUTE);
+        await signInTimes("203.0.113.7", 9);
 
-        expect(resets.map((job) => job.state.kind)).toStrictEqual(Array.from({ length: 11 }, () => "success"));
-        expect(keys.size).toBe(2);
-        expect([...keys].some((key) => key.includes("2001:db8") || key.includes("203.0.113.7"))).toBeFalsy();
+        vi.advanceTimersByTime(10 * MINUTE);
+        await t.finishInProgressScheduledFunctions();
+
+        await expect(signInTimes("203.0.113.7", 3)).resolves.toStrictEqual([200, 200, 429]);
+        const [key = ""] = await callerKeys();
+        await t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(60 * MINUTE));
+        await expect(bucketTouchedAt(key)).resolves.toBe(0);
     });
 });
