@@ -55,16 +55,20 @@ export function useExitOffer(flow: ExitFlow) {
         }
     };
 
-    // A screen that owns leaving (onboarding) finishes its flow on system Back instead of being popped. Once any
-    // leave has started, removals pass: the leave dispatches before a re-render could lift the prevention.
+    // An owning screen (onboarding) never pops: its finish flips a route guard, which removal prevention lets through.
+    // A standalone paywall lets removals pass once a leave starts, since router.back dispatches before a re-render.
     usePreventRemove(armed || flow.ownsLeave, ({ repeat }) => {
-        if (flow.left.current) {
-            repeat();
-        } else if (armed) {
-            resume.current = flow.ownsLeave ? null : repeat;
+        if (flow.ownsLeave) {
+            if (armed) {
+                show();
+            } else if (flow.busy === null) {
+                flow.leave("dismissed");
+            }
+        } else if (armed && !flow.left.current) {
+            resume.current = repeat;
             show();
-        } else if (flow.busy === null) {
-            flow.leave("dismissed");
+        } else {
+            repeat();
         }
     });
 
