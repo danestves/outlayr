@@ -34,7 +34,12 @@ describe("emailSetup", () => {
 
         await expect(runEdge(emailSetup)).resolves.toStrictEqual({ provider: "unconfigured", requested: "cloudflare" });
 
-        for (const malformed of ["not-an-address", "sender@example..com"]) {
+        for (const malformed of [
+            "not-an-address",
+            "sender@example..com",
+            "sender..name@example.com",
+            ".sender@example.com",
+        ]) {
             vi.stubEnv("EMAIL_FROM", malformed);
 
             await expect(runEdge(emailSetup)).resolves.toStrictEqual({
@@ -42,6 +47,13 @@ describe("emailSetup", () => {
                 requested: "cloudflare",
             });
         }
+
+        vi.stubEnv("EMAIL_FROM", "no-reply+auth@tryoutlayr.com");
+
+        await expect(runEdge(emailSetup)).resolves.toMatchObject({
+            from: "no-reply+auth@tryoutlayr.com",
+            provider: "cloudflare",
+        });
     });
 
     it("stays unconfigured when a provider is only half set", async () => {
