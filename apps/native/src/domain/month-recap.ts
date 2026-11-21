@@ -57,7 +57,7 @@ export function monthRecap({ categoriesById, language, month, now, rows, valuati
         rates
     );
     const contributions: InsightsContribution[] = rows.map((row, index) => ({
-        amount: valued[index],
+        amount: valued[index] ?? 0,
         categoryId: row.categoryId,
         date: row.date,
         income: row.income,
@@ -88,7 +88,7 @@ export function monthRecap({ categoriesById, language, month, now, rows, valuati
         if (row.income) {
             continue;
         }
-        spentAtTodayRate += valuedToday[index];
+        spentAtTodayRate += valuedToday[index] ?? 0;
         foreign ||= row.currency !== null && row.currency !== displayCurrency;
     }
 

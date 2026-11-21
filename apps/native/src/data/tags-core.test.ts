@@ -47,7 +47,7 @@ describe("tagsRepo", () => {
     it("keeps the casing the owner typed first", async () => {
         await Effect.runPromise(tagsRepo.ensureTag(db, "WFH"));
         await Effect.runPromise(tagsRepo.ensureTag(db, "wfh"));
-        expect((await liveTagsQuery(db))[0].name).toBe("WFH");
+        expect((await liveTagsQuery(db)).at(0)?.name).toBe("WFH");
     });
 
     it("refuses a name that is only whitespace", async () => {
@@ -94,7 +94,7 @@ describe("tagsRepo", () => {
 
         const rows = await db.select().from(transactionTags);
         expect(rows).toHaveLength(1);
-        expect(rows[0].deletedAt).toBeNull();
+        expect(rows.at(0)?.deletedAt).toBeNull();
     });
 
     it("retires the links when the tag itself goes", async () => {
@@ -119,8 +119,8 @@ describe("tagsRepo", () => {
 
         const all = await db.select().from(tags);
         expect(all).toHaveLength(1);
-        expect(all[0].deletedAt).toBeTruthy();
-        expect(all[0].name).toBe("");
+        expect(all.at(0)?.deletedAt).toBeTruthy();
+        expect(all.at(0)?.name).toBe("");
     });
 
     it("lets the same name be created again after a delete", async () => {

@@ -2,6 +2,7 @@
     "extends": "expo/tsconfig.base",
     "compilerOptions": {
         "strict": true,
+        "noUncheckedIndexedAccess": true,
         "allowJs": true,
         "types": ["node"],
         "plugins": [
@@ -28,7 +29,9 @@
         ],
         "paths": {
             "@/*": ["./src/*"],
-            "@/assets/*": ["./assets/*"]
+            "@/assets/*": ["./assets/*"],
+            // Its `react-native` condition resolves to TS source, which noUncheckedIndexedAccess would then check.
+            "number-flow-react-native": ["./node_modules/number-flow-react-native/lib/typescript/index.d.ts"]
         }
     },
     "include": [

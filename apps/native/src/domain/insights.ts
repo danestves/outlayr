@@ -182,10 +182,10 @@ export function categoryBuckets(
         }
         const index = buckets.findIndex((bucket) => t >= bucket.start.getTime() && t < bucket.end.getTime());
         if (index !== -1) {
-            values[index] += row.amount;
+            values[index] = (values[index] ?? 0) + row.amount;
         }
     }
-    return buckets.map((bucket, index) => ({ ...bucket, value: values[index] }));
+    return buckets.map((bucket, index) => ({ ...bucket, value: values[index] ?? 0 }));
 }
 
 function windowBounds(
@@ -195,13 +195,14 @@ function windowBounds(
     calendar: InsightsCalendar
 ): { start: number; end: number } | null {
     const ranges = bucketRanges(period, now, offset, calendar);
+    const [first] = ranges;
     const last = ranges.at(-1);
-    if (!last) {
+    if (!first || !last) {
         return null;
     }
     return {
         end: last.end.getTime(),
-        start: ranges[0].start.getTime(),
+        start: first.start.getTime(),
     };
 }
 
@@ -385,10 +386,8 @@ export function aggregateInsightsWindows(
     const ranges = bucketRanges(period, now, offset, calendar, language);
     const priorBounds = windowBounds(period, now, offset - 1, calendar);
     const buckets: InsightsBucket[] = ranges.map((range) => ({ ...range, value: 0 }));
-    const starts = buckets.map((bucket) => bucket.start.getTime());
-    const ends = buckets.map((bucket) => bucket.end.getTime());
-    const [start] = starts;
-    const end = ends.at(-1) ?? start;
+    const start = buckets[0]?.start.getTime();
+    const end = buckets.at(-1)?.end.getTime();
     // An unset prior window must exclude every row, which `±Infinity` bounds do.
     const priorStart = priorBounds?.start ?? Number.POSITIVE_INFINITY;
     const priorEnd = priorBounds?.end ?? Number.NEGATIVE_INFINITY;
@@ -405,13 +404,13 @@ export function aggregateInsightsWindows(
         if (t > nowMs) {
             continue;
         }
-        const inCurrent = t >= start && t < end;
+        const inCurrent = start !== undefined && end !== undefined && t >= start && t < end;
         if (inCurrent) {
             const value = measureValue(row.income, row.amount, measure);
             if (value !== 0) {
-                for (const [index, bucketEnd] of ends.entries()) {
-                    if (t >= starts[index] && t < bucketEnd) {
-                        buckets[index].value += value;
+                for (const bucket of buckets) {
+                    if (t >= bucket.start.getTime() && t < bucket.end.getTime()) {
+                        bucket.value += value;
                         break;
                     }
                 }

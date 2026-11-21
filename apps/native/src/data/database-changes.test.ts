@@ -27,7 +27,11 @@ describe("wakeSettingListeners", () => {
     it("wakes only the listener whose setting the changed row holds", async () => {
         const db = migratedDatabase();
         await db.insert(appMeta).values({ key: "colorScheme", value: "dark" });
-        const [{ rowid }] = await db.all<{ rowid: number }>("select rowid from appMeta where key = 'colorScheme'");
+        const [metaRow] = await db.all<{ rowid: number }>("select rowid from appMeta where key = 'colorScheme'");
+        if (metaRow === undefined) {
+            throw new Error("expected the colorScheme row");
+        }
+        const { rowid } = metaRow;
         const scheme = vi.fn();
         const reminders = vi.fn();
 

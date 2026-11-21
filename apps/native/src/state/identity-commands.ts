@@ -57,10 +57,11 @@ export const adoptPickedPhoto = Effect.fn("Identity.adoptPickedPhoto")(function*
 export const pickLibraryPhotoCommand = createCommand({
     execute: Effect.fn("Identity.pickLibraryPhoto")(function* pickLibraryPhoto(value: IdentitySelection) {
         const result = yield* openLibrary;
-        if (result.canceled || result.assets.length === 0) {
+        const [asset] = result.assets ?? [];
+        if (result.canceled || asset === undefined) {
             return null;
         }
-        return yield* adoptPickedPhoto(value, result.assets[0].uri);
+        return yield* adoptPickedPhoto(value, asset.uri);
     }),
     label: "identity:pick-library-photo",
 });

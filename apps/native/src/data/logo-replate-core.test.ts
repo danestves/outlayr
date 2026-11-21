@@ -78,5 +78,8 @@ test("re-stores a logo only where the row's name and the photo's pixels both mat
         receipt: "file:///p/receipt.jpg",
     });
     const [apple] = await db.select({ imageUri: accounts.imageUri }).from(accounts);
+    if (apple === undefined) {
+        throw new Error("expected an account");
+    }
     expect(apple.imageUri).toBe("file:///p/plated-1.jpg");
 });

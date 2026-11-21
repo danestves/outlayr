@@ -14,7 +14,11 @@ describe("sameRows", () => {
 
     it("sees a change to only the date column of one row", () => {
         const next = tags();
-        next[1] = { ...next[1], updatedAt: new Date(3000) };
+        const [, second] = next;
+        if (second === undefined) {
+            throw new Error("expected two tags");
+        }
+        next[1] = { ...second, updatedAt: new Date(3000) };
 
         expect(sameRows(tags(), next)).toBe(false);
     });

@@ -165,7 +165,7 @@ export function useYearPlan(db: Database, nowMs: number, year: number): YearPlan
 
     const valuedLogged = valueDatedRowsIn(logged, displayCurrency, rates);
     const flows: PlanFlow[] = logged.map((row, index) => ({
-        amount: valuedLogged[index],
+        amount: valuedLogged[index] ?? 0,
         categoryId: topLevel(row.categoryId, row.income),
         date: row.date,
         income: row.income,
@@ -175,7 +175,7 @@ export function useYearPlan(db: Database, nowMs: number, year: number): YearPlan
     const upcoming = occurrencesBetween(schedules, now, addDays(startOfDay(now), 1), yearEnd);
     const valuedUpcoming = valueDatedRowsIn(upcoming, displayCurrency, rates);
     const scheduled: PlanFlow[] = upcoming.map((row, index) => ({
-        amount: valuedUpcoming[index],
+        amount: valuedUpcoming[index] ?? 0,
         categoryId: topLevel(row.categoryId, row.income),
         date: row.date,
         income: row.income,

@@ -59,6 +59,9 @@ async function frozen(db: Database, id: string) {
         })
         .from(transactions)
         .where(eq(transactions.id, id));
+    if (row === undefined) {
+        throw new Error("expected a transaction");
+    }
     return row;
 }
 
@@ -204,6 +207,9 @@ describe("transactionsRepo.update and the replicated photo key", () => {
             })
             .from(transactions)
             .where(eq(transactions.id, id));
+        if (row === undefined) {
+            throw new Error("expected a transaction");
+        }
         return row;
     }
 
@@ -300,6 +306,9 @@ describe("transactionsRepo.update and the replicated photo key", () => {
 
         await expect(photoColumns(db, id)).resolves.toMatchObject({ imageUri: PHOTO });
         const [row] = await db.select({ updatedAt: transactions.updatedAt }).from(transactions);
+        if (row === undefined) {
+            throw new Error("expected a transaction");
+        }
         expect(row.updatedAt.getTime()).toBeGreaterThan(painted.getTime());
     });
 
@@ -576,6 +585,9 @@ describe("restoring a tombstoned transaction", () => {
             })
             .from(transactions)
             .where(eq(transactions.id, transactionId));
+        if (row === undefined) {
+            throw new Error("expected a transaction");
+        }
         return row;
     }
 
@@ -707,6 +719,9 @@ describe("the fee on a transfer the user deleted", () => {
             .select({ id: transactions.id })
             .from(transactions)
             .where(and(eq(transactions.transferId, transferId), eq(transactions.accountId, "acc-checking")));
+        if (fee === undefined) {
+            throw new Error("expected a fee");
+        }
         return { db, feeId: fee.id, transferId };
     }
 

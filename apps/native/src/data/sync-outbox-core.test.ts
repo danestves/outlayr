@@ -160,7 +160,7 @@ describe("enqueueAllForSync", () => {
         const after = await db.select().from(outbox);
         const queued = after.filter((row) => row.tableName === "transactions" && row.localId === "t1");
         expect(queued).toHaveLength(1);
-        expect(queued[0].seq).toBeGreaterThan(before.find((row) => row.localId === "t1")?.seq ?? 0);
+        expect(queued.at(0)?.seq).toBeGreaterThan(before.find((row) => row.localId === "t1")?.seq ?? 0);
     });
 
     it("queues only account-scoped meta keys", async () => {

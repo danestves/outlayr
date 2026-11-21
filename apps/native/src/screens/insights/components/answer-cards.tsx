@@ -57,6 +57,7 @@ function OverLimitCard({ card, context, money, name }: CardProps<Extract<AnswerC
     const valued = valueDatedRowsIn(rows, displayCurrency, rates);
     const biggest = valued.reduce((best, amount, index) => (amount > (valued[best] ?? -1) ? index : best), 0);
     const row = rows[biggest];
+    const biggestValue = valued[biggest];
     const budgetId = context.budgetIds.get(card.categoryId);
 
     const now = new Date(context.nowMs);
@@ -68,10 +69,10 @@ function OverLimitCard({ card, context, money, name }: CardProps<Extract<AnswerC
     });
 
     let evidence: string | undefined;
-    if (row) {
+    if (row && biggestValue !== undefined) {
         const named = row.note.trim();
         evidence = t(named ? "insights.answers.limit.evidence" : "insights.answers.limit.evidenceUnnamed", {
-            amount: money.exact(valued[biggest]),
+            amount: money.exact(biggestValue),
             date: formatSentenceDate(row.date, language),
             name: named,
             spent: money.exact(card.spent),

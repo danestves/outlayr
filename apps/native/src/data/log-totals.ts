@@ -102,7 +102,7 @@ export function useSparklineRows(
 
     const valued = valueDatedRowsIn(rows, displayCurrency, rates);
     return rows.map((row, index) => ({
-        amount: valued[index],
+        amount: valued[index] ?? 0,
         date: row.date,
         income: row.income,
     }));

@@ -589,18 +589,21 @@ function buildWeek(contributions: readonly Contribution[], now: Date, whole: Mon
     );
     const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).getTime();
     const values = starts.map(() => 0);
+    const [firstStart] = starts;
     for (const row of contributions) {
         const t = row.date.getTime();
-        if (row.income || t < starts[0].getTime() || t >= end) {
+        if (row.income || firstStart === undefined || t < firstStart.getTime() || t >= end) {
             continue;
         }
         const index = starts.findLastIndex((start) => start.getTime() <= t);
-        values[index] += row.amount;
+        if (index !== -1) {
+            values[index] = (values[index] ?? 0) + row.amount;
+        }
     }
     const total = values.reduce((sum, value) => sum + value, 0);
     return {
         average: whole(total / WEEK_DAYS),
-        days: starts.map((start, index) => ({ label: weekdayInitial(start), value: values[index] })),
+        days: starts.map((start, index) => ({ label: weekdayInitial(start), value: values[index] ?? 0 })),
     };
 }
 

@@ -11,12 +11,14 @@ export { WALLPAPER_ACCENT_VALUE } from "@outlayr/money/accent";
  */
 export type Accent = AccentColors & { label: TranslationKey };
 
-export const ACCENTS: readonly Accent[] = ACCENT_PALETTE.map((accent) => ({
+const toAccent = (accent: AccentColors): Accent => ({
     ...accent,
     label: `settings.theme.${accent.key}` as const,
-}));
+});
 
-export const [DEFAULT_ACCENT] = ACCENTS;
+export const ACCENTS: readonly Accent[] = ACCENT_PALETTE.map(toAccent);
+
+export const DEFAULT_ACCENT: Accent = toAccent(ACCENT_PALETTE[0]);
 
 export function accentForValue(value: number): Accent {
     return ACCENTS.find((accent) => accent.value === value) ?? DEFAULT_ACCENT;

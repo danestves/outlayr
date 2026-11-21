@@ -67,14 +67,15 @@ export function buildBurndown(rows: readonly ExpenseContribution[], options: Bur
         if (ms < firstMs || ms >= endMs || !contributesTo(row, categoryId)) {
             continue;
         }
-        perDay[dayOffset(row.date, window.start)] += row.amount;
+        const day = dayOffset(row.date, window.start);
+        perDay[day] = (perDay[day] ?? 0) + row.amount;
     }
 
     const points: BurndownPoint[] = [];
     let runwayDay: number | null = null;
     let spent = 0;
     for (let index = 0; index < elapsedDays; index += 1) {
-        spent += perDay[index];
+        spent += perDay[index] ?? 0;
         const balance = limit - spent;
         if (runwayDay === null && balance < 0) {
             runwayDay = index + 1;

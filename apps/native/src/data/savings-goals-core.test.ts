@@ -70,10 +70,16 @@ describe("savings goals", () => {
     it("holds the balance the goal opened against through an unrelated edit", async () => {
         const id = await goal({ startAmount: 1200 });
         const [opened] = await savingsGoalsQuery(db);
+        if (opened === undefined) {
+            throw new Error("expected opened");
+        }
         expect(opened.startAmount).toBe(1200);
 
         await Effect.runPromise(savingsGoalsRepo.update(db, id, { targetAmount: 6000 }));
         const [raised] = await savingsGoalsQuery(db);
+        if (raised === undefined) {
+            throw new Error("expected raised");
+        }
         expect(raised.startAmount).toBe(1200);
         expect(raised.startAmountUsd).toBe(opened.startAmountUsd);
     });
@@ -82,10 +88,16 @@ describe("savings goals", () => {
         await withRate("EUR", 0.9);
         const id = await goal({ currency: "EUR", targetAmount: 1000 });
         const [before] = await savingsGoalsQuery(db);
+        if (before === undefined) {
+            throw new Error("expected before");
+        }
 
         await Effect.runPromise(savingsGoalsRepo.update(db, id, { targetDate: new Date("2027-09-04T10:00:00.000Z") }));
 
         const [after] = await savingsGoalsQuery(db);
+        if (after === undefined) {
+            throw new Error("expected after");
+        }
         expect(after.targetAmount).toBe(1000);
         expect(after.currency).toBe("EUR");
         expect(after.targetAmountUsd).toBe(before.targetAmountUsd);
@@ -99,6 +111,9 @@ describe("savings goals", () => {
         await Effect.runPromise(savingsGoalsRepo.update(db, id, { targetAmount: 1200 }));
 
         const [after] = await savingsGoalsQuery(db);
+        if (after === undefined) {
+            throw new Error("expected after");
+        }
         expect(after.targetAmount).toBe(1200);
         expect(after.currency).toBe("EUR");
         expect(after.startAmount).toBe(500);
@@ -109,6 +124,9 @@ describe("savings goals", () => {
         await goal({ currency: "EUR", startAmount: 0, targetAmount: 1000 });
 
         const [row] = await savingsGoalsQuery(db);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.startAmountUsd).toBe(0);
     });
 
@@ -117,6 +135,9 @@ describe("savings goals", () => {
         const id = await goal({ currency: "EUR", targetAmount: 1000 });
         await db.update(savingsGoals).set({ exchangeRate: null }).where(eq(savingsGoals.id, id));
         const [before] = await savingsGoalsQuery(db);
+        if (before === undefined) {
+            throw new Error("expected before");
+        }
         const rate = before.targetAmount / (before.targetAmountUsd ?? 1);
 
         await db.delete(exchangeRates).run?.();
@@ -124,6 +145,9 @@ describe("savings goals", () => {
         await Effect.runPromise(savingsGoalsRepo.update(db, id, { targetAmount: 2000 }));
 
         const [after] = await savingsGoalsQuery(db);
+        if (after === undefined) {
+            throw new Error("expected after");
+        }
         expect(after.targetAmount / (after.targetAmountUsd ?? 1)).toBeCloseTo(rate, 8);
     });
 
@@ -144,6 +168,9 @@ describe("savings goals", () => {
         await withRate("EUR", 0.8);
         const id = await goal({ currency: "EUR", targetAmount: 1000 });
         const [before] = await savingsGoalsQuery(db);
+        if (before === undefined) {
+            throw new Error("expected before");
+        }
         const rate = before.targetAmount / (before.targetAmountUsd ?? 1);
 
         // A different rate is all that survives by the time the target is re-typed.
@@ -152,6 +179,9 @@ describe("savings goals", () => {
         await Effect.runPromise(savingsGoalsRepo.update(db, id, { targetAmount: 2000 }));
 
         const [after] = await savingsGoalsQuery(db);
+        if (after === undefined) {
+            throw new Error("expected after");
+        }
         expect(after.targetAmount / (after.targetAmountUsd ?? 1)).toBeCloseTo(rate, 8);
     });
 

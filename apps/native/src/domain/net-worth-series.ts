@@ -63,7 +63,7 @@ export function netWorthSeries(
                 carried[index] = { exact: point.exact, seen: true, value: point.value };
             }
             const held = carried[index];
-            if (held.seen) {
+            if (held !== undefined && held.seen) {
                 value += held.value;
                 exact &&= held.exact;
             }

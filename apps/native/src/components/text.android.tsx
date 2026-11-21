@@ -51,7 +51,8 @@ function requestedWeight(style: TextStyle | undefined, className: string | undef
         return Number.isNaN(numeric) ? 400 : numeric;
     }
     const match = WEIGHT_CLASS.exec(className ?? "");
-    return (match && CLASS_WEIGHTS.get(match[1])) ?? 400;
+    const weight = match?.[1];
+    return weight === undefined ? 400 : (CLASS_WEIGHTS.get(weight) ?? 400);
 }
 
 export const FontScaleCapContext = createContext<number | undefined>(undefined);

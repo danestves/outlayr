@@ -147,8 +147,8 @@ function toLocalFields(spec: SyncedTableSpec, fields: WireFields): Row {
     const columns = getTableColumns(spec.table);
     return Object.fromEntries(
         spec.fields.map((name) => {
-            const carried = Object.hasOwn(fields, name) && (fields[name] !== null || !columns[name].notNull);
-            const value = carried ? fields[name] : (spec.defaults[name] ?? null);
+            const carried = Object.hasOwn(fields, name) && (fields[name] !== null || columns[name]?.notNull === false);
+            const value = (carried ? fields[name] : spec.defaults[name]) ?? null;
             return [name, spec.dates.includes(name) ? toLocalDate(value) : value];
         })
     );

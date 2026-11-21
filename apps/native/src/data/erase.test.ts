@@ -194,6 +194,9 @@ describe("eraseData", () => {
 
         await expect(liveTransactions(db)).resolves.toHaveLength(0);
         const [tombstone] = await db.select().from(transactions);
+        if (tombstone === undefined) {
+            throw new Error("expected a transaction");
+        }
         expect(tombstone.deletedAt).not.toBeNull();
     });
 

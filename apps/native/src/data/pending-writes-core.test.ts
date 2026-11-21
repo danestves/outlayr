@@ -490,7 +490,9 @@ describe("applyPendingWrites", () => {
     it("lets a purchase the user deleted be logged again", async () => {
         await Effect.runPromise(applyPendingWrites(db, [walletWrite("auth")], NOW));
         const [row] = await liveRows(db);
-        expect(row).toBeTruthy();
+        if (row === undefined) {
+            throw new Error("expected a transaction");
+        }
         await Effect.runPromise(transactionsRepo.remove(db, row.id, NOW));
 
         const { applied } = await Effect.runPromise(applyPendingWrites(db, [walletWrite("again")], NOW));

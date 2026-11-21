@@ -29,7 +29,11 @@ export function presetForName(categoryName: string): SuggestedCategoryPreset {
         // oxlint-disable-next-line no-bitwise, unicorn/prefer-code-point -- `>>> 0` truncates the running product to uint32, which is what keeps this hash off float precision; and the hash picks the preset a name has already been shown with, so it has to keep numbering surrogate halves the way it did when those categories were created
         hash = (hash * 31 + categoryName.charCodeAt(index)) >>> 0;
     }
-    return ALL_CATEGORY_PRESETS[hash % ALL_CATEGORY_PRESETS.length];
+    const preset = ALL_CATEGORY_PRESETS[hash % ALL_CATEGORY_PRESETS.length];
+    if (preset === undefined) {
+        throw new Error("category presets are empty");
+    }
+    return preset;
 }
 
 export function pendingCategoryFor(

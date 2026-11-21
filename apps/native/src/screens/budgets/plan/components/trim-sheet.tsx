@@ -182,12 +182,13 @@ function TrimBody({
     const lineRight = (throughIndex + 1) * columnWidth + throughIndex * COLUMN_GAP;
 
     const notes: string[] = [];
-    if (effect.fixed.length === 1) {
-        notes.push(t("budgets.plan.trim.fixedOne", { month: monthName(effect.fixed[0], language) }));
-    } else if (effect.fixed.length > 1) {
+    const [firstFixed] = effect.fixed;
+    if (firstFixed !== undefined && effect.fixed.length === 1) {
+        notes.push(t("budgets.plan.trim.fixedOne", { month: monthName(firstFixed, language) }));
+    } else if (firstFixed !== undefined) {
         notes.push(
             t("budgets.plan.trim.fixedRange", {
-                range: monthRange(effect.fixed[0], effect.fixed.at(-1) ?? effect.fixed[0], language, t),
+                range: monthRange(firstFixed, effect.fixed.at(-1) ?? firstFixed, language, t),
             })
         );
     }

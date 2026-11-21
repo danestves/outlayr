@@ -31,7 +31,7 @@ describe("cash flow", () => {
         expect(valueOf(flow, "kept")).toBeCloseTo(3127, 6);
         expect(valueOf(flow, "savings")).toBeUndefined();
         expect(total(flow, "target")).toBeCloseTo(total(flow, "source"), 6);
-        expect(flow.nodes[0].label).toBe("Income");
+        expect(flow.nodes.at(0)?.label).toBe("Income");
     });
 
     it("draws the overspend as Savings instead of Kept", () => {
@@ -40,7 +40,7 @@ describe("cash flow", () => {
         expect(valueOf(flow, "savings")).toBeCloseTo(850, 6);
         expect(valueOf(flow, "kept")).toBeUndefined();
         expect(total(flow, "target")).toBeCloseTo(total(flow, "source"), 6);
-        expect(flow.nodes[0].label).toBe("Spent");
+        expect(flow.nodes.at(0)?.label).toBe("Spent");
     });
 
     it("folds the tail and uncategorized spending into Other, but never a single leftover", () => {

@@ -1,6 +1,9 @@
 // SwiftUI's `move(fromOffsets:toOffset:)`: `destination` is an index before the moved items are removed.
 export function applyMove<T>(items: readonly T[], sourceIndices: readonly number[], destination: number): T[] {
-    const moving = sourceIndices.map((index) => items[index]);
+    const moving = sourceIndices.flatMap((index) => {
+        const item = items[index];
+        return item === undefined ? [] : [item];
+    });
     const rest = items.filter((_, index) => !sourceIndices.includes(index));
     const removedBefore = sourceIndices.filter((index) => index < destination).length;
     const insertAt = destination - removedBefore;
@@ -15,6 +18,9 @@ export function moveItem<T>(items: readonly T[], from: number, to: number): T[] 
         return next;
     }
     const [moved] = next.splice(from, 1);
+    if (moved === undefined) {
+        return next;
+    }
     next.splice(to, 0, moved);
     return next;
 }

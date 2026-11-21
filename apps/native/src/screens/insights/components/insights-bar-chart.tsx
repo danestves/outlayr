@@ -53,10 +53,13 @@ function makePlot(values: number[]): Plot {
 
 function lastLiveIndex(buckets: readonly InsightsBucket[], nowMs: number): number {
     let index = buckets.length - 1;
-    while (index > 0 && buckets[index].start.getTime() > nowMs) {
+    for (;;) {
+        const bucket = buckets[index];
+        if (index <= 0 || bucket === undefined || bucket.start.getTime() <= nowMs) {
+            return index;
+        }
         index -= 1;
     }
-    return index;
 }
 
 function gapFor(period: InsightsPeriod): number {
@@ -162,7 +165,7 @@ export function InsightsBarChart({
                                 onActivate={() => onCommit(selectedIndex === index ? null : index)}
                                 plot={plot}
                                 selected={selectedIndex === index}
-                                value={values[index]}
+                                value={values[index] ?? 0}
                             />
                         ))}
                     </View>

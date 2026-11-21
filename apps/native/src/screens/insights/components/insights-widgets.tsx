@@ -166,10 +166,11 @@ export function NetWorthWidget({ currency, onOpen, series, showCents }: NetWorth
     const { language } = useLanguage();
     const hidden = use(AmountsHiddenContext);
     const latest = series.at(-1);
-    if (!latest) {
+    const [first] = series;
+    if (!latest || first === undefined) {
         return null;
     }
-    const change = latest.value - series[0].value;
+    const change = latest.value - first.value;
     const changeText = t("insights.netWorth.change", {
         amount: hidden ? maskedAmount(currency) : formatSignedAmount(change, currency, showCents, language),
     });

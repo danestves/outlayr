@@ -58,7 +58,7 @@ export function Confetti({ width, height, seed }: ConfettiProps) {
         >
             {pieces.map((piece) => (
                 <Piece
-                    color={palette[piece.colorIndex] ?? palette[0]}
+                    color={palette[piece.colorIndex] ?? colors.income}
                     height={height}
                     key={piece.id}
                     piece={piece}

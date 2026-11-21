@@ -232,10 +232,10 @@ describe("valueRowsIn", () => {
         );
 
         expect({
-            header: cents(header[0].amount),
+            header: cents(header.at(0)?.amount ?? 0),
             perRowAdded: added(valueRowsIn(entries.map(asValuable), "EUR", rates)),
-            subtotals: subtotals.map((day) => cents(day[0].amount)),
-            subtotalsAdded: added(subtotals.map((day) => day[0].amount)),
+            subtotals: subtotals.map((day) => cents(day.at(0)?.amount ?? 0)),
+            subtotalsAdded: added(subtotals.map((day) => day.at(0)?.amount ?? 0)),
         }).toStrictEqual({
             header: 15.91,
             perRowAdded: 15.91,
@@ -309,7 +309,7 @@ describe("valueRowsIn in a three-decimal currency", () => {
         const values = valueRowsIn([row(3.274), row(3.274)], "BHD", bhdRates);
 
         // 6.548 USD is 2.468596 BHD, which is 2.469 at three decimals.
-        expect(roundMoney(values[0] + values[1], 3)).toBe(2.469);
+        expect(roundMoney((values.at(0) ?? 0) + (values.at(1) ?? 0), 3)).toBe(2.469);
     });
 
     it("keeps the fils rather than rounding each row to cents", () => {
