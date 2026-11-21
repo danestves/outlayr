@@ -205,6 +205,26 @@ describe("a retried email", () => {
         expect(keys[0]).toBeTruthy();
         expect(keys[1]).toBe(keys[0]);
     });
+
+    it("is never sent once its code expired, even before the expiry job deletes it", async () => {
+        vi.stubEnv("EMAIL_PROVIDER", "resend");
+        vi.stubEnv("RESEND_API_KEY", "re_test");
+        const t = mailTest();
+        const send = vi.fn(async () => Response.json({ id: "sent" }));
+        vi.stubGlobal("fetch", send);
+        const emailId = await t.run((ctx) =>
+            ctx.db.insert("outboundEmails", {
+                expiresAt: Date.now() - 1,
+                subject: "Your code",
+                text: "123456",
+                to: "late@example.com",
+            })
+        );
+
+        await t.action(internal.mailDelivery.deliver, { emailId });
+
+        expect(send).not.toHaveBeenCalled();
+    });
 });
 
 describe("a policy notice", () => {
