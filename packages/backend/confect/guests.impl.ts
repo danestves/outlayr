@@ -10,6 +10,7 @@ import { MutationCtx, MutationRunner, Scheduler } from "./_generated/services";
 import spec from "./guests.spec";
 import { purgeUserBatch } from "./lib/account";
 import { outboundHttp } from "./lib/http";
+import { erasePostHogPerson } from "./lib/posthog";
 import { eraseUpstreamCustomer, revenuecat } from "./revenuecat";
 
 // Runs while the guest signs in to a real account, before the device logs RevenueCat in to it: with the guest
@@ -22,6 +23,10 @@ const retire = FunctionImpl.make(
         yield* eraseUpstreamCustomer(guestId).pipe(
             Effect.provide(outboundHttp),
             Effect.catchTags({ RevenueCatError: (error) => Console.warn("[guests] customer not erased", error) })
+        );
+        yield* erasePostHogPerson(guestId).pipe(
+            Effect.provide(outboundHttp),
+            Effect.catchTags({ PostHogError: (error) => Console.warn("[guests] analytics not erased", error) })
         );
         const { runMutation } = yield* MutationRunner;
         yield* runMutation(refs.internal.guests.forget, { guestId });

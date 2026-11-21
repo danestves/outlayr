@@ -17,6 +17,8 @@ export const NOVEMBER_NOTICE_AT_MS = Date.UTC(2026, 10, 19);
 
 export const CAPTURE_PUSH_EFFECTIVE_AT_MS = NOVEMBER_NOTICE_AT_MS;
 
+const GUEST_PURCHASE_AT_MS = Date.UTC(2026, 10, 21);
+
 export const POLICY_NOTICES: readonly PolicyNotice[] = [
     {
         changes: {
@@ -1027,6 +1029,80 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         document: "terms",
         effectiveAtMs: NOVEMBER_NOTICE_AT_MS,
         postedAtMs: Date.UTC(2026, 10, 16),
+    },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "If you buy or restore Pro signed out, the app creates an anonymous account on our servers: a random ID and a session, with no name or email. RevenueCat uses that ID. When you sign in, the purchase moves to your account and the anonymous one is deleted.",
+                    label: "Buying Pro without an account",
+                },
+            ],
+            de: [
+                {
+                    detail: "Wenn du Pro abgemeldet kaufst oder wiederherstellst, erstellt die App ein anonymes Konto auf unseren Servern: eine zufällige ID und eine Sitzung, ohne Namen oder E-Mail-Adresse. RevenueCat nutzt diese ID. Wenn du dich anmeldest, geht der Kauf auf dein Konto über und das anonyme Konto wird gelöscht.",
+                    label: "Pro ohne Konto kaufen",
+                },
+            ],
+            es: [
+                {
+                    detail: "Si compras o restauras Pro sin sesión, la app crea una cuenta anónima en nuestros servidores: un ID aleatorio y una sesión, sin nombre ni correo. RevenueCat usa ese ID. Cuando inicias sesión, la compra pasa a tu cuenta y la anónima se elimina.",
+                    label: "Comprar Pro sin cuenta",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Si vous achetez ou restaurez Pro sans être connecté, l'app crée un compte anonyme sur nos serveurs : un identifiant aléatoire et une session, sans nom ni adresse e-mail. RevenueCat utilise cet identifiant. Quand vous vous connectez, l'achat passe sur votre compte et le compte anonyme est supprimé.",
+                    label: "Acheter Pro sans compte",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Se você comprar ou restaurar o Pro sem sessão, o app cria uma conta anônima nos nossos servidores: um ID aleatório e uma sessão, sem nome nem e-mail. A RevenueCat usa esse ID. Quando você inicia sessão, a compra passa para a sua conta e a anônima é excluída.",
+                    label: "Comprar o Pro sem conta",
+                },
+            ],
+        },
+        document: "privacy",
+        effectiveAtMs: GUEST_PURCHASE_AT_MS,
+        postedAtMs: Date.UTC(2026, 10, 22),
+    },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "You can buy Pro without an account. It works on that phone, including AI features, and moves to your account when you sign in. Sync, receipt photo backup, and Notion still need an account.",
+                    label: "Pro without an account",
+                },
+            ],
+            de: [
+                {
+                    detail: "Du kannst Pro ohne Konto kaufen. Es funktioniert auf diesem Handy, auch mit KI-Funktionen, und geht bei der Anmeldung auf dein Konto über. Synchronisierung, Sicherung von Belegfotos und Notion brauchen weiterhin ein Konto.",
+                    label: "Pro ohne Konto",
+                },
+            ],
+            es: [
+                {
+                    detail: "Puedes comprar Pro sin cuenta. Funciona en ese celular, incluidas las funciones de IA, y pasa a tu cuenta cuando inicias sesión. La sincronización, el respaldo de fotos de recibos y Notion siguen requiriendo una cuenta.",
+                    label: "Pro sin cuenta",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Vous pouvez acheter Pro sans compte. Il fonctionne sur ce téléphone, fonctionnalités d'IA comprises, et passe sur votre compte quand vous vous connectez. La synchronisation, la sauvegarde des photos de tickets et Notion nécessitent toujours un compte.",
+                    label: "Pro sans compte",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Você pode comprar o Pro sem conta. Ele funciona naquele celular, incluindo os recursos de IA, e passa para a sua conta quando você inicia sessão. A sincronização, o backup de fotos de recibos e o Notion continuam exigindo uma conta.",
+                    label: "Pro sem conta",
+                },
+            ],
+        },
+        document: "terms",
+        effectiveAtMs: GUEST_PURCHASE_AT_MS,
+        postedAtMs: Date.UTC(2026, 10, 22),
     },
 ];
 
