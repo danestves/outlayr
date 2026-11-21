@@ -345,3 +345,32 @@ describe("email sign-in", () => {
         expect(statuses.at(-1)).toBe(429);
     });
 });
+
+describe("guest sign-in", () => {
+    it("limits each caller on its own so one caller cannot lock out new guests", async () => {
+        const t = convexTest(schema, modules);
+        betterAuthTest.register(t);
+        rateLimiterTest.register(t);
+        const signIn = async (address: string) => {
+            const response = await t.fetch("/api/auth/sign-in/anonymous", {
+                body: "{}",
+                headers: {
+                    "cf-connecting-ip": address,
+                    "content-type": "application/json",
+                    origin: "http://localhost:3000",
+                },
+                method: "POST",
+            });
+            return response.status;
+        };
+        const statuses: number[] = [];
+
+        for (let attempt = 0; attempt < 11; attempt += 1) {
+            statuses.push(await signIn("2001:db8:1:2::1"));
+        }
+
+        expect(statuses.slice(0, 10)).toStrictEqual(Array.from({ length: 10 }, () => 200));
+        await expect(signIn("2001:db8:1:2:ffff::9")).resolves.toBe(429);
+        await expect(signIn("203.0.113.7")).resolves.toBe(200);
+    });
+});

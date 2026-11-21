@@ -21,6 +21,7 @@ import { importPKCS8, SignJWT } from "jose";
 import { components, internal } from "../../convex/_generated/api";
 import type { DataModel } from "../../convex/_generated/dataModel";
 import authConfig from "../../convex/auth.config";
+import { callerAddress } from "./callerAddress";
 import { authSettings } from "./config";
 import { accountExistsEmail, codeEmail, EMAIL_CODE_TTL_SECONDS, EmailError, emailLanguage } from "./email";
 import type { Email } from "./email";
@@ -62,7 +63,8 @@ const emailProblem = Effect.gen(function* emailProblem() {
 
 const authLimiter = new RateLimiter(components.rateLimiter, {
     emailAuth: { capacity: 10, kind: "token bucket", period: HOUR, rate: 10 },
-    guestSignIn: { capacity: 100, kind: "token bucket", period: HOUR, rate: 100 },
+    guestSignIn: { capacity: 500, kind: "token bucket", period: HOUR, rate: 500 },
+    guestSignInPerCaller: { capacity: 10, kind: "token bucket", period: HOUR, rate: 10 },
 });
 
 const decodeEmailBody = Schema.decodeUnknownOption(
@@ -225,9 +227,20 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                             );
                         }
                         if (endpoint.path === "/sign-in/anonymous") {
-                            const { ok } = yield* Effect.promise(() =>
-                                authLimiter.limit(requireRunMutationCtx(ctx), "guestSignIn")
+                            const limiterCtx = requireRunMutationCtx(ctx);
+                            const caller = callerAddress(
+                                endpoint.request?.headers ?? endpoint.headers ?? new Headers()
                             );
+                            const callerOk = yield* Option.match(caller, {
+                                onNone: () => Effect.succeed(true),
+                                onSome: (key) =>
+                                    Effect.promise(() =>
+                                        authLimiter.limit(limiterCtx, "guestSignInPerCaller", { key })
+                                    ).pipe(Effect.map(({ ok }) => ok)),
+                            });
+                            const { ok } = callerOk
+                                ? yield* Effect.promise(() => authLimiter.limit(limiterCtx, "guestSignIn"))
+                                : { ok: false };
                             if (!ok) {
                                 return yield* Effect.fail(
                                     new APIError("TOO_MANY_REQUESTS", { message: "Too many guest sign-ins" })
