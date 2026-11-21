@@ -23,9 +23,9 @@ import type {
     VoiceQuote,
     VoiceThreadTransport,
 } from "@/lib/cloud-ai";
+import { useLatest } from "@/lib/lifecycle";
 import { TranscriptStreamError } from "@/lib/transcript-stream";
 import type { TranscriptFailureReason } from "@/lib/transcript-stream";
-import { useLatest } from "@/lib/use-latest";
 import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-commands";
 import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
 import { logged } from "@/state/entry-save";

@@ -193,7 +193,7 @@ oxlint's compiler rules are a port and do not see every bailout: `try`/`finally`
 | `prefer-catch-tags` | Every file: `Effect.catchTags({ Tag: handler })` rather than `Effect.catchTag`, even for one tag. |
 | `no-inline-schema-compile` | Every file: no `Schema.decodeUnknownSync(S)(input)` and friends inside a function, which compiles the decoder on every call. Hoist the compiled function to module scope. |
 | `require-suppression-reason` | Every file: an `oxlint-disable`, `eslint-disable`, `@ts-expect-error`, `@ts-ignore` or `@effect-diagnostics` directive ends with `-- reason` or sits under a comment that gives one. |
-| `react-effect-budget` | `apps/native/src`, `apps/site/src`, `packages/*/src`, tests skipped: a file holds at most as many `useEffect`, `useLayoutEffect` and `useInsertionEffect` calls as `scripts/effect-budget.json` gives it, and a file without an entry gets none. See "React effect budget". |
+| `react-effect-budget` | `apps/native/src`, `apps/app/src`, `apps/site/src`, `packages/*/src`, tests skipped: a file holds at most as many `useEffect`, `useLayoutEffect` and `useInsertionEffect` calls as `scripts/effect-budget.json` gives it, and a file without an entry gets none. See "React effect budget". |
 | `no-em-dash-copy` | The same paths: no em dash in a string, template or JSX text. Comments are `no-slop-comments`' job. A "no value" placeholder is an en dash. |
 | `no-misread-copy` | The same paths: a translation under a locale key (`es`, `"es-ES"`) avoids words its readers take for something else, such as `oración` (also "prayer"). Add a word to `MISREAD_WORDS` in `plugin.mjs` with the reading and the word to use. |
 | `no-test-in-loop` | Test files: no `it` or `describe` declared inside a `for` loop; write `it.each(cases)(name, fn)`. A loop inside a test body is fine. |
@@ -221,7 +221,7 @@ An effect is for synchronizing with something outside React. A file's count of `
 
   A justified effect is not counted. The rule still reports it once, so the directive is used and `reportUnusedDisableDirectives` stays satisfied.
 - **Lower a budget** after removing effects: run `node scripts/effect-budget.mjs`, which prints every file whose real count is below its budget, then `node scripts/effect-budget.mjs --write` to rewrite the file with the real counts. Never raise one by hand.
-- Replacements, in order: derive in render, the handler that causes the change, a `key` remount, `useSyncExternalStore` through a shared helper, `useAtomMount` on an atom family, a module service, Reanimated `useDerivedValue` or `useAnimatedReaction`, a ref callback.
+- Replacements: see [React effects](./react-effects.md). The two `lifecycle.ts` files that hold the named hooks are the only budget entries.
 
 ### Unused directives
 

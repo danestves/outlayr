@@ -6,11 +6,11 @@ import { useSharedValue } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 
 import { meterToLevel } from "@/domain/voice-entry";
+import { useLatest } from "@/lib/lifecycle";
 import { openAiProtocol } from "@/lib/realtime-openai";
 import { scribeProtocol } from "@/lib/realtime-scribe";
 import { openTranscriptStream, TranscriptStreamError } from "@/lib/transcript-stream";
 import type { TranscriptProtocol, TranscriptStream } from "@/lib/transcript-stream";
-import { useLatest } from "@/lib/use-latest";
 
 const CHUNK_MS = 100;
 const PCM16_MAX = 32_767;
