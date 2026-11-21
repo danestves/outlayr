@@ -1,6 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
@@ -11,9 +12,19 @@ import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationRunner, QueryRunner } from "./_generated/services";
 import { gitHubToken, postHogConfig, revenueCatMetricsConfig } from "./lib/config";
 import { outboundHttp } from "./lib/http";
-import { accountStats, fetchGitHubStats, fetchPostHogStats, fetchRevenueStats } from "./openStats";
-import type { OpenStatsError } from "./openStats";
+import { capturePostHogEvent } from "./lib/posthog";
+import {
+    accountStats,
+    fetchGitHubStats,
+    fetchPostHogStats,
+    fetchReach,
+    fetchRevenueStats,
+    optional,
+    orNull,
+} from "./openStats";
 import spec from "./openStats.spec";
+
+const REACH_CAPTURE_TIMEOUT = Duration.seconds(10);
 
 const toSnapshot = ({ _creationTime: _created, _id, ...snapshot }: OpenStatsDoc) => snapshot;
 
@@ -21,18 +32,6 @@ const latestDoc = Effect.gen(function* latestDoc() {
     const reader = yield* DatabaseReader;
     return yield* reader.table("openStats").index("by_creation_time", "desc").first();
 });
-
-const orNull = <A, R>(effect: Effect.Effect<A, OpenStatsError, R>) =>
-    effect.pipe(
-        Effect.map(Option.some),
-        Effect.catchTags({
-            OpenStatsError: (error) =>
-                Console.error(error.message, error.cause ?? "").pipe(Effect.as(Option.none<A>())),
-        })
-    );
-
-const optional = <C, A, R>(config: Option.Option<C>, fetch: (value: C) => Effect.Effect<A, OpenStatsError, R>) =>
-    Option.isSome(config) ? orNull(fetch(config.value)) : Effect.succeed(Option.none<A>());
 
 const refresh = FunctionImpl.make(
     databaseSchema,
@@ -43,10 +42,12 @@ const refresh = FunctionImpl.make(
         const { runQuery } = yield* QueryRunner;
         const { runMutation } = yield* MutationRunner;
         const { previous, syncedAt } = yield* runQuery(refs.internal.openStats.inputs, {});
+        const posthogConfig = yield* postHogConfig;
+        const revenueCatConfig = yield* revenueCatMetricsConfig;
         const [posthog, revenue, github] = yield* Effect.all(
             [
-                optional(yield* postHogConfig, fetchPostHogStats),
-                optional(yield* revenueCatMetricsConfig, (config) => fetchRevenueStats(config, now)),
+                optional(posthogConfig, fetchPostHogStats),
+                optional(revenueCatConfig, (config) => fetchRevenueStats(config, now)),
                 orNull(fetchGitHubStats(yield* gitHubToken, now)),
             ],
             { concurrency: "unbounded" }
@@ -60,6 +61,23 @@ const refresh = FunctionImpl.make(
                 revenue: Option.getOrElse(revenue, () => previous?.revenue ?? null),
             },
         });
+        const properties = yield* fetchReach(posthogConfig, revenueCatConfig, syncedAt, now).pipe(
+            Effect.provide(outboundHttp)
+        );
+        if (Object.keys(properties).length > 0) {
+            yield* capturePostHogEvent(
+                {
+                    distinct_id: "outlayr-backend",
+                    event: "reach_snapshot",
+                    properties: { ...properties, $process_person_profile: false },
+                },
+                REACH_CAPTURE_TIMEOUT
+            ).pipe(
+                Effect.tapError((error) => Console.error("Reach snapshot capture failed", error)),
+                Effect.ignore,
+                Effect.provide(outboundHttp)
+            );
+        }
         return null;
     }, Effect.orDie)
 );
