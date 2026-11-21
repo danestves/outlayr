@@ -373,7 +373,17 @@ export default defineConfig({
                 rules: {
                     "outlayr/no-em-dash-copy": "error",
                     "outlayr/no-misread-copy": "error",
-                    "outlayr/react-effect-budget": "error",
+                    "outlayr/locked-rules": [
+                        "error",
+                        { rules: ["outlayr/locked-rules", "outlayr/no-manual-memo", "outlayr/no-react-effects"] },
+                    ],
+                    "outlayr/no-react-effects": "error",
+                },
+            },
+            {
+                files: ["apps/native/src/lib/lifecycle.ts", "packages/shared/src/lifecycle.ts"],
+                rules: {
+                    "outlayr/no-react-effects": "off",
                 },
             },
             {

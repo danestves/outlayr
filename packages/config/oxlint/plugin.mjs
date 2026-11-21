@@ -10,7 +10,6 @@ import noPollingLoopInTests from "./t3code/no-polling-loop-in-tests.mjs";
 import noTestInLoop from "./t3code/no-test-in-loop.mjs";
 import preferCatchTags from "./t3code/prefer-catch-tags.mjs";
 import preferEffectFn from "./t3code/prefer-effect-fn.mjs";
-import reactEffectBudget from "./t3code/react-effect-budget.mjs";
 import requireSuppressionReason from "./t3code/require-suppression-reason.mjs";
 
 const isIdentifier = (node, name) => node?.type === "Identifier" && node.name === name;
@@ -441,11 +440,122 @@ const noMisreadCopy = {
     },
 };
 
+const RAW_EFFECT_HOOKS = new Set(["useEffect", "useEffectEvent", "useInsertionEffect", "useLayoutEffect"]);
+
+const staticMemberName = (node) => {
+    if (node.type === "Literal") {
+        // oxlint-disable-next-line anti-slop/no-runtime-typeof -- an ESTree Literal key is a string or number by node shape
+        return typeof node.value === "string" ? node.value : undefined;
+    }
+    if (node.type === "TemplateLiteral" && node.expressions.length === 0) {
+        return node.quasis[0].value.cooked ?? node.quasis[0].value.raw;
+    }
+    return undefined;
+};
+
+const noReactEffects = {
+    create(context) {
+        const report = (node, name) => context.report({ data: { name }, messageId: "raw", node });
+        return {
+            ExportNamedDeclaration(node) {
+                if (node.source?.value !== "react") {
+                    return;
+                }
+                for (const specifier of node.specifiers) {
+                    const name = specifier.local.type === "Identifier" ? specifier.local.name : specifier.local.value;
+                    if (RAW_EFFECT_HOOKS.has(name)) {
+                        report(specifier, name);
+                    }
+                }
+            },
+            ImportSpecifier(node) {
+                const { imported } = node;
+                const name = imported.type === "Identifier" ? imported.name : imported.value;
+                if (node.parent.source.value === "react" && RAW_EFFECT_HOOKS.has(name)) {
+                    report(node, name);
+                }
+            },
+            MemberExpression(node) {
+                if (!node.computed) {
+                    if (node.property.type === "Identifier" && RAW_EFFECT_HOOKS.has(node.property.name)) {
+                        report(node.property, node.property.name);
+                    }
+                    return;
+                }
+                const name = staticMemberName(node.property);
+                if (name !== undefined && RAW_EFFECT_HOOKS.has(name)) {
+                    report(node.property, name);
+                }
+            },
+            ObjectPattern(node) {
+                for (const property of node.properties) {
+                    if (property.type !== "Property") {
+                        continue;
+                    }
+                    const name = propertyName(property.key);
+                    if (name !== undefined && RAW_EFFECT_HOOKS.has(name)) {
+                        report(property.key, name);
+                    }
+                }
+            },
+        };
+    },
+    meta: {
+        docs: { description: "Disallow React's effect hooks outside the lifecycle module." },
+        messages: {
+            raw: "`{{name}}` is banned. Derive in render, act in the handler, or use a named hook from the lifecycle module; see docs/internals/react-effects.md.",
+        },
+        type: "problem",
+    },
+};
+
+const DISABLE_DIRECTIVE = /^\s*(?:oxlint|eslint)-disable(?:-next-line|-line)?(?<rules>[\s\S]*)$/u;
+
+// A locked rule has no escape hatch. A directive naming no rule silences this check too, so it can't catch one.
+const lockedRules = {
+    create(context) {
+        const locked = new Set(context.options[0]?.rules);
+        return {
+            Program() {
+                for (const comment of context.sourceCode.getAllComments()) {
+                    const named = DISABLE_DIRECTIVE.exec(comment.value)?.groups?.rules;
+                    if (named === undefined) {
+                        continue;
+                    }
+                    const rules = named
+                        .split("--")[0]
+                        .split(/[\s,]+/u)
+                        .filter((rule) => rule !== "");
+                    const hit = rules.find((rule) => locked.has(rule));
+                    if (hit !== undefined) {
+                        context.report({ data: { rule: hit }, loc: comment.loc, messageId: "locked" });
+                    }
+                }
+            },
+        };
+    },
+    meta: {
+        docs: { description: "Disallow disable directives for rules the repo never waives." },
+        messages: {
+            locked: "This directive turns off {{rule}}, which is locked. Change the code instead.",
+        },
+        schema: [
+            {
+                additionalProperties: false,
+                properties: { rules: { items: { type: "string" }, type: "array" } },
+                type: "object",
+            },
+        ],
+        type: "problem",
+    },
+};
+
 export default {
     meta: { name: "outlayr" },
     rules: {
         "bottom-sheet-background": bottomSheetBackground,
         "editor-cta-busy": editorCtaBusy,
+        "locked-rules": lockedRules,
         "no-drizzle-transaction": noDrizzleTransaction,
         "no-em-dash-copy": noEmDashCopy,
         "no-hermes-unsupported-apis": noHermesUnsupportedApis,
@@ -455,13 +565,13 @@ export default {
         "no-manual-memo": noManualMemo,
         "no-misread-copy": noMisreadCopy,
         "no-polling-loop-in-tests": noPollingLoopInTests,
+        "no-react-effects": noReactEffects,
         "no-sheet-repaint": noSheetRepaint,
         "no-slop-comments": noSlopComments,
         "no-test-in-loop": noTestInLoop,
         "no-test-timeout-or-retry": noTestTimeoutOrRetry,
         "prefer-catch-tags": preferCatchTags,
         "prefer-effect-fn": preferEffectFn,
-        "react-effect-budget": reactEffectBudget,
         "require-suppression-reason": requireSuppressionReason,
         "swiftui-list-grounds": swiftuiListGrounds,
         "widget-module-scope": widgetModuleScope,
