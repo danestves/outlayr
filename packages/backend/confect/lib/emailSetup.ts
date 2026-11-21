@@ -44,7 +44,7 @@ const DEFAULT_SMTP_PORT = 587;
 const MIN_SMTP_PORT = 1;
 const MAX_SMTP_PORT = 65_535;
 
-const EMAIL_ADDRESS = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+const EMAIL_ADDRESS = /^[^\s@<>]+@(?:[a-z\d](?:[a-z\d-]*[a-z\d])?\.)+[a-z]{2,}$/i;
 
 const setting = (name: string) =>
     Config.String(name).pipe(Config.option, Config.map(Option.filter((value) => value.trim() !== "")));

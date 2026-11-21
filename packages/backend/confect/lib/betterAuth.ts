@@ -264,7 +264,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
             emailOTP({
                 changeEmail: { enabled: true },
                 expiresIn: EMAIL_CODE_TTL_SECONDS,
-                overrideDefaultEmailVerification: true,
+                overrideDefaultEmailVerification: Option.isNone(emailBlocked),
                 sendVerificationOTP: ({ email, otp, type }, endpoint) =>
                     runEdge(
                         Effect.gen(function* sendVerificationOTP() {
