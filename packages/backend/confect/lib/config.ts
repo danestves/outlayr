@@ -9,7 +9,7 @@ const secret = (name: string) => Config.Redacted(name).pipe(Config.option);
 const MIN_WEBHOOK_AUTH_LENGTH = 32;
 const DEFAULT_SITE_URL = "http://localhost:3000";
 const DEFAULT_NATIVE_APP_URL = "outlayr://";
-const DEFAULT_MCP_CONSENT_URL = "https://tryoutlayr.com/connect";
+const DEFAULT_MCP_CONSENT_URL = "https://app.tryoutlayr.com/connect";
 
 export const convexSiteUrl = text("CONVEX_SITE_URL");
 
