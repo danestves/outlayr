@@ -73,6 +73,9 @@ jobs:
             - name: No blanket disable
               run: node scripts/no-blanket-disable.mjs
 
+            - name: Docs index
+              run: node scripts/docs-index.mjs
+
     test:
         name: types · tests
         needs: changes
