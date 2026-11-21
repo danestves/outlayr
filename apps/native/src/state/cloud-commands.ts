@@ -1,13 +1,16 @@
+import type { UnknownError } from "effect/Cause";
 import * as Effect from "effect/Effect";
 
 import { setSyncEnabled } from "@/data/sync-outbox-core";
-import type { Database } from "@/db/client";
+import type { SyncOutboxError } from "@/data/sync-outbox-core";
+import type { Database, CloseDatabaseError } from "@/db/client";
 import { closeDatabase } from "@/db/client";
 import { runAccountLifecycle } from "@/lib/account-lifecycle";
 import type { AccountLifecycleAction } from "@/lib/account-lifecycle";
 import { requestUnlock } from "@/lib/app-lock";
 import type { authClient } from "@/lib/auth-client";
 import { forgetCaptureLookup } from "@/lib/capture-lookup";
+import type { CloudError } from "@/lib/cloud-error";
 import { cloudAction, cloudMutation, convex } from "@/lib/convex";
 import {
     DeletionResumeError,
@@ -17,9 +20,12 @@ import {
 } from "@/lib/deletion-resume";
 import type { StoredDeletionPreparation } from "@/lib/deletion-resume";
 import { createDeviceResetGate, writeDeviceResetMarker } from "@/lib/device-data-reset";
+import type { DeviceResetMarkerError } from "@/lib/device-data-reset";
+import type { ProviderRevocationError } from "@/lib/provider-revocation";
 import { providerBindingFor } from "@/lib/provider-revocation";
 import { signInWithProvider } from "@/lib/provider-sign-in";
 import { appRuntime } from "@/lib/runtime";
+import type { SecureStorageError } from "@/lib/secure-storage";
 import { SecureStorage } from "@/lib/secure-storage";
 
 import { createCommand, createRuntimeCommand } from "./atom-command";
@@ -41,11 +47,11 @@ const cloudConfigured = Effect.suspend(() =>
     convex === null ? Effect.fail(new DeletionResumeError({ reason: "unavailable" })) : Effect.void
 );
 
-const quiesce = (db: Database) => () => setSyncEnabled(db, false).pipe(Effect.mapError((error) => error.cause));
+const quiesce = (db: Database) => () => setSyncEnabled(db, false);
 
 export const signOutCommand = createRuntimeCommand(appRuntime, {
     execute: (input: { allowLocal: () => void; client: AuthClient; db: Database; navigateToLedger: () => void }) =>
-        runAccountLifecycle("signOut", {
+        runAccountLifecycle<SyncOutboxError | UnknownError, never>("signOut", {
             allowLocal: input.allowLocal,
             navigateToLedger: input.navigateToLedger,
             quiesce: quiesce(input.db),
@@ -71,14 +77,31 @@ export const deleteAccountCommand = createRuntimeCommand(appRuntime, {
         const storage = yield* SecureStorage;
         const deleteAll = input.action === "deleteAll";
         const resetGate = deleteAll
-            ? createDeviceResetGate({
+            ? createDeviceResetGate<
+                  | CloseDatabaseError
+                  | CloudError
+                  | DeletionResumeError
+                  | DeviceResetMarkerError
+                  | ProviderRevocationError
+                  | SecureStorageError
+              >({
                   closeDatabase: closeDatabase(db),
                   completeCloudDeletion: resumePersistedCloudDeletion({ clearOnComplete: false, required: true }).pipe(
                       Effect.asVoid
                   ),
               })
             : null;
-        yield* runAccountLifecycle<unknown, SecureStorage>(input.action, {
+        yield* runAccountLifecycle<
+            | CloseDatabaseError
+            | CloudError
+            | DeletionResumeError
+            | DeviceResetMarkerError
+            | ProviderRevocationError
+            | SecureStorageError
+            | SyncOutboxError
+            | UnknownError,
+            SecureStorage
+        >(input.action, {
             advanceDeletion: (resumeSecret) =>
                 cloudConfigured.pipe(
                     Effect.andThen(

@@ -1,3 +1,4 @@
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
 import { accountsRepo } from "@/data/accounts-core";
@@ -94,7 +95,7 @@ export const writeDebt = Effect.fn("Planning.writeDebt")(function* writeDebt(db:
 export const writeOwe = Effect.fn("Planning.writeOwe")(function* writeOwe(db: Database, draft: OweDraft) {
     const { amount, categoryId, currency, note } = draft;
     const owed = draft.person ?? { currency, id: yield* createPerson(db, { currency, name: draft.newName }) };
-    yield* recordBoughtOnCredit(db, { amount, categoryId, date: new Date(), note, person: owed });
+    yield* recordBoughtOnCredit(db, { amount, categoryId, date: yield* DateTime.nowAsDate, note, person: owed });
     return owed.id;
 });
 

@@ -6,6 +6,7 @@ import type { Route } from "@outlayr/model-router/route";
 import { knowledgeKey, knowledgeKeys } from "@outlayr/money/merchant-key";
 import { v } from "convex/values";
 import * as Clock from "effect/Clock";
+import type { ConfigError } from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 
@@ -33,7 +34,7 @@ export const pool = new Workpool(components.enrichmentPool, {
 });
 
 export interface ResolveDeps {
-    fast?: (chosen: Route) => Effect.Effect<Option.Option<TextModel>>;
+    fast?: (chosen: Route) => Effect.Effect<Option.Option<TextModel>, ConfigError>;
     grounded?: TextModel;
 }
 

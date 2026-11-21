@@ -1,6 +1,7 @@
 import { uuidV5 } from "@outlayr/money/uuid5";
 import type { MonthKey } from "@outlayr/money/year-plan";
 import { and, gte, inArray, isNull, lte, eq } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -48,7 +49,7 @@ export const setPlanMonths = Effect.fn("BudgetPlans.setPlanMonths")(function* se
     db: Database,
     { amounts, categoryId, currency }: SetPlanMonthsInput
 ) {
-    const now = new Date();
+    const now = yield* DateTime.nowAsDate;
     const ids = [...amounts.keys()].map((month) => budgetPlanId(categoryId, month));
     yield* transaction(
         db,

@@ -5,6 +5,7 @@ import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import * as Schema from "effect/Schema";
 import type { ReactNode } from "react";
 import { Text } from "react-native";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -16,11 +17,17 @@ import { unusedDatabase as mockUnusedDatabase } from "@/db/test-database";
 import { DeviceResetRecovery } from "./device-reset-recovery";
 import { appRuntime } from "./runtime";
 
-const mockRecover = vi.fn<() => Effect.Effect<{ failures: string[] }, unknown>>();
+class RecoveryTestFailure extends Schema.TaggedError<RecoveryTestFailure>()("RecoveryTestFailure", {
+    message: Schema.String,
+}) {}
+
+const mockRecover = vi.fn<() => Effect.Effect<{ failures: string[] }, RecoveryTestFailure>>();
 const mockResumePersistedCloudDeletion =
-    vi.fn<(options?: { clearOnComplete?: boolean; required?: boolean }) => Effect.Effect<boolean, unknown>>();
-let mockCompleteCloudDeletion: Effect.Effect<void, unknown> | undefined;
-let mockCloseDatabase: Effect.Effect<void, unknown> | undefined;
+    vi.fn<
+        (options?: { clearOnComplete?: boolean; required?: boolean }) => Effect.Effect<boolean, RecoveryTestFailure>
+    >();
+let mockCompleteCloudDeletion: Effect.Effect<void, RecoveryTestFailure> | undefined;
+let mockCloseDatabase: Effect.Effect<void, RecoveryTestFailure> | undefined;
 const mockDatabase = mockUnusedDatabase();
 const mockLocalDataReads = vi.fn();
 vi.mock("@/contexts/local-data-context", async () => {
@@ -48,8 +55,8 @@ vi.mock("./device-data-reset", () => ({
         closeDatabase,
         completeCloudDeletion,
     }: {
-        closeDatabase: Effect.Effect<void, unknown>;
-        completeCloudDeletion: Effect.Effect<void, unknown>;
+        closeDatabase: Effect.Effect<void, RecoveryTestFailure>;
+        completeCloudDeletion: Effect.Effect<void, RecoveryTestFailure>;
     }) => {
         mockCompleteCloudDeletion = completeCloudDeletion;
         mockCloseDatabase = closeDatabase;
@@ -113,7 +120,7 @@ describe("deviceResetRecovery", () => {
 
     it("discloses a failed recovery and retries it before rendering the ledger", async () => {
         mockResumePersistedCloudDeletion
-            .mockReturnValueOnce(Effect.fail(new Error("network unavailable")))
+            .mockReturnValueOnce(Effect.fail(new RecoveryTestFailure({ message: "network unavailable" })))
             .mockReturnValueOnce(Effect.succeed(true));
         mockRecover.mockReturnValue(recovering());
         const { getByText, queryByText } = renderRecovery(
@@ -178,7 +185,7 @@ describe("deviceResetRecovery", () => {
 
     it("keeps the root opaque when the cloud marker has no usable resume material", async () => {
         mockResumePersistedCloudDeletion.mockReturnValue(
-            Effect.fail(new Error("Cloud deletion recovery requires reauthentication"))
+            Effect.fail(new RecoveryTestFailure({ message: "Cloud deletion recovery requires reauthentication" }))
         );
         mockRecover.mockReturnValue(recovering());
         const { getByText, queryByText } = renderRecovery(

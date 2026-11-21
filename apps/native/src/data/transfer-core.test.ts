@@ -580,12 +580,14 @@ describe("applyImport", () => {
         const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         const originalCreate = transactionsRepo.create;
         let calls = 0;
-        const spy = vi.spyOn(transactionsRepo, "create").mockImplementation((targetDb, input) => {
-            calls += 1;
-            return calls === 2
-                ? Effect.fail(new TransactionsError({ cause: new Error("disk full"), operation: "create" }))
-                : originalCreate(targetDb, input);
-        });
+        const spy = vi
+            .spyOn(transactionsRepo, "create")
+            .mockImplementation((...args): ReturnType<typeof transactionsRepo.create> => {
+                calls += 1;
+                return calls === 2
+                    ? Effect.fail(new TransactionsError({ cause: new Error("disk full"), operation: "create" }))
+                    : originalCreate(...args);
+            });
 
         const failure = await Effect.runPromise(Effect.flip(applyImport(transactionalDb, plan)));
         expect(failure).toBeInstanceOf(CsvTransferError);

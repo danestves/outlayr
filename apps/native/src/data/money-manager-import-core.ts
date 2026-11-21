@@ -10,6 +10,8 @@ import type {
     PlannedCategory,
 } from "@outlayr/money/money-manager/types";
 import { and, eq, inArray, isNull, or } from "drizzle-orm";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -159,12 +161,13 @@ const renameMatchedCategories = Effect.fn("MoneyManagerImport.renameMatchedCateg
                 catch: fail("apply"),
                 try: () => db.select({ name: categories.name }).from(categories).where(eq(categories.id, id)).limit(1),
             });
+            const now = yield* DateTime.nowAsDate;
             yield* Effect.tryPromise({
                 catch: fail("apply"),
                 try: () =>
                     db
                         .update(categories)
-                        .set({ customName: true, name: category.name, updatedAt: new Date() })
+                        .set({ customName: true, name: category.name, updatedAt: now })
                         .where(eq(categories.id, id)),
             });
             renamed.push({ id, imported: category.name, previous: row?.name ?? "" });
@@ -351,6 +354,7 @@ export const applyMoneyManagerImport = Effect.fn("MoneyManagerImport.apply")(fun
                 tick();
             }
 
+            const importedAt = yield* Clock.currentTimeMillis;
             const record = {
                 accountIds,
                 accountKeys,
@@ -358,7 +362,7 @@ export const applyMoneyManagerImport = Effect.fn("MoneyManagerImport.apply")(fun
                 budgetIds,
                 categoryIds,
                 expectedBalances,
-                importedAt: Date.now(),
+                importedAt,
                 renamedCategories,
                 transactionIds,
                 transferIds,
@@ -402,7 +406,7 @@ export const undoRecordedImport = Effect.fn("MoneyManagerImport.undoRecorded")(f
     return yield* transaction(
         db,
         Effect.gen(function* write() {
-            const now = new Date();
+            const now = yield* DateTime.nowAsDate;
             const transactionIds = new Set(record.transactionIds);
             for (const chunk of chunkRows(record.transactionIds, CHUNK)) {
                 const fees = yield* undoQuery(() =>
@@ -658,7 +662,7 @@ export const verifyImportedBalances = Effect.fn("MoneyManagerImport.verify")(fun
     db: Database,
     record: MmImportRecord
 ) {
-    const now = new Date();
+    const now = yield* DateTime.nowAsDate;
     const checks: MmBalanceCheck[] = [];
     for (const [accountId, expected] of Object.entries(record.expectedBalances)) {
         const account = yield* Effect.try({

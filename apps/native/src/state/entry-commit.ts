@@ -38,7 +38,7 @@ export class PendingCategoryError extends Schema.TaggedError<PendingCategoryErro
     }
 }
 
-type Step = Effect.Effect<unknown, unknown>;
+type Step<E = never> = Effect.Effect<unknown, E>;
 
 export interface EntrySchedule {
     coefficient: number;
@@ -71,16 +71,16 @@ export interface EntryDraft {
 
 type ExtrasWrite = ReturnType<typeof writeExtras>;
 
-export interface EntryCommit {
+export interface EntryCommit<E = never> {
     attachments?: readonly AttachmentDraft[];
-    carry?: (id: string) => Step | null;
+    carry?: (id: string) => Step<E> | null;
     db: Database;
     draft: EntryDraft;
     initial?: Transaction;
     installments?: (
         entry: TransactionInput,
         writeExtras: (id: string) => ExtrasWrite
-    ) => Effect.Effect<string, unknown> | null;
+    ) => Effect.Effect<string, E> | null;
     pendingCategory?: PendingCategory;
     source: "form" | "onboarding" | "scan" | "voice";
     splits?: { allocations: readonly Allocation[]; decimals: number };
@@ -173,7 +173,7 @@ const materializeTagIds = Effect.fn("EntryCommit.materializeTagIds")(function* m
     return materialized;
 });
 
-const writeExtras = Effect.fn("EntryCommit.writeExtras")(function* writeExtras(commit: EntryCommit, id: string) {
+const writeExtras = Effect.fn("EntryCommit.writeExtras")(function* writeExtras<E>(commit: EntryCommit<E>, id: string) {
     const { db } = commit;
     if (commit.tags !== undefined) {
         const tagIds = yield* materializeTagIds(db, commit.tags.tagIds, commit.tags.pendingNames);
@@ -187,7 +187,7 @@ const writeExtras = Effect.fn("EntryCommit.writeExtras")(function* writeExtras(c
     }
 });
 
-const writeEntry = Effect.fn("EntryCommit.write")(function* writeEntry(commit: EntryCommit) {
+const writeEntry = Effect.fn("EntryCommit.write")(function* writeEntry<E>(commit: EntryCommit<E>) {
     const { db, draft, initial } = commit;
     const categoryId =
         commit.pendingCategory === undefined
@@ -215,9 +215,9 @@ export const queueLookup = Effect.fn("EntryCommit.queueLookup")(function* queueL
     yield* Effect.ignore(sendEnrichmentQueue(db));
 });
 
-const detached = (message: string, step: Step) => Effect.forkDetach(logged(message)(step));
+const detached = <E>(message: string, step: Step<E>) => Effect.forkDetach(logged(message)(step));
 
-export const commitEntry = Effect.fn("EntryCommit.commit")(function* commitEntry(commit: EntryCommit) {
+export const commitEntry = Effect.fn("EntryCommit.commit")(function* commitEntry<E>(commit: EntryCommit<E>) {
     const saved = yield* writeEntry(commit).pipe(Effect.exit);
     if (Exit.isFailure(saved)) {
         const failure = Cause.squash(saved.cause);

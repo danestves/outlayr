@@ -2,6 +2,7 @@ import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { occurrenceId } from "@outlayr/money/occurrence";
 import { anchorDayOf, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, between, desc, eq, gt, inArray, isNull, like, or, sql } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -229,7 +230,11 @@ const writeLanding = Effect.fn("PendingWrites.writeLanding")(function* writeLand
     { currency, landing, parentId }: Landing,
     now: Date
 ) {
-    yield* backfillRecurring(db, parentId, new Date(Math.max(now.getTime(), landing.getTime())));
+    yield* backfillRecurring(
+        db,
+        parentId,
+        DateTime.toDate(DateTime.makeUnsafe(Math.max(now.getTime(), landing.getTime())))
+    );
     const id = occurrenceId(parentId, landing);
     const [written] = yield* attempt("read", () =>
         db
@@ -267,7 +272,7 @@ const settleOccurrence = Effect.fn("PendingWrites.settleOccurrence")(function* s
     now: Date
 ) {
     if (settled.date.getTime() !== write.date) {
-        const date = new Date(write.date);
+        const date = DateTime.toDate(DateTime.makeUnsafe(write.date));
         yield* attempt("write", () =>
             db
                 .update(transactions)
@@ -316,7 +321,7 @@ const createEntry = Effect.fn("PendingWrites.createEntry")(function* createEntry
             amount: write.amount,
             categoryId,
             currency,
-            date: new Date(write.date),
+            date: DateTime.toDate(DateTime.makeUnsafe(write.date)),
             details: null,
             fee,
             income: write.income,
@@ -626,7 +631,7 @@ const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
         return NOTHING_DRAINED;
     }
     const reads = reader ? yield* reader(db, [...waiting, ...claimed.jobs]) : undefined;
-    const now = new Date();
+    const now = yield* DateTime.nowAsDate;
     const released = yield* applyPendingWrites(db, waiting, now, access, reads);
     const fresh = yield* applyPendingWrites(db, claimed.jobs, now, access, reads, claimed.captured);
     if (waiting.length > 0) {

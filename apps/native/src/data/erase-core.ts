@@ -1,5 +1,6 @@
 import { ERASED_DATE, ERASED_TRANSACTION, ERASED_TRANSFER } from "@outlayr/money/erase";
 import { isNotNull, isNull } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -40,7 +41,7 @@ const query = <A>(scope: EraseScope, run: () => PromiseLike<A>) =>
 // Tombstoned, not dropped: a hard delete leaves nothing to replicate, so the first pull would hand the ledger back.
 // Already-tombstoned rows are skipped so a second erase doesn't re-stamp and push unchanged rows.
 export const eraseLedger = Effect.fn("Erase.eraseLedger")(function* eraseLedger(db: Database, scope: EraseScope) {
-    const now = new Date();
+    const now = yield* DateTime.nowAsDate;
 
     yield* transaction(
         db,

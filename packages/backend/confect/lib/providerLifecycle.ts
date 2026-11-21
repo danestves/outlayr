@@ -1,6 +1,7 @@
 import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import { decryptOAuthToken, setTokenUtil } from "better-auth/oauth2";
 import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
@@ -125,7 +126,7 @@ export const grantAppleCredential = Effect.fn("AppleLifecycle.grantAppleCredenti
         const now = yield* Clock.currentTimeMillis;
         yield* deps.persist(account.id, {
             accessToken: tokens.accessToken,
-            accessTokenExpiresAt: new Date(now + tokens.expiresIn * MS_PER_SECOND),
+            accessTokenExpiresAt: DateTime.toDate(DateTime.makeUnsafe(now + tokens.expiresIn * MS_PER_SECOND)),
             refreshToken: tokens.refreshToken,
         });
         return { active: true } as const;
@@ -267,6 +268,14 @@ export const revokeAppleToken = Effect.fn("AppleLifecycle.revokeToken")(function
     );
 });
 
+export class GoogleLifecycleError extends Schema.TaggedError<GoogleLifecycleError>()("GoogleLifecycleError", {
+    status: Schema.Number,
+}) {
+    override get message(): string {
+        return `Google token revocation answered ${this.status}`;
+    }
+}
+
 const GOOGLE_REVOKE_URL = "https://oauth2.googleapis.com/revoke";
 const GOOGLE_INVALID_TOKEN = 400;
 
@@ -275,7 +284,7 @@ export const revokeGoogleToken = Effect.fn("GoogleLifecycle.revokeToken")(functi
         HttpClientRequest.post(GOOGLE_REVOKE_URL).pipe(HttpClientRequest.bodyUrlParams({ token }))
     );
     if (response.status >= 300 && response.status !== GOOGLE_INVALID_TOKEN) {
-        return yield* Effect.fail(new Error(`Google token revocation answered ${response.status}`));
+        return yield* new GoogleLifecycleError({ status: response.status });
     }
 });
 

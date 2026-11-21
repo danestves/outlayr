@@ -4,6 +4,7 @@ import { resolveTextModel } from "@outlayr/ai/model";
 import type { TextModel } from "@outlayr/ai/model";
 import { route } from "@outlayr/model-router/route";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
+import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -259,10 +260,11 @@ export const groundedAnswer: (
         })
     );
     if (Option.isNone(called)) {
+        const at = yield* Clock.currentTimeMillis;
         yield* Effect.promise(() =>
             ctx.runMutation(internal.groundedSpend.record, {
                 actualMicros: 0,
-                at: Date.now(),
+                at,
                 chargedMicros: estimated,
                 inputTokens: 0,
                 outputTokens: 0,
@@ -278,6 +280,7 @@ export const groundedAnswer: (
     const { candidate } = outcome;
     const { categoryName, domain } = candidate;
     if (published && domain !== null && categoryName !== null) {
+        const resolvedAt = yield* Clock.currentTimeMillis;
         yield* Effect.promise(() =>
             ctx.runMutation(internal.merchantKnowledge.record, {
                 categoryName,
@@ -292,7 +295,7 @@ export const groundedAnswer: (
                 merchantName: candidate.merchantName ?? undefined,
                 modelId,
                 parentCategoryName: null,
-                resolvedAt: Date.now(),
+                resolvedAt,
                 source: "web",
                 tags: [...candidate.tags],
             })
@@ -303,10 +306,11 @@ export const groundedAnswer: (
         { inputTokens: outcome.inputTokens, outputTokens: outcome.outputTokens },
         outcome.searchCalls
     );
+    const at = yield* Clock.currentTimeMillis;
     yield* Effect.promise(() =>
         ctx.runMutation(internal.groundedSpend.record, {
             actualMicros,
-            at: Date.now(),
+            at,
             chargedMicros: estimated,
             inputTokens: outcome.inputTokens,
             outputTokens: outcome.outputTokens,

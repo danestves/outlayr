@@ -1,4 +1,5 @@
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
@@ -69,7 +70,8 @@ export const make = Effect.gen(function* make() {
     });
 
     const stamp = Effect.fn("SyncStore.stamp")(function* stamp(db: Database) {
-        yield* setSyncedAt(db, new Date()).pipe(surfaced("stamp"));
+        const now = yield* DateTime.nowAsDate;
+        yield* setSyncedAt(db, now).pipe(surfaced("stamp"));
     });
 
     return SyncStore.of({ cursor, enabled, pending, stamp, sync });

@@ -6,6 +6,7 @@ import type { EntryInput } from "@outlayr/money/entry-row";
 import { merchantKey } from "@outlayr/money/merchant-key";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, asc, count, desc, eq, gt, gte, inArray, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -225,7 +226,7 @@ const toRow = Effect.fn("Transactions.toRow")(function* toRow(db: Database, id: 
         calendar: deviceCalendar,
         categoryName: category?.name ?? null,
         currency,
-        now: new Date(),
+        now: yield* DateTime.nowAsDate,
     }).pipe(Effect.mapError((cause) => new TransactionsError({ cause, operation: "row" })));
 });
 
@@ -322,7 +323,9 @@ export const transactionsRepo = {
                 );
                 const reviewed: { from: Date; id: string; updatedAt: Date }[] = [];
                 for (const row of flagged) {
-                    const updatedAt = new Date(Math.max(now.getTime(), row.updatedAt.getTime() + 1));
+                    const updatedAt = DateTime.toDate(
+                        DateTime.makeUnsafe(Math.max(now.getTime(), row.updatedAt.getTime() + 1))
+                    );
                     yield* refreshLogoCandidate(db, row.id, updatedAt.getTime());
                     const written = yield* query("update", () =>
                         db

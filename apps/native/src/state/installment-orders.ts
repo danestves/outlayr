@@ -1,5 +1,7 @@
 import { draftSchedule, paidBeforeCount } from "@outlayr/money/installment-draft";
 import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
 import type { Account } from "@/data/accounts-core";
@@ -33,7 +35,8 @@ const addSeededFees = Effect.fn("InstallmentOrder.addSeededFees")(function* addS
                 if (cuota === undefined) {
                     return;
                 }
-                const charged = new Date(Math.min(cuota.dueDate.getTime(), Date.now()));
+                const nowMs = yield* Clock.currentTimeMillis;
+                const charged = DateTime.toDate(DateTime.makeUnsafe(Math.min(cuota.dueDate.getTime(), nowMs)));
                 yield* installmentsRepo.addFee(db, { amount: fee.amount, date: charged, installmentId: cuota.id });
                 if (fee.sequence <= paidOutside) {
                     yield* installmentsRepo.recordPayment(db, {
@@ -48,15 +51,15 @@ const addSeededFees = Effect.fn("InstallmentOrder.addSeededFees")(function* addS
         { concurrency: "unbounded" }
     ).pipe(
         Effect.catchCause((cause) =>
-            Effect.sync(() => {
-                console.error("Failed to save a scanned late fee", Cause.squash(cause));
-                onFailed();
-            })
+            Effect.andThen(
+                Effect.logError("Failed to save a scanned late fee", Cause.squash(cause)),
+                Effect.sync(onFailed)
+            )
         )
     );
 });
 
-export const placeOrder = Effect.fn("InstallmentOrder.placeOrder")(function* placeOrder<E>(
+export const placeOrder = Effect.fn("InstallmentOrder.placeOrder")(function* placeOrder<E = never>(
     db: Database,
     order: InstallmentOrderInput<E>,
     fees: readonly SeededFee[],
@@ -94,7 +97,7 @@ const importScannedOrders = Effect.fn("InstallmentOrder.importScannedOrders")(fu
         const transactionId = yield* placeOrder(
             db,
             {
-                installmentsPaidOutside: paidBeforeCount(order.draft, schedule, new Date()),
+                installmentsPaidOutside: paidBeforeCount(order.draft, schedule, yield* DateTime.nowAsDate),
                 purchase: {
                     accountId: account.id,
                     amount: order.price,

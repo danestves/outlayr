@@ -1,5 +1,6 @@
 import type { TransferInput } from "@outlayr/money/transfer-row";
 import { and, eq, isNull } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -101,6 +102,7 @@ export const recordOutsideMove = Effect.fn("Debts.recordOutsideMove")(function* 
     const amount = comesFromPerson(input.verb) ? -input.amount : input.amount;
     const id = newId();
     const amountUsd = yield* frozenUsdAmount(db, amount, person.currency, date);
+    const now = yield* DateTime.nowAsDate;
     yield* Effect.tryPromise({
         catch: (cause) => new DebtsError({ cause, operation: "record-outside-move" }),
         try: () =>
@@ -111,7 +113,7 @@ export const recordOutsideMove = Effect.fn("Debts.recordOutsideMove")(function* 
                 date,
                 id,
                 note: input.note ?? "",
-                updatedAt: new Date(),
+                updatedAt: now,
             }),
     });
     return id;

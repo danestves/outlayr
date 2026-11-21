@@ -19,7 +19,7 @@ import {
     suggestedCategoriesNotAdded,
 } from "./categories-core";
 
-const failureCode = (effect: Effect.Effect<unknown, unknown>) =>
+const failureCode = <A, E>(effect: Effect.Effect<A, E>) =>
     Effect.runPromise(Effect.flip(effect)).then((error) => (isCategoryValidationError(error) ? error.code : null));
 
 const makeDb = migratedDatabase;

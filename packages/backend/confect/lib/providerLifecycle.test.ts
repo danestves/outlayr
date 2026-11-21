@@ -1,3 +1,4 @@
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import { describe, expect, it, vi } from "vite-plus/test";
 
@@ -68,7 +69,7 @@ describe("apple-capture-exchange-storage", () => {
 
     it("best-effort revokes exchanged material when persistence fails", async () => {
         const deps = dependencies();
-        deps.persist.mockReturnValue(Effect.fail(new Error("storage unavailable")));
+        deps.persist.mockReturnValue(Effect.fail(new Cause.UnknownError(undefined, "storage unavailable")));
 
         await expect(runEdge(grantAppleCredential("user-id", input, deps))).rejects.toThrow("storage unavailable");
 

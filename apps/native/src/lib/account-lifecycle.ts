@@ -31,6 +31,10 @@ export interface AccountLifecycleDependencies<E = never, R = never> {
     signOut?: () => Effect.Effect<void, E, R>;
 }
 
+class AccountLifecycleFailure extends Schema.TaggedError<AccountLifecycleFailure>()("AccountLifecycleFailure", {
+    message: Schema.String,
+}) {}
+
 export class AccountLifecycleError extends Schema.TaggedError<AccountLifecycleError>()("AccountLifecycleError", {
     cause: Schema.Defect(),
     stage: Schema.Literals(["deleteAccount", "resetDevice", "revokeProvider", "signOut"]),
@@ -78,7 +82,7 @@ const completeCloudDeletion = Effect.fn("AccountLifecycle.completeCloudDeletion"
             deps.clearDeletionSecret
         )
     ) {
-        return yield* Effect.fail(new Error(NOT_CONFIGURED));
+        return yield* new AccountLifecycleFailure({ message: NOT_CONFIGURED });
     }
     const {
         advanceDeletion,
@@ -129,7 +133,9 @@ export const runAccountLifecycle = Effect.fn("AccountLifecycle.run")(function* r
             }
             const result = deps.resetDevice ? yield* deps.resetDevice() : undefined;
             if (result && result.failures.length > 0) {
-                return yield* Effect.fail(new Error(`Device cleanup incomplete: ${result.failures.join(", ")}`));
+                return yield* new AccountLifecycleFailure({
+                    message: `Device cleanup incomplete: ${result.failures.join(", ")}`,
+                });
             }
         }).pipe(inStage("resetDevice"));
         (deps.navigateToOnboarding ?? deps.navigateToLedger)();

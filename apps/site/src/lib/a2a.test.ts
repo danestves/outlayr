@@ -1,3 +1,4 @@
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -11,7 +12,7 @@ const call = async (body: string, version: string | null = "1.0") => {
                 headers: version === null ? {} : { "a2a-version": version },
                 method: "POST",
             })
-        )
+        ).pipe(Effect.provide(SecureRandom.layerWebCrypto))
     );
     return response.json();
 };

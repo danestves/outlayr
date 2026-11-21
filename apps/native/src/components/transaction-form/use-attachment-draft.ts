@@ -83,7 +83,7 @@ const pickFiles = Effect.fn("AttachmentDraft.pickFiles")(function* pickFiles() {
           }));
 });
 
-type PickAttachments = (room: number) => Effect.Effect<Picked[] | "denied", unknown>;
+type PickAttachments<E = never> = (room: number) => Effect.Effect<Picked[] | "denied", E>;
 
 export const intake = Effect.fn("AttachmentDraft.intake")(function* intake(picked: Picked) {
     const stored: AttachmentIntake = yield* (
@@ -94,9 +94,9 @@ export const intake = Effect.fn("AttachmentDraft.intake")(function* intake(picke
     return stored;
 });
 
-const addAttachments = Effect.fn("AttachmentDraft.add")(function* addAttachments(
+const addAttachments = Effect.fn("AttachmentDraft.add")(function* addAttachments<E>(
     held: number,
-    pick: PickAttachments,
+    pick: PickAttachments<E>,
     done: { onAdded: (added: AttachmentDraft[]) => void; onFailed: (failure: Failure) => void }
 ) {
     const room = MAX_ATTACHMENTS - held;
@@ -149,7 +149,7 @@ export function useAttachmentDraft({ db, initial, mode, onEdit, onFailure, resto
     const runFlow = useAtomCommand(voidFlowCommand);
     const fail = (failure: Failure) => onFailure(t(FAILURE_KEYS[failure]));
 
-    const run = (pick: PickAttachments) => {
+    const run = <E>(pick: PickAttachments<E>) => {
         void runFlow(
             addAttachments(attachments.length, pick, {
                 onAdded: (added) => {

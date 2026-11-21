@@ -1,6 +1,7 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
+import type { TagsError } from "@/data/tags-core";
 import { parseImportFile } from "@/data/transfer-core";
 import { classifyParseFailure, HARD_PARSE_REJECT_CHARS } from "@/domain/import-diagnosis";
 import type { ImportFlowEvent } from "@/domain/import-flow";
@@ -22,7 +23,7 @@ class TagCreateError extends Schema.TaggedError<TagCreateError>()("TagCreateErro
 }
 
 export const createTagCommand = createCommand({
-    execute: (create: Effect.Effect<string | null, unknown>) =>
+    execute: (create: Effect.Effect<string | null, TagsError>) =>
         create.pipe(Effect.mapError((cause) => new TagCreateError({ cause }))),
     label: "editor:create-tag",
 });

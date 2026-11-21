@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 
 import { outbox } from "@/db/schema";
@@ -8,6 +9,10 @@ import { transaction } from "@/db/transaction";
 import { CorruptMetaError, Meta } from "./app-meta-core";
 import { META_NAMES } from "./app-meta-registry";
 import type { MetaName } from "./app-meta-registry";
+
+class TransactionFailure extends Schema.TaggedError<TransactionFailure>()("TransactionFailure", {
+    cause: Schema.Defect(),
+}) {}
 
 const BOOL = ["true", "false"];
 const BIT = ["1", "0"];
@@ -229,7 +234,7 @@ describe("a corrupt value", () => {
                 yield* Meta.set(db, "categoryLanguage", "es-MX");
                 yield* Meta.get(db, "syncCursor");
             }),
-            (cause) => new Error("transaction failed", { cause })
+            (cause) => new TransactionFailure({ cause })
         );
 
         await expect(Effect.runPromise(Effect.flip(write))).resolves.toBeInstanceOf(CorruptMetaError);

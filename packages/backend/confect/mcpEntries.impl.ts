@@ -5,6 +5,8 @@ import { fixedOffset, isoDay, utcOffsetOf, zoneCalendar } from "@outlayr/money/l
 import type { RateLookup } from "@outlayr/money/rates";
 import { roundMoney } from "@outlayr/money/round";
 import * as Clock from "effect/Clock";
+import * as SecureRandom from "effect/crypto/SecureRandom";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
@@ -133,7 +135,7 @@ const logEntry = FunctionImpl.make(
             const now = yield* Clock.currentTimeMillis;
             const date = yield* entryInstant(args.date, now, offsetAt);
             const { idempotencyKey } = args;
-            const localId = idempotencyKey ? yield* keyedLocalId(userId, idempotencyKey) : crypto.randomUUID();
+            const localId = idempotencyKey ? yield* keyedLocalId(userId, idempotencyKey) : SecureRandom.uuidV4Unsafe();
             const entry = {
                 account: account?.name ?? null,
                 amount,
@@ -174,12 +176,17 @@ const logEntry = FunctionImpl.make(
                     amount,
                     categoryId: category.localId,
                     currency,
-                    date: new Date(date),
+                    date: DateTime.toDate(DateTime.makeUnsafe(date)),
                     details: null,
                     income,
                     note,
                 },
-                { calendar: zoneCalendar(offsetAt), categoryName: category.name, currency, now: new Date(now) }
+                {
+                    calendar: zoneCalendar(offsetAt),
+                    categoryName: category.name,
+                    currency,
+                    now: DateTime.toDate(DateTime.makeUnsafe(now)),
+                }
             );
             yield* writer.table("transactions").insert({
                 accountId: row.accountId,
