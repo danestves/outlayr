@@ -59,6 +59,12 @@ const retire = FunctionImpl.make(
                     guestId,
                 }
             );
+        } else {
+            yield* Console.error("[guests] retirement gave up with upstream records left", {
+                analytics,
+                customer,
+                guestId,
+            });
         }
         return null;
     }, Effect.orDie)
