@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
-import { useLayoutEffect, useRef } from "react";
 
 import { toolbarIcon } from "@/components/toolbar-icons";
+import { useLatest } from "@/lib/lifecycle";
 
 import { transactionFormCtaActions } from "./cta-actions";
 import { useKeyboardShown } from "./stage/use-keyboard-shown";
@@ -51,11 +51,8 @@ function CtaToolbar(props: TransactionFormCtaProps) {
 }
 
 export function TransactionFormCta(props: TransactionFormCtaProps) {
-    const handlers = useRef(props);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- keeps the callbacks registered with the native header pointing at the latest form handlers
-    useLayoutEffect(() => {
-        handlers.current = props;
-    });
+    // The native header keeps the handlers it first registered, so they read the latest props through this ref.
+    const handlers = useLatest(props);
     const remove = () => handlers.current.onDelete?.();
     const lookup = () => handlers.current.onLookup?.();
     const press = () => handlers.current.save?.onPress();

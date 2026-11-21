@@ -8,7 +8,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import { PortalHost, PortalProvider } from "panelui-native/primitives/portal";
 import type { ComponentProps, RefObject } from "react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Keyboard, KeyboardAvoidingView, Pressable, View, useWindowDimensions } from "react-native";
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
 
@@ -48,6 +48,7 @@ import { useToggleFavouriteCurrency } from "@/hooks/use-toggle-favourite-currenc
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { celebration } from "@/lib/celebration";
+import { useLatest, useLayoutMirror, useMirror } from "@/lib/lifecycle";
 import { notifyFailure, notifySaved } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import { voidAppFlowCommand } from "@/state/entry-commands";
@@ -589,10 +590,9 @@ export function TransactionForm(props: TransactionFormProps) {
     });
     const { attachments } = attachmentDraft;
     const dirty = formDirty || edited || identitySource === "user";
-    // oxlint-disable-next-line outlayr/react-effect-budget -- reports the form's dirtiness to the screen's navigation guard that blocks leaving with edits
-    useEffect(() => {
+    useMirror([dirty], () => {
         onDirtyChange?.(dirty);
-    }, [dirty, onDirtyChange]);
+    });
 
     const note = useEntryNote({
         contentWidth,
@@ -601,20 +601,22 @@ export function TransactionForm(props: TransactionFormProps) {
         seeded: notesSeed,
     });
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- hands the draft reader to the sheet's swipe-dismiss listener while mounted, and clears it on unmount
-    useLayoutEffect(() => {
+    const readDraft = () => ({
+        ...lookup.sources,
+        accountDeclined,
+        attachments,
+        identity,
+        notes: note.read(),
+        splitAllocations: split.allocations,
+        values: form.state.values,
+    });
+    const latestRead = useLatest(readDraft);
+    // The sheet's swipe-dismiss listener reads the snapshot; the reader it holds always sees the latest commit.
+    useLayoutMirror([draftRef], () => {
         if (draftRef === undefined) {
             return;
         }
-        draftRef.current = () => ({
-            ...lookup.sources,
-            accountDeclined,
-            attachments,
-            identity,
-            notes: note.read(),
-            splitAllocations: split.allocations,
-            values: form.state.values,
-        });
+        draftRef.current = () => latestRead.current();
         return () => {
             draftRef.current = null;
         };

@@ -1,6 +1,6 @@
 import { LegendList } from "@legendapp/list/react-native";
 import type { LegendListRef } from "@legendapp/list/react-native";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { View } from "react-native";
 import type { HostInstance, StyleProp, ViewInstance, ViewStyle } from "react-native";
 import Animated, {
@@ -16,6 +16,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { currencyPickerRows } from "@/domain/currency-picker-rows";
 import type { CurrencyCode, CurrencyPickerRow } from "@/domain/currency-picker-rows";
 import { FAVOURITE_CURRENCY_LIMIT } from "@/domain/favourite-currencies";
+import { useMirror } from "@/lib/lifecycle";
 
 import { CurrencyHint, CurrencyRow, CurrencyRowCopy, CurrencySectionHeader } from "./currency-picker-row";
 
@@ -69,6 +70,8 @@ export function CurrencyPickerList({
     contentContainerStyle,
 }: CurrencyPickerListProps) {
     const rows: readonly CurrencyPickerRow[] = currencyPickerRows(favourites, query);
+    // The list is rebuilt for these two inputs; a primitive key keeps the landing watcher off the array's identity.
+    const rowsKey = JSON.stringify([favourites, query]);
 
     const full = favourites.length >= FAVOURITE_CURRENCY_LIMIT;
 
@@ -109,8 +112,7 @@ export function CurrencyPickerList({
         });
     };
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- measures the landed row in the native list a frame after the favourites commit
-    useEffect(() => {
+    useMirror([rowsKey, travel, travelled], () => {
         if (travel === null || rows === travel.departed) {
             return;
         }
@@ -137,7 +139,7 @@ export function CurrencyPickerList({
             });
         });
         return () => cancelAnimationFrame(frame);
-    }, [rows, travel, travelled]);
+    });
 
     const toggleFavourite =
         onToggleFavourite === null
