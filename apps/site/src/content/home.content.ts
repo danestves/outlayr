@@ -178,11 +178,11 @@ const home = {
             },
             {
                 answer: t({
-                    en: "Outlayr reads the store, the date, the total, and every line from a photo of the receipt, then fills in the entry for you to save. Take the photo or pick one from your library. Scanning needs an account, and each scan counts as one capture.",
-                    de: "Outlayr liest Geschäft, Datum, Summe und jede Zeile aus einem Foto des Belegs und füllt den Eintrag aus, damit du ihn speicherst. Mach das Foto oder wähle eines aus deiner Fotomediathek. Fürs Scannen brauchst du ein Konto, und jeder Scan zählt als eine Erfassung.",
-                    es: "Outlayr lee la tienda, la fecha, el total y cada línea de una foto del recibo, y llena el registro para que lo guardes. Toma la foto o elige una de tu galería. Para escanear necesitas una cuenta, y cada escaneo equivale a una captura.",
-                    pt: "O Outlayr lê o estabelecimento, a data, o total e cada item de uma foto do recibo, e preenche o lançamento para você salvar. Tire a foto ou escolha uma da sua galeria. Para escanear, você precisa de uma conta, e cada escaneamento conta como uma captura.",
-                    fr: "Outlayr lit le commerce, la date, le total et chaque ligne sur une photo du ticket, puis remplit l'opération pour que vous l'enregistriez. Prenez la photo ou choisissez-en une dans votre galerie. Le scan nécessite un compte, et chaque scan compte comme une capture.",
+                    en: "Outlayr reads the store, the date, the total, and every line from a photo of the receipt, then fills in the entry for you to save. Take the photo or pick one from your library. Scanning needs an account or Pro, and each scan counts as one capture.",
+                    de: "Outlayr liest Geschäft, Datum, Summe und jede Zeile aus einem Foto des Belegs und füllt den Eintrag aus, damit du ihn speicherst. Mach das Foto oder wähle eines aus deiner Fotomediathek. Fürs Scannen brauchst du ein Konto oder Pro, und jeder Scan zählt als eine Erfassung.",
+                    es: "Outlayr lee la tienda, la fecha, el total y cada línea de una foto del recibo, y llena el registro para que lo guardes. Toma la foto o elige una de tu galería. Para escanear necesitas una cuenta o Pro, y cada escaneo equivale a una captura.",
+                    pt: "O Outlayr lê o estabelecimento, a data, o total e cada item de uma foto do recibo, e preenche o lançamento para você salvar. Tire a foto ou escolha uma da sua galeria. Para escanear, você precisa de uma conta ou do Pro, e cada escaneamento conta como uma captura.",
+                    fr: "Outlayr lit le commerce, la date, le total et chaque ligne sur une photo du ticket, puis remplit l'opération pour que vous l'enregistriez. Prenez la photo ou choisissez-en une dans votre galerie. Le scan nécessite un compte ou Pro, et chaque scan compte comme une capture.",
                 }),
                 question: t({
                     en: "How does receipt scanning work?",
@@ -336,11 +336,11 @@ const home = {
         },
         plansCopy: {
             footnote: t({
-                en: "A capture is one voice clip, one receipt photo, or one installment plan import of up to 5 screenshots, and needs you signed in. Pro is billed monthly or yearly, or bought once, at the price your app store shows in your country.",
-                de: "Eine Erfassung ist ein Sprachclip, ein Belegfoto oder ein Import von Ratenplänen mit bis zu 5 Screenshots und setzt voraus, dass du angemeldet bist. Pro wird monatlich oder jährlich abgerechnet oder einmalig gekauft, zum Preis, den dein App Store in deinem Land zeigt.",
-                es: "Una captura es un clip de voz, una foto de un recibo o una importación de planes de cuotas de hasta 5 capturas de pantalla, y requiere que hayas iniciado sesión. Pro se cobra al mes o al año, o se compra una sola vez, al precio que muestra tu tienda de apps en tu país.",
-                pt: "Uma captura é um áudio de voz, uma foto de recibo ou uma importação de parcelamentos de até 5 capturas de tela, e exige que você tenha entrado na sua conta. O Pro é cobrado por mês ou por ano, ou comprado uma vez só, pelo preço que sua loja de apps mostra no seu país.",
-                fr: "Une capture correspond à un extrait vocal, une photo de ticket ou un import d’échéanciers d’au plus 5 captures d’écran, et nécessite d'être connecté. Pro est facturé au mois ou à l'année, ou acheté en une fois, au prix affiché par votre boutique d'apps dans votre pays.",
+                en: "A capture is one voice clip, one receipt photo, or one installment plan import of up to 5 screenshots, and needs an account or Pro. Pro is billed monthly or yearly, or bought once, at the price your app store shows in your country.",
+                de: "Eine Erfassung ist ein Sprachclip, ein Belegfoto oder ein Import von Ratenplänen mit bis zu 5 Screenshots und setzt ein Konto oder Pro voraus. Pro wird monatlich oder jährlich abgerechnet oder einmalig gekauft, zum Preis, den dein App Store in deinem Land zeigt.",
+                es: "Una captura es un clip de voz, una foto de un recibo o una importación de planes de cuotas de hasta 5 capturas de pantalla, y requiere una cuenta o Pro. Pro se cobra al mes o al año, o se compra una sola vez, al precio que muestra tu tienda de apps en tu país.",
+                pt: "Uma captura é um áudio de voz, uma foto de recibo ou uma importação de parcelamentos de até 5 capturas de tela, e exige uma conta ou o Pro. O Pro é cobrado por mês ou por ano, ou comprado uma vez só, pelo preço que sua loja de apps mostra no seu país.",
+                fr: "Une capture correspond à un extrait vocal, une photo de ticket ou un import d’échéanciers d’au plus 5 captures d’écran, et nécessite un compte ou Pro. Pro est facturé au mois ou à l'année, ou acheté en une fois, au prix affiché par votre boutique d'apps dans votre pays.",
             }),
             lead: t({
                 en: "The tracker is free. Pro lifts the limits and adds sync.",

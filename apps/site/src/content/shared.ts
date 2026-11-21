@@ -9,11 +9,11 @@ export const PRODUCT_DEFINITION = t({
 });
 
 export const RECEIPT_SCAN_ANSWER = t({
-    en: "Take a photo of the receipt or pick one from your library. Outlayr reads the store, the date, the total, and every line, then fills in the entry for you to save. Scanning needs an account, and each scan counts as one capture.",
-    de: "Mach ein Foto vom Beleg oder wähle eines aus deiner Fotomediathek. Outlayr liest Geschäft, Datum, Summe und jede Zeile und füllt den Eintrag aus, damit du ihn speicherst. Fürs Scannen brauchst du ein Konto, und jeder Scan zählt als eine Erfassung.",
-    es: "Toma una foto del recibo o elige una de tu galería. Outlayr lee la tienda, la fecha, el total y cada línea, y llena el registro para que lo guardes. Para escanear necesitas una cuenta, y cada escaneo equivale a una captura.",
-    pt: "Tire uma foto do recibo ou escolha uma da sua galeria. O Outlayr lê o estabelecimento, a data, o total e cada item, e preenche o lançamento para você salvar. Para escanear, você precisa de uma conta, e cada escaneamento conta como uma captura.",
-    fr: "Prenez le ticket en photo ou choisissez une photo dans votre galerie. Outlayr lit le commerce, la date, le total et chaque ligne, puis remplit l'opération pour que vous l'enregistriez. Le scan nécessite un compte, et chaque scan compte comme une capture.",
+    en: "Take a photo of the receipt or pick one from your library. Outlayr reads the store, the date, the total, and every line, then fills in the entry for you to save. Scanning needs an account or Pro, and each scan counts as one capture.",
+    de: "Mach ein Foto vom Beleg oder wähle eines aus deiner Fotomediathek. Outlayr liest Geschäft, Datum, Summe und jede Zeile und füllt den Eintrag aus, damit du ihn speicherst. Fürs Scannen brauchst du ein Konto oder Pro, und jeder Scan zählt als eine Erfassung.",
+    es: "Toma una foto del recibo o elige una de tu galería. Outlayr lee la tienda, la fecha, el total y cada línea, y llena el registro para que lo guardes. Para escanear necesitas una cuenta o Pro, y cada escaneo equivale a una captura.",
+    pt: "Tire uma foto do recibo ou escolha uma da sua galeria. O Outlayr lê o estabelecimento, a data, o total e cada item, e preenche o lançamento para você salvar. Para escanear, você precisa de uma conta ou do Pro, e cada escaneamento conta como uma captura.",
+    fr: "Prenez le ticket en photo ou choisissez une photo dans votre galerie. Outlayr lit le commerce, la date, le total et chaque ligne, puis remplit l'opération pour que vous l'enregistriez. Le scan nécessite un compte ou Pro, et chaque scan compte comme une capture.",
 });
 
 export const OPEN_SOURCE_ANSWER = t({

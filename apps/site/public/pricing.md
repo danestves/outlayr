@@ -13,7 +13,7 @@ Prices vary by country. Google Play and the App Store show your price before you
 
 ## Limits
 
-A capture is one voice clip, one receipt photo, or one installment plan import of up to 5 screenshots, and needs you signed in. Typing a sentence never uses one.
+A capture is one voice clip, one receipt photo, or one installment plan import of up to 5 screenshots, and needs an account or Pro. Typing a sentence never uses one.
 
 | | Free | Pro |
 |---|---|---|

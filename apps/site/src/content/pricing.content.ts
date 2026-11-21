@@ -18,11 +18,11 @@ const pricing = {
             fr: "Résiliez quand vous voulez depuis votre boutique d'applications, ou achetez-le une seule fois.",
         }),
         capture: t({
-            en: "A capture is one voice clip, one receipt photo, or one installment plan import of up to 5 screenshots, and needs you signed in. Typing a sentence never uses one. The free plan includes 30 captures every 30 days, and Pro includes 500.",
-            de: "Eine Erfassung ist ein Sprachclip, ein Belegfoto oder ein Import von Ratenplänen mit bis zu 5 Screenshots und setzt voraus, dass du angemeldet bist. Einen Satz zu tippen verbraucht nie eine. Der Gratis-Plan enthält 30 Erfassungen alle 30 Tage, Pro enthält 500.",
-            es: "Una captura es un clip de voz, una foto de un recibo o una importación de planes de cuotas de hasta 5 capturas de pantalla, y requiere que hayas iniciado sesión. Escribir una frase nunca gasta una. El plan gratis incluye 30 capturas cada 30 días, y Pro incluye 500.",
-            pt: "Uma captura é um áudio de voz, uma foto de recibo ou uma importação de parcelamentos de até 5 capturas de tela, e exige que você tenha entrado na sua conta. Digitar uma frase nunca gasta uma. O plano grátis inclui 30 capturas a cada 30 dias, e o Pro inclui 500.",
-            fr: "Une capture correspond à un extrait vocal, une photo de ticket ou un import d'échéanciers d'au plus 5 captures d'écran, et nécessite d'être connecté. Taper une phrase n'en consomme jamais. La formule gratuite comprend 30 captures tous les 30 jours, et Pro en comprend 500.",
+            en: "A capture is one voice clip, one receipt photo, or one installment plan import of up to 5 screenshots, and needs an account or Pro. Typing a sentence never uses one. The free plan includes 30 captures every 30 days, and Pro includes 500.",
+            de: "Eine Erfassung ist ein Sprachclip, ein Belegfoto oder ein Import von Ratenplänen mit bis zu 5 Screenshots und setzt ein Konto oder Pro voraus. Einen Satz zu tippen verbraucht nie eine. Der Gratis-Plan enthält 30 Erfassungen alle 30 Tage, Pro enthält 500.",
+            es: "Una captura es un clip de voz, una foto de un recibo o una importación de planes de cuotas de hasta 5 capturas de pantalla, y requiere una cuenta o Pro. Escribir una frase nunca gasta una. El plan gratis incluye 30 capturas cada 30 días, y Pro incluye 500.",
+            pt: "Uma captura é um áudio de voz, uma foto de recibo ou uma importação de parcelamentos de até 5 capturas de tela, e exige uma conta ou o Pro. Digitar uma frase nunca gasta uma. O plano grátis inclui 30 capturas a cada 30 dias, e o Pro inclui 500.",
+            fr: "Une capture correspond à un extrait vocal, une photo de ticket ou un import d'échéanciers d'au plus 5 captures d'écran, et nécessite un compte ou Pro. Taper une phrase n'en consomme jamais. La formule gratuite comprend 30 captures tous les 30 jours, et Pro en comprend 500.",
         }),
         country: t({
             en: "These are US prices. Your app store shows the final price in your country before you buy.",
