@@ -9,6 +9,7 @@ export const Notice = Schema.Struct({
 });
 
 export const OutboundEmail = Schema.Struct({
+    expiresAt: Schema.optional(Schema.Number),
     html: Schema.optional(Schema.String),
     notice: Schema.optional(Notice),
     replyTo: Schema.optional(Schema.String),

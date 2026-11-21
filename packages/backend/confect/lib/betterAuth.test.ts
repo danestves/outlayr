@@ -206,7 +206,7 @@ function emailAuth() {
     betterAuthTest.register(t);
     rateLimiterTest.register(t);
     workpoolTest.register(t, "emailPool");
-    const drain = () => t.finishAllScheduledFunctions(vi.runAllTimers);
+    const drain = () => t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(1000));
     const post = async (path: string, body: Record<string, string>, language = "en") => {
         const response = await t.fetch(`/api/auth${path}`, {
             body: JSON.stringify(body),

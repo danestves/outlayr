@@ -31,13 +31,14 @@ const enqueue = FunctionImpl.make(
     Effect.fn("EmailOutbox.enqueue")(function* enqueue({ notice, ...email }) {
         if (notice === undefined) {
             yield* queue(email, pool);
-            return null;
+            return true;
         }
         const keys = yield* recordNotices(notice.userId, notice.keys, notice.language);
-        if (keys.length > 0) {
-            yield* queue({ ...email, notice: { ...notice, keys } }, noticePool);
+        if (keys.length === 0) {
+            return false;
         }
-        return null;
+        yield* queue({ ...email, notice: { ...notice, keys } }, noticePool);
+        return true;
     }, Effect.orDie)
 );
 

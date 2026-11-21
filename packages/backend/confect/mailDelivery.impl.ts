@@ -137,7 +137,7 @@ const notifyPolicy = FunctionImpl.make(
                 keys: batch.map(noticeKey),
             });
 
-            const queued = yield* Effect.all(
+            const outcomes = yield* Effect.all(
                 page.recipients.map(({ email, language, pending, userId }) =>
                     Effect.promise(() =>
                         policyChangeEmail({
@@ -156,8 +156,8 @@ const notifyPolicy = FunctionImpl.make(
                                 { keys: pending, language, userId }
                             )
                         ),
-                        Effect.as(true),
-                        Effect.catchTags({ EmailError: (error) => unsent(error).pipe(Effect.as(false)) })
+                        Effect.map((queued) => (queued ? "sent" : "skipped")),
+                        Effect.catchTags({ EmailError: (error) => unsent(error).pipe(Effect.as("failed" as const)) })
                     )
                 ),
                 { concurrency: NOTICE_CONCURRENCY }
@@ -168,8 +168,10 @@ const notifyPolicy = FunctionImpl.make(
                     cursor: page.continueCursor,
                 });
             }
-            const sent = queued.filter(Boolean).length;
-            return { failed: queued.length - sent, sent };
+            return {
+                failed: outcomes.filter((outcome) => outcome === "failed").length,
+                sent: outcomes.filter((outcome) => outcome === "sent").length,
+            };
         },
         Effect.provide(ConvexConfigProvider.layer),
         Effect.orDie
@@ -186,6 +188,9 @@ const deliver = FunctionImpl.make(
             const email = yield* runQuery(refs.internal.emailOutbox.email, { emailId });
             if (email === null) {
                 return null;
+            }
+            if (email.expiresAt !== undefined && email.expiresAt <= Date.now()) {
+                return "expired";
             }
             const setup = yield* emailSetup;
             if (setup.provider === "log") {

@@ -141,7 +141,10 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         );
 
     const deliverEmail = (to: string, email: Email) =>
-        sendEmail(to, email).pipe(Effect.provide(MutationRunner.layer(requireActionCtx(ctx).runMutation)));
+        sendEmail(to, email).pipe(
+            Effect.asVoid,
+            Effect.provide(MutationRunner.layer(requireActionCtx(ctx).runMutation))
+        );
 
     return betterAuth({
         account: {

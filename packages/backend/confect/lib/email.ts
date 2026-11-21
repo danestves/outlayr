@@ -7,6 +7,7 @@ import { EmailProviderName, REQUIRED_VARIABLES } from "./emailSetup";
 export const EMAIL_CODE_TTL_SECONDS = 10 * 60;
 
 export interface Email {
+    expiresAt?: number;
     html?: string;
     replyTo?: string;
     subject: string;
@@ -71,6 +72,7 @@ const CODE_EMAIL = {
 export function codeEmail(otp: string, purpose: "change" | "verify" | "reset", language: Language): Email {
     const copy = CODE_EMAIL[language];
     return {
+        expiresAt: Date.now() + EMAIL_CODE_TTL_SECONDS * 1000,
         subject: copy.subject(otp),
         text: `${copy[purpose]}\n\n${otp}\n\n${copy.expiry(EMAIL_CODE_TTL_SECONDS / 60)}`,
     };

@@ -11,7 +11,7 @@ export default GroupSpec.make()
         FunctionSpec.internalMutation({
             args: () => OutboundEmail.fields,
             name: "enqueue",
-            returns: () => Schema.Null,
+            returns: () => Schema.Boolean,
         })
     )
     .addFunction(

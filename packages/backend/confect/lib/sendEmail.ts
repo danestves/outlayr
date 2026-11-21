@@ -16,11 +16,11 @@ export const sendEmail = Effect.fn("Email.send")(function* sendEmail(
     const setup = yield* emailSetup;
     if (setup.provider === "log") {
         yield* Console.log(`[mail] to ${to}: ${email.subject}\n\n${email.text}`);
-        return;
+        return true;
     }
     if (setup.provider === "unconfigured") {
         return yield* new EmailError({ provider: setup.requested, reason: "unconfigured" });
     }
     const { runMutation } = yield* MutationRunner;
-    yield* runMutation(refs.internal.emailOutbox.enqueue, { ...email, notice, to }).pipe(Effect.orDie);
+    return yield* runMutation(refs.internal.emailOutbox.enqueue, { ...email, notice, to }).pipe(Effect.orDie);
 });

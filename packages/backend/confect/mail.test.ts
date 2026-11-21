@@ -164,6 +164,28 @@ describe("the trial reminder", () => {
     });
 });
 
+describe("a sign-in code", () => {
+    it("stops retrying once it expires", async () => {
+        vi.useFakeTimers();
+        const t = mailTest();
+        let attempts = 0;
+        stubCloudflare(() => {
+            attempts += 1;
+            return true;
+        });
+
+        await t.mutation(internal.emailOutbox.enqueue, {
+            expiresAt: Date.now() + 1500,
+            subject: "Your code",
+            text: "123456",
+            to: "code@example.com",
+        });
+        await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+        expect(attempts).toBeLessThan(4);
+    });
+});
+
 describe("a policy notice", () => {
     it("queues one email per account for every document changing that day, and again only for a bounced one", async () => {
         vi.useFakeTimers();
@@ -216,12 +238,14 @@ describe("a policy notice", () => {
 
         await expect(notify()).resolves.toStrictEqual({ failed: 0, sent: 4 });
         await expect(notify()).resolves.toStrictEqual({ failed: 0, sent: 0 });
-        await t.mutation(internal.emailOutbox.enqueue, {
-            notice: { keys: [`privacy:${DAY}`, `terms:${DAY}`], language: "en", userId: ana.userId },
-            subject: "stale run",
-            text: "stale run",
-            to: ana.email,
-        });
+        await expect(
+            t.mutation(internal.emailOutbox.enqueue, {
+                notice: { keys: [`privacy:${DAY}`, `terms:${DAY}`], language: "en", userId: ana.userId },
+                subject: "stale run",
+                text: "stale run",
+                to: ana.email,
+            })
+        ).resolves.toBeFalsy();
         await t.finishAllScheduledFunctions(vi.runAllTimers);
 
         expect(sent).toHaveLength(3);
