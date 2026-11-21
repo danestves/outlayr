@@ -32,6 +32,7 @@ export class ProviderRevocationError extends Schema.TaggedError<ProviderRevocati
 
 const isProviderBinding = Schema.is(ProviderBinding);
 const decodeProviderBinding = Schema.decodeUnknownOption(Schema.fromJsonString(ProviderBinding));
+const encodeProviderBinding = Schema.encodeSync(Schema.fromJsonString(ProviderBinding));
 
 /** Call only once the matching Better Auth session is established. */
 export const persistProviderBinding = Effect.fn("ProviderRevocation.persistBinding")(function* persistBinding(
@@ -41,7 +42,7 @@ export const persistProviderBinding = Effect.fn("ProviderRevocation.persistBindi
         return yield* new ProviderRevocationError({ reason: "invalid" });
     }
     const storage = yield* SecureStorage;
-    yield* storage.set(PROVIDER_BINDING_KEY, JSON.stringify(binding));
+    yield* storage.set(PROVIDER_BINDING_KEY, encodeProviderBinding(binding));
 });
 
 export const providerBindingFor = Effect.fn("ProviderRevocation.bindingFor")(function* bindingFor(

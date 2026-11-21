@@ -1,6 +1,7 @@
 import BetterSqlite3 from "better-sqlite3";
 import { isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
@@ -127,13 +128,17 @@ async function seed(db: Database): Promise<void> {
 
 type Effect = "photos" | "spotlight";
 
+class IndexUnavailable extends Schema.TaggedError<IndexUnavailable>()("IndexUnavailable", {
+    message: Schema.String,
+}) {}
+
 /**
  * `"photos" in failures` rather than a truthiness check, so a step can be told
  * to throw a value that is itself falsy.
  */
-function spyResidue(failures: { photos?: unknown; spotlight?: unknown } = {}): {
+function spyResidue(failures: { photos?: unknown; spotlight?: IndexUnavailable } = {}): {
     calls: Effect[];
-    residue: EraseResidue;
+    residue: EraseResidue<IndexUnavailable>;
 } {
     const calls: Effect[] = [];
     return {
@@ -141,7 +146,7 @@ function spyResidue(failures: { photos?: unknown; spotlight?: unknown } = {}): {
         residue: {
             clearSpotlight() {
                 calls.push("spotlight");
-                return "spotlight" in failures ? Effect.fail(failures.spotlight) : Effect.void;
+                return failures.spotlight === undefined ? Effect.void : Effect.fail(failures.spotlight);
             },
             clearStoredPhotos() {
                 calls.push("photos");
@@ -212,7 +217,7 @@ describe("eraseData", () => {
     });
 
     it("reports a Spotlight step that failed on its own", async () => {
-        const denied = new Error("index unavailable");
+        const denied = new IndexUnavailable({ message: "index unavailable" });
         const { calls, residue } = spyResidue({ spotlight: denied });
 
         await expect(Effect.runPromise(Effect.flip(eraseData(db, "transactions", residue)))).resolves.toMatchObject({

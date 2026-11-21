@@ -45,10 +45,10 @@ export const adoptPickedPhoto = Effect.fn("Identity.adoptPickedPhoto")(function*
 ) {
     const uri = yield* persistPickedPhoto(pickedUri).pipe(
         Effect.catchCause((cause) =>
-            Effect.sync(() => {
-                console.error("Failed to store the picked photo", Cause.squash(cause));
-                return pickedUri;
-            })
+            Effect.andThen(
+                Effect.logError("Failed to store the picked photo", Cause.squash(cause)),
+                Effect.succeed(pickedUri)
+            )
         )
     );
     return withPhoto(value, uri, yield* glowFromImage(uri));

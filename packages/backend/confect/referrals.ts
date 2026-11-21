@@ -206,10 +206,9 @@ export const forgetRevokedGrant = Effect.fn("Referrals.forgetRevokedGrant")(func
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
     const userId = entitlement.appUserId;
-    const [reward, invite] = yield* Effect.all([
-        reader.table("referralRewards").get("by_userId", userId).pipe(Effect.catchTags(nullOnMissing)),
-        reader.table("referrals").get("by_referredId", userId).pipe(Effect.catchTags(nullOnMissing)),
-    ]);
+    const rewardEffect = reader.table("referralRewards").get("by_userId", userId).pipe(Effect.catchTags(nullOnMissing));
+    const inviteEffect = reader.table("referrals").get("by_referredId", userId).pipe(Effect.catchTags(nullOnMissing));
+    const [reward, invite] = yield* Effect.all([rewardEffect, inviteEffect]);
     if (reward !== null) {
         yield* writer.table("referralRewards").patch(reward._id, { bankedMonths: 0, promoEndsAt: null });
     }

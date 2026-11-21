@@ -1,4 +1,5 @@
 import { asc, eq, isNull, max } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -84,7 +85,7 @@ const nextSortOrder = Effect.fn("SavingsGoals.nextSortOrder")(function* nextSort
 
 export const savingsGoalsRepo = {
     create: Effect.fn("SavingsGoals.create")(function* create(db: Database, input: SavingsGoalInput) {
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         const id = newId();
         // Both checked before writing: a balance the screen can display isn't always one that can be canonicalised.
         const start = yield* frozenUsd(db, input.startAmount, input.currency, now);
@@ -127,7 +128,7 @@ export const savingsGoalsRepo = {
         if (existing == null) {
             return yield* new SavingsGoalsError({ operation: "update", reason: "missing" });
         }
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         const targetAmount = patch.targetAmount ?? existing.targetAmount;
         const { currency } = existing;
         const restated = targetAmount !== existing.targetAmount;

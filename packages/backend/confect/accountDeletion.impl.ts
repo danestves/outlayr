@@ -4,6 +4,8 @@ import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import type * as HttpClient from "effect/http/HttpClient";
+import type { HttpClientError } from "effect/http/HttpClientError";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -45,6 +47,7 @@ import { dieAsConvexError } from "./lib/convexError";
 import { outboundHttp } from "./lib/http";
 import { erasePostHogPerson } from "./lib/posthog";
 import { revokeAppleToken, revokeGoogleToken } from "./lib/providerLifecycle";
+import type { AppleLifecycleError, GoogleLifecycleError } from "./lib/providerLifecycle";
 import { sha256Hex } from "./lib/sha256Hex";
 import { NOTION_PROVIDER_ID } from "./notion";
 import { eraseUpstreamCustomer, revenuecat } from "./revenuecat";
@@ -349,7 +352,11 @@ const revokeProviderToken = FunctionImpl.make(
         const ctx = yield* ActionCtx;
         const token = yield* Effect.promise(() => decryptStoredToken(ctx, args.token));
         const apple = yield* appleConfig;
-        const revoked =
+        const revoked: Effect.Effect<
+            void,
+            AppleLifecycleError | GoogleLifecycleError | HttpClientError,
+            HttpClient.HttpClient
+        > =
             args.provider === GOOGLE_PROVIDER_ID
                 ? revokeGoogleToken(token)
                 : revokeAppleToken(Option.isSome(apple) ? appleRevokeClients(apple.value) : [], token);
@@ -424,14 +431,15 @@ const advance = FunctionImpl.make(
             yield* deleteAuthRows("account", userId);
             // SAFETY: the component types its references against its own generated api, which this app does not
             // import.
-            yield* Effect.promise(() =>
-                ctx.runMutation(
+            yield* Effect.promise(async () => {
+                // SAFETY: as above.
+                await ctx.runMutation(
                     components.betterAuth.adapter.deleteOne as never,
                     {
                         input: { model: "user", where: [{ field: "_id", operator: "eq", value: userId }] },
                     } as never
-                )
-            );
+                );
+            });
             yield* writer
                 .table("accountDeletionJobs")
                 .patch(job._id, { phase: "complete", tokenIdentifier: undefined, userId: null });

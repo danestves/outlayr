@@ -1,4 +1,5 @@
 import { useAtomMount } from "@effect/atom-react/Hooks";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
 import * as Semaphore from "effect/Semaphore";
@@ -18,7 +19,7 @@ const TRIAL_REMINDER_ID = "outlayr.pro-trial-ending";
 const reconcile = Effect.fn("TrialReminder.reconcile")(function* reconcile(ask: boolean) {
     const reminders = yield* Reminders;
     const { status } = yield* proTerm();
-    const now = new Date();
+    const now = yield* DateTime.nowAsDate;
     const fireAt = status?.kind === "trial" ? trialReminderAt(status.on, now) : null;
     if (status?.kind !== "trial" || fireAt === null) {
         yield* reminders.cancel([TRIAL_REMINDER_ID]);

@@ -88,22 +88,24 @@ export const recentTransactionsOf = Effect.fn("McpLedger.recentTransactions")(fu
         )
     );
     const picked = transactions.filter((row) => shown.has(row.localId));
+    const readCategories = (localId: string) =>
+        reader
+            .table("categories")
+            .get("by_user_and_localId", userId, localId)
+            .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
+    const readAccounts = (localId: string) =>
+        reader
+            .table("accounts")
+            .get("by_user_and_localId", userId, localId)
+            .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
     const [categories, accounts] = yield* Effect.all(
         [
             lookup(
-                (localId) =>
-                    reader
-                        .table("categories")
-                        .get("by_user_and_localId", userId, localId)
-                        .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) })),
+                readCategories,
                 picked.flatMap((row) => (row.categoryId ? [row.categoryId] : []))
             ),
             lookup(
-                (localId) =>
-                    reader
-                        .table("accounts")
-                        .get("by_user_and_localId", userId, localId)
-                        .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) })),
+                readAccounts,
                 picked.flatMap((row) => (row.accountId ? [row.accountId] : []))
             ),
         ],

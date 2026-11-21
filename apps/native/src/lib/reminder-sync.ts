@@ -1,4 +1,5 @@
 import { addMonths, firstOfMonth } from "@outlayr/money/calendar";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
 import { Meta } from "@/data/app-meta-core";
@@ -48,7 +49,7 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
         return;
     }
     const decision = reminderReconcile(enabled, permission);
-    const now = new Date();
+    const now = yield* DateTime.nowAsDate;
     const time = decision === "schedule" ? yield* readReminderTime(db) : null;
     const notices: DatedReminder[] = [];
     if (time !== null) {

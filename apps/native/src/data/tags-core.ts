@@ -1,4 +1,5 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -64,7 +65,7 @@ const writeTagsFor = Effect.fn("Tags.writeTagsFor")(function* writeTagsFor(
     transactionId: string,
     tagIds: readonly string[]
 ) {
-    const now = new Date();
+    const now = yield* DateTime.nowAsDate;
     const rows = yield* query("write", () => tagIdsForQuery(db, transactionId));
     const current = rows.map((row) => row.tagId);
     const { attach, detach } = tagLinkDiff(current, tagIds);
@@ -120,7 +121,7 @@ export const tagsRepo = {
      * that has not pulled the tag's tombstone yet.
      */
     deleteTag: Effect.fn("Tags.deleteTag")(function* deleteTag(db: Database, id: string) {
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         yield* transaction(
             db,
             Effect.gen(function* write() {

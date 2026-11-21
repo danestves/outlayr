@@ -1,4 +1,6 @@
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import { AndroidImportance, setNotificationChannelAsync } from "expo-notifications";
 
 import { buildWalletPush } from "@/data/wallet-push";
@@ -17,9 +19,12 @@ import WalletWidget from "./glance/wallet";
 
 const PUSH_CHANNEL = "purchases";
 
+// The native side parses this blob, so its fields are its contract, not this module's.
+const encodePush = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 export const publishWidgets: typeof iosPublishWidgets = Effect.fn("Widgets.publish")(function* publishWidgets(db) {
     yield* Effect.gen(function* publish() {
-        const props = yield* buildAndroidWidgetProps(db, new Date());
+        const props = yield* buildAndroidWidgetProps(db, yield* DateTime.nowAsDate);
         yield* Effect.sync(() => {
             WalletWidget.updateSnapshot(props.Wallet);
             TodayWidget.updateSnapshot(props.Today);
@@ -36,7 +41,7 @@ export const publishWidgets: typeof iosPublishWidgets = Effect.fn("Widgets.publi
     const listener = purchaseListener;
     yield* Effect.gen(function* publish() {
         const push = yield* buildWalletPush(db);
-        listener.setSnapshot(JSON.stringify(push));
+        listener.setSnapshot(encodePush(push));
         yield* Effect.tryPromise(() =>
             setNotificationChannelAsync(PUSH_CHANNEL, {
                 importance: AndroidImportance.DEFAULT,

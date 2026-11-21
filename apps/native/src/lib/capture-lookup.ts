@@ -3,6 +3,7 @@ import { api } from "@outlayr/backend/convex/_generated/api";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import { getIosPushNotificationServiceEnvironmentAsync } from "expo-application";
 import { getRandomBytesAsync } from "expo-crypto";
 import { Platform } from "react-native";
@@ -20,6 +21,9 @@ import { sharedStore } from "./shared-store";
 
 /** Mirrors `snapshotKey` in `app-intents/CaptureLookup.swift`; its presence is what lets the intent ask. */
 const CAPTURE_SNAPSHOT_KEY = "captureLookup";
+
+// The Swift intent reads this blob, so its fields are its contract, not this module's.
+const encodeSnapshot = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 // Its own label rather than the sync device id, which the privacy policy ties to ordering synced edits.
 const CAPTURE_DEVICE_KEY = "captureDevice";
@@ -136,7 +140,7 @@ export const syncCaptureLookup = Effect.fn("CaptureLookup.sync")(
             regionCode: device?.regionCode?.trim() || undefined,
             url: `${CONVEX_SITE_URL}/capture/enrich`,
         };
-        sharedStore.set(CAPTURE_SNAPSHOT_KEY, JSON.stringify(snapshot));
+        sharedStore.set(CAPTURE_SNAPSHOT_KEY, encodeSnapshot(snapshot));
         yield* registerPush(sharedStore).pipe(
             Effect.catchCause((cause) => Effect.logWarning("[outlayr] capture push not registered", cause))
         );

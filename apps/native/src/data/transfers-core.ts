@@ -17,6 +17,7 @@ import {
 } from "@outlayr/money/transfer-row";
 import type { TransferFeeInput, TransferInput } from "@outlayr/money/transfer-row";
 import { and, count, desc, eq, isNull, notInArray, or } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -191,7 +192,7 @@ export const stageTransfer = Effect.fn("Transfers.stageTransfer")(function* stag
     input: TransferInput
 ) {
     yield* assertMovable("create", input);
-    const now = new Date();
+    const now = yield* DateTime.nowAsDate;
     const id = newId();
     const { feesUsd, fromAmountUsd, toAmountUsd } = yield* freezeLegs(db, "create", input);
     const write = Effect.gen(function* write() {
@@ -250,7 +251,7 @@ export const transfersRepo = {
         if (!(yield* read("update", () => liveTransfer(db, id)))) {
             return yield* new TransfersError({ operation: "update", reason: "missing" });
         }
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         const {
             feesUsd: freshFeesUsd,
             fromAmountUsd: freshFromUsd,

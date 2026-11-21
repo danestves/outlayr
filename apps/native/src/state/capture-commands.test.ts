@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 
 import { CaptureCallError, timedCaptureCommand } from "./capture-commands";
 
-const command = timedCaptureCommand<string>({ operation: "speak", timeout: Duration.seconds(10) });
+const command = timedCaptureCommand<string, Cause.UnknownError>({ operation: "speak", timeout: Duration.seconds(10) });
 
 describe("timedCaptureCommand", () => {
     beforeEach(() => {
@@ -34,7 +34,7 @@ describe("timedCaptureCommand", () => {
     it("fails with the typed error when the request rejects", async () => {
         const registry = AtomRegistry.make();
         const pending = command.run(registry, {
-            call: Effect.fail(new Error("offline")),
+            call: Effect.fail(new Cause.UnknownError("offline")),
             signal: new AbortController().signal,
         });
         await vi.advanceTimersByTimeAsync(0);

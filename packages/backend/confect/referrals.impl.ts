@@ -11,6 +11,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -56,6 +57,8 @@ const FRIENDS_LIMIT = 100;
 const GRANT_SAFETY_NET = Duration.minutes(1);
 const STORE_RETRY = Duration.hours(1);
 const SWEEP_PAGE = 100;
+
+const encodeSubscriber = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 const codeOwner = Effect.fn("Referrals.codeOwner")(function* codeOwner(code: string) {
     const reader = yield* DatabaseReader;
@@ -119,14 +122,23 @@ const overview = FunctionImpl.make(
             return null;
         }
         const reader = yield* DatabaseReader;
+        const codeEffect = reader.table("referralCodes").get("by_userId", userId).pipe(Effect.catchTags(nullOnMissing));
+        const rewardEffect = reader
+            .table("referralRewards")
+            .get("by_userId", userId)
+            .pipe(Effect.catchTags(nullOnMissing));
+        const inviteEffect = reader
+            .table("referrals")
+            .get("by_referredId", userId)
+            .pipe(Effect.catchTags(nullOnMissing));
         const [code, rows, reward, redeemed, user, entitlements, active] = yield* Effect.all([
-            reader.table("referralCodes").get("by_userId", userId).pipe(Effect.catchTags(nullOnMissing)),
+            codeEffect,
             reader
                 .table("referrals")
                 .index("by_referrerId_and_claimedAt", (q) => q.eq("referrerId", userId), "desc")
                 .take(FRIENDS_LIMIT),
-            reader.table("referralRewards").get("by_userId", userId).pipe(Effect.catchTags(nullOnMissing)),
-            reader.table("referrals").get("by_referredId", userId).pipe(Effect.catchTags(nullOnMissing)),
+            rewardEffect,
+            inviteEffect,
             Effect.promise(() => authComponent.getAnyUserById(ctx, userId)),
             Effect.promise(() => revenuecat.getAllEntitlements(ctx, { appUserId: userId })),
             mirroredPro(ctx, userId),
@@ -166,9 +178,17 @@ const claim = FunctionImpl.make(
         }
         const ctx = yield* MutationCtx;
         const reader = yield* DatabaseReader;
+        const redeemedEffect = reader
+            .table("referrals")
+            .get("by_referredId", userId)
+            .pipe(Effect.catchTags(nullOnMissing));
+        const ownerReferralEffect = reader
+            .table("referrals")
+            .get("by_referredId", owner.userId)
+            .pipe(Effect.catchTags(nullOnMissing));
         const [redeemed, ownerReferral, user, entitlements] = yield* Effect.all([
-            reader.table("referrals").get("by_referredId", userId).pipe(Effect.catchTags(nullOnMissing)),
-            reader.table("referrals").get("by_referredId", owner.userId).pipe(Effect.catchTags(nullOnMissing)),
+            redeemedEffect,
+            ownerReferralEffect,
             Effect.promise(() => authComponent.getAnyUserById(ctx, userId)),
             Effect.promise(() => revenuecat.getAllEntitlements(ctx, { appUserId: userId })),
         ]);
@@ -216,8 +236,12 @@ const pendingGrant = FunctionImpl.make(
             return null;
         }
         const now = yield* Clock.currentTimeMillis;
+        const inviteEffect = reader
+            .table("referrals")
+            .get("by_referredId", userId)
+            .pipe(Effect.catchTags(nullOnMissing));
         const [invite, earned] = yield* Effect.all([
-            reader.table("referrals").get("by_referredId", userId).pipe(Effect.catchTags(nullOnMissing)),
+            inviteEffect,
             reader
                 .table("referrals")
                 .index("by_referrerId_and_rewardedAt", (q) =>
@@ -274,7 +298,7 @@ const sendGrant = Effect.fn("Referrals.sendGrant")(function* sendGrant(userId: s
     const { runMutation } = yield* MutationRunner;
     yield* runMutation(refs.internal.revenuecat.mirrorSubscriber, {
         appUserId: userId,
-        subscriber: JSON.stringify(subscriber),
+        subscriber: encodeSubscriber(subscriber),
     });
 });
 
@@ -346,7 +370,7 @@ const releaseBanked = FunctionImpl.make(
         const { runMutation } = yield* MutationRunner;
         yield* runMutation(refs.internal.revenuecat.mirrorSubscriber, {
             appUserId: userId,
-            subscriber: JSON.stringify(subscriber),
+            subscriber: encodeSubscriber(subscriber),
         });
         yield* runMutation(refs.internal.referrals.creditBanked, { userId });
         return null;

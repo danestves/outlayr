@@ -1,3 +1,4 @@
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { Platform } from "react-native";
 
@@ -25,7 +26,7 @@ export const publishWidgets = Effect.fn("Widgets.publish")(function* publishWidg
         return;
     }
     yield* Effect.gen(function* publish() {
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         const appliedSince = now.getTime() - APPLIED_WINDOW_MS;
         const applied = yield* appliedWriteIds(db, appliedSince);
         const props = yield* buildWidgetProps(db, now);
@@ -37,7 +38,9 @@ export const publishWidgets = Effect.fn("Widgets.publish")(function* publishWidg
                 .reduce((soonest, view) => Math.min(soonest, view.endsAt), Number.POSITIVE_INFINITY);
             BudgetWidget.updateTimeline([
                 { date: now, props: props.Budget },
-                ...(Number.isFinite(rollover) ? [{ date: new Date(rollover), props: props.Budget }] : []),
+                ...(Number.isFinite(rollover)
+                    ? [{ date: DateTime.toDate(DateTime.makeUnsafe(rollover)), props: props.Budget }]
+                    : []),
             ]);
             LedgerWidget.updateSnapshot(props.Ledger);
             InsightsWidget.updateSnapshot(props.Insights);

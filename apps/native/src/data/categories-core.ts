@@ -11,6 +11,7 @@ import type { SuggestedCategoryPreset } from "@outlayr/money/category-rules";
 import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
 import type { CanonicalCategoryName } from "@outlayr/money/contract";
 import { and, eq, isNull, max } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -87,7 +88,7 @@ export const seedCategories = Effect.fn("Categories.seedCategories")(function* s
         return;
     }
 
-    const now = new Date();
+    const now = yield* DateTime.nowAsDate;
     const rows = (["expense", "income"] as const).flatMap((namespace) => {
         const pool = SUGGESTED_CATEGORY_PRESETS[namespace];
         return SEEDED_CATEGORY_NAMES[namespace].map((name, order) => {
@@ -177,7 +178,7 @@ export const localizePresetCategories = Effect.fn("Categories.localizePresetCate
                 .from(categories)
                 .where(isNull(categories.deletedAt))
         );
-        const updates = presetLabelUpdates(rows, language, languageFromTag(stored), new Date());
+        const updates = presetLabelUpdates(rows, language, languageFromTag(stored), yield* DateTime.nowAsDate);
         if (updates.length === 0 && stored === language) {
             return;
         }
@@ -465,7 +466,7 @@ export const categoriesRepo = {
         if (error != null) {
             return null;
         }
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         const id = newId();
         yield* query("addSuggested", () =>
             db.insert(categories).values({
@@ -497,7 +498,7 @@ export const categoriesRepo = {
             return yield* new CategoryValidationError({ code: error });
         }
         const parentId = input.parentId ?? null;
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         const id = newId();
         yield* query("create", () =>
             db.insert(categories).values({
@@ -529,7 +530,7 @@ export const categoriesRepo = {
 
     /** One namespace/parent scope, already ordered: each id takes its index as `sortOrder`. */
     reorder: Effect.fn("Categories.reorder")(function* reorder(db: Database, orderedIds: string[]) {
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         yield* transaction(
             db,
             // One expo-sqlite connection backs the surrounding transaction, so concurrent statements would
@@ -559,7 +560,7 @@ export const categoriesRepo = {
         if (existing == null) {
             return yield* new CategoryNotFoundError({ id });
         }
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         if (parentId == null) {
             const sortOrder = yield* nextSortOrder("setParent", db, existing.income, null);
             yield* query("setParent", () =>
@@ -604,7 +605,7 @@ export const categoriesRepo = {
         }
 
         const updates: Partial<typeof categories.$inferInsert> = {
-            updatedAt: new Date(),
+            updatedAt: yield* DateTime.nowAsDate,
         };
         if (patch.name !== undefined) {
             const cleanName = formatCategoryName(patch.name);

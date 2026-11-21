@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import { getPendingResultAsync } from "expo-image-picker";
 
@@ -37,6 +38,6 @@ export const pendingPick: typeof iosPendingPick = Effect.fn("PendingPick.pending
         return null;
     }
     yield* stored(() => AsyncStorage.removeItem(PICK_MARK_KEY));
-    const recent = Date.now() - Number(launchedAt) <= PENDING_PICK_WINDOW_MS;
+    const recent = (yield* Clock.currentTimeMillis) - Number(launchedAt) <= PENDING_PICK_WINDOW_MS;
     return recent && "canceled" in result ? result : null;
 });

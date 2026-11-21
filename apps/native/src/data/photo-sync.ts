@@ -48,6 +48,7 @@ export class PhotoPasses extends Context.Service<
     }
 >()("outlayr/data/PhotoSync/PhotoPasses") {}
 
+// @effect-diagnostics effect/leakingRequirements:off -- passes are provided at the mount sites that own them.
 /**
  * A separate pass from `runSync`: one round trip per file against another service would otherwise hold up the
  * record stream every screen reads.

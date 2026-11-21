@@ -1,6 +1,7 @@
 import { isBalanced } from "@outlayr/money/split";
 import type { Allocation } from "@outlayr/money/split";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -53,7 +54,7 @@ export const splitsRepo = {
         if (transactionIds.length === 0) {
             return;
         }
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         yield* query("clear", () =>
             db
                 .update(transactionSplits)
@@ -81,7 +82,7 @@ export const splitsRepo = {
             const allocated = allocations.reduce((sum, one) => sum + one.amount, 0);
             return yield* new UnbalancedSplitError({ allocated, total });
         }
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         yield* query("write", () =>
             db
                 .update(transactionSplits)

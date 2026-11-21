@@ -136,8 +136,8 @@ interface Slot {
     setNotice: (next: UndoNotice | undefined) => void;
 }
 
-export interface DeferredDeleteSources {
-    commit: (kind: DeferredDeleteKind, db: Database, id: string) => Effect.Effect<void, unknown>;
+export interface DeferredDeleteSources<E> {
+    commit: (kind: DeferredDeleteKind, db: Database, id: string) => Effect.Effect<void, E>;
     /** Read when the window closes, not captured per request: a delete lands in the database the app is on then. */
     database: () => Database | null;
     launch: (write: Effect.Effect<void>) => void;
@@ -145,11 +145,11 @@ export interface DeferredDeleteSources {
 
 // Not React on purpose: the window outlives the screen that opened it (a detail screen navigates straight back), and
 // a screen-owned controller would flush on the way out.
-export function createDeferredDeleteRegistry({
+export function createDeferredDeleteRegistry<E>({
     commit,
     database,
     launch,
-}: DeferredDeleteSources): DeferredDeleteRegistry {
+}: DeferredDeleteSources<E>): DeferredDeleteRegistry {
     const slots = new Map<DeferredDeleteKind, Slot>();
 
     function build(kind: DeferredDeleteKind): Slot {
@@ -161,7 +161,7 @@ export function createDeferredDeleteRegistry({
 
         const controller = createDeferredDelete({
             commit: (id) =>
-                Effect.suspend(() => {
+                Effect.suspend((): Effect.Effect<void, DeferredDeleteError | E> => {
                     const db = database();
                     if (db === null) {
                         return Effect.fail(

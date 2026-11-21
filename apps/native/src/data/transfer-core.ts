@@ -4,6 +4,7 @@ import { ENTRY_RATE_TYPES } from "@outlayr/money/rates";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { transactionsToCsv } from "@outlayr/money/transaction-csv";
 import { desc, eq, isNull } from "drizzle-orm";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -456,7 +457,8 @@ export const applyImport = Effect.fn("CsvTransfer.applyImport")(function* applyI
                 });
                 transactionIds.push(id);
             }
-            const record = { categoryIds: created, importedAt: Date.now(), transactionIds };
+            const importedAt = yield* Clock.currentTimeMillis;
+            const record = { categoryIds: created, importedAt, transactionIds };
             yield* Meta.set(db, FILE_IMPORT_META[kind], record).pipe(
                 Effect.mapError((cause) => new CsvTransferError({ cause, operation: "import" }))
             );

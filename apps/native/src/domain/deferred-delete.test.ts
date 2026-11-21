@@ -1,3 +1,4 @@
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import { describe, expect, it } from "vite-plus/test";
@@ -71,7 +72,7 @@ function recorder() {
     };
 }
 
-const rejecting = () => Effect.fail(new Error("database is locked"));
+const rejecting = () => Effect.fail(new Cause.UnknownError("database is locked"));
 
 describe("createDeferredDelete", () => {
     it("hides the row now and holds the write until the window closes", () => {

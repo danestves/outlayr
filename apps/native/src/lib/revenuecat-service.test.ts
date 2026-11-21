@@ -131,7 +131,7 @@ describe("revenueCat", () => {
         sdk.purchaseAndCheckPro.mockReturnValue(Effect.succeed(false));
         sdk.refreshProEntitlement.mockReturnValue(Effect.succeed(false));
         sdk.restoreAndCheckPro.mockReturnValue(Effect.succeed(false));
-        sdk.setCustomerProfile.mockReturnValue(Effect.succeed(undefined));
+        sdk.setCustomerProfile.mockReturnValue(Effect.void);
     });
 
     afterEach(() => {

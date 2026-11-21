@@ -1,4 +1,4 @@
-import * as Effect from "effect/Effect";
+import type * as Effect from "effect/Effect";
 
 import { setSyncEnabled } from "@/data/sync-outbox-core";
 import type { Database } from "@/db/client";
@@ -6,9 +6,9 @@ import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand } from "./atom-command";
 
-const syncCommand = <W, A>(label: string, execute: (input: W) => Effect.Effect<A, { readonly cause: unknown }>) =>
+const syncCommand = <W, A, E>(label: string, execute: (input: W) => Effect.Effect<A, E>) =>
     createRuntimeCommand(appRuntime, {
-        execute: (input: W) => execute(input).pipe(Effect.mapError((error) => error.cause)),
+        execute,
         label: `sync:${label}`,
     });
 

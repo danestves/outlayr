@@ -1,3 +1,4 @@
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import { describe, expect, it, test } from "vite-plus/test";
 
@@ -21,7 +22,7 @@ describe("runAccountLifecycle", () => {
                 quiesce: record(calls, "quiesce"),
                 revokeProvider: () =>
                     Effect.sync(() => calls.push("revokeProvider")).pipe(
-                        Effect.andThen(Effect.fail(new Error("revocation unavailable")))
+                        Effect.andThen(Effect.fail(new Cause.UnknownError("revocation unavailable")))
                     ),
             }).pipe(Effect.flip)
         );
@@ -143,7 +144,7 @@ test("stops a device erase at the step that failed, before any store is cleared 
             advanceDeletion: () => Effect.succeed({ phase: "complete" as const }),
             allowLocal: () => calls.push("allowLocal"),
             beginDeviceReset: record(calls, "marker-cloud"),
-            clearDeletionSecret: () => Effect.fail(new Error("keychain locked")),
+            clearDeletionSecret: () => Effect.fail(new Cause.UnknownError("keychain locked")),
             eraseBilling: () => Effect.succeed({ phase: "billingErased" as const }),
             markDeviceCleanupReady: record(calls, "marker-device"),
             navigateToLedger: () => calls.push("ledger"),

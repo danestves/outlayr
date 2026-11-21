@@ -1,4 +1,6 @@
 import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
 import { buildArchive, restoreArchive } from "@/data/archive-core";
@@ -52,7 +54,7 @@ export const exportArchive = Effect.fn("Lifecycle.exportArchive")(function* expo
             )
         );
     }
-    return yield* buildArchive(input.db, new Date(), input.photos());
+    return yield* buildArchive(input.db, yield* DateTime.nowAsDate, input.photos());
 });
 
 export const restoreArchiveWithPhotos = Effect.fn("Lifecycle.restoreArchive")(
@@ -62,7 +64,7 @@ export const restoreArchiveWithPhotos = Effect.fn("Lifecycle.restoreArchive")(
         files: PhotoFiles;
     }) {
         yield* restoreArchive(input.db, input.document);
-        yield* reconcilePhotos(input.db, input.files, Date.now());
+        yield* reconcilePhotos(input.db, input.files, yield* Clock.currentTimeMillis);
     }
 );
 

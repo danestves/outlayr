@@ -1,4 +1,5 @@
 import { toAccountKind } from "@outlayr/money/account-kind";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
@@ -165,7 +166,7 @@ const reconcileInstallmentReminders = Effect.fn("InstallmentReminderSync.reconci
             decision === "schedule"
                 ? yield* dueNotices(
                       db,
-                      new Date(),
+                      yield* DateTime.nowAsDate,
                       yield* readReminderTime(db),
                       installmentReminderCap(pending),
                       hideAmounts

@@ -77,8 +77,8 @@ export interface DeviceDataStores<R = never> {
     widget: () => Effect.Effect<void, DeviceStoreError, R>;
 }
 
-export interface NativeDeviceDataStoreDependencies {
-    closeDatabase: Effect.Effect<void, unknown>;
+export interface NativeDeviceDataStoreDependencies<E = never> {
+    closeDatabase: Effect.Effect<void, E>;
 }
 
 const failedStore = (store: DeviceStore) => (cause: unknown) => new DeviceStoreError({ cause, store });
@@ -119,7 +119,7 @@ const clearBetterAuthCredentials = Effect.fn("DeviceStores.clearCredentials")(fu
     );
     const failed = removals.find(Result.isFailure);
     if (failed) {
-        return yield* Effect.fail(failed.failure);
+        return yield* failed.failure;
     }
 });
 
@@ -174,9 +174,9 @@ const clearNotifications = Effect.fn("DeviceStores.clearNotifications")(function
     }
 });
 
-export function createNativeDeviceDataStores({
+export function createNativeDeviceDataStores<E>({
     closeDatabase,
-}: NativeDeviceDataStoreDependencies): DeviceDataStores<SecureStorage> {
+}: NativeDeviceDataStoreDependencies<E>): DeviceDataStores<SecureStorage> {
     return {
         alternateIcon: () =>
             supportsAlternateIcons ? clearAsync("alternateIcon", () => setAlternateAppIcon(null)) : Effect.void,

@@ -50,6 +50,7 @@ const StoredPreparation = Schema.StructWithRest(
 );
 
 const decodeStoredPreparation = Schema.decodeUnknownOption(Schema.fromJsonString(StoredPreparation));
+const encodeStoredPreparation = Schema.encodeSync(Schema.fromJsonString(StoredPreparation));
 
 export const resumeProviderRevocation = Effect.fn("DeletionResume.resumeProviderRevocation")(
     function* resumeProviderRevocation(preparation: StoredDeletionPreparation) {
@@ -65,7 +66,7 @@ export const resumeProviderRevocation = Effect.fn("DeletionResume.resumeProvider
             yield* revokeGoogleProviderSubject(preparation.providerSubject);
             yield* storage.set(
                 deletionResumeSecretKey,
-                JSON.stringify({ ...preparation, googleLocalReceipt: preparation.receiptChallenge })
+                encodeStoredPreparation({ ...preparation, googleLocalReceipt: preparation.receiptChallenge })
             );
             yield* cloudMutation(api.accountDeletion.submitGoogleLocalReceipt, {
                 receiptChallenge: preparation.receiptChallenge,

@@ -7,7 +7,9 @@ import * as Semaphore from "effect/Semaphore";
 const STORAGE_KEY = "outlayr.over-budget-seen";
 const REMEMBERED = 60;
 
-const decodeSeenKeys = Schema.decodeUnknownOption(Schema.mutable(Schema.Array(Schema.String)));
+const SeenKeys = Schema.fromJsonString(Schema.mutable(Schema.Array(Schema.String)));
+const decodeSeenKeys = Schema.decodeUnknownOption(SeenKeys);
+const encodeSeenKeys = Schema.encodeSync(SeenKeys);
 
 export class OverBudgetMomentError extends Schema.TaggedError<OverBudgetMomentError>()("OverBudgetMomentError", {
     cause: Schema.Defect(),
@@ -26,13 +28,7 @@ const load = Effect.tryPromise({
     catch: (cause) => new OverBudgetMomentError({ cause, operation: "read" }),
     try: () => AsyncStorage.getItem(STORAGE_KEY),
 }).pipe(
-    Effect.flatMap((raw) =>
-        Effect.try({
-            catch: (cause) => new OverBudgetMomentError({ cause, operation: "read" }),
-            try: () => (raw ? JSON.parse(raw) : []),
-        })
-    ),
-    Effect.map((parsed) => Option.getOrElse(decodeSeenKeys(parsed), () => [])),
+    Effect.map((raw) => (raw === null ? [] : Option.getOrElse(decodeSeenKeys(raw), () => []))),
     Effect.catchTags({ OverBudgetMomentError: () => Effect.succeed<string[]>([]) })
 );
 
@@ -55,7 +51,7 @@ export const claimOverBudgetMoment = Effect.fn("OverBudgetMoment.claim")(functio
         seen.splice(0, Math.max(0, seen.length - REMEMBERED));
         yield* Effect.tryPromise({
             catch: (cause) => new OverBudgetMomentError({ cause, operation: "save" }),
-            try: () => AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(seen)),
+            try: () => AsyncStorage.setItem(STORAGE_KEY, encodeSeenKeys(seen)),
         });
         return true;
     }).pipe(inFlight.withPermits(1));

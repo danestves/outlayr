@@ -542,7 +542,7 @@ export const make = Effect.gen(function* make() {
                     { ...state, sessions: state.sessions.filter((live) => live !== entry) },
                 ])
         );
-        yield* Effect.never;
+        return yield* Effect.never;
     });
 
     return RevenueCat.of({
