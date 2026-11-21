@@ -210,7 +210,7 @@ The rows from `no-manual-memo` down are ported under the MIT License; the upstre
 - `no-manual-memo` is not on in `apps/site`: without the compiler there, nothing replaces the memoization it would remove. The site has no `useMemo`, `useCallback` or `memo` today.
 - The rest of that plugin duplicates `no-low-value-comments` and `no-test-timeout-or-retry`, or polices another product's components, RPC layer, browser tests and styling.
 
-The `no-react-effects`, `locked-rules`, em dash, `no-test-in-loop` and `no-polling-loop-in-tests` rules have tests in `packages/config/oxlint/rules.test.ts`, which lint a fixture through the real oxlint binary: `vp test run` in `packages/config`. The reason for each lives in the plugin, as a comment above the rule or in its message. To prove a rule still fires, break the invariant in a shipped file and run `vp check`; every rule was verified that way when it landed.
+Every `outlayr/*` rule has fixture tests in `packages/config/oxlint/rules*.test.ts`, which lint a fixture through the real oxlint binary: `vp test run` in `packages/config`. Each rule has a case that must report and a close lookalike that must not, so a rule that stops firing fails CI. The reason for each lives in the plugin, as a comment above the rule or in its message. To prove a rule still fires, break the invariant in a shipped file and run `vp check`; every rule was verified that way when it landed.
 
 ### React effects
 
