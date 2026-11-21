@@ -41,6 +41,23 @@ describe("retiring a guest", () => {
         await expect(t.run((ctx) => runEdge(isPro(ctx, guest.userId)))).resolves.toBeFalsy();
     });
 
+    it("stops retrying once RevenueCat reports the customer gone", async () => {
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(async (input: URL) =>
+                String(input).includes("revenuecat")
+                    ? Response.json({}, { status: 404 })
+                    : Response.json({ deletion_errors: [] }, { status: 200 })
+            )
+        );
+        const { guest, t } = await guestWithPro();
+
+        await t.action(internal.guests.retire, { guestId: guest.userId });
+
+        const scheduled = await t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect());
+        expect(scheduled.filter(({ name }) => name.includes("retire"))).toHaveLength(0);
+    });
+
     it("drops the guest's mirror at once and retries a refused erase later", async () => {
         vi.stubGlobal(
             "fetch",

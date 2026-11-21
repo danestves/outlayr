@@ -386,10 +386,8 @@ export const make = Effect.gen(function* make() {
 
     // The server erased the guest's customer while linking, so a sync hands its store receipt to the account.
     const claimGuestPurchases = Effect.fn("RevenueCat.claimGuestPurchases")(function* claimGuestPurchases(
-        target: string,
         identified: Result.Result<boolean, RevenueCatError>
     ) {
-        yield* saveGuestClaim({ destination: target });
         const claimed = yield* Effect.result(call("claim", sdk.syncAndCheckPro));
         if (Result.isFailure(claimed)) {
             yield* warn(claimed.failure);
@@ -401,18 +399,14 @@ export const make = Effect.gen(function* make() {
         return Result.succeed(claimed.success);
     });
 
-    const identify = Effect.fn("RevenueCat.identify")(function* identify(
-        target: string | null,
-        ticket: number,
-        claim: boolean
-    ) {
+    const identify = Effect.fn("RevenueCat.identify")(function* identify(target: string | null, ticket: number) {
         const identified = yield* Effect.result(
             call("identity", () => (target === null ? sdk.logOutUser() : sdk.identifyUser(target)))
         );
-        const answer =
-            claim && target !== null && Result.isSuccess(identified)
-                ? yield* claimGuestPurchases(target, identified)
-                : identified;
+        // Read when the job runs, not when it was queued: an earlier job may have bound the claim to someone else.
+        const { guestClaim } = yield* SubscriptionRef.get(ref);
+        const claim = target !== null && guestClaim?.destination === target && Result.isSuccess(identified);
+        const answer = claim ? yield* claimGuestPurchases(identified) : identified;
         yield* transition((state) => {
             let next = state;
             if (Result.isSuccess(answer)) {
@@ -438,10 +432,12 @@ export const make = Effect.gen(function* make() {
             }
             const ticket = state.identityTicket + 1;
             const reset = target === state.applied ? state : { ...withPro(state, false), isResolved: false };
+            const bind = state.guestClaim?.destination === null && claimFor(state, target);
             return [
-                { claim: claimFor(state, target), ticket },
+                { bind, ticket },
                 {
                     ...reset,
+                    guestClaim: bind ? { destination: target } : state.guestClaim,
                     identityPending: true,
                     identityTicket: ticket,
                     pendingRequest: { target, ticket },
@@ -450,7 +446,11 @@ export const make = Effect.gen(function* make() {
             ];
         });
         if (requested !== null) {
-            yield* enqueue(identify(target, requested.ticket, requested.claim));
+            // Bound before the login, so a failed login can't leave the receipt to the next account signed in to.
+            if (requested.bind) {
+                yield* sdk.writeGuestClaim({ destination: target });
+            }
+            yield* enqueue(identify(target, requested.ticket));
         }
     }, Effect.uninterruptible);
 
@@ -563,6 +563,16 @@ export const make = Effect.gen(function* make() {
         );
     });
 
+    const reclaim = Effect.fn("RevenueCat.reclaim")(function* reclaim(account: string) {
+        const pro = yield* forSession(account, call("claim", sdk.syncAndCheckPro), (state, held) =>
+            withRead(state, account, held)
+        );
+        if (pro) {
+            yield* saveGuestClaim(null);
+        }
+        return pro;
+    });
+
     const purchaseOutcome = (pack: PurchasesPackage) =>
         call("purchase", () => sdk.purchaseAndCheckPro(pack)).pipe(
             Effect.map((pro): typeof PurchaseOutcome.Type => (pro ? "pro" : "unentitled")),
@@ -591,11 +601,18 @@ export const make = Effect.gen(function* make() {
             Stream.filter((status) => status === "active"),
             Stream.runForEach(() =>
                 Effect.gen(function* onForeground() {
-                    const session = currentSession(yield* SubscriptionRef.get(ref));
+                    const state = yield* SubscriptionRef.get(ref);
+                    const session = currentSession(state);
                     if (session === undefined) {
                         return;
                     }
-                    yield* refresh(session.accountId).pipe(
+                    // A claim RevenueCat wasn't ready for at sign-in, while it still deletes the guest, retries here.
+                    const destination = state.guestClaim?.destination;
+                    const read =
+                        destination !== undefined && destination !== null && destination === session.accountId
+                            ? reclaim(destination)
+                            : refresh(session.accountId);
+                    yield* read.pipe(
                         // A refused mirror retries here: the entitlement does not change, so nothing else asks again.
                         Effect.andThen(mirrorOnce(session.accountId)),
                         Effect.catchTags({

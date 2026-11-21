@@ -346,6 +346,38 @@ describe("revenueCat", () => {
         expect(sdk.syncAndCheckPro).toHaveBeenCalledTimes(2);
     });
 
+    it("keeps the claim for the account whose sign-in failed, not the next one signed in to", async () => {
+        await start(null);
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
+        signIn("guest-6", true);
+        await flush();
+        sdk.identifyUser.mockReturnValueOnce(Effect.fail(new PurchasesError({ cause: new Error("network") })));
+        signIn("user-26");
+        await flush();
+
+        signIn("user-27");
+        await flush();
+        expect(sdk.syncAndCheckPro).not.toHaveBeenCalled();
+        expect(disk).toStrictEqual({ destination: "user-26" });
+    });
+
+    it("retries the claim on foreground while the app stays open", async () => {
+        await start(null);
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
+        signIn("guest-7", true);
+        await flush();
+        signIn("user-28");
+        await flush();
+        expect(entitlement()).toMatchObject({ kind: "free" });
+
+        sdk.syncAndCheckPro.mockReturnValueOnce(Effect.succeed(true));
+        appState.emit("active");
+        await flush();
+        expect(sdk.syncAndCheckPro).toHaveBeenCalledTimes(2);
+        expect(entitlement()).toMatchObject({ kind: "pro" });
+        expect(disk).toBeNull();
+    });
+
     it("drops the previous customer's Pro at the switch and discards every late answer about it", async () => {
         sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
         await start("user-3");

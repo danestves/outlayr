@@ -11,10 +11,10 @@ On mobile, Pro can be bought or restored signed out. The paywall creates a Bette
 
 ## Hand-off
 
-1. The user signs in or verifies an email. Better Auth's anonymous plugin runs `onLinkAccount`, which runs `guests.retire`: it erases the guest's upstream RevenueCat customer and PostHog person, purges the mirror, usage counters, voice threads and anything else keyed to the guest, and the plugin deletes the user. A failed upstream erase retries with backoff, up to 6 attempts.
+1. The user signs in or verifies an email. Better Auth's anonymous plugin runs `onLinkAccount`, which runs `guests.retire`: it erases the guest's upstream RevenueCat customer and PostHog person, purges the mirror, usage counters, voice threads and anything else keyed to the guest, and the plugin deletes the user. RevenueCat only queues a customer delete, so `retire` repeats with backoff, up to 6 attempts, until a DELETE answers 404. Each pass purges the mirror again, since the TRANSFER webhook from the device's sync can recreate the guest there.
 2. The device logs RevenueCat in to the account, then calls `syncPurchasesForResult`. With the guest customer gone, the receipt follows the account whatever the dashboard's transfer setting says.
 
-`revenuecat-service` writes a claim marker to AsyncStorage once a guest holds Pro. The first sign-in after it binds the marker to that account, and the marker is cleared only when the sync reports Pro, so a kill mid hand-off retries on the next launch, and a later sign-in to a different account never runs the sync.
+`revenuecat-service` writes a claim marker to AsyncStorage once a guest holds Pro. The first sign-in after it binds the marker to that account before RevenueCat logs in, and the marker is cleared only when the sync reports Pro. A failed login or a kill mid hand-off retries on the next launch or foreground, and a later sign-in to a different account never runs the sync.
 
 ## Traps
 

@@ -24,8 +24,9 @@ const settled = (label: string) => (error: { readonly reason: string }) =>
         ? Effect.succeed(true)
         : Console.warn(`[guests] ${label} not erased`, error).pipe(Effect.as(false));
 
-// Runs while the guest signs in to a real account, before the device logs RevenueCat in to it: with the guest
-// customer gone, the store receipt follows the account whatever the project's transfer setting says.
+// Runs while the guest signs in to a real account, before the device logs RevenueCat in to it. RevenueCat queues
+// the delete, so it repeats until a 404 confirms it, and each pass sweeps the mirror again: the TRANSFER webhook from
+// the device's sync can recreate the guest there.
 const retire = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -33,10 +34,7 @@ const retire = FunctionImpl.make(
     Effect.fn("Guests.retire")(function* retire({ attempt = 0, guestId }) {
         const [customer, analytics] = yield* Effect.all(
             [
-                eraseUpstreamCustomer(guestId).pipe(
-                    Effect.as(true),
-                    Effect.catchTags({ RevenueCatError: settled("customer") })
-                ),
+                eraseUpstreamCustomer(guestId).pipe(Effect.catchTags({ RevenueCatError: settled("customer") })),
                 erasePostHogPerson(guestId).pipe(
                     Effect.as(true),
                     Effect.catchTags({ PostHogError: settled("analytics") })
@@ -44,10 +42,8 @@ const retire = FunctionImpl.make(
             ],
             { concurrency: "unbounded" }
         ).pipe(Effect.provide(outboundHttp));
-        if (attempt === 0) {
-            const { runMutation } = yield* MutationRunner;
-            yield* runMutation(refs.internal.guests.forget, { guestId });
-        }
+        const { runMutation } = yield* MutationRunner;
+        yield* runMutation(refs.internal.guests.forget, { guestId });
         if ((!customer || !analytics) && attempt + 1 < RETIRE_ATTEMPTS) {
             const scheduler = yield* Scheduler;
             yield* scheduler.runAfter(Duration.minutes(2 ** attempt), refs.internal.guests.retire, {

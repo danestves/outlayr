@@ -97,6 +97,7 @@ const subscriberUrl = (appUserId: string) => `${SUBSCRIBERS_URL}/${encodeURIComp
 
 const isOk = (status: number) => status >= 200 && status < 300;
 
+// True once RevenueCat has no such customer: a 200 only queues the delete.
 export const eraseUpstreamCustomer = Effect.fn("RevenueCat.eraseUpstreamCustomer")(function* eraseUpstreamCustomer(
     appUserId: string
 ) {
@@ -116,6 +117,7 @@ export const eraseUpstreamCustomer = Effect.fn("RevenueCat.eraseUpstreamCustomer
     if (!isOk(response.status) && response.status !== 404) {
         return yield* new RevenueCatError({ operation: "eraseCustomer", reason: "status", status: response.status });
     }
+    return response.status === 404;
 });
 
 const SubscriberResponse = Schema.Struct({ subscriber: Schema.Record(Schema.String, Schema.Unknown) });
