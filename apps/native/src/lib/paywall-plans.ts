@@ -24,10 +24,12 @@ const EXIT_OFFERING = "exit";
 const loadExitOffer = Effect.fn("Paywall.loadExitOffer")(function* loadExitOffer(accountId: string | null) {
     const revenueCat = yield* RevenueCat;
     const packages = yield* revenueCat.getPackages(accountId, EXIT_OFFERING);
-    const eligible = yield* revenueCat.eligibleForTrial(
-        accountId,
-        packages.map((offer) => offer.product.identifier)
-    );
+    const eligible = yield* revenueCat
+        .eligibleForTrial(
+            accountId,
+            packages.map((offer) => offer.product.identifier)
+        )
+        .pipe(Effect.orElseSucceed(() => new Set<string>()));
     return readExitOffer(packages, eligible);
 });
 

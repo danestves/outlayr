@@ -29,13 +29,19 @@ interface PlanPick {
     plans: readonly Plan[];
 }
 
-function purchaseProperties(plan: Plan | null, variant: typeof PaywallVariant.Type, exitOffer = false) {
+function purchaseProperties(
+    plan: Plan | null,
+    variant: typeof PaywallVariant.Type,
+    trigger: typeof PaywallTrigger.Type,
+    exitOffer = false
+) {
     const product = plan?.offer.product;
     return {
         exit_offer: exitOffer,
         period: product?.subscriptionPeriod ?? null,
         plan: plan?.kind ?? null,
         product_id: product?.identifier ?? null,
+        trigger,
         variant,
     };
 }
@@ -95,7 +101,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type, options: Pay
     const selected = selectedKind(pick, plans, resumed?.kind);
     const plan = plans?.find((candidate) => candidate.kind === selected) ?? null;
     const [failure, setFailure] = useState<TranslationKey | null>(null);
-    const sale = useRef(purchaseProperties(null, variant));
+    const sale = useRef(purchaseProperties(null, variant, trigger));
 
     const retry = () => {
         setAttempt((count) => count + 1);
@@ -176,7 +182,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type, options: Pay
     const startPurchase = (target: Plan, soldBy: typeof PaywallVariant.Type, exitOffer = false) => {
         setBusy("buy");
         setFailure(null);
-        sale.current = purchaseProperties(target, soldBy, exitOffer);
+        sale.current = purchaseProperties(target, soldBy, trigger, exitOffer);
         posthog?.capture("purchase_started", { ...sale.current, trial_days: target.trialDays });
         buyPlan({ accountId, offer: target.offer });
     };
@@ -255,6 +261,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type, options: Pay
         logsWaiting: canBuy && block === "autolog" && autolog.waiting > 0,
         needsAccount,
         noCloud,
+        ownsLeave: options.onLeave !== undefined,
         pitches,
         plan,
         plans,

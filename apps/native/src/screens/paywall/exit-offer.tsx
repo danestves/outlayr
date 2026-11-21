@@ -30,6 +30,7 @@ interface ExitFlow {
     isPro: boolean;
     leave: (outcome?: LeaveOutcome) => void;
     needsAccount: boolean;
+    ownsLeave: boolean;
 }
 
 /** Shown once per device, the first time someone leaves a paywall without buying. */
@@ -40,6 +41,8 @@ export function useExitOffer(flow: ExitFlow) {
     const [open, setOpen] = useState(false);
     const [settled, setSettled] = useState(false);
     const resume = useRef<(() => void) | null>(null);
+    // A ref, not state: the leave below dispatches before a re-render could lift the prevention.
+    const leaving = useRef(false);
     const markSeen = useAtomAction(markExitOfferSeenCommand, {}, SILENT);
     const armed =
         offer !== null && !seen && !settled && flow.canBuy && !flow.needsAccount && !flow.isPro && flow.busy === null;
@@ -52,9 +55,23 @@ export function useExitOffer(flow: ExitFlow) {
         }
     };
 
-    usePreventRemove(armed, ({ repeat }) => {
-        resume.current = repeat;
-        show();
+    const leave = () => {
+        leaving.current = true;
+        flow.leave("dismissed");
+    };
+
+    // A screen that owns leaving (onboarding) must finish its flow on system Back instead of being popped.
+    usePreventRemove(armed || (flow.ownsLeave && !flow.isPro), ({ repeat }) => {
+        if (leaving.current) {
+            if (!flow.ownsLeave) {
+                repeat();
+            }
+        } else if (armed) {
+            resume.current = flow.ownsLeave ? null : repeat;
+            show();
+        } else if (flow.busy === null) {
+            leave();
+        }
     });
 
     const decline = () => {
@@ -64,7 +81,7 @@ export function useExitOffer(flow: ExitFlow) {
         const go = resume.current;
         resume.current = null;
         if (go === null) {
-            flow.leave("dismissed");
+            leave();
         } else {
             go();
         }
@@ -83,11 +100,11 @@ export function useExitOffer(flow: ExitFlow) {
         if (armed) {
             show();
         } else {
-            flow.leave("dismissed");
+            leave();
         }
     };
 
-    return { accept, decline, offer: open ? offer : null, requestLeave };
+    return { accept, decline, offer: open && !flow.isPro ? offer : null, requestLeave };
 }
 
 export function ExitOfferSheet({

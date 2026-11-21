@@ -816,12 +816,12 @@ const pro = {
             pt: "A compra foi concluída, mas o servidor ainda não confirmou. Tente de novo em instantes.",
         }),
         "pro.timeline.charge": t({
-            en: "Your plan starts at {price}. Cancel before and you're never charged.",
-            de: "Dein Abo startet für {price}. Kündige vorher, und es wird nichts abgebucht.",
-            es: "Tu plan empieza a {price}. Si cancelas antes, no se te cobra nada.",
-            fr: "Votre abonnement démarre à {price}. Résiliez avant et vous ne payez rien.",
-            pt: "Seu plano começa por {price}. Cancele antes e você não paga nada.",
-            "pt-PT": "O seu plano começa por {price}. Cancele antes e não paga nada.",
+            en: "Your plan starts at {price}. Cancel at least a day before and you're never charged.",
+            de: "Dein Abo startet für {price}. Kündige mindestens einen Tag vorher, und es wird nichts abgebucht.",
+            es: "Tu plan empieza a {price}. Si cancelas al menos un día antes, no se te cobra nada.",
+            fr: "Votre abonnement démarre à {price}. Résiliez au moins un jour avant et vous ne payez rien.",
+            pt: "Seu plano começa por {price}. Cancele pelo menos um dia antes e você não paga nada.",
+            "pt-PT": "O seu plano começa por {price}. Cancele pelo menos um dia antes e não paga nada.",
         }),
         "pro.timeline.day": t({
             en: "Day {day}",

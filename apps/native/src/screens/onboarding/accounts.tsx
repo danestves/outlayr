@@ -20,7 +20,7 @@ import { accountPicksFor, CASH_PICK, splitByFreeLimits } from "@/domain/onboardi
 import type { AccountPick } from "@/domain/onboarding-accounts";
 import { FREE_ACCOUNTS, FREE_CURRENCIES } from "@/domain/pro-limits";
 import { useMerchantMark } from "@/hooks/use-merchant-mark";
-import { useProLocked } from "@/hooks/use-pro-locked";
+import { useProConfirmed } from "@/hooks/use-pro-locked";
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useTranslation } from "@/i18n/context";
 import { useHaptics } from "@/lib/use-haptics";
@@ -87,7 +87,8 @@ export function OnboardingAccounts() {
     const haptics = useHaptics();
     const region = useRegionCode();
     const home = useGlobalCurrency(db);
-    const locked = useProLocked();
+    // Free limits until Pro is confirmed: a stalled store lookup must not let a Free user past both caps.
+    const locked = !useProConfirmed();
     const held = useAccounts(db).filter((account) => !isPerson(account));
     const heldNames = new Set(held.map((account) => account.name));
     const picks = accountPicksFor(region, home, t("onboarding.accounts.cash"));
@@ -125,22 +126,19 @@ export function OnboardingAccounts() {
         });
     };
 
-    const save = () => {
+    // Skip saves too, so picks left waiting by an earlier visit to this step are cleared.
+    const save = (skip: boolean) => {
         if (saving) {
-            return;
-        }
-        if (fresh.length === 0) {
-            next();
             return;
         }
         setSaving(true);
         setFailed(false);
-        createAccounts({ db, now, waiting });
+        createAccounts(skip ? { db, now: [], waiting: [] } : { db, now, waiting });
     };
 
     return (
         <FirstRun
-            action={{ disabled: saving, label: t("common.continue"), onPress: save }}
+            action={{ disabled: saving, label: t("common.continue"), onPress: () => save(false) }}
             error={failed ? t("onboarding.accounts.failed") : null}
             eyebrow={t("onboarding.accounts.eyebrow")}
             footnote={
@@ -152,7 +150,7 @@ export function OnboardingAccounts() {
                       })
                     : undefined
             }
-            skip={{ label: t("onboarding.accounts.skip"), onPress: next }}
+            skip={{ label: t("onboarding.accounts.skip"), onPress: () => save(true) }}
             title={t("onboarding.accounts.title")}
         >
             <ScrollView className="shrink grow-0">

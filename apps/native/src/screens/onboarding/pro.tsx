@@ -1,5 +1,6 @@
 import * as Cause from "effect/Cause";
 import { useFocusEffect } from "expo-router";
+import { useRef } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
@@ -24,23 +25,27 @@ export function OnboardingPro() {
     const db = useDatabase();
     const haptics = useHaptics();
     const isPro = useRevenueCat().kind === "pro";
+    // Continue and the purchase callback can both land; a second run would create the waiting accounts twice.
+    const finishing = useRef(false);
     const finish = useAtomAction(
         finishOnboardingOfferCommand,
         {
             onFailure: (cause) => {
                 console.error("Finishing onboarding failed", Cause.squash(cause));
                 haptics("error");
+                finishing.current = false;
             },
         },
         SILENT
     );
+    const leave = (outcome: LeaveOutcome) => {
+        if (!finishing.current) {
+            finishing.current = true;
+            finish({ db, purchased: outcome === "pro" || isPro });
+        }
+    };
     useFocusEffect(() => {
         posthog?.capture("paywall_viewed", { trigger: "onboarding", variant: "redesign" });
     });
-    return (
-        <PaywallRedesign
-            onLeave={(outcome: LeaveOutcome) => finish({ db, purchased: outcome === "pro" || isPro })}
-            trigger="onboarding"
-        />
-    );
+    return <PaywallRedesign onLeave={leave} trigger="onboarding" />;
 }
