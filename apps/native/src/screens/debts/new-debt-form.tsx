@@ -1,7 +1,7 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import * as Cause from "effect/Cause";
 import * as Result from "effect/Result";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { RefObject } from "react";
 import { Keyboard } from "react-native";
 
@@ -32,6 +32,7 @@ import { useCreateAccount, useOpenPaywall, usePayoffPlanGate, usePeopleCapped } 
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
+import { useLatest } from "@/lib/lifecycle";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT } from "@/state/atom-command";
@@ -305,14 +306,10 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: 
         };
         saveDebt({ db, debt, fromPush: pushed?.id, payBackBy });
     };
-    const handlers = useRef({ save });
-    // oxlint-disable-next-line outlayr/react-effect-budget -- keeps the latest save behind the stable press handler the native header button registers once
-    useLayoutEffect(() => {
-        handlers.current = { save };
-    });
+    const latestSave = useLatest(save);
     // Reads only the ref, so Save does not re-register per keystroke.
     const onSave = () => {
-        handlers.current.save();
+        latestSave.current();
     };
 
     return {

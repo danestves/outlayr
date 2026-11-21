@@ -1,17 +1,16 @@
-import { useEffect } from "react";
+import type { AppStateStatus } from "react-native";
 
 import { relocksOnPhase } from "@/domain/app-lock";
 import { subscribeAppState } from "@/lib/app-state";
+import { useEventListener } from "@/lib/lifecycle";
 
 export function useRelock(relock: () => void): void {
-    // oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to AppState phase changes for the gate's lifetime
-    useEffect(
-        () =>
-            subscribeAppState((phase) => {
-                if (relocksOnPhase(phase)) {
-                    relock();
-                }
-            }),
-        [relock]
+    useEventListener(
+        (listener: (status: AppStateStatus) => void) => subscribeAppState(listener),
+        (phase) => {
+            if (relocksOnPhase(phase)) {
+                relock();
+            }
+        }
     );
 }

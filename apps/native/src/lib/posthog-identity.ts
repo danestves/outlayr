@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
-import { useEffect } from "react";
 
 import { useAuthSession } from "@/lib/auth-session";
+import { useMirror } from "@/lib/lifecycle";
 import { posthog } from "@/lib/posthog";
 import { createCommand, SILENT } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
@@ -14,8 +14,7 @@ const posthogReadyCommand = createCommand({
 
 export function usePostHogIdentity() {
     const { accountId, gate } = useAuthSession();
-    // oxlint-disable-next-line outlayr/react-effect-budget -- keeps the PostHog client's identity equal to the signed-in account
-    useEffect(() => {
+    useMirror([accountId, gate], () => {
         const client = posthog;
         if (client === null) {
             return;
@@ -44,5 +43,5 @@ export function usePostHogIdentity() {
         return () => {
             live = false;
         };
-    }, [accountId, gate]);
+    });
 }
