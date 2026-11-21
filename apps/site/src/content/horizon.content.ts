@@ -383,11 +383,11 @@ const horizon = {
                 fr: "Pro lève les limites et ajoute la synchronisation.",
             }),
             yearUnit: t({
-                en: "a year with 7 days free",
-                de: "im Jahr mit 7 Tagen gratis",
-                es: "al año con 7 días gratis",
-                pt: "por ano com 7 dias grátis",
-                fr: "par an avec 7 jours gratuits",
+                en: "a year with 3 days free",
+                de: "im Jahr mit 3 Tagen gratis",
+                es: "al año con 3 días gratis",
+                pt: "por ano com 3 dias grátis",
+                fr: "par an avec 3 jours gratuits",
             }),
         },
         source: {
