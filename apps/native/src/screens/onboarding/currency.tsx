@@ -118,8 +118,8 @@ export function OnboardingCurrency() {
                         db,
                         hold: meta === "continue" ? untilRefocused() : Effect.void,
                         kind: meta,
-                        // The root guard does not swap on this write: the auto-log step is next.
-                        navigate: () => router.push("/onboarding/auto-log"),
+                        // The root guard does not swap on this write: the accounts step is next.
+                        navigate: () => router.push("/onboarding/accounts"),
                         onFailure: (error) => {
                             console.error("Failed to save the onboarding currency", error);
                             notifyFailure({

@@ -7,6 +7,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 import { useAutologUsage } from "@/data/autolog-cap";
 import { paywallTriggerOf } from "@/domain/paywall-trigger";
+import type { PaywallTrigger } from "@/domain/paywall-trigger";
 import type { Plan, PlanKind } from "@/domain/pro-plans";
 import { proSellable } from "@/hooks/use-pro-locked";
 import type { TranslationKey } from "@/i18n/catalog";
@@ -28,12 +29,19 @@ interface PlanPick {
     plans: readonly Plan[];
 }
 
-function purchaseProperties(plan: Plan | null, variant: typeof PaywallVariant.Type) {
+function purchaseProperties(
+    plan: Plan | null,
+    variant: typeof PaywallVariant.Type,
+    trigger: typeof PaywallTrigger.Type,
+    exitOffer = false
+) {
     const product = plan?.offer.product;
     return {
+        exit_offer: exitOffer,
         period: product?.subscriptionPeriod ?? null,
         plan: plan?.kind ?? null,
         product_id: product?.identifier ?? null,
+        trigger,
         variant,
     };
 }
@@ -53,8 +61,23 @@ function selectedKind(
     return fallback?.kind ?? null;
 }
 
+export type LeaveOutcome = "dismissed" | "pro";
+
+export interface PaywallFlowOptions {
+    /** Replaces closing the route, for a paywall shown as a step instead of a modal. */
+    onLeave?: (outcome: LeaveOutcome) => void;
+    trigger?: typeof PaywallTrigger.Type;
+}
+
+/** Who this build can sell Pro to right now. */
+export function saleReach(accountId: string | null) {
+    // A build without a backend cannot deliver Pro, so it takes no money for it.
+    const noCloud = !proSellable();
+    return { needsAccount: !noCloud && accountId === null, noCloud };
+}
+
 /** Plans, purchase, restore and the entitlement states both paywall variants render. */
-export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
+export function usePaywallFlow(variant: typeof PaywallVariant.Type, options: PaywallFlowOptions = {}) {
     const router = useRouter();
     const navigation = useNavigation();
     const entitlement = useRevenueCat();
@@ -67,7 +90,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         return handed?.handed ? handed : null;
     });
     const autolog = useAutologUsage(useDatabase());
-    const trigger = paywallTriggerOf(triggerParam);
+    const trigger = options.trigger ?? paywallTriggerOf(triggerParam);
     const block = topBlockOf(trigger, autolog.used);
     const [busy, setBusy] = useState<"buy" | "confirm" | "restore" | null>(null);
     const [attempt, setAttempt] = useState(0);
@@ -78,7 +101,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const selected = selectedKind(pick, plans, resumed?.kind);
     const plan = plans?.find((candidate) => candidate.kind === selected) ?? null;
     const [failure, setFailure] = useState<TranslationKey | null>(null);
-    const sale = useRef(purchaseProperties(null, variant));
+    const sale = useRef(purchaseProperties(null, variant, trigger));
 
     const retry = () => {
         setAttempt((count) => count + 1);
@@ -90,8 +113,13 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         }
     };
 
-    const leave = () => {
-        if (navigation.isFocused()) {
+    // Read by the exit offer's Back guard, which must let through the removal a leave starts.
+    const left = useRef(false);
+    const leave = (outcome: LeaveOutcome = "dismissed") => {
+        left.current = true;
+        if (options.onLeave) {
+            options.onLeave(outcome);
+        } else if (navigation.isFocused()) {
             router.back();
         }
     };
@@ -124,7 +152,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
                     setFailure(next.failure);
                 }
                 if (next.leave) {
-                    leave();
+                    leave("pro");
                 }
             },
         },
@@ -141,7 +169,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
                     setFailure(next.failure);
                 }
                 if (next.leave) {
-                    leave();
+                    leave("pro");
                 }
             },
         },
@@ -154,10 +182,10 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         confirmEntitlement(accountId);
     };
 
-    const startPurchase = (target: Plan, soldBy: typeof PaywallVariant.Type) => {
+    const startPurchase = (target: Plan, soldBy: typeof PaywallVariant.Type, exitOffer = false) => {
         setBusy("buy");
         setFailure(null);
-        sale.current = purchaseProperties(target, soldBy);
+        sale.current = purchaseProperties(target, soldBy, trigger, exitOffer);
         posthog?.capture("purchase_started", { ...sale.current, trial_days: target.trialDays });
         buyPlan({ accountId, offer: target.offer });
     };
@@ -174,6 +202,12 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         startPurchase(plan, variant);
     };
 
+    const buyExitOffer = (target: Plan) => {
+        if (accountId !== null) {
+            startPurchase(target, variant, true);
+        }
+    };
+
     const restore = () => {
         setBusy("restore");
         setFailure(null);
@@ -181,9 +215,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     };
 
     const empty = failed || (plans !== null && plans.length === 0);
-    // A build without a backend cannot deliver Pro, so it takes no money for it.
-    const noCloud = !proSellable();
-    const needsAccount = !noCloud && accountId === null;
+    const { needsAccount, noCloud } = saleReach(accountId);
     const pitches = !(isPro || noCloud);
     const canBuy = pitches;
     const resuming = resumed !== null && accountId !== null && entitlement.kind === "free" && !entitlement.pending;
@@ -218,8 +250,10 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     return {
         autolog,
         block,
+        accountId,
         busy: busy ?? (resuming && plans === null && !failed ? "buy" : null),
         buy,
+        buyExitOffer,
         canBuy,
         confirm,
         empty,
@@ -227,9 +261,11 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         isMirrored,
         isPro,
         leave,
+        left,
         logsWaiting: canBuy && block === "autolog" && autolog.waiting > 0,
         needsAccount,
         noCloud,
+        ownsLeave: options.onLeave !== undefined,
         pitches,
         plan,
         plans,

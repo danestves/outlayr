@@ -24,6 +24,7 @@ import {
     WalletCard,
 } from "@/domain/meta-values";
 import { DEFAULT_CURRENCY } from "@/domain/money";
+import { AccountPick } from "@/domain/onboarding-accounts";
 import { firstLocale } from "@/i18n/device-language";
 
 type SyncScope = "device" | "synced";
@@ -112,6 +113,7 @@ const BOOKKEEPING = defineMeta({
     csvImport: { default: null, schema: Schema.fromJsonString(FileImportRecord), scope: "device" },
     // `bootstrap` seeds `currency` unconditionally, so only this tells a chosen code from the default.
     currencyChosen: { default: false, schema: BoolText, scope: "synced" },
+    exitOfferSeen: { default: false, schema: BoolText, scope: "device" },
     notificationDebts: { elements: NotificationDebt, scope: "device" },
     enrichmentOutbox: { elements: Schema.String, scope: "device" },
     favouriteCurrencies: { default: [], schema: FavouriteCurrenciesText, scope: "device" },
@@ -137,6 +139,8 @@ const BOOKKEEPING = defineMeta({
     // `firstLaunch` cannot stand in: bootstrap writes it before any screen exists.
     onboardingComplete: { default: false, schema: BoolText, scope: "device" },
     onboardingGateMigrated: { default: false, schema: BoolText, scope: "device" },
+    // Accounts picked in onboarding past the free caps; Pro bought on the onboarding offer creates them.
+    onboardingWaitingAccounts: { elements: AccountPick, scope: "device" },
     pdfImport: { default: null, schema: Schema.fromJsonString(FileImportRecord), scope: "device" },
     // Written in the same SQLite transaction as the row it records, so a replayed queue file never logs twice.
     pendingWriteLedger: { elements: PendingWriteLedgerEntry, scope: "device" },

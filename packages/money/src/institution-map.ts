@@ -485,6 +485,11 @@ export function searchInstitutions(query: string) {
     );
 }
 
+export function institutionById(id: string): { currency: string | null; domain: string; label: string } | null {
+    const entry = INSTITUTIONS.find((candidate) => candidate.id === id);
+    return entry === undefined ? null : { currency: entry.currency ?? null, domain: entry.domain, label: entry.label };
+}
+
 export function institutionCurrency(name: string): string | null {
     const domain = resolveInstitutionDomain(merchantKey(name));
     return INSTITUTIONS.find((entry) => entry.domain === domain)?.currency ?? null;

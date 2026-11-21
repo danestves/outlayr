@@ -23,6 +23,7 @@ export const finishOnboarding = Effect.fn("Onboarding.finishOnboarding")(functio
 
 export const finishFirstRun = Effect.fn("Onboarding.finishFirstRun")(function* finishFirstRun(db: Database) {
     yield* Meta.set(db, "accountOfferHeld", true);
+    yield* Meta.set(db, "onboardingWaitingAccounts", []);
     yield* finishOnboarding(db);
 });
 

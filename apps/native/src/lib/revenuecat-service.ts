@@ -153,7 +153,10 @@ export class RevenueCat extends Context.Service<
         ) => Effect.Effect<ReadonlySet<string>, SessionError>;
         readonly entitlement: Stream.Stream<Entitlement>;
         readonly follow: (session: Session) => Effect.Effect<void, never, Scope.Scope>;
-        readonly getPackages: (account: string | null) => Effect.Effect<PurchasesPackage[], SessionError>;
+        readonly getPackages: (
+            account: string | null,
+            offering?: string
+        ) => Effect.Effect<PurchasesPackage[], SessionError>;
         readonly mirror: (account: string | null) => Effect.Effect<boolean, RevenueCatError>;
         readonly purchase: (
             account: string | null,
@@ -554,8 +557,11 @@ export const make = Effect.gen(function* make() {
         }),
         entitlement: SubscriptionRef.changes(ref).pipe(Stream.map(entitlementOf), Stream.changes),
         follow,
-        getPackages: Effect.fn("RevenueCat.getPackages")(function* packages(account) {
-            return yield* forSession(account, call("offerings", sdk.getPackages));
+        getPackages: Effect.fn("RevenueCat.getPackages")(function* packages(account, offering) {
+            return yield* forSession(
+                account,
+                call("offerings", () => sdk.getPackages(offering))
+            );
         }),
         mirror,
         purchase: Effect.fn("RevenueCat.purchase")(function* purchase(account, pack) {

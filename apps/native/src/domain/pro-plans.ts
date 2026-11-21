@@ -79,6 +79,45 @@ export function readPlans(
     });
 }
 
+// The sheet says "first year", so a monthly intro repeated for a few cycles must not qualify.
+function coversOneYear({
+    cycles,
+    periodNumberOfUnits,
+    periodUnit,
+}: NonNullable<PurchasesPackage["product"]["introPrice"]>): boolean {
+    const unit = periodUnit.toUpperCase();
+    return (
+        cycles === 1 &&
+        ((unit === "YEAR" && periodNumberOfUnits === 1) || (unit === "MONTH" && periodNumberOfUnits === 12))
+    );
+}
+
+/** A paid first year on the annual plan, sold once to someone about to leave the paywall. */
+export interface ExitOffer {
+    firstYear: string;
+    percentOff: number;
+    plan: Plan;
+}
+
+export function readExitOffer(
+    packages: readonly PurchasesPackage[],
+    eligibleForIntro: ReadonlySet<string>
+): ExitOffer | null {
+    const plan = readPlans(packages, eligibleForIntro).find((candidate) => candidate.kind === "annual");
+    const intro = plan?.offer.product.introPrice;
+    if (
+        plan === undefined ||
+        intro == null ||
+        intro.price <= 0 ||
+        !coversOneYear(intro) ||
+        !trialEligible(plan.offer, eligibleForIntro)
+    ) {
+        return null;
+    }
+    const percentOff = Math.round((1 - intro.price / plan.offer.product.price) * 100);
+    return percentOff > 0 ? { firstYear: intro.priceString, percentOff, plan } : null;
+}
+
 export interface ProCost {
     currency: string;
     monthly: number;
