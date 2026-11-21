@@ -15,7 +15,7 @@ const STRIPE_API = "https://api.stripe.com/v1";
 const STRIPE_VERSION = "2026-04-22.dahlia";
 const RECEIPTS_URL = "https://api.revenuecat.com/v1/receipts";
 const TIMEOUT = Duration.seconds(15);
-const TRIAL_DAYS = "7";
+const TRIAL_DAYS = "3";
 const PAYMENTS_SHOWN = 12;
 
 export class StripeError extends Schema.TaggedError<StripeError>()("StripeError", {

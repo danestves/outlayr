@@ -36,7 +36,7 @@ import { convexClient } from "@/lib/convex";
 import { paywallPrices } from "@/lib/paywall-prices";
 import { currentToken } from "@/lib/session";
 
-const TRIAL_DAYS = 7;
+const TRIAL_DAYS = 3;
 const DAY_MS = 86_400_000;
 const REMINDER_DAY = TRIAL_DAYS - TRIAL_REMINDER_LEAD_MS / DAY_MS;
 const remindsBeforeCharge = (now: number) => now + REMINDER_DAY * DAY_MS >= TRIAL_REMINDERS_FROM_MS;

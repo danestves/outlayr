@@ -21,7 +21,7 @@ describe(checkoutForm, () => {
 
     it("gives the trial only to an eligible yearly buyer", () => {
         const key = "subscription_data[trial_period_days]";
-        expect(checkoutForm({ ...input, plan: "annual", trial: true })).toMatchObject({ [key]: "7" });
+        expect(checkoutForm({ ...input, plan: "annual", trial: true })).toMatchObject({ [key]: "3" });
         expect(checkoutForm({ ...input, plan: "annual", trial: false })).not.toHaveProperty([key]);
         expect(checkoutForm({ ...input, plan: "monthly", trial: true })).not.toHaveProperty([key]);
     });

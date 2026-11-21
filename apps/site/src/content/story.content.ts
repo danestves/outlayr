@@ -53,11 +53,11 @@ const story = {
                 })
             ),
             trial: t({
-                en: "7 days free on yearly",
-                de: "7 Tage gratis beim Jahresabo",
-                es: "7 días gratis en el plan anual",
-                pt: "7 dias grátis no plano anual",
-                fr: "7 jours gratuits sur l'offre annuelle",
+                en: "3 days free on yearly",
+                de: "3 Tage gratis beim Jahresabo",
+                es: "3 días gratis en el plan anual",
+                pt: "3 dias grátis no plano anual",
+                fr: "3 jours gratuits sur l'offre annuelle",
             }),
             title: t({
                 en: "Free to start. Pro when you want more",

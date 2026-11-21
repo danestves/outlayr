@@ -130,11 +130,11 @@ const home = {
             },
             {
                 answer: t({
-                    en: "Yes. In the United States, Outlayr Pro is $129.99 once, or $7.99 a month or $49.99 a year with 7 days free. Your app store shows the price for your country. There are no ads on any plan.",
-                    de: "Ja. In den USA kostet Outlayr Pro einmalig 129,99 $, oder 7,99 $ im Monat oder 49,99 $ im Jahr mit 7 Tagen gratis. Dein App Store zeigt den Preis für dein Land. In keinem Plan gibt es Werbung.",
-                    es: "Sí. En Estados Unidos, Outlayr Pro cuesta US$129.99 en un solo pago, o US$7.99 al mes o US$49.99 al año con 7 días gratis. Tu tienda de apps muestra el precio de tu país. No hay anuncios en ningún plan.",
-                    pt: "Sim. Nos Estados Unidos, o Outlayr Pro custa US$ 129,99 em pagamento único, ou US$ 7,99 por mês ou US$ 49,99 por ano com 7 dias grátis. Sua loja de apps mostra o preço do seu país. Não há anúncios em nenhum plano.",
-                    fr: "Oui. Aux États-Unis, Outlayr Pro coûte 129,99 $US en un seul paiement, ou 7,99 $US par mois ou 49,99 $US par an avec 7 jours gratuits. Votre boutique d'apps affiche le prix de votre pays. Aucune formule n'affiche de publicité.",
+                    en: "Yes. In the United States, Outlayr Pro is $129.99 once, or $7.99 a month or $49.99 a year with 3 days free. Your app store shows the price for your country. There are no ads on any plan.",
+                    de: "Ja. In den USA kostet Outlayr Pro einmalig 129,99 $, oder 7,99 $ im Monat oder 49,99 $ im Jahr mit 3 Tagen gratis. Dein App Store zeigt den Preis für dein Land. In keinem Plan gibt es Werbung.",
+                    es: "Sí. En Estados Unidos, Outlayr Pro cuesta US$129.99 en un solo pago, o US$7.99 al mes o US$49.99 al año con 3 días gratis. Tu tienda de apps muestra el precio de tu país. No hay anuncios en ningún plan.",
+                    pt: "Sim. Nos Estados Unidos, o Outlayr Pro custa US$ 129,99 em pagamento único, ou US$ 7,99 por mês ou US$ 49,99 por ano com 3 dias grátis. Sua loja de apps mostra o preço do seu país. Não há anúncios em nenhum plano.",
+                    fr: "Oui. Aux États-Unis, Outlayr Pro coûte 129,99 $US en un seul paiement, ou 7,99 $US par mois ou 49,99 $US par an avec 3 jours gratuits. Votre boutique d'apps affiche le prix de votre pays. Aucune formule n'affiche de publicité.",
                 }),
                 question: t({
                     en: "Can I buy Outlayr Pro once instead of subscribing?",

@@ -6,7 +6,7 @@ Outlayr is the expense tracker that never links your bank: log by sentence, voic
 |---|---|---|
 | Free | $0 | |
 | Outlayr Pro monthly | $7.99 | Every month |
-| Outlayr Pro yearly | $49.99 | Every year, with 7 days free |
+| Outlayr Pro yearly | $49.99 | Every year, with 3 days free |
 | Outlayr Pro once | $129.99 | One payment, no renewal |
 
 Prices vary by country. Google Play and the App Store show your price before you buy.
