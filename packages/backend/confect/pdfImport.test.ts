@@ -644,6 +644,15 @@ describe("pdfImport.sweepUploads", () => {
         await expect(stored(photo)).resolves.toBeTruthy();
     });
 
+    it("deletes a statement whose upload finished just after its window closed", async () => {
+        const { stored, t, upload } = await setup();
+        const statement = await upload();
+
+        await t.mutation(internal.pdfImport.sweepUploads, { from: 0, to: Date.now() - 60_000 });
+
+        await expect(stored(statement)).resolves.toBeFalsy();
+    });
+
     it("leaves a statement uploaded outside its window", async () => {
         const { stored, t, upload } = await setup();
         const statement = await upload();

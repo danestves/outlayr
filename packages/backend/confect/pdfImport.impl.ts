@@ -26,6 +26,8 @@ import { isPro } from "./revenuecat";
 // Convex upload urls live an hour. Extraction deletes a statement at once; this catches the client that never called.
 const UPLOAD_URL_LIFETIME = Duration.hours(1);
 const SWEEP_GRACE = Duration.minutes(15);
+// Convex checks the url before reading the body, so an upload started near expiry can land after the window closes.
+const LATE_UPLOAD = Duration.minutes(10);
 // PDF extraction has no client deadline and classifies up to 200 labels, which can outrun the CSV budget.
 const CLASSIFY_TIMEOUT = Duration.seconds(60);
 
@@ -117,13 +119,14 @@ const uploadContentType = FunctionImpl.make(
     }, Effect.orDie)
 );
 
-// A statement is only ever stored under this content type, and photos never are, so the type is what picks them out.
+// Statements are always PDFs. A PDF still unconfirmed minutes after upload is abandoned, whichever feature sent it.
 const sweepUploads = FunctionImpl.make(
     databaseSchema,
     spec,
     "sweepUploads",
-    Effect.fn("PdfImport.sweepUploads")(function* sweepUploads({ from, key, to }) {
+    Effect.fn("PdfImport.sweepUploads")(function* sweepUploads({ from, key, to: windowEnd }) {
         const ctx = yield* MutationCtx;
+        const to = windowEnd + Duration.toMillis(LATE_UPLOAD);
         const files = yield* Effect.promise(() =>
             ctx.db.system
                 .query("_storage")
@@ -229,7 +232,7 @@ const readKeyedUpload = Effect.fn("PdfImport.readKeyedUpload")(function* readKey
         return null;
     }
     const read = yield* Effect.promise(() =>
-        ctx.runAction(components.storage.objects.read, { key: upload.key, maxBytes: MAX_PDF_BYTES, provider })
+        ctx.runAction(components.storage.objects.read, { key: upload.key, maxBytes: MAX_PDF_BYTES })
     );
     return read.kind === "stored" ? new Uint8Array(read.bytes) : null;
 });

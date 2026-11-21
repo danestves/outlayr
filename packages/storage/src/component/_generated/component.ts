@@ -50,21 +50,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       read: FunctionReference<
         "action",
         "internal",
-        {
-          key: string;
-          maxBytes: number;
-          provider:
-            | { kind: "convex" }
-            | {
-                accessKeyId: string;
-                bucket: string;
-                endpoint?: string;
-                forcePathStyle: boolean;
-                kind: "s3";
-                region: string;
-                secretAccessKey: string;
-              };
-        },
+        { key: string; maxBytes: number },
         { bytes: ArrayBuffer; kind: "stored" } | { kind: "missing" } | { kind: "tooLarge" },
         Name
       >;

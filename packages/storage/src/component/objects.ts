@@ -119,41 +119,19 @@ export const lookup = internalQuery({
 });
 
 export const read = action({
-    args: { key: v.string(), maxBytes: v.number(), provider },
+    args: { key: v.string(), maxBytes: v.number() },
     returns: readResult,
     handler: async (ctx, args): Promise<ReadResult> => {
-        if (args.provider.kind === "convex") {
-            const row = await ctx.runQuery(internal.objects.lookup, { key: args.key });
-            if (row === null) {
-                return { kind: "missing" as const };
-            }
-            const blob = await ctx.storage.get(row.storageId);
-            if (blob === null) {
-                return { kind: "missing" as const };
-            }
-            // Checked before reading: an oversized file would also break the 16 MiB return cap.
-            if (blob.size > args.maxBytes) {
-                return { kind: "tooLarge" as const };
-            }
-            return { bytes: await blob.arrayBuffer(), kind: "stored" as const };
-        }
-        const bucket = bucketFor(args.provider);
-        if (!bucket) {
+        const row = await ctx.runQuery(internal.objects.lookup, { key: args.key });
+        const blob = row === null ? null : await ctx.storage.get(row.storageId);
+        if (blob === null) {
             return { kind: "missing" as const };
         }
-        try {
-            const meta = await bucket.head(args.key);
-            if (meta.size > args.maxBytes) {
-                return { kind: "tooLarge" as const };
-            }
-        } catch (error) {
-            if (error instanceof FilesError && error.code === "NotFound") {
-                return { kind: "missing" as const };
-            }
-            throw error;
+        // Checked before reading: an oversized file would also break the 16 MiB return cap.
+        if (blob.size > args.maxBytes) {
+            return { kind: "tooLarge" as const };
         }
-        const file = await bucket.download(args.key);
-        return { bytes: await file.arrayBuffer(), kind: "stored" as const };
+        return { bytes: await blob.arrayBuffer(), kind: "stored" as const };
     },
 });
 
