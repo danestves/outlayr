@@ -64,20 +64,23 @@ const refresh = FunctionImpl.make(
         const properties = yield* fetchReach(posthogConfig, revenueCatConfig, syncedAt, now).pipe(
             Effect.provide(outboundHttp)
         );
-        if (Object.keys(properties).length > 0) {
-            yield* capturePostHogEvent(
-                {
-                    distinct_id: "outlayr-backend",
-                    event: "reach_snapshot",
-                    properties: { ...properties, $process_person_profile: false },
-                },
-                REACH_CAPTURE_TIMEOUT
-            ).pipe(
-                Effect.tapError((error) => Console.error("Reach snapshot capture failed", error)),
-                Effect.ignore,
-                Effect.provide(outboundHttp)
-            );
-        }
+        yield* capturePostHogEvent(
+            {
+                distinct_id: "outlayr-backend",
+                event: "reach_snapshot",
+                properties: { ...properties, $process_person_profile: false },
+            },
+            REACH_CAPTURE_TIMEOUT
+        ).pipe(
+            Effect.flatMap((response) =>
+                Option.isSome(response) && (response.value.status < 200 || response.value.status >= 300)
+                    ? Console.error(`Reach snapshot capture failed with HTTP ${response.value.status}`)
+                    : Effect.void
+            ),
+            Effect.tapError((error) => Console.error("Reach snapshot capture failed", error)),
+            Effect.ignore,
+            Effect.provide(outboundHttp)
+        );
         return null;
     }, Effect.orDie)
 );
