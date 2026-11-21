@@ -105,14 +105,7 @@ export function TagDonut({ of, onSelect, parts, tagged }: DonutProps) {
     });
     return (
         <Card panelClassName="px-5 pt-1.5 pb-4" title={cards.taggedSpend}>
-            <svg
-                aria-label={cards.taggedSpend.value}
-                className="block"
-                height={DONUT}
-                // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- an img element cannot hold the drawn chart, so the container is named by role.
-                role="img"
-                width={DONUT}
-            >
+            <svg aria-label={cards.taggedSpend.value} className="block" height={DONUT} role="img" width={DONUT}>
                 {arcs.map(({ from, part, to }) => (
                     <path
                         aria-label={part.name}
@@ -190,14 +183,7 @@ export function TagWeeks({ color, compact, label, rangeOf, weeks, whole }: TagWe
     return (
         <div className="w-full" ref={ref} style={{ height: WEEK_HEIGHT }}>
             {width > 0 ? (
-                <svg
-                    aria-label={label}
-                    className="block"
-                    height={WEEK_HEIGHT}
-                    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- an img element cannot hold the drawn chart, so the container is named by role.
-                    role="img"
-                    width={width}
-                >
+                <svg aria-label={label} className="block" height={WEEK_HEIGHT} role="img" width={width}>
                     {axis.ticks.map((tick) => (
                         <g key={tick}>
                             <path d={`M${WEEK_GUTTER} ${yOf(tick)}H${width}`} stroke="var(--color-border)" />
@@ -284,13 +270,7 @@ export function CompareChart({ baseLabel, compact, whole, currentLabel, format, 
     return (
         <div className="relative w-full" ref={ref} style={{ height: COMPARE_HEIGHT }}>
             {width > 0 ? (
-                <svg
-                    aria-label={`${baseLabel} / ${currentLabel}`}
-                    height={COMPARE_HEIGHT}
-                    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- an img element cannot hold the drawn chart, so the container is named by role.
-                    role="img"
-                    width={width}
-                >
+                <svg aria-label={`${baseLabel} / ${currentLabel}`} height={COMPARE_HEIGHT} role="img" width={width}>
                     {axis.ticks.map((tick) => (
                         <g key={tick}>
                             <path

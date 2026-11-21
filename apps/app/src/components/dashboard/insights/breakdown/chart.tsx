@@ -97,14 +97,7 @@ export function StackedChart({ aspect, format, label, labelOf, renderTip, slots,
     return (
         <div className="relative w-full" ref={ref} style={{ height }}>
             {width > 0 ? (
-                <svg
-                    aria-label={label}
-                    className="block"
-                    height={height}
-                    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- an img element cannot hold the drawn chart, so the container is named by role.
-                    role="img"
-                    width={width}
-                >
+                <svg aria-label={label} className="block" height={height} role="img" width={width}>
                     {tickValues.map((tick) => (
                         <g key={tick}>
                             <path d={`M${GUTTER} ${yAt(scale, tick)}H${width}`} stroke="var(--color-border)" />

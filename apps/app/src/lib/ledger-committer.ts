@@ -234,12 +234,17 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
             return { status: "undone" };
         };
 
-        const run = () => {
+        const run = async () => {
             if (!allowed) {
                 return push();
             }
             sendingKeys.add(key);
-            return allowed.then(push, giveUp);
+            try {
+                await allowed;
+            } catch {
+                return giveUp();
+            }
+            return push();
         };
 
         const leaveHold = () => {

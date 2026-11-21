@@ -51,7 +51,9 @@ export function Replica({ children }: { children: (replicas: Replicas, locale: L
         const held = island?.firstChild ? 1 : 0;
         kept += held;
         if (held === 0) {
-            void load().then(() => setLive(true), reloadOnce);
+            void load()
+                .then(() => setLive(true))
+                .catch(reloadOnce);
         }
         return () => {
             kept -= held;

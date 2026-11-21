@@ -193,7 +193,7 @@ export function useCategoryForm(props: CategoryEditorProps, nameField: NameField
         if (changed && mode === "create" && parentId == null && !income && expenseCount >= MAX_EXPENSE_CATEGORIES) {
             router.back();
         }
-    }, [expenseCount, mode, parentId, income, router]);
+    }, [expenseCount, mode, parentId, income, router, seenExpenseCount]);
 
     const nextColor = firstAvailableColor(usedColors);
     const autoColor = categoryColorFollowsSiblings(mode, parentId, colorTouched);

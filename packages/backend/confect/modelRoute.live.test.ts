@@ -333,11 +333,7 @@ const PLACE = {
     VE: { currency: "VES", locale: "es-VE", regionCode: "VE" },
 } as const;
 
-const fold = (text: string) =>
-    text
-        .normalize("NFD")
-        .replaceAll(/[̀-ͯ']/g, "")
-        .toLowerCase();
+const fold = (text: string) => text.normalize("NFD").replaceAll(/[̀-ͯ']/g, "").toLowerCase();
 
 interface Usage {
     inputTokens: number;

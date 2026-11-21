@@ -82,7 +82,9 @@ function CopyableCode({ code }: { code: string }) {
                 aria-live="polite"
                 className="fluid bg-surface hover:bg-foreground/5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold active:scale-[0.98]"
                 onClick={() =>
-                    navigator.clipboard ? navigator.clipboard.writeText(code).then(onCopied, selectCode) : selectCode()
+                    navigator.clipboard
+                        ? navigator.clipboard.writeText(code).then(onCopied).catch(selectCode)
+                        : selectCode()
                 }
                 type="button"
             >
