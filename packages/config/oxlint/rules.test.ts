@@ -2,60 +2,70 @@ import { describe, expect, it } from "vite-plus/test";
 
 import { lint } from "./test-harness";
 
-const component = (effects: number) => `import React, { useEffect } from "react";
-export function Panel() {
-${Array.from({ length: effects }, (_, index) => (index % 2 === 0 ? "    useEffect(() => {}, []);" : "    React.useLayoutEffect(() => {});")).join("\n")}
-    return null;
-}
-`;
-
-const budget = (filename: string, source: string) => lint("react-effect-budget", filename, source);
 const messages = (diagnostics: { message: string }[]) => diagnostics.map(({ message }) => message);
 
-describe("react-effect-budget", () => {
-    it("gives a file without an entry a budget of 0 and counts member calls", () => {
-        const reported = messages(
-            budget(
-                "apps/site/src/NotInTheBudget.tsx",
-                "export const New = () => { React.useEffect(() => {}); return null; };"
-            )
-        );
-        expect(reported).toHaveLength(1);
-        expect(reported[0]).toContain("has 1 React effect against a budget of 0");
+describe("no-react-effects", () => {
+    const effects = (source: string) => messages(lint("no-react-effects", "apps/site/src/Panel.tsx", source));
+
+    it.each([
+        ["a named import", 'import { useEffect } from "react";'],
+        ["an aliased import", 'import { useLayoutEffect as useBeforePaint } from "react";'],
+        ["an effect event", 'import { useEffectEvent } from "react";'],
+        ["a namespace call", 'import * as React from "react";\nReact.useInsertionEffect(() => {});'],
+        ["a computed member with a string key", 'import * as React from "react";\nReact["useEffect"](() => {});'],
+        [
+            "a computed member with a template key",
+            'import * as React from "react";\nReact[`useLayoutEffect`](() => {});',
+        ],
+        ["a destructured hook", 'import * as React from "react";\nconst { useEffect } = React;'],
+        ["an aliased destructured hook", 'import * as React from "react";\nconst { useLayoutEffect: later } = React;'],
+        ["a re-export", 'export { useEffect } from "react";'],
+        ["an aliased re-export", 'export { useEffect as u } from "react";'],
+    ])("reports %s", (_, source) => {
+        expect(effects(source)).toHaveLength(1);
     });
 
-    it("ignores comments, strings and lookalike names", () => {
+    it("ignores comments, strings, other modules and lookalike names", () => {
         const source = `// useEffect(() => {}) in a comment
-/* React.useLayoutEffect(() => {}) */
-export const label = "useEffect(() => {})";
+import { useEffect } from "./lifecycle-shim";
+export const label = "React.useEffect(() => {})";
 export const pipeline = Effect.matchCauseEffect(effect, {});
-export const alias = useEffect;
 `;
-        expect(budget("apps/site/src/Lookalikes.tsx", source)).toStrictEqual([]);
+        expect(effects(source)).toStrictEqual([]);
     });
 
-    it("does not count an effect that states its reason, and uses its directive", () => {
-        const source = `export function New() {
-    // oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to the window's resize events
-    React.useEffect(() => {});
-    return null;
-}
+    it("ignores dynamic keys, non-hook destructuring and re-exports from other modules", () => {
+        const source = `import * as React from "react";
+const key = "useEffect";
+React[key]();
+React[\`use\${key}\`]();
+const { useMemo } = React;
+export { useEffect } from "./lifecycle-shim";
 `;
-        expect(budget("apps/site/src/New.tsx", source)).toStrictEqual([]);
+        expect(effects(source)).toStrictEqual([]);
+    });
+});
+
+describe("locked-rules", () => {
+    const locked = (source: string) =>
+        lint("locked-rules", "apps/site/src/Panel.tsx", source, { rules: ["outlayr/no-react-effects"] }).filter(
+            ({ code }) => code?.includes("locked-rules")
+        );
+
+    it.each([
+        [
+            "a next-line directive with a reason",
+            "// oxlint-disable-next-line no-bitwise, outlayr/no-react-effects -- why",
+        ],
+        ["a file directive", "/* eslint-disable outlayr/no-react-effects */"],
+    ])("reports %s", (_, directive) => {
+        expect(locked(`${directive}\nexport const value = 1 | 2;\n`)).toHaveLength(1);
     });
 
-    it("still counts an effect whose line above is not a reasoned directive", () => {
-        const source = `export function New() {
-    // subscribes to the window's resize events
-    React.useEffect(() => {});
-    return null;
-}
-`;
-        expect(budget("apps/site/src/New.tsx", source)).toHaveLength(1);
-    });
-
-    it("skips test files", () => {
-        expect(budget("apps/site/src/Panel.test.tsx", component(3))).toStrictEqual([]);
+    it("leaves directives for other rules alone", () => {
+        expect(
+            locked("// oxlint-disable-next-line no-bitwise -- packs flags\nexport const value = 1 | 2;\n")
+        ).toStrictEqual([]);
     });
 });
 

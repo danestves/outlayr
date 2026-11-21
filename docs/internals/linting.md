@@ -185,6 +185,8 @@ oxlint's compiler rules are a port and do not see every bailout: `try`/`finally`
 | `editor-cta-busy` | Every `<EditorCta>` passes `busy`, so a save spins rather than only dimming. |
 | `no-slop-comments` | On for every file. A comment block (consecutive `//` lines count as one) has at most three lines, no line past column 120 unless it holds a URL, and no em dash. Lint and TypeScript directives are exempt from the length limits. Longer reasoning goes in the commit message or here. |
 | `no-low-value-comments` | On for every file. Rejects a comment that only repeats the name below it, a section divider, a test step label (`// arrange`), a `TODO`/`FIXME` with no issue link, a JSDoc type in TypeScript, an empty `@param`/`@returns`, and commented-out code. Ported from t3code, MIT: the rule and its `LICENSE` live in `packages/config/oxlint/t3code/`. |
+| `no-react-effects` | `apps/native/src`, `apps/app/src`, `apps/site/src`, `packages/*/src`, tests skipped: no `useEffect`, `useLayoutEffect`, `useInsertionEffect` or `useEffectEvent` imported from `react` or called on its namespace. Only the two `lifecycle.ts` files are exempt. See [React effects](./react-effects.md). |
+| `locked-rules` | The same paths: a disable directive that names a locked rule fails, so the rule has no escape hatch. Locked today: `no-react-effects`, `no-manual-memo` and `locked-rules` itself. A directive naming no rule silences every check, this one included; only generated files carry one. |
 | `no-test-timeout-or-retry` | On in test files instead: no timeout argument on a test or hook, no `{ timeout }` or `{ retry }` options, no `vi.setConfig` override. A test that needs more time is waiting on something it should await. `*.live.test.ts` model probes are exempt. |
 | `no-manual-memo` | `apps/native/src`: no `useMemo`, `useCallback`, `memo` or memo directive (`"use memo"`, `"use no memo"`, `"use no forget"`). The compiler memoizes, and a directive hides a bailout from the coverage test. Ratcheted by `MANUAL_MEMO_FILES`, see "Rules we scoped". |
 | `no-hookless-use-function` | `apps/native/src`: a `use*` function must call a hook. The compiler only compiles functions that do, so a hookless one rebuilds what it returns on every render. Rename it, as `unconfiguredSession` in `lib/auth-client.ts` was. |
@@ -193,7 +195,6 @@ oxlint's compiler rules are a port and do not see every bailout: `try`/`finally`
 | `prefer-catch-tags` | Every file: `Effect.catchTags({ Tag: handler })` rather than `Effect.catchTag`, even for one tag. |
 | `no-inline-schema-compile` | Every file: no `Schema.decodeUnknownSync(S)(input)` and friends inside a function, which compiles the decoder on every call. Hoist the compiled function to module scope. |
 | `require-suppression-reason` | Every file: an `oxlint-disable`, `eslint-disable`, `@ts-expect-error`, `@ts-ignore` or `@effect-diagnostics` directive ends with `-- reason` or sits under a comment that gives one. |
-| `react-effect-budget` | `apps/native/src`, `apps/app/src`, `apps/site/src`, `packages/*/src`, tests skipped: a file holds at most as many `useEffect`, `useLayoutEffect` and `useInsertionEffect` calls as `scripts/effect-budget.json` gives it, and a file without an entry gets none. See "React effect budget". |
 | `no-em-dash-copy` | The same paths: no em dash in a string, template or JSX text. Comments are `no-slop-comments`' job. A "no value" placeholder is an en dash. |
 | `no-misread-copy` | The same paths: a translation under a locale key (`es`, `"es-ES"`) avoids words its readers take for something else, such as `oración` (also "prayer"). Add a word to `MISREAD_WORDS` in `plugin.mjs` with the reading and the word to use. |
 | `no-test-in-loop` | Test files: no `it` or `describe` declared inside a `for` loop; write `it.each(cases)(name, fn)`. A loop inside a test body is fine. |
@@ -206,22 +207,11 @@ The rows from `no-manual-memo` down are ported under the MIT License; the upstre
 - `no-manual-memo` is not on in `apps/site`: without the compiler there, nothing replaces the memoization it would remove. The site has no `useMemo`, `useCallback` or `memo` today.
 - The rest of that plugin duplicates `no-low-value-comments` and `no-test-timeout-or-retry`, or polices another product's components, RPC layer, browser tests and styling.
 
-The budget, em dash, `no-test-in-loop` and `no-polling-loop-in-tests` rules have tests in `packages/config/oxlint/rules.test.ts`, which lint a fixture through the real oxlint binary: `vp test run` in `packages/config`. The reason for each lives in the plugin, as a comment above the rule or in its message. To prove a rule still fires, break the invariant in a shipped file and run `vp check`; every rule was verified that way when it landed.
+The `no-react-effects`, `locked-rules`, em dash, `no-test-in-loop` and `no-polling-loop-in-tests` rules have tests in `packages/config/oxlint/rules.test.ts`, which lint a fixture through the real oxlint binary: `vp test run` in `packages/config`. The reason for each lives in the plugin, as a comment above the rule or in its message. To prove a rule still fires, break the invariant in a shipped file and run `vp check`; every rule was verified that way when it landed.
 
-### React effect budget
+### React effects
 
-An effect is for synchronizing with something outside React. A file's count of `useEffect`, `useLayoutEffect` and `useInsertionEffect` calls may only go down, so `scripts/effect-budget.json` (repo-relative path to count, sorted, a missing file allows none) is a ratchet: a new effect in a file with no spare budget fails lint, and the message asks whether render or the handler that causes the change can own it.
-
-- **Justify an effect** that is honestly synchronization with an outside system (a native subscription, a worker, a DOM listener) with the reason on the line above it:
-
-  ```ts
-  // oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to the keyboard for the screen's lifetime
-  useEffect(() => { ... }, []);
-  ```
-
-  A justified effect is not counted. The rule still reports it once, so the directive is used and `reportUnusedDisableDirectives` stays satisfied.
-- **Lower a budget** after removing effects: run `node scripts/effect-budget.mjs`, which prints every file whose real count is below its budget, then `node scripts/effect-budget.mjs --write` to rewrite the file with the real counts. Never raise one by hand.
-- Replacements: see [React effects](./react-effects.md). The two `lifecycle.ts` files that hold the named hooks are the only budget entries.
+Product code never calls an effect hook; [React effects](./react-effects.md) has the replacements and the named hooks. `no-react-effects` bans the raw hooks and `locked-rules` rejects a directive that would waive the ban, so a new effect is a change to `lifecycle.ts`, reviewed as one. A blanket directive names every rule and so silences the lock with them; `scripts/no-blanket-disable.mjs` rejects one in CI because no lint rule can see it.
 
 ### Unused directives
 
