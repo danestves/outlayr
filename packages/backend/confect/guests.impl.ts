@@ -15,12 +15,14 @@ import { purgeUserBatch } from "./lib/account";
 import { convexSiteUrl } from "./lib/config";
 import { GUEST_BUCKET_REFILL_MS, guestLimiter } from "./lib/guestLimits";
 import { outboundHttp } from "./lib/http";
-import { erasePostHogPerson } from "./lib/posthog";
+import { BACKEND_DISTINCT_ID, capturePostHogEvent, erasePostHogPerson } from "./lib/posthog";
 import { eraseUpstreamCustomer, revenuecat } from "./revenuecat";
 
-const RETIRE_ATTEMPTS = 20;
+const BACKOFF_ATTEMPTS = 20;
 const RETIRE_MAX_DELAY_MINUTES = 360;
+const STUCK_RETRY_DELAY = Duration.days(1);
 const FINAL_SWEEP_DELAY = Duration.hours(3);
+const STUCK_CAPTURE_TIMEOUT = Duration.seconds(10);
 
 // An unconfigured deployment has nothing upstream to erase, so only a real failure is retried.
 const settled = (label: string) => (error: { readonly reason: string }) =>
@@ -52,21 +54,39 @@ const retire = FunctionImpl.make(
         if (customer && analytics) {
             // A TRANSFER webhook sent just before the delete landed can arrive later, through RevenueCat's retries too.
             yield* scheduler.runAfter(FINAL_SWEEP_DELAY, refs.internal.guests.forget, { guestId });
-        } else if (attempt + 1 < RETIRE_ATTEMPTS) {
-            yield* scheduler.runAfter(
-                Duration.minutes(Math.min(2 ** attempt, RETIRE_MAX_DELAY_MINUTES)),
-                refs.internal.guests.retire,
-                {
-                    attempt: attempt + 1,
-                    guestId,
-                }
-            );
         } else {
-            yield* Console.error("[guests] retirement gave up with upstream records left", {
-                analytics,
-                customer,
-                guestId,
-            });
+            const next = attempt + 1;
+            yield* scheduler.runAfter(
+                next < BACKOFF_ATTEMPTS
+                    ? Duration.minutes(Math.min(2 ** attempt, RETIRE_MAX_DELAY_MINUTES))
+                    : STUCK_RETRY_DELAY,
+                refs.internal.guests.retire,
+                { attempt: next, guestId }
+            );
+            if (next === BACKOFF_ATTEMPTS) {
+                yield* Console.error("[guests] retirement still failing, retrying daily", {
+                    analytics,
+                    customer,
+                    guestId,
+                });
+                yield* capturePostHogEvent(
+                    {
+                        distinct_id: BACKEND_DISTINCT_ID,
+                        event: "guest_retirement_stuck",
+                        properties: { $process_person_profile: false, analytics, customer },
+                    },
+                    STUCK_CAPTURE_TIMEOUT
+                ).pipe(
+                    Effect.flatMap((response) =>
+                        Option.isSome(response) && (response.value.status < 200 || response.value.status >= 300)
+                            ? Console.error(`[guests] stuck event failed with HTTP ${response.value.status}`)
+                            : Effect.void
+                    ),
+                    Effect.tapError((error) => Console.error("[guests] stuck event failed", error)),
+                    Effect.ignore,
+                    Effect.provide(outboundHttp)
+                );
+            }
         }
         return null;
     }, Effect.orDie)

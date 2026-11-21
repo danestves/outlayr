@@ -13,6 +13,8 @@ import { postHogConfig, postHogProjectToken } from "./config";
 const POSTHOG_TIMEOUT = Duration.seconds(10);
 const CAPTURE_URL = "https://us.i.posthog.com/i/v0/e/";
 
+export const BACKEND_DISTINCT_ID = "outlayr-backend";
+
 export const capturePostHogEvent = Effect.fn("PostHog.capture")(function* capturePostHogEvent(
     event: { distinct_id: string; event: string; properties: object },
     timeout: Duration.Input
