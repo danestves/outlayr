@@ -19,7 +19,7 @@ import { api, internal } from "../convex/_generated/api";
 import type { Doc } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
 import { resolveJob } from "./enrichmentQueue";
-import { authenticatedAs, seedAuthUser, seedProUser } from "./test.helpers";
+import { authenticatedAs, grantPro, seedAuthUser, seedProUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");
 
@@ -97,6 +97,16 @@ describe("enqueue", () => {
 
         await expect(asUser.mutation(api.enrichmentQueue.enqueue, oldBuild)).resolves.toBeFalsy();
         await expect(t.run((ctx) => ctx.db.query("enrichmentJobs").collect())).resolves.toHaveLength(0);
+    });
+
+    it("queues a guest's job only once it holds Pro", async () => {
+        const t = setup();
+        const seeded = await seedAuthUser(t, { guest: true });
+        const asGuest = authenticatedAs(t, seeded);
+
+        await expect(asGuest.mutation(api.enrichmentQueue.enqueue, ENQUEUE_ARGS)).resolves.toBeFalsy();
+        await grantPro(t, seeded);
+        await expect(asGuest.mutation(api.enrichmentQueue.enqueue, ENQUEUE_ARGS)).resolves.toBeTruthy();
     });
 
     it("refuses a caller with no session", async () => {

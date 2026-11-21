@@ -2,6 +2,7 @@ import { expoClient, getCookie, storageAdapter } from "@better-auth/expo/client"
 import type { ExpoClientStorage } from "@better-auth/expo/client";
 import { convexClient } from "@convex-dev/better-auth/client/plugins";
 import type { BetterAuthClientPlugin } from "better-auth/client";
+import type { anonymous } from "better-auth/plugins/anonymous";
 import type { emailOTP } from "better-auth/plugins/email-otp";
 import { createAuthClient } from "better-auth/react";
 import { ConvexReactClient } from "convex/react";
@@ -21,6 +22,14 @@ const emailCodes = {
     $InferServerPlugin: {} as ReturnType<typeof emailOTP>,
     atomListeners: [{ matcher: (path) => path === "/email-otp/verify-email", signal: "$sessionSignal" }],
     id: "email-otp",
+} satisfies BetterAuthClientPlugin;
+
+const guests = {
+    // SAFETY: a type carrier, as above.
+    $InferServerPlugin: {} as ReturnType<typeof anonymous>,
+    atomListeners: [{ matcher: (path) => path === "/sign-in/anonymous", signal: "$sessionSignal" }],
+    id: "anonymous",
+    pathMethods: { "/sign-in/anonymous": "POST" },
 } satisfies BetterAuthClientPlugin;
 
 const keychainStorage = {
@@ -68,6 +77,7 @@ function createCloudRuntime() {
             plugins: [
                 convexClient(),
                 emailCodes,
+                guests,
                 expoClient({
                     scheme,
                     storage: keychainStorage,

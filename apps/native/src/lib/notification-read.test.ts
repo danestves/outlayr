@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vite-plus/test";
 import { Meta } from "@/data/app-meta-core";
 import { migratedDatabase } from "@/db/test-database";
 
-import { setCloudAuthenticated } from "./convex";
+import { setCloudSession } from "./convex";
 import { readNotifications } from "./notification-read";
 import type { PendingWrite } from "./queue-file";
 
@@ -27,11 +27,11 @@ const push = (id: string, text: string): PendingWrite => ({
 
 beforeEach(() => {
     sent.mockResolvedValue({ read: null, status: "ok" });
-    setCloudAuthenticated(true);
+    setCloudSession("account");
 });
 
 afterEach(() => {
-    setCloudAuthenticated(false);
+    setCloudSession(null);
     sent.mockReset();
 });
 

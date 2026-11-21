@@ -1,8 +1,11 @@
 import { RateLimiter } from "@convex-dev/rate-limiter";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import { components } from "../convex/_generated/api";
+import refs from "./_generated/refs";
+import { MutationCtx, Scheduler } from "./_generated/services";
 import type accountDeletionJobs from "./_generated/tables/accountDeletionJobs";
 import { sha256Hex } from "./lib/sha256Hex";
 
@@ -127,3 +130,20 @@ export function publicStatus(job: Pick<DeletionJob, "errorCode" | "phase">) {
 export const DELETION_JOBS_PER_USER = 20;
 
 export const CLEANUP_BATCH = 200;
+
+export const forgetUsage = Effect.fn("AccountDeletion.forgetUsage")(function* forgetUsage(
+    userId: string,
+    tokenIdentifier: string | undefined
+) {
+    const ctx = yield* MutationCtx;
+    yield* Effect.promise(() => usage.reset(ctx, "enrichmentQueue", { key: userId }));
+    if (tokenIdentifier === undefined) {
+        return;
+    }
+    // Component mutations inside a mutation run one at a time.
+    for (const name of USAGE_BY_TOKEN) {
+        yield* Effect.promise(() => usage.reset(ctx, name, { key: tokenIdentifier }));
+    }
+    const scheduler = yield* Scheduler;
+    yield* scheduler.runAfter(Duration.zero, refs.internal.voiceEntry.forgetUser, { userId: tokenIdentifier });
+});

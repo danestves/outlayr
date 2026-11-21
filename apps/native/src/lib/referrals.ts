@@ -7,13 +7,7 @@ import { Meta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
 import type { TranslationKey } from "@/i18n/catalog";
 import { translateNow } from "@/i18n/runtime";
-import {
-    cloudAction,
-    cloudMutation,
-    cloudQuery,
-    isCloudAuthenticated,
-    subscribeCloudAuthenticated,
-} from "@/lib/convex";
+import { cloudAction, cloudMutation, cloudQuery, isCloudAccount, subscribeCloudAuthenticated } from "@/lib/convex";
 import { notifyFailure, notifyGift } from "@/lib/notify";
 import { reloadProEntitlement } from "@/lib/revenuecat";
 import { createCommand } from "@/state/atom-command";
@@ -97,7 +91,7 @@ function claimInBackground(code: string): void {
 export function claimOnceSignedIn(code: string): void {
     cancelPendingClaim();
     const unsubscribe = subscribeCloudAuthenticated(() => {
-        if (!isCloudAuthenticated()) {
+        if (!isCloudAccount()) {
             return;
         }
         unsubscribe();

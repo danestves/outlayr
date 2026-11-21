@@ -11,7 +11,7 @@ import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationCtx, MutationRunner, QueryRunner } from "./_generated/services";
 import spec, { MAX_ID_LENGTH, MAX_KEY_LENGTH, MIN_KEY_LENGTH } from "./captureLookup.spec";
 import { CAPTURE_PUSH_EFFECTIVE_AT_MS } from "./legal";
-import { requireUserId } from "./lib/auth";
+import { requireBillingId } from "./lib/auth";
 import { capturePushRequest, DEVICE_TOKEN, isDeadToken, PUSH_SECRET, rejectionReason } from "./lib/capturePush";
 import { apnsConfig } from "./lib/config";
 import { dieAsConvexError } from "./lib/convexError";
@@ -40,7 +40,7 @@ const register = FunctionImpl.make(
     Effect.fn("CaptureLookup.register")(
         function* register(args) {
             const ctx = yield* MutationCtx;
-            const userId = yield* requireUserId(ctx);
+            const userId = yield* requireBillingId(ctx);
             const tooShort = args.key.length < MIN_KEY_LENGTH;
             if (tooShort || args.key.length > MAX_KEY_LENGTH || args.deviceId.length > MAX_ID_LENGTH) {
                 return false;
@@ -66,7 +66,7 @@ const revoke = FunctionImpl.make(
     Effect.fn("CaptureLookup.revoke")(
         function* revoke(args) {
             const ctx = yield* MutationCtx;
-            const userId = yield* requireUserId(ctx);
+            const userId = yield* requireBillingId(ctx);
             const existing = yield* deviceKey(userId, args.deviceId);
             if (existing !== null) {
                 const writer = yield* DatabaseWriter;
@@ -130,7 +130,7 @@ const setPush = FunctionImpl.make(
     Effect.fn("CaptureLookup.setPush")(
         function* setPush({ deviceId, ...push }) {
             const ctx = yield* MutationCtx;
-            const userId = yield* requireUserId(ctx);
+            const userId = yield* requireBillingId(ctx);
             const valid = PUSH_SECRET.test(push.secret) && DEVICE_TOKEN.test(push.token);
             const existing = valid && Option.isSome(yield* pushLive()) ? yield* deviceKey(userId, deviceId) : null;
             if (existing === null) {

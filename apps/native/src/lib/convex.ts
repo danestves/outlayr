@@ -16,21 +16,28 @@ import { posthog } from "./posthog";
 
 export const convex = cloudRuntime?.convex ?? null;
 
-let authenticated = false;
+type CloudSession = "account" | "guest";
+
+let cloudSession: CloudSession | null = null;
 const authListeners = new Set<() => void>();
 
-export function setCloudAuthenticated(next: boolean): void {
-    if (next === authenticated) {
+export function setCloudSession(next: CloudSession | null): void {
+    if (next === cloudSession) {
         return;
     }
-    authenticated = next;
+    cloudSession = next;
     for (const listener of authListeners) {
         listener();
     }
 }
 
+/** Whether calls carry a token: an account's, or the guest's that holds a purchase. */
 export function isCloudAuthenticated(): boolean {
-    return authenticated;
+    return cloudSession !== null;
+}
+
+export function isCloudAccount(): boolean {
+    return cloudSession === "account";
 }
 
 export function subscribeCloudAuthenticated(listener: () => void): () => void {
@@ -39,6 +46,18 @@ export function subscribeCloudAuthenticated(listener: () => void): () => void {
         authListeners.delete(listener);
     };
 }
+
+export const awaitCloudSession = Effect.callback<undefined>((resume) => {
+    const unsubscribe = subscribeCloudAuthenticated(() => {
+        if (isCloudAuthenticated()) {
+            resume(Effect.undefined);
+        }
+    });
+    if (isCloudAuthenticated()) {
+        resume(Effect.undefined);
+    }
+    return Effect.sync(unsubscribe);
+});
 
 export function useCloudAuthenticated(): boolean {
     return useSyncExternalStore(subscribeCloudAuthenticated, isCloudAuthenticated, isCloudAuthenticated);
@@ -129,7 +148,7 @@ export type EnrichmentFn = (args: EnrichmentRequest) => Effect.Effect<RemoteEnri
 const decodeSuggestion = Schema.decodeUnknownEffect(Suggestion);
 
 export function merchantWebsiteTransport() {
-    if (!authenticated) {
+    if (cloudSession === null) {
         return null;
     }
     const { submitWebsite } = api.enrichment;
@@ -145,7 +164,7 @@ export function merchantWebsiteTransport() {
 
 /** Names only: `packages/backend/confect/enrichment.test.ts` asserts the action's validator against this field set. */
 export function enrichmentTransport(): EnrichmentFn | null {
-    if (!authenticated) {
+    if (cloudSession === null) {
         return null;
     }
     const { suggest } = api.enrichment;

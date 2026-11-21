@@ -6,8 +6,8 @@ intro: "This policy explains what Outlayr collects, where it goes, how long it s
 
 ## The short version
 
-- Your ledger is stored on your device. You can use Outlayr without an account, and then your entries, amounts, and notes never leave the phone.
-- An account (Sign in with Apple, Google, or an email and password) turns on merchant suggestions, notification reading, voice entry, receipt scans, and installment plan imports. With Outlayr Pro it also turns on sync, which keeps a copy of your ledger and photos on our servers until you delete your account.
+- Your ledger is stored on your device. You can use Outlayr without an account, and then your entries, amounts, and notes never leave the phone, unless you buy Outlayr Pro and use the features below.
+- An account (Sign in with Apple, Google, or an email and password) turns on merchant suggestions, notification reading, voice entry, receipt scans, and installment plan imports. With Outlayr Pro it also turns on sync, which keeps a copy of your ledger and photos on our servers until you delete your account. Outlayr Pro bought without an account turns on the same features apart from sync.
 - With an account, we email you a welcome note, a note when Pro starts, a reminder before a free trial you started on the web ends, and notice before a material change to this policy or our Terms. No newsletters or marketing.
 - Voice entries, receipt scans, installment plan imports, PDF bank statements you choose to import, merchant suggestions, and bank notifications that show an amount are processed by Anthropic, and ElevenLabs turns voice recordings into text. We don’t store your recordings, scanned photos, screenshots, or notifications, and, apart from whatever a statement you import shows, we never send either company your name, email, or account ID.
 - Nothing goes to Anthropic or ElevenLabs until you allow it. The app asks during setup, or after you sign in, and Speak an entry and Scan a receipt ask again until you do. Import from a screenshot, for installment plans, asks the first time you use it, even if you allowed the others. Withdraw it any time in **Settings › Send data to AI providers**. Once allowed, merchant suggestions, notification reading, and web lookups are on, and all three can be turned off in **Settings › Smart fill**. Turning Smart fill on also allows sending data to AI providers.
@@ -38,6 +38,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Email address, 6-digit code | Email sign-in | Our servers, Cloudflare | Code: 10 minutes. Email: Cloudflare’s policy |
 | Email address, app language, which of our emails you got | Account emails | Our servers, Cloudflare | Until account deletion. Email: Cloudflare’s policy |
 | Sessions, IP address, device type | Sign-in | Our servers | Until sign-out or account deletion |
+| Anonymous account ID, sessions, IP address, device type, purchase records | Buying or restoring Pro without an account | Our servers, RevenueCat | Until you sign in, or ask us to delete it |
 | Merchant and category names | Smart fill | Our servers, Anthropic | Until answered |
 | iPhone push address, an encryption key | Smart fill with the Apple Pay automation | Our servers, Apple’s push service | Until you turn Smart fill off, sign out, or delete your account |
 | Title and text of a notification that shows an amount | Logging from notifications, with Smart fill | Our servers, Anthropic | Not kept |
@@ -69,7 +70,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 
 Outlayr keeps your ledger in a database inside the app on your device: your entries (amount, currency, date, merchant or note, category, tags, account, repeat schedule, and any photos), accounts and their balances, transfers, budgets, savings goals, categories, tags, and settings. Entries you delete wait in **Recently deleted** on the phone, where you can restore them.
 
-You don’t need an account to use Outlayr. Without one, none of your ledger is sent to us.
+You don’t need an account to use Outlayr. Without one, none of your ledger is sent to us, unless you buy Outlayr Pro and use its AI features.
 
 ### Features that stay on your device
 
@@ -84,7 +85,7 @@ You don’t need an account to use Outlayr. Without one, none of your ledger is 
 - **Exchange rates.** The app downloads market rates from our server. The request needs no account and carries no ledger data. Our server reads the rates from Open Exchange Rates, CotizaVE, and Binance, which receive nothing about you.
 - **Logos.** To show a logo for a merchant or bank, the app asks our logo server for it by web address (for example, netflix.com). It never includes amounts, notes, or who you are. If we don’t have that logo yet, our server looks it up on Google’s and DuckDuckGo’s icon services, the merchant’s own website, and Wikidata, and keeps a copy for everyone. Those services see the web address and our server, not you. Logos are then cached on the phone.
 - **App updates.** When the app starts, it asks Expo, the platform we use to ship updates, whether a newer version of the app’s code is available. The request includes a random ID created for this install (not linked to your account), the app version, and your IP address. If an update failed to start last time, it also includes a short error message.
-- **Purchase status.** The app checks with RevenueCat whether you have Outlayr Pro, using a random anonymous ID until you sign in, and your account ID, name, and email after. See [Outlayr Pro](#outlayr-pro).
+- **Purchase status.** The app checks with RevenueCat whether you have Outlayr Pro, using a random anonymous ID until you sign in, and your account ID, name, and email after. If you buy or restore Pro signed out, the app creates an anonymous account on our servers first, and RevenueCat uses its ID. See [Outlayr Pro](#outlayr-pro).
 - **Analytics and crash reports.** The app tells PostHog, the analytics service we use, when it is installed, updated, opened, or closed, which kind of screen you open (for example, an account’s screen, never which account), and when you save an entry, transfer, account, category, or budget, share a card, import or export data, change a setting, open Outlayr Pro, or open the app from a widget, shortcut, or link. If you answer the question after your first entry, it also sends where you heard about Outlayr, and the few words you type if you pick Something else. These events carry details such as expense or income, whether an entry came from a scan or your voice, whether it was new or an edit, which setting changed and whether it is now on, and how many rows an import brought in, rounded to a range such as 10 to 99. If the app hits an error, it sends the error message and where in the code it happened. Each event carries a random ID created for this install, the app version, your device model, operating system, language, time zone, and screen size. It never includes amounts, merchants, notes, account or category names, or your email. PostHog discards your IP address. Once you sign in, these events are linked to your Outlayr account ID. If your device’s region is set to a country in the EEA or UK, **Settings › Share analytics** starts off and none of this is sent until you turn it on. Turning it off stops all of it on that device.
 
 ## Your account
@@ -253,6 +254,8 @@ On the web, payments go through Stripe, and its Link service is the seller. When
 
 RevenueCat manages subscription status for us. When the app opens, RevenueCat’s software checks whether you have Pro. Before you sign in it uses a random anonymous ID. After you sign in it uses your Outlayr account ID, and the app also sends your name and email so we can find your purchases when you write to us. RevenueCat receives your app store purchase and subscription records and basic technical details, such as the app and operating system versions.
 
+If you buy or restore Pro without an account, the app first creates an anonymous account on our servers: a random ID with no name or email, and a session that can record your IP address and your device’s user agent. RevenueCat uses that ID, and with Pro the anonymous account also opens the AI features described above, which send the same data they do for an account. When you sign in, the purchase moves to your Outlayr account, and we delete the anonymous account, our copy of its subscription records, RevenueCat’s record of it, and any analytics linked to it. If you never sign in, we keep it so your purchase keeps working, until you ask us to delete it.
+
 Our server asks RevenueCat about your account ID to confirm Pro, and RevenueCat tells our server when your subscription changes. We keep a copy of your subscription records, such as the product, dates, price, and store country, and delete it with your account.
 
 ## Invites
@@ -349,6 +352,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Your app language and the record of which welcome, Pro, and change notices you got are deleted with your account.
 - Usage counters that enforce limits on scans, voice entries, suggestions, and notification reading hold counts only, keyed to your account ID, and are deleted with your account.
 - Invite records (your code, who invited whom, first names, whether the friend bought Pro, and months earned or waiting) are deleted with the account they belong to. An invite that earned a month loses the friend’s name when the friend’s account is deleted, and stays until the inviter’s account is deleted.
+- An anonymous account created when you buy or restore Pro signed out is deleted when you sign in, with everything linked to it. If you never sign in, it stays so the purchase keeps working, until you ask us to delete it.
 - Items in the shared merchant list aren’t linked to anyone. They’re refreshed after 30 or 90 days.
 - Analytics events linked to your account are deleted with it. PostHog erases them in a later batch, so they can remain for a while after the app reports the deletion finished. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry a random ID instead of your account ID, plus the conversation ID for voice entry, and are kept the same way, as are AI assistant tool calls, which carry a connection ID instead.
 - Website events carry a random browser ID, or a code that changes daily if you declined cookies, and are kept under PostHog’s retention policy.

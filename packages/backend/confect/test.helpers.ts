@@ -32,6 +32,7 @@ export interface SeededIdentity {
 interface SeedOptions {
     createdAt?: number;
     email?: string;
+    guest?: boolean;
     name?: string;
 }
 
@@ -64,6 +65,7 @@ export async function seedAuthUser(t: AnyTestConvex, options?: SeedOptions): Pro
                     createdAt,
                     email,
                     emailVerified: true,
+                    isAnonymous: options?.guest === true,
                     name,
                     updatedAt: now,
                 },

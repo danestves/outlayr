@@ -38,6 +38,7 @@ import { conversionOf, resolveReceipt, savableReceipt } from "@/domain/receipt-s
 import type { Conversion, ResolvedReceipt } from "@/domain/receipt-scan";
 import { formatRateFigure, pairQuotedInverse, pairUnitSymbols, quotePairRate } from "@/domain/transaction-entry-rate";
 import { stillCurrent } from "@/domain/voice-entry";
+import { useAiGate } from "@/hooks/use-ai-gate";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
 import { useMerchantMark } from "@/hooks/use-merchant-mark";
 import { useProEntitled } from "@/hooks/use-pro-locked";
@@ -48,7 +49,6 @@ import { isLimitRefusal, useLimitNotice } from "@/hooks/use-usage-limits";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
-import { useAuthSession } from "@/lib/auth-session";
 import { persistAttachmentBytes } from "@/lib/photo-storage";
 import { useHaptics } from "@/lib/use-haptics";
 import { openAppSettings, voidFlowCommand } from "@/state/entry-commands";
@@ -708,9 +708,9 @@ function ScanFlowScreen() {
     );
 }
 
-/** Signed-in only: the action authenticates on the Convex client mounted then. Consent precedes the camera. */
+/** An account or a Pro guest: the action authenticates on that session. Consent precedes the camera. */
 export function ReceiptScanScreen() {
-    const { gate } = useAuthSession();
+    const gate = useAiGate();
     const consent = useAiConsent(useDatabase());
     if (gate === "signed-in") {
         return consent === "allowed" ? <ScanFlowScreen /> : <AiConsentGate />;

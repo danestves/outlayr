@@ -9,6 +9,7 @@ import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/a
 import { symmetricDecrypt } from "better-auth/crypto";
 import { betterAuth } from "better-auth/minimal";
 import { emailOTP } from "better-auth/plugins";
+import { anonymous } from "better-auth/plugins/anonymous";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -59,8 +60,9 @@ const emailProblem = Effect.gen(function* emailProblem() {
         : Option.none<string>();
 }).pipe(Effect.catch((error) => Effect.succeed(Option.some(error.message))));
 
-const emailLimiter = new RateLimiter(components.rateLimiter, {
+const authLimiter = new RateLimiter(components.rateLimiter, {
     emailAuth: { capacity: 10, kind: "token bucket", period: HOUR, rate: 10 },
+    guestSignIn: { capacity: 100, kind: "token bucket", period: HOUR, rate: 100 },
 });
 
 const decodeEmailBody = Schema.decodeUnknownOption(
@@ -215,6 +217,23 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                                 new APIError("FORBIDDEN", { message: "Notion is not a sign-in method" })
                             );
                         }
+                        // Only `guests.retire` cleans up a guest, and `disableDeleteAnonymousUser` would also keep a
+                        // linked one.
+                        if (endpoint.path === "/delete-anonymous-user") {
+                            return yield* Effect.fail(
+                                new APIError("FORBIDDEN", { message: "A guest is removed when it signs in" })
+                            );
+                        }
+                        if (endpoint.path === "/sign-in/anonymous") {
+                            const { ok } = yield* Effect.promise(() =>
+                                authLimiter.limit(requireRunMutationCtx(ctx), "guestSignIn")
+                            );
+                            if (!ok) {
+                                return yield* Effect.fail(
+                                    new APIError("TOO_MANY_REQUESTS", { message: "Too many guest sign-ins" })
+                                );
+                            }
+                        }
                         if (EMAIL_SENDING_PATHS.has(endpoint.path) && Option.isSome(emailBlocked)) {
                             yield* Console.error(emailBlocked.value);
                             return yield* Effect.fail(
@@ -226,7 +245,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                             const address = "email" in body.value ? body.value.email : body.value.newEmail;
                             const key = yield* sha256Hex(address.trim().toLowerCase());
                             const { ok } = yield* Effect.promise(() =>
-                                emailLimiter.limit(requireRunMutationCtx(ctx), "emailAuth", { key })
+                                authLimiter.limit(requireRunMutationCtx(ctx), "emailAuth", { key })
                             );
                             if (!ok) {
                                 return yield* Effect.fail(
@@ -280,6 +299,18 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                         })
                     ),
                 storeOTP: "hashed",
+            }),
+            anonymous({
+                onLinkAccount: ({ anonymousUser, newUser }) =>
+                    newUser.user.isAnonymous === true || newUser.user.id === anonymousUser.user.id
+                        ? undefined
+                        : runEdge(
+                              Effect.tryPromise(() =>
+                                  requireActionCtx(ctx).runAction(internal.guests.retire, {
+                                      guestId: anonymousUser.user.id,
+                                  })
+                              ).pipe(Effect.ignoreCause({ log: true, message: "guests.retire failed" }))
+                          ),
             }),
             expo(),
             crossDomain({ siteUrl }),

@@ -38,7 +38,7 @@ import { ctaLabel, thenLabel } from "./plan-copy";
 import { PlanPicker } from "./plan-picker";
 import { PlanRows } from "./plan-rows";
 import { ProBand } from "./pro-band";
-import { PurchaseFailure, SaleBlockers, UnconfirmedNotice } from "./sale-notices";
+import { PurchaseFailure, NoCloudNotice, UnconfirmedNotice } from "./sale-notices";
 import { StoreTerms } from "./store-terms";
 import type { TopBlock } from "./top-block";
 import { TrialTimeline } from "./trial-timeline";
@@ -181,7 +181,7 @@ export function PaywallRedesign({
 
     const purchaseFooter = (
         <>
-            <SaleBlockers empty={flow.empty} needsAccount={flow.needsAccount} noCloud={flow.noCloud} />
+            {flow.noCloud ? <NoCloudNotice /> : null}
             {flow.canBuy ? (
                 <View className="px-5">
                     <PlanPicker
@@ -273,8 +273,8 @@ export function PaywallRedesign({
         <>
             {flow.isPro ? proFooter : purchaseFooter}
             <LegalRow
-                canRestore={!flow.needsAccount}
                 disabled={flow.busy !== null}
+                noCloud={flow.noCloud}
                 onRestore={flow.restore}
                 restoring={flow.busy === "restore"}
             />

@@ -1,9 +1,12 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Queue from "effect/Queue";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
@@ -28,10 +31,12 @@ import {
     refreshProEntitlement,
     restoreAndCheckPro,
     setCustomerProfile,
+    syncAndCheckPro,
 } from "@/lib/revenuecat";
 import type { PurchasesError } from "@/lib/revenuecat";
 
 const Operation = Schema.Literals([
+    "claim",
     "configure",
     "identity",
     "profile",
@@ -44,6 +49,7 @@ const Operation = Schema.Literals([
 ]);
 
 const FAILED = {
+    claim: "RevenueCat could not claim the guest's purchases",
     configure: "RevenueCat could not be configured",
     identity: "RevenueCat identity sync failed",
     mirror: "RevenueCat entitlement mirror failed",
@@ -83,6 +89,28 @@ const watchEntitlement: Watch<boolean> = (listener) =>
 const watchCloudAuthenticated: Watch<boolean> = (listener) =>
     subscribeCloudAuthenticated(() => listener(isCloudAuthenticated()));
 
+const GUEST_CLAIM_KEY = "revenuecat.guestClaim";
+const CLAIM_RETRY_MINUTES = [1, 2, 4, 8, 16, 32] as const;
+
+// `destination` is the account the first claim ran for, so a later sign-in to anyone else can't take the receipt.
+const GuestClaim = Schema.Struct({ destination: Schema.NullOr(Schema.String) });
+type GuestClaim = typeof GuestClaim.Type;
+
+const decodeGuestClaim = Schema.decodeUnknownOption(Schema.fromJsonString(GuestClaim));
+
+const readGuestClaim = () =>
+    Effect.tryPromise(() => AsyncStorage.getItem(GUEST_CLAIM_KEY)).pipe(
+        Effect.map((raw) => (raw === null ? null : Option.getOrNull(decodeGuestClaim(raw)))),
+        Effect.orElseSucceed(() => null)
+    );
+
+const writeGuestClaim = (claim: GuestClaim | null) =>
+    Effect.tryPromise(() =>
+        claim === null
+            ? AsyncStorage.removeItem(GUEST_CLAIM_KEY)
+            : AsyncStorage.setItem(GUEST_CLAIM_KEY, JSON.stringify(claim))
+    ).pipe(Effect.catch((error) => Effect.logWarning("RevenueCat guest claim not saved", error.cause)));
+
 const revenueCatSdk = {
     cloudAuthenticated: isCloudAuthenticated,
     configureRevenueCat,
@@ -92,11 +120,14 @@ const revenueCatSdk = {
     logOutUser,
     mirrorEntitlement,
     purchaseAndCheckPro,
+    readGuestClaim,
     refreshProEntitlement,
     restoreAndCheckPro,
     setCustomerProfile,
+    syncAndCheckPro,
     watchCloudAuthenticated,
     watchEntitlement,
+    writeGuestClaim,
 };
 
 export const RevenueCatSdk = Context.Reference<typeof revenueCatSdk>("outlayr/lib/RevenueCat/Sdk", {
@@ -106,6 +137,7 @@ export const RevenueCatSdk = Context.Reference<typeof revenueCatSdk>("outlayr/li
 export interface Session {
     readonly accountId: string | null;
     readonly email: string | undefined;
+    readonly guest: boolean;
     readonly name: string | undefined;
 }
 
@@ -128,6 +160,8 @@ interface MirrorRequest {
 
 interface State {
     readonly applied: string | null | undefined;
+    // Kept on disk until a claim succeeds, so a kill mid hand-off retries on the next launch.
+    readonly guestClaim: GuestClaim | null;
     readonly identityPending: boolean;
     readonly identityTicket: number;
     readonly isMirrored: boolean;
@@ -170,6 +204,7 @@ export class RevenueCat extends Context.Service<
 
 const initialState: State = {
     applied: undefined,
+    guestClaim: null,
     // Starts closed: the identity sync is requested on mount, so a waiter must not see a gap first.
     identityPending: true,
     identityTicket: 0,
@@ -236,6 +271,23 @@ const profileTarget = (state: State) => {
         return null;
     }
     return { accountId: session.accountId, email: session.email, name: session.name };
+};
+
+const holdsGuestPurchase = (state: State) => {
+    const session = currentSession(state);
+    return session?.guest === true && state.applied === session.accountId && state.isPro;
+};
+
+const claimFor = (state: State, target: string | null) => {
+    const session = currentSession(state);
+    const destination = state.guestClaim?.destination;
+    return (
+        destination !== undefined &&
+        target !== null &&
+        session?.accountId === target &&
+        !session.guest &&
+        (destination === null || destination === target)
+    );
 };
 
 const mirrorTarget = (state: State): string | null => (state.isPro ? (currentSession(state)?.accountId ?? null) : null);
@@ -318,7 +370,7 @@ export const make = Effect.gen(function* make() {
     if (!configured.success) {
         return yield* unconfigured(sdk, Effect.never);
     }
-    const ref = yield* SubscriptionRef.make(initialState);
+    const ref = yield* SubscriptionRef.make({ ...initialState, guestClaim: yield* sdk.readGuestClaim() });
     const lane = yield* Queue.unbounded<Effect.Effect<unknown>>();
 
     const call = <A>(operation: typeof Operation.Type, run: () => Effect.Effect<A, PurchasesError>) =>
@@ -332,10 +384,37 @@ export const make = Effect.gen(function* make() {
             return [{ after, before, result }, after] as const;
         }).pipe(Effect.flatMap(({ after, before, result }) => react(before, after).pipe(Effect.as(result))));
 
+    const saveGuestClaim = (claim: GuestClaim | null) =>
+        transition((state) => [undefined, { ...state, guestClaim: claim }]).pipe(
+            Effect.andThen(sdk.writeGuestClaim(claim))
+        );
+
+    // The server erased the guest's customer while linking, so a sync hands its store receipt to the account.
+    const claimGuestPurchases = Effect.fn("RevenueCat.claimGuestPurchases")(function* claimGuestPurchases(
+        identified: Result.Result<boolean, RevenueCatError>
+    ) {
+        const claimed = yield* Effect.result(call("claim", sdk.syncAndCheckPro));
+        if (Result.isFailure(claimed)) {
+            yield* warn(claimed.failure);
+            return identified;
+        }
+        if (claimed.success) {
+            yield* saveGuestClaim(null);
+        }
+        return Result.succeed(claimed.success);
+    });
+
     const identify = Effect.fn("RevenueCat.identify")(function* identify(target: string | null, ticket: number) {
-        const answer = yield* Effect.result(
+        const identified = yield* Effect.result(
             call("identity", () => (target === null ? sdk.logOutUser() : sdk.identifyUser(target)))
         );
+        // Read when the job runs, not when it was queued: an earlier job may have bound the claim to someone else.
+        const { guestClaim } = yield* SubscriptionRef.get(ref);
+        const claim = target !== null && guestClaim?.destination === target && Result.isSuccess(identified);
+        const answer = claim ? yield* claimGuestPurchases(identified) : identified;
+        if (claim) {
+            yield* Effect.forkIn(keepClaiming(target), scope);
+        }
         yield* transition((state) => {
             let next = state;
             if (Result.isSuccess(answer)) {
@@ -361,10 +440,12 @@ export const make = Effect.gen(function* make() {
             }
             const ticket = state.identityTicket + 1;
             const reset = target === state.applied ? state : { ...withPro(state, false), isResolved: false };
+            const bind = state.guestClaim?.destination === null && claimFor(state, target);
             return [
-                ticket,
+                { bind, ticket },
                 {
                     ...reset,
+                    guestClaim: bind ? { destination: target } : state.guestClaim,
                     identityPending: true,
                     identityTicket: ticket,
                     pendingRequest: { target, ticket },
@@ -373,7 +454,11 @@ export const make = Effect.gen(function* make() {
             ];
         });
         if (requested !== null) {
-            yield* enqueue(identify(target, requested));
+            const login = identify(target, requested.ticket);
+            // Bound before the login, so a failed login can't leave the receipt to the next account signed in to.
+            yield* enqueue(
+                requested.bind ? sdk.writeGuestClaim({ destination: target }).pipe(Effect.andThen(login)) : login
+            );
         }
     }, Effect.uninterruptible);
 
@@ -458,6 +543,10 @@ export const make = Effect.gen(function* make() {
     });
 
     const react = Effect.fn("RevenueCat.react")(function* react(before: State, after: State) {
+        // A new guest purchase unbinds an older claim, or a sign-in to a second account could never take it.
+        if (holdsGuestPurchase(after) && !holdsGuestPurchase(before) && after.guestClaim?.destination !== null) {
+            yield* saveGuestClaim({ destination: null });
+        }
         const session = currentSession(after);
         if (session !== undefined && currentSession(before)?.accountId !== session.accountId) {
             return yield* syncIdentity(session.accountId);
@@ -481,6 +570,37 @@ export const make = Effect.gen(function* make() {
             withRead(state, account, pro)
         );
     });
+
+    const reclaim = Effect.fn("RevenueCat.reclaim")(function* reclaim(account: string) {
+        const pro = yield* forSession(account, call("claim", sdk.syncAndCheckPro), (state, held) =>
+            withRead(state, account, held)
+        );
+        if (pro) {
+            yield* saveGuestClaim(null);
+        }
+        return pro;
+    });
+
+    // RevenueCat deletes the guest a while after the sign-in, so a claim it wasn't ready for retries while the
+    // account stays signed in.
+    const keepClaiming: (account: string) => Effect.Effect<void> = Effect.fn("RevenueCat.keepClaiming")(
+        function* keepClaiming(account: string) {
+            for (const minutes of CLAIM_RETRY_MINUTES) {
+                yield* Effect.sleep(Duration.minutes(minutes));
+                const state = yield* SubscriptionRef.get(ref);
+                if (state.guestClaim?.destination !== account || currentSession(state)?.accountId !== account) {
+                    return;
+                }
+                const claimed = yield* reclaim(account).pipe(
+                    Effect.catchTags({ RevenueCatError: (error) => warn(error).pipe(Effect.as(false)) })
+                );
+                if (claimed) {
+                    return;
+                }
+            }
+        },
+        Effect.catchTags({ RevenueCatSessionChanged: (error) => Effect.logWarning(error.message) })
+    );
 
     const purchaseOutcome = (pack: PurchasesPackage) =>
         call("purchase", () => sdk.purchaseAndCheckPro(pack)).pipe(
@@ -510,11 +630,18 @@ export const make = Effect.gen(function* make() {
             Stream.filter((status) => status === "active"),
             Stream.runForEach(() =>
                 Effect.gen(function* onForeground() {
-                    const session = currentSession(yield* SubscriptionRef.get(ref));
+                    const state = yield* SubscriptionRef.get(ref);
+                    const session = currentSession(state);
                     if (session === undefined) {
                         return;
                     }
-                    yield* refresh(session.accountId).pipe(
+                    // A claim RevenueCat wasn't ready for at sign-in, while it still deletes the guest, retries here.
+                    const destination = state.guestClaim?.destination;
+                    const read =
+                        destination !== undefined && destination !== null && destination === session.accountId
+                            ? reclaim(destination)
+                            : refresh(session.accountId);
+                    yield* read.pipe(
                         // A refused mirror retries here: the entitlement does not change, so nothing else asks again.
                         Effect.andThen(mirrorOnce(session.accountId)),
                         Effect.catchTags({

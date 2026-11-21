@@ -1,5 +1,3 @@
-import { useRouter } from "expo-router";
-import { Button } from "panelui-native/components/button";
 import { Pressable, View } from "react-native";
 
 import { BusyText } from "@/components/busy-text";
@@ -8,45 +6,15 @@ import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
-/** Why nothing is for sale: no account to attach Pro to, or a build with no backend to deliver it. */
-export function SaleBlockers({
-    empty,
-    needsAccount,
-    noCloud,
-}: {
-    empty: boolean;
-    needsAccount: boolean;
-    noCloud: boolean;
-}) {
+/** A build with no backend cannot deliver Pro, so nothing is for sale. */
+export function NoCloudNotice() {
     const t = useTranslation();
-    const router = useRouter();
     return (
-        <>
-            {needsAccount ? (
-                <View className="gap-4 px-5 pt-5">
-                    <Text className="text-muted text-subtitle text-center">{t("pro.needsAccount")}</Text>
-                    {empty ? (
-                        <Button
-                            className="rounded-full"
-                            fullWidth
-                            onPress={() => router.push("/settings/account")}
-                            size="md"
-                            testID="paywall-sign-in"
-                            variant="primary"
-                        >
-                            {t("settings.account.signIn")}
-                        </Button>
-                    ) : null}
-                </View>
-            ) : null}
-            {noCloud ? (
-                <View className="items-center px-5 pt-5">
-                    <Text className="text-muted text-subtitle text-center" testID="paywall-no-cloud">
-                        {t("pro.needsCloud")}
-                    </Text>
-                </View>
-            ) : null}
-        </>
+        <View className="items-center px-5 pt-5">
+            <Text className="text-muted text-subtitle text-center" testID="paywall-no-cloud">
+                {t("pro.needsCloud")}
+            </Text>
+        </View>
     );
 }
 

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { receiptScanTransport, voiceThreadTransport } from "./cloud-ai";
 import type { ReceiptDraft, ScanRequest, SpeakRequest } from "./cloud-ai";
-import { enrichmentTransport, setCloudAuthenticated } from "./convex";
+import { enrichmentTransport, setCloudSession } from "./convex";
 
 const reply = vi.fn<() => Promise<unknown>>();
 
@@ -86,7 +86,7 @@ describe("voiceThreadTransport", () => {
 
 describe("enrichmentTransport", () => {
     it("fails with a CloudError when the suggestion does not match the spec", async () => {
-        setCloudAuthenticated(true);
+        setCloudSession("account");
         reply.mockResolvedValue({ categoryName: "Groceries", domain: null });
         const suggest = enrichmentTransport();
         if (suggest === null) {

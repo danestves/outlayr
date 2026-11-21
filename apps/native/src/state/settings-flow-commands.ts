@@ -1,3 +1,4 @@
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Schema from "effect/Schema";
@@ -15,6 +16,9 @@ import { lockFailureMessage } from "@/domain/app-lock";
 import { serializeArchive } from "@/domain/archive";
 import { enableReminderStep } from "@/domain/reminder";
 import { requestUnlock } from "@/lib/app-lock";
+import { authClient } from "@/lib/auth-client";
+import { startGuest } from "@/lib/auth-session";
+import { awaitCloudSession } from "@/lib/convex";
 import { shareFile } from "@/lib/data-transfer";
 import { armLogoBackfill, cancelLogoBackfill } from "@/lib/logo-backfill";
 import { posthog } from "@/lib/posthog";
@@ -149,6 +153,24 @@ const revenueCatFlow = <W, A, E>(
         label: `paywall:${label}`,
     });
 
+const GUEST_READY = Duration.seconds(20);
+
+interface Billed {
+    readonly accountId: string | null;
+    readonly billingId: string | null;
+}
+
+// Signed out, the store bills a guest, made on the spot if there is none yet. Its token must land first, on a retry
+// too: the mirror after checkout needs it.
+const billedAccount = Effect.fn("Paywall.billedAccount")(function* billedAccount({ accountId, billingId }: Billed) {
+    if (accountId !== null || authClient === null) {
+        return accountId;
+    }
+    const guestId = billingId ?? (yield* startGuest());
+    yield* awaitCloudSession.pipe(Effect.timeout(GUEST_READY));
+    return guestId;
+});
+
 export const confirmEntitlementCommand = revenueCatFlow("confirm", (revenueCat, accountId: string | null) =>
     revenueCat.mirror(accountId)
 );
@@ -157,14 +179,15 @@ export const buyPlanCommand = revenueCatFlow(
     "buy",
     Effect.fn("Paywall.buy")(function* buy(
         revenueCat: RevenueCat["Service"],
-        input: { accountId: string | null; offer: PurchasesPackage }
+        input: Billed & { readonly offer: PurchasesPackage }
     ) {
-        const outcome = yield* revenueCat.purchase(input.accountId, input.offer);
+        const accountId = yield* billedAccount(input);
+        const outcome = yield* revenueCat.purchase(accountId, input.offer);
         if (outcome === "pro") {
             // Detached: the permission prompt must not hold the paywall open after the store sheet closes.
             yield* Effect.forkDetach(syncTrialReminder(true));
         }
-        const mirrored = outcome !== "pro" || (yield* revenueCat.mirror(input.accountId));
+        const mirrored = outcome !== "pro" || (yield* revenueCat.mirror(accountId));
         const trial =
             outcome === "pro" &&
             (yield* proTerm().pipe(
@@ -182,7 +205,8 @@ export const markExitOfferSeenCommand = createCommand({
 
 export const restorePlanCommand = revenueCatFlow(
     "restore",
-    Effect.fn("Paywall.restore")(function* restore(revenueCat: RevenueCat["Service"], accountId: string | null) {
+    Effect.fn("Paywall.restore")(function* restore(revenueCat: RevenueCat["Service"], signedIn: Billed) {
+        const accountId = yield* billedAccount(signedIn);
         const restored = yield* revenueCat.restore(accountId);
         const mirrored = !restored || (yield* revenueCat.mirror(accountId));
         return { mirrored, restored };

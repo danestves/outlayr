@@ -32,9 +32,16 @@ export const revenueCatSessionAtom = Atom.family((session: Session) =>
 );
 
 export function RevenueCatSession() {
-    const { accountId, profile } = useAuthSession();
+    const { accountId, billingId, profile } = useAuthSession();
     const run = useAtomValue(revenueCatAtom);
-    useAtomMount(revenueCatSessionAtom({ accountId, email: profile?.email, name: profile?.name }));
+    useAtomMount(
+        revenueCatSessionAtom({
+            accountId: billingId,
+            email: profile?.email,
+            guest: billingId !== null && accountId === null,
+            name: profile?.name,
+        })
+    );
     if (AsyncResult.isFailure(run)) {
         throw Cause.squash(run.cause);
     }

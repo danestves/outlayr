@@ -9,7 +9,7 @@ import * as Schema from "effect/Schema";
 import type { ActionCtx, MutationCtx, QueryCtx } from "../../convex/_generated/server";
 import { isPro } from "../revenuecat";
 import { traceModel } from "./aiTracing";
-import { liveIdentity } from "./auth";
+import { isGuest, liveIdentity } from "./auth";
 
 export const AiRefusal = Schema.Literals([
     "unauthenticated",
@@ -46,12 +46,17 @@ export interface AiRequest<Admitted, E, R> {
 }
 
 export const openAiGateFor = Effect.fn("AiGate.openFor")(function* openAiGateFor<Admitted, E, R>(
+    ctx: Parameters<typeof isPro>[0],
     caller: UserIdentity,
     request: AiRequest<Admitted, E, R>
 ) {
     const resolved = yield* resolveTextModel(request.route);
     if (Option.isNone(resolved) || !hasAiConsent(request.args)) {
         return yield* refuse("notConfigured");
+    }
+    // Free AI is an account's allowance; a guest costs nothing to make, so only the purchase it holds opens AI.
+    if (isGuest(caller) && !(yield* isPro(ctx, caller.subject))) {
+        return yield* refuse("unauthenticated");
     }
     const admitted = yield* request.admit(caller);
     const distinctId = request.args.shareAnalytics === true ? caller.subject : undefined;
@@ -71,7 +76,7 @@ export const openAiGate = Effect.fn("AiGate.open")(function* openAiGate<Admitted
     if (caller === null) {
         return yield* refuse("unauthenticated");
     }
-    return yield* openAiGateFor(caller, request);
+    return yield* openAiGateFor(ctx, caller, request);
 });
 
 export const proOnly = Effect.fn("AiGate.proOnly")(function* proOnly(

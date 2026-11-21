@@ -5,7 +5,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import schema from "../../convex/schema";
 import { authenticatedAs, seedAuthUser } from "../test.helpers";
-import { liveIdentity, optionalUserId, requireUserId, Unauthenticated } from "./auth";
+import { liveIdentity, optionalBillingId, optionalUserId, requireUserId, Unauthenticated } from "./auth";
 import { runEdge } from "./runEdge";
 
 const modules = import.meta.glob("../../convex/**/*.ts");
@@ -53,6 +53,14 @@ describe(optionalUserId, () => {
         const t = convexTest(schema, modules);
 
         await expect(t.run((ctx) => runEdge(optionalUserId(ctx)))).resolves.toBeNull();
+    });
+
+    it("keeps a guest out of account data but bills it", async () => {
+        const t = convexTest(schema, modules);
+        const guest = authenticatedAs(t, await seedAuthUser(t, { guest: true }));
+
+        await expect(guest.run((ctx) => runEdge(optionalUserId(ctx)))).resolves.toBeNull();
+        await expect(guest.run((ctx) => runEdge(optionalBillingId(ctx)))).resolves.not.toBeNull();
     });
 
     it("returns null when the identity names a session that does not exist", async () => {

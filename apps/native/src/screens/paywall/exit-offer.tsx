@@ -24,14 +24,13 @@ import { PaywallCta } from "./paywall-cta";
 import type { LeaveOutcome } from "./use-paywall-flow";
 
 interface ExitFlow {
-    accountId: string | null;
+    billingId: string | null;
     busy: string | null;
     buyExitOffer: (plan: Plan) => void;
     canBuy: boolean;
     isPro: boolean;
     leave: (outcome?: LeaveOutcome) => void;
     left: RefObject<boolean>;
-    needsAccount: boolean;
     ownsLeave: boolean;
 }
 
@@ -39,13 +38,12 @@ interface ExitFlow {
 export function useExitOffer(flow: ExitFlow) {
     const db = useDatabase();
     const seen = useMeta(db, "exitOfferSeen");
-    const offer = AsyncResult.getOrElse(useAtomValue(exitOfferAtom(flow.accountId)), () => null);
+    const offer = AsyncResult.getOrElse(useAtomValue(exitOfferAtom(flow.billingId)), () => null);
     const [open, setOpen] = useState(false);
     const [settled, setSettled] = useState(false);
     const resume = useRef<(() => void) | null>(null);
     const markSeen = useAtomAction(markExitOfferSeenCommand, {}, SILENT);
-    const armed =
-        offer !== null && !seen && !settled && flow.canBuy && !flow.needsAccount && !flow.isPro && flow.busy === null;
+    const armed = offer !== null && !seen && !settled && flow.canBuy && !flow.isPro && flow.busy === null;
 
     const show = () => {
         if (!open && offer !== null) {

@@ -18,6 +18,7 @@ describe("useAuthSession", () => {
     it("apple-session-quarantined-until-grant-stored", () => {
         expect(sessionView({ user: PROVISIONAL_USER }, false, true)).toStrictEqual({
             accountId: null,
+            billingId: null,
             gate: "restoring",
             profile: null,
         });
@@ -25,6 +26,18 @@ describe("useAuthSession", () => {
 
     it("keeps the quarantine cover up after the cold-start restore budget has lapsed", () => {
         expect(sessionView({ user: PROVISIONAL_USER }, false, true, true).gate).toBe("restoring");
+    });
+
+    it("bills a guest while keeping the app signed out, even through a sign-in's quarantine", () => {
+        const guest = { user: { ...PROVISIONAL_USER, id: "guest-user", isAnonymous: true } };
+
+        expect(sessionView(guest, false, false)).toStrictEqual({
+            accountId: null,
+            billingId: "guest-user",
+            gate: "signed-out",
+            profile: null,
+        });
+        expect(sessionView(guest, false, true).billingId).toBe("guest-user");
     });
 
     it("makes zero cloud calls when no runtime is configured", () => {
@@ -35,7 +48,7 @@ describe("useAuthSession", () => {
         );
 
         expect(getByTestId("probe").textContent).toBe(
-            JSON.stringify({ accountId: null, gate: "unconfigured", profile: null })
+            JSON.stringify({ accountId: null, billingId: null, gate: "unconfigured", profile: null })
         );
     });
 });

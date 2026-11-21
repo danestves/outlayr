@@ -31,7 +31,8 @@ const HELD = new Set(["renews", "trial", "ends", "lifetime"]);
 const billingUser = Effect.fn("Billing.user")(function* billingUser() {
     const ctx = yield* ActionCtx;
     const user = yield* Effect.promise(() => authComponent.safeGetAuthUser(ctx));
-    return user ? { email: user.email, id: String(user._id), name: user.name } : null;
+    // Stripe is web only, and a guest exists only on a phone.
+    return user && user.isAnonymous !== true ? { email: user.email, id: String(user._id), name: user.name } : null;
 });
 
 const withinLimit = Effect.fn("Billing.withinLimit")(function* withinLimit(userId: string) {

@@ -6,11 +6,11 @@ const support = {
         answers: [
             {
                 answer: t({
-                    en: "No. Outlayr works without an account. Signing in with Apple, Google, or email and password is needed for sync, voice entry, receipt scanning, and to buy Pro.",
-                    de: "Nein. Outlayr funktioniert ohne Konto. Die Anmeldung mit Apple, Google oder E-Mail und Passwort brauchst du für die Synchronisierung, die Spracheingabe, den Belegscan und den Kauf von Pro.",
-                    es: "No. Outlayr funciona sin cuenta. Necesitas iniciar sesión con Apple, con Google, o con un correo electrónico y una contraseña para sincronizar, dictar registros, escanear recibos y comprar Pro.",
-                    pt: "Não. O Outlayr funciona sem conta. Você precisa entrar com Apple, com Google ou com e-mail e senha para sincronizar, registrar por voz, escanear recibos e comprar o Pro.",
-                    fr: "Non. Outlayr fonctionne sans compte. La connexion avec Apple, Google ou une adresse e-mail et un mot de passe est nécessaire pour la synchronisation, la saisie vocale, le scan de tickets et l'achat de Pro.",
+                    en: "No. Outlayr works without an account. Signing in with Apple, Google, or email and password is needed for sync, and for voice entry and receipt scanning unless you buy Pro, which works signed out too.",
+                    de: "Nein. Outlayr funktioniert ohne Konto. Die Anmeldung mit Apple, Google oder E-Mail und Passwort brauchst du für die Synchronisierung, und für Spracheingabe und Belegscan, außer du kaufst Pro, das auch abgemeldet funktioniert.",
+                    es: "No. Outlayr funciona sin cuenta. Necesitas iniciar sesión con Apple, con Google, o con un correo electrónico y una contraseña para sincronizar, y para dictar registros y escanear recibos salvo que compres Pro, que también funciona sin sesión.",
+                    pt: "Não. O Outlayr funciona sem conta. Você precisa entrar com Apple, com Google ou com e-mail e senha para sincronizar, e para registrar por voz e escanear recibos, a menos que você compre o Pro, que também funciona sem sessão.",
+                    fr: "Non. Outlayr fonctionne sans compte. La connexion avec Apple, Google ou une adresse e-mail et un mot de passe est nécessaire pour la synchronisation, ainsi que pour la saisie vocale et le scan de tickets, sauf si vous achetez Pro, qui fonctionne aussi sans être connecté.",
                 }),
                 question: t({
                     en: "Do I need an account?",

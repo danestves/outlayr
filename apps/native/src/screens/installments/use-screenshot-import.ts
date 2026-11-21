@@ -4,9 +4,9 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useAiConsent } from "@/data/settings";
 import { newId } from "@/domain/ids";
 import { PLAN_SCREENSHOT_LIMIT } from "@/domain/installment-scan";
+import { useAiGate } from "@/hooks/use-ai-gate";
 import { photosFrom } from "@/hooks/use-receipt-scan";
 import type { ScanPhoto } from "@/hooks/use-receipt-scan";
-import { useAuthSession } from "@/lib/auth-session";
 import { SILENT } from "@/state/atom-command";
 import { pickInstallmentPhotoCommand } from "@/state/installment-flow-commands";
 import { useAtomAction } from "@/state/use-atom-action";
@@ -24,7 +24,7 @@ export function handedOffPhotos(token: string | undefined): readonly ScanPhoto[]
 
 export function useScreenshotImport(accountId: string): () => void {
     const router = useRouter();
-    const { gate } = useAuthSession();
+    const gate = useAiGate();
     const consent = useAiConsent(useDatabase(), "aiConsentPlanScan");
     const openScan = (photo?: string) => router.push({ params: { accountId, photo }, pathname: "/installments/scan" });
     const pick = useAtomAction(

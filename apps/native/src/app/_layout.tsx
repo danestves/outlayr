@@ -43,7 +43,7 @@ import { LanguageProvider, useTranslation } from "@/i18n/context";
 import { translateNow } from "@/i18n/runtime";
 import { AuthSessionProvider, useAuthSession } from "@/lib/auth-session";
 import { cloudRuntime } from "@/lib/cloud-runtime";
-import { setCloudAuthenticated } from "@/lib/convex";
+import { setCloudSession } from "@/lib/convex";
 import { DeviceResetRecovery } from "@/lib/device-reset-recovery";
 import { LedgerAdoptionProvider, useLedgerAdoption } from "@/lib/ledger-adoption";
 import { useScreenTracking } from "@/lib/posthog";
@@ -52,7 +52,6 @@ import { usePostHogIdentity } from "@/lib/posthog-identity";
 import { identityPickerDetent, LARGE_ONLY } from "@/lib/sheet-detents";
 import { TrialReminderSync } from "@/lib/trial-reminder";
 import { useAccountOffer } from "@/lib/use-account-offer";
-import { usePaywallOpeners } from "@/lib/use-paywall-openers";
 import { useSubscriptionReminderTaps } from "@/lib/use-subscription-reminder-taps";
 import { useWalletPushTaps } from "@/lib/use-wallet-push-taps";
 import { useStackChrome } from "@/navigation/stack-chrome";
@@ -114,28 +113,40 @@ function Analytics() {
 }
 
 function ActivatedCloudRuntime({ children }: { children: ReactNode }) {
-    const { accountId } = useAuthSession();
+    const { accountId, billingId } = useAuthSession();
     usePostHogIdentity();
-    if (cloudRuntime === null || accountId === null) {
+    if (cloudRuntime === null) {
         return children;
     }
+    let session: "account" | "guest" | null = null;
+    if (billingId !== null) {
+        session = accountId === null ? "guest" : "account";
+    }
+    // Signing in or out remounts the app on the new account; a guest appearing mid-checkout keeps the screen it is on.
     return (
-        <ConvexBetterAuthProvider authClient={cloudRuntime.authClient} client={cloudRuntime.convex}>
-            <CloudAuthMirror />
+        <ConvexBetterAuthProvider
+            authClient={cloudRuntime.authClient}
+            client={cloudRuntime.convex}
+            key={accountId ?? SIGNED_OUT}
+        >
+            <CloudAuthMirror session={session} />
             {children}
         </ConvexBetterAuthProvider>
     );
 }
 
-function CloudAuthMirror() {
+const SIGNED_OUT = "signed-out";
+
+function CloudAuthMirror({ session }: { session: "account" | "guest" | null }) {
     const { isAuthenticated } = useConvexAuth();
-    // oxlint-disable-next-line outlayr/react-effect-budget -- mirrors Convex auth state into the cloud client's authenticated flag
+    const current = isAuthenticated ? session : null;
+    // oxlint-disable-next-line outlayr/react-effect-budget -- mirrors Convex auth state into the cloud client's session flag
     useEffect(() => {
-        setCloudAuthenticated(isAuthenticated);
+        setCloudSession(current);
         return () => {
-            setCloudAuthenticated(false);
+            setCloudSession(null);
         };
-    }, [isAuthenticated]);
+    }, [current]);
     return null;
 }
 
@@ -247,11 +258,6 @@ function RouteGate({
     return children;
 }
 
-function PaywallOpeners({ ready }: { ready: boolean }) {
-    usePaywallOpeners(ready);
-    return null;
-}
-
 function AccountOffer({ db, ready }: { db: Database; ready: boolean }) {
     useAccountOffer(db, ready);
     return null;
@@ -312,7 +318,6 @@ function RootStack() {
 
     return (
         <>
-            <PaywallOpeners ready={tapsReady} />
             <AccountOffer db={db} ready={tapsReady} />
             <YearSheetOpener db={db} ready={tapsReady} />
             <Stack>

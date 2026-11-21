@@ -34,7 +34,7 @@ import spec from "./enrichment.spec";
 import type { Suggestion } from "./enrichment.spec";
 import { isForbiddenLogoOrigin } from "./groundedLookup";
 import { openAiGateFor, withinLimit } from "./lib/aiGate";
-import { liveIdentity, optionalUserId } from "./lib/auth";
+import { liveIdentity, optionalBillingId, optionalUserId } from "./lib/auth";
 import { outboundHttp } from "./lib/http";
 import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
 import { isPro } from "./revenuecat";
@@ -68,7 +68,7 @@ const sharedCategory = Effect.fn("Enrichment.sharedCategory")(
             return args.categoryName;
         }
         const ctx = yield* ActionCtx;
-        const { model } = yield* openAiGateFor(caller, {
+        const { model } = yield* openAiGateFor(ctx, caller, {
             admit: () => withinLimit(() => rateLimiter.limit(ctx, "enrichmentGlobal")),
             args,
             route: route({ feature: "category_suggest" }),
@@ -99,7 +99,7 @@ const groundedConsent = FunctionImpl.make(
     "groundedConsent",
     Effect.fn("Enrichment.groundedConsent")(function* groundedConsent() {
         const ctx = yield* QueryCtx;
-        const userId = yield* optionalUserId(ctx);
+        const userId = yield* optionalBillingId(ctx);
         if (userId === null) {
             return false;
         }
@@ -177,7 +177,7 @@ const suggest = FunctionImpl.make(
             }
 
             const ctx = yield* ActionCtx;
-            const { distinctId, model } = yield* openAiGateFor(identity, {
+            const { distinctId, model } = yield* openAiGateFor(ctx, identity, {
                 admit: Effect.fn("Enrichment.suggestRungs")(function* suggestRungs(caller: UserIdentity) {
                     yield* withinLimit(() =>
                         rateLimiter.limit(ctx, args.background ? "enrichmentBackground" : "enrichmentPerUser", {

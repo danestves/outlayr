@@ -4,13 +4,12 @@ import { useRef } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { proSellable } from "@/hooks/use-pro-locked";
 import { useTranslation } from "@/i18n/context";
-import { useAuthSession } from "@/lib/auth-session";
 import { notifyFailure } from "@/lib/notify";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { PaywallRedesign } from "@/screens/paywall/redesign";
-import { saleReach } from "@/screens/paywall/use-paywall-flow";
 import type { LeaveOutcome } from "@/screens/paywall/use-paywall-flow";
 import { SILENT } from "@/state/atom-command";
 import { finishOnboardingOfferCommand } from "@/state/onboarding-commands";
@@ -18,9 +17,7 @@ import { useAtomAction } from "@/state/use-atom-action";
 
 /** The offer closes onboarding only for someone this build can sell to who is not Pro yet. */
 export function useOnboardingOfferDue(): boolean {
-    const free = useRevenueCat().kind === "free";
-    const { needsAccount, noCloud } = saleReach(useAuthSession().accountId);
-    return free && !needsAccount && !noCloud;
+    return useRevenueCat().kind === "free" && proSellable();
 }
 
 export function OnboardingPro() {
