@@ -1,11 +1,12 @@
 import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
 import Share08Icon from "@hugeicons/core-free-icons/Share08Icon";
+import { useMirror } from "@outlayr/shared/lifecycle";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Switch } from "panelui-web/switch";
 import { Tabs } from "panelui-web/tabs";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { useIntlayer } from "react-intlayer";
 
@@ -85,8 +86,7 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
     const drawn = useMemo(() => [input, size] as const, [input, size]);
     const canCopy = "ClipboardItem" in globalThis && "clipboard" in navigator && "write" in navigator.clipboard;
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- draws the card on a canvas and owns the object URL it hands out.
-    useEffect(() => {
+    useMirror([drawn, open], () => {
         if (!open) {
             return;
         }
@@ -108,15 +108,15 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
         return () => {
             stale = true;
         };
-    }, [drawn, open]);
+    });
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the last card stays on screen until the next is drawn, so its URL lives as long as it is held.
-    useEffect(() => {
+    // The last card stays on screen until the next is drawn, so its URL lives as long as it is held.
+    useMirror([made], () => {
         if (made === null) {
             return;
         }
         return () => URL.revokeObjectURL(made.url);
-    }, [made]);
+    });
 
     // The last card stays on screen while the next is drawn, but only the card for the current choices may leave.
     const ready = made?.of === drawn ? made : null;

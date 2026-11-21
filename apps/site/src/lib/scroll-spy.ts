@@ -1,14 +1,13 @@
-import { useEffect, useEffectEvent } from "react";
+import { useLatest, useMirror } from "@outlayr/shared/lifecycle";
 
 export function useScrollSpy(
     ids: readonly string[],
     rootMargin: string,
     onChange: (intersecting: ReadonlySet<string>, entries: readonly IntersectionObserverEntry[]) => void
 ) {
-    const notify = useEffectEvent(onChange);
+    const notify = useLatest(onChange);
     const key = ids.join(" ");
-    // oxlint-disable-next-line outlayr/react-effect-budget -- an IntersectionObserver on headings elsewhere in the document, found by id after render
-    useEffect(() => {
+    useMirror([key, rootMargin], () => {
         if (key === "") {
             return;
         }
@@ -22,7 +21,7 @@ export function useScrollSpy(
                         intersecting.delete(target.id);
                     }
                 }
-                notify(intersecting, entries);
+                notify.current(intersecting, entries);
             },
             { rootMargin }
         );
@@ -33,5 +32,5 @@ export function useScrollSpy(
             }
         }
         return () => observer.disconnect();
-    }, [key, rootMargin]);
+    });
 }

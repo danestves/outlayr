@@ -9,6 +9,7 @@ import { accountLook } from "@outlayr/money/ledger-log";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { roundMoney } from "@outlayr/money/round";
+import { useOnUnmount } from "@outlayr/shared/lifecycle";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Field } from "panelui-web/field";
@@ -16,7 +17,7 @@ import { Input } from "panelui-web/input";
 import { Select } from "panelui-web/select";
 import { Tabs } from "panelui-web/tabs";
 import { Textarea } from "panelui-web/textarea";
-import { useEffect, useEffectEvent, useId, useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -749,9 +750,8 @@ export function EntryEditor({
             }
         });
     };
-    const flush = useEffectEvent(() => save(values));
-    // oxlint-disable-next-line outlayr/react-effect-budget -- Esc and J K unmount this with no blur to save on.
-    useEffect(() => () => flush(), []);
+    // Esc and J K unmount this with no blur to save on.
+    useOnUnmount(() => save(values));
     return (
         <>
             <div onBlur={() => save(values)}>
