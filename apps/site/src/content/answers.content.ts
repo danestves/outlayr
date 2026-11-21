@@ -12261,7 +12261,7 @@ const answers = {
                     },
                     {
                         label: t({ en: "Needs", es: "Requiere" }),
-                        text: t({ en: "An account and a connection", es: "Una cuenta y conexión" }),
+                        text: t({ en: "An account or Pro, and a connection", es: "Una cuenta o Pro, y conexión" }),
                     },
                 ],
                 faq: [
@@ -12356,8 +12356,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Scanning needs an account or Pro, a connection, and your OK to send the photo to an AI provider. The photo is read by Anthropic's Claude, and it isn't stored after the scan. Each scan counts as one capture: 30 every 30 days on the free plan, shared with voice entry, and 500 with Outlayr Pro, which also backs up the receipt photo.",
-                                es: "Para escanear necesitas una cuenta o Pro, conexión y aceptar que la foto se envíe a un proveedor de IA. La foto la lee Claude, de Anthropic, y no se guarda después del escaneo. Cada escaneo cuenta como una captura: 30 cada 30 días en el plan gratis, compartidas con el registro por voz, y 500 con Outlayr Pro, que además respalda la foto del recibo.",
+                                en: "Scanning needs an account or Pro, a connection, and your OK to send the photo to an AI provider. The photo is read by Anthropic's Claude, and it isn't stored after the scan. Each scan counts as one capture: 30 every 30 days on the free plan, shared with voice entry, and 500 with Outlayr Pro, which also backs up the receipt photo once you sign in and turn on sync.",
+                                es: "Para escanear necesitas una cuenta o Pro, conexión y aceptar que la foto se envíe a un proveedor de IA. La foto la lee Claude, de Anthropic, y no se guarda después del escaneo. Cada escaneo cuenta como una captura: 30 cada 30 días en el plan gratis, compartidas con el registro por voz, y 500 con Outlayr Pro, que además respalda la foto del recibo si inicias sesión y activas la sincronización.",
                             }),
                             t({
                                 en: "Typing works with no signal, so when you're offline you can type the purchase as one sentence and scan the next receipt later.",
@@ -12428,8 +12428,8 @@ const answers = {
                         es: "El plan gratis incluye 30 capturas cada 30 días, compartidas con la entrada por voz. Outlayr Pro las sube a 500.",
                     }),
                     t({
-                        en: "Scanning needs an account or Pro, and a connection. Anthropic's Claude reads the photo and doesn't keep it. With Outlayr Pro, receipt photo backup keeps it with the entry.",
-                        es: "Escanear requiere una cuenta o Pro, y conexión. La foto la lee Claude, de Anthropic, y no la guarda. Con Outlayr Pro, el respaldo de fotos la guarda junto a su registro.",
+                        en: "Scanning needs an account or Pro, and a connection. Anthropic's Claude reads the photo and doesn't keep it. With Outlayr Pro and sync on, receipt photo backup keeps it with the entry.",
+                        es: "Escanear requiere una cuenta o Pro, y conexión. La foto la lee Claude, de Anthropic, y no la guarda. Con Outlayr Pro y la sincronización activa, el respaldo de fotos la guarda junto a su registro.",
                     }),
                 ],
                 title: t({ en: "Scan a receipt into an expense", es: "Convierte un recibo en un gasto" }),
@@ -13871,7 +13871,7 @@ const answers = {
                     },
                     {
                         label: t({ en: "Needs", es: "Requiere" }),
-                        text: t({ en: "An account and a connection", es: "Una cuenta y conexión" }),
+                        text: t({ en: "An account or Pro, and a connection", es: "Una cuenta o Pro, y conexión" }),
                     },
                 ],
                 faq: [
