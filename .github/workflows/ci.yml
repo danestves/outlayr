@@ -70,6 +70,9 @@ jobs:
             - name: Lint and format
               run: vp check
 
+            - name: No blanket disable
+              run: node scripts/no-blanket-disable.mjs
+
     test:
         name: types · tests
         needs: changes
