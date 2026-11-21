@@ -1,7 +1,7 @@
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import { useForm, useSelector } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
-import { use, useEffect, useRef, useState } from "react";
+import { use, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { Keyboard } from "react-native";
 
@@ -21,6 +21,7 @@ import { firstAvailableColor } from "@/domain/category-color";
 import { CATEGORY_ERROR_KEYS } from "@/domain/category-error";
 import { useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
+import { useOnChange } from "@/lib/lifecycle";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { runAtomCommand, SILENT } from "@/state/atom-command";
@@ -185,15 +186,12 @@ export function useCategoryForm(props: CategoryEditorProps, nameField: NameField
     const forcedIncome = categoryCreatesIncome(mode, parentId, openedAtLimit);
     const income = mode === "create" ? formIncome || forcedIncome : (loaded?.income ?? false);
 
-    const seenExpenseCount = useRef(expenseCount);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- closes the sheet when the live expense count, which a sync can move, crosses the cap
-    useEffect(() => {
-        const changed = expenseCount !== seenExpenseCount.current;
-        seenExpenseCount.current = expenseCount;
-        if (changed && mode === "create" && parentId == null && !income && expenseCount >= MAX_EXPENSE_CATEGORIES) {
+    // A sync can move the live count across the cap under an open create sheet.
+    useOnChange([expenseCount], () => {
+        if (mode === "create" && parentId === null && !income && expenseCount >= MAX_EXPENSE_CATEGORIES) {
             router.back();
         }
-    }, [expenseCount, mode, parentId, income, router, seenExpenseCount]);
+    });
 
     const nextColor = firstAvailableColor(usedColors);
     const autoColor = categoryColorFollowsSiblings(mode, parentId, colorTouched);

@@ -4,7 +4,7 @@ import type { TransferInput } from "@outlayr/money/transfer-row";
 import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
 import { HeaderHeightContext } from "expo-router/react-navigation";
-import { use, useLayoutEffect, useRef, useState } from "react";
+import { use, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { AccessibilityInfo, Keyboard, Pressable, ScrollView, TextInput, View } from "react-native";
 import type { LayoutChangeEvent, ScrollViewInstance } from "react-native";
@@ -49,6 +49,7 @@ import type { SheetRest } from "@/hooks/use-resting-sheet";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
+import { useLatest, useLayoutMirror } from "@/lib/lifecycle";
 import { useHaptics } from "@/lib/use-haptics";
 import { saveTransferCommand } from "@/state/accounts-commands";
 import { SILENT } from "@/state/atom-command";
@@ -157,12 +158,13 @@ function openingNote(restore?: TransferEditorDraft, saved?: SavedTransfer, seed?
 }
 
 function useDraftHandoff(draftRef: TransferEditorProps["draftRef"], read: () => TransferEditorDraft) {
-    // oxlint-disable-next-line outlayr/react-effect-budget -- hands the draft reader to the sheet's swipe-dismiss listener while mounted, and clears it on unmount
-    useLayoutEffect(() => {
+    const latestRead = useLatest(read);
+    // The sheet's swipe-dismiss listener reads the snapshot; the reader it holds always sees the latest commit.
+    useLayoutMirror([draftRef], () => {
         if (draftRef === undefined) {
             return;
         }
-        draftRef.current = read;
+        draftRef.current = () => latestRead.current();
         return () => {
             draftRef.current = null;
         };

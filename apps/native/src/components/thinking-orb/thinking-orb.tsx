@@ -1,13 +1,14 @@
 import { Canvas, createPicture, PaintStyle, Picture, Skia } from "@shopify/react-native-skia";
 import type { SkPicture } from "@shopify/react-native-skia";
 import { useTheme } from "panelui-native/theme";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
 import { useReducedMotion, useSharedValue } from "react-native-reanimated";
 import { MODE_FRAMES, resolvePreset } from "thinking-orbs/engine";
 import type { OrbSize, OrbState } from "thinking-orbs/engine";
 
 import { useAppForeground } from "@/lib/app-state";
+import { useMirror } from "@/lib/lifecycle";
 
 const REDUCED_MOTION_T = 0.6;
 const FRAME_MS = 1000 / 30;
@@ -32,8 +33,7 @@ export function ThinkingOrb({ size = 20, state }: { size?: OrbSize; state: OrbSt
     const [ink] = useState(makeInk);
     const { mode, speed, opts } = resolvePreset(state, size);
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- drives a requestAnimationFrame loop that records Skia pictures while the orb is mounted and the app is in the foreground
-    useEffect(() => {
+    useMirror([active, dark, mode, opts, reduced, size, speed], () => {
         const build = MODE_FRAMES[mode];
         const setInk = (paint: typeof ink.fill, white: number, alpha: number) => {
             const clamped = Math.min(1, Math.max(0, white));
@@ -83,7 +83,7 @@ export function ThinkingOrb({ size = 20, state }: { size?: OrbSize; state: OrbSt
         };
         frameId = requestAnimationFrame(loop);
         return () => cancelAnimationFrame(frameId);
-    }, [active, dark, ink, mode, opts, picture, reduced, size, speed]);
+    });
 
     return (
         <View

@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { AccessibilityInfo } from "react-native";
 
 import { useTranslation } from "@/i18n/context";
+import { useOnUnmount } from "@/lib/lifecycle";
 import { useHaptics } from "@/lib/use-haptics";
 
 const SHAKE_MS = 500;
@@ -23,15 +24,11 @@ export function useMissingFlags() {
     const [shaking, setShaking] = useState({ amount: false, category: false, rate: false });
     const timers = useRef(new Map<MissingSlot, ReturnType<typeof setTimeout>>());
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- clears the pending shake timers when the form unmounts
-    useEffect(
-        () => () => {
-            for (const timer of timers.current.values()) {
-                clearTimeout(timer);
-            }
-        },
-        []
-    );
+    useOnUnmount(() => {
+        for (const timer of timers.current.values()) {
+            clearTimeout(timer);
+        }
+    });
 
     const flag = (slot: MissingSlot, announce = true) => {
         haptics("error");

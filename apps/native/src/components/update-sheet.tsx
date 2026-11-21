@@ -6,8 +6,9 @@ import { isEnabled, useUpdates } from "expo-updates";
 import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
 import { cn } from "panelui-native/utils/cn";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { AppState, View } from "react-native";
+import type { AppStateStatus } from "react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import { useAppLockOpen } from "@/components/app-lock-gate";
@@ -20,12 +21,15 @@ import { formatChargeDate } from "@/domain/dates";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { subscribeAppState } from "@/lib/app-state";
 import { APP_VERSION } from "@/lib/app-version";
+import { useEventListener } from "@/lib/lifecycle";
 import { appAtomRegistry } from "@/state/atom-registry";
 import { AppUpdateError, applyUpdateCommand, checkForUpdateCommand } from "@/state/settings-flow-commands";
 import { fireAtomCommand, useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 const CHECKS_UPDATES = isEnabled && !__DEV__;
+
+const NOOP = () => undefined;
 
 const dismissedUpdateAtom = Atom.make<string | null>(null).pipe(
     Atom.keepAlive,
@@ -71,15 +75,18 @@ export function UpdateSheet() {
         setShown(update);
     }
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- checks expo-updates each time the app returns from the background
-    useEffect(() => {
-        if (!CHECKS_UPDATES) {
-            return;
-        }
-        let phase = AppState.currentState;
-        return subscribeAppState((next) => {
-            const returned = phase === "background" && next === "active";
-            phase = next;
+    const phase = useRef(AppState.currentState);
+    useEventListener<[AppStateStatus], undefined>(
+        (listener) => {
+            if (!CHECKS_UPDATES) {
+                return NOOP;
+            }
+            phase.current = AppState.currentState;
+            return subscribeAppState(listener);
+        },
+        (next) => {
+            const returned = phase.current === "background" && next === "active";
+            phase.current = next;
             if (!returned) {
                 return;
             }
@@ -88,8 +95,8 @@ export function UpdateSheet() {
             fireAtomCommand(appAtomRegistry, checkForUpdateCommand, undefined, {
                 onFailure: (cause) => console.warn("[outlayr] update check failed", updateFailure(cause)),
             });
-        });
-    }, [setDismissedId]);
+        }
+    );
 
     if (!shown) {
         return null;

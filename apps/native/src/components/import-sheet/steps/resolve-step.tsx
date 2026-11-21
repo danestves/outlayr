@@ -1,6 +1,6 @@
 import { Task } from "panelui-native/components/task";
 import type { TaskStatus } from "panelui-native/components/task";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Pressable, View } from "react-native";
 
 import { Text } from "@/components/text";
@@ -13,6 +13,7 @@ import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import type { CsvImportStage } from "@/lib/csv-import";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";
+import { useWhen } from "@/lib/lifecycle";
 
 import { StepCta } from "../step-cta";
 
@@ -107,22 +108,20 @@ export function ResolveStep({ review, onOpenFeatureLab, onSeePro }: ResolveStepP
     const { flow } = useImportDraft();
     const { running, stage, outcome, reason, totalLabels, tier1Matched, tier2Sent, run, retry } = useCsvImport();
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- starts the CSV resolution run on the import service when the step opens
-    useEffect(() => {
-        if (!running && outcome == null) {
-            run();
-        }
-    }, [running, outcome, run]);
+    useWhen(!running && outcome === null, () => {
+        run();
+    });
 
     const entryCount = review.plan.entries.length;
     const advancedRef = useRef(false);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- advances the module-level import draft store to review once the import service reports its outcome applied
-    useEffect(() => {
-        if (outcome === "applied" && entryCount > 0 && !advancedRef.current) {
-            advancedRef.current = true;
-            importDraftStore.setStep("review");
+    // The service reports `applied` through its atom; the draft store advances once that lands.
+    useWhen(outcome === "applied" && entryCount > 0, () => {
+        if (advancedRef.current) {
+            return;
         }
-    }, [outcome, entryCount]);
+        advancedRef.current = true;
+        importDraftStore.setStep("review");
+    });
 
     const reviewCta =
         entryCount > 0 ? (

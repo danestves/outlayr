@@ -1,11 +1,12 @@
 import ArrowDown01Icon from "@hugeicons-pro/core-solid-rounded/ArrowDown01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ComponentProps, ReactNode, Ref } from "react";
 import { AccessibilityInfo, Pressable, View } from "react-native";
 import type { TextInput as RNTextInput, TextInputInstance } from "react-native";
 
 import { Text, TextInput } from "@/components/text";
+import { useMirror } from "@/lib/lifecycle";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
@@ -41,12 +42,11 @@ function FieldFrame({
     const accent = error ? m3.error : m3.primary;
     // An error may land under a field the cursor is not on, so TalkBack is told.
     const errorText = error ? supportingText : null;
-    // oxlint-disable-next-line outlayr/react-effect-budget -- announces the field error to TalkBack when it appears
-    useEffect(() => {
+    useMirror([errorText], () => {
         if (errorText) {
             AccessibilityInfo.announceForAccessibility(errorText);
         }
-    }, [errorText]);
+    });
     let labelColor = m3.onSurfaceVariant;
     if (error || focused) {
         labelColor = accent;

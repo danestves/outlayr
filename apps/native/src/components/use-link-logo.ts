@@ -1,8 +1,9 @@
 import * as Effect from "effect/Effect";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { readIdentityLink } from "@/domain/identity-link";
 import type { TranslationKey } from "@/i18n/catalog";
+import { useOnUnmount, useTimers } from "@/lib/lifecycle";
 import { checkLinkLogo, discardStoredPhoto, voidAppFlowCommand } from "@/state/entry-commands";
 import type { MerchantWebsiteLogo } from "@/state/entry-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
@@ -27,26 +28,17 @@ export function useLinkLogo(onFound: (logo: MerchantWebsiteLogo) => void) {
     const [text, setText] = useState("");
     const [status, setStatus] = useState<LinkStatus>(IDLE);
     const ticket = useRef(0);
-    const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const timers = useTimers();
 
     const cancel = () => {
         ticket.current += 1;
-        if (timer.current !== null) {
-            clearTimeout(timer.current);
-            timer.current = null;
-        }
+        timers.clear();
     };
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- a result landing after the picker closes would write into whichever form opens next
-    useEffect(
-        () => () => {
-            ticket.current += 1;
-            if (timer.current !== null) {
-                clearTimeout(timer.current);
-            }
-        },
-        []
-    );
+    // A result landing after the picker closes would write into whichever form opens next.
+    useOnUnmount(() => {
+        ticket.current += 1;
+    });
 
     const lookUp = (input: string, delay: number) => {
         cancel();
@@ -61,7 +53,7 @@ export function useLinkLogo(onFound: (logo: MerchantWebsiteLogo) => void) {
         }
         setStatus({ kind: "checking" });
         const asked = ticket.current;
-        timer.current = setTimeout(() => {
+        timers.after(delay, () => {
             void runFlow(
                 checkLinkLogo(link).pipe(
                     Effect.flatMap((found) =>
@@ -87,7 +79,7 @@ export function useLinkLogo(onFound: (logo: MerchantWebsiteLogo) => void) {
                     )
                 )
             );
-        }, delay);
+        });
     };
 
     return {
