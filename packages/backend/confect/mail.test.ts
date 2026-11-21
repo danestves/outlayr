@@ -168,21 +168,23 @@ describe("a sign-in code", () => {
     it("stops retrying once it expires", async () => {
         vi.useFakeTimers();
         const t = mailTest();
+        const expiresAt = Date.now() + 10 * 60_000;
         let attempts = 0;
         stubCloudflare(() => {
             attempts += 1;
+            vi.setSystemTime(expiresAt);
             return true;
         });
 
         await t.mutation(internal.emailOutbox.enqueue, {
-            expiresAt: Date.now() + 1500,
+            expiresAt,
             subject: "Your code",
             text: "123456",
             to: "code@example.com",
         });
         await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-        expect(attempts).toBeLessThan(4);
+        expect(attempts).toBe(1);
     });
 });
 
