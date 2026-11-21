@@ -347,7 +347,8 @@ describe("email sign-in", () => {
 });
 
 describe("guest sign-in", () => {
-    it("limits each caller on its own so one caller cannot lock out new guests", async () => {
+    it("limits each caller on its own and forgets the caller once its bucket refills", async () => {
+        vi.useFakeTimers();
         const t = convexTest(schema, modules);
         betterAuthTest.register(t);
         rateLimiterTest.register(t);
@@ -365,12 +366,20 @@ describe("guest sign-in", () => {
         };
         const statuses: number[] = [];
 
-        for (let attempt = 0; attempt < 11; attempt += 1) {
+        for (let attempt = 0; attempt < 10; attempt += 1) {
             statuses.push(await signIn("2001:db8:1:2::1"));
         }
+        statuses.push(await signIn("2001:db8:1:2:ffff::9"));
 
-        expect(statuses.slice(0, 10)).toStrictEqual(Array.from({ length: 10 }, () => 200));
-        await expect(signIn("2001:db8:1:2:ffff::9")).resolves.toBe(429);
+        expect(statuses).toStrictEqual([...Array.from({ length: 10 }, () => 200), 429]);
         await expect(signIn("203.0.113.7")).resolves.toBe(200);
+
+        await t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(60 * 60 * 1000));
+        const resets = await t.run(async (ctx) => ctx.db.system.query("_scheduled_functions").collect());
+        const keys = new Set(resets.map((job) => job.args[0].key));
+
+        expect(resets.map((job) => job.state.kind)).toStrictEqual(Array.from({ length: 11 }, () => "success"));
+        expect(keys.size).toBe(2);
+        expect([...keys].some((key) => key.includes("2001:db8") || key.includes("203.0.113.7"))).toBeFalsy();
     });
 });

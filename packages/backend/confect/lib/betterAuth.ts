@@ -6,7 +6,7 @@ import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
 import { requireActionCtx, requireRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
-import { symmetricDecrypt } from "better-auth/crypto";
+import { makeSignature, symmetricDecrypt } from "better-auth/crypto";
 import { betterAuth } from "better-auth/minimal";
 import { emailOTP } from "better-auth/plugins";
 import { anonymous } from "better-auth/plugins/anonymous";
@@ -65,6 +65,28 @@ const authLimiter = new RateLimiter(components.rateLimiter, {
     emailAuth: { capacity: 10, kind: "token bucket", period: HOUR, rate: 10 },
     guestSignIn: { capacity: 500, kind: "token bucket", period: HOUR, rate: 500 },
     guestSignInPerCaller: { capacity: 10, kind: "token bucket", period: HOUR, rate: 10 },
+});
+
+// The limiter never deletes a bucket, so the address is stored only as an HMAC, and the bucket is dropped once it
+// would have refilled: the privacy policy keeps a guest's IP address only on its sessions.
+const limitGuestCaller = Effect.fn("BetterAuth.limitGuestCaller")(function* limitGuestCaller(
+    ctx: GenericCtx<DataModel>,
+    address: string,
+    secret: string
+) {
+    const key = yield* Effect.promise(() => makeSignature(address, secret));
+    const { ok } = yield* Effect.promise(() =>
+        authLimiter.limit(requireRunMutationCtx(ctx), "guestSignInPerCaller", { key })
+    );
+    if (ok) {
+        yield* Effect.promise(() =>
+            requireActionCtx(ctx).scheduler.runAfter(HOUR, components.rateLimiter.lib.resetRateLimit, {
+                key,
+                name: "guestSignInPerCaller",
+            })
+        );
+    }
+    return ok;
 });
 
 const decodeEmailBody = Schema.decodeUnknownOption(
@@ -227,19 +249,17 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                             );
                         }
                         if (endpoint.path === "/sign-in/anonymous") {
-                            const limiterCtx = requireRunMutationCtx(ctx);
                             const caller = callerAddress(
                                 endpoint.request?.headers ?? endpoint.headers ?? new Headers()
                             );
                             const callerOk = yield* Option.match(caller, {
                                 onNone: () => Effect.succeed(true),
-                                onSome: (key) =>
-                                    Effect.promise(() =>
-                                        authLimiter.limit(limiterCtx, "guestSignInPerCaller", { key })
-                                    ).pipe(Effect.map(({ ok }) => ok)),
+                                onSome: (address) => limitGuestCaller(ctx, address, endpoint.context.secret),
                             });
                             const { ok } = callerOk
-                                ? yield* Effect.promise(() => authLimiter.limit(limiterCtx, "guestSignIn"))
+                                ? yield* Effect.promise(() =>
+                                      authLimiter.limit(requireRunMutationCtx(ctx), "guestSignIn")
+                                  )
                                 : { ok: false };
                             if (!ok) {
                                 return yield* Effect.fail(
