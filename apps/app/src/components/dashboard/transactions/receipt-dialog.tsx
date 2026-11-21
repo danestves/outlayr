@@ -2,10 +2,11 @@ import File01Icon from "@hugeicons/core-free-icons/File01Icon";
 import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useEventListener, useOnMount } from "@outlayr/shared/lifecycle";
 import { Alert } from "panelui-web/alert";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -185,37 +186,35 @@ export function ReceiptDialog({
         onSwitch({ accountId: flow.accountId, kind: "entry", scanned });
     };
 
-    const begin = useEffectEvent(() => {
+    // A file dropped on the Add form starts once, and a scan still running when the dialog goes must not reopen a flow.
+    useOnMount(() => {
+        mounted.current = true;
         if (!started.current && phase.kind === "preparing") {
             started.current = true;
             void read(phase.file);
         }
-    });
-    // oxlint-disable-next-line outlayr/react-effect-budget -- a file dropped on the Add form starts once, and a scan still running when the dialog goes must not reopen a flow.
-    useEffect(() => {
-        mounted.current = true;
-        begin();
         return () => {
             mounted.current = false;
         };
-    }, []);
+    });
 
     const takesFile = phase.kind === "pick" || phase.kind === "failed";
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the clipboard is an external system.
-    useEffect(() => {
-        if (!takesFile) {
-            return;
-        }
-        const paste = (event: ClipboardEvent) => {
+    useEventListener(
+        (listener) => {
+            window.addEventListener("paste", listener);
+            return () => window.removeEventListener("paste", listener);
+        },
+        (event: ClipboardEvent) => {
+            if (!takesFile) {
+                return;
+            }
             const file = fileIn(event.clipboardData?.items ?? null);
             if (file) {
                 event.preventDefault();
                 void read(file);
             }
-        };
-        window.addEventListener("paste", paste);
-        return () => window.removeEventListener("paste", paste);
-    });
+        }
+    );
 
     const choose = () => input.current?.click();
     const stop = () => {

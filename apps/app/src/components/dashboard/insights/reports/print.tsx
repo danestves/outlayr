@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useMirror, useTimers } from "@outlayr/shared/lifecycle";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -18,8 +18,8 @@ interface PrintSheetProps {
 
 /** Prints what it holds through the browser's own print dialog, in the light theme whatever the app wears. */
 export function PrintSheet({ children, onDone, title }: PrintSheetProps) {
-    // oxlint-disable-next-line outlayr/react-effect-budget -- swaps the page theme and title and opens the browser print dialog.
-    useEffect(() => {
+    const timers = useTimers();
+    useMirror([onDone, title], () => {
         const root = document.documentElement;
         const { theme } = root.dataset;
         const previousTitle = document.title;
@@ -38,13 +38,13 @@ export function PrintSheet({ children, onDone, title }: PrintSheetProps) {
             onDone();
         };
         window.addEventListener("afterprint", finish, { once: true });
-        const frame = requestAnimationFrame(() => window.print());
+        const frame = timers.frame(() => window.print());
         return () => {
-            cancelAnimationFrame(frame);
+            frame();
             window.removeEventListener("afterprint", finish);
             restore();
         };
-    }, [onDone, title]);
+    });
     return createPortal(
         <div id="rp-print">
             <style>{PRINT_CSS}</style>

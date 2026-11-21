@@ -1,4 +1,5 @@
-import { type CSSProperties, type HTMLAttributes, type ReactNode, useEffect, useId, useRef, useState } from 'react'
+import { useMirror } from '@outlayr/shared/lifecycle'
+import { type CSSProperties, type HTMLAttributes, type ReactNode, useId, useRef, useState } from 'react'
 import { useLook } from './looks'
 import './phone.css'
 
@@ -108,7 +109,7 @@ export function Phone({ width, frame: asked = 'pro', time = '9:41', island, stat
   // instead of standing as an empty shell
   const photoRef = useRef<HTMLSpanElement>(null)
   const [photoOk, setPhotoOk] = useState(true)
-  useEffect(() => {
+  useMirror([asked, dark], () => {
     if (asked !== 'photo' || !photoRef.current) return
     const bg = getComputedStyle(photoRef.current).backgroundImage
     const url = bg.match(/url\(["']?([^"')]+)["']?\)/)?.[1]
@@ -120,7 +121,7 @@ export function Phone({ width, frame: asked = 'pro', time = '9:41', island, stat
     return () => {
       live = false
     }
-  }, [asked, dark])
+  })
   const frame: PhoneFrame = asked === 'photo' && !photoOk ? 'pro' : asked
   const { band, glass } = FRAMES[frame]
   const { fidelity } = useLook()

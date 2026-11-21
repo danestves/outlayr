@@ -3,9 +3,10 @@ import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { placed } from "@outlayr/money/ledger-log";
+import { useEventListener } from "@outlayr/shared/lifecycle";
 import { Button } from "panelui-web/button";
 import { Chip } from "panelui-web/chip";
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -209,19 +210,12 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
             setSearch({ entry: next.id }, { replace: true });
         }
     };
-    const onEscape = useEffectEvent(() => {
-        if (selected === null) {
-            clearPicked();
-        }
-    });
-    const stepByKey = useEffectEvent((by: 1 | -1) => {
-        if (selected === null) {
-            step(by);
-        }
-    });
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the keyboard is an external system.
-    useEffect(() => {
-        const onKey = (event: KeyboardEvent) => {
+    useEventListener(
+        (listener) => {
+            document.addEventListener("keydown", listener);
+            return () => document.removeEventListener("keydown", listener);
+        },
+        (event: KeyboardEvent) => {
             if (
                 event.metaKey ||
                 event.ctrlKey ||
@@ -233,15 +227,13 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
             if (event.key === "/") {
                 event.preventDefault();
                 searchField.current?.focus();
-            } else if (event.key === "j" || event.key === "k") {
-                stepByKey(event.key === "j" ? 1 : -1);
-            } else if (event.key === "Escape") {
-                onEscape();
+            } else if ((event.key === "j" || event.key === "k") && selected === null) {
+                step(event.key === "j" ? 1 : -1);
+            } else if (event.key === "Escape" && selected === null) {
+                clearPicked();
             }
-        };
-        document.addEventListener("keydown", onKey);
-        return () => document.removeEventListener("keydown", onKey);
-    }, []);
+        }
+    );
 
     const filtering = (patch: SearchPatch, options?: { replace?: boolean }) =>
         setSearch({ ...patch, view: null }, options);

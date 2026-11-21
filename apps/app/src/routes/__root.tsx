@@ -2,6 +2,7 @@ import type { ConvexQueryClient } from "@convex-dev/react-query";
 import geist from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import { startAnalytics } from "@outlayr/shared/analytics";
 import { LANGUAGES } from "@outlayr/shared/i18n";
+import { useLayoutMirror, useMirror } from "@outlayr/shared/lifecycle";
 import { THEME_SCRIPT, paintTheme, readTheme } from "@outlayr/shared/theme";
 import type { DbClient } from "@tanstack/react-db";
 import type { QueryClient } from "@tanstack/react-query";
@@ -9,7 +10,7 @@ import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/reac
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import * as Effect from "effect/Effect";
-import { useEffect, useLayoutEffect, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { IntlayerProvider } from "react-intlayer";
 
@@ -71,15 +72,14 @@ export const Route = createRootRouteWithContext<{
 function RootDocument({ children }: { children: ReactNode }) {
     const locale = useSyncExternalStore(subscribeDashboardLocale, readDashboardLocale, serverDashboardLocale);
     const country = Route.useLoaderData();
-    // oxlint-disable-next-line outlayr/react-effect-budget -- starts the analytics SDK once after hydration, with the visitor's country
-    useEffect(() => {
+    useMirror([country], () => {
         Effect.runFork(startAnalytics(ANALYTICS_TOKEN, country).pipe(Effect.ignoreCause));
-    }, [country]);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- a hydration that falls back to a client render strips what THEME_SCRIPT stamped on <html>.
-    useLayoutEffect(() => {
+    });
+    // A hydration that falls back to a client render strips what THEME_SCRIPT stamped on <html>.
+    useLayoutMirror([], () => {
         document.documentElement.classList.add("js");
         paintTheme(readTheme());
-    }, []);
+    });
     return (
         <html lang={LANGUAGES[locale].lang} suppressHydrationWarning>
             <head>
