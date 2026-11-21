@@ -113,7 +113,10 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type, options: Pay
         }
     };
 
+    // Read by the exit offer's Back guard, which must let through the removal a leave starts.
+    const left = useRef(false);
     const leave = (outcome: LeaveOutcome = "dismissed") => {
+        left.current = true;
         if (options.onLeave) {
             options.onLeave(outcome);
         } else if (navigation.isFocused()) {
@@ -258,6 +261,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type, options: Pay
         isMirrored,
         isPro,
         leave,
+        left,
         logsWaiting: canBuy && block === "autolog" && autolog.waiting > 0,
         needsAccount,
         noCloud,

@@ -3,6 +3,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { usePreventRemove } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { useRef, useState } from "react";
+import type { RefObject } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { FadeIn, SlideInDown } from "react-native-reanimated";
 
@@ -29,6 +30,7 @@ interface ExitFlow {
     canBuy: boolean;
     isPro: boolean;
     leave: (outcome?: LeaveOutcome) => void;
+    left: RefObject<boolean>;
     needsAccount: boolean;
     ownsLeave: boolean;
 }
@@ -41,8 +43,6 @@ export function useExitOffer(flow: ExitFlow) {
     const [open, setOpen] = useState(false);
     const [settled, setSettled] = useState(false);
     const resume = useRef<(() => void) | null>(null);
-    // A ref, not state: the leave below dispatches before a re-render could lift the prevention.
-    const leaving = useRef(false);
     const markSeen = useAtomAction(markExitOfferSeenCommand, {}, SILENT);
     const armed =
         offer !== null && !seen && !settled && flow.canBuy && !flow.needsAccount && !flow.isPro && flow.busy === null;
@@ -55,22 +55,16 @@ export function useExitOffer(flow: ExitFlow) {
         }
     };
 
-    const leave = () => {
-        leaving.current = true;
-        flow.leave("dismissed");
-    };
-
-    // A screen that owns leaving (onboarding) must finish its flow on system Back instead of being popped.
-    usePreventRemove(armed || (flow.ownsLeave && !flow.isPro), ({ repeat }) => {
-        if (leaving.current) {
-            if (!flow.ownsLeave) {
-                repeat();
-            }
+    // A screen that owns leaving (onboarding) finishes its flow on system Back instead of being popped. Once any
+    // leave has started, removals pass: the leave dispatches before a re-render could lift the prevention.
+    usePreventRemove(armed || flow.ownsLeave, ({ repeat }) => {
+        if (flow.left.current) {
+            repeat();
         } else if (armed) {
             resume.current = flow.ownsLeave ? null : repeat;
             show();
         } else if (flow.busy === null) {
-            leave();
+            flow.leave("dismissed");
         }
     });
 
@@ -81,7 +75,7 @@ export function useExitOffer(flow: ExitFlow) {
         const go = resume.current;
         resume.current = null;
         if (go === null) {
-            leave();
+            flow.leave("dismissed");
         } else {
             go();
         }
@@ -100,7 +94,7 @@ export function useExitOffer(flow: ExitFlow) {
         if (armed) {
             show();
         } else {
-            leave();
+            flow.leave("dismissed");
         }
     };
 
