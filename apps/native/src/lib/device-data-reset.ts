@@ -5,6 +5,7 @@ import * as Schema from "effect/Schema";
 import { createNativeDeviceDataStores, DEVICE_STORES } from "./device-data-stores";
 import type { DeviceDataStores, DeviceStore, NativeDeviceDataStoreDependencies } from "./device-data-stores";
 import { SecureStorage } from "./secure-storage";
+import type { SecureStorageError } from "./secure-storage";
 
 const RESET_MARKER_KEY = "outlayr.device-reset";
 
@@ -23,6 +24,7 @@ export class DeviceResetMarkerError extends Schema.TaggedError<DeviceResetMarker
 }
 
 const decodeResetMarker = Schema.decodeUnknownOption(Schema.fromJsonString(DeviceResetMarker));
+const encodeResetMarker = Schema.encodeSync(Schema.fromJsonString(DeviceResetMarker));
 
 export const readDeviceResetMarker = Effect.fn("DeviceReset.readMarker")(function* readMarker() {
     const storage = yield* SecureStorage;
@@ -41,7 +43,7 @@ export const writeDeviceResetMarker = Effect.fn("DeviceReset.writeMarker")(funct
     marker: DeviceResetMarker
 ) {
     const storage = yield* SecureStorage;
-    yield* storage.set(RESET_MARKER_KEY, JSON.stringify(marker));
+    yield* storage.set(RESET_MARKER_KEY, encodeResetMarker(marker));
 });
 
 export const clearDeviceResetMarker = Effect.fn("DeviceReset.clearMarker")(function* clearMarker() {
@@ -49,14 +51,16 @@ export const clearDeviceResetMarker = Effect.fn("DeviceReset.clearMarker")(funct
     yield* storage.remove(RESET_MARKER_KEY);
 });
 
-export interface DeviceResetGateDependencies extends NativeDeviceDataStoreDependencies {
-    completeCloudDeletion: Effect.Effect<void, unknown, SecureStorage>;
+export interface DeviceResetGateDependencies<E = never> extends NativeDeviceDataStoreDependencies<E> {
+    completeCloudDeletion: Effect.Effect<void, E, SecureStorage>;
 }
 
-export interface DeviceResetGate {
-    begin: () => Effect.Effect<DeviceResetResult, unknown, SecureStorage>;
-    recover: () => Effect.Effect<DeviceResetResult, unknown, SecureStorage>;
-    retry: (failures: readonly DeviceStore[]) => Effect.Effect<DeviceResetResult, unknown, SecureStorage>;
+export interface DeviceResetGate<E = never> {
+    begin: () => Effect.Effect<DeviceResetResult, DeviceResetMarkerError | SecureStorageError | E, SecureStorage>;
+    recover: () => Effect.Effect<DeviceResetResult, DeviceResetMarkerError | SecureStorageError | E, SecureStorage>;
+    retry: (
+        failures: readonly DeviceStore[]
+    ) => Effect.Effect<DeviceResetResult, DeviceResetMarkerError | SecureStorageError | E, SecureStorage>;
 }
 
 export interface DeviceResetRecoveryDependencies<E = never, R = never> {
@@ -125,11 +129,11 @@ export const retryDeviceReset = Effect.fn("DeviceReset.retry")(function* retry<E
     return result;
 });
 
-export function createDeviceResetGate({
+export function createDeviceResetGate<E>({
     closeDatabase,
     completeCloudDeletion,
-}: DeviceResetGateDependencies): DeviceResetGate {
-    const deps: DeviceResetRecoveryDependencies<unknown, SecureStorage> = {
+}: DeviceResetGateDependencies<E>): DeviceResetGate<E> {
+    const deps: DeviceResetRecoveryDependencies<DeviceResetMarkerError | SecureStorageError | E, SecureStorage> = {
         clearMarker: clearDeviceResetMarker,
         completeCloudDeletion,
         readMarker: readDeviceResetMarker,

@@ -30,12 +30,12 @@ const dismissedBy = (signal: AbortSignal) =>
         return Effect.sync(() => signal.removeEventListener("abort", onAbort));
     });
 
-export const timedCaptureCommand = <A>(options: {
+export const timedCaptureCommand = <A, E>(options: {
     readonly operation: typeof CaptureOperation.Type;
     readonly timeout: Duration.Duration;
 }) =>
     createCommand({
-        execute: (input: { call: Effect.Effect<A, unknown>; signal: AbortSignal }) =>
+        execute: (input: { call: Effect.Effect<A, E>; signal: AbortSignal }) =>
             input.call.pipe(
                 Effect.mapError((cause) => new CaptureCallError({ cause, operation: options.operation })),
                 Effect.timeoutOption(options.timeout),

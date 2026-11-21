@@ -1,3 +1,4 @@
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -30,7 +31,8 @@ const createGoalFromAccount = Effect.fn("BudgetFlow.createGoalFromAccount")(func
     valuation: Valuation;
 }) {
     const { account, db, goal, valuation } = input;
-    const balance = account === undefined ? undefined : yield* settledBalanceAt(db, account, valuation, new Date());
+    const balance =
+        account === undefined ? undefined : yield* settledBalanceAt(db, account, valuation, yield* DateTime.nowAsDate);
     if (!balance?.exact) {
         return yield* new GoalAnchorUnvaluedError();
     }
@@ -45,7 +47,7 @@ const readGoalAnchor = Effect.fn("BudgetFlow.readGoalAnchor")(function* readGoal
     db: Database;
     valuation: Valuation;
 }) {
-    const balance = yield* settledBalanceAt(input.db, input.account, input.valuation, new Date());
+    const balance = yield* settledBalanceAt(input.db, input.account, input.valuation, yield* DateTime.nowAsDate);
     return { account: input.account, balance };
 });
 

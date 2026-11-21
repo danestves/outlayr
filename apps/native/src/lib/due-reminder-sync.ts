@@ -42,6 +42,7 @@ export class DueReminderPasses extends Context.Service<
     Record<typeof DueReminder.Type, (db: Database) => Effect.Effect<void, Error>>
 >()("outlayr/lib/DueReminderSync/DueReminderPasses") {}
 
+// @effect-diagnostics effect/leakingRequirements:off -- passes are provided at the mount site that owns them.
 export class DueReminderSync extends Context.Service<
     DueReminderSync,
     {

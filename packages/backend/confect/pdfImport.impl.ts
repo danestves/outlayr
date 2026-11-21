@@ -4,6 +4,7 @@ import { route } from "@outlayr/model-router/route";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import type { UserIdentity } from "convex/server";
 import * as Clock from "effect/Clock";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -99,7 +100,7 @@ const startUpload = FunctionImpl.make(
         if (gate.identity === null) {
             return { key: null, status: gate.status, url: null };
         }
-        const key = statementKeyFor(gate.identity.subject, crypto.randomUUID());
+        const key = statementKeyFor(gate.identity.subject, SecureRandom.uuidV4Unsafe());
         yield* scheduleSweep(key);
         const { url } = yield* Effect.promise(() =>
             ctx.runMutation(components.statementStorage.objects.uploadUrl, { key, provider: { kind: "convex" } })

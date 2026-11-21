@@ -203,7 +203,10 @@ export function TransactionForm(props: TransactionFormProps) {
             return null;
         }
 
-        return saveEntry({
+        return saveEntry<
+            | Effect.Error<NonNullable<ReturnType<typeof lookup.carry>>>
+            | Effect.Error<NonNullable<ReturnType<typeof installmentOrder.save>>>
+        >({
             commit: {
                 attachments,
                 carry: (savedId) => lookup.carry(savedId, value, entry.currency),

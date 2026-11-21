@@ -1,5 +1,7 @@
 import { merchantKey } from "@outlayr/money/merchant-key";
 import { and, desc, eq, inArray, isNull, ne, or } from "drizzle-orm";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -31,7 +33,7 @@ const failedAt = (operation: typeof MerchantSiblingsOperation.Type) => (cause: u
 const query = <A>(operation: typeof MerchantSiblingsOperation.Type, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: failedAt(operation), try: run });
 
-export interface MerchantSiblingsInput<R = never> {
+export interface MerchantSiblingsInput<R = never, E = never> {
     categoryId: string | null;
     /** Null means the ledger default; a same-currency sibling may store null or the code, so both match. */
     currency: string | null;
@@ -40,7 +42,7 @@ export interface MerchantSiblingsInput<R = never> {
     excludeId: string;
     income: boolean;
     key: string;
-    persistLogo: Effect.Effect<{ imageColor: string | null; imageUri: string }, unknown, R> | null;
+    persistLogo: Effect.Effect<{ imageColor: string | null; imageUri: string }, E, R> | null;
     tagIds: readonly string[];
 }
 
@@ -54,7 +56,7 @@ interface SiblingPatch {
 // often a wrong earlier lookup. Category and tags only fill rows that have none. `imageKey` stays on a repainted row
 // so the uploader can release the superseded object.
 export const applyMerchantToSiblings = Effect.fn("MerchantSiblings.applyMerchantToSiblings")(
-    function* applyMerchantToSiblings<R>(db: Database, input: MerchantSiblingsInput<R>) {
+    function* applyMerchantToSiblings<R, E>(db: Database, input: MerchantSiblingsInput<R, E>) {
         const effective = input.currency ?? input.defaultCurrency;
         const sameCurrency =
             effective === input.defaultCurrency
@@ -117,7 +119,8 @@ export const applyMerchantToSiblings = Effect.fn("MerchantSiblings.applyMerchant
             if (patch.imageUri != null) {
                 still.push(isNull(transactions.emoji), isNull(transactions.icon), isNull(transactions.customColor));
             }
-            const nextStamp = new Date(Math.max(Date.now(), row.updatedAt.getTime() + 1));
+            const nowMs = yield* Clock.currentTimeMillis;
+            const nextStamp = DateTime.toDate(DateTime.makeUnsafe(Math.max(nowMs, row.updatedAt.getTime() + 1)));
             let liveStamp = row.updatedAt;
             let wrote = false;
             if (Object.keys(patch).length > 0) {
@@ -164,7 +167,7 @@ const attachTagsIfStill = Effect.fn("MerchantSiblings.attachTagsIfStill")(functi
     stamp: Date,
     tagIds: readonly string[]
 ) {
-    const now = new Date();
+    const now = yield* DateTime.nowAsDate;
     return yield* transaction(
         db,
         Effect.gen(function* write() {

@@ -4,6 +4,7 @@ import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import { planStanding } from "@outlayr/money/installments";
 import type { InstallmentStanding, PlanStanding, ScheduledInstallment } from "@outlayr/money/installments";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -292,8 +293,8 @@ export const installmentsRepo = {
         const plan = yield* liveInstallment("add-fee", db, input.installmentId);
         const account = yield* liabilityAccount("add-fee", db, plan.accountId);
         const [current, ...extra] = yield* read("add-fee", () => liveFees(db, input.installmentId));
-        const date = input.date ?? current?.date ?? new Date();
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
+        const date = input.date ?? current?.date ?? now;
         const values = {
             ...(yield* canonicalUsd(localRateLookup(db), {
                 amount: input.amount,
@@ -365,7 +366,7 @@ export const installmentsRepo = {
             return yield* new InstallmentsError({ operation: "create-order", reason: "empty-schedule" });
         }
         const planId = newId();
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         const upfrontRow = schedule.find((row) => row.sequence === 0);
         const paidOutside = input.installmentsPaidOutside ?? 0;
         const cuotas = schedule.filter((row) => row.sequence > 0).sort((a, b) => a.sequence - b.sequence);
@@ -540,7 +541,7 @@ export const installmentsRepo = {
             if (!(input.amount > 0)) {
                 return yield* new InstallmentsError({ operation: "record-payment", reason: "payment-not-positive" });
             }
-            const [row] = yield* outsideRows(db, plan.id, account.currency, [input], new Date());
+            const [row] = yield* outsideRows(db, plan.id, account.currency, [input], yield* DateTime.nowAsDate);
             if (!row) {
                 return yield* new InstallmentsError({ operation: "record-payment", reason: "no-outside-row" });
             }

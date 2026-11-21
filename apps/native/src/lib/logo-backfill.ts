@@ -4,12 +4,15 @@ import * as HttpClient from "effect/http/HttpClient";
 import { File } from "expo-file-system";
 
 import { Meta } from "@/data/app-meta-core";
+import type { AppMetaError, CorruptMetaError } from "@/data/app-meta-core";
 import type { LogoBackfillDeps } from "@/data/logo-backfill-core";
 import { attachMissingLogos } from "@/data/logo-backfill-core";
 import { readRemoteEnrichment } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { firstLocale } from "@/i18n/device-language";
+import type { CloudError } from "@/lib/cloud-error";
 import { persistLogo } from "@/lib/persist-logo";
+import type { PhotoStorageError } from "@/lib/photo-storage";
 
 import { enrichmentTransport } from "./convex";
 import { outboundHttp } from "./http";
@@ -83,7 +86,7 @@ const backfillPass = Effect.fn("LogoBackfill.backfillPass")(function* backfillPa
     const locale = device?.languageTag?.trim() || undefined;
     const regionCode = device?.regionCode?.trim() || undefined;
     const transport = remoteEnabled ? enrichmentTransport() : null;
-    const deps: LogoBackfillDeps = {
+    const deps: LogoBackfillDeps<AppMetaError | CloudError | CorruptMetaError | PhotoStorageError> = {
         cancelled,
         discard: discardLogo,
         enrich:

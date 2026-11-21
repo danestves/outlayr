@@ -1,4 +1,5 @@
 import { eq, sql } from "drizzle-orm";
+import type * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -15,6 +16,7 @@ import { rememberLogoCandidate, rememberLogoDismissal } from "./logo-backfill-st
 const makeDb = migratedDatabase;
 
 const NOW = new Date("2026-09-07T21:00:00Z");
+const JUST_AFTER_NOW = new Date(NOW.getTime() + 1);
 const LOGO = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
 
 const REMOTE: RemoteEnrichmentResult = {
@@ -61,7 +63,9 @@ async function seedRow(
     });
 }
 
-function makeDeps(overrides: Partial<LogoBackfillDeps> = {}): LogoBackfillDeps & {
+function makeDeps(
+    overrides: Partial<LogoBackfillDeps<Cause.UnknownError>> = {}
+): LogoBackfillDeps<Cause.UnknownError> & {
     enrichCalls: string[];
     fetched: string[];
 } {
@@ -124,7 +128,7 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "a", "Lescot", { date: NOW });
         await seedRow(db, "b", "Monoprix", { date: new Date(NOW.getTime() - 1000) });
         let calls = 0;
-        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps<Cause.UnknownError>["enrich"]>>(() =>
             Effect.tryPromise(async () => {
                 calls += 1;
                 return calls === 1 ? null : { groundedLookup: true, result: REMOTE };
@@ -171,7 +175,7 @@ describe("attachMissingLogos", () => {
 
     it("keeps a retry deadline across launches", async () => {
         await seedRow(db, "a", "Iolanda");
-        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps<Cause.UnknownError>["enrich"]>>(() =>
             Effect.tryPromise(async () => ({
                 groundedLookup: true,
                 result: NOTHING,
@@ -383,7 +387,7 @@ describe("attachMissingLogos", () => {
     it("looks a same-named merchant up once per currency", async () => {
         await seedRow(db, "fr", "Carrefour", { currency: "EUR" });
         await seedRow(db, "ve", "Carrefour", { currency: "VES" });
-        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(({ currency }) =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps<Cause.UnknownError>["enrich"]>>(({ currency }) =>
             Effect.tryPromise(async () => ({
                 groundedLookup: true,
                 result: { ...REMOTE, domain: currency === "EUR" ? "carrefour.fr" : "carrefour.com.ve" },
@@ -409,7 +413,7 @@ describe("attachMissingLogos", () => {
             parentCategoryName: null,
             tags: [],
         };
-        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps<Cause.UnknownError>["enrich"]>>(() =>
             Effect.tryPromise(async () => ({
                 groundedLookup: true,
                 result: empty,
@@ -429,7 +433,7 @@ describe("attachMissingLogos", () => {
         for (const [index, name] of ["Lescot", "Monoprix", "Franprix", "Amorino"].entries()) {
             await seedRow(db, name, name, { date: new Date(NOW.getTime() - index * 1000) });
         }
-        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps<Cause.UnknownError>["enrich"]>>(() =>
             Effect.tryPromise(async () => ({
                 groundedLookup: true,
                 result: NOTHING,
@@ -472,7 +476,7 @@ describe("attachMissingLogos", () => {
     it("sends nothing for a row renamed while an earlier lookup was out", async () => {
         await seedRow(db, "first", "Intermarche");
         await seedRow(db, "second", "Iolanda", { date: new Date(NOW.getTime() - 1000) });
-        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(({ name }) =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps<Cause.UnknownError>["enrich"]>>(({ name }) =>
             Effect.tryPromise(async () => {
                 if (name === "Intermarche") {
                     await db.update(transactions).set({ note: "Renamed" }).where(eq(transactions.id, "second"));
@@ -539,7 +543,7 @@ describe("attachMissingLogos", () => {
 
     it("treats a miss as provisional when the request went out without the web lookup", async () => {
         await seedRow(db, "a", "Iolanda");
-        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps<Cause.UnknownError>["enrich"]>>(() =>
             Effect.tryPromise(async () => ({
                 groundedLookup: false,
                 result: NOTHING,
@@ -572,10 +576,7 @@ describe("attachMissingLogos", () => {
         const deps = makeDeps({
             persist: () =>
                 Effect.tryPromise(async () => {
-                    await db
-                        .update(transactions)
-                        .set({ updatedAt: new Date(NOW.getTime() + 1) })
-                        .where(eq(transactions.id, "a"));
+                    await db.update(transactions).set({ updatedAt: JUST_AFTER_NOW }).where(eq(transactions.id, "a"));
                     return { imageColor: null, imageUri: "file:///photos/logo.jpg" };
                 }),
         });

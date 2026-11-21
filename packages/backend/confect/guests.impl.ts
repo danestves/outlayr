@@ -38,16 +38,16 @@ const retire = FunctionImpl.make(
     spec,
     "retire",
     Effect.fn("Guests.retire")(function* retire({ attempt = 0, guestId }) {
-        const [customer, analytics] = yield* Effect.all(
-            [
-                eraseUpstreamCustomer(guestId).pipe(Effect.catchTags({ RevenueCatError: settled("customer") })),
-                erasePostHogPerson(guestId).pipe(
-                    Effect.as(true),
-                    Effect.catchTags({ PostHogError: settled("analytics") })
-                ),
-            ],
-            { concurrency: "unbounded" }
-        ).pipe(Effect.provide(outboundHttp));
+        const eraseCustomer = eraseUpstreamCustomer(guestId).pipe(
+            Effect.catchTags({ RevenueCatError: settled("customer") })
+        );
+        const eraseAnalytics = erasePostHogPerson(guestId).pipe(
+            Effect.as(true),
+            Effect.catchTags({ PostHogError: settled("analytics") })
+        );
+        const [customer, analytics] = yield* Effect.all([eraseCustomer, eraseAnalytics], {
+            concurrency: "unbounded",
+        }).pipe(Effect.provide(outboundHttp));
         const { runMutation } = yield* MutationRunner;
         yield* runMutation(refs.internal.guests.forget, { guestId });
         const scheduler = yield* Scheduler;

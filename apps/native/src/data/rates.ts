@@ -1,6 +1,7 @@
 import type { RateLookup } from "@outlayr/money/rates";
 import { and, desc, eq, inArray, lte, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/effect-schema";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -93,7 +94,7 @@ export const pullRatesIfDue = Effect.fn("Rates.pullRatesIfDue")(function* pullRa
     pull: PullRatesFn,
     options: { force?: boolean; now?: number } = {}
 ) {
-    const now = options.now ?? Date.now();
+    const now = options.now ?? (yield* Clock.currentTimeMillis);
     if (!options.force && isThrottled(yield* lastPullAt(db), now)) {
         return false;
     }

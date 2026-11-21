@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import { utcDateString } from "./dates";
 import { MoneyValidationError } from "./errors";
@@ -29,6 +30,11 @@ const UNRESOLVED: CanonicalUsd = {
 };
 
 const DEFAULT_RATE_TYPE: EntryRateType = "official";
+
+// `computeAmountUSD` is typed to fail with `MoneyValidationError`; this keeps any other throw a defect.
+class UnexpectedComputeThrow extends Schema.TaggedError<UnexpectedComputeThrow>()("UnexpectedComputeThrow", {
+    cause: Schema.Unknown,
+}) {}
 
 // A stored rate is currency PER USD, so USD is the amount divided by it, in scaled integers inside `computeAmountUSD`.
 export const canonicalUsd = Effect.fn("CanonicalUsd.canonicalUsd")(function* canonicalUsd<E>(
@@ -68,10 +74,13 @@ export const canonicalUsd = Effect.fn("CanonicalUsd.canonicalUsd")(function* can
             return { amountUsd: null, exchangeRate: null, exchangeRateType };
         }
         const amountUsd = yield* Effect.try({
-            catch: (error) => error,
+            catch: (cause) => (cause instanceof MoneyValidationError ? cause : new UnexpectedComputeThrow({ cause })),
             try: () => computeAmountUSD({ baseAmount: input.amount, date, exchangeRate, exchangeRateType }),
         }).pipe(
-            Effect.catch((error) => (error instanceof MoneyValidationError ? Effect.fail(error) : Effect.die(error)))
+            Effect.catchTags({
+                MoneyValidationError: (error) => Effect.fail(error),
+                UnexpectedComputeThrow: ({ cause }) => Effect.die(cause),
+            })
         );
         return { amountUsd, exchangeRate, exchangeRateType };
     });

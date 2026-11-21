@@ -118,6 +118,36 @@ jobs:
               if: env.TEST != ''
               run: vp run $TEST test
 
+    effect:
+        name: Effect diagnostics
+        needs: changes
+        if: needs.changes.outputs.typecheck != ''
+        runs-on: ubuntu-26.04
+        timeout-minutes: 20
+        strategy:
+            fail-fast: false
+            matrix:
+                project:
+                    - packages/money/tsconfig.json
+                    - apps/site/tsconfig.json
+                    - apps/native/tsconfig.json
+                    - packages/backend/tsconfig.json
+                    - apps/app/tsconfig.json
+                    - packages/ai/tsconfig.json
+                    - packages/shared/tsconfig.json
+                    - packages/model-router/tsconfig.json
+                    - packages/backend/convex/tsconfig.json
+        steps:
+            - uses: actions/checkout@v7
+
+            - uses: ./.github/actions/setup-native
+              with:
+                  hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
+                  minimum-release-age: ${{ vars.PNPM_MINIMUM_RELEASE_AGE }}
+
+            - name: Diagnostics
+              run: vp exec effect-language-service diagnostics --project ${{ matrix.project }} --strict
+
     bundle:
         name: expo export (ios)
         needs: changes
@@ -143,7 +173,7 @@ jobs:
     check:
         name: Check
         if: always()
-        needs: [changes, lint, test, bundle]
+        needs: [changes, lint, test, effect, bundle]
         runs-on: ubuntu-26.04
         timeout-minutes: 5
         steps:
@@ -153,5 +183,5 @@ jobs:
               run: |
                   jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<<"$RESULTS"
                   jq -e '.changes.outputs as $o
-                    | {test: (($o.typecheck // "") == "" and ($o.test // "") == ""), bundle: ($o.native != "true")} as $skippable
+                    | {test: (($o.typecheck // "") == "" and ($o.test // "") == ""), effect: (($o.typecheck // "") == ""), bundle: ($o.native != "true")} as $skippable
                     | all(to_entries[]; .value.result == "success" or (.value.result == "skipped" and $skippable[.key]))' <<<"$RESULTS" > /dev/null

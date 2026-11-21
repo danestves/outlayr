@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -35,6 +36,12 @@ const PUSH_TTL_SECONDS = 3600;
 const GONE = new Set([404, 410]);
 
 const nullOnMissing = { GetByIndexFailure: () => Effect.succeed(null) } as const;
+
+const encodeNudge = Schema.encodeSync(
+    Schema.fromJsonString(Schema.Struct({ body: Schema.String, title: Schema.String }))
+);
+// Convex actions have no HttpClient layer, so the runtime's own fetch is the transport.
+const sendPush = (endpoint: string, init: Parameters<typeof fetch>[1]) => fetch(endpoint, init);
 
 const subscriptionAt = Effect.fn("WebPush.subscriptionAt")(function* subscriptionAt(endpoint: string) {
     return yield* (yield* DatabaseReader)
@@ -188,11 +195,11 @@ const sendDue = FunctionImpl.make(
         for (const reminder of reminders) {
             const { status } = yield* Effect.tryPromise(async () => {
                 const body = await encryptPush(
-                    JSON.stringify({ body: nudgeText(reminder.locale), title: "Outlayr" }),
+                    encodeNudge({ body: nudgeText(reminder.locale), title: "Outlayr" }),
                     reminder,
                     await newServerKeys()
                 );
-                return fetch(reminder.endpoint, {
+                return sendPush(reminder.endpoint, {
                     body,
                     headers: {
                         Authorization: await vapidAuthorization(

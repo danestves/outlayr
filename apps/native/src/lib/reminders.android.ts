@@ -104,7 +104,7 @@ export const openNotificationSettings: typeof iosOpenNotificationSettings = () =
         Effect.tryPromise(() => Linking.openSettings()).pipe(
             Effect.catchTags({
                 UnknownError: (error) =>
-                    Effect.sync(() => console.warn("[outlayr] opening notification settings failed", error.cause)),
+                    Effect.logWarning("[outlayr] opening notification settings failed", error.cause),
             })
         )
     );

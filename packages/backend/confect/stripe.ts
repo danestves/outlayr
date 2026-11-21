@@ -31,8 +31,8 @@ export class StripeError extends Schema.TaggedError<StripeError>()("StripeError"
 
 const transport = (path: string) => (cause: unknown) => new StripeError({ cause, path, reason: "transport" });
 
-const stripeCall = <A, I>(schema: Schema.Codec<A, I>, path: string, form?: Readonly<Record<string, string>>) =>
-    Effect.fn("Stripe.call")(
+const stripeCall = <A, I>(schema: Schema.Codec<A, I>, path: string, form?: Readonly<Record<string, string>>) => {
+    const call = Effect.fn("Stripe.call")(
         function* call() {
             const key = yield* stripeSecretKey;
             if (Option.isNone(key)) {
@@ -59,7 +59,9 @@ const stripeCall = <A, I>(schema: Schema.Codec<A, I>, path: string, form?: Reado
             SchemaError: transport(path),
             TimeoutError: transport(path),
         })
-    )();
+    );
+    return call();
+};
 
 const List = <A, I>(item: Schema.Codec<A, I>) => Schema.Struct({ data: Schema.Array(item) });
 const WithId = Schema.Struct({ id: Schema.String });

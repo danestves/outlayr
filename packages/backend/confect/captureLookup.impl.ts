@@ -19,6 +19,9 @@ import { insertJob, queueWork } from "./lib/queueJob";
 import { sha256Hex } from "./lib/sha256Hex";
 
 // Nothing about a push is stored or sent before the privacy notice that announces it takes effect.
+// Convex actions have no HttpClient layer, so the runtime's own fetch is the transport.
+const sendPush = (url: string, init: Parameters<typeof fetch>[1]) => fetch(url, init);
+
 const pushLive = Effect.fn("CaptureLookup.pushLive")(function* pushLive() {
     const config = yield* apnsConfig;
     const now = yield* Clock.currentTimeMillis;
@@ -189,7 +192,7 @@ const push = FunctionImpl.make(
                     answer,
                     nowSeconds
                 );
-                const response = await fetch(url, init);
+                const response = await sendPush(url, init);
                 return {
                     reason: response.ok ? undefined : rejectionReason(await response.text()),
                     status: response.status,

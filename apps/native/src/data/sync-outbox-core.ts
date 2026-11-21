@@ -1,4 +1,5 @@
 import { and, count, eq, isNotNull, or } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -118,7 +119,7 @@ export const outboxPendingCount = Effect.fn("SyncOutbox.outboxPendingCount")(fun
  * Run it after a "replace" adoption, or it pushes the seed categories the replace discards (convex-sync.md §5).
  */
 export const enqueueAllForSync = Effect.fn("SyncOutbox.enqueueAllForSync")(function* enqueueAllForSync(db: Database) {
-    const enqueuedAt = new Date();
+    const enqueuedAt = yield* DateTime.nowAsDate;
     const entries: {
         tableName: string;
         localId: string;

@@ -19,7 +19,29 @@
         "forceConsistentCasingInFileNames": true,
         "module": "ESNext",
         "isolatedModules": true,
-        "noEmit": true
+        "noEmit": true,
+        "plugins": [
+            {
+                "name": "@effect/language-service",
+                "diagnosticSeverity": {
+                    "anyUnknownInErrorContext": "error",
+                    "cryptoRandomUUIDInEffect": "error",
+                    "globalConsoleInEffect": "error",
+                    "globalDateInEffect": "error",
+                    "globalErrorInEffectCatch": "error",
+                    "globalErrorInEffectFailure": "error",
+                    "globalFetchInEffect": "error",
+                    "globalRandomInEffect": "error",
+                    "globalTimersInEffect": "error",
+                    "leakingRequirements": "error",
+                    "missingEffectServiceDependency": "error",
+                    "preferSchemaOverJson": "error",
+                    "schemaSyncInEffect": "error",
+                    "unknownInEffectCatch": "error",
+                    "unsafeEffectTypeAssertion": "error"
+                }
+            }
+        ]
     },
     "include": ["./**/*"],
     "exclude": ["./_generated"]

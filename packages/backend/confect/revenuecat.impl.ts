@@ -3,6 +3,7 @@ import type { RevenueCatSubscriber } from "convex-revenuecat";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -14,13 +15,17 @@ import { forgetRevokedGrant, mirroredPro } from "./referrals";
 import { isPro, listsPro, revenuecat, storeSubscriber, syncLimiter } from "./revenuecat";
 import spec from "./revenuecat.spec";
 
+const decodeSubscriber = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown));
+const encodeSubscriber = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 const mirrorSubscriber = FunctionImpl.make(
     databaseSchema,
     spec,
     "mirrorSubscriber",
     Effect.fn("RevenueCat.mirrorSubscriber")(function* mirrorSubscriber(args) {
         const ctx = yield* MutationCtx;
-        const subscriber: RevenueCatSubscriber = JSON.parse(args.subscriber);
+        // SAFETY: the component writes this blob from its own `RevenueCatSubscriber`.
+        const subscriber = decodeSubscriber(args.subscriber) as RevenueCatSubscriber;
         // `syncSubscriber` never removes, and a revoked entitlement is absent rather than expired, so the mirror is
         // cleared when it disagrees. The re-sync below runs in the same transaction.
         const mirrored = listsPro(subscriber) ? null : yield* mirroredPro(ctx, args.appUserId);
@@ -90,7 +95,7 @@ const syncFromStore = FunctionImpl.make(
         }
         return yield* runMutation(refs.internal.revenuecat.mirrorSubscriber, {
             appUserId: userId,
-            subscriber: JSON.stringify(subscriber),
+            subscriber: encodeSubscriber(subscriber),
         });
     }, Effect.orDie)
 );

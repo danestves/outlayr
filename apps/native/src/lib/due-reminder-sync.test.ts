@@ -1,3 +1,4 @@
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
@@ -33,7 +34,7 @@ describe("due reminder sync", () => {
                     order.push("subscription");
                     if (order.length === 1) {
                         yield* Effect.promise(() => held.promise);
-                        return yield* Effect.fail(new Error("notification queue unavailable"));
+                        return yield* new Cause.UnknownError("notification queue unavailable");
                     }
                 }),
         };

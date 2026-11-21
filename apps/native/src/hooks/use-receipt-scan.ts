@@ -1,3 +1,4 @@
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
@@ -16,6 +17,7 @@ import { trackCapturesWall } from "@/hooks/use-usage-limits";
 import { duringHandoff } from "@/lib/app-handoff";
 import { receiptScanTransport } from "@/lib/cloud-ai";
 import type { ReceiptDraft, ReceiptScanFn, ScanOutcome, ScanRefusal, ScanRequest } from "@/lib/cloud-ai";
+import type { CloudError } from "@/lib/cloud-error";
 import { useLatest, useOnMount } from "@/lib/lifecycle";
 import { launchPick, pendingPick } from "@/lib/pending-pick";
 import type { PickOwner } from "@/lib/pending-pick";
@@ -63,7 +65,7 @@ type ScanSend<Draft> = (
     image: ArrayBuffer,
     today: string,
     more: readonly ArrayBuffer[]
-) => Effect.Effect<ScanOutcome<Draft>, unknown>;
+) => Effect.Effect<ScanOutcome<Draft>, CloudError>;
 
 interface UseImageScanArgs<Context, Draft> {
     context: Context;
@@ -130,7 +132,7 @@ interface ScanPorts<Context, Draft> {
     isCurrent: (take: number) => boolean;
     latest: () => { context: Context; onReview?: (draft: Draft) => void; send: ScanSend<Draft> };
     owner: PickOwner;
-    scanCommand: ReturnType<typeof timedCaptureCommand<ScanOutcome<Draft>>>;
+    scanCommand: ReturnType<typeof timedCaptureCommand<ScanOutcome<Draft>, CloudError>>;
     selectionLimit: number;
     setPhase: (phase: ScanPhase<Context, Draft>) => void;
 }
@@ -161,8 +163,9 @@ const readPhoto = Effect.fn("ReceiptScan.read")(function* readPhoto<Context, Dra
     }
     const { context: sentContext, send: sent } = ports.latest();
     const controller = ports.beginScan();
+    const today = yield* DateTime.nowAsDate;
     const result = yield* fromCommand(ports.scanCommand, {
-        call: sent(bytes, localIsoDate(new Date()), moreBytes),
+        call: sent(bytes, localIsoDate(today), moreBytes),
         signal: controller.signal,
     }).pipe(Effect.exit);
     if (!ports.isCurrent(take)) {
@@ -263,7 +266,7 @@ export function useImageScan<Context, Draft>({
     const takeRef = useRef(0);
     const scanAbortRef = useRef<AbortController | null>(null);
     const [scanCommand] = useState(() =>
-        timedCaptureCommand<ScanOutcome<Draft>>({ operation: "scan", timeout: RECEIPT_SCAN_TIMEOUT })
+        timedCaptureCommand<ScanOutcome<Draft>, CloudError>({ operation: "scan", timeout: RECEIPT_SCAN_TIMEOUT })
     );
     const runFlow = useAtomCommand(voidFlowCommand);
     const start = (flow: Effect.Effect<void, never>) => {

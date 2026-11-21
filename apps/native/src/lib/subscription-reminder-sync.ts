@@ -1,3 +1,4 @@
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Semaphore from "effect/Semaphore";
 
@@ -24,7 +25,10 @@ const reconcileSubscriptionReminders = Effect.fn("SubscriptionReminderSync.recon
         const decision = reminderReconcile(enabled, permission);
         const notices =
             decision === "schedule"
-                ? reminderNotices(yield* pendingReminderPlan(db, new Date(), yield* readReminderTime(db)), hideAmounts)
+                ? reminderNotices(
+                      yield* pendingReminderPlan(db, yield* DateTime.nowAsDate, yield* readReminderTime(db)),
+                      hideAmounts
+                  )
                 : [];
 
         yield* reminders.cancel(

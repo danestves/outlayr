@@ -13,10 +13,10 @@ export interface CachedOriginal {
     signature: Uint8Array;
 }
 
-export interface LogoReplateDeps {
-    originalsFor: (name: string) => Effect.Effect<readonly CachedOriginal[], unknown>;
-    persist: (bytes: Uint8Array) => Effect.Effect<string, unknown>;
-    signature: (uri: string) => Effect.Effect<Uint8Array | null, unknown>;
+export interface LogoReplateDeps<E = never> {
+    originalsFor: (name: string) => Effect.Effect<readonly CachedOriginal[], E>;
+    persist: (bytes: Uint8Array) => Effect.Effect<string, E>;
+    signature: (uri: string) => Effect.Effect<Uint8Array | null, E>;
 }
 
 const LogoReplateOperation = Schema.Literals(["originals", "persist", "rows", "signature"]);
@@ -35,7 +35,7 @@ const attempt = <A>(operation: typeof LogoReplateOperation.Type, run: () => Prom
 
 const failedAt =
     (operation: typeof LogoReplateOperation.Type) =>
-    <A>(step: Effect.Effect<A, unknown>) =>
+    <A, E>(step: Effect.Effect<A, E>) =>
         step.pipe(Effect.mapError((cause) => new LogoReplateError({ cause, operation })));
 
 /** Mean per-channel difference two signatures can show and still be one image re-encoded. */
@@ -60,9 +60,9 @@ const TABLES = [
 // Replaced only when the row's name files a cached logo AND the photo matches it drawn over black: a receipt on a
 // Netflix row passes the first, a dark photo the second. shortcut: a renamed row or a reclaimed cache entry keeps its
 // black tile; re-resolve the merchant's domain if that turns out common.
-export const replateStoredLogos = Effect.fn("LogoReplate.replateStoredLogos")(function* replateStoredLogos(
+export const replateStoredLogos = Effect.fn("LogoReplate.replateStoredLogos")(function* replateStoredLogos<E>(
     db: SpendDb,
-    deps: LogoReplateDeps
+    deps: LogoReplateDeps<E>
 ) {
     if (yield* Meta.get(db, "logoPlates")) {
         return 0;

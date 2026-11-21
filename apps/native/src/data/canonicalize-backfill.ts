@@ -1,6 +1,7 @@
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import { utcDateString } from "@outlayr/money/dates";
 import { and, count, eq, isNotNull, isNull, min, ne, not, or } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -200,6 +201,7 @@ export const backfillBudgetUsd = Effect.fn("CanonicalizeBackfill.backfillBudgetU
                 .where(and(isNull(table.amountUsd), isNull(table.deletedAt)))
         );
 
+        const now = yield* DateTime.nowAsDate;
         for (const row of pending) {
             if (row.currency === null) {
                 continue;
@@ -208,7 +210,7 @@ export const backfillBudgetUsd = Effect.fn("CanonicalizeBackfill.backfillBudgetU
             const { amountUsd } = yield* canonicalUsd(lookup, {
                 amount: row.amount,
                 currency,
-                date: row.dateCreated ?? row.startDate ?? new Date(),
+                date: row.dateCreated ?? row.startDate ?? now,
                 displayCurrency: currency,
             }).pipe(Effect.mapError((cause) => new CanonicalizeBackfillError({ cause, operation: "budgets" })));
             if (amountUsd === null) {

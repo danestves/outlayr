@@ -1,3 +1,4 @@
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import { Button } from "panelui-web/button";
@@ -112,22 +113,28 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
                 }
                 let shownAt: number | null = null;
                 const label = yield* Effect.forkChild(
-                    Effect.sync(() => {
-                        shownAt = Date.now();
+                    Effect.gen(function* showLabelProgram() {
+                        shownAt = yield* Clock.currentTimeMillis;
                         setSendingCode(true);
                     }).pipe(Effect.delay(SHOW_AFTER_MS))
                 );
                 const hide = Fiber.interrupt(label).pipe(
                     Effect.andThen(
-                        Effect.suspend(() =>
-                            shownAt === null
-                                ? Effect.void
-                                : Effect.forkDetach(
-                                      Effect.sync(() => setSendingCode(false)).pipe(
-                                          Effect.delay(Math.max(0, shownAt + SHOW_AT_LEAST_MS - Date.now()))
-                                      )
-                                  )
-                        )
+                        Effect.suspend(() => {
+                            if (shownAt === null) {
+                                return Effect.void;
+                            }
+                            const hideAt = shownAt + SHOW_AT_LEAST_MS;
+                            return Clock.currentTimeMillis.pipe(
+                                Effect.flatMap((now) =>
+                                    Effect.forkDetach(
+                                        Effect.sync(() => setSendingCode(false)).pipe(
+                                            Effect.delay(Math.max(0, hideAt - now))
+                                        )
+                                    )
+                                )
+                            );
+                        })
                     )
                 );
                 yield* authRequest(() => authClient.emailOtp.requestPasswordReset({ email })).pipe(

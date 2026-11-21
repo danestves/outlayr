@@ -1,3 +1,4 @@
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import { openBrowserAsync } from "expo-web-browser";
 import type { WebBrowserResult } from "expo-web-browser";
@@ -28,9 +29,9 @@ export function expectHandoff(now: number = Date.now()): void {
  */
 export const duringHandoff = <A, E, R>(trip: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
     Effect.acquireUseRelease(
-        Effect.sync(() => {
+        Effect.gen(function* markHandoff() {
             expectHandoff();
-            runningSince = Date.now();
+            runningSince = yield* Clock.currentTimeMillis;
         }),
         () => trip,
         () =>

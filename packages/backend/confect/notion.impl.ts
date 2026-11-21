@@ -216,15 +216,16 @@ const forget = FunctionImpl.make(
     Effect.fn("Notion.forget")(function* forget(args) {
         const ctx = yield* MutationCtx;
         // SAFETY: as in `deleteAuthRows` (`accountDeletion.impl.ts`); one page clears a user's single Notion link.
-        yield* Effect.promise(() =>
-            ctx.runMutation(
+        yield* Effect.promise(async () => {
+            // SAFETY: as in `deleteAuthRows` (`accountDeletion.impl.ts`).
+            await ctx.runMutation(
                 components.betterAuth.adapter.deleteMany as never,
                 {
                     input: { model: "account", where: notionAccountWhere(args.userId) },
                     paginationOpts: { cursor: null, numItems: NOTION_ACCOUNT_PAGE },
                 } as never
-            )
-        );
+            );
+        });
         return null;
     }, Effect.orDie)
 );

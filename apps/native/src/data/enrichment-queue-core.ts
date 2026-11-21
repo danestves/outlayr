@@ -41,13 +41,10 @@ export interface SendDeps {
     regionCode?: string;
 }
 
-export interface ApplyDeps {
+export interface ApplyDeps<E = never> {
     discard: (imageUri: string) => void;
     fetchImage: (request: MerchantImageRequest) => Effect.Effect<LogoOutcome>;
-    persist: (
-        bytes: Uint8Array,
-        domain: string
-    ) => Effect.Effect<{ imageColor: string | null; imageUri: string }, unknown>;
+    persist: (bytes: Uint8Array, domain: string) => Effect.Effect<{ imageColor: string | null; imageUri: string }, E>;
 }
 
 export const MIN_KEY_LENGTH = 3;
@@ -207,8 +204,8 @@ const parentIdFor = Effect.fn("EnrichmentQueue.parentIdFor")(function* parentIdF
     return parent?.id ?? null;
 });
 
-const fetchLogo = Effect.fn("EnrichmentQueue.fetchLogo")(function* fetchLogo(
-    deps: ApplyDeps,
+const fetchLogo = Effect.fn("EnrichmentQueue.fetchLogo")(function* fetchLogo<E>(
+    deps: ApplyDeps<E>,
     domain: string | null,
     name: string
 ) {
@@ -224,11 +221,9 @@ const fetchLogo = Effect.fn("EnrichmentQueue.fetchLogo")(function* fetchLogo(
         .pipe(Effect.mapError((cause) => new EnrichmentQueueError({ cause, operation: "apply" })));
 });
 
-export const applyEnrichmentAnswer = Effect.fn("EnrichmentQueue.applyEnrichmentAnswer")(function* applyEnrichmentAnswer(
-    db: Database,
-    job: AnsweredJob,
-    deps: ApplyDeps
-) {
+export const applyEnrichmentAnswer = Effect.fn("EnrichmentQueue.applyEnrichmentAnswer")(function* applyEnrichmentAnswer<
+    E,
+>(db: Database, job: AnsweredJob, deps: ApplyDeps<E>) {
     const answer = job.result;
     const before = answer == null ? null : yield* readRow(db, job.localId);
     if (answer == null || before == null) {

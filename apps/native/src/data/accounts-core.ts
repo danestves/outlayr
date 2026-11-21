@@ -1,6 +1,7 @@
 import { DEFAULT_ACCOUNT_KIND, isPerson } from "@outlayr/money/account-kind";
 import type { AccountKind } from "@outlayr/money/account-kind";
 import { and, eq, isNull, max } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -123,7 +124,7 @@ export const accountsRepo = {
     archive: (db: Database, id: string, now: Date = new Date()) => setArchivedAt(db, id, now, now),
 
     create: Effect.fn("Accounts.create")(function* create(db: Database, input: AccountInput) {
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         const id = newId();
         const initialBalance = input.initialBalance ?? 0;
         const initialBalanceDate = input.initialBalanceDate ?? now;
@@ -167,7 +168,7 @@ export const accountsRepo = {
 
     /** Takes every live account it lists, already ordered; people keep their own relative order. */
     reorder: Effect.fn("Accounts.reorder")(function* reorder(db: Database, orderedIds: string[]) {
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         yield* transaction(
             db,
             Effect.gen(function* write() {

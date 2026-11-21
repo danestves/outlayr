@@ -11,7 +11,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { localDataAtom, useLocalData } from "@/contexts/local-data-context";
 import { closeDatabase } from "@/db/client";
-import type { Database } from "@/db/client";
+import type { CloseDatabaseError, Database } from "@/db/client";
 import { useTranslation } from "@/i18n/context";
 
 import { CloudError } from "./cloud-error";
@@ -19,6 +19,7 @@ import { DeletionResumeError, resumePersistedCloudDeletion } from "./deletion-re
 import { createDeviceResetGate } from "./device-data-reset";
 import { ProviderRevocationError } from "./provider-revocation";
 import { appRuntime } from "./runtime";
+import type { SecureStorageError } from "./secure-storage";
 
 export class DeviceRecoveryError extends Schema.TaggedError<DeviceRecoveryError>()("DeviceRecoveryError", {
     failures: Schema.optional(Schema.Array(Schema.String)),
@@ -41,7 +42,9 @@ const recoverDevice = Effect.fn("DeviceResetRecovery.recover")(function* recover
     // Set only when the sweep reached the sqlite store: reopening after an ordinary launch publishes
     // `status: "opening"`, which un-gates this in `_layout`, remounts it and loops forever.
     let closed = false;
-    const result = yield* createDeviceResetGate({
+    const result = yield* createDeviceResetGate<
+        CloudError | CloseDatabaseError | DeletionResumeError | ProviderRevocationError | SecureStorageError
+    >({
         // Close only: `reopen()` here starts a reopen racing `deleteDatabaseAsync`, so the delete loses to a
         // locked file or a ledger is re-seeded mid-erase. `settings/account` closes the same way.
         closeDatabase: Effect.sync(() => {

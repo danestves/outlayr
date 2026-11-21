@@ -1,8 +1,10 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { proPrice, proPriceKey } from "@outlayr/money/pro-prices";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -28,6 +30,9 @@ import {
 
 const HELD = new Set(["renews", "trial", "ends", "lifetime"]);
 
+// `RevenueCatSubscriber` is the component's own type; this only guards the JSON it came in as.
+const encodeSubscriber = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 const billingUser = Effect.fn("Billing.user")(function* billingUser() {
     const ctx = yield* ActionCtx;
     const user = yield* Effect.promise(() => authComponent.safeGetAuthUser(ctx));
@@ -49,7 +54,7 @@ const mirrorFromStore = Effect.fn("Billing.mirrorFromStore")(function* mirrorFro
     }
     return yield* runMutation(refs.internal.revenuecat.mirrorSubscriber, {
         appUserId: userId,
-        subscriber: JSON.stringify(subscriber),
+        subscriber: encodeSubscriber(subscriber),
     });
 });
 
@@ -91,7 +96,8 @@ const createCheckout = FunctionImpl.make(
             if (subscriber === null) {
                 return { kind: "unavailable" as const };
             }
-            if (HELD.has(proTermOf(subscriber, Date.now()).state)) {
+            const nowMs = yield* Clock.currentTimeMillis;
+            if (HELD.has(proTermOf(subscriber, nowMs).state)) {
                 return { kind: "alreadyPro" as const };
             }
             const priceId = yield* priceIdForKey(proPriceKey(proPrice(country, plan)));
@@ -204,7 +210,8 @@ const plan = FunctionImpl.make(
             if (stored === null) {
                 return yield* unbilledPlan(user.id);
             }
-            const isStripe = proTermOf(stored, Date.now()).store === "stripe";
+            const nowMs = yield* Clock.currentTimeMillis;
+            const isStripe = proTermOf(stored, nowMs).store === "stripe";
             const customerId = isStripe ? yield* findCustomer(user.id) : null;
             if (customerId !== null && (yield* withinLimit(user.id))) {
                 for (const sessionId of yield* paidSessionIds(customerId)) {
@@ -212,7 +219,7 @@ const plan = FunctionImpl.make(
                 }
             }
             const subscriber = customerId === null ? stored : ((yield* readProSubscriber(user.id)) ?? stored);
-            const { productId, ...term } = proTermOf(subscriber, Date.now());
+            const { productId, ...term } = proTermOf(subscriber, yield* Clock.currentTimeMillis);
             const catalog =
                 isStripe && productId !== null
                     ? yield* catalogPrice(productId)
