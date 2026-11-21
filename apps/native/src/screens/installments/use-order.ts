@@ -1,7 +1,7 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Alert } from "react-native";
 
 import { useDatabase } from "@/contexts/local-data-context";
@@ -9,6 +9,7 @@ import { useInstallmentPlans } from "@/data/installments";
 import type { InstallmentRow, PlanWithStanding } from "@/data/installments-core";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
+import { useLeaveWhenGone } from "@/hooks/use-leave-when-gone";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
@@ -32,13 +33,7 @@ export function useInstallmentEntry(planId: string) {
         }
     };
 
-    const leaveGone = useEffectEvent(leave);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- leaves the screen when the live ledger query reports the plan removed, whether here or by a sync
-    useEffect(() => {
-        if (entry == null) {
-            leaveGone();
-        }
-    }, [entry]);
+    useLeaveWhenGone(entry == null, leave);
 
     return { entry, leave, nowMs };
 }

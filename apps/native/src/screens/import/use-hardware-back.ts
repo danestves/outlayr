@@ -1,14 +1,17 @@
-import { useEffect } from "react";
 import { BackHandler } from "react-native";
+
+import { useEventListener } from "@/lib/lifecycle";
 
 /** Android's back button ignores `gestureEnabled`, so the screens that write the ledger catch it themselves. */
 export function useHardwareBack(onBack: () => void) {
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the hardware back button has no declarative block
-    useEffect(() => {
-        const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+    useEventListener(
+        (listener: () => boolean) => {
+            const subscription = BackHandler.addEventListener("hardwareBackPress", listener);
+            return () => subscription.remove();
+        },
+        () => {
             onBack();
             return true;
-        });
-        return () => subscription.remove();
-    }, [onBack]);
+        }
+    );
 }

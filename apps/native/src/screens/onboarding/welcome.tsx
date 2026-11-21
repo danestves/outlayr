@@ -1,11 +1,11 @@
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
 
 import { FirstRun } from "@/components/first-run";
 import { OutlayrMark } from "@/components/outlayr-mark";
 import { useNow } from "@/data/use-now";
 import { flyleafDate } from "@/domain/flyleaf";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { useWhen } from "@/lib/lifecycle";
 import { useMoneyManagerSession } from "@/lib/money-manager-session";
 
 export function OnboardingWelcome() {
@@ -16,12 +16,9 @@ export function OnboardingWelcome() {
     const { pending } = useMoneyManagerSession();
 
     // A backup opened in Outlayr before the first run lands here, since the guard keeps the ledger's routes shut.
-    // oxlint-disable-next-line outlayr/react-effect-budget -- routes a handed-over backup into the onboarding import
-    useEffect(() => {
-        if (pending !== null) {
-            router.push("/onboarding/import/money-manager/open");
-        }
-    }, [pending, router]);
+    useWhen(pending !== null, () => {
+        router.push("/onboarding/import/money-manager/open");
+    });
 
     return (
         <FirstRun
