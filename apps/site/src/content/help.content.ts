@@ -325,8 +325,8 @@ const help = {
                         id: "iphone-android",
                         items: [
                             t({
-                                en: "Sign in. Voice entry runs on Outlayr's server, so it needs an account.",
-                                es: "Inicia sesión. Dictar pasa por el servidor de Outlayr, así que necesita una cuenta.",
+                                en: "Sign in or buy Pro. Voice entry runs on Outlayr's server, so it needs an account or Pro.",
+                                es: "Inicia sesión o compra Pro. Dictar pasa por el servidor de Outlayr, así que necesita una cuenta o Pro.",
                             }),
                             t({
                                 en: "Tap + and choose Speak an entry. The microphone opens right away. On Android, the Voice tile on the home screen widget opens it too.",
@@ -370,8 +370,8 @@ const help = {
                         id: "iphone-android",
                         items: [
                             t({
-                                en: "Sign in. Scanning runs on Outlayr's server, so it needs an account.",
-                                es: "Inicia sesión. Escanear pasa por el servidor de Outlayr, así que necesita una cuenta.",
+                                en: "Sign in or buy Pro. Scanning runs on Outlayr's server, so it needs an account or Pro.",
+                                es: "Inicia sesión o compra Pro. Escanear pasa por el servidor de Outlayr, así que necesita una cuenta o Pro.",
                             }),
                             t({
                                 en: "Tap + and choose Scan a receipt.",

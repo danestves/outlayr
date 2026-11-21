@@ -1097,13 +1097,12 @@ const moneyManagerImport = {
             pt: "Concluir a configuração",
         }),
         "mmImport.pro.laterNote": t({
-            en: "Pro needs an account, which comes at the end of setup. This backup opens again once you're in.",
-            de: "Pro braucht ein Konto, das am Ende der Einrichtung kommt. Diese Sicherung öffnet sich wieder, sobald du drin bist.",
-            es: "Pro necesita una cuenta, que llega al final de la configuración. Este respaldo se abre de nuevo cuando entres.",
-            fr: "Pro demande un compte, proposé à la fin de la configuration. Cette sauvegarde se rouvre une fois dedans.",
-            pt: "O Pro precisa de uma conta, que vem no fim da configuração. Este backup abre de novo quando você entrar.",
-            "pt-PT":
-                "O Pro precisa de uma conta, que vem no fim da configuração. Esta cópia abre de novo quando entrar.",
+            en: "You can get Pro at the end of setup. This backup opens again once you're in.",
+            de: "Pro kannst du am Ende der Einrichtung holen. Diese Sicherung öffnet sich wieder, sobald du drin bist.",
+            es: "Puedes obtener Pro al final de la configuración. Este respaldo se abre de nuevo cuando entres.",
+            fr: "Pro vous sera proposé à la fin de la configuration. Cette sauvegarde se rouvre une fois dedans.",
+            pt: "Você pode ativar o Pro no fim da configuração. Este backup abre de novo quando você entrar.",
+            "pt-PT": "Pode ativar o Pro no fim da configuração. Esta cópia abre de novo quando entrar.",
         }),
         "mmImport.pro.note": t({
             en: "Everything comes over as soon as Pro is on.",

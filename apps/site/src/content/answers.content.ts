@@ -367,9 +367,9 @@ const LISTED_IN_SPANISH = t({
 });
 
 const OUTLAYR_WATCH = t({
-    en: "Voice entry and receipt scans need an account and a connection, with 30 captures every 30 days on the free plan. The web app needs Pro",
-    es: "Dictar y escanear recibos requiere una cuenta y conexión, con 30 capturas cada 30 días en el plan gratis. La app web requiere Pro",
-    fr: "La saisie vocale et le scan de reçus demandent un compte et une connexion Internet, avec 30 captures tous les 30 jours en offre gratuite. La version Web demande Pro",
+    en: "Voice entry and receipt scans need an account or Pro, and a connection, with 30 captures every 30 days on the free plan. The web app needs Pro",
+    es: "Dictar y escanear recibos requiere una cuenta o Pro, y conexión, con 30 capturas cada 30 días en el plan gratis. La app web requiere Pro",
+    fr: "La saisie vocale et le scan de reçus demandent un compte ou Pro, et une connexion Internet, avec 30 captures tous les 30 jours en offre gratuite. La version Web demande Pro",
 });
 
 const CSV_INTO_OUTLAYR = {
@@ -3667,8 +3667,8 @@ const answers = {
                     {
                         label: t({ en: "Needs", es: "Requiere" }),
                         text: t({
-                            en: "Voice and receipts need an account and a connection. Typing needs neither",
-                            es: "La voz y los recibos requieren una cuenta y conexión. Escribir no requiere ninguna de las dos",
+                            en: "Voice and receipts need an account or Pro, and a connection. Typing needs none of that",
+                            es: "La voz y los recibos requieren una cuenta o Pro, y conexión. Escribir no requiere nada de eso",
                         }),
                     },
                 ],
@@ -3776,8 +3776,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Without an account you can type entries, set budgets and subscriptions, import a CSV matched by category name, and export your data. Signing in is needed for voice entry and receipt scanning, and, with Pro, for AI matching on import and for sync.",
-                                es: "Sin cuenta puedes escribir registros, armar presupuestos y suscripciones, importar un CSV emparejado por nombre de categoría y exportar tus datos. Iniciar sesión es necesario para dictar registros y escanear recibos, y, con Pro, para la asignación con IA al importar y para la sincronización.",
+                                en: "Without an account you can type entries, set budgets and subscriptions, import a CSV matched by category name, and export your data. Voice entry and receipt scanning need an account or Pro, AI matching on import needs Pro, and sync needs Pro and an account.",
+                                es: "Sin cuenta puedes escribir registros, armar presupuestos y suscripciones, importar un CSV emparejado por nombre de categoría y exportar tus datos. Dictar registros y escanear recibos requiere una cuenta o Pro, la asignación con IA al importar requiere Pro, y la sincronización requiere Pro y una cuenta.",
                             }),
                             t({
                                 en: "Before the first clip or receipt, Outlayr asks whether it may send data to its AI providers. A voice clip sends the recording, your account and category names, your currency, your language, and today's date, and no balances or past entries.",
@@ -4869,16 +4869,16 @@ const answers = {
                                     es: "https://tryoutlayr.com/es/privacy",
                                 }),
                                 text: t({
-                                    en: "Without an account, your entries, amounts, and notes stay on the phone. Usage analytics go to PostHog, on by default outside the EEA and UK, and you can turn them off",
-                                    es: "Sin una cuenta, tus registros, montos y notas se quedan en el celular. Las analíticas de uso van a PostHog, activas por defecto fuera del EEE y el Reino Unido, y puedes apagarlas",
+                                    en: "Without an account or Pro, your entries, amounts, and notes stay on the phone. Usage analytics go to PostHog, on by default outside the EEA and UK, and you can turn them off",
+                                    es: "Sin una cuenta ni Pro, tus registros, montos y notas se quedan en el celular. Las analíticas de uso van a PostHog, activas por defecto fuera del EEE y el Reino Unido, y puedes apagarlas",
                                 }),
                             },
                             {
                                 label: LABELS.watch,
                                 source: "https://github.com/danestves/outlayr/blob/main/packages/backend/confect/lib/captures.ts",
                                 text: t({
-                                    en: "It does not connect to your bank. Voice entry and receipt scans need an account and a connection, with 30 captures every 30 days on the free plan",
-                                    es: "No se conecta con tu banco. Dictar y escanear recibos requiere una cuenta y conexión, con 30 capturas cada 30 días en el plan gratis",
+                                    en: "It does not connect to your bank. Voice entry and receipt scans need an account or Pro, and a connection, with 30 captures every 30 days on the free plan",
+                                    es: "No se conecta con tu banco. Dictar y escanear recibos requiere una cuenta o Pro, y conexión, con 30 capturas cada 30 días en el plan gratis",
                                 }),
                             },
                         ],
@@ -6169,9 +6169,9 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "No bank sync, so every entry starts with you. Voice entry and receipt scans need an account and a connection, with 30 captures every 30 days on the free plan. The web app needs Pro",
-                                    es: "No sincroniza con el banco, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta y conexión, con 30 capturas cada 30 días en el plan gratis. La app web requiere Pro",
-                                    pt: "Não sincroniza com o banco, então cada lançamento começa por você. Lançar por voz e escanear recibos exige uma conta e conexão, com 30 capturas a cada 30 dias no plano grátis. Não tem versão web",
+                                    en: "No bank sync, so every entry starts with you. Voice entry and receipt scans need an account or Pro, and a connection, with 30 captures every 30 days on the free plan. The web app needs Pro",
+                                    es: "No sincroniza con el banco, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta o Pro, y conexión, con 30 capturas cada 30 días en el plan gratis. La app web requiere Pro",
+                                    pt: "Não sincroniza com o banco, então cada lançamento começa por você. Lançar por voz e escanear recibos exige uma conta ou o Pro, e conexão, com 30 capturas a cada 30 dias no plano grátis. Não tem versão web",
                                 }),
                             },
                         ],
@@ -6793,9 +6793,9 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "No bank sync, so every entry starts with you. Voice entry and receipt scans need an account and a connection, with 30 captures every 30 days on the free plan. The web app needs Pro",
-                                    es: "No sincroniza con el banco, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta y conexión, con 30 capturas cada 30 días en el plan gratis. La app web requiere Pro",
-                                    fr: "Pas de synchronisation bancaire, donc chaque opération part de vous. La saisie vocale et le scan de tickets demandent un compte et une connexion, avec 30 captures tous les 30 jours en formule gratuite. La version Web demande Pro",
+                                    en: "No bank sync, so every entry starts with you. Voice entry and receipt scans need an account or Pro, and a connection, with 30 captures every 30 days on the free plan. The web app needs Pro",
+                                    es: "No sincroniza con el banco, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta o Pro, y conexión, con 30 capturas cada 30 días en el plan gratis. La app web requiere Pro",
+                                    fr: "Pas de synchronisation bancaire, donc chaque opération part de vous. La saisie vocale et le scan de tickets demandent un compte ou Pro, et une connexion, avec 30 captures tous les 30 jours en formule gratuite. La version Web demande Pro",
                                 }),
                             },
                         ],
@@ -7499,8 +7499,8 @@ const answers = {
                                     es: "https://tryoutlayr.com/es/privacy",
                                 }),
                                 text: t({
-                                    en: "Without an account, your entries, amounts, and notes stay on the phone. Usage analytics and crash reports go to PostHog, on by default outside the EEA and UK, never with amounts, merchants, notes, or names. You can turn them off",
-                                    es: "Sin una cuenta, tus registros, montos y notas se quedan en el celular. Las analíticas de uso y los reportes de fallas van a PostHog, activos por defecto fuera del EEE y el Reino Unido, nunca con montos, comercios, notas ni nombres. Puedes apagarlos",
+                                    en: "Without an account or Pro, your entries, amounts, and notes stay on the phone. Usage analytics and crash reports go to PostHog, on by default outside the EEA and UK, never with amounts, merchants, notes, or names. You can turn them off",
+                                    es: "Sin una cuenta ni Pro, tus registros, montos y notas se quedan en el celular. Las analíticas de uso y los reportes de fallas van a PostHog, activos por defecto fuera del EEE y el Reino Unido, nunca con montos, comercios, notas ni nombres. Puedes apagarlos",
                                 }),
                             },
                             {
@@ -7525,8 +7525,8 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "Voice entry and receipt scans run on Outlayr's servers through Anthropic and ElevenLabs, and need an account. Typing works offline, but new exchange rates need a connection",
-                                    es: "Dictar y escanear recibos pasa por los servidores de Outlayr, con Anthropic y ElevenLabs, y requiere una cuenta. Escribir funciona sin conexión, pero las tasas de cambio nuevas necesitan conexión",
+                                    en: "Voice entry and receipt scans run on Outlayr's servers through Anthropic and ElevenLabs, and need an account or Pro. Typing works offline, but new exchange rates need a connection",
+                                    es: "Dictar y escanear recibos pasa por los servidores de Outlayr, con Anthropic y ElevenLabs, y requiere una cuenta o Pro. Escribir funciona sin conexión, pero las tasas de cambio nuevas necesitan conexión",
                                 }),
                             },
                         ],
@@ -10497,15 +10497,15 @@ const answers = {
                     {
                         label: t({ en: "Account", es: "Cuenta" }),
                         text: t({
-                            en: "Not needed to log and budget. Sync, voice entry, receipt scans, and merchant suggestions ask you to sign in",
-                            es: "No hace falta para registrar y presupuestar. La sincronización, la voz, los recibos y las sugerencias de comercios piden iniciar sesión",
+                            en: "Not needed to log and budget. Voice entry, receipt scans, and merchant suggestions need an account or Pro, and sync needs both",
+                            es: "No hace falta para registrar y presupuestar. La voz, los recibos y las sugerencias de comercios piden una cuenta o Pro, y la sincronización pide las dos cosas",
                         }),
                     },
                     {
                         label: t({ en: "Where your data lives", es: "Dónde están tus datos" }),
                         text: t({
-                            en: "On your phone. Without an account, entries, amounts, and notes never leave it",
-                            es: "En tu celular. Sin una cuenta, los registros, montos y notas nunca salen de él",
+                            en: "On your phone. Without an account or Pro, entries, amounts, and notes never leave it",
+                            es: "En tu celular. Sin una cuenta ni Pro, los registros, montos y notas nunca salen de él",
                         }),
                     },
                     {
@@ -10546,8 +10546,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Outlayr works without an account. Some extras need one, such as voice entry, receipt scans, merchant suggestions, and sync across devices with Pro.",
-                            es: "No. Outlayr funciona sin cuenta. Algunos extras la necesitan, como dictar registros, escanear recibos, las sugerencias de comercios y sincronizar entre dispositivos con Pro.",
+                            en: "No. Outlayr works without an account. Voice entry, receipt scans, and merchant suggestions need one or Pro, and sync across devices needs both.",
+                            es: "No. Outlayr funciona sin cuenta. Dictar registros, escanear recibos y las sugerencias de comercios necesitan una cuenta o Pro, y sincronizar entre dispositivos necesita las dos cosas.",
                         }),
                         question: t({
                             en: "Do I need to sign up to use it?",
@@ -10644,8 +10644,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Your ledger is stored on your phone. Without an account, your entries, amounts, and notes never leave it. With Pro, sync keeps a copy on our servers until you delete your account.",
-                                es: "Tu registro se guarda en tu celular. Sin una cuenta, tus registros, montos y notas nunca salen de él. Con Pro, la sincronización guarda una copia en nuestros servidores hasta que elimines tu cuenta.",
+                                en: "Your ledger is stored on your phone. Without an account or Pro, your entries, amounts, and notes never leave it. With Pro, sync keeps a copy on our servers until you delete your account.",
+                                es: "Tu registro se guarda en tu celular. Sin una cuenta ni Pro, tus registros, montos y notas nunca salen de él. Con Pro, la sincronización guarda una copia en nuestros servidores hasta que elimines tu cuenta.",
                             }),
                             t({
                                 en: "Voice entries, receipt scans, and merchant suggestions are processed by Anthropic and ElevenLabs, and recordings and scanned photos are not stored.",
@@ -10708,8 +10708,8 @@ const answers = {
                         es: "Outlayr es la app para controlar gastos que nunca se conecta a tu banco: registra con una frase, tu voz, un recibo o Apple Pay en iPhone, en cualquiera de 165 monedas.",
                     }),
                     t({
-                        en: "Without an account, your entries, amounts, and notes never leave your phone.",
-                        es: "Sin una cuenta, tus registros, montos y notas nunca salen de tu celular.",
+                        en: "Without an account or Pro, your entries, amounts, and notes never leave your phone.",
+                        es: "Sin una cuenta ni Pro, tus registros, montos y notas nunca salen de tu celular.",
                     }),
                     t({
                         en: "The free plan includes 3 accounts, 2 category budgets, and 30 voice or receipt captures every 30 days.",
@@ -10813,8 +10813,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Outlayr never links bank accounts, and it works without an account. Some extras need one, such as voice entry, receipt scans, merchant suggestions, and sync across devices with Pro.",
-                            es: "No. Outlayr nunca conecta cuentas bancarias, y funciona sin cuenta. Algunos extras la necesitan, como dictar registros, escanear recibos, las sugerencias de comercios y sincronizar entre dispositivos con Pro.",
+                            en: "No. Outlayr never links bank accounts, and it works without an account. Voice entry, receipt scans, and merchant suggestions need one or Pro, and sync across devices needs both.",
+                            es: "No. Outlayr nunca conecta cuentas bancarias, y funciona sin cuenta. Dictar registros, escanear recibos y las sugerencias de comercios necesitan una cuenta o Pro, y sincronizar entre dispositivos necesita las dos cosas.",
                         }),
                         question: t({
                             en: "Do I need to link my bank or sign up?",
@@ -10905,8 +10905,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Outlayr does not link your bank, so nothing is pulled from your account. Your ledger is stored on your phone, and without an account your entries, amounts, and notes never leave it.",
-                                es: "Outlayr no conecta tu banco, así que no se trae nada de tu cuenta. Tu registro se guarda en tu celular, y sin una cuenta tus registros, montos y notas nunca salen de él.",
+                                en: "Outlayr does not link your bank, so nothing is pulled from your account. Your ledger is stored on your phone, and without an account or Pro your entries, amounts, and notes never leave it.",
+                                es: "Outlayr no conecta tu banco, así que no se trae nada de tu cuenta. Tu registro se guarda en tu celular, y sin una cuenta ni Pro tus registros, montos y notas nunca salen de él.",
                             }),
                         ],
                         id: "privacy",
@@ -12356,8 +12356,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Scanning needs an account, a connection, and your OK to send the photo to an AI provider. The photo is read by Anthropic's Claude, and it isn't stored after the scan. Each scan counts as one capture: 30 every 30 days on the free plan, shared with voice entry, and 500 with Outlayr Pro, which also backs up the receipt photo.",
-                                es: "Para escanear necesitas una cuenta, conexión y aceptar que la foto se envíe a un proveedor de IA. La foto la lee Claude, de Anthropic, y no se guarda después del escaneo. Cada escaneo cuenta como una captura: 30 cada 30 días en el plan gratis, compartidas con el registro por voz, y 500 con Outlayr Pro, que además respalda la foto del recibo.",
+                                en: "Scanning needs an account or Pro, a connection, and your OK to send the photo to an AI provider. The photo is read by Anthropic's Claude, and it isn't stored after the scan. Each scan counts as one capture: 30 every 30 days on the free plan, shared with voice entry, and 500 with Outlayr Pro, which also backs up the receipt photo.",
+                                es: "Para escanear necesitas una cuenta o Pro, conexión y aceptar que la foto se envíe a un proveedor de IA. La foto la lee Claude, de Anthropic, y no se guarda después del escaneo. Cada escaneo cuenta como una captura: 30 cada 30 días en el plan gratis, compartidas con el registro por voz, y 500 con Outlayr Pro, que además respalda la foto del recibo.",
                             }),
                             t({
                                 en: "Typing works with no signal, so when you're offline you can type the purchase as one sentence and scan the next receipt later.",
@@ -12428,8 +12428,8 @@ const answers = {
                         es: "El plan gratis incluye 30 capturas cada 30 días, compartidas con la entrada por voz. Outlayr Pro las sube a 500.",
                     }),
                     t({
-                        en: "Scanning needs an account and a connection. Anthropic's Claude reads the photo and doesn't keep it. With Outlayr Pro, receipt photo backup keeps it with the entry.",
-                        es: "Escanear requiere una cuenta y conexión. La foto la lee Claude, de Anthropic, y no la guarda. Con Outlayr Pro, el respaldo de fotos la guarda junto a su registro.",
+                        en: "Scanning needs an account or Pro, and a connection. Anthropic's Claude reads the photo and doesn't keep it. With Outlayr Pro, receipt photo backup keeps it with the entry.",
+                        es: "Escanear requiere una cuenta o Pro, y conexión. La foto la lee Claude, de Anthropic, y no la guarda. Con Outlayr Pro, el respaldo de fotos la guarda junto a su registro.",
                     }),
                 ],
                 title: t({ en: "Scan a receipt into an expense", es: "Convierte un recibo en un gasto" }),
@@ -13904,8 +13904,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Speaking an entry needs an account and a connection. Typing an entry works with no signal.",
-                            es: "No. Para dictar un registro necesitas una cuenta y conexión. Escribir un registro funciona sin señal.",
+                            en: "No. Speaking an entry needs an account or Pro, and a connection. Typing an entry works with no signal.",
+                            es: "No. Para dictar un registro necesitas una cuenta o Pro, y conexión. Escribir un registro funciona sin señal.",
                         }),
                         question: t({
                             en: "Does voice entry work offline?",
@@ -13973,8 +13973,8 @@ const answers = {
                         es: "El plan gratis incluye 30 capturas cada 30 días, compartidas con el escaneo de recibos. Outlayr Pro las sube a 500.",
                     }),
                     t({
-                        en: "Speaking an entry needs an account and a connection. Typing works with no signal.",
-                        es: "Dictar un registro requiere una cuenta y conexión. Escribir funciona sin señal.",
+                        en: "Speaking an entry needs an account or Pro, and a connection. Typing works with no signal.",
+                        es: "Dictar un registro requiere una cuenta o Pro, y conexión. Escribir funciona sin señal.",
                     }),
                 ],
                 title: t({
