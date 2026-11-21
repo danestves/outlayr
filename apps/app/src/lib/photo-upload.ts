@@ -25,6 +25,10 @@ export function useUploadPhoto() {
         const { storageId } = (await response.json().catch(() => ({}))) as {
             storageId?: Parameters<typeof client.action<typeof api.photos.confirmUpload>>[1]["storageId"];
         };
+        // Convex file storage binds bytes to a key only through this id, so confirming without it loses the photo.
+        if (method === "POST" && !storageId) {
+            throw new Error("Photo upload returned no storage id");
+        }
         await client.action(api.photos.confirmUpload, storageId ? { key, storageId } : { key });
         return key;
     };

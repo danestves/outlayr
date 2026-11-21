@@ -47,13 +47,18 @@ export const photoTransport = Effect.fn("Cloud.photoTransport")(function* photoT
         if (!isOk(response.status)) {
             return yield* failed("upload", new Error(`Photo upload failed: ${response.status}`));
         }
-        return yield* decodeUploadReceipt(response).pipe(
+        const storageId = yield* decodeUploadReceipt(response).pipe(
             Effect.map((receipt) => receipt.storageId ?? null),
             Effect.catchTags({
                 HttpClientError: () => Effect.succeed(null),
                 SchemaError: () => Effect.succeed(null),
             })
         );
+        // Convex file storage binds bytes to a key only through this id, so confirming without it loses the photo.
+        if (method === "POST" && storageId === null) {
+            return yield* failed("upload", new Error("Photo upload returned no storage id"));
+        }
+        return storageId;
     });
 
     return {
