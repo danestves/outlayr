@@ -8,6 +8,7 @@ export type Components = {
   "noticePool": import("@convex-dev/workpool/_generated/component.js").ComponentApi<"noticePool">;
   "rateLimiter": import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
   "revenuecat": import("convex-revenuecat/_generated/component.js").ComponentApi<"revenuecat">;
+  "statementStorage": import("@outlayr/storage/_generated/component.js").ComponentApi<"statementStorage">;
   "storage": import("@outlayr/storage/_generated/component.js").ComponentApi<"storage">;
 };
 
