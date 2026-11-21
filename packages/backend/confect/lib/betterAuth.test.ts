@@ -277,6 +277,32 @@ describe("email sign-in", () => {
         expect(sent.map(({ subject }) => subject)).toStrictEqual([expect.stringContaining("Your Outlayr code")]);
     });
 
+    it("keeps verified password sign-in while email is broken, without sending codes", async () => {
+        const sent = stubEmail();
+        const post = emailAuth();
+        const pending = { ...credentials, email: "bea@example.com" };
+        await post("/sign-up/email", credentials);
+        await post("/email-otp/verify-email", { email: credentials.email, otp: codeIn(sent.at(-1)) });
+        await post("/sign-up/email", pending);
+        await vi.waitFor(() => expect(sent).toHaveLength(3));
+        vi.stubEnv("EMAIL_PROVIDER", "sendgrid");
+
+        await expect(post("/sign-in/email", credentials)).resolves.toMatchObject({
+            status: 200,
+            token: expect.any(String),
+        });
+        const errors = vi.spyOn(console, "error").mockReturnValue(undefined);
+        await expect(post("/sign-in/email", pending)).resolves.toMatchObject({
+            code: "EMAIL_NOT_VERIFIED",
+            status: 403,
+        });
+        expect(errors).not.toHaveBeenCalled();
+        await expect(post("/sign-up/email", { ...credentials, email: "cy@example.com" })).resolves.toMatchObject({
+            status: 503,
+        });
+        expect(sent).toHaveLength(3);
+    });
+
     it("answers a taken address like a new one and tells its owner instead", async () => {
         const sent = stubEmail();
         const post = emailAuth();

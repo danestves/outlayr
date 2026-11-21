@@ -44,8 +44,15 @@ const DEFAULT_SMTP_PORT = 587;
 const MIN_SMTP_PORT = 1;
 const MAX_SMTP_PORT = 65_535;
 
+const EMAIL_ADDRESS = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+
 const setting = (name: string) =>
     Config.String(name).pipe(Config.option, Config.map(Option.filter((value) => value.trim() !== "")));
+
+const emailFrom = Config.String("EMAIL_FROM").pipe(
+    Config.option,
+    Config.map(Option.filter((value) => EMAIL_ADDRESS.test(value)))
+);
 
 const secret = (name: string) =>
     Config.Redacted(name).pipe(Config.option, Config.map(Option.filter((value) => Redacted.value(value) !== "")));
@@ -124,7 +131,7 @@ function unconfigured(requested: SendingProvider): EmailSetup {
 
 export const emailSetup: Config.Config<EmailSetup> = Config.all({
     found: credentials,
-    from: setting("EMAIL_FROM"),
+    from: emailFrom,
     requested: Config.schema(EmailProviderName, "EMAIL_PROVIDER").pipe(Config.option),
 }).pipe(
     Config.map(({ found, from, requested }): EmailSetup => {

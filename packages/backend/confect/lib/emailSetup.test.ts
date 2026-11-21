@@ -29,8 +29,12 @@ describe("emailSetup", () => {
         await expect(runEdge(emailSetup)).resolves.toStrictEqual({ provider: "unconfigured", requested: "resend" });
     });
 
-    it("stays unconfigured instead of logging when a provider has no EMAIL_FROM", async () => {
+    it("stays unconfigured instead of logging when EMAIL_FROM is missing or malformed", async () => {
         vi.stubEnv("EMAIL_FROM", "");
+
+        await expect(runEdge(emailSetup)).resolves.toStrictEqual({ provider: "unconfigured", requested: "cloudflare" });
+
+        vi.stubEnv("EMAIL_FROM", "not-an-address");
 
         await expect(runEdge(emailSetup)).resolves.toStrictEqual({ provider: "unconfigured", requested: "cloudflare" });
     });

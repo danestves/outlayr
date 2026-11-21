@@ -50,6 +50,13 @@ const EMAIL_SENDING_PATHS = new Set([
     "/sign-up/email",
 ]);
 
+const emailProblem = Effect.gen(function* emailProblem() {
+    const setup = yield* emailSetup;
+    return setup.provider === "unconfigured"
+        ? Option.some(new EmailError({ provider: setup.requested, reason: "unconfigured" }).message)
+        : Option.none<string>();
+}).pipe(Effect.catch((error) => Effect.succeed(Option.some(error.message))));
+
 const emailLimiter = new RateLimiter(components.rateLimiter, {
     emailAuth: { capacity: 10, kind: "token bucket", period: HOUR, rate: 10 },
 });
@@ -119,6 +126,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         siteUrl,
         webOrigins,
     } = runEdgeSync(authSettings);
+    const emailBlocked = runEdgeSync(emailProblem);
 
     const recordMail = (name: "claimWelcome" | "rememberLanguage", userId: string, headers: Headers | undefined) =>
         runEdge(
@@ -177,7 +185,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         },
         emailVerification: {
             autoSignInAfterVerification: true,
-            sendOnSignIn: true,
+            sendOnSignIn: Option.isNone(emailBlocked),
         },
         hooks: {
             after: createAuthMiddleware(async (endpoint) => {
@@ -204,18 +212,11 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                                 new APIError("FORBIDDEN", { message: "Notion is not a sign-in method" })
                             );
                         }
-                        if (EMAIL_SENDING_PATHS.has(endpoint.path)) {
-                            const setup = yield* emailSetup;
-                            if (setup.provider === "unconfigured") {
-                                yield* Console.error(
-                                    new EmailError({ provider: setup.requested, reason: "unconfigured" }).message
-                                );
-                                return yield* Effect.fail(
-                                    new APIError("SERVICE_UNAVAILABLE", {
-                                        message: "Email is not set up on this server",
-                                    })
-                                );
-                            }
+                        if (EMAIL_SENDING_PATHS.has(endpoint.path) && Option.isSome(emailBlocked)) {
+                            yield* Console.error(emailBlocked.value);
+                            return yield* Effect.fail(
+                                new APIError("SERVICE_UNAVAILABLE", { message: "Email is not set up on this server" })
+                            );
                         }
                         const body = decodeEmailBody(endpoint.body);
                         if (EMAIL_LIMITED_PATHS.has(endpoint.path) && Option.isSome(body)) {
