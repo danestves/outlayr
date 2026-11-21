@@ -17,6 +17,14 @@ const settingsAccountPanel = {
             fr: "Passer à Pro",
             pt: "Seja Pro",
         }),
+        "settings.panel.notOnAccount": t({
+            en: "Not on an account",
+            de: "Mit keinem Konto verknüpft",
+            es: "Sin cuenta vinculada",
+            fr: "Sans compte associé",
+            pt: "Sem conta vinculada",
+            "pt-PT": "Sem conta associada",
+        }),
         "settings.panel.plan": t({
             en: "Plan",
             de: "Plan",
