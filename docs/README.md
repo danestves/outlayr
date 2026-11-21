@@ -12,6 +12,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [Confect backend layout](./internals/confect.md)
 - [Linting and formatting](./internals/linting.md)
 - [Effect services](./internals/effect-services.md)
+- [React effects](./internals/react-effects.md)
 - [Library traps](./internals/library-traps.md)
 - [AI providers](./internals/ai-providers.md)
 - [Email](./internals/email.md)

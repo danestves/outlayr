@@ -3,7 +3,7 @@ import { resolveInstitutionDomain } from "@outlayr/money/institution-map";
 import { use, useEffect, useEffectEvent, useRef } from "react";
 
 import type { EnrichmentFn } from "@/lib/convex";
-import { useLatest } from "@/lib/use-latest";
+import { useLatest } from "@/lib/lifecycle";
 import { attachAccountLogoCommand } from "@/state/identity-commands";
 import { fireAtomCommand } from "@/state/use-atom-action";
 

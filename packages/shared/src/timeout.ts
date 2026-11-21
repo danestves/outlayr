@@ -1,14 +1,12 @@
-import { useEffect, useEffectEvent } from "react";
+import { useLatest, useMirror } from "./lifecycle";
 
 export function useTimeout<Token>(callback: () => void, delayMs: number | null, restartOn: Token) {
-    const fire = useEffectEvent(callback);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- a browser timer that must be cleared when the delay changes or the component unmounts
-    useEffect(() => {
-        if (delayMs === null) {
-            return;
+    const latest = useLatest(callback);
+    useMirror([delayMs, restartOn], ([delay]) => {
+        if (delay === null) {
+            return undefined;
         }
-        const timer = window.setTimeout(fire, delayMs);
+        const timer = window.setTimeout(() => latest.current(), delay);
         return () => window.clearTimeout(timer);
-        // oxlint-disable-next-line react/exhaustive-effect-dependencies -- restartOn only restarts the delay, the effect never reads it
-    }, [delayMs, restartOn]);
+    });
 }
