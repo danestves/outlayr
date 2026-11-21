@@ -79,6 +79,26 @@ export function readPlans(
     });
 }
 
+/** A paid first year on the annual plan, sold once to someone about to leave the paywall. */
+export interface ExitOffer {
+    firstYear: string;
+    percentOff: number;
+    plan: Plan;
+}
+
+export function readExitOffer(
+    packages: readonly PurchasesPackage[],
+    eligibleForIntro: ReadonlySet<string>
+): ExitOffer | null {
+    const plan = readPlans(packages, eligibleForIntro).find((candidate) => candidate.kind === "annual");
+    const intro = plan?.offer.product.introPrice;
+    if (plan === undefined || intro == null || intro.price <= 0 || !trialEligible(plan.offer, eligibleForIntro)) {
+        return null;
+    }
+    const percentOff = Math.round((1 - intro.price / plan.offer.product.price) * 100);
+    return percentOff > 0 ? { firstYear: intro.priceString, percentOff, plan } : null;
+}
+
 export interface ProCost {
     currency: string;
     monthly: number;

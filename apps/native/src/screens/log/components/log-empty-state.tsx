@@ -17,13 +17,31 @@ export function LogEmptyState() {
     return (
         <EmptyState
             action={
-                <Pressable
-                    accessibilityRole="button"
-                    className="bg-accent rounded-full px-7 py-3.5 active:opacity-80"
-                    onPress={() => router.push("/transactions/create")}
-                >
-                    <Text className="font-sans-semibold text-accent-foreground text-body">{t("log.empty.action")}</Text>
-                </Pressable>
+                <View className="items-center gap-1">
+                    <Pressable
+                        accessibilityRole="button"
+                        className="bg-accent rounded-full px-7 py-3.5 active:opacity-80"
+                        onPress={() => router.push("/transactions/create")}
+                    >
+                        <Text className="font-sans-semibold text-accent-foreground text-body">
+                            {t("log.empty.action")}
+                        </Text>
+                    </Pressable>
+                    <Pressable
+                        accessibilityRole="button"
+                        className="px-4 pt-3 pb-1 active:opacity-60"
+                        onPress={() => router.push("/settings/integrations")}
+                    >
+                        <Text className="text-tint text-body">{t("log.empty.autoLog")}</Text>
+                    </Pressable>
+                    <Pressable
+                        accessibilityRole="button"
+                        className="px-4 py-1 active:opacity-60"
+                        onPress={() => router.push("/import")}
+                    >
+                        <Text className="text-tint text-body">{t("log.empty.import")}</Text>
+                    </Pressable>
+                </View>
             }
             body={t("log.empty.body")}
             mark={<LedgerWaiting />}

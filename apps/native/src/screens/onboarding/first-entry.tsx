@@ -1,4 +1,5 @@
 import * as Cause from "effect/Cause";
+import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { ScrollView } from "react-native";
 
@@ -27,6 +28,7 @@ import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 import { HeardFrom } from "./heard-from";
+import { useOnboardingOfferDue } from "./pro";
 
 const FAILURE_COPY = {
     finish: "onboarding.firstEntry.finishFailed",
@@ -35,6 +37,8 @@ const FAILURE_COPY = {
 
 export function OnboardingFirstEntry() {
     const db = useDatabase();
+    const router = useRouter();
+    const offerDue = useOnboardingOfferDue();
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
@@ -61,7 +65,14 @@ export function OnboardingFirstEntry() {
         haptics("error");
         setFailed("finish");
     };
-    const finishOnboarding = useAtomAction(finishFirstRunCommand, { onFailure: finishFailed }, SILENT);
+    const finishFirstRun = useAtomAction(finishFirstRunCommand, { onFailure: finishFailed }, SILENT);
+    const finishOnboarding = () => {
+        if (offerDue) {
+            router.push("/onboarding/pro");
+        } else {
+            finishFirstRun(db);
+        }
+    };
     const skipOnboarding = useAtomAction(
         finishFirstRunCommand,
         {
@@ -88,7 +99,7 @@ export function OnboardingFirstEntry() {
                 if (written && shareAnalytics) {
                     setAsking(true);
                 } else if (written) {
-                    finishOnboarding(db);
+                    finishOnboarding();
                 }
             },
         },
@@ -122,7 +133,14 @@ export function OnboardingFirstEntry() {
             return;
         }
         setFailed(null);
-        (saved ? finishOnboarding : skipOnboarding)(db);
+        if (saved) {
+            finishOnboarding();
+        } else if (offerDue) {
+            posthog?.capture("onboarding_first_entry", { outcome: "skipped" });
+            router.push("/onboarding/pro");
+        } else {
+            skipOnboarding(db);
+        }
     };
 
     if (asking && category !== null) {
@@ -135,7 +153,7 @@ export function OnboardingFirstEntry() {
                 })}
                 onDone={() => {
                     setFailed(null);
-                    finishOnboarding(db);
+                    finishOnboarding();
                 }}
             />
         );
