@@ -94,8 +94,11 @@ describe("retiring a guest", () => {
         const captured = fetchMock.mock.calls
             .filter(([input]) => String(input).includes("/i/v0/e/"))
             .map(([, init]) => JSON.parse(String(init?.body)));
-        expect(captured.map(({ event, properties }) => ({ event, properties }))).toStrictEqual([
+        expect(
+            captured.map(({ distinct_id, event, properties }) => ({ distinct_id, event, properties }))
+        ).toStrictEqual([
             {
+                distinct_id: "outlayr-backend",
                 event: "guest_retirement_stuck",
                 properties: { $process_person_profile: false, analytics: false, customer: false },
             },
