@@ -1,5 +1,4 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
-import type { Id } from "@outlayr/backend/convex/_generated/dataModel";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -97,8 +96,8 @@ export async function readStatement(
     try {
         const client = convexClient();
         onPhase("uploading");
-        const ticket = await client.mutation(api.pdfImport.requestUpload, {});
-        if (ticket.status !== "ok" || ticket.url === null) {
+        const ticket = await client.mutation(api.pdfImport.startUpload, {});
+        if (ticket.status !== "ok" || ticket.key === null || ticket.url === null) {
             return { ok: false, reason: ticket.status === "rateLimited" ? "overLimit" : "service" };
         }
         const sent = await fetch(ticket.url, { body: file, headers: { "Content-Type": PDF_TYPE }, method: "POST" });
@@ -111,9 +110,8 @@ export async function readStatement(
         const reply = await client.action(api.pdfImport.extract, {
             aiConsent: AI_CONSENT_VERSION,
             categoryTree: categoryTree(books),
-            // SAFETY: the upload URL answers with the id of the file it stored, in Convex's own `_storage` table.
-            storageId: storageId as Id<"_storage">,
             today,
+            upload: { key: ticket.key, storageId },
         });
         if (reply.status !== "ok" || reply.rows === null) {
             return { ok: false, reason: pdfRefusal(reply.status) };

@@ -8,6 +8,7 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 
 export default {
 ["requestUpload"]: RegisteredConvexFunction.register({ ...definitions["requestUpload"], handler: forward(definitions["requestUpload"].handler) }),
+["startUpload"]: RegisteredConvexFunction.register({ ...definitions["startUpload"], handler: forward(definitions["startUpload"].handler) }),
 ["uploadContentType"]: RegisteredConvexFunction.register({ ...definitions["uploadContentType"], handler: forward(definitions["uploadContentType"].handler) }),
 ["sweepUploads"]: RegisteredConvexFunction.register({ ...definitions["sweepUploads"], handler: forward(definitions["sweepUploads"].handler) }),
 ["extract"]: RegisteredConvexFunction.register({ ...definitions["extract"], handler: forward(definitions["extract"].handler) }),

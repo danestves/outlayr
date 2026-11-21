@@ -5,7 +5,7 @@ import { FilesError } from "files-sdk";
 import { internal } from "./_generated/api.js";
 import type { Id } from "./_generated/dataModel.js";
 import type { MutationCtx, QueryCtx } from "./_generated/server.js";
-import { action, internalAction, internalMutation, mutation } from "./_generated/server.js";
+import { action, internalAction, internalMutation, internalQuery, mutation } from "./_generated/server.js";
 import { bucketFor } from "./bucket";
 import { provider } from "./provider";
 
@@ -20,6 +20,14 @@ const confirmation = v.union(
 );
 
 type Confirmation = Infer<typeof confirmation>;
+
+const readResult = v.union(
+    v.object({ bytes: v.bytes(), kind: v.literal("stored") }),
+    v.object({ kind: v.literal("missing") }),
+    v.object({ kind: v.literal("tooLarge") })
+);
+
+type ReadResult = Infer<typeof readResult>;
 
 const objectFor = (ctx: QueryCtx, key: string) =>
     ctx.db
@@ -97,6 +105,80 @@ export const bind = internalMutation({
             await ctx.db.patch("objects", existing._id, { storageId });
         }
         return { bytes: file.size, kind: "stored" as const };
+    },
+});
+
+// Actions have no db, so an action that reads bytes asks this first.
+export const lookup = internalQuery({
+    args: { key: v.string() },
+    returns: v.union(v.object({ storageId: v.id("_storage") }), v.null()),
+    handler: async (ctx, args) => {
+        const row = await objectFor(ctx, args.key);
+        return row === null ? null : { storageId: row.storageId };
+    },
+});
+
+export const read = action({
+    args: { key: v.string(), maxBytes: v.number(), provider },
+    returns: readResult,
+    handler: async (ctx, args): Promise<ReadResult> => {
+        if (args.provider.kind === "convex") {
+            const row = await ctx.runQuery(internal.objects.lookup, { key: args.key });
+            if (row === null) {
+                return { kind: "missing" as const };
+            }
+            const blob = await ctx.storage.get(row.storageId);
+            if (blob === null) {
+                return { kind: "missing" as const };
+            }
+            // Checked before reading: an oversized file would also break the 16 MiB return cap.
+            if (blob.size > args.maxBytes) {
+                return { kind: "tooLarge" as const };
+            }
+            return { bytes: await blob.arrayBuffer(), kind: "stored" as const };
+        }
+        const bucket = bucketFor(args.provider);
+        if (!bucket) {
+            return { kind: "missing" as const };
+        }
+        try {
+            const meta = await bucket.head(args.key);
+            if (meta.size > args.maxBytes) {
+                return { kind: "tooLarge" as const };
+            }
+        } catch (error) {
+            if (error instanceof FilesError && error.code === "NotFound") {
+                return { kind: "missing" as const };
+            }
+            throw error;
+        }
+        const file = await bucket.download(args.key);
+        return { bytes: await file.arrayBuffer(), kind: "stored" as const };
+    },
+});
+
+// Unconfirmed uploads never get a row, so only this scan can tell them apart from a bound file.
+export const sweepUnbound = mutation({
+    args: { contentType: v.string(), from: v.number(), to: v.number() },
+    returns: v.null(),
+    handler: async (ctx, args) => {
+        const files = await ctx.db.system
+            .query("_storage")
+            .withIndex("by_creation_time", (q) => q.gte("_creationTime", args.from).lte("_creationTime", args.to))
+            .collect();
+        const contentFiles = files.filter((file) => file.contentType === args.contentType);
+        await Promise.all(
+            contentFiles.map(async (file) => {
+                const bound = await ctx.db
+                    .query("objects")
+                    .withIndex("by_storageId", (q) => q.eq("storageId", file._id))
+                    .first();
+                if (!bound) {
+                    await ctx.storage.delete(file._id);
+                }
+            })
+        );
+        return null;
     },
 });
 

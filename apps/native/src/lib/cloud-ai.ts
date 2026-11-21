@@ -2,7 +2,7 @@ import { CsvImportResult } from "@outlayr/backend/confect/csvImport.spec";
 import type { CsvImportStatus, LabelSuggestion } from "@outlayr/backend/confect/csvImport.spec";
 import { InstallmentScanResult } from "@outlayr/backend/confect/installmentScan.spec";
 import type { InstallmentPlanDraft as InstallmentPlanDraftSchema } from "@outlayr/backend/confect/installmentScan.spec";
-import { PDF_CONTENT_TYPE, PdfImportResult, UploadTicket } from "@outlayr/backend/confect/pdfImport.spec";
+import { KeyedUploadTicket, PDF_CONTENT_TYPE, PdfImportResult } from "@outlayr/backend/confect/pdfImport.spec";
 import type { PdfImportStatus, StatementRow } from "@outlayr/backend/confect/pdfImport.spec";
 import { ScanResult } from "@outlayr/backend/confect/receiptScan.spec";
 import type {
@@ -160,7 +160,7 @@ export type PdfImportOutcome =
       }
     | { readonly ok: false; readonly reason: PdfImportRefusal };
 
-const decodeUploadTicket = Schema.decodeUnknownOption(UploadTicket);
+const decodeUploadTicket = Schema.decodeUnknownOption(KeyedUploadTicket);
 const decodePdfImportResult = Schema.decodeUnknownOption(PdfImportResult);
 const decodeStorageReceipt = HttpIncomingMessage.schemaBodyJson(Schema.Struct({ storageId: Schema.String }));
 
@@ -183,14 +183,14 @@ function pdfImportOutcome({ degraded, rows, status, suggestions, unreadPages }: 
 
 export const pdfImport = Effect.fn("Cloud.pdfImport")(function* pdfImport({ bytes, ...args }: PdfImportRequest) {
     const client = yield* HttpClient.HttpClient;
-    const ticket = Option.getOrNull(decodeUploadTicket(yield* cloudMutation(api.pdfImport.requestUpload, {})));
+    const ticket = Option.getOrNull(decodeUploadTicket(yield* cloudMutation(api.pdfImport.startUpload, {})));
     if (ticket === null) {
         return INVALID_RESPONSE;
     }
     if (ticket.status !== "ok") {
         return { ok: false, reason: ticket.status } as const;
     }
-    if (ticket.url === null) {
+    if (ticket.key === null || ticket.url === null) {
         return INVALID_RESPONSE;
     }
     const uploaded = yield* client
@@ -205,7 +205,7 @@ export const pdfImport = Effect.fn("Cloud.pdfImport")(function* pdfImport({ byte
     const reply = yield* cloudAction<unknown, unknown>("pdfImport:extract", {
         ...args,
         ...aiConsentArgs(),
-        storageId: uploaded.storageId,
+        upload: { key: ticket.key, storageId: uploaded.storageId },
     });
     return Option.match(decodePdfImportResult(reply), { onNone: () => INVALID_RESPONSE, onSome: pdfImportOutcome });
 });
