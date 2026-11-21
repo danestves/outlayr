@@ -7,10 +7,18 @@ function row(day: string, amount: number, income = false) {
     return { amount, day: new Date(`${day}T00:00:00`), income };
 }
 
+function itemAt<T>(values: readonly T[], index: number): T {
+    const value = values[index];
+    if (value === undefined) {
+        throw new Error(`expected item ${index}`);
+    }
+    return value;
+}
+
 describe("groupByDay", () => {
     it("subtracts expense and adds income into the day total", () => {
         const sections = groupByDay([row("2026-07-24", 40), row("2026-07-24", 15, true)]);
-        expect(sections[0].total).toBe(-25);
+        expect(itemAt(sections, 0).total).toBe(-25);
     });
 
     it("orders sections newest first", () => {
@@ -21,8 +29,8 @@ describe("groupByDay", () => {
     it("keeps a day's key when a newer day is added above it", () => {
         const before = groupByDay([row("2026-07-23", 20)]);
         const after = groupByDay([row("2026-07-24", 10), row("2026-07-23", 20)]);
-        expect(after[1].key).toBe(before[0].key);
-        expect(after[0].key).not.toBe(after[1].key);
+        expect(itemAt(after, 1).key).toBe(itemAt(before, 0).key);
+        expect(itemAt(after, 0).key).not.toBe(itemAt(after, 1).key);
     });
 
     it("merges a day that reappears later without opening a second section", () => {
@@ -30,9 +38,9 @@ describe("groupByDay", () => {
         // still land in its own day rather than splitting the section in two.
         const sections = groupByDay([row("2026-07-24", 10), row("2026-07-23", 20), row("2026-07-24", 5)]);
         expect(sections).toHaveLength(2);
-        expect(sections[0].data).toHaveLength(2);
-        expect(sections[0].total).toBe(-15);
-        expect(sections[1].total).toBe(-20);
+        expect(itemAt(sections, 0).data).toHaveLength(2);
+        expect(itemAt(sections, 0).total).toBe(-15);
+        expect(itemAt(sections, 1).total).toBe(-20);
     });
 
     it("merges a day saved under two time zones into one section, newest first", () => {
@@ -46,8 +54,8 @@ describe("groupByDay", () => {
         const late = { amount: 8, date: new Date("2026-09-09T22:09:00"), day: midnight, income: false };
         const sections = groupByDay([early, late]);
         expect(sections).toHaveLength(1);
-        expect(sections[0].day.getTime()).toBe(midnight.getTime());
-        expect(sections[0].data).toStrictEqual([late, early]);
+        expect(itemAt(sections, 0).day.getTime()).toBe(midnight.getTime());
+        expect(itemAt(sections, 0).data).toStrictEqual([late, early]);
     });
 
     it("buckets a day's total per currency rather than adding two together", () => {
@@ -55,6 +63,9 @@ describe("groupByDay", () => {
             [{ ...row("2026-07-24", 40) }, { ...row("2026-07-24", 10), currency: "EUR" }],
             "USD"
         );
+        if (section === undefined) {
+            throw new Error("expected a section");
+        }
         expect(section.totals.map((bucket) => [bucket.currencyCode, bucket.amount])).toStrictEqual([
             ["USD", -40],
             ["EUR", -10],
@@ -66,6 +77,9 @@ describe("groupByDay", () => {
         const fee = { ...row("2026-07-24", 0.44), feeForId: "glovo", id: "fee" };
         const orphan = { ...row("2026-07-24", 0.1), feeForId: "elsewhere", id: "orphan" };
         const [section] = groupByDay([purchase, fee, orphan]);
+        if (section === undefined) {
+            throw new Error("expected a section");
+        }
         expect(section.data).toStrictEqual([{ ...purchase, fees: [fee] }, orphan]);
         expect(section.total).toBeCloseTo(-10.54);
     });
@@ -105,6 +119,9 @@ describe("groupByDay with rates", () => {
             "EUR",
             eurRates
         );
+        if (section === undefined) {
+            throw new Error("expected a section");
+        }
         expect(section.totals.map((bucket) => [bucket.currencyCode, bucket.amount])).toStrictEqual([["EUR", -49]]);
     });
 
@@ -135,6 +152,9 @@ describe("groupByDay with rates", () => {
             "EUR",
             eurRates
         );
+        if (section === undefined) {
+            throw new Error("expected a section");
+        }
         let summed = 0;
         for (const bucket of section.totals) {
             summed += bucket.amount;
@@ -152,6 +172,9 @@ describe("groupByDay with rates", () => {
             date: new Date(Date.UTC(2026, 6, 24, 12)),
         }));
         const [section] = groupByDay(rows, "EUR", buildRateTable([{ date: "2026-07-01", quote: "EUR", rate: 0.95 }]));
+        if (section === undefined) {
+            throw new Error("expected a section");
+        }
         const summed = section.data.reduce((sum, entry) => sum + (entry.valued ?? 0), 0);
         expect(summed).toBeCloseTo(-section.total, 10);
     });
@@ -169,7 +192,10 @@ describe("groupByDay with rates", () => {
             "EUR",
             eurRates
         );
-        expect(section.data[0].valued).toBeNull();
+        if (section === undefined) {
+            throw new Error("expected a section");
+        }
+        expect(itemAt(section.data, 0).valued).toBeNull();
     });
 });
 
@@ -228,12 +254,17 @@ describe("groupByDayAsItGrows", () => {
         const group = groupByDayAsItGrows<ReturnType<typeof row>>("USD");
         const held = [row("2026-07-24", 10), row("2026-07-23", 20)];
         const [first] = group(held);
+        if (first === undefined) {
+            throw new Error("expected a section");
+        }
 
         const grown = group([...held, row("2026-07-22", 30)]);
-        expect(grown[0]).toBe(first);
+        expect(itemAt(grown, 0)).toBe(first);
         expect(totals(grown)).toStrictEqual([-10, -20, -30]);
 
-        expect(totals(group([row("2026-07-24", 15), held[1], row("2026-07-22", 30)]))).toStrictEqual([-15, -20, -30]);
+        expect(totals(group([row("2026-07-24", 15), itemAt(held, 1), row("2026-07-22", 30)]))).toStrictEqual([
+            -15, -20, -30,
+        ]);
     });
 
     it("keeps one section for a day the held and the added rows share", () => {

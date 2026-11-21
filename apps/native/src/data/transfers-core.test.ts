@@ -149,6 +149,9 @@ describe("transfersRepo.create", () => {
 
         const id = await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
 
         expect(row).toMatchObject({
             exchangeRate: 55.5,
@@ -166,6 +169,9 @@ describe("transfersRepo.create", () => {
 
         const id = await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
 
         expect(row.day.getTime()).toBe(startOfDay(DAY).getTime());
         expect(row.month.getTime()).toBe(firstOfMonth(DAY).getTime());
@@ -189,6 +195,9 @@ describe("transfersRepo.create", () => {
             })
         );
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
 
         expect(row.fromAmountUsd).toBe(100);
         expect(row.toAmountUsd).toBeCloseTo((100 * P2P_VES_PER_USD) / OFFICIAL_VES_PER_USD, 5);
@@ -212,6 +221,9 @@ describe("transfersRepo.create", () => {
             })
         );
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
 
         expect(row.fromAmountUsd).toBeNull();
         expect(row.toAmountUsd).toBe(100);
@@ -237,6 +249,9 @@ describe("transfersRepo.create", () => {
             })
         );
         const [fee] = await db.select().from(transactions);
+        if (fee === undefined) {
+            throw new Error("expected fee");
+        }
 
         expect(fee).toMatchObject({
             accountId: from,
@@ -259,6 +274,9 @@ describe("transfersRepo.create", () => {
             })
         );
         const [fee] = await db.select().from(transactions);
+        if (fee === undefined) {
+            throw new Error("expected fee");
+        }
 
         expect(fee).toMatchObject({ accountId: to, amount: 150, currency: "VES", income: false });
     });
@@ -290,6 +308,9 @@ describe("transfersRepo.update", () => {
             transfersRepo.create(db, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } })
         );
         const [before] = await db.select().from(transactions);
+        if (before === undefined) {
+            throw new Error("expected before");
+        }
 
         await Effect.runPromise(
             transfersRepo.update(db, id, {
@@ -300,6 +321,9 @@ describe("transfersRepo.update", () => {
             })
         );
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         const fees = await db.select().from(transactions);
 
         expect(row).toMatchObject({ fromAmount: 110, toAmount: 6105 });
@@ -323,6 +347,9 @@ describe("transfersRepo.update", () => {
 
         await Effect.runPromise(transfersRepo.update(db, id, baseInput(from, to)));
         const [fee] = await db.select().from(transactions);
+        if (fee === undefined) {
+            throw new Error("expected fee");
+        }
 
         expect(fee.deletedAt).not.toBeNull();
     });
@@ -336,6 +363,9 @@ describe("transfersRepo.update", () => {
             transfersRepo.update(db, id, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } })
         );
         const [fee] = await db.select().from(transactions);
+        if (fee === undefined) {
+            throw new Error("expected fee");
+        }
 
         expect(fee).toMatchObject({ accountId: from, amount: 2.7, categoryId: null, income: false, transferId: id });
     });
@@ -363,6 +393,9 @@ describe("transfersRepo.update", () => {
             })
         );
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
 
         expect(row).toMatchObject({ fromAmountUsd: 100, note: "rent", toAmountUsd: 100 });
     });
@@ -390,6 +423,9 @@ describe("transfersRepo.update", () => {
             })
         );
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
 
         expect(row).toMatchObject({ fromAmountUsd: 110, toAmountUsd: 110 });
     });
@@ -424,6 +460,9 @@ describe("transfersRepo.update", () => {
             transfersRepo.create(db, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } })
         );
         const [first] = await db.select().from(transactions);
+        if (first === undefined) {
+            throw new Error("expected first");
+        }
         await db.insert(transactions).values({ ...first, id: "synced-twin" });
 
         await Effect.runPromise(
@@ -465,6 +504,9 @@ describe("transfersRepo.update", () => {
             )
         ).rejects.toThrow(/no longer exists/);
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
 
         expect(row).toMatchObject({ deletedAt: DAY, fromAmount: 100 });
         await expect(db.select().from(transactions)).resolves.toStrictEqual([]);
@@ -568,6 +610,9 @@ describe("transfersRepo.softDelete", () => {
 
         await Effect.runPromise(transfersRepo.softDelete(db, id, DAY));
         const [fee] = await db.select().from(transactions);
+        if (fee === undefined) {
+            throw new Error("expected fee");
+        }
 
         expect(fee.deletedAt).not.toBeNull();
     });
@@ -580,6 +625,9 @@ describe("transfersRepo.softDelete", () => {
 
         await Effect.runPromise(transfersRepo.softDelete(db, id, DAY));
         const [other] = await db.select().from(transactions).where(eq(transactions.id, "other"));
+        if (other === undefined) {
+            throw new Error("expected other");
+        }
 
         expect(other.deletedAt).toBeNull();
     });
@@ -593,6 +641,9 @@ describe("deleting an account takes its transfers with it", () => {
 
         await Effect.runPromise(accountsRepo.softDelete(db, from, DAY));
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
 
         expect(row.deletedAt).not.toBeNull();
     });
@@ -604,6 +655,9 @@ describe("deleting an account takes its transfers with it", () => {
 
         await Effect.runPromise(accountsRepo.softDelete(db, to, DAY));
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
 
         expect(row.deletedAt).not.toBeNull();
     });
@@ -620,6 +674,9 @@ describe("deleting an account takes its transfers with it", () => {
 
         await Effect.runPromise(accountsRepo.softDelete(db, from, DAY));
         const [fee] = await db.select().from(transactions);
+        if (fee === undefined) {
+            throw new Error("expected fee");
+        }
 
         expect(fee.deletedAt).not.toBeNull();
     });
@@ -659,6 +716,9 @@ describe("an account delete that cannot finish", () => {
         await expect(Effect.runPromise(transfersRepo.countForAccount(db, from))).resolves.toBe(3);
         expect((await Effect.runPromise(accountsRepo.listActive(db))).map((row) => row.id)).toContain(from);
         const [entry] = await db.select().from(transactions).where(eq(transactions.id, "groceries"));
+        if (entry === undefined) {
+            throw new Error("expected entry");
+        }
         expect(entry.accountId).toBe(from);
     });
 
@@ -679,6 +739,9 @@ describe("an account delete that cannot finish", () => {
         expect(failure).toMatchObject({ cause: { cause: { message: expect.stringContaining("mid-delete") } } });
 
         const [fee] = await db.select().from(transactions);
+        if (fee === undefined) {
+            throw new Error("expected fee");
+        }
         expect(fee.deletedAt).toBeNull();
     });
 });

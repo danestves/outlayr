@@ -122,11 +122,11 @@ function useRippledCharges(charges: readonly ScheduledCharge[], ready: boolean) 
         timers.clear();
 
         const clamped = charges.some((charge) => charge.clamped);
-        for (const index of charges.keys()) {
+        for (const [index, charge] of charges.entries()) {
             timers.after(index * RIPPLE_STAGGER_MS, () => {
                 setSwapping((prev) => withAt(prev, index, true));
                 timers.after(SWAP.duration, () => {
-                    setShown((prev) => withAt(prev, index, charges[index]));
+                    setShown((prev) => withAt(prev, index, charge));
                     setSwapping((prev) => withAt(prev, index, false));
                 });
             });

@@ -167,6 +167,9 @@ describe("stampLedgerCurrency", () => {
 
         await expect(Effect.runPromise(stampLedgerCurrency(db))).resolves.toBe(0);
         const [row] = await db.select({ currency: transactions.currency }).from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.currency).toBeNull();
     });
 
@@ -180,6 +183,9 @@ describe("stampLedgerCurrency", () => {
 
         await expect(Effect.runPromise(stampLedgerCurrency(db))).resolves.toBe(1);
         const [row] = await db.select({ currency: transactions.currency }).from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.currency).toBe("USD");
     });
 });
@@ -204,6 +210,9 @@ describe("a row kept under a currency nobody stated", () => {
             })
             .from(transactions)
             .where(eq(transactions.id, id));
+        if (row === undefined) {
+            throw new Error("expected a transaction");
+        }
         expect(row.currency).toBeNull();
         expect(row.amountUsd).toBeNull();
         expect(row.exchangeRate).toBeNull();
@@ -327,6 +336,9 @@ describe("backfillCanonicalUsd", () => {
                 exchangeRateType: transactions.exchangeRateType,
             })
             .from(transactions);
+        if (row === undefined) {
+            throw new Error("expected a transaction");
+        }
         // 100 EUR / 0.87775: the divisor is currency-per-USD.
         expect(Math.round((row.amountUsd ?? 0) * 100) / 100).toBe(113.93);
         expect(row.exchangeRate).toBe(0.87775);
@@ -465,7 +477,13 @@ describe("stampLedgerCurrency over budgets", () => {
         // One transaction-less ledger: the count is the two budgets.
         await expect(Effect.runPromise(stampLedgerCurrency(db))).resolves.toBe(2);
         const [b] = await db.select({ currency: budgets.currency }).from(budgets);
+        if (b === undefined) {
+            throw new Error("expected b");
+        }
         const [m] = await db.select({ currency: mainBudget.currency }).from(mainBudget);
+        if (m === undefined) {
+            throw new Error("expected m");
+        }
         expect(b.currency).toBe("EUR");
         expect(m.currency).toBe("EUR");
     });
@@ -483,6 +501,9 @@ describe("stampLedgerCurrency over budgets", () => {
 
         await expect(Effect.runPromise(stampLedgerCurrency(db))).resolves.toBe(0);
         const [b] = await db.select({ currency: budgets.currency }).from(budgets);
+        if (b === undefined) {
+            throw new Error("expected b");
+        }
         expect(b.currency).toBe("GBP");
     });
 });
@@ -503,6 +524,9 @@ async function seedJulyRates(db: SpendDb): Promise<void> {
 
 async function budgetUsd(db: SpendDb, id: string): Promise<number | null> {
     const [row] = await db.select({ amountUsd: budgets.amountUsd }).from(budgets).where(eq(budgets.id, id));
+    if (row === undefined) {
+        throw new Error("expected row");
+    }
     return row?.amountUsd ?? null;
 }
 
@@ -611,6 +635,9 @@ describe("backfillBudgetUsd", () => {
 
         await expect(Effect.runPromise(backfillBudgetUsd(db))).resolves.toBe(2);
         const [m] = await db.select({ amountUsd: mainBudget.amountUsd }).from(mainBudget);
+        if (m === undefined) {
+            throw new Error("expected m");
+        }
         expect(m.amountUsd).toBe(3000);
     });
 

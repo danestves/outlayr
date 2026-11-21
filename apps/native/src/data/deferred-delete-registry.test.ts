@@ -72,12 +72,18 @@ describe("createDeferredDeleteRegistry", () => {
         registry.requestDelete("row", "tx-1");
         expect(registry.pendingId("row")).toBe("tx-1");
         const [held] = await db.select().from(transactions).where(eq(transactions.id, "tx-1"));
+        if (held === undefined) {
+            throw new Error("expected held");
+        }
         expect(held.deletedAt).toBeNull();
 
         vi.advanceTimersByTime(UNDO_WINDOW_MS);
         await settle();
 
         const [written] = await db.select().from(transactions).where(eq(transactions.id, "tx-1"));
+        if (written === undefined) {
+            throw new Error("expected written");
+        }
         expect(written.deletedAt).not.toBeNull();
         expect(registry.pendingId("row")).toBeNull();
     });
@@ -95,6 +101,9 @@ describe("createDeferredDeleteRegistry", () => {
         await settle();
 
         const [row] = await db.select().from(transactions).where(eq(transactions.id, "tx-1"));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.deletedAt).toBeNull();
         expect(registry.pendingId("row")).toBeNull();
     });
@@ -123,6 +132,9 @@ describe("createDeferredDeleteRegistry", () => {
         await settle();
 
         const [transfer] = await db.select().from(transfers).where(eq(transfers.id, id));
+        if (transfer === undefined) {
+            throw new Error("expected transfer");
+        }
         expect(transfer.deletedAt).not.toBeNull();
     });
 
@@ -155,7 +167,13 @@ describe("createDeferredDeleteRegistry", () => {
         await settle();
 
         const [main] = await db.select().from(mainBudget).where(eq(mainBudget.id, overall));
+        if (main === undefined) {
+            throw new Error("expected main");
+        }
         const [category] = await db.select().from(budgets).where(eq(budgets.id, perCategory));
+        if (category === undefined) {
+            throw new Error("expected category");
+        }
         expect(main.deletedAt).not.toBeNull();
         expect(category.deletedAt).not.toBeNull();
     });
@@ -175,7 +193,13 @@ describe("createDeferredDeleteRegistry", () => {
         await settle();
 
         const [row] = await db.select().from(transactions).where(eq(transactions.id, "tx-1"));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         const [held] = await db.select().from(accounts).where(eq(accounts.id, account));
+        if (held === undefined) {
+            throw new Error("expected held");
+        }
         expect(row.deletedAt).not.toBeNull();
         expect(held.deletedAt).not.toBeNull();
     });
@@ -207,6 +231,9 @@ describe("createDeferredDeleteRegistry", () => {
         expect(show).toHaveBeenCalledTimes(2);
         await settle();
         const [first] = await db.select().from(transactions).where(eq(transactions.id, "tx-1"));
+        if (first === undefined) {
+            throw new Error("expected first");
+        }
         expect(first.deletedAt).not.toBeNull();
     });
 });

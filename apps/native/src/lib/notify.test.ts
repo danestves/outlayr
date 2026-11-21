@@ -23,7 +23,7 @@ describe("notifyFailure", () => {
         notifyFailure({ title: "Read me" });
         notifyFailure({ actionLabel: "Retry", onActionPress: vi.fn(), title: "Act on me" });
 
-        const [plain, actionable] = showSpy.mock.calls.map(([options]) =>
+        const [plain = 0, actionable = 0] = showSpy.mock.calls.map(([options]) =>
             typeof options === "string" ? 0 : (options.duration ?? 0)
         );
         expect(actionable).toBeGreaterThan(plain);

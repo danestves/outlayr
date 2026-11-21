@@ -69,8 +69,8 @@ export function isMerchantKey(key: string): boolean {
 }
 
 export function photoFileName(uri: string): string {
-    const [beforeQuery] = uri.split("?");
-    const [path] = beforeQuery.split("#");
+    const [beforeQuery = ""] = uri.split("?");
+    const [path = ""] = beforeQuery.split("#");
     return path.slice(path.lastIndexOf("/") + 1);
 }
 

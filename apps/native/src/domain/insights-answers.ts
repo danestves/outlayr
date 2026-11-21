@@ -81,7 +81,9 @@ export function cumulativeByDay(rows: readonly ExpenseContribution[], progress: 
             continue;
         }
         const day = Math.min(elapsed - 1, daysBetween(startMs, startOfDay(row.date).getTime()));
-        perDay[day] += row.amount;
+        if (day >= 0) {
+            perDay[day] = (perDay[day] ?? 0) + row.amount;
+        }
     }
     let running = 0;
     return perDay.map((amount) => {

@@ -128,7 +128,11 @@ async function readRow(db: SpendDb, id: string) {
         })
         .from(transactions)
         .where(eq(transactions.id, id));
-    return rows[0];
+    const [row] = rows;
+    if (row === undefined) {
+        throw new Error("expected a transaction");
+    }
+    return row;
 }
 
 async function insertAccount(
@@ -159,7 +163,11 @@ async function readAccount(db: SpendDb, id: string) {
         })
         .from(accounts)
         .where(eq(accounts.id, id));
-    return rows[0];
+    const [row] = rows;
+    if (row === undefined) {
+        throw new Error("expected an account");
+    }
+    return row;
 }
 
 class FakeFiles implements PhotoFiles {

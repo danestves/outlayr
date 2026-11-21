@@ -140,6 +140,9 @@ export function StepAccountInstallments({ accounts, onPick, searchable }: StepAc
 
     const where = (app: FoundInstallmentApp) => {
         const [home, ...others] = app.regions;
+        if (home === undefined) {
+            return app.currency;
+        }
         const country = t(`installments.country.${home}`);
         return `${others.length > 0 ? `${country} +${others.length}` : country} · ${app.currency}`;
     };

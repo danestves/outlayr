@@ -195,7 +195,8 @@ function reconcile(
     const { rate } = typed;
     const entered = rate === null ? null : { ...typed, rate };
     const charged = FEE_SIDES.filter((side) => typed.fees[side] > 0);
-    const single = charged.length === 1 ? charged[0] : null;
+    const [onlyCharged] = charged;
+    const single = charged.length === 1 ? (onlyCharged ?? null) : null;
     const blockSide = single === null || typed.fees[activeSide] > 0 ? activeSide : single;
     const asTopUp = single === null ? null : { amount: typed.fees[single], side: single };
     const topUp = feeMode === "onTop" ? asTopUp : null;

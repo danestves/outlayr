@@ -53,6 +53,9 @@ function input(overrides: Partial<MerchantSiblingsInput> = {}): MerchantSiblings
 
 async function row(db: Database, id: string) {
     const [found] = await db.select().from(transactions).where(eq(transactions.id, id));
+    if (found === undefined) {
+        throw new Error("expected a transaction");
+    }
     return found;
 }
 
@@ -243,13 +246,13 @@ describe("applyMerchantToSiblings", () => {
         await Effect.runPromise(tagsRepo.setTagsFor(db, "retired", []));
         const before = await db.select().from(transactionTags).where(eq(transactionTags.transactionId, "retired"));
         expect(before).toHaveLength(1);
-        expect(before[0].deletedAt).not.toBeNull();
+        expect(before.at(0)?.deletedAt).not.toBeNull();
 
         await Effect.runPromise(applyMerchantToSiblings(db, input({ tagIds: ["tag-food"] })));
 
         const after = await db.select().from(transactionTags).where(eq(transactionTags.transactionId, "retired"));
         expect(after).toHaveLength(1);
-        expect(after[0]).toMatchObject({ deletedAt: null, id: before[0].id, tagId: "tag-food" });
+        expect(after.at(0)).toMatchObject({ deletedAt: null, id: before.at(0)?.id, tagId: "tag-food" });
     });
 
     it("keeps a bare sibling the backfill's when only a category is carried", async () => {

@@ -181,6 +181,9 @@ describe("an account page's day total", () => {
     function dayTotals(accountId: string, currency: string, fee: TransferLogFee, own: ReturnType<typeof expense>[]) {
         const transfer = toAccountTransferRow(TRANSFER, accountId, ACCOUNTS, new Map([["t1", [fee]]]));
         const [section] = groupByDay([transfer, ...own], currency);
+        if (section === undefined) {
+            throw new Error("expected a section");
+        }
         return section.totals.map((bucket) => [bucket.currencyCode, bucket.amount]);
     }
 

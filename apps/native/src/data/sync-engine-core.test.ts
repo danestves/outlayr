@@ -285,13 +285,17 @@ describe("drainOutbox", () => {
             )
         );
 
-        expect(seen[0].table).toBe("transactions");
-        expect(seen[0].updatedAt).toBe(7000);
-        expect(seen[0].deletedAt).toBeNull();
-        expect(seen[0].fields.amount).toBe(42.5);
-        expect(seen[0].fields.note).toBe("lunch");
-        expect(seen[0].fields.date).toBe(5000);
-        expect(seen[0].fields.categoryId).toBeNull();
+        const [firstSeen] = seen;
+        if (firstSeen === undefined) {
+            throw new Error("expected a pushed row");
+        }
+        expect(firstSeen.table).toBe("transactions");
+        expect(firstSeen.updatedAt).toBe(7000);
+        expect(firstSeen.deletedAt).toBeNull();
+        expect(firstSeen.fields.amount).toBe(42.5);
+        expect(firstSeen.fields.note).toBe("lunch");
+        expect(firstSeen.fields.date).toBe(5000);
+        expect(firstSeen.fields.categoryId).toBeNull();
     });
 
     it("round-trips resolved and pending custom transaction rate triples", async () => {
@@ -355,7 +359,11 @@ describe("drainOutbox", () => {
             )
         );
 
-        expect(seen[0].deletedAt).toBe(9000);
+        const [firstSeen] = seen;
+        if (firstSeen === undefined) {
+            throw new Error("expected a pushed row");
+        }
+        expect(firstSeen.deletedAt).toBe(9000);
     });
 
     it("leaves an edit that arrived mid-flight queued", async () => {
@@ -427,8 +435,12 @@ describe("drainOutbox", () => {
         );
 
         expect(seen.map((row) => row.localId)).toStrictEqual(["currency"]);
-        expect(seen[0].fields.value).toBe("EUR");
-        expect(seen[0].deletedAt).toBeNull();
+        const [onlySeen] = seen;
+        if (onlySeen === undefined) {
+            throw new Error("expected a pushed row");
+        }
+        expect(onlySeen.fields.value).toBe("EUR");
+        expect(onlySeen.deletedAt).toBeNull();
     });
 });
 
@@ -447,6 +459,9 @@ describe("applyPulledRows", () => {
         );
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(result.applied).toBe(1);
         expect(row.id).toBe("remote");
         expect(row.amount).toBe(7.5);
@@ -461,6 +476,9 @@ describe("applyPulledRows", () => {
         );
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.amount).toBe(huge);
         await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(1);
     });
@@ -503,6 +521,9 @@ describe("applyPulledRows", () => {
         );
 
         const [row] = await transactional.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(result.applied).toBe(1);
         expect(row.amount).toBe(7.5);
         await expect(Effect.runPromise(getSyncCursor(transactional))).resolves.toBe(9);
@@ -522,6 +543,9 @@ describe("applyPulledRows", () => {
         );
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.date.getTime()).toBe(111);
         expect(row.day.getTime()).toBe(222);
         expect(row.month.getTime()).toBe(333);
@@ -541,6 +565,9 @@ describe("applyPulledRows", () => {
         );
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(result.applied).toBe(0);
         expect(row.note).toBe("mine");
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(1);
@@ -560,6 +587,9 @@ describe("applyPulledRows", () => {
         );
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.deletedAt?.getTime()).toBe(1000);
         expect(row.note).not.toBe("back");
     });
@@ -584,6 +614,9 @@ describe("applyPulledRows", () => {
         );
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.reminderLeadDays).toBeNull();
     });
 
@@ -603,6 +636,9 @@ describe("applyPulledRows", () => {
         );
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.reminderLeadDays).toBeNull();
     });
 
@@ -626,6 +662,9 @@ describe("applyPulledRows", () => {
         );
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.note).toBe("theirs");
         expect(row.reminderLeadDays).toBe(3);
     });
@@ -642,6 +681,9 @@ describe("applyPulledRows", () => {
         );
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.note).toBe("mine");
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(1);
     });
@@ -688,6 +730,9 @@ describe("applyPulledRows", () => {
 
         expect(result.applied).toBe(2);
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.categoryId).toBe("c1");
     });
 
@@ -830,6 +875,9 @@ describe("the echo of this device's own push", () => {
         );
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(result.tables).toStrictEqual(["transactions"]);
         expect(row.note).toBe("theirs");
     });
@@ -861,6 +909,9 @@ describe("the echo of this device's own push", () => {
         const result = await Effect.runPromise(applyPulledRows(db, await pushAndEcho()));
 
         const [goal] = await db.select().from(savingsGoals);
+        if (goal === undefined) {
+            throw new Error("expected goal");
+        }
         expect(goal.startAmountUsd).toBeNull();
         expect(result.tables).toStrictEqual([]);
     });
@@ -871,6 +922,9 @@ describe("the echo of this device's own push", () => {
         const result = await Effect.runPromise(applyPulledRows(db, await pushAndEcho()));
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(result.tables).toStrictEqual(["transactions"]);
         expect(row.reminderLeadDays).toBeNull();
     });
@@ -942,7 +996,11 @@ describe("r3 — invariants Convex cannot hold", () => {
         const rows = await db.select().from(budgets);
         const live = rows.filter((row) => row.deletedAt === null);
         expect(live).toHaveLength(1);
-        expect(live[0].id).toBe("remote");
+        const [firstLive] = live;
+        if (firstLive === undefined) {
+            throw new Error("expected a live budget");
+        }
+        expect(firstLive.id).toBe("remote");
         const loser = rows.find((row) => row.id === "local");
         expect(loser?.deletedAt).not.toBeNull();
         expect(loser?.categoryId).toBeNull();
@@ -970,7 +1028,11 @@ describe("r3 — invariants Convex cannot hold", () => {
         const rows = await db.select().from(budgets);
         const live = rows.filter((row) => row.deletedAt === null);
         expect(live).toHaveLength(1);
-        expect(live[0].id).toBe("local");
+        const [firstLive] = live;
+        if (firstLive === undefined) {
+            throw new Error("expected a live budget");
+        }
+        expect(firstLive.id).toBe("local");
         expect(rows.find((row) => row.id === "remote")?.categoryId).toBeNull();
         expect((await db.select().from(outbox)).map((row) => row.localId)).toStrictEqual(["remote"]);
     });
@@ -1112,7 +1174,11 @@ describe("r3 — invariants Convex cannot hold", () => {
 
         const live = (await db.select().from(mainBudget)).filter((row) => row.deletedAt === null);
         expect(live).toHaveLength(1);
-        expect(live[0].id).toBe("remote");
+        const [firstLive] = live;
+        if (firstLive === undefined) {
+            throw new Error("expected a live budget");
+        }
+        expect(firstLive.id).toBe("remote");
     });
 });
 
@@ -1133,6 +1199,9 @@ describe("a pulled page that outgrows the queue lookup's chunk", () => {
 
         expect(result.applied).toBe(ID_CHUNK + 9);
         const [row] = await db.select().from(transactions).where(eqId("t1"));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.note).toBe("mine");
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(1);
     });
@@ -1171,6 +1240,9 @@ describe("two devices against one account", () => {
         await Effect.runPromise(runSync(db, { pull: asCloudCall(pull), push }));
 
         const [row] = await db.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row).toMatchObject({ amountUsd: null, exchangeRate: null, exchangeRateType: "custom" });
         await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(2);
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
@@ -1203,6 +1275,9 @@ describe("two devices against one account", () => {
         await Effect.runPromise(runSync(beta, server.transport));
 
         const [row] = await beta.select().from(accounts);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.name).toBe("Checking");
         expect(row.currency).toBe("EUR");
         expect(row.initialBalance).toBe(250);
@@ -1238,6 +1313,9 @@ describe("two devices against one account", () => {
         await Effect.runPromise(runSync(beta, server.transport));
 
         const [row] = await beta.select().from(accounts);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.checkedAt?.getTime()).toBe(9000);
     });
 
@@ -1262,12 +1340,18 @@ describe("two devices against one account", () => {
         await Effect.runPromise(runSync(alpha, server.transport));
         await Effect.runPromise(runSync(beta, server.transport));
         const [archived] = await beta.select().from(accounts);
+        if (archived === undefined) {
+            throw new Error("expected archived");
+        }
         expect(archived.archivedAt?.getTime()).toBe(9000);
 
         await Effect.runPromise(accountsRepo.restore(beta, "acct-1", AT(10_000)));
         await Effect.runPromise(runSync(beta, server.transport));
         await Effect.runPromise(runSync(alpha, server.transport));
         const [restored] = await alpha.select().from(accounts);
+        if (restored === undefined) {
+            throw new Error("expected restored");
+        }
         expect(restored.archivedAt).toBeNull();
     });
 
@@ -1288,8 +1372,10 @@ describe("two devices against one account", () => {
         await Effect.runPromise(runSync(beta, server.transport));
         await Effect.runPromise(runSync(alpha, server.transport));
 
-        expect((await alpha.select().from(transactions))[0].note).toBe("from-beta");
-        expect((await beta.select().from(transactions))[0].note).toBe("from-beta");
+        const [alphaRow] = await alpha.select().from(transactions);
+        const [betaRow] = await beta.select().from(transactions);
+        expect(alphaRow?.note).toBe("from-beta");
+        expect(betaRow?.note).toBe("from-beta");
     });
 
     it("keeps a row deleted when a tombstone races an edit", async () => {
@@ -1313,6 +1399,9 @@ describe("two devices against one account", () => {
 
         for (const db of [alpha, beta]) {
             const [row] = await db.select().from(transactions);
+            if (row === undefined) {
+                throw new Error("expected row");
+            }
             expect(row.deletedAt).not.toBeNull();
         }
     });
@@ -1323,7 +1412,10 @@ describe("two devices against one account", () => {
         const server = makeServer();
         await Effect.runPromise(setSyncEnabled(alpha, true));
         await Effect.runPromise(setSyncEnabled(beta, true));
-        const liveOn = async (db: Database) => (await db.select().from(transactions))[0].deletedAt === null;
+        const liveOn = async (db: Database) => {
+            const [first] = await db.select().from(transactions);
+            return first?.deletedAt === null;
+        };
 
         await addTransaction(alpha, "t1");
         await Effect.runPromise(runSync(alpha, server.transport));
@@ -1379,8 +1471,10 @@ describe("two devices against one account", () => {
         await Effect.runPromise(runSync(db, server.transport));
         await Effect.runPromise(runSync(db, server.transport));
 
-        const deletedAt = async (id: string) =>
-            (await db.select().from(transactions).where(eqId(id)))[0].deletedAt?.getTime() ?? null;
+        const deletedAt = async (id: string) => {
+            const [row] = await db.select().from(transactions).where(eqId(id));
+            return row?.deletedAt?.getTime() ?? null;
+        };
         await expect(deletedAt("restored-there")).resolves.toBeNull();
         await expect(deletedAt("restored-here")).resolves.toBeNull();
         await expect(deletedAt("from-archive")).resolves.toBeNull();
@@ -1472,6 +1566,9 @@ describe("two devices against one account", () => {
         await Effect.runPromise(pullAndApply(db, server.pullFn));
 
         const [entry] = await db.select().from(transactions).where(eqId("restored"));
+        if (entry === undefined) {
+            throw new Error("expected entry");
+        }
         expect(entry?.deletedAt).toBeNull();
         await expect(db.select().from(installmentPlans)).resolves.toHaveLength(1);
         await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(9);
@@ -1537,6 +1634,9 @@ describe("a savings goal from a build that predates the start anchor", () => {
         await Effect.runPromise(applyPulledRows(db, { cursor: 1, rows: [legacyGoal()] }));
 
         const [row] = await db.select().from(savingsGoals);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.startAmount).toBe(0);
         expect(row.startAmountUsd).toBe(0);
         expect(row.targetDate.getTime()).toBe(9000);
@@ -1554,9 +1654,15 @@ describe("a savings goal from a build that predates the start anchor", () => {
         );
 
         const [goal] = await db.select().from(savingsGoals);
+        if (goal === undefined) {
+            throw new Error("expected goal");
+        }
         expect(goal.deletedAt).not.toBeNull();
         expect(applied.applied).toBe(2);
         const [kept] = await db.select().from(transactions);
+        if (kept === undefined) {
+            throw new Error("expected kept");
+        }
         expect(kept.note).toBe("kept");
     });
 
@@ -1570,6 +1676,9 @@ describe("a savings goal from a build that predates the start anchor", () => {
         );
 
         const [row] = await db.select().from(savingsGoals);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.deletedAt).not.toBeNull();
         expect(row.targetDate).not.toBeNull();
     });
@@ -1584,6 +1693,9 @@ describe("a savings goal from a build that predates the start anchor", () => {
         );
 
         const [row] = await db.select().from(savingsGoals);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.deletedAt).not.toBeNull();
     });
 });
@@ -1617,6 +1729,9 @@ describe("an account from a build that predates account kinds", () => {
         );
 
         const [row] = await db.select().from(accounts);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.kind).toBe("asset");
     });
 });

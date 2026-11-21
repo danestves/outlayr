@@ -47,7 +47,7 @@ function sameImage(a: Uint8Array, b: Uint8Array): boolean {
     }
     let total = 0;
     for (const [index, value] of a.entries()) {
-        total += Math.abs(value - b[index]);
+        total += Math.abs(value - (b[index] ?? 0));
     }
     return total / a.length <= SIGNATURE_TOLERANCE;
 }

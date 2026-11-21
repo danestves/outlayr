@@ -3,12 +3,7 @@ import type { TranslationKey } from "@/i18n/catalog";
 export type ThemePreference = "light" | "dark" | "system";
 
 /** `value` is what the `colorScheme` setting stores. Append only: renumbering changes every stored answer. */
-export const THEME_OPTIONS: readonly {
-    label: TranslationKey;
-    detail: TranslationKey;
-    preference: ThemePreference;
-    value: number;
-}[] = [
+export const THEME_OPTIONS = [
     {
         detail: "settings.colorScheme.systemDetail",
         label: "settings.colorScheme.system",
@@ -27,7 +22,12 @@ export const THEME_OPTIONS: readonly {
         preference: "dark",
         value: 2,
     },
-];
+] as const satisfies readonly {
+    label: TranslationKey;
+    detail: TranslationKey;
+    preference: ThemePreference;
+    value: number;
+}[];
 
 const DISPLAY_ORDER: readonly ThemePreference[] = ["light", "dark", "system"];
 

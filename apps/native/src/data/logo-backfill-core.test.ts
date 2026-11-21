@@ -261,6 +261,9 @@ describe("attachMissingLogos", () => {
         await expect(Effect.runPromise(attachMissingLogos(db, makeDeps({ now: today.getTime() })))).resolves.toBe(1);
 
         const [row] = await db.select({ updatedAt: transactions.updatedAt }).from(transactions);
+        if (row === undefined) {
+            throw new Error("expected a transaction");
+        }
         expect(row.updatedAt.getTime()).toBeGreaterThan(ahead.getTime());
     });
 

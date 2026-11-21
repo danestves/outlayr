@@ -135,7 +135,8 @@ function subBreakdownFor(
 }
 
 function withoutLoneDirect(entries: CategoryBreakdownEntry[], filterId: string | null): CategoryBreakdownEntry[] {
-    return entries.length === 1 && entries[0].id === filterId ? [] : entries;
+    const [only] = entries;
+    return entries.length === 1 && only !== undefined && only.id === filterId ? [] : entries;
 }
 
 /** A bare date would read as that day's own net, not the running position. */

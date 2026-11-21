@@ -32,11 +32,16 @@ function declarations(): Declaration[] {
             if (!(name && families)) {
                 throw new Error(`unparsable widget entry:\n${chunk}`);
             }
+            const [, widgetName] = name;
+            const [, familiesBody] = families;
+            if (widgetName === undefined || familiesBody === undefined) {
+                throw new Error(`unparsable widget entry:\n${chunk}`);
+            }
             return {
                 configured: chunk.includes("configuration: {"),
-                families: [...families[1].matchAll(/"(\w+)"/g)].map((m) => m[1]),
+                families: [...familiesBody.matchAll(/"(\w+)"/g)].flatMap((m) => (m[1] === undefined ? [] : [m[1]])),
                 initialLayout: chunk.match(/initialLayout: "([^"]+)",$/m)?.[1],
-                name: name[1],
+                name: widgetName,
             };
         });
 }

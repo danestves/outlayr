@@ -290,7 +290,7 @@ describe("buildAnswers", () => {
             limit: 120,
             spent: 143.28,
         });
-        expect(cards[0].impact).toBeCloseTo(23.28, 2);
+        expect(cards.at(0)?.impact).toBeCloseTo(23.28, 2);
     });
 
     it("leaves a category under its limit out of the usual comparison too", () => {

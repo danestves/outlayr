@@ -1,7 +1,7 @@
 /** 1-indexed; reaching the limit exactly counts as running out. */
 export function crossingDay(cumulative: readonly number[], limit: number): number | null {
     for (let index = 0; index < cumulative.length; index += 1) {
-        if (cumulative[index] >= limit) {
+        if ((cumulative[index] ?? 0) >= limit) {
             return index + 1;
         }
     }

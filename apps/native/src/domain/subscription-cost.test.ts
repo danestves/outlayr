@@ -47,11 +47,17 @@ describe("monthlySubscriptionCost", () => {
 
         const [coffeeOnly] = monthlySubscriptionCost([coffee], "USD");
         const [renewalOnly] = monthlySubscriptionCost([renewal], "USD");
+        if (coffeeOnly === undefined || renewalOnly === undefined) {
+            throw new Error("expected subscription costs");
+        }
         expect(isClose(coffeeOnly.amount, -(5 * DAYS_PER_MONTH))).toBeTruthy();
         expect(isClose(renewalOnly.amount, -1)).toBeTruthy();
         expect(Math.abs(coffeeOnly.amount) > Math.abs(renewalOnly.amount) * 100).toBeTruthy();
 
         const [both] = monthlySubscriptionCost([coffee, renewal], "USD");
+        if (both === undefined) {
+            throw new Error("expected a subscription cost");
+        }
         expect(isClose(both.amount, -(5 * DAYS_PER_MONTH + 1))).toBeTruthy();
         expect(both.transactionCount).toBe(2);
     });

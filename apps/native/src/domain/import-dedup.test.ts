@@ -67,12 +67,16 @@ describe("flagDuplicates", () => {
             entry({ note: "Rent", row: 5 }),
             entry({ note: "Coffee Shop", row: 7 }),
         ];
+        const [first] = entries;
+        if (first === undefined) {
+            throw new Error("expected an entry");
+        }
         const existing = fingerprintsOf([
             {
-                amount: entries[0].amount,
-                date: entries[0].date,
-                income: entries[0].income,
-                note: entries[0].note,
+                amount: first.amount,
+                date: first.date,
+                income: first.income,
+                note: first.note,
             },
         ]);
         expect(flagDuplicates(entries, existing)).toStrictEqual(new Set([4, 7]));

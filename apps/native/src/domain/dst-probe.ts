@@ -95,7 +95,8 @@ async function answer(): Promise<string> {
                 return index >= 0 && index < elapsed;
             });
             for (const row of rowsInside) {
-                perDay[dayOffset(row.date)] += row.amount;
+                const index = dayOffset(row.date);
+                perDay[index] = (perDay[index] ?? 0) + row.amount;
             }
             let sum = 0;
             const options = { limit: 1_000_000, now, window };

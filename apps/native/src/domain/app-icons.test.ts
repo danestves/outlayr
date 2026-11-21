@@ -21,16 +21,19 @@ const ALTERNATE_ICON_NAMES = APP_ICONS.map((icon) => icon.name).filter((name) =>
 function declaredInAppConfig(): string[] {
     const source = readFileSync(join(nativeRoot, "app.config.ts"), "utf-8");
     const block = /const ALTERNATE_ICONS = \[([\s\S]*?)\];/.exec(source);
-    if (!block) {
+    const body = block?.[1];
+    if (body === undefined) {
         throw new Error("app.config.ts no longer declares ALTERNATE_ICONS");
     }
-    return [...block[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+    return [...body.matchAll(/"([^"]+)"/g)].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
 }
 
 /** The quoted path form matches only the primaries; the alternates reach the plugin as a template literal. */
 function primaryIconsInAppConfig(): string[] {
     const source = readFileSync(join(nativeRoot, "app.config.ts"), "utf-8");
-    const names = [...source.matchAll(/"\.\/assets\/(\w+)\.icon"/g)].map((match) => match[1]);
+    const names = [...source.matchAll(/"\.\/assets\/(\w+)\.icon"/g)].flatMap((match) =>
+        match[1] === undefined ? [] : [match[1]]
+    );
     if (names.length === 0) {
         throw new Error("app.config.ts no longer names a primary icon bundle");
     }
@@ -47,7 +50,17 @@ function primaryIconBranches(): { icon: string[]; extra: string[] } {
     if (!extra) {
         throw new Error("app.config.ts no longer carries extra.primaryAppIcon on isProduction");
     }
-    return { extra: [extra[1], extra[2]], icon: [icon[1], icon[2]] };
+    const [, productionIcon, developmentIcon] = icon;
+    const [, productionExtra, developmentExtra] = extra;
+    if (
+        productionIcon === undefined ||
+        developmentIcon === undefined ||
+        productionExtra === undefined ||
+        developmentExtra === undefined
+    ) {
+        throw new Error("app.config.ts icon branches no longer name both variants");
+    }
+    return { extra: [productionExtra, developmentExtra], icon: [productionIcon, developmentIcon] };
 }
 
 function iconBundlesOnDisk(): string[] {

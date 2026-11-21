@@ -42,7 +42,7 @@ describe("sparklineSeries", () => {
             "week",
             NOW
         );
-        expect(points[0].amount).toBe(500);
+        expect(points.at(0)?.amount).toBe(500);
         expect(points.at(-1)?.amount).toBe(300);
     });
 

@@ -18,23 +18,20 @@ const POINTS: number[][] = [
     [1, 1],
 ];
 
-const MID_ALPHA = [0.55, 0.5, 0.55];
+const MID_ALPHA = [0.55, 0.5, 0.55] as const;
 
 function meshHues(shades: string[]): [string, string, string] {
-    switch (shades.length) {
-        case 0: {
-            return ["#000000", "#000000", "#000000"];
-        }
-        case 1: {
-            return [shades[0], shades[0], shades[0]];
-        }
-        case 2: {
-            return [shades[0], shades[0], shades[1]];
-        }
-        default: {
-            return [shades[0], shades[1], shades[2]];
-        }
+    const [first, second, third] = shades;
+    if (first === undefined) {
+        return ["#000000", "#000000", "#000000"];
     }
+    if (second === undefined) {
+        return [first, first, first];
+    }
+    if (third === undefined) {
+        return [first, first, second];
+    }
+    return [first, second, third];
 }
 
 // With `backgroundRepeat: "no-repeat"`, `CURTAIN_HEIGHT` is where the mesh stops and the plain grouped grey begins.

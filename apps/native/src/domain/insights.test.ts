@@ -198,6 +198,14 @@ beforeAll(async () => {
     );
 });
 
+function itemAt<T>(values: readonly T[], index: number): T {
+    const value = values[index];
+    if (value === undefined) {
+        throw new Error(`expected item ${index}`);
+    }
+    return value;
+}
+
 describe("loadContributions", () => {
     it("excludes soft-deleted and future rows", () => {
         const ids = new Set(contributions.map((c) => `${c.amount}:${c.date.getTime()}`));
@@ -249,9 +257,9 @@ describe("bucketRanges boundaries", () => {
     it("week is the calendar week containing today", () => {
         const ranges = bucketRanges("week", NOW);
         expect(ranges).toHaveLength(7);
-        expect(ranges[0].start).toStrictEqual(at(2025, 7, 13)); // Sunday
-        expect(ranges[6].start).toStrictEqual(at(2025, 7, 19));
-        expect(ranges[6].end).toStrictEqual(at(2025, 7, 20));
+        expect(itemAt(ranges, 0).start).toStrictEqual(at(2025, 7, 13)); // Sunday
+        expect(itemAt(ranges, 6).start).toStrictEqual(at(2025, 7, 19));
+        expect(itemAt(ranges, 6).end).toStrictEqual(at(2025, 7, 20));
     });
 
     it("week honours a Monday-first calendar", () => {
@@ -259,15 +267,15 @@ describe("bucketRanges boundaries", () => {
             firstDayOfMonth: 1,
             firstWeekday: 2,
         });
-        expect(ranges[0].start).toStrictEqual(at(2025, 7, 14));
-        expect(ranges[6].start).toStrictEqual(at(2025, 7, 20));
+        expect(itemAt(ranges, 0).start).toStrictEqual(at(2025, 7, 14));
+        expect(itemAt(ranges, 6).start).toStrictEqual(at(2025, 7, 20));
     });
 
     it("month is every day of the calendar month, future included", () => {
         const ranges = bucketRanges("month", NOW);
         expect(ranges).toHaveLength(31);
-        expect(ranges[0].start).toStrictEqual(at(2025, 7, 1));
-        expect(ranges[30].start).toStrictEqual(at(2025, 7, 31));
+        expect(itemAt(ranges, 0).start).toStrictEqual(at(2025, 7, 1));
+        expect(itemAt(ranges, 30).start).toStrictEqual(at(2025, 7, 31));
     });
 
     it("month honours a mid-month anchor", () => {
@@ -277,16 +285,16 @@ describe("bucketRanges boundaries", () => {
         });
         // Jul 15 has not reached the 25th, so the period is the one that opened
         // on Jun 25 and runs to Jul 24.
-        expect(ranges[0].start).toStrictEqual(at(2025, 6, 25));
+        expect(itemAt(ranges, 0).start).toStrictEqual(at(2025, 6, 25));
         expect(ranges).toHaveLength(30);
-        expect(ranges[29].start).toStrictEqual(at(2025, 7, 24));
+        expect(itemAt(ranges, 29).start).toStrictEqual(at(2025, 7, 24));
     });
 
     it("year is the twelve months of the calendar year", () => {
         const ranges = bucketRanges("year", NOW);
         expect(ranges).toHaveLength(12);
-        expect(ranges[0].start).toStrictEqual(at(2025, 1, 1));
-        expect(ranges[11].start).toStrictEqual(at(2025, 12, 1));
+        expect(itemAt(ranges, 0).start).toStrictEqual(at(2025, 1, 1));
+        expect(itemAt(ranges, 11).start).toStrictEqual(at(2025, 12, 1));
     });
 });
 
@@ -315,10 +323,10 @@ describe("buckets for spent", () => {
     it("buckets the month, excluding income, soft-deleted, and future", () => {
         const { buckets } = windows("month", "spent");
         expect(periodTotal(buckets)).toBe(165);
-        expect(buckets[0].value).toBe(10); // Jul 1
-        expect(buckets[7].value).toBe(0); // Jul 8 was soft-deleted
-        expect(buckets[14].value).toBe(30); // Jul 15: e5 only, f2 is future
-        expect(buckets[30].value).toBe(0); // Jul 31 is charted but empty
+        expect(itemAt(buckets, 0).value).toBe(10); // Jul 1
+        expect(itemAt(buckets, 7).value).toBe(0); // Jul 8 was soft-deleted
+        expect(itemAt(buckets, 14).value).toBe(30); // Jul 15: e5 only, f2 is future
+        expect(itemAt(buckets, 30).value).toBe(0); // Jul 31 is charted but empty
     });
 });
 
@@ -326,16 +334,16 @@ describe("buckets for income and net", () => {
     it("income counts only inflows", () => {
         const { buckets } = windows("month", "income");
         expect(periodTotal(buckets)).toBe(540);
-        expect(buckets[2].value).toBe(500); // Jul 3
-        expect(buckets[14].value).toBe(40); // Jul 15
+        expect(itemAt(buckets, 2).value).toBe(500); // Jul 3
+        expect(itemAt(buckets, 14).value).toBe(40); // Jul 15
     });
 
     it("net signs each flow (income − expense)", () => {
         const { buckets } = windows("month", "net");
         expect(periodTotal(buckets)).toBe(375); // 540 − 165
-        expect(buckets[0].value).toBe(-10); // Jul 1 expense
-        expect(buckets[2].value).toBe(500); // Jul 3 income
-        expect(buckets[14].value).toBe(10); // Jul 15: +40 − 30
+        expect(itemAt(buckets, 0).value).toBe(-10); // Jul 1 expense
+        expect(itemAt(buckets, 2).value).toBe(500); // Jul 3 income
+        expect(itemAt(buckets, 14).value).toBe(10); // Jul 15: +40 − 30
     });
 });
 
@@ -343,12 +351,12 @@ describe("category composition", () => {
     it("rolls subcategories into their parent and sorts desc", () => {
         const rows = windows("month", "spent").categories;
         expect(rows).toHaveLength(2);
-        expect(rows[0].id).toBe("rent");
-        expect(rows[0].amount).toBe(130);
-        expect(rows[1].id).toBe("food");
-        expect(rows[1].amount).toBe(35); // 10 (food) + 20 (groc child) + 5 (food)
-        expect(Math.abs(rows[0].fraction - 130 / 165) < 1e-9).toBeTruthy();
-        expect(Math.abs(rows[1].fraction - 35 / 165) < 1e-9).toBeTruthy();
+        expect(itemAt(rows, 0).id).toBe("rent");
+        expect(itemAt(rows, 0).amount).toBe(130);
+        expect(itemAt(rows, 1).id).toBe("food");
+        expect(itemAt(rows, 1).amount).toBe(35); // 10 (food) + 20 (groc child) + 5 (food)
+        expect(Math.abs(itemAt(rows, 0).fraction - 130 / 165) < 1e-9).toBeTruthy();
+        expect(Math.abs(itemAt(rows, 1).fraction - 35 / 165) < 1e-9).toBeTruthy();
     });
 
     it("carries an emoji identity, not only an icon one", () => {
@@ -364,9 +372,9 @@ describe("category composition", () => {
     it("income reads only inflow categories", () => {
         const rows = windows("month", "income").categories;
         expect(rows).toHaveLength(1);
-        expect(rows[0].id).toBe("sal");
-        expect(rows[0].amount).toBe(540);
-        expect(rows[0].fraction).toBe(1);
+        expect(itemAt(rows, 0).id).toBe("sal");
+        expect(itemAt(rows, 0).amount).toBe(540);
+        expect(itemAt(rows, 0).fraction).toBe(1);
     });
 
     it("net mirrors the outflow composition", () => {
@@ -380,8 +388,8 @@ describe("categoryBuckets", () => {
     it("re-sums the chart's slots for one category, subcategories included", () => {
         const food = categoryBuckets(windows("month", "spent").buckets, contributions, "food", false, NOW);
         expect(periodTotal(food)).toBe(35);
-        expect(food[4].value).toBe(20);
-        expect(food[9].value).toBe(0);
+        expect(itemAt(food, 4).value).toBe(20);
+        expect(itemAt(food, 9).value).toBe(0);
     });
 });
 
@@ -435,11 +443,11 @@ describe("subcategoryBreakdown", () => {
     it("splits a parent into Direct plus children, sorted desc", () => {
         const subs = subcategoryBreakdown(contributions, categoriesById, "food", "month", "spent", NOW);
         expect(subs).toHaveLength(2);
-        expect(subs[0].id).toBe("groc");
-        expect(subs[0].amount).toBe(20);
-        expect(subs[1].name).toBe("Direct"); // e1 (10) + e4 (5)
-        expect(subs[1].amount).toBe(15);
-        expect(Math.abs(subs[0].fraction - 20 / 35) < 1e-9).toBeTruthy();
+        expect(itemAt(subs, 0).id).toBe("groc");
+        expect(itemAt(subs, 0).amount).toBe(20);
+        expect(itemAt(subs, 1).name).toBe("Direct"); // e1 (10) + e4 (5)
+        expect(itemAt(subs, 1).amount).toBe(15);
+        expect(Math.abs(itemAt(subs, 0).fraction - 20 / 35) < 1e-9).toBeTruthy();
     });
 });
 

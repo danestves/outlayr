@@ -30,7 +30,7 @@ function currencyRow(code: CurrencyCode, favourite: boolean): CurrencyPickerRow 
 function closeSections(rows: CurrencyPickerRow[]): CurrencyPickerRow[] {
     for (let index = 0; index < rows.length; index += 1) {
         const row = rows[index];
-        if (row.kind !== "currency") {
+        if (row === undefined || row.kind !== "currency") {
             continue;
         }
         const next = rows[index + 1];
