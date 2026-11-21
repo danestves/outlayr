@@ -7,8 +7,8 @@ import { useDerivedValue, useReducedMotion, useSharedValue } from "react-native-
 import { scheduleOnRN } from "react-native-worklets";
 
 import { useSetting } from "@/contexts/display-settings-context";
-import { bucketDateLabel } from "@/data/insights";
-import type { InsightsBucket, InsightsPeriod } from "@/data/insights";
+import { bucketDateLabel } from "@/domain/insights";
+import type { InsightsBucket, InsightsPeriod } from "@/domain/insights";
 import { formatAmount } from "@/domain/money";
 import { LARGEST_STANDARD_FONT_SCALE } from "@/hooks/use-accessibility-text-size";
 import { useChartDraw, useChartPath } from "@/hooks/use-chart-draw";

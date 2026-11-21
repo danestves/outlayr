@@ -2,10 +2,10 @@ import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import type { RecurringType } from "@outlayr/money/recurrence";
 import { roundMoney } from "@outlayr/money/round";
 
-import { pendingCategoryFor } from "@/data/categories-core";
-import type { PendingCategory } from "@/data/categories-core";
 import type { ThreadTurn, VoiceDraft, VoiceQuote, VoiceRecurrence } from "@/lib/cloud-ai";
 
+import { pendingCategoryFor } from "./category-presets";
+import type { PendingCategory } from "./category-presets";
 import { minorUnitsFor } from "./money";
 
 export interface ResolvedRecurrence {

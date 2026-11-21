@@ -4,7 +4,7 @@ import Svg, { Path, Rect } from "react-native-svg";
 import { MarkInk, useMark } from "@/components/empty-state";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
-import type { InsightsMeasure, InsightsPeriod } from "@/data/insights";
+import type { InsightsMeasure, InsightsPeriod } from "@/domain/insights";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { MARK_CEILING } from "@/theme/empty-state-ink";

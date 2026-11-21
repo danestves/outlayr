@@ -6,8 +6,8 @@ import * as Option from "effect/Option";
 import { useRef, useState } from "react";
 import type { RefObject } from "react";
 
-import { findCategoryPreset, pendingCategoryFor } from "@/data/categories-core";
-import type { PendingCategory } from "@/data/categories-core";
+import { findCategoryPreset, pendingCategoryFor } from "@/domain/category-presets";
+import type { PendingCategory } from "@/domain/category-presets";
 import { getCachedEnrichment, setCachedEnrichment } from "@/domain/enrichment-cache";
 import type { RemoteEnrichmentResult } from "@/domain/enrichment-cache";
 import { resolveMerchant } from "@/domain/merchant-resolver";

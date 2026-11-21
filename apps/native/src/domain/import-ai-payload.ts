@@ -1,5 +1,7 @@
-import type { ColumnMapping, ParsedImportFile } from "@/data/transfer-core";
+import type { ParsedImportFile } from "@/data/transfer-core";
 import type { CategoryBranch } from "@/lib/convex";
+
+import type { ColumnMapping } from "./import-header";
 
 export const MAX_LABELS = 200;
 

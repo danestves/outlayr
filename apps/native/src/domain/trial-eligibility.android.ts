@@ -1,4 +1,4 @@
-import type { trialEligible as iosTrialEligible } from "@/lib/trial-eligibility";
+import type { trialEligible as iosTrialEligible } from "./trial-eligibility";
 
 /**
  * RevenueCat answers UNKNOWN for trial eligibility on Google Play, but Play only returns offers this user can still

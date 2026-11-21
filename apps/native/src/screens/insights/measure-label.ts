@@ -1,4 +1,4 @@
-import type { InsightsMeasure } from "@/data/insights";
+import type { InsightsMeasure } from "@/domain/insights";
 import type { TranslationKey } from "@/i18n/catalog";
 
 export const MEASURE_KEY = {

@@ -15,7 +15,6 @@ import { useDisplaySettings, useSetting } from "@/contexts/display-settings-cont
 import { useDatabase } from "@/contexts/local-data-context";
 import { goesWithPendingDelete } from "@/data/card-fees-core";
 import { useCategoryMeta } from "@/data/categories";
-import { categoryBreakdownWithin } from "@/data/insights";
 import { useWindowTransactions } from "@/data/insights-transactions";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useInsights } from "@/data/use-insights";
@@ -23,6 +22,7 @@ import { useNow } from "@/data/use-now";
 import { useValuation } from "@/data/use-valuation";
 import { formatMonthHeader } from "@/domain/dates";
 import { groupByMonth } from "@/domain/day-sections";
+import { categoryBreakdownWithin } from "@/domain/insights";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
 

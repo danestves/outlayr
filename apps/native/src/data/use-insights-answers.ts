@@ -5,13 +5,13 @@ import { landingDate } from "@outlayr/money/recurrence";
 import { monthlySubscriptionCost } from "@outlayr/money/subscription-cost";
 
 import type { Database } from "@/db/client";
+import { windowEnd, windowStart } from "@/domain/insights";
+import type { InsightsCalendar, InsightsPeriod } from "@/domain/insights";
 import { buildAnswers, periodProgress, PRIOR_PERIODS, stayUnder } from "@/domain/insights-answers";
 import type { Answers, PeriodProgress, StayUnder } from "@/domain/insights-answers";
 
 import { useExpenseContributions, useMainBudget, usePerCategoryBudgets } from "./budgets";
 import { goesWithPendingDelete } from "./card-fees-core";
-import { windowEnd, windowStart } from "./insights";
-import type { InsightsCalendar, InsightsPeriod } from "./insights";
 import { useUpcomingTransactions } from "./log-filtered";
 import { usePendingDeletes } from "./use-deferred-delete";
 import { useValuation } from "./use-valuation";

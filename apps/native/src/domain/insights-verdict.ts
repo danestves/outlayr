@@ -1,4 +1,4 @@
-import type { InsightsMeasure } from "@/data/insights";
+import type { InsightsMeasure } from "@/domain/insights";
 import type { TranslateFn } from "@/i18n/context";
 
 import { measureRiseIsFavourable } from "./insights-measure";

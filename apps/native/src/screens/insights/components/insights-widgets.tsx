@@ -7,9 +7,9 @@ import { CategoryIconTile } from "@/components/category-icon-tile";
 import { MonoLabel } from "@/components/mono-label";
 import { cn } from "@/components/tw";
 import { Widget } from "@/components/widget-card";
-import type { CategoryBreakdownEntry, InsightsMeasure } from "@/data/insights";
 import { formatSignedAmount } from "@/domain/account-display";
 import { formatDayMonth } from "@/domain/dates";
+import type { CategoryBreakdownEntry, InsightsMeasure } from "@/domain/insights";
 import {
     insightsMeasureIsIncome,
     insightsMeasureIsPositive,

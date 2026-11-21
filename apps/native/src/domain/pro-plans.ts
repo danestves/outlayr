@@ -2,7 +2,7 @@ import { decimalsFor } from "@outlayr/money/currency";
 import { roundMoney } from "@outlayr/money/round";
 import type { PurchasesPackage } from "react-native-purchases";
 
-import { trialEligible } from "@/lib/trial-eligibility";
+import { trialEligible } from "./trial-eligibility";
 
 export interface Plan {
     kind: PlanKind;
