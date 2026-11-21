@@ -19,6 +19,7 @@ import { useAiConsent } from "@/data/settings";
 import { matchedAccount, PLAN_SCREENSHOT_LIMIT, planImport } from "@/domain/installment-scan";
 import { paywallHref } from "@/domain/paywall-trigger";
 import { boundedPromptNames } from "@/domain/prompt-budget";
+import { useAiGate } from "@/hooks/use-ai-gate";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
 import { useCreateLiability } from "@/hooks/use-pro-gate";
 import { useProEntitled } from "@/hooks/use-pro-locked";
@@ -28,7 +29,6 @@ import { useRegionCode } from "@/hooks/use-region-code";
 import { isLimitRefusal, useLimitNotice } from "@/hooks/use-usage-limits";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
-import { useAuthSession } from "@/lib/auth-session";
 import { installmentScanTransport } from "@/lib/cloud-ai";
 import type { InstallmentScan } from "@/lib/cloud-ai";
 import {
@@ -274,7 +274,7 @@ function AccountChoice({ photos }: { photos: readonly ScanPhoto[] }) {
 
 export function InstallmentScanScreen({ accountId, photo }: { accountId?: string; photo?: string }) {
     const db = useDatabase();
-    const { gate } = useAuthSession();
+    const gate = useAiGate();
     const consent = useAiConsent(db, "aiConsentPlanScan");
     const [account] = useState(() => (accountId === undefined ? null : getAccountById(db, accountId)));
     const [picked] = useState(() => handedOffPhotos(photo));

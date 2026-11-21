@@ -40,11 +40,12 @@ export function BackgroundWork() {
     // Held down without a confirmed entitlement and session: the server refuses a lapsed customer and a missing token.
     // A guest's purchase opens AI but not sync, which needs an account to restore the ledger to.
     const cloudPaused = !proEntitled || !cloudAuthenticated || accountId === null;
+    const enrichmentOn = cloudAuthenticated && (accountId !== null || proEntitled);
 
     return (
         <>
             <BackgroundProgramMount db={db} />
-            {cloudAuthenticated ? <EnrichmentSyncMount db={db} /> : null}
+            {enrichmentOn ? <EnrichmentSyncMount db={db} /> : null}
             {cloudPaused ? null : <PhotoSyncMount db={db} />}
             {cloudPaused ? null : <SyncEngineMount db={db} />}
         </>

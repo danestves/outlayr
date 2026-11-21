@@ -38,6 +38,8 @@ const customerInfo = watchable<boolean>();
 const appState = watchable<AppStateStatus>();
 const cloudAuth = watchable<boolean>();
 
+let disk: { destination: string | null } | null = null;
+
 const sdk = {
     cloudAuthenticated: vi.fn<() => boolean>(),
     configureRevenueCat: () => true,
@@ -47,12 +49,17 @@ const sdk = {
     logOutUser: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
     mirrorEntitlement: vi.fn<() => Effect.Effect<boolean>>(),
     purchaseAndCheckPro: vi.fn<(pack: PurchasesPackage) => Effect.Effect<boolean, PurchasesError>>(),
+    readGuestClaim: () => Effect.sync(() => disk),
     refreshProEntitlement: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
     restoreAndCheckPro: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
     setCustomerProfile: vi.fn<(profile: { email: string; name: string }) => Effect.Effect<void, PurchasesError>>(),
     syncAndCheckPro: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
     watchCloudAuthenticated: cloudAuth.watch,
     watchEntitlement: customerInfo.watch,
+    writeGuestClaim: (claim: { destination: string | null } | null) =>
+        Effect.sync(() => {
+            disk = claim;
+        }),
 };
 
 // SAFETY: the service hands the package straight to the fake SDK; nothing on it is read.
@@ -126,6 +133,7 @@ describe("revenueCat", () => {
         cloudAuth.listeners.clear();
         sdk.cloudAuthenticated.mockReturnValue(true);
         leaveSession = undefined;
+        disk = null;
         sdk.eligibleForTrial.mockReturnValue(Effect.succeed(new Set()));
         sdk.getPackages.mockReturnValue(Effect.succeed([]));
         sdk.identifyUser.mockReturnValue(Effect.succeed(false));
@@ -273,6 +281,7 @@ describe("revenueCat", () => {
 
     it("hands a guest's purchase to the account it signs in to, even across the sign-in's signed-out gap", async () => {
         await start(null);
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
         signIn("guest-1", true);
         await flush();
         expect(sdk.syncAndCheckPro).not.toHaveBeenCalled();
@@ -291,8 +300,18 @@ describe("revenueCat", () => {
         expect(sdk.syncAndCheckPro).toHaveBeenCalledOnce();
     });
 
+    it("leaves the store alone when the guest never held Pro", async () => {
+        await start(null);
+        signIn("guest-3", true);
+        await flush();
+        signIn("user-23");
+        await flush();
+        expect(sdk.syncAndCheckPro).not.toHaveBeenCalled();
+    });
+
     it("keeps the account's own answer when claiming the guest's purchase fails", async () => {
         await start(null);
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
         signIn("guest-2", true);
         await flush();
         sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
@@ -300,6 +319,31 @@ describe("revenueCat", () => {
         signIn("user-22");
         await flush();
         expect(entitlement()).toMatchObject({ kind: "pro" });
+    });
+
+    it("retries an unfinished claim on the next launch, only for the account it started on", async () => {
+        await start(null);
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
+        signIn("guest-4", true);
+        await flush();
+        sdk.syncAndCheckPro.mockReturnValueOnce(Effect.fail(new PurchasesError({ cause: new Error("killed") })));
+        signIn("user-24");
+        await flush();
+        expect(sdk.syncAndCheckPro).toHaveBeenCalledOnce();
+
+        leaveSession?.();
+        await start("user-25");
+        expect(sdk.syncAndCheckPro).toHaveBeenCalledOnce();
+
+        leaveSession?.();
+        sdk.syncAndCheckPro.mockReturnValueOnce(Effect.succeed(true));
+        await start("user-24");
+        expect(sdk.syncAndCheckPro).toHaveBeenCalledTimes(2);
+        expect(entitlement()).toMatchObject({ kind: "pro" });
+
+        leaveSession?.();
+        await start("user-24");
+        expect(sdk.syncAndCheckPro).toHaveBeenCalledTimes(2);
     });
 
     it("drops the previous customer's Pro at the switch and discards every late answer about it", async () => {

@@ -5,7 +5,7 @@ export default GroupSpec.make()
     .addFunction(
         FunctionSpec.internalAction({
             name: "retire",
-            args: () => ({ guestId: Schema.String }),
+            args: () => ({ attempt: Schema.optional(Schema.Number), guestId: Schema.String }),
             returns: () => Schema.Null,
         })
     )

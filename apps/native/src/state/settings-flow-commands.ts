@@ -155,12 +155,18 @@ const revenueCatFlow = <W, A, E>(
 
 const GUEST_READY = Duration.seconds(20);
 
-// Signed out, the store bills a guest made on the spot. Its token must land first: the mirror after checkout needs it.
-const billedAccount = Effect.fn("Paywall.billedAccount")(function* billedAccount(accountId: string | null) {
+interface Billed {
+    readonly accountId: string | null;
+    readonly billingId: string | null;
+}
+
+// Signed out, the store bills a guest, made on the spot if there is none yet. Its token must land first, on a retry
+// too: the mirror after checkout needs it.
+const billedAccount = Effect.fn("Paywall.billedAccount")(function* billedAccount({ accountId, billingId }: Billed) {
     if (accountId !== null || authClient === null) {
         return accountId;
     }
-    const guestId = yield* startGuest();
+    const guestId = billingId ?? (yield* startGuest());
     yield* awaitCloudSession.pipe(Effect.timeout(GUEST_READY));
     return guestId;
 });
@@ -173,9 +179,9 @@ export const buyPlanCommand = revenueCatFlow(
     "buy",
     Effect.fn("Paywall.buy")(function* buy(
         revenueCat: RevenueCat["Service"],
-        input: { accountId: string | null; offer: PurchasesPackage }
+        input: Billed & { readonly offer: PurchasesPackage }
     ) {
-        const accountId = yield* billedAccount(input.accountId);
+        const accountId = yield* billedAccount(input);
         const outcome = yield* revenueCat.purchase(accountId, input.offer);
         if (outcome === "pro") {
             // Detached: the permission prompt must not hold the paywall open after the store sheet closes.
@@ -194,7 +200,7 @@ export const buyPlanCommand = revenueCatFlow(
 
 export const restorePlanCommand = revenueCatFlow(
     "restore",
-    Effect.fn("Paywall.restore")(function* restore(revenueCat: RevenueCat["Service"], signedIn: string | null) {
+    Effect.fn("Paywall.restore")(function* restore(revenueCat: RevenueCat["Service"], signedIn: Billed) {
         const accountId = yield* billedAccount(signedIn);
         const restored = yield* revenueCat.restore(accountId);
         const mirrored = !restored || (yield* revenueCat.mirror(accountId));

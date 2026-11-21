@@ -7,7 +7,7 @@ import * as Option from "effect/Option";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import { ActionCtx, Auth, MutationCtx, MutationRunner, QueryCtx, QueryRunner } from "./_generated/services";
-import { optionalUserId } from "./lib/auth";
+import { optionalBillingId } from "./lib/auth";
 import { revenueCatSecretKey } from "./lib/config";
 import { outboundHttp } from "./lib/http";
 import { forgetRevokedGrant, mirroredPro } from "./referrals";
@@ -49,7 +49,7 @@ const sessionUserId = FunctionImpl.make(
     "sessionUserId",
     Effect.fn("RevenueCat.sessionUserId")(function* sessionUserId() {
         const ctx = yield* QueryCtx;
-        return yield* optionalUserId(ctx);
+        return yield* optionalBillingId(ctx);
     }, Effect.orDie)
 );
 

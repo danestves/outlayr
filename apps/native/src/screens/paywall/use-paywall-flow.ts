@@ -48,7 +48,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const entitlement = useRevenueCat();
     const isPro = entitlement.kind === "pro";
     const isMirrored = isPro && entitlement.mirrored;
-    const { billingId } = useAuthSession();
+    const { accountId, billingId } = useAuthSession();
     const { trigger: triggerParam } = useLocalSearchParams<{ trigger?: string }>();
     const autolog = useAutologUsage(useDatabase());
     const trigger = paywallTriggerOf(triggerParam);
@@ -141,7 +141,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         setFailure(null);
         sale.current = purchaseProperties(target, variant);
         posthog?.capture("purchase_started", { ...sale.current, trial_days: target.trialDays });
-        buyPlan({ accountId: billingId, offer: target.offer });
+        buyPlan({ accountId, billingId, offer: target.offer });
     };
 
     // A build without a backend cannot deliver Pro, so it takes no money for it.
@@ -157,7 +157,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const restore = () => {
         setBusy("restore");
         setFailure(null);
-        restorePlan(billingId);
+        restorePlan({ accountId, billingId });
     };
 
     const empty = failed || (plans !== null && plans.length === 0);

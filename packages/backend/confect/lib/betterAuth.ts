@@ -217,6 +217,13 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                                 new APIError("FORBIDDEN", { message: "Notion is not a sign-in method" })
                             );
                         }
+                        // Only `guests.retire` cleans up a guest, and `disableDeleteAnonymousUser` would also keep a
+                        // linked one.
+                        if (endpoint.path === "/delete-anonymous-user") {
+                            return yield* Effect.fail(
+                                new APIError("FORBIDDEN", { message: "A guest is removed when it signs in" })
+                            );
+                        }
                         if (endpoint.path === "/sign-in/anonymous") {
                             const { ok } = yield* Effect.promise(() =>
                                 authLimiter.limit(requireRunMutationCtx(ctx), "guestSignIn")

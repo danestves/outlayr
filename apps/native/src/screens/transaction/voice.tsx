@@ -55,6 +55,7 @@ import { createLiveParser } from "@/domain/voice-live";
 import type { LiveContext } from "@/domain/voice-live";
 import { overlayLive, sentenceFromLive, sentenceFromResolved, withCorrection } from "@/domain/voice-sentence";
 import type { VoiceSentence } from "@/domain/voice-sentence";
+import { useAiGate } from "@/hooks/use-ai-gate";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import { isLimitRefusal, useLimitNotice } from "@/hooks/use-usage-limits";
 import { useVoiceEntry } from "@/hooks/use-voice-entry";
@@ -62,7 +63,6 @@ import type { VoiceFailure, VoicePhase } from "@/hooks/use-voice-entry";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { languageSubtag } from "@/i18n/languages";
-import { useAuthSession } from "@/lib/auth-session";
 import type { VoiceDraft, VoiceQuote } from "@/lib/cloud-ai";
 import { useHaptics } from "@/lib/use-haptics";
 import { saveTransferCommand } from "@/state/accounts-commands";
@@ -884,9 +884,9 @@ function VoiceThreadScreen() {
     );
 }
 
-/** The recorder and thread need the Convex provider, mounted only when signed in; consent comes first. */
+/** The recorder and thread need a cloud session, an account's or a Pro guest's; consent comes first. */
 export function VoiceEntryScreen() {
-    const { gate } = useAuthSession();
+    const gate = useAiGate();
     const consent = useAiConsent(useDatabase());
     if (gate === "signed-in") {
         return consent === "allowed" ? <VoiceThreadScreen /> : <AiConsentGate />;

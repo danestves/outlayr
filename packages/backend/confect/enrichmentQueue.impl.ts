@@ -8,7 +8,7 @@ import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx, Scheduler } from "./_generated/services";
 import { MAX_ACK_IDS, MAX_RESULTS, settled, work } from "./enrichmentQueue";
 import spec from "./enrichmentQueue.spec";
-import { optionalUserId, requireUserId } from "./lib/auth";
+import { optionalBillingId, requireBillingId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
 import { insertJob, queueWork } from "./lib/queueJob";
 
@@ -19,7 +19,7 @@ const enqueue = FunctionImpl.make(
     Effect.fn("EnrichmentQueue.enqueue")(
         function* enqueue(args) {
             const ctx = yield* MutationCtx;
-            const userId = yield* requireUserId(ctx);
+            const userId = yield* requireBillingId(ctx);
             const jobId = yield* insertJob(userId, args);
             if (jobId === null) {
                 return false;
@@ -83,7 +83,7 @@ const results = FunctionImpl.make(
     "results",
     Effect.fn("EnrichmentQueue.results")(function* results(args) {
         const ctx = yield* QueryCtx;
-        const userId = yield* optionalUserId(ctx);
+        const userId = yield* optionalBillingId(ctx);
         if (userId === null) {
             return [];
         }
@@ -117,7 +117,7 @@ const ack = FunctionImpl.make(
     Effect.fn("EnrichmentQueue.ack")(
         function* ack(args) {
             const ctx = yield* MutationCtx;
-            const userId = yield* requireUserId(ctx);
+            const userId = yield* requireBillingId(ctx);
             const reader = yield* DatabaseReader;
             const writer = yield* DatabaseWriter;
             for (const localId of args.localIds.slice(0, MAX_ACK_IDS)) {

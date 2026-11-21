@@ -16,6 +16,7 @@ import {
 import { MIN_NAME_LENGTH, pool } from "../enrichmentQueue";
 import { isPro } from "../revenuecat";
 import { hasAiConsent } from "./aiGate";
+import { authComponent } from "./betterAuth";
 
 export interface JobArgs {
     readonly aiConsent?: number | undefined;
@@ -31,11 +32,19 @@ export interface JobArgs {
     readonly shareAnalytics?: boolean | undefined;
 }
 
-// Null is a refusal (consent, name length or the per-user limit); a job already keyed by `localId` is replaced.
+// Null is a refusal (consent, name length, a guest without Pro or the per-user limit); a job already keyed by
+// `localId` is replaced.
 export const insertJob = Effect.fn("EnrichmentQueue.insertJob")(function* insertJob(userId: string, args: JobArgs) {
     const ctx = yield* MutationCtx;
     const name = args.name.trim();
     if (!hasAiConsent(args) || name.length < MIN_NAME_LENGTH || name.length > MAX_NAME_LENGTH) {
+        return null;
+    }
+    const [user, pro] = yield* Effect.all([
+        Effect.promise(() => authComponent.getAnyUserById(ctx, userId)),
+        isPro(ctx, userId),
+    ]);
+    if (user?.isAnonymous === true && !pro) {
         return null;
     }
     const gate = yield* Effect.promise(() => rateLimiter.limit(ctx, "enrichmentQueue", { key: userId }));
@@ -51,7 +60,7 @@ export const insertJob = Effect.fn("EnrichmentQueue.insertJob")(function* insert
             Effect.map((row) => row.value === "false"),
             Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(false) })
         );
-    const grounded = args.groundedLookup && !groundedOff && (yield* isPro(ctx, userId));
+    const grounded = args.groundedLookup && !groundedOff && pro;
     const existing = yield* reader
         .table("enrichmentJobs")
         .get("by_user_and_localId", userId, args.localId)

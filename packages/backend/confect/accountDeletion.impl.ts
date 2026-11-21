@@ -29,11 +29,10 @@ import {
     DELETION_JOBS_PER_USER,
     DeletionRefused,
     DeletionUnconfigured,
+    forgetUsage,
     publicStatus,
     randomSecret,
     UPSTREAM_ERASE_SECRETS,
-    usage,
-    USAGE_BY_TOKEN,
 } from "./accountDeletion";
 import type { DeletionJob } from "./accountDeletion";
 import spec from "./accountDeletion.spec";
@@ -241,23 +240,6 @@ const recordCredentialOnly = FunctionImpl.make(
         Effect.orDie
     )
 );
-
-const forgetUsage = Effect.fn("AccountDeletion.forgetUsage")(function* forgetUsage(
-    userId: string,
-    tokenIdentifier: string | undefined
-) {
-    const ctx = yield* MutationCtx;
-    yield* Effect.promise(() => usage.reset(ctx, "enrichmentQueue", { key: userId }));
-    if (tokenIdentifier === undefined) {
-        return;
-    }
-    // Component mutations inside a mutation run one at a time.
-    for (const name of USAGE_BY_TOKEN) {
-        yield* Effect.promise(() => usage.reset(ctx, name, { key: tokenIdentifier }));
-    }
-    const scheduler = yield* Scheduler;
-    yield* scheduler.runAfter(Duration.zero, refs.internal.voiceEntry.forgetUser, { userId: tokenIdentifier });
-});
 
 /** Better Auth's user cascade is off (`lib/betterAuth.ts`), so these are ours; `deleteMany` takes one page per call. */
 const deleteAuthRows = Effect.fn("AccountDeletion.deleteAuthRows")(function* deleteAuthRows(
