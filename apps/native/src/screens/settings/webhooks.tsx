@@ -27,7 +27,7 @@ import { useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { useAuthSession } from "@/lib/auth-session";
 import { CONVEX_SITE_URL } from "@/lib/cloud-configuration";
-import { useOnChange } from "@/lib/lifecycle";
+import { useOnChange, useOnMount, useTimers } from "@/lib/lifecycle";
 import { notifyFailure } from "@/lib/notify";
 import {
     endpointAddress,
@@ -53,6 +53,7 @@ import type { ThemeColors } from "@/theme/use-colors";
 const FIT_CONTENT = { alignSelf: "stretch" } as const;
 const DOT_SIZE = 9;
 const TOKEN_HINT = "••••";
+const TICK_MS = 60_000;
 
 const VALUE_TONE: Record<EndpointState, string> = {
     active: "text-income",
@@ -90,6 +91,10 @@ function WebhookSettings() {
 function SignedInWebhooks({ ready }: { ready: boolean }) {
     const t = useTranslation();
     const status = useWebhookStatus();
+
+    if (status.kind !== "ready" && !ready) {
+        return <FreePlan />;
+    }
 
     if (status.kind === "loading") {
         return <SettingsScreen>{null}</SettingsScreen>;
@@ -175,12 +180,24 @@ function WebhookSections({ canManage, status }: { canManage: boolean; status: We
     const [addUrl, setAddUrl] = useState("");
     const [addError, setAddError] = useState<string | null>(null);
     const [addBusy, setAddBusy] = useState(false);
-    // One secret at a time: a second save finishing behind the sheet would replace the first before it is copied.
+    // Held from the tap until the secret sheet closes, so a second save can't replace a secret before it is copied.
     const minting = useRef(false);
+    const addOpen = useRef(false);
+    // UIKit can refuse a sheet presented while another is still dismissing.
+    const secretAfterAdd = useRef<string | null>(null);
     const inbound = inboundEndpoint(CONVEX_SITE_URL);
+    const timers = useTimers();
 
     useOnChange([status], () => {
         setNow(Date.now());
+    });
+
+    useOnMount(() => {
+        const tick = () => {
+            setNow(Date.now());
+            timers.after(TICK_MS, tick);
+        };
+        return timers.after(TICK_MS, tick);
     });
 
     useOnChange([shownSecret], ([next]) => {
@@ -190,15 +207,16 @@ function WebhookSections({ canManage, status }: { canManage: boolean; status: We
     });
 
     const fail = () => notifyFailure({ title: t("settings.webhooks.failed") });
+    const failMint = () => {
+        minting.current = false;
+        fail();
+    };
 
     const saveToken = useAtomAction(setInboundTokenCommand, {
-        onFailure: fail,
-        onSettled: () => {
-            minting.current = false;
-        },
+        onFailure: failMint,
         onSuccess: ({ saved, token }) => {
             if (!saved) {
-                fail();
+                failMint();
                 return;
             }
             setShownSecret({ kind: "token", value: token });
@@ -214,29 +232,33 @@ function WebhookSections({ canManage, status }: { canManage: boolean; status: We
         },
     });
     const saveEndpointSecret = useAtomAction(setEndpointSecretCommand, {
-        onFailure: fail,
-        onSettled: () => {
-            minting.current = false;
-        },
+        onFailure: failMint,
         onSuccess: ({ saved, secret }) => {
             if (!saved) {
-                fail();
+                failMint();
                 return;
             }
             setShownSecret({ kind: "signing", value: secret });
         },
     });
     const addEndpoint = useAtomAction(addEndpointCommand, {
-        onFailure: () => setAddError(t("settings.webhooks.add.failed")),
-        onSettled: () => {
+        onFailure: () => {
             minting.current = false;
-            setAddBusy(false);
+            setAddError(t("settings.webhooks.add.failed"));
         },
+        onSettled: () => setAddBusy(false),
         onSuccess: ({ result, secret }) => {
+            if (result.kind !== "added") {
+                minting.current = false;
+            }
             switch (result.kind) {
                 case "added": {
-                    setShownSecret({ kind: "signing", value: secret });
-                    addRef.current?.dismiss();
+                    if (addOpen.current) {
+                        secretAfterAdd.current = secret;
+                        addRef.current?.dismiss();
+                    } else {
+                        setShownSecret({ kind: "signing", value: secret });
+                    }
                     break;
                 }
                 case "invalidUrl": {
@@ -332,9 +354,25 @@ function WebhookSections({ canManage, status }: { canManage: boolean; status: We
         setAddError(null);
     };
 
+    const openAdd = () => {
+        addOpen.current = true;
+        addRef.current?.present();
+    };
+
     const closeAdd = () => {
+        addOpen.current = false;
         setAddUrl("");
         setAddError(null);
+        const secret = secretAfterAdd.current;
+        if (secret !== null) {
+            secretAfterAdd.current = null;
+            setShownSecret({ kind: "signing", value: secret });
+        }
+    };
+
+    const closeSecret = () => {
+        minting.current = false;
+        setShownSecret(null);
     };
 
     const showReceive = status.inbound !== null || canManage;
@@ -416,7 +454,7 @@ function WebhookSections({ canManage, status }: { canManage: boolean; status: We
                                 <Pressable
                                     accessibilityRole="button"
                                     className="flex-row items-center gap-1 active:opacity-60"
-                                    onPress={() => addRef.current?.present()}
+                                    onPress={openAdd}
                                 >
                                     <HugeiconsIcon
                                         color={colors.tint}
@@ -434,11 +472,7 @@ function WebhookSections({ canManage, status }: { canManage: boolean; status: We
                         title={t("settings.webhooks.send")}
                     >
                         {status.endpoints.length === 0 ? (
-                            <LinkRow
-                                icon="Plug"
-                                onPress={() => addRef.current?.present()}
-                                title={t("settings.webhooks.addAddress")}
-                            />
+                            <LinkRow icon="Plug" onPress={openAdd} title={t("settings.webhooks.addAddress")} />
                         ) : (
                             status.endpoints.map((endpoint) => (
                                 <EndpointRow
@@ -463,7 +497,7 @@ function WebhookSections({ canManage, status }: { canManage: boolean; status: We
                 ref={addRef}
                 url={addUrl}
             />
-            <SecretSheet onDismiss={() => setShownSecret(null)} ref={secretRef} secret={shownSecret} />
+            <SecretSheet onDismiss={closeSecret} ref={secretRef} secret={shownSecret} />
         </>
     );
 }
