@@ -3,7 +3,7 @@ import { useQueries } from "convex/react";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { RefObject } from "react";
 import type { SharedValue } from "react-native-reanimated";
 
@@ -23,7 +23,7 @@ import type {
     VoiceQuote,
     VoiceThreadTransport,
 } from "@/lib/cloud-ai";
-import { useLatest } from "@/lib/lifecycle";
+import { useLatest, useOnMount } from "@/lib/lifecycle";
 import { TranscriptStreamError } from "@/lib/transcript-stream";
 import type { TranscriptFailureReason } from "@/lib/transcript-stream";
 import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-commands";
@@ -495,30 +495,24 @@ export function useVoiceEntry<Context>({
     };
     const portsRef = useLatest(ports);
 
-    const endThreadOnUnmount = useEffectEvent(() => {
-        const id = threadRef.current;
-        if (id !== null) {
-            start(api.end(id).pipe(Effect.catchCause(() => Effect.void)));
-        }
-    });
-    const startFirstTake = useEffectEvent(() => start(startTake(ports)));
-    const endFirstTake = useEffectEvent(() => supersedeTake(ports));
-    // oxlint-disable-next-line outlayr/react-effect-budget -- opens the voice stream while the screen is mounted; the cleanup ends the thread and closes the microphone
-    useEffect(() => {
+    useOnMount(() => {
         let disposed = false;
         disposedRef.current = false;
         queueMicrotask(() => {
             if (!disposed) {
-                startFirstTake();
+                start(startTake(ports));
             }
         });
         return () => {
             disposedRef.current = true;
-            endThreadOnUnmount();
+            const id = threadRef.current;
+            if (id !== null) {
+                start(api.end(id).pipe(Effect.catchCause(() => Effect.void)));
+            }
             disposed = true;
-            endFirstTake();
+            supersedeTake(ports);
         };
-    }, []);
+    });
 
     const settledPhase = settledPhaseOf(phase, thread);
     if (settledPhase !== phase) {

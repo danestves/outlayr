@@ -1,7 +1,7 @@
-import { useLayoutEffect } from "react";
 import { Uniwind } from "uniwind";
 
 import { useSetting } from "@/contexts/display-settings-context";
+import { useLayoutMirror } from "@/lib/lifecycle";
 
 import { themePreferenceForValue } from "./theme-preference";
 import type { ThemePreference } from "./theme-preference";
@@ -10,10 +10,9 @@ import type { ThemePreference } from "./theme-preference";
 export function useApplyThemePreference(): ThemePreference {
     const preference = themePreferenceForValue(useSetting("colorScheme"));
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- sets the Uniwind theme before the first paint
-    useLayoutEffect(() => {
+    useLayoutMirror([preference], () => {
         Uniwind.setTheme(preference);
-    }, [preference]);
+    });
 
     return preference;
 }

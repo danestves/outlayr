@@ -1,11 +1,12 @@
 import { useNavigation } from "expo-router";
 import type { NativeStackNavigationProp } from "expo-router";
 import type { ParamListBase } from "expo-router/react-navigation";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { AccessibilityInfo, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HEADER_HEIGHT } from "@/components/editor-style";
+import { useEventListener } from "@/lib/lifecycle";
 import { heightDetent, LARGE_ONLY } from "@/lib/sheet-detents";
 
 const REST_BODY_ESTIMATE = 170;
@@ -32,18 +33,14 @@ export function useRestingSheet(wakeAnnouncement: string) {
         setAwake(true);
         AccessibilityInfo.announceForAccessibility(wakeAnnouncement);
     };
-    const onDetentChange = useEffectEvent((index: number) => {
-        if (index === 1) {
-            wake();
-        }
-    });
-
-    // oxlint-disable-next-line outlayr/react-effect-budget -- listens for the native sheet's detent change for the screen's lifetime
-    useEffect(
-        () =>
-            navigation.addListener("sheetDetentChange", (event) => {
-                onDetentChange(event.data.index);
-            }),
+    useEventListener(
+        (listener: (event: { data: { index: number } }) => void) =>
+            navigation.addListener("sheetDetentChange", listener),
+        (event) => {
+            if (event.data.index === 1) {
+                wake();
+            }
+        },
         [navigation]
     );
 
