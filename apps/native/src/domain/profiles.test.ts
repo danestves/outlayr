@@ -21,4 +21,8 @@ describe("databaseNameFor", () => {
             "outlayr-0b8f3c3e-6a51-4c4e-9f3b-2a7d5e1c9a10.db"
         );
     });
+
+    it("refuses an id that would name a file outside the profile databases", () => {
+        expect(() => databaseNameFor("../outlayr")).toThrow("Not a profile id");
+    });
 });

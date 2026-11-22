@@ -1,8 +1,6 @@
 import { isNull } from "drizzle-orm";
 import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import * as Effect from "effect/Effect";
-import { File, Paths } from "expo-file-system";
-import { deleteDatabaseAsync } from "expo-sqlite";
 
 import { closeDatabase, openDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
@@ -13,6 +11,7 @@ import { databaseNameFor } from "@/domain/profiles";
 import migrationsBundle from "../../drizzle/migrations";
 import { bootstrapLocalData } from "./bootstrap";
 import { useLiveQuery } from "./live-query";
+import { deleteProfileLedger, markProfileLedgerReady } from "./profile-ledger-files";
 import { profileRegistry } from "./profile-registry";
 import { insertProfile, ProfilesError, seedProfileLedger, tombstoneProfile } from "./profiles-core";
 import type { Profile, ProfileIdentity } from "./profiles-core";
@@ -38,11 +37,10 @@ export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function
         yield* seedProfileLedger(from, ledger, currency);
     }).pipe(
         Effect.ensuring(closeDatabase(ledger).pipe(Effect.ignore)),
-        Effect.onError(() => Effect.promise(() => deleteDatabaseAsync(databaseNameFor(id))).pipe(Effect.ignore))
+        Effect.onError(() => deleteProfileLedger(id))
     );
+    yield* Effect.try({ catch: failed("create"), try: () => markProfileLedgerReady(id) });
 });
-
-export const profileLedgerExists = (id: string) => new File(Paths.document, "SQLite", databaseNameFor(id)).exists;
 
 export const createProfile = Effect.fn("Profiles.create")(function* createProfile(input: {
     currency: string;

@@ -14,6 +14,7 @@ import {
 import { deleteDatabaseAsync } from "expo-sqlite";
 import { Platform } from "react-native";
 
+import { profileReadyMarker } from "@/data/profile-ledger-files";
 import { closeProfileRegistry } from "@/data/profile-registry";
 import { PERSONAL_DATABASE } from "@/domain/profiles";
 
@@ -168,8 +169,11 @@ const clearSqliteFiles = Effect.fn("DeviceStores.clearSqliteFiles")(function* cl
     for (const name of new Set([PERSONAL_DATABASE, ...names])) {
         yield* clearAsync("sqlite", () => deleteDatabaseAsync(name));
         yield* clearSync("sqlite", () => {
-            for (const filename of [`${name}-wal`, `${name}-shm`]) {
-                const file = new File(sqliteDirectory, filename);
+            for (const file of [
+                new File(sqliteDirectory, `${name}-wal`),
+                new File(sqliteDirectory, `${name}-shm`),
+                profileReadyMarker(name),
+            ]) {
                 if (file.exists) {
                     file.delete();
                 }

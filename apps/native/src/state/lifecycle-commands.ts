@@ -16,6 +16,7 @@ import { pickCardAccount } from "@/data/wallet-state-core";
 import type { Database } from "@/db/client";
 import { adoptionActions, adoptionPlan } from "@/domain/ledger-adoption";
 import type { AdoptionActions } from "@/domain/ledger-adoption";
+import { activeProfileId } from "@/lib/active-profile";
 import { adoptionEngine } from "@/lib/adoption-engine";
 import { photoTransport } from "@/lib/cloud-photos";
 import { appRuntime } from "@/lib/runtime";
@@ -37,7 +38,7 @@ export const eraseDataCommand = createRuntimeCommand(appRuntime, {
         db: Database;
         residue: Parameters<typeof eraseData>[2];
         scope: Parameters<typeof eraseData>[1];
-    }) => eraseData(input.db, input.scope, input.residue),
+    }) => eraseData(input.db, input.scope, input.residue, deviceHasProfiles()),
     label: "lifecycle:erase-data",
 });
 
@@ -84,7 +85,9 @@ export const reconcileAdoption = Effect.fn("Adoption.reconcile")(function* recon
     if (plan === "defer") {
         return "defer";
     }
-    const actions = adoptionActions(plan);
+    // A new profile seeds its own currency, and only a push carries it to the account other phones read.
+    const actions =
+        plan === "fresh" && activeProfileId() !== undefined ? adoptionActions("adopt") : adoptionActions(plan);
     if (actions) {
         yield* completeAdoption(db, engine, actions, accountId);
     }

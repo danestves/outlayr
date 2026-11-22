@@ -8,7 +8,13 @@ export function parseProfileId(stored: string | null): string | undefined {
 }
 
 export function databaseNameFor(profileId: string | undefined): string {
-    return profileId === undefined ? PERSONAL_DATABASE : `outlayr-${profileId}.db`;
+    if (profileId === undefined) {
+        return PERSONAL_DATABASE;
+    }
+    if (!PROFILE_ID_PATTERN.test(profileId)) {
+        throw new Error("Not a profile id");
+    }
+    return `outlayr-${profileId}.db`;
 }
 
 export function profileArgs(profileId: string | undefined): { profileId?: string } {

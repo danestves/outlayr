@@ -1,17 +1,17 @@
 import { isNotNull, isNull } from "drizzle-orm";
 import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import * as Effect from "effect/Effect";
-import { deleteDatabaseAsync } from "expo-sqlite";
 
 import { SYNCED_SPECS } from "@/data/sync-tables";
 import { closeDatabase, openDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
 import { ensureOutboxTriggers } from "@/db/outbox-triggers";
 import { profiles } from "@/db/schema";
-import { databaseNameFor, PERSONAL_DATABASE } from "@/domain/profiles";
+import { parseProfileId, PERSONAL_DATABASE } from "@/domain/profiles";
 import { activeProfileId } from "@/lib/active-profile";
 
 import migrationsBundle from "../../drizzle/migrations";
+import { deleteProfileLedger } from "./profile-ledger-files";
 
 let registry: { db: Database; own: boolean } | null = null;
 
@@ -21,8 +21,12 @@ export const openProfileRegistry = Effect.fn("ProfileRegistry.open")(function* o
         const deleted = yield* Effect.tryPromise(() =>
             active.select({ id: profiles.id }).from(profiles).where(isNotNull(profiles.deletedAt))
         );
-        for (const { id } of deleted) {
-            yield* Effect.tryPromise(() => deleteDatabaseAsync(databaseNameFor(id))).pipe(Effect.ignore);
+        for (const row of deleted) {
+            // Registry rows arrive from the server, so an id that names no ledger is not ours to delete.
+            const id = parseProfileId(row.id);
+            if (id !== undefined) {
+                yield* deleteProfileLedger(id);
+            }
         }
         return;
     }

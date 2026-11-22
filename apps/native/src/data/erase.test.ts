@@ -170,7 +170,7 @@ describe("eraseData", () => {
     it("tombstones the ledger, clears the photos, then clears Spotlight", async () => {
         const { calls, residue } = spyResidue();
 
-        await Effect.runPromise(eraseData(db, "transactions", residue));
+        await Effect.runPromise(eraseData(db, "transactions", residue, false));
 
         expect(calls).toStrictEqual(["photos", "spotlight"]);
         await expect(liveTransactions(db)).resolves.toHaveLength(0);
@@ -182,7 +182,9 @@ describe("eraseData", () => {
         const busy = new Error("directory busy");
         const { calls, residue } = spyResidue({ photos: busy });
 
-        await expect(Effect.runPromise(Effect.flip(eraseData(db, "transactions", residue)))).resolves.toMatchObject({
+        await expect(
+            Effect.runPromise(Effect.flip(eraseData(db, "transactions", residue, false)))
+        ).resolves.toMatchObject({
             cause: busy,
             residue: "photos",
         });
@@ -195,7 +197,7 @@ describe("eraseData", () => {
     it("leaves the ledger erased after the photo step failed", async () => {
         const { residue } = spyResidue({ photos: new Error("directory busy") });
 
-        await expect(Effect.runPromise(eraseData(db, "transactions", residue))).rejects.toThrow();
+        await expect(Effect.runPromise(eraseData(db, "transactions", residue, false))).rejects.toThrow();
 
         await expect(liveTransactions(db)).resolves.toHaveLength(0);
         const [tombstone] = await db.select().from(transactions);
@@ -210,7 +212,7 @@ describe("eraseData", () => {
     it("reports a photo step that threw a value of its own", async () => {
         const { calls, residue } = spyResidue({ photos: undefined });
 
-        const failure = await Effect.runPromise(Effect.flip(eraseData(db, "transactions", residue)));
+        const failure = await Effect.runPromise(Effect.flip(eraseData(db, "transactions", residue, false)));
 
         expect(failure).toMatchObject({ _tag: "EraseResidueError", cause: undefined, residue: "photos" });
         expect(calls).toStrictEqual(["photos", "spotlight"]);
@@ -220,12 +222,25 @@ describe("eraseData", () => {
         const denied = new IndexUnavailable({ message: "index unavailable" });
         const { calls, residue } = spyResidue({ spotlight: denied });
 
-        await expect(Effect.runPromise(Effect.flip(eraseData(db, "transactions", residue)))).resolves.toMatchObject({
+        await expect(
+            Effect.runPromise(Effect.flip(eraseData(db, "transactions", residue, false)))
+        ).resolves.toMatchObject({
             cause: denied,
             residue: "spotlight",
         });
 
         expect(calls).toStrictEqual(["photos", "spotlight"]);
+    });
+
+    // Every profile writes photos into the same directory, so erasing one profile
+    // must leave the files the others still point at.
+    it("keeps the shared photo directory when other profiles have photos there", async () => {
+        const { calls, residue } = spyResidue();
+
+        await Effect.runPromise(eraseData(db, "transactions", residue, true));
+
+        expect(calls).toStrictEqual(["spotlight"]);
+        await expect(liveTransactions(db)).resolves.toHaveLength(0);
     });
 
     // Both stores still describe rows the user has, so clearing either would
@@ -237,7 +252,7 @@ describe("eraseData", () => {
 
         // `toMatchObject`, not `.rejects.toThrow()`: the rejection is a native-addon `SqliteError` from
         // another Jest realm, so `instanceof Error` fails and `toThrow()` reports "did not throw".
-        await expect(Effect.runPromise(eraseData(unwritable, "transactions", residue))).rejects.toMatchObject({
+        await expect(Effect.runPromise(eraseData(unwritable, "transactions", residue, false))).rejects.toMatchObject({
             message: expect.any(String),
         });
 
