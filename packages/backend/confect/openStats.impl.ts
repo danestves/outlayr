@@ -19,6 +19,7 @@ import {
     fetchPostHogStats,
     fetchReach,
     fetchRevenueStats,
+    firstSyncPerUser,
     optional,
     orNull,
 } from "./openStats";
@@ -95,7 +96,7 @@ const inputs = FunctionImpl.make(
         const previous = yield* latestDoc;
         return {
             previous: Option.match(previous, { onNone: () => null, onSome: toSnapshot }),
-            syncedAt: states.map((state) => state._creationTime),
+            syncedAt: firstSyncPerUser(states),
         };
     }, Effect.orDie)
 );

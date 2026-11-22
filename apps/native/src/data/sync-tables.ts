@@ -14,6 +14,7 @@ import {
     mainBudget,
     outsideMoves,
     outsidePayments,
+    profiles,
     savingsGoals,
     tags,
     transactionAttachments,
@@ -124,6 +125,7 @@ export const SYNCED_SPECS = {
     outsidePayments: synced(outsidePayments, outsidePayments.id),
     outsideMoves: synced(outsideMoves, outsideMoves.id, { defaults: { adjustment: false } }),
     transactionAttachments: synced(transactionAttachments, transactionAttachments.id, { deviceLocal: ["imageUri"] }),
+    profiles: synced(profiles, profiles.id, { deviceLocal: ["imageUri"] }),
     // Only the synced meta keys: the rest of `appMeta` is this phone's own, as in `replaceLocalFromAccount`.
     appMeta: synced(appMeta, appMeta.key, { syncedIds: SYNCED_META_NAMES }),
 };

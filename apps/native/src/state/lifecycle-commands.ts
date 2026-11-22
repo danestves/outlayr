@@ -10,6 +10,7 @@ import { deferAccount, finishFirstRun } from "@/data/onboarding-core";
 import { reconcilePhotos } from "@/data/photo-store-core";
 import type { PhotoFiles } from "@/data/photo-store-core";
 import { downloadEveryPhoto } from "@/data/photo-sync-core";
+import { deviceHasProfiles } from "@/data/profile-registry";
 import { isSyncEnabled } from "@/data/sync-outbox-core";
 import { pickCardAccount } from "@/data/wallet-state-core";
 import type { Database } from "@/db/client";
@@ -64,7 +65,7 @@ export const restoreArchiveWithPhotos = Effect.fn("Lifecycle.restoreArchive")(
         files: PhotoFiles;
     }) {
         yield* restoreArchive(input.db, input.document);
-        yield* reconcilePhotos(input.db, input.files, yield* Clock.currentTimeMillis);
+        yield* reconcilePhotos(input.db, input.files, yield* Clock.currentTimeMillis, deviceHasProfiles());
     }
 );
 

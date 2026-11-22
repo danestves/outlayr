@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { accountStats, monthDates, recentMonths, WEEK_MS, weeksFromRows } from "./openStats";
+import { accountStats, firstSyncPerUser, monthDates, recentMonths, WEEK_MS, weeksFromRows } from "./openStats";
 
 const NOW = Date.UTC(2026, 10, 1, 0, 10);
 
@@ -34,5 +34,15 @@ describe("open stats bucketing", () => {
         expect(recentMonths(Date.UTC(2026, 0, 15)).slice(-2)).toStrictEqual(["2025-12", "2026-01"]);
         expect(monthDates("2026-02", NOW)).toStrictEqual({ endDate: "2026-02-28", startDate: "2026-02-01" });
         expect(monthDates("2026-11", NOW)).toStrictEqual({ endDate: "2026-11-01", startDate: "2026-11-01" });
+    });
+
+    it("counts a person with several profiles once, from their first sync", () => {
+        const states = [
+            { _creationTime: 30, userId: "u1:p2" },
+            { _creationTime: 10, userId: "u1" },
+            { _creationTime: 20, userId: "u2:p1" },
+        ];
+
+        expect(firstSyncPerUser(states)).toStrictEqual([10, 20]);
     });
 });

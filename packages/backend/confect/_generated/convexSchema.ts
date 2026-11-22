@@ -24,6 +24,7 @@ import outsideMoves from "./tables/outsideMoves";
 import outsidePayments from "./tables/outsidePayments";
 import photoObjects from "./tables/photoObjects";
 import photoSizes from "./tables/photoSizes";
+import profiles from "./tables/profiles";
 import referralCodes from "./tables/referralCodes";
 import referralRewards from "./tables/referralRewards";
 import referrals from "./tables/referrals";
@@ -70,6 +71,7 @@ export default $defineSchema({
   outsidePayments: $Table.tableDefinition(outsidePayments),
   photoObjects: $Table.tableDefinition(photoObjects),
   photoSizes: $Table.tableDefinition(photoSizes),
+  profiles: $Table.tableDefinition(profiles),
   referralCodes: $Table.tableDefinition(referralCodes),
   referralRewards: $Table.tableDefinition(referralRewards),
   referrals: $Table.tableDefinition(referrals),
