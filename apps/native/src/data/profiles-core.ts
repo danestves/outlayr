@@ -1,4 +1,5 @@
 import { and, eq, inArray, isNull, max } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -87,7 +88,7 @@ export const insertProfile = Effect.fn("Profiles.insert")(function* insertProfil
     registry: Database,
     input: ProfileIdentity & { id: string; name: string }
 ) {
-    const now = new Date();
+    const now = yield* DateTime.nowAsDate;
     const [row] = yield* query("create", () =>
         registry
             .select({ highest: max(profiles.sortOrder) })
@@ -123,7 +124,7 @@ export const tombstoneProfile = Effect.fn("Profiles.tombstone")(function* tombst
     registry: Database,
     id: string
 ) {
-    const now = new Date();
+    const now = yield* DateTime.nowAsDate;
     yield* query("delete", () =>
         registry.update(profiles).set({ deletedAt: now, updatedAt: now }).where(eq(profiles.id, id))
     );

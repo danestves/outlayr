@@ -1,12 +1,16 @@
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Schema from "effect/Schema";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 
 const WORK = "6f1c2b3a-4d5e-4f60-8a7b-9c0d1e2f3a4b";
 let activeFile: string | undefined;
-let drain: Effect.Effect<void, Error> = Effect.void;
+class QueueUnreadable extends Schema.TaggedError<QueueUnreadable>()("QueueUnreadable", {}) {}
+class Offline extends Schema.TaggedError<Offline>()("Offline", {}) {}
+
+let drain: Effect.Effect<void, QueueUnreadable> = Effect.void;
 
 vi.mock("@/lib/active-profile", () => ({
     activeProfileId: () => WORK,
@@ -32,7 +36,7 @@ describe("signing out from a profile", () => {
     });
 
     it("keeps the profile and its session when its captures can't be drained", async () => {
-        drain = Effect.fail(new Error("queue unreadable"));
+        drain = Effect.fail(new QueueUnreadable());
 
         const exit = await Effect.runPromiseExit(settleBeforeSignOut(db));
 
@@ -41,7 +45,7 @@ describe("signing out from a profile", () => {
     });
 
     it("lands on Personal even when the sign-out request fails", async () => {
-        const exit = await Effect.runPromiseExit(signOutToPersonal(Effect.fail(new Error("offline"))));
+        const exit = await Effect.runPromiseExit(signOutToPersonal(Effect.fail(new Offline())));
 
         expect(Exit.isFailure(exit)).toBe(true);
         expect(activeFile).toBeUndefined();
