@@ -91,7 +91,7 @@ export function resolveDeepLink(raw: string): string | null {
         return null;
     }
 
-    if (rest.length > 0 && (ID_HOSTS.has(key) || base === `/${key}`)) {
+    if (rest.length > 0 && (ID_HOSTS.has(key) || key === "insights")) {
         return `${key === "budgets" ? budgetsPath(rest) : `${base}/${rest.join("/")}`}${query}`;
     }
 
