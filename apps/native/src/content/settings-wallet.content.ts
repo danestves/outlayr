@@ -340,6 +340,13 @@ const settingsWallet = {
             pt: "Compras registradas",
             "pt-PT": "Compras registadas",
         }),
+        "settings.wallet.pushConfirm": t({
+            en: "Confirm",
+            de: "Bestätigen",
+            es: "Confirmar",
+            fr: "Confirmer",
+            pt: "Confirmar",
+        }),
         "settings.wallet.pushNewPlace": t({
             en: "New place, tap to pick a category.",
             de: "Neuer Ort, tippe, um eine Kategorie zu wählen.",

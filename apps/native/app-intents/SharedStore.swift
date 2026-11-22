@@ -116,6 +116,9 @@ enum SharedStore {
         content.body = body
         content.userInfo = userInfo
         content.threadIdentifier = "automation"
+        if userInfo["walletWrite"] != nil {
+            content.categoryIdentifier = "detected-charge"
+        }
         do {
             try await center.add(UNNotificationRequest(identifier: identifier, content: content, trigger: nil))
         } catch {

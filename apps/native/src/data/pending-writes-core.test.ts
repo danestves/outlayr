@@ -16,7 +16,13 @@ import { readAutologWaiting, writeAutologAccess } from "./autolog-cap-core";
 import { cardFeeFor } from "./card-fees-core";
 import { inboundEntryId } from "./inbound-entry-id";
 import { WALLET_DEDUPE_WINDOW_MS } from "./pending-write-decision";
-import { appliedWriteIds, applyPendingWrites, drainPendingWrites, pendingWriteTxId } from "./pending-writes-core";
+import {
+    appliedWriteIds,
+    applyPendingWrites,
+    dismissPendingWrite,
+    drainPendingWrites,
+    pendingWriteTxId,
+} from "./pending-writes-core";
 import { backfillRecurring } from "./recurrence-backfill";
 import { transactionsRepo } from "./transactions-core";
 import { fileWaitingPurchases, pickCardAccount, takeRepriced } from "./wallet-state-core";
@@ -176,6 +182,20 @@ describe("applyPendingWrites", () => {
             })
             .from(transactions);
         expect(row).toStrictEqual({ accountId: "acc-chase", amount: 12.4, currency: "USD", note: "STARBUCKS" });
+    });
+
+    it("lands nothing for a dismissed write while a sibling in the same batch still lands", async () => {
+        const dropped = walletWrite("dismissed-1", {
+            dedupeKey: "wallet:expense:dismissed:640",
+            note: "Dropped",
+        });
+        const kept = walletWrite("kept-1", { dedupeKey: "wallet:expense:kept:640", note: "Kept" });
+
+        dismissPendingWrite("dismissed-1");
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [dropped, kept], NOW));
+
+        expect(applied).toBe(1);
+        await expect(liveRows(db)).resolves.toMatchObject([{ note: "Kept" }]);
     });
 
     it("drafts a debt from a push instead of filing it, once, and keeps a dismissed draft dismissed", async () => {

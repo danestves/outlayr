@@ -313,7 +313,7 @@ function RootStack() {
     // A sheet opened over the lock or restoring cover shows the entry on top of it. The tap stays the last response
     // until a handler clears it, so holding the hooks back delays it rather than dropping it.
     const tapsReady = group === "ledger" && lockOpen && !covered;
-    useWalletPushTaps(db, tapsReady);
+    useWalletPushTaps(db, tapsReady, group === "ledger");
     useSubscriptionReminderTaps(db, tapsReady);
 
     return (

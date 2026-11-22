@@ -4,6 +4,7 @@ import type * as Effect from "effect/Effect";
 import { Meta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
 import type { TranslatableKey } from "@/i18n/catalog";
+import type { ChargeAction } from "@/lib/charge-actions";
 import {
     declineInstallmentReminders,
     setDueReminders,
@@ -11,7 +12,7 @@ import {
     turnOnInstallmentReminders,
 } from "@/lib/due-reminders";
 import { syncInstallmentReminders } from "@/lib/installment-reminder-sync";
-import { resolveReminderTap, resolveWalletPushTap } from "@/lib/notification-taps";
+import { resolveReminderTap, resolveWalletPushTap, settleWalletPushAction } from "@/lib/notification-taps";
 import type { ReminderTap, WalletPushTap } from "@/lib/notification-taps";
 import { claimOverBudgetMoment } from "@/lib/over-budget-moment";
 import { appRuntime } from "@/lib/runtime";
@@ -59,6 +60,12 @@ export const resolveReminderTapCommand = surfacesCommand(
 export const resolveWalletPushTapCommand = surfacesCommand(
     "resolve-wallet-push-tap",
     (input: { db: Database; tap: WalletPushTap }) => resolveWalletPushTap(input.db, input.tap)
+);
+
+export const settleWalletPushActionCommand = surfacesCommand(
+    "settle-wallet-push-action",
+    (input: { action: ChargeAction; db: Database; walletWrite: string }) =>
+        settleWalletPushAction(input.db, input.walletWrite, input.action)
 );
 
 function fireLogged<W, A, E>(command: AtomCommand<W, A, E>, input: W, message: string): void {

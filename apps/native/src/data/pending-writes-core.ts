@@ -163,6 +163,12 @@ interface DrainResult {
 
 const NOTHING_DRAINED: DrainResult = { applied: 0, autologged: 0 };
 
+const dismissed = new Set<string>();
+
+export function dismissPendingWrite(id: string): void {
+    dismissed.add(id);
+}
+
 type Batch = Pick<PendingWriteFacts, "access" | "captured" | "ledger" | "usage">;
 
 const filedRows = Effect.fn("PendingWrites.filedRows")(function* filedRows(db: Database, ledger: Batch["ledger"]) {
@@ -462,6 +468,9 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     // Exactly-once depends on this pending write seeing the ledger row the previous one's SQLite transaction
     // committed, so they must land one at a time.
     for (const queued of jobs) {
+        if (dismissed.has(queued.id)) {
+            continue;
+        }
         const debt = readDebt(queued, reads);
         if (debt) {
             yield* rememberNotification(

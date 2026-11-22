@@ -221,6 +221,7 @@ internal object PurchaseListenerStore {
       .setTitle(if (merchant.isEmpty()) amount else "$amount · $merchant")
       .setText(listOfNotNull(category, cardLabel, newPlace).joinToString(" · ").ifEmpty { card })
       .setBody(JSONObject().put("walletWrite", id).put("pickCard", pickCard).put("card", card))
+      .setCategoryId("detected-charge")
       .setAutoDismiss(true)
       .build()
     val request = NotificationRequest(UUID.randomUUID().toString(), content, ChannelAwareTrigger(PUSH_CHANNEL))
