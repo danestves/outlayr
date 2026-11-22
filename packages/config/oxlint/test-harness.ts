@@ -5,6 +5,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+type RuleOptions = Record<string, readonly string[]>;
+
 interface Diagnostic {
     code: string;
     message: string;
@@ -18,7 +20,7 @@ const OXLINT_BIN = join(
     "oxlint"
 );
 
-export function lint(rule: string, filename: string, source: string): Diagnostic[] {
+export function lint(rule: string, filename: string, source: string, options?: RuleOptions): Diagnostic[] {
     const dir = mkdtempSync(join(tmpdir(), "outlayr-rule-"));
     try {
         const config = join(dir, ".oxlintrc.json");
@@ -28,7 +30,7 @@ export function lint(rule: string, filename: string, source: string): Diagnostic
                 categories: { correctness: "off" },
                 jsPlugins: [{ name: "outlayr", specifier: PLUGIN }],
                 options: { reportUnusedDisableDirectives: "error" },
-                rules: { [`outlayr/${rule}`]: "error" },
+                rules: { [`outlayr/${rule}`]: options === undefined ? "error" : ["error", options] },
             })
         );
         const file = join(dir, filename);
