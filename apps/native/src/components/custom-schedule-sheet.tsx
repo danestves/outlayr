@@ -9,8 +9,7 @@ import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
 import { Tabs } from "panelui-native/components/tabs";
 import { cn } from "panelui-native/utils/cn";
-import { useDeferredValue, useRef, useState } from "react";
-import type { RefObject } from "react";
+import { useDeferredValue, useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { Easing, FadeIn, FadeOut, useAnimatedStyle, withTiming } from "react-native-reanimated";
 
@@ -18,7 +17,7 @@ import { formatChargeDate } from "@/domain/dates";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
-import { useMirror, useOnUnmount, useTimers } from "@/lib/lifecycle";
+import { useMirror, useTimers } from "@/lib/lifecycle";
 import { SANS_BY_WEIGHT } from "@/theme/body-fonts";
 import { useColors } from "@/theme/use-colors";
 
@@ -310,21 +309,6 @@ const STEP_ICON_SIZE = 18;
 const HOLD_DELAY_MS = 350;
 const HOLD_REPEAT_MS = 70;
 
-type HoldTimers = RefObject<{
-    delay?: ReturnType<typeof setTimeout>;
-    repeat?: ReturnType<typeof setInterval>;
-}>;
-
-function releaseHold(held: HoldTimers) {
-    if (held.current.delay) {
-        clearTimeout(held.current.delay);
-    }
-    if (held.current.repeat) {
-        clearInterval(held.current.repeat);
-    }
-    held.current = {};
-}
-
 interface StepButtonProps {
     accessibilityLabel: string;
     disabled: boolean;
@@ -334,11 +318,9 @@ interface StepButtonProps {
 
 function StepButton({ icon, onStep, disabled, accessibilityLabel }: StepButtonProps) {
     const colors = useColors();
-    const held: HoldTimers = useRef({});
+    const timers = useTimers();
 
-    const release = () => releaseHold(held);
-
-    useOnUnmount(() => releaseHold(held));
+    const release = () => timers.clear();
 
     return (
         <Pressable
@@ -355,9 +337,13 @@ function StepButton({ icon, onStep, disabled, accessibilityLabel }: StepButtonPr
             // On press-in: a stepper that waits for the lift feels a beat behind, and the hold starts from that moment.
             onPressIn={() => {
                 onStep();
-                held.current.delay = setTimeout(() => {
-                    held.current.repeat = setInterval(onStep, HOLD_REPEAT_MS);
-                }, HOLD_DELAY_MS);
+                timers.after(HOLD_DELAY_MS, () => {
+                    const repeat = () => {
+                        onStep();
+                        timers.after(HOLD_REPEAT_MS, repeat);
+                    };
+                    timers.after(HOLD_REPEAT_MS, repeat);
+                });
             }}
             onPressOut={release}
         >

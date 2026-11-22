@@ -8,6 +8,7 @@ import { Pressable, View } from "react-native";
 import { websiteDomain } from "@/domain/merchant-website";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useTranslation } from "@/i18n/context";
+import { useTimers } from "@/lib/lifecycle";
 import { checkMerchantWebsite, discardStoredPhoto, voidAppFlowCommand } from "@/state/entry-commands";
 import type { MerchantWebsiteLogo } from "@/state/entry-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
@@ -36,7 +37,7 @@ export function MerchantWebsiteSheet({ merchant, onUse, ref }: MerchantWebsiteSh
     const [address, setAddress] = useState("");
     const [check, setCheck] = useState<Check>({ kind: "idle" });
     const ticket = useRef(0);
-    const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const timers = useTimers();
     const preview = useRef<string | null>(null);
 
     const release = () => {
@@ -48,10 +49,7 @@ export function MerchantWebsiteSheet({ merchant, onUse, ref }: MerchantWebsiteSh
 
     const cancelCheck = () => {
         ticket.current += 1;
-        if (timer.current !== null) {
-            clearTimeout(timer.current);
-            timer.current = null;
-        }
+        timers.clear();
     };
 
     const changeAddress = (next: string) => {
@@ -65,7 +63,7 @@ export function MerchantWebsiteSheet({ merchant, onUse, ref }: MerchantWebsiteSh
         }
         setCheck({ kind: "checking" });
         const asked = ticket.current;
-        timer.current = setTimeout(() => {
+        timers.after(CHECK_DELAY_MS, () => {
             void runFlow(
                 checkMerchantWebsite(domain, merchant).pipe(
                     Effect.flatMap((logo) =>
@@ -82,7 +80,7 @@ export function MerchantWebsiteSheet({ merchant, onUse, ref }: MerchantWebsiteSh
                     )
                 )
             );
-        }, CHECK_DELAY_MS);
+        });
     };
 
     const use = () => {

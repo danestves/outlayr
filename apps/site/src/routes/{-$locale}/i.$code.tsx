@@ -1,6 +1,7 @@
 import { formatReferralCode, normalizeReferralCode } from "@outlayr/money/contract";
 import { capture } from "@outlayr/shared/analytics";
 import { localeFromParam } from "@outlayr/shared/i18n";
+import { useTimers } from "@outlayr/shared/lifecycle";
 import { createFileRoute, notFound, rootRouteId } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import { useRef, useState } from "react";
@@ -61,12 +62,13 @@ function Invite() {
 
 function CopyableCode({ code }: { code: string }) {
     const { copied, copy } = useIntlayer("invite");
+    const timers = useTimers();
     const [done, setDone] = useState(false);
     const shown = useRef<HTMLParagraphElement>(null);
     const onCopied = () => {
         capture("invite_code_copied");
         setDone(true);
-        setTimeout(() => setDone(false), COPIED_MS);
+        timers.after(COPIED_MS, () => setDone(false));
     };
     const selectCode = () => {
         if (shown.current) {

@@ -16,7 +16,8 @@ import { translateNow } from "@/i18n/runtime";
 import type { CloudError } from "@/lib/cloud-error";
 import { enrichmentTransport } from "@/lib/convex";
 import type { CategoryBranch, EnrichmentFn } from "@/lib/convex";
-import { useLatest, useOnChange, useWhen } from "@/lib/lifecycle";
+import { useLatest, useOnChange, useTimers, useWhen } from "@/lib/lifecycle";
+import type { Timers } from "@/lib/lifecycle";
 import { ENRICHMENT_TIMEOUT, timedCaptureCommand } from "@/state/capture-commands";
 import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
 import { logged } from "@/state/entry-save";
@@ -141,28 +142,21 @@ type LatestArgs = Omit<UseTransactionEnrichmentArgs, "groundedLookup" | "initial
 interface EnrichmentPorts {
     curatedFallbackRef: RefObject<{ key: string; suggestion: EnrichmentSuggestion } | null>;
     forceRef: RefObject<boolean>;
-    groundedTimerRef: RefObject<ReturnType<typeof setTimeout> | null>;
     inFlightRef: RefObject<Map<string, number>>;
     lastEmittedRef: RefObject<{ key: string; suggestion: EnrichmentSuggestion } | null>;
     lastRemoteOutcomeRef: RefObject<{ hasDomain: boolean; key: string } | null>;
     latest: RefObject<LatestArgs>;
     nameRef: RefObject<string>;
-    recheckTimerRef: RefObject<ReturnType<typeof setTimeout> | null>;
     rememberedRef: RefObject<{ categoryId: string | null; key: string } | null>;
     remoteAbortRef: RefObject<AbortController | null>;
     requestIdRef: RefObject<number>;
     setPending: (pending: boolean) => void;
     start: (flow: Effect.Effect<void, unknown>) => void;
-    timerRef: RefObject<ReturnType<typeof setTimeout> | null>;
+    timers: Timers;
 }
 
-function clearTimers({ groundedTimerRef, recheckTimerRef, timerRef }: EnrichmentPorts) {
-    for (const ref of [timerRef, groundedTimerRef, recheckTimerRef]) {
-        if (ref.current != null) {
-            clearTimeout(ref.current);
-            ref.current = null;
-        }
-    }
+function clearTimers({ timers }: EnrichmentPorts) {
+    timers.clear();
 }
 
 function supersedeRequest({ remoteAbortRef, requestIdRef }: EnrichmentPorts) {
@@ -340,7 +334,7 @@ const recheckGrounded = Effect.fn("TransactionEnrichment.recheck")(function* rec
 });
 
 function scheduleRecheck(ports: EnrichmentPorts, lookup: GroundedLookup, delay: number, retriesLeft: number) {
-    ports.recheckTimerRef.current = setTimeout(() => ports.start(recheckGrounded(ports, lookup, retriesLeft)), delay);
+    ports.timers.after(delay, () => ports.start(recheckGrounded(ports, lookup, retriesLeft)));
 }
 
 interface GroundedLookup {
@@ -353,7 +347,7 @@ interface GroundedLookup {
 const runGroundedFollowUp: (ports: EnrichmentPorts) => Effect.Effect<void> = Effect.fn(
     "TransactionEnrichment.runGroundedFollowUp"
 )(function* groundedFollowUp(ports: EnrichmentPorts) {
-    const { groundedTimerRef, inFlightRef, lastRemoteOutcomeRef, latest, nameRef, requestIdRef } = ports;
+    const { inFlightRef, lastRemoteOutcomeRef, latest, nameRef, requestIdRef, timers } = ports;
     // `remoteEnabled` too: a merchant the ledger already knew records an outcome, and its name must not leave
     // here.
     if (!latest.current.groundedLookup || !latest.current.remoteEnabled) {
@@ -363,7 +357,7 @@ const runGroundedFollowUp: (ports: EnrichmentPorts) => Effect.Effect<void> = Eff
     const outcome = lastRemoteOutcomeRef.current;
     if (outcome == null || outcome.key !== key) {
         if (inFlightRef.current.has(key)) {
-            groundedTimerRef.current = setTimeout(() => ports.start(runGroundedFollowUp(ports)), GROUNDED_IDLE_MS);
+            timers.after(GROUNDED_IDLE_MS, () => ports.start(runGroundedFollowUp(ports)));
         }
         return;
     }
@@ -510,9 +504,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     // fields lift, and the save carries the answer to the merchant's other rows.
     const userAskedRef = useRef(false);
     const cancelledRef = useRef(false);
-    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const groundedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const recheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const timers = useTimers();
     const requestIdRef = useRef(0);
     const remoteAbortRef = useRef<AbortController | null>(null);
     const runFlow = useAtomCommand(voidFlowCommand);
@@ -556,19 +548,17 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     const ports: EnrichmentPorts = {
         curatedFallbackRef,
         forceRef,
-        groundedTimerRef,
         inFlightRef,
         lastEmittedRef,
         lastRemoteOutcomeRef,
         latest,
         nameRef,
-        recheckTimerRef,
         rememberedRef,
         remoteAbortRef,
         requestIdRef,
         setPending,
         start,
-        timerRef,
+        timers,
     };
 
     const onNameChange = (next: string) => {
@@ -578,8 +568,8 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             return;
         }
         clearTimers(ports);
-        timerRef.current = setTimeout(() => start(runLookup(ports)), DEBOUNCE_MS);
-        groundedTimerRef.current = setTimeout(() => start(runGroundedFollowUp(ports)), GROUNDED_IDLE_MS);
+        timers.after(DEBOUNCE_MS, () => start(runLookup(ports)));
+        timers.after(GROUNDED_IDLE_MS, () => start(runGroundedFollowUp(ports)));
     };
 
     const settleNow = async (next: string) => {
@@ -590,7 +580,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             return;
         }
         clearTimers(ports);
-        groundedTimerRef.current = setTimeout(() => start(runGroundedFollowUp(ports)), GROUNDED_IDLE_MS);
+        timers.after(GROUNDED_IDLE_MS, () => start(runGroundedFollowUp(ports)));
         await settle(runLookup(ports, true));
     };
 

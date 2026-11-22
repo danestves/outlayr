@@ -1,5 +1,6 @@
 import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import DragDropVerticalIcon from "@hugeicons/core-free-icons/DragDropVerticalIcon";
+import { useTimers } from "@outlayr/shared/lifecycle";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { useMemo, useRef, useState } from "react";
@@ -29,6 +30,7 @@ const moved = (ids: readonly string[], id: string, to: number) => {
 function Rows({ onMove, rows }: { onMove: (id: string, to: number) => void; rows: readonly AccountRow[] }) {
     const { flows } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
+    const timers = useTimers();
     const list = useRef<HTMLDivElement>(null);
     const [dragging, setDragging] = useState<string | null>(null);
 
@@ -59,7 +61,7 @@ function Rows({ onMove, rows }: { onMove: (id: string, to: number) => void; rows
             const handle = event.currentTarget;
             onMove(id, to);
             // React moves the row's node to reorder it, and the browser drops focus from a moved node.
-            requestAnimationFrame(() => handle instanceof HTMLElement && handle.focus());
+            timers.frame(() => handle instanceof HTMLElement && handle.focus());
         }
     };
 

@@ -1,4 +1,5 @@
 import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
+import { useTimers } from "@outlayr/shared/lifecycle";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Switch } from "panelui-web/switch";
@@ -49,6 +50,7 @@ export function ShareDialog({
 }: ShareDialogProps) {
     const { sharing } = words.copy;
     const { locale } = useLocale();
+    const timers = useTimers();
     const [picked, setPicked] = useState<{ amounts?: boolean; lifetime?: Lifetime }>({});
     const [busy, setBusy] = useState(false);
     const [failed, setFailed] = useState(false);
@@ -99,7 +101,7 @@ export function ShareDialog({
         }
         await navigator.clipboard.writeText(`https://${url}`);
         setCopied(true);
-        setTimeout(() => setCopied(false), COPIED_MS);
+        timers.after(COPIED_MS, () => setCopied(false));
     };
 
     return (

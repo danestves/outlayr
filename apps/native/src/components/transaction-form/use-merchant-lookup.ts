@@ -375,6 +375,7 @@ export function useMerchantLookup({
             await Promise.race([
                 logoFlowRef.current,
                 new Promise((resolve) => {
+                    // oxlint-disable-next-line outlayr/no-raw-timers -- bounds a save that outlives this screen
                     setTimeout(resolve, LOGO_WAIT_MS);
                 }),
             ]);

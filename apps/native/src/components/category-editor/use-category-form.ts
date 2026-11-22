@@ -1,7 +1,7 @@
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import { useForm, useSelector } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
-import { use, useRef, useState } from "react";
+import { use, useState } from "react";
 import type { RefObject } from "react";
 import { Keyboard } from "react-native";
 
@@ -21,7 +21,7 @@ import { firstAvailableColor } from "@/domain/category-color";
 import { CATEGORY_ERROR_KEYS } from "@/domain/category-error";
 import { useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
-import { useOnChange } from "@/lib/lifecycle";
+import { useOnChange, useTimers } from "@/lib/lifecycle";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { runAtomCommand, SILENT } from "@/state/atom-command";
@@ -161,7 +161,7 @@ export function useCategoryForm(props: CategoryEditorProps, nameField: NameField
 
     const [colorTouched, setColorTouched] = useState(false);
     const [showToast, setShowToast] = useState(false);
-    const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const timers = useTimers();
 
     const expenseTree = useCategoriesByNamespace(db, false);
 
@@ -282,11 +282,9 @@ export function useCategoryForm(props: CategoryEditorProps, nameField: NameField
 
     /** Back-to-back adds must not let the first timer clear the second flash. */
     const flashAdded = () => {
-        if (toastTimer.current !== null) {
-            clearTimeout(toastTimer.current);
-        }
+        timers.clear();
         setShowToast(true);
-        toastTimer.current = setTimeout(() => setShowToast(false), TOAST_MS);
+        timers.after(TOAST_MS, () => setShowToast(false));
     };
 
     const submit = () => pressSubmit(form);
