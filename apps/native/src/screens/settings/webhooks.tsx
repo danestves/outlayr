@@ -355,6 +355,9 @@ function WebhookSections({ canManage, status }: { canManage: boolean; status: We
     };
 
     const openAdd = () => {
+        if (minting.current) {
+            return;
+        }
         addOpen.current = true;
         addRef.current?.present();
     };
