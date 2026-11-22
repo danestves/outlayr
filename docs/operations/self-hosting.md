@@ -77,7 +77,7 @@ Builds need no Hugeicons Pro token: only the native app and the marketing site u
 | `BIND_ADDRESS` | No | Address the host ports listen on, default `0.0.0.0`. |
 | `INSTANCE_NAME`, `INSTANCE_SECRET` | No | Empty, Convex generates the secret and keeps it in the `convex-data` volume. A new secret invalidates every admin key. |
 | `CONVEX_VERSION` | No | Convex engine and dashboard image tag. Convex tags images by commit. |
-| `DISABLE_BEACON` | No | Any value stops the Convex backend's anonymous usage beacon. |
+| `DISABLE_BEACON` | No | `true` stops the Convex backend's anonymous usage beacon. Leave it unset otherwise: an empty value stops Convex from starting. |
 
 ### `convex.env`: the deployment's variables
 

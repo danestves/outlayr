@@ -2,7 +2,7 @@ name: outlayr
 
 services:
     convex:
-        image: ghcr.io/convex/convex-backend:${CONVEX_VERSION:-21f6fe42d4a5e4b8530f69b9a188dabcdb316e06}
+        image: ghcr.io/convex/convex-backend:${CONVEX_VERSION:-cf39368b85da10d95522e27960d57833c048ea56}
         restart: unless-stopped
         stop_grace_period: 10s
         stop_signal: SIGINT
@@ -16,7 +16,7 @@ services:
             INSTANCE_SECRET: ${INSTANCE_SECRET:-}
             CONVEX_CLOUD_ORIGIN: ${CONVEX_CLOUD_ORIGIN:?Set CONVEX_CLOUD_ORIGIN in .env}
             CONVEX_SITE_ORIGIN: ${CONVEX_SITE_ORIGIN:?Set CONVEX_SITE_ORIGIN in .env}
-            DISABLE_BEACON: ${DISABLE_BEACON:-}
+            DISABLE_BEACON:
         healthcheck:
             test: ["CMD", "curl", "-fsS", "http://localhost:3210/version"]
             interval: 5s
@@ -25,7 +25,7 @@ services:
             start_period: 10s
 
     convex-dashboard:
-        image: ghcr.io/convex/convex-dashboard:${CONVEX_VERSION:-21f6fe42d4a5e4b8530f69b9a188dabcdb316e06}
+        image: ghcr.io/convex/convex-dashboard:${CONVEX_VERSION:-cf39368b85da10d95522e27960d57833c048ea56}
         restart: unless-stopped
         stop_grace_period: 10s
         stop_signal: SIGINT
