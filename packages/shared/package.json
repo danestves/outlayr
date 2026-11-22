@@ -8,6 +8,7 @@
         "./consent-banner": "./src/consent-banner.tsx",
         "./exception-noise": "./src/exception-noise.ts",
         "./i18n": "./src/i18n.ts",
+        "./lifecycle": "./src/lifecycle.ts",
         "./theme": "./src/theme.ts",
         "./timeout": "./src/timeout.ts",
         "./tokens.css": "./src/tokens.css",
