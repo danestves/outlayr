@@ -6,7 +6,9 @@ import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { syncTransport } from "@/lib/cloud-sync";
+import { inboundWritesTransport } from "@/lib/cloud-webhooks";
 
+import { pullInboundWrites } from "./inbound-writes";
 import { runSync } from "./sync-engine-core";
 import type { SyncCoreError } from "./sync-engine-core";
 import { getSyncCursor, isSyncEnabled, outboxPendingCount, setSyncedAt } from "./sync-outbox-core";
@@ -24,6 +26,11 @@ export class SyncError extends Schema.TaggedError<SyncError>()("SyncError", {
 export const SyncTransport = Context.Reference<ReturnType<typeof syncTransport>>(
     "outlayr/data/SyncStore/SyncTransport",
     { defaultValue: syncTransport }
+);
+
+export const InboxTransport = Context.Reference<ReturnType<typeof inboundWritesTransport>>(
+    "outlayr/data/SyncStore/InboxTransport",
+    { defaultValue: inboundWritesTransport }
 );
 
 export class SyncStore extends Context.Service<
@@ -52,9 +59,14 @@ export const make = Effect.gen(function* make() {
     const transport = yield* SyncTransport;
 
     const sync = Effect.fn("SyncStore.sync")(function* sync(db: Database) {
+        const inbox = yield* InboxTransport;
         const { tables } = yield* runSync(db, transport).pipe(surfaced("pass"));
         // Outside the write transaction, so nothing repaints rows a rollback is about to remove.
         yield* Effect.try({ catch: failedAt("pass"), try: () => invalidateAll(tables) });
+        // Never blocks the pass: the rows stay on the server until a later pass parks them.
+        yield* pullInboundWrites(db, inbox).pipe(
+            Effect.catchCause((cause) => Effect.logWarning("[outlayr] inbound writes failed", cause))
+        );
     });
 
     const pending = Effect.fn("SyncStore.pending")(function* pending(db: Database) {

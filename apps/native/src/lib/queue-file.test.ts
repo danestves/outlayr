@@ -139,6 +139,14 @@ describe("adoptQueue", () => {
 
         expect([...disk.keys()]).toStrictEqual([]);
     });
+
+    it("reports a write the container dropped, so the server keeps its copy", () => {
+        const { files } = makeFiles();
+        const readOnly: QueueFiles = { ...files, write: () => undefined };
+
+        expect(adoptQueue(readOnly, [write("inbound:1")])).toBeFalsy();
+        expect(adoptQueue(files, [write("inbound:1")])).toBeTruthy();
+    });
 });
 
 describe("autologSourceOf", () => {
