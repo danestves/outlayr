@@ -8,6 +8,7 @@ import { useWalletState } from "@/data/use-wallet-state";
 import { formatSentenceDate } from "@/domain/dates";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { TRIGGERS_IN_SHORTCUTS } from "@/lib/wallet-shortcut";
+import { WEBHOOKS_OPEN } from "@/lib/webhook-settings";
 
 import { CardsSection } from "./wallet-parts";
 
@@ -39,6 +40,13 @@ export function Integrations() {
                         onPress={() => router.push("/settings/integrations/bank")}
                         title={t("settings.wallet.bankSection")}
                         value={t(onOffLabel(lastNotification != null))}
+                    />
+                ) : null}
+                {WEBHOOKS_OPEN ? (
+                    <LinkRow
+                        icon="Plug"
+                        onPress={() => router.push("/settings/integrations/webhooks")}
+                        title={t("nav.settings.webhooks")}
                     />
                 ) : null}
             </SettingsSection>

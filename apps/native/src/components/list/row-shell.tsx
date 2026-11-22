@@ -21,6 +21,7 @@ export interface RowShellProps {
     /** `below` and `detail` start under the icon instead of the title. */
     flush?: boolean;
     icon?: SettingsIconName;
+    leading?: ReactNode;
     onTitleLines?: (lines: number) => void;
     title: string;
     titleLines?: number;
@@ -28,6 +29,7 @@ export interface RowShellProps {
 
 export function RowShell({
     icon,
+    leading,
     title,
     titleLines = 1,
     destructive,
@@ -39,17 +41,19 @@ export function RowShell({
 }: RowShellProps) {
     const colors = useColors();
     const largeText = useAccessibilityTextSize();
+    const hasLeading = icon !== undefined || leading !== undefined;
     return (
         <View className="border-border border-b py-3.5">
             <View className="flex-row items-center gap-3">
-                {icon ? (
-                    <HugeiconsIcon
-                        color={destructive ? colors.danger : colors.foreground}
-                        icon={settingsIcon(icon)}
-                        size={GLYPH}
-                        strokeWidth={1.9}
-                    />
-                ) : null}
+                {leading ??
+                    (icon ? (
+                        <HugeiconsIcon
+                            color={destructive ? colors.danger : colors.foreground}
+                            icon={settingsIcon(icon)}
+                            size={GLYPH}
+                            strokeWidth={1.9}
+                        />
+                    ) : null)}
                 <Text
                     className={cn("text-body flex-1", destructive ? "text-danger" : "text-foreground")}
                     numberOfLines={largeText ? Math.max(titleLines, 2) : titleLines}
@@ -59,9 +63,9 @@ export function RowShell({
                 </Text>
                 {children}
             </View>
-            {below ? <View className={cn(icon && !flush && TITLE_INSET, "items-start")}>{below}</View> : null}
+            {below ? <View className={cn(hasLeading && !flush && TITLE_INSET, "items-start")}>{below}</View> : null}
             {detail ? (
-                <Text className={cn(icon && !flush && TITLE_INSET, "text-muted text-subtitle mt-2 leading-snug")}>
+                <Text className={cn(hasLeading && !flush && TITLE_INSET, "text-muted text-subtitle mt-2 leading-snug")}>
                     {detail}
                 </Text>
             ) : null}

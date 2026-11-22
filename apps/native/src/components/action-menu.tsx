@@ -23,6 +23,7 @@ interface ActionMenuProps {
     // For a row a recycling list hands to another entry: a menu still open when the owner changes must not act on
     // the new one.
     owner?: string;
+    press?: "long" | "tap";
     style?: StyleProp<ViewStyle>;
 }
 
@@ -51,7 +52,7 @@ export function StretchedMenuView({ children, style, ...menu }: MenuComponentPro
     );
 }
 
-export function ActionMenu({ items, owner, children, style }: ActionMenuProps) {
+export function ActionMenu({ items, owner, press = "long", children, style }: ActionMenuProps) {
     // An empty menu still swallows the long press, which reads as a dead row.
     if (items.length === 0) {
         return children;
@@ -71,7 +72,12 @@ export function ActionMenu({ items, owner, children, style }: ActionMenuProps) {
     };
 
     return (
-        <StretchedMenuView actions={actions} onPressAction={onPressAction} shouldOpenOnLongPress style={style}>
+        <StretchedMenuView
+            actions={actions}
+            onPressAction={onPressAction}
+            shouldOpenOnLongPress={press === "long"}
+            style={style}
+        >
             {children}
         </StretchedMenuView>
     );

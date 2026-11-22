@@ -38,6 +38,7 @@ type SettingsData = typeof import("@/content/settings-data.content").default;
 type SettingsFeatureLab = typeof import("@/content/settings-feature-lab.content").default;
 type SettingsNotifications = typeof import("@/content/settings-notifications.content").default;
 type SettingsWallet = typeof import("@/content/settings-wallet.content").default;
+type SettingsWebhooks = typeof import("@/content/settings-webhooks.content").default;
 type Transaction = typeof import("@/content/transaction.content").default;
 type Transfers = typeof import("@/content/transfers.content").default;
 type Update = typeof import("@/content/update.content").default;
@@ -75,6 +76,7 @@ export const DICTIONARY_KEYS = [
     "settings-feature-lab",
     "settings-notifications",
     "settings-wallet",
+    "settings-webhooks",
     "transaction",
     "transfers",
     "update",
@@ -112,6 +114,7 @@ type Content =
     | SettingsFeatureLab["content"]
     | SettingsNotifications["content"]
     | SettingsWallet["content"]
+    | SettingsWebhooks["content"]
     | Transaction["content"]
     | Transfers["content"]
     | Update["content"]

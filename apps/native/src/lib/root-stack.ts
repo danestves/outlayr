@@ -94,6 +94,11 @@ export const ROOT_STACK: readonly { group: RootStackGroup; screens: readonly Roo
             { chrome: "titled", name: "settings/integrations/index", titleKey: "nav.settings.integrations" },
             { chrome: "titled", name: "settings/integrations/messages", titleKey: "settings.wallet.messages" },
             { chrome: "titled", name: "settings/integrations/wallet", titleKey: "nav.settings.wallet" },
+            {
+                chrome: "titled",
+                name: "settings/integrations/webhooks",
+                titleKey: "nav.settings.webhooks",
+            },
             { chrome: "titled", name: "settings/invite", titleKey: "referrals.title" },
             { chrome: "titled", name: "settings/licenses/index", titleKey: "settings.about.openSourceLicenses" },
             { chrome: "titled", name: "settings/notifications", titleKey: "nav.settings.notifications" },

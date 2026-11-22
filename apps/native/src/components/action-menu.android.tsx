@@ -153,7 +153,7 @@ export const StretchedMenuView: typeof StretchedMenuViewBase = ({
     );
 };
 
-export const ActionMenu: typeof ActionMenuBase = ({ items, owner, children, style }) => {
+export const ActionMenu: typeof ActionMenuBase = ({ items, owner, press = "long", children, style }) => {
     // An empty menu would still swallow the long press.
     if (items.length === 0) {
         return children;
@@ -163,13 +163,22 @@ export const ActionMenu: typeof ActionMenuBase = ({ items, owner, children, styl
         id: item.id,
         title: item.label,
     }));
+    const onPressAction = ({ nativeEvent }: NativeActionEvent) =>
+        items.find((item) => item.id === nativeEvent.event)?.onPress();
+    if (press === "tap") {
+        return (
+            <StretchedMenuView
+                actions={actions}
+                onPressAction={onPressAction}
+                shouldOpenOnLongPress={false}
+                style={style}
+            >
+                {children}
+            </StretchedMenuView>
+        );
+    }
     return (
-        <LongPressMenu
-            actions={actions}
-            onPressAction={({ nativeEvent }) => items.find((item) => item.id === nativeEvent.event)?.onPress()}
-            owner={owner}
-            style={style}
-        >
+        <LongPressMenu actions={actions} onPressAction={onPressAction} owner={owner} style={style}>
             {children}
         </LongPressMenu>
     );
