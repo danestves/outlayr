@@ -4,17 +4,23 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
+import { Meta } from "@/data/app-meta-core";
 import { seedCategories } from "@/data/categories-core";
 import { adoptedAccount } from "@/data/ledger-adoption";
 import type { AdoptionEngine } from "@/data/ledger-adoption";
 import { isSyncEnabled } from "@/data/sync-outbox-core";
 import type { Database } from "@/db/client";
-import { transactions } from "@/db/schema";
+import { outbox, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 import { appRuntime } from "@/lib/runtime";
 
 let mockEngine: AdoptionEngine | null = null;
 vi.mock("@/lib/adoption-engine", () => ({ adoptionEngine: () => mockEngine }));
+let mockProfile: string | undefined;
+vi.mock("@/lib/active-profile", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@/lib/active-profile")>()),
+    activeProfileId: () => mockProfile,
+}));
 
 import { reconcileAdoptionCommand } from "./lifecycle-commands";
 
@@ -44,6 +50,7 @@ describe("reconcileAdoptionCommand", () => {
         db = migratedDatabase();
         await Effect.runPromise(seedCategories(db, "en"));
         mockEngine = null;
+        mockProfile = undefined;
     });
 
     it("defers without touching either ledger when no engine can read the account", async () => {
@@ -83,5 +90,24 @@ describe("reconcileAdoptionCommand", () => {
         expect(replaced).toHaveBeenCalledOnce();
         await expect(Effect.runPromise(adoptedAccount(db))).resolves.toBe(ACCOUNT);
         await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(true);
+    });
+
+    it("pushes a new profile's chosen currency from the phone that made it", async () => {
+        mockProfile = "6f1c2b3a-4d5e-4f60-8a7b-9c0d1e2f3a4b";
+        mockEngine = engineReading("empty").engine;
+        await Effect.runPromise(Meta.set(db, "currencyChosen", true));
+
+        await expect(reconcile(db)).resolves.toBe("settled");
+
+        await expect(db.select().from(outbox)).resolves.not.toHaveLength(0);
+    });
+
+    it("keeps another phone's bootstrap currency off a profile its maker has not pushed yet", async () => {
+        mockProfile = "6f1c2b3a-4d5e-4f60-8a7b-9c0d1e2f3a4b";
+        mockEngine = engineReading("empty").engine;
+
+        await expect(reconcile(db)).resolves.toBe("settled");
+
+        await expect(db.select().from(outbox)).resolves.toHaveLength(0);
     });
 });

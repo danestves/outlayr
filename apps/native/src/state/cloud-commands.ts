@@ -1,6 +1,7 @@
 import type { UnknownError } from "effect/Cause";
 import * as Effect from "effect/Effect";
 
+import type { ProfilesError } from "@/data/profiles-core";
 import { setSyncEnabled } from "@/data/sync-outbox-core";
 import type { SyncOutboxError } from "@/data/sync-outbox-core";
 import type { Database, CloseDatabaseError } from "@/db/client";
@@ -29,6 +30,7 @@ import type { SecureStorageError } from "@/lib/secure-storage";
 import { SecureStorage } from "@/lib/secure-storage";
 
 import { createCommand, createRuntimeCommand } from "./atom-command";
+import { leaveProfile } from "./profiles-commands";
 
 type AuthClient = NonNullable<typeof authClient>;
 
@@ -51,13 +53,14 @@ const quiesce = (db: Database) => () => setSyncEnabled(db, false);
 
 export const signOutCommand = createRuntimeCommand(appRuntime, {
     execute: (input: { allowLocal: () => void; client: AuthClient; db: Database; navigateToLedger: () => void }) =>
-        runAccountLifecycle<SyncOutboxError | UnknownError, never>("signOut", {
+        runAccountLifecycle<ProfilesError | SyncOutboxError | UnknownError, never>("signOut", {
             allowLocal: input.allowLocal,
             navigateToLedger: input.navigateToLedger,
             quiesce: quiesce(input.db),
             signOut: () =>
                 forgetCaptureLookup().pipe(
                     Effect.andThen(Effect.tryPromise(() => input.client.signOut())),
+                    Effect.andThen(leaveProfile(input.db)),
                     Effect.asVoid
                 ),
         }),

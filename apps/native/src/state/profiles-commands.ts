@@ -10,9 +10,8 @@ import { ProfilesError, updateProfile } from "@/data/profiles-core";
 import type { ProfileIdentity } from "@/data/profiles-core";
 import { flushDeferredDeletes } from "@/data/use-deferred-delete";
 import type { Database } from "@/db/client";
-import { writeActiveProfile } from "@/lib/active-profile";
+import { activeProfileId, writeActiveProfile } from "@/lib/active-profile";
 import { appRuntime } from "@/lib/runtime";
-import { warnAndContinue } from "@/lib/warn-and-continue";
 
 import { createRuntimeCommand } from "./atom-command";
 
@@ -21,10 +20,10 @@ const switchTo = Effect.fn("Profiles.switchTo")(function* switchTo(
     drainInto: Database | null
 ) {
     yield* flushDeferredDeletes;
-    // A queued capture carries ids from the open ledger, so it lands there unless that ledger is being deleted.
+    // A queued capture carries ids from the open ledger, so a failed drain stays put rather than land in the next one.
     if (drainInto !== null) {
         yield* drainDevicePendingWrites(drainInto).pipe(
-            warnAndContinue("[outlayr] pending writes not drained before switching profiles")
+            Effect.mapError((cause) => new ProfilesError({ cause, operation: "switch" }))
         );
     }
     yield* Effect.try({
@@ -40,6 +39,9 @@ const switchTo = Effect.fn("Profiles.switchTo")(function* switchTo(
         try: () => reloadAsync(),
     });
 });
+
+export const leaveProfile = (db: Database) =>
+    Effect.suspend(() => (activeProfileId() === undefined ? Effect.void : switchTo(undefined, db)));
 
 export const switchProfileCommand = createRuntimeCommand(appRuntime, {
     execute: Effect.fn("Profiles.switch")(function* switchProfile(input: {

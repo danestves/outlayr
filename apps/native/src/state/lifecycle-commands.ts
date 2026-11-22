@@ -3,6 +3,7 @@ import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
+import { Meta } from "@/data/app-meta-core";
 import { buildArchive, restoreArchive } from "@/data/archive-core";
 import { eraseData } from "@/data/erase";
 import { completeAdoption, localLedgerState, prepareAccountAdoption, runAdoption } from "@/data/ledger-adoption";
@@ -85,9 +86,10 @@ export const reconcileAdoption = Effect.fn("Adoption.reconcile")(function* recon
     if (plan === "defer") {
         return "defer";
     }
-    // A new profile seeds its own currency, and only a push carries it to the account other phones read.
-    const actions =
-        plan === "fresh" && activeProfileId() !== undefined ? adoptionActions("adopt") : adoptionActions(plan);
+    // The phone that made a profile chose its currency, and only a push carries it to the account other phones read.
+    // Another phone's copy holds only the bootstrap default, which must not overwrite that choice.
+    const madeHere = plan === "fresh" && activeProfileId() !== undefined && (yield* Meta.get(db, "currencyChosen"));
+    const actions = madeHere ? adoptionActions("adopt") : adoptionActions(plan);
     if (actions) {
         yield* completeAdoption(db, engine, actions, accountId);
     }

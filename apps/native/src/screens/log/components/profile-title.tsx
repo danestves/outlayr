@@ -2,7 +2,7 @@ import { MenuView } from "@expo/ui/community/menu";
 import type { MenuState } from "@expo/ui/community/menu";
 import ArrowDown01Icon from "@hugeicons-pro/core-solid-rounded/ArrowDown01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { View } from "react-native";
 
 import { AccountTile } from "@/components/account-tile";
@@ -20,7 +20,7 @@ import { useColors } from "@/theme/use-colors";
 const PERSONAL_ACTION = "profiles.personal";
 const NEW_ACTION = "profiles.new";
 const EDIT_ACTION = "profiles.edit";
-const TILE_SIZE = 30;
+const TILE_SIZE = 24;
 
 const menuState = (on: boolean): MenuState => (on ? "on" : "off");
 
@@ -34,7 +34,7 @@ const PERSONAL_IDENTITY = {
     name: "",
 } as const;
 
-export function ProfileTitle() {
+function ProfileChip() {
     const db = useDatabase();
     const t = useTranslation();
     const colors = useColors();
@@ -96,18 +96,20 @@ export function ProfileTitle() {
                 accessibilityHint={t("profiles.a11y.switch")}
                 accessibilityLabel={name}
                 accessibilityRole="button"
-                className="flex-row items-center gap-2.5 self-start pt-1 pb-3"
+                className="flex-row items-center gap-2"
             >
                 <AccountTile account={active ? { ...active, kind: "asset" } : PERSONAL_IDENTITY} size={TILE_SIZE} />
-                <Text
-                    className="text-foreground font-sans-bold shrink"
-                    numberOfLines={1}
-                    style={{ fontSize: 30, lineHeight: 36 }}
-                >
+                <Text className="text-foreground font-sans-semibold shrink text-[17px]" numberOfLines={1}>
                     {name}
                 </Text>
-                <HugeiconsIcon color={colors.muted} icon={ArrowDown01Icon} size={16} />
+                <HugeiconsIcon color={colors.muted} icon={ArrowDown01Icon} size={14} />
             </View>
         </MenuView>
     );
+}
+
+const renderChip = () => <ProfileChip />;
+
+export function ProfileTitle() {
+    return <Stack.Screen options={{ headerTitle: renderChip }} />;
 }

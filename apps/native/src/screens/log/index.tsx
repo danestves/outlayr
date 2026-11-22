@@ -333,12 +333,12 @@ export function Log() {
     if (listRows.length === 0 && tailRows.length === 0 && listFilter === "all") {
         return (
             <AmountsHiddenContext value={amountsHidden}>
+                <ProfileTitle />
                 <ScrollView
                     className="bg-background"
                     contentContainerStyle={{ flexGrow: 1, paddingBottom: FAB_CLEARANCE, paddingHorizontal: 20 }}
                     contentInsetAdjustmentBehavior="automatic"
                 >
-                    <ProfileTitle />
                     {accountsOverview || debts ? (
                         <AccountsBlock {...accountsProps} trailing={<AmountsEyeButton />} />
                     ) : null}
@@ -352,6 +352,7 @@ export function Log() {
     return (
         <AmountsHiddenContext value={amountsHidden}>
             {toolbar}
+            <ProfileTitle />
             <SectionList
                 className="bg-background"
                 contentInsetAdjustmentBehavior="automatic"
@@ -374,7 +375,6 @@ export function Log() {
                 }}
                 ListHeaderComponent={
                     <>
-                        <ProfileTitle />
                         {filter === "all" ? (
                             <LogInsights
                                 insights={insights}
