@@ -1,5 +1,4 @@
 import { useNavigation } from "expo-router";
-import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { Pressable, useWindowDimensions, View } from "react-native";
 import Animated, {
@@ -12,6 +11,7 @@ import type { SharedValue } from "react-native-reanimated";
 
 import { useIdentityFlyUp } from "@/contexts/identity-draft-context";
 import { floatTargetY } from "@/domain/identity-flyup-geometry";
+import { useEventListener, useOnMount } from "@/lib/lifecycle";
 
 import { FLOAT_TILE, HERO_RING, IdentityHero } from "./identity-hero";
 import type { HeroVariant } from "./identity-hero";
@@ -100,11 +100,9 @@ export function IdentityFlyUpLayer({
 
     // `pickerOpen` lives in the app-level provider and outlives every screen: left true, it strands an invisible
     // scrim on the next screen that swallows every tap.
-
-    // oxlint-disable-next-line outlayr/react-effect-budget -- closes the app-level picker flag a previous screen may have left open
-    useEffect(() => {
+    useOnMount(() => {
         setPickerOpen(false);
-    }, [setPickerOpen]);
+    });
 
     // `translateY`, not `top`: this tracks the hero every scroll frame. The hero's fly-up transform lives on a
     // descendant inside `IdentityHero`, so the two stack instead of colliding.
@@ -183,20 +181,23 @@ export function IdentityFlyUpSheetHost({ children }: { children: ReactNode }) {
     const navigation = useNavigation<DismissalNavigation>();
     const { setPickerOpen, setSheetHeight } = useIdentityFlyUp();
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to the sheet's transitionStart events and closes the picker flag when the sheet unmounts
-    useEffect(() => {
-        setPickerOpen(true);
-        const unsubscribe = listen(navigation, "transitionStart", (event) => {
+    useEventListener<[DismissalEvent], undefined>(
+        (listener) => {
+            setPickerOpen(true);
+            const unsubscribe = listen(navigation, "transitionStart", listener);
+            return () => {
+                unsubscribe();
+                setPickerOpen(false);
+            };
+        },
+        (event) => {
             const closing = event.data?.closing;
             if (closing !== undefined) {
                 setPickerOpen(!closing);
             }
-        });
-        return () => {
-            unsubscribe();
-            setPickerOpen(false);
-        };
-    }, [navigation, setPickerOpen]);
+        },
+        [navigation]
+    );
 
     return (
         <View onLayout={(event) => setSheetHeight(event.nativeEvent.layout.height)} style={{ flex: 1 }}>

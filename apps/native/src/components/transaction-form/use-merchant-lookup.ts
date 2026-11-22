@@ -1,6 +1,6 @@
 import { merchantKey } from "@outlayr/money/merchant-key";
 import * as Effect from "effect/Effect";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { useAppSettings } from "@/contexts/display-settings-context";
 import { useIdentityDraft, useIdentityReads } from "@/contexts/identity-draft-context";
@@ -16,6 +16,7 @@ import { useLocaleTag } from "@/hooks/use-locale-tag";
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useTransactionEnrichment } from "@/hooks/use-transaction-enrichment";
 import type { EnrichmentSuggestion } from "@/hooks/use-transaction-enrichment";
+import { useOnUnmount } from "@/lib/lifecycle";
 import { voidAppFlowCommand } from "@/state/entry-commands";
 import type { MerchantWebsiteLogo } from "@/state/entry-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
@@ -192,13 +193,10 @@ export function useMerchantLookup({
             },
             domain
         );
-    // oxlint-disable-next-line outlayr/react-effect-budget -- stops an in-flight logo fetch and file write from landing after the form unmounts
-    useEffect(
-        () => () => {
-            logoRequestRef.current += 1;
-        },
-        [logoRequestRef]
-    );
+    // A logo fetch or file write still in flight must not land on the next form.
+    useOnUnmount(() => {
+        logoRequestRef.current += 1;
+    });
 
     // Its only consumer reads it through a committed snapshot, so its identity may change.
     const applySuggestion = (suggestion: EnrichmentSuggestion) => {

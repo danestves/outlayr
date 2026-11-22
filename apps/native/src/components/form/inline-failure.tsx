@@ -1,9 +1,9 @@
-import { useEffect } from "react";
 import { AccessibilityInfo } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { AppSymbol } from "@/components/app-symbol";
 import { Text } from "@/components/text";
+import { useMirror } from "@/lib/lifecycle";
 import { useColors } from "@/theme/use-colors";
 
 // For screens that stay up after a failure (`formSheet`, `modal`): a native presentation covers the root toast
@@ -11,12 +11,11 @@ import { useColors } from "@/theme/use-colors";
 export function InlineFailure({ message }: { message: string | null }) {
     const colors = useColors();
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- announces the failure to the platform screen reader when it appears
-    useEffect(() => {
+    useMirror([message], () => {
         if (message !== null) {
             AccessibilityInfo.announceForAccessibility(message);
         }
-    }, [message]);
+    });
 
     if (message === null) {
         return null;

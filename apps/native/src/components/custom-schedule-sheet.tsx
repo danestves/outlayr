@@ -9,7 +9,7 @@ import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
 import { Tabs } from "panelui-native/components/tabs";
 import { cn } from "panelui-native/utils/cn";
-import { useDeferredValue, useEffect, useRef, useState } from "react";
+import { useDeferredValue, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { Easing, FadeIn, FadeOut, useAnimatedStyle, withTiming } from "react-native-reanimated";
@@ -18,6 +18,7 @@ import { formatChargeDate } from "@/domain/dates";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
+import { useMirror, useOnUnmount, useTimers } from "@/lib/lifecycle";
 import { SANS_BY_WEIGHT } from "@/theme/body-fonts";
 import { useColors } from "@/theme/use-colors";
 
@@ -99,7 +100,7 @@ function useRippledCharges(charges: readonly ScheduledCharge[], ready: boolean) 
     // Committed once every row has landed: a half-updated set with no clamped row would hide the note, shrink the
     // sheet, then grow it again a beat later.
     const [noteVisible, setNoteVisible] = useState(() => charges.some((charge) => charge.clamped));
-    const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+    const timers = useTimers();
     const next = chargeKey(charges);
     const current = chargeKey(shown);
 
@@ -109,51 +110,29 @@ function useRippledCharges(charges: readonly ScheduledCharge[], ready: boolean) 
         setNoteVisible(charges.some((charge) => charge.clamped));
     }
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- runs the staggered swap timers for the preview rows, and stops them when the sheet is not ready
-    useEffect(() => {
+    // The charge key covers every field of `charges` this schedules against, so the array's identity adds nothing.
+    useMirror([next, current, ready], () => {
         if (!ready) {
-            for (const timer of timers.current) {
-                clearTimeout(timer);
-            }
-            timers.current = [];
+            timers.clear();
             return;
         }
         if (next === current) {
             return;
         }
-        for (const timer of timers.current) {
-            clearTimeout(timer);
-        }
-        timers.current = [];
+        timers.clear();
 
         const clamped = charges.some((charge) => charge.clamped);
         for (const index of charges.keys()) {
-            timers.current.push(
-                setTimeout(() => {
-                    setSwapping((prev) => withAt(prev, index, true));
-                    timers.current.push(
-                        setTimeout(() => {
-                            setShown((prev) => withAt(prev, index, charges[index]));
-                            setSwapping((prev) => withAt(prev, index, false));
-                        }, SWAP.duration)
-                    );
-                }, index * RIPPLE_STAGGER_MS)
-            );
+            timers.after(index * RIPPLE_STAGGER_MS, () => {
+                setSwapping((prev) => withAt(prev, index, true));
+                timers.after(SWAP.duration, () => {
+                    setShown((prev) => withAt(prev, index, charges[index]));
+                    setSwapping((prev) => withAt(prev, index, false));
+                });
+            });
         }
-        timers.current.push(
-            setTimeout(() => setNoteVisible(clamped), (charges.length - 1) * RIPPLE_STAGGER_MS + SWAP.duration * 2)
-        );
-    }, [next, current, charges, ready]);
-
-    // oxlint-disable-next-line outlayr/react-effect-budget -- clears the pending swap timers when the sheet unmounts
-    useEffect(
-        () => () => {
-            for (const timer of timers.current) {
-                clearTimeout(timer);
-            }
-        },
-        []
-    );
+        timers.after((charges.length - 1) * RIPPLE_STAGGER_MS + SWAP.duration * 2, () => setNoteVisible(clamped));
+    });
 
     return { noteVisible, shown, swapping };
 }
@@ -359,8 +338,7 @@ function StepButton({ icon, onStep, disabled, accessibilityLabel }: StepButtonPr
 
     const release = () => releaseHold(held);
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- clears the stepper's hold timers when it unmounts
-    useEffect(() => () => releaseHold(held), []);
+    useOnUnmount(() => releaseHold(held));
 
     return (
         <Pressable

@@ -1,5 +1,4 @@
 import { Canvas, Group, Image, rect, useImage } from "@shopify/react-native-skia";
-import { useEffect } from "react";
 import { View } from "react-native";
 import {
     useDerivedValue,
@@ -12,6 +11,7 @@ import type { SharedValue } from "react-native-reanimated";
 
 import oriDark from "@/assets/images/ori/voice-dark.webp";
 import oriLight from "@/assets/images/ori/voice-light.webp";
+import { useMirror } from "@/lib/lifecycle";
 import { useIsDark } from "@/theme/use-is-dark";
 
 export type OriState = "idle" | "listening" | "thinking" | "settled" | "failed";
@@ -122,8 +122,8 @@ export function OriVoice({ level, size, state }: OriVoiceProps) {
     }, false);
 
     const { setActive } = frame;
-    // oxlint-disable-next-line outlayr/react-effect-budget -- runs the frame callback only while Ori moves: never under Reduced Motion, and not past the settle hop
-    useEffect(() => {
+    // The frame loop runs only while Ori moves: never under Reduced Motion, and not past the settle hop.
+    useMirror([reducedMotion, state], () => {
         if (reducedMotion) {
             cell.set(STILL_CELL[state]);
             return;
@@ -137,7 +137,7 @@ export function OriVoice({ level, size, state }: OriVoiceProps) {
             clearTimeout(rest);
             setActive(false);
         };
-    }, [cell, reducedMotion, setActive, state]);
+    });
 
     const withMic = state === "idle" || state === "listening";
     const shift = useDerivedValue(() => {

@@ -2,7 +2,7 @@ import { useAtomValue } from "@effect/atom-react/Hooks";
 import SquareLock02Icon from "@hugeicons-pro/core-solid-rounded/SquareLock02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { createContext, use, useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
+import { createContext, use, useRef, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { AppState, Pressable, View } from "react-native";
 
@@ -13,6 +13,7 @@ import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { lockEnforceableAtom } from "@/lib/app-lock-enforceable";
 import { subscribeAppState } from "@/lib/app-state";
+import { useMirror } from "@/lib/lifecycle";
 import { useRelock } from "@/lib/use-relock";
 import { SILENT } from "@/state/atom-command";
 import { requestUnlockCommand } from "@/state/cloud-commands";
@@ -80,9 +81,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
 
     // One automatic prompt per shut gate: re-prompting would reopen a sheet the user just dismissed.
     const prompted = useRef(false);
-    const promptUnlock = useEffectEvent(attempt);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- opens the system biometric prompt once each time the gate shuts
-    useEffect(() => {
+    useMirror([gate, enforceable], () => {
         if (gate === "open") {
             prompted.current = false;
             return;
@@ -91,8 +90,8 @@ export function AppLockGate({ children }: { children: ReactNode }) {
             return;
         }
         prompted.current = true;
-        promptUnlock();
-    }, [gate, enforceable]);
+        attempt();
+    });
 
     return (
         <View className="flex-1">

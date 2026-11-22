@@ -6,7 +6,7 @@ import { startingDraft } from "@outlayr/money/installment-terms";
 import type { EntryRateType } from "@outlayr/money/rates";
 import type * as Effect from "effect/Effect";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import type { Account } from "@/data/accounts-core";
 import { lastPlanRows, paymentRate, planIdForPurchase } from "@/data/installment-reads";
@@ -18,6 +18,7 @@ import type { InstallmentSeed } from "@/domain/installment-scan";
 import { formatAmount } from "@/domain/money";
 import { transactionRateError } from "@/domain/transaction-entry-rate";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { useMirror } from "@/lib/lifecycle";
 import { notifyFailure } from "@/lib/notify";
 import { placeOrder } from "@/state/installment-orders";
 import { askForInstallmentReminders } from "@/state/surfaces-commands";
@@ -69,7 +70,7 @@ export function useInstallmentOrder({
     const [seenTurn, setSeenTurn] = useState<number | null>(null);
     const [draft, setDraft] = useState<InstallmentDraft | null>(null);
     const [draftFor, setDraftFor] = useState<string | null>(null);
-    // Presented from an effect: the sheet mounts with the draft, a render after the tap that makes it.
+    // The sheet mounts with the draft, a render after the tap that makes it.
     const [presented, setPresented] = useState(0);
     const [planId] = useState(() => (initial ? planIdForPurchase(db, initial.id) : null));
     const sources = paymentSources(banks, account?.id);
@@ -88,12 +89,11 @@ export function useInstallmentOrder({
             planPerUsd: currency === planCurrency ? null : paymentRate(db, "USD", planCurrency, date),
         });
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- presents the native installments sheet once it has mounted with the draft
-    useEffect(() => {
+    useMirror([presented], () => {
         if (presented > 0) {
             sheetRef.current?.present();
         }
-    }, [presented]);
+    });
 
     const termsFor = (picked: Account) =>
         startingDraft(

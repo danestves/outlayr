@@ -11,7 +11,7 @@ import type { FoundInstallmentApp, InstallmentApp } from "@outlayr/money/institu
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { View } from "react-native";
 
 import { BusyText } from "@/components/busy-text";
@@ -29,6 +29,7 @@ import { useMerchantMark } from "@/hooks/use-merchant-mark";
 import { useAccountCaps, useCreateLiability, useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useTranslation } from "@/i18n/context";
+import { useOnChange } from "@/lib/lifecycle";
 import { fetchMerchantImage } from "@/lib/logo-fetch";
 import { notifyFailure } from "@/lib/notify";
 import { persistLogo } from "@/lib/persist-logo";
@@ -91,16 +92,17 @@ export function StepAccountInstallments({ accounts, onPick, searchable }: StepAc
     const slow = useLongWait(adding !== null);
     // The ids the editor was opened over; the one it adds is the account to pick.
     const before = useRef<ReadonlySet<string> | null>(null);
+    const accountIds = accounts.map((account) => account.id).join("\u0000");
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- picks the account the pushed editor wrote to SQLite once the live account list reports it
-    useEffect(() => {
+    // The pushed editor writes SQLite, so the account it made arrives through the live list.
+    useOnChange([accountIds], () => {
         const known = before.current;
         const made = known === null ? undefined : accounts.find((account) => !known.has(account.id));
         if (made) {
             before.current = null;
             onPick(made);
         }
-    }, [accounts, onPick]);
+    });
 
     const taken = new Set(
         accounts.filter(isInstallmentAppAccount).map((account) => installmentAppDomain(account.name))

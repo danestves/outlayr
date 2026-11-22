@@ -1,12 +1,12 @@
 import Delete02Icon from "@hugeicons-pro/core-stroke-rounded/Delete02Icon";
 import Search01Icon from "@hugeicons-pro/core-stroke-rounded/Search01Icon";
 import { Stack } from "expo-router";
-import { useLayoutEffect, useRef } from "react";
 import { Pressable } from "react-native";
 
 import { SheetHeader, SheetHeaderIconButton, SheetHeaderTextButton } from "@/components/sheet-header";
 import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
+import { useLatest } from "@/lib/lifecycle";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
@@ -103,11 +103,8 @@ function CtaBar({
 // A sheet (edit) has no app bar, so its actions go in the `SheetHeader` it draws first: render this before the
 // form's scroller so that header lands on top.
 export const TransactionFormCta: typeof TransactionFormCtaBase = (props) => {
-    const handlers = useRef(props);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- keeps the callbacks registered with the native header pointing at the latest form handlers
-    useLayoutEffect(() => {
-        handlers.current = props;
-    });
+    // The native app bar keeps the handlers it first registered, so they read the latest props through this ref.
+    const handlers = useLatest(props);
     const remove = () => handlers.current.onDelete?.();
     const lookup = () => handlers.current.onLookup?.();
     const press = () => handlers.current.save?.onPress();
