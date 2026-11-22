@@ -79,11 +79,11 @@ const socialSignIn = <A>(run: () => Promise<A>) =>
 const rejected = (rejection: NonNullable<SocialSignInResult["error"]>) =>
     new ProviderSignInError({ cause: new Error(rejection.message), operation: "sign-in" });
 
-export const completeAppleSignIn = Effect.fn("ProviderSignIn.completeApple")(function* completeApple(
+export const completeAppleSignIn = Effect.fn("ProviderSignIn.completeApple")(function* completeApple<E>(
     client: AuthClient,
     activation: Activation,
     credential: AppleSignInCredential,
-    onFailure?: () => Effect.Effect<void, unknown>
+    onFailure?: () => Effect.Effect<void, E>
 ) {
     activation.begin();
     yield* Effect.gen(function* signIn() {

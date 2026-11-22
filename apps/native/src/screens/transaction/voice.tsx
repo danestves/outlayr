@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
@@ -375,7 +376,8 @@ function useHandoffHaptics(kind: VoicePhase["kind"]) {
 
 const voiceHintSeedAtom = Atom.family((db: Database) =>
     Atom.make(
-        Effect.suspend(() => lastLoggedEntry(db, new Date())).pipe(
+        DateTime.nowAsDate.pipe(
+            Effect.flatMap((now) => lastLoggedEntry(db, now)),
             Effect.catchTags({ TransactionsError: () => Effect.succeed(null) }),
             Effect.catchDefect(() => Effect.succeed(null)),
             Effect.map((last: LastEntry | null) => ({ account: getLastUsedAccount(db)?.name ?? null, last }))

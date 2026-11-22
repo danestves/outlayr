@@ -192,7 +192,8 @@ const deliver = FunctionImpl.make(
         function* deliver({ emailId }) {
             const { runQuery } = yield* QueryRunner;
             const email = yield* runQuery(refs.internal.emailOutbox.email, { emailId });
-            if (email === null || (email.expiresAt !== undefined && Date.now() >= email.expiresAt)) {
+            const now = yield* Clock.currentTimeMillis;
+            if (email === null || (email.expiresAt !== undefined && now >= email.expiresAt)) {
                 return null;
             }
             const setup = yield* emailSetup;

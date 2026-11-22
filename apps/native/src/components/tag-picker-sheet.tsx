@@ -10,7 +10,7 @@ import { useRef, useState } from "react";
 import type { Ref } from "react";
 import { Platform, Pressable, View } from "react-native";
 
-import type { TagRow } from "@/data/tags-core";
+import type { TagRow, TagsError } from "@/data/tags-core";
 import { findTagByName, isUsableTagName, normalizeTagName } from "@/domain/tags";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useTranslation } from "@/i18n/context";
@@ -34,7 +34,7 @@ function TagSlot() {
 }
 
 interface TagPickerSheetProps {
-    onCreate: (name: string) => Effect.Effect<string | null, unknown>;
+    onCreate: (name: string) => Effect.Effect<string | null, TagsError>;
     onToggle: (tagId: string) => void;
     pendingTagNames?: readonly string[];
     ref?: Ref<BottomSheetModal>;

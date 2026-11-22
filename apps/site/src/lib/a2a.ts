@@ -1,3 +1,4 @@
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -57,11 +58,12 @@ export const answerA2a = Effect.fn("A2a.answer")(function* answerA2a(request: Re
     if (Option.isNone(params)) {
         return reply(id, { error: { code: -32_602, message: "params.message with parts is required" } });
     }
+    const random = yield* SecureRandom.SecureRandom;
     return reply(id, {
         result: {
             message: {
-                contextId: params.value.message.contextId ?? crypto.randomUUID(),
-                messageId: crypto.randomUUID(),
+                contextId: params.value.message.contextId ?? (yield* random.uuidV4()),
+                messageId: yield* random.uuidV4(),
                 parts: [{ mediaType: "text/markdown", text: facts }],
                 role: "ROLE_AGENT",
             },

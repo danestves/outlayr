@@ -6,6 +6,8 @@ import * as Option from "effect/Option";
 import { useRef, useState } from "react";
 import type { RefObject } from "react";
 
+import type { AppMetaError, CorruptMetaError } from "@/data/app-meta-core";
+import type { MerchantHistoryError } from "@/data/merchant-history-core";
 import { findCategoryPreset, pendingCategoryFor } from "@/domain/category-presets";
 import type { PendingCategory } from "@/domain/category-presets";
 import { getCachedEnrichment, setCachedEnrichment } from "@/domain/enrichment-cache";
@@ -23,7 +25,7 @@ import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
 import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
 
-const enrichCommand = timedCaptureCommand<RemoteEnrichmentResult | null>({
+const enrichCommand = timedCaptureCommand<RemoteEnrichmentResult | null, CloudError>({
     operation: "enrich",
     timeout: ENRICHMENT_TIMEOUT,
 });
@@ -67,12 +69,12 @@ export interface UseTransactionEnrichmentArgs {
     onSuggest: (suggestion: EnrichmentSuggestion) => void;
     regionCode?: string;
     remoteEnabled: boolean;
-    resolveHistory?: (key: string, income: boolean) => Effect.Effect<string | null, unknown>;
+    resolveHistory?: (key: string, income: boolean) => Effect.Effect<string | null, MerchantHistoryError>;
     resolveLocal: (suggestion: EnrichmentSuggestion) => EnrichmentSuggestion;
     recallMerchant?: (
         name: string,
         currency: string | undefined
-    ) => Effect.Effect<RemoteEnrichmentResult | null, unknown>;
+    ) => Effect.Effect<RemoteEnrichmentResult | null, AppMetaError | CorruptMetaError>;
     resolveDomain?: (key: string) => string | null;
     transport?: EnrichmentFn | null;
 }
@@ -151,7 +153,7 @@ interface EnrichmentPorts {
     remoteAbortRef: RefObject<AbortController | null>;
     requestIdRef: RefObject<number>;
     setPending: (pending: boolean) => void;
-    start: (flow: Effect.Effect<void, unknown>) => void;
+    start: <E>(flow: Effect.Effect<void, E>) => void;
     timers: Timers;
 }
 
@@ -508,8 +510,8 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     const requestIdRef = useRef(0);
     const remoteAbortRef = useRef<AbortController | null>(null);
     const runFlow = useAtomCommand(voidFlowCommand);
-    const settle = (flow: Effect.Effect<void, unknown>) => runFlow(logged("Merchant lookup failed")(flow));
-    const start = (flow: Effect.Effect<void, unknown>) => {
+    const settle = <E>(flow: Effect.Effect<void, E>) => runFlow(logged("Merchant lookup failed")(flow));
+    const start = <E>(flow: Effect.Effect<void, E>) => {
         void settle(flow);
     };
     // Ticketed, not a bare set: a superseded request still settles and must not delete an entry a LATER request owns.

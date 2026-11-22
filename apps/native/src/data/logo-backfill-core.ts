@@ -1,5 +1,6 @@
 import { merchantKey } from "@outlayr/money/merchant-key";
 import { and, desc, eq, gte, inArray, isNull, ne, notExists, sql } from "drizzle-orm";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -34,7 +35,7 @@ const RETRY_MISS_MS = 6 * 60 * 60 * 1000;
 const RETRY_GROUNDING_MS = 2 * 60 * 1000;
 const RETRY_INDETERMINATE_MS = 30 * 60 * 1000;
 
-export interface LogoBackfillDeps {
+export interface LogoBackfillDeps<E = never> {
     /**
      * Resolving null means consent was withdrawn: the pass stops and nothing else is sent. `groundedLookup` is read
      * at send time, since a no-domain answer is only a real miss if web search ran on that request.
@@ -44,16 +45,13 @@ export interface LogoBackfillDeps {
               currency: string | null;
               income: boolean;
               name: string;
-          }) => Effect.Effect<{ groundedLookup: boolean; result: RemoteEnrichmentResult } | null, unknown>)
+          }) => Effect.Effect<{ groundedLookup: boolean; result: RemoteEnrichmentResult } | null, E>)
         | null;
     cancelled?: () => boolean;
     discard?: (imageUri: string) => void;
     fetchImage: (request: MerchantImageRequest) => Effect.Effect<LogoOutcome>;
     now?: number;
-    persist: (
-        bytes: Uint8Array,
-        domain: string
-    ) => Effect.Effect<{ imageColor: string | null; imageUri: string }, unknown>;
+    persist: (bytes: Uint8Array, domain: string) => Effect.Effect<{ imageColor: string | null; imageUri: string }, E>;
 }
 
 interface PendingRow {
@@ -209,9 +207,9 @@ type DomainAnswer =
 
 // Nothing is written back to the session cache: the empty shape `suggest` returns when signed out or rate-limited
 // would poison the form's next lookup of the same name.
-const resolveDomain = Effect.fn("LogoBackfill.resolveDomain")(function* resolveDomain(
+const resolveDomain = Effect.fn("LogoBackfill.resolveDomain")(function* resolveDomain<E>(
     group: MerchantGroup,
-    deps: LogoBackfillDeps,
+    deps: LogoBackfillDeps<E>,
     remoteLeft: number
 ) {
     const curated = resolveMerchant(group.key)?.domain ?? null;
@@ -264,11 +262,11 @@ const resolveDomain = Effect.fn("LogoBackfill.resolveDomain")(function* resolveD
     return answer;
 });
 
-export const attachMissingLogos = Effect.fn("LogoBackfill.attachMissingLogos")(function* attachMissingLogos(
+export const attachMissingLogos = Effect.fn("LogoBackfill.attachMissingLogos")(function* attachMissingLogos<E>(
     db: Database,
-    deps: LogoBackfillDeps
+    deps: LogoBackfillDeps<E>
 ) {
-    const now = deps.now ?? Date.now();
+    const now = deps.now ?? (yield* Clock.currentTimeMillis);
     const pending = yield* pendingGroups(db, now);
     const retryAfter = yield* readRetryDeadlines(db, now);
     // Oldest deadline first, or the newest rows' misses take the budget every pass and older rows age out unasked.

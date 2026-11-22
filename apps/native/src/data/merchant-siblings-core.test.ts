@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
@@ -16,7 +17,11 @@ import { applyMerchantToSiblings } from "./merchant-siblings-core";
 import type { MerchantSiblingsInput } from "./merchant-siblings-core";
 import { tagIdsForQuery, tagsRepo } from "./tags-core";
 
+class DiskFull extends Schema.TaggedError<DiskFull>()("DiskFull", {}) {}
+
 const NOW = new Date("2026-09-08T12:00:00Z");
+const LATER = new Date(NOW.getTime() + 1000);
+const MUCH_LATER = new Date(NOW.getTime() + 5000);
 
 async function seedRow(
     db: Database,
@@ -37,7 +42,7 @@ async function seedRow(
     });
 }
 
-function input(overrides: Partial<MerchantSiblingsInput> = {}): MerchantSiblingsInput {
+function input<E = never>(overrides: Partial<MerchantSiblingsInput<never, E>> = {}): MerchantSiblingsInput<never, E> {
     return {
         categoryId: null,
         currency: "EUR",
@@ -102,10 +107,7 @@ describe("applyMerchantToSiblings", () => {
         await seedRow(db, "bare");
 
         await Effect.runPromise(
-            applyMerchantToSiblings(
-                db,
-                input({ categoryId: "groceries", persistLogo: Effect.fail(new Error("disk full")) })
-            )
+            applyMerchantToSiblings(db, input({ categoryId: "groceries", persistLogo: Effect.fail(new DiskFull()) }))
         );
 
         await expect(row(db, "bare")).resolves.toMatchObject({ categoryId: "groceries", imageUri: null });
@@ -180,7 +182,7 @@ describe("applyMerchantToSiblings", () => {
                     persistLogo: Effect.promise(async () => {
                         await db
                             .update(transactions)
-                            .set({ emoji: "🛒", updatedAt: new Date(NOW.getTime() + 1000) })
+                            .set({ emoji: "🛒", updatedAt: LATER })
                             .where(eq(transactions.id, "moved"));
                         return { imageColor: null, imageUri: "file:///late.png" };
                     }),
@@ -202,7 +204,7 @@ describe("applyMerchantToSiblings", () => {
                     persistLogo: Effect.promise(async () => {
                         await db
                             .update(transactions)
-                            .set({ note: "Carrefour", updatedAt: new Date(NOW.getTime() + 1000) })
+                            .set({ note: "Carrefour", updatedAt: LATER })
                             .where(eq(transactions.id, "renamed"));
                         return { imageColor: null, imageUri: "file:///late.png" };
                     }),
@@ -226,7 +228,7 @@ describe("applyMerchantToSiblings", () => {
                     persistLogo: Effect.promise(async () => {
                         await db
                             .update(transactions)
-                            .set({ updatedAt: new Date(NOW.getTime() + 5000) })
+                            .set({ updatedAt: MUCH_LATER })
                             .where(eq(transactions.id, "moved"));
                         return { imageColor: null, imageUri: "file:///first.png" };
                     }),

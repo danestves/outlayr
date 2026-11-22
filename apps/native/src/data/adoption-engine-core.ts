@@ -1,4 +1,5 @@
 import { inArray } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -166,8 +167,9 @@ export const discardAccountLedger = Effect.fn("AdoptionEngine.discardAccountLedg
                 const bucket = lifts.get(table) ?? [];
                 bucket.push({
                     id: row.localId,
-                    restoredAt: theirsRestored > mineRestored ? new Date(theirsRestored) : null,
-                    updatedAt: new Date(Math.max(mineMs, row.updatedAt + 1)),
+                    restoredAt:
+                        theirsRestored > mineRestored ? DateTime.toDate(DateTime.makeUnsafe(theirsRestored)) : null,
+                    updatedAt: DateTime.toDate(DateTime.makeUnsafe(Math.max(mineMs, row.updatedAt + 1))),
                 });
                 lifts.set(table, bucket);
             }

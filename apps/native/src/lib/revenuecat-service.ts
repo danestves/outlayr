@@ -97,6 +97,7 @@ const GuestClaim = Schema.Struct({ destination: Schema.NullOr(Schema.String) });
 type GuestClaim = typeof GuestClaim.Type;
 
 const decodeGuestClaim = Schema.decodeUnknownOption(Schema.fromJsonString(GuestClaim));
+const encodeGuestClaim = Schema.encodeSync(Schema.fromJsonString(GuestClaim));
 
 const readGuestClaim = () =>
     Effect.tryPromise(() => AsyncStorage.getItem(GUEST_CLAIM_KEY)).pipe(
@@ -108,7 +109,7 @@ const writeGuestClaim = (claim: GuestClaim | null) =>
     Effect.tryPromise(() =>
         claim === null
             ? AsyncStorage.removeItem(GUEST_CLAIM_KEY)
-            : AsyncStorage.setItem(GUEST_CLAIM_KEY, JSON.stringify(claim))
+            : AsyncStorage.setItem(GUEST_CLAIM_KEY, encodeGuestClaim(claim))
     ).pipe(Effect.catch((error) => Effect.logWarning("RevenueCat guest claim not saved", error.cause)));
 
 const revenueCatSdk = {
@@ -370,7 +371,10 @@ export const make = Effect.gen(function* make() {
     if (!configured.success) {
         return yield* unconfigured(sdk, Effect.never);
     }
-    const ref = yield* SubscriptionRef.make({ ...initialState, guestClaim: yield* sdk.readGuestClaim() });
+    const ref = yield* SubscriptionRef.make({
+        ...initialState,
+        guestClaim: yield* sdk.readGuestClaim(),
+    });
     const lane = yield* Queue.unbounded<Effect.Effect<unknown>>();
 
     const call = <A>(operation: typeof Operation.Type, run: () => Effect.Effect<A, PurchasesError>) =>
@@ -659,7 +663,10 @@ export const make = Effect.gen(function* make() {
             ),
             Effect.forever
         );
-        yield* Effect.all([jobs, entitlementUpdates, foregrounds], { concurrency: "unbounded", discard: true });
+        yield* Effect.all([jobs, entitlementUpdates, foregrounds], {
+            concurrency: "unbounded",
+            discard: true,
+        });
     });
 
     const follow = Effect.fn("RevenueCat.follow")(function* follow(session: Session) {
@@ -672,7 +679,7 @@ export const make = Effect.gen(function* make() {
                     { ...state, sessions: state.sessions.filter((live) => live !== entry) },
                 ])
         );
-        yield* Effect.never;
+        return yield* Effect.never;
     });
 
     return RevenueCat.of({

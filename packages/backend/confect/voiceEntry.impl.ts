@@ -51,6 +51,8 @@ import {
 } from "./voiceEntry";
 import spec, { SpeakTextInput, VoiceEntryInput } from "./voiceEntry.spec";
 
+const encodeModelOutput = Schema.encodeSync(Schema.fromJsonString(ModelOutput));
+
 const isVoiceEntryInput = Schema.is(VoiceEntryInput);
 const isSpeakTextInput = Schema.is(SpeakTextInput);
 
@@ -88,7 +90,7 @@ const parseTurn = Effect.fn("VoiceEntry.parseTurn")(function* parseTurn(turn: {
     }
     yield* runMutation(refs.internal.voiceEntry.answerTurn, {
         proposed: proposeDraft(answered.value, context, text),
-        reply: JSON.stringify(answered.value),
+        reply: encodeModelOutput(answered.value),
         turnId: begun.turnId,
     });
     return { order: begun.order, status: "ok" as const, transcript: text };

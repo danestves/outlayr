@@ -20,21 +20,21 @@ export interface DeferredDeleteController {
     undo: () => void;
 }
 
-export interface DeferredDeleteOptions<Handle> {
-    commit: (id: string) => Effect.Effect<void, unknown>;
+export interface DeferredDeleteOptions<Handle, E> {
+    commit: (id: string) => Effect.Effect<void, E>;
     launch: (write: Effect.Effect<void>) => void;
     onChange: (snapshot: DeferredDeleteSnapshot) => void;
     timers: DeferredDeleteTimers<Handle>;
     windowMs: number;
 }
 
-export function createDeferredDelete<Handle>({
+export function createDeferredDelete<Handle, E>({
     commit,
     launch,
     windowMs,
     timers,
     onChange,
-}: DeferredDeleteOptions<Handle>): DeferredDeleteController {
+}: DeferredDeleteOptions<Handle, E>): DeferredDeleteController {
     let pendingId: string | null = null;
     let failedId: string | null = null;
     let handle: Handle | null = null;

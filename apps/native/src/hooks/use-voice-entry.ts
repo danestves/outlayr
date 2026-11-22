@@ -1,5 +1,7 @@
 import type { StreamSession } from "@outlayr/backend/confect/voiceEntry.spec";
 import { useQueries } from "convex/react";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
@@ -23,6 +25,7 @@ import type {
     VoiceQuote,
     VoiceThreadTransport,
 } from "@/lib/cloud-ai";
+import type { CloudError } from "@/lib/cloud-error";
 import { useLatest, useOnMount } from "@/lib/lifecycle";
 import { TranscriptStreamError } from "@/lib/transcript-stream";
 import type { TranscriptFailureReason } from "@/lib/transcript-stream";
@@ -31,12 +34,12 @@ import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
 import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
 
-const speakCommand = timedCaptureCommand<Effect.Success<ReturnType<VoiceThreadTransport["speakText"]>>>({
+const speakCommand = timedCaptureCommand<Effect.Success<ReturnType<VoiceThreadTransport["speakText"]>>, CloudError>({
     operation: "speak",
     timeout: VOICE_SPEAK_TIMEOUT,
 });
 
-const streamCommand = timedCaptureCommand<Effect.Success<ReturnType<VoiceThreadTransport["openStream"]>>>({
+const streamCommand = timedCaptureCommand<Effect.Success<ReturnType<VoiceThreadTransport["openStream"]>>, CloudError>({
     operation: "speak",
     timeout: VOICE_SPEAK_TIMEOUT,
 });
@@ -170,7 +173,7 @@ interface VoicePorts<Context> {
     setSpoke: (spoke: boolean) => void;
     setThreadId: (threadId: string | null) => void;
     speakAbortRef: RefObject<AbortController | null>;
-    start: (flow: Effect.Effect<void, unknown>) => void;
+    start: (flow: Effect.Effect<void>) => void;
     takeRef: RefObject<number>;
     threadRef: RefObject<string | null>;
     transcriptRef: RefObject<RealtimeTranscript>;
@@ -296,7 +299,7 @@ const sendTake: <Context>(ports: VoicePorts<Context>, take: number, said: Take, 
         const { context: sentContext, request: sentRequest } = latest.current;
         const controller = new AbortController();
         speakAbortRef.current = controller;
-        const request = { ...sentRequest, threadId: id, today: localIsoDate(new Date()) };
+        const request = { ...sentRequest, threadId: id, today: localIsoDate(yield* DateTime.nowAsDate) };
         const result = yield* fromCommand(speakCommand, {
             call:
                 said.kind === "transcript"
@@ -434,7 +437,7 @@ const startTake = Effect.fn("VoiceEntry.startTake")(function* startTake<Context>
         fail(ports, take, began === "denied" ? "denied" : "provider");
         return;
     }
-    watchRef.current = startSilenceWatch(Date.now());
+    watchRef.current = startSilenceWatch(yield* Clock.currentTimeMillis);
     setSpoke(false);
     setPhase({ kind: "listening" });
 });
@@ -458,7 +461,7 @@ export function useVoiceEntry<Context>({
     const disposedRef = useRef(false);
     const speakAbortRef = useRef<AbortController | null>(null);
     const runFlow = useAtomCommand(voidFlowCommand);
-    const start = (flow: Effect.Effect<void, unknown>) => {
+    const start = <E>(flow: Effect.Effect<void, E>) => {
         void runFlow(logged("Voice entry failed")(flow));
     };
     const [api] = useState(() => transport ?? voiceThreadTransport());

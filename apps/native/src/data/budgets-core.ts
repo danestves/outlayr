@@ -2,6 +2,7 @@ import { startOfPeriod } from "@outlayr/money/budget-window";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import { TOMBSTONED_BUDGET, TOMBSTONED_MAIN_BUDGET } from "@outlayr/money/erase";
 import { and, eq, isNull } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -185,7 +186,7 @@ export const budgetsRepo = {
     }),
 
     createBudget: Effect.fn("Budgets.createBudget")(function* createBudget(db: Database, input: CreateBudgetInput) {
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         const id = newId();
         const start = yield* anchorFor("create-budget", db, input.startDate, input.type, now);
         const limit = yield* budgetLimit("create-budget", db, input.amount, start);
@@ -211,7 +212,7 @@ export const budgetsRepo = {
         db: Database,
         input: CreateMainBudgetInput
     ) {
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         const existing = yield* query("create-main-budget", () =>
             db.select({ id: mainBudget.id }).from(mainBudget).where(isNull(mainBudget.deletedAt)).limit(1)
         );
@@ -256,7 +257,7 @@ export const budgetsRepo = {
 
     // An already-deleted row is left alone, so a repeated delete doesn't re-stamp and push an unchanged row.
     deleteBudget: Effect.fn("Budgets.deleteBudget")(function* deleteBudget(db: Database, id: string) {
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         yield* query("delete-budget", () =>
             db
                 .update(budgets)
@@ -266,7 +267,7 @@ export const budgetsRepo = {
     }),
 
     deleteMainBudget: Effect.fn("Budgets.deleteMainBudget")(function* deleteMainBudget(db: Database, id: string) {
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         yield* query("delete-main-budget", () =>
             db
                 .update(mainBudget)
@@ -287,7 +288,7 @@ export const budgetsRepo = {
         id: string,
         input: PatchBudgetInput
     ) {
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         const [row] = yield* query("patch-budget", () =>
             db
                 .select({
@@ -312,7 +313,7 @@ export const budgetsRepo = {
         id: string,
         input: PatchBudgetInput
     ) {
-        const now = new Date();
+        const now = yield* DateTime.nowAsDate;
         const [row] = yield* query("patch-main-budget", () =>
             db
                 .select({

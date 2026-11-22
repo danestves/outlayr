@@ -1,6 +1,7 @@
 import { merchantKey } from "@outlayr/money/merchant-key";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import { Meta } from "@/data/app-meta-core";
 import { getCategoryById } from "@/data/categories-core";
@@ -20,15 +21,15 @@ import { commitEntry } from "@/state/entry-commit";
 import type { EntryCommit } from "@/state/entry-commit";
 import { logged } from "@/state/entry-save";
 
-export interface SaveEntryInput {
-    commit: EntryCommit;
+export interface SaveEntryInput<E = never> {
+    commit: EntryCommit<E>;
     onMissingCategory: () => void;
     onSaveFailed: () => void;
     onSaved: () => boolean;
     onScheduleFailed: () => void;
 }
 
-export const saveEntry = Effect.fn("TransactionForm.saveEntry")(function* saveEntry(input: SaveEntryInput) {
+export const saveEntry = Effect.fn("TransactionForm.saveEntry")(function* saveEntry<E>(input: SaveEntryInput<E>) {
     const outcome = yield* commitEntry(input.commit);
     if (outcome.kind === "failed") {
         if (outcome.missingCategory) {
@@ -119,6 +120,10 @@ const sharedCategoryName = (db: Database, savedId: string) => {
     return category?.preset ?? null;
 };
 
+class CarriedLogoError extends Schema.TaggedError<CarriedLogoError>()("CarriedLogoError", {
+    cause: Schema.Defect(),
+}) {}
+
 export interface CarryInput {
     db: Database;
     forCurrency: string | null;
@@ -139,7 +144,7 @@ export const carryLookup = Effect.fn("TransactionForm.carryLookup")(function* ca
             : carriedLogo(domain, merchant).pipe(
                   Effect.map((imageUri) => ({ imageColor: saved?.imageColor ?? null, imageUri })),
                   Effect.provide(outboundHttp),
-                  Effect.catchCause((cause) => Effect.fail(Cause.squash(cause)))
+                  Effect.catchCause((cause) => Effect.fail(new CarriedLogoError({ cause: Cause.squash(cause) })))
               );
     const carriedTags = carryTags ? yield* Effect.tryPromise(() => tagIdsForQuery(db, savedId)) : [];
     yield* applyMerchantToSiblings(db, {

@@ -33,6 +33,7 @@ vi.mock<Partial<typeof import("./widget-bridge")>>(import("./widget-bridge"), ()
 }));
 
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import { deleteItemAsync, getItemAsync, setItemAsync } from "expo-secure-store";
 
 import {
@@ -47,6 +48,10 @@ import {
 import { createNativeDeviceDataStores, DEVICE_STORES, DeviceStoreError } from "./device-data-stores";
 import type { DeviceDataStores, DeviceStore } from "./device-data-stores";
 import { layer } from "./secure-storage";
+
+class CloudUnavailable extends Schema.TaggedError<CloudUnavailable>()("CloudUnavailable", {
+    message: Schema.String,
+}) {}
 
 function storesWith(calls: string[], failing: readonly string[] = []): DeviceDataStores {
     const recorded = (store: DeviceStore) => () =>
@@ -161,7 +166,7 @@ test("does not clean device stores when cloud completion fails", async () => {
             ...store,
             completeCloudDeletion: Effect.suspend(() => {
                 calls.push("cloud");
-                return Effect.fail(new Error("cloud unavailable"));
+                return Effect.fail(new CloudUnavailable({ message: "cloud unavailable" }));
             }),
             stores: storesWith(calls),
         }).pipe(Effect.flip)

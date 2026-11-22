@@ -13,10 +13,8 @@ import type { Database } from "@/db/client";
 import { persistLogo } from "@/lib/persist-logo";
 
 import { appStates, launchAndForegrounds, listen, signals, WatchAppState } from "./app-events";
-import type { Watch } from "./app-events";
 import { syncCaptureLookup } from "./capture-lookup";
 import { enrichmentQueueTransport, watchEnrichmentResults } from "./cloud-enrichment-queue";
-import type { CloudError } from "./cloud-error";
 import { subscribeCloudAuthenticated } from "./convex";
 import { sendEnrichmentQueue } from "./enrichment-queue";
 import { discardLogo } from "./logo-backfill";
@@ -35,28 +33,26 @@ export class EnrichmentSyncError extends Schema.TaggedError<EnrichmentSyncError>
     step: EnrichmentStep,
 }) {}
 
-export const EnrichmentResults = Context.Reference<{
-    readonly ack: (localIds: string[]) => Effect.Effect<null, CloudError>;
-    readonly apply: (db: Database, job: AnsweredJob) => Effect.Effect<void, unknown, HttpClient.HttpClient>;
-    /** A Wallet capture's answer can arrive before its row is filed, and an answer with no row is acked away. */
-    readonly drain: (db: Database) => Effect.Effect<unknown, unknown>;
-    readonly watch: Watch<AnsweredJob[]>;
-}>("outlayr/lib/EnrichmentSync/EnrichmentResults", {
-    defaultValue: () => ({
-        ack: (localIds) => enrichmentQueueTransport().ack(localIds),
-        apply: Effect.fn("EnrichmentResults.apply")(function* apply(db, job) {
-            const http = yield* HttpClient.HttpClient;
-            return yield* applyEnrichmentAnswer(db, job, {
-                discard: discardLogo,
-                fetchImage: (request) =>
-                    fetchMerchantImage(request).pipe(Effect.provideService(HttpClient.HttpClient, http)),
-                persist: persistLogo,
-            });
-        }),
-        drain: drainDevicePendingWrites,
-        watch: watchEnrichmentResults,
+// A Wallet capture's answer can arrive before its row is filed, and an answer with no row is acked away.
+const defaultResults = {
+    ack: (localIds: string[]) => enrichmentQueueTransport().ack(localIds),
+    apply: Effect.fn("EnrichmentResults.apply")(function* apply(db: Database, job: AnsweredJob) {
+        const http = yield* HttpClient.HttpClient;
+        return yield* applyEnrichmentAnswer(db, job, {
+            discard: discardLogo,
+            fetchImage: (request) =>
+                fetchMerchantImage(request).pipe(Effect.provideService(HttpClient.HttpClient, http)),
+            persist: persistLogo,
+        });
     }),
-});
+    drain: drainDevicePendingWrites,
+    watch: watchEnrichmentResults,
+};
+
+export const EnrichmentResults = Context.Reference<typeof defaultResults>(
+    "outlayr/lib/EnrichmentSync/EnrichmentResults",
+    { defaultValue: () => defaultResults }
+);
 
 export class EnrichmentSync extends Context.Service<
     EnrichmentSync,

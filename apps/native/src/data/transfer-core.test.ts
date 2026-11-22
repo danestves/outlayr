@@ -579,12 +579,11 @@ describe("applyImport", () => {
         await seed(transactionalDb);
         const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         const originalCreate = transactionsRepo.create;
+        const diskFull = Effect.fail(new TransactionsError({ cause: new Error("disk full"), operation: "create" }));
         let calls = 0;
         const spy = vi.spyOn(transactionsRepo, "create").mockImplementation((targetDb, input) => {
             calls += 1;
-            return calls === 2
-                ? Effect.fail(new TransactionsError({ cause: new Error("disk full"), operation: "create" }))
-                : originalCreate(targetDb, input);
+            return calls === 2 ? diskFull : originalCreate<never>(targetDb, input, { logoCandidate: false });
         });
 
         const failure = await Effect.runPromise(Effect.flip(applyImport(transactionalDb, plan)));
@@ -951,7 +950,11 @@ describe("undoFileImport", () => {
         await importRows();
         const [travel] = await db.select().from(categories).where(eq(categories.name, "Travel"));
         await Effect.runPromise(
-            budgetsRepo.createBudget(db, { amount: 200, categoryId: travel?.id ?? "", type: BUDGET_TYPE.month })
+            budgetsRepo.createBudget(db, {
+                amount: 200,
+                categoryId: travel?.id ?? "",
+                type: BUDGET_TYPE.month,
+            })
         );
 
         const counts = await Effect.runPromise(undoFileImport(db));
@@ -962,6 +965,9 @@ describe("undoFileImport", () => {
     it("does nothing once the import has been undone", async () => {
         await importRows();
         await Effect.runPromise(undoFileImport(db));
-        await expect(Effect.runPromise(undoFileImport(db))).resolves.toMatchObject({ categories: 0, transactions: 0 });
+        await expect(Effect.runPromise(undoFileImport(db))).resolves.toMatchObject({
+            categories: 0,
+            transactions: 0,
+        });
     });
 });

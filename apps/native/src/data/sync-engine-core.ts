@@ -2,6 +2,7 @@ import { and, asc, eq, extractExtendedColumnType, getTableColumns, inArray, isNu
 import type { SQL } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-orm/effect-schema";
 import type { SQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -591,7 +592,7 @@ const writeRow = Effect.fn("SyncCore.writeRow")(function* writeRow(
         values.deletedAt = rewritten ? now : toLocalDate(row.deletedAt);
         // Dropped by drizzle on a table without the column.
         values.restoredAt = toLocalDate(row.restoredAt ?? null);
-        values.updatedAt = rewritten ? now : new Date(row.updatedAt);
+        values.updatedAt = rewritten ? now : DateTime.toDate(DateTime.makeUnsafe(row.updatedAt));
     }
     if (lostCategory) {
         values.categoryId = null;
@@ -817,7 +818,7 @@ const repairUnsyncedRestores = Effect.fn("SyncCore.repairUnsyncedRestores")(func
                             deletedAt: toLocalDate(served.deletedAt),
                             restoredAt: toLocalDate(served.restoredAt ?? null),
                         },
-                        new Date(updatedAt)
+                        DateTime.toDate(DateTime.makeUnsafe(updatedAt))
                     );
                     yield* query("write", () => db.update(table).set({ restoredAt: stamp }).where(eq(table.id, id)));
                     repaired.push(tableName);

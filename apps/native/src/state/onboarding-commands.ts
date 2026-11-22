@@ -1,3 +1,4 @@
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 
@@ -21,9 +22,10 @@ export const saveFirstEntryCommand = createRuntimeCommand(appRuntime, {
         db: Database;
         draft: Omit<EntryDraft, "date">;
     }) {
+        const now = yield* DateTime.nowAsDate;
         const outcome = yield* commitEntry({
             db: input.db,
-            draft: { ...input.draft, date: new Date() },
+            draft: { ...input.draft, date: now },
             source: "onboarding",
         });
         if (outcome.kind === "failed") {
