@@ -22,6 +22,7 @@ import { useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useWebhookStatus } from "@/hooks/use-webhook-status";
+import { useWebhooksOpen } from "@/hooks/use-webhooks-open";
 import { useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { useAuthSession } from "@/lib/auth-session";
@@ -29,15 +30,14 @@ import { CONVEX_SITE_URL } from "@/lib/cloud-configuration";
 import { useOnChange } from "@/lib/lifecycle";
 import { notifyFailure } from "@/lib/notify";
 import {
-    endpointHost,
+    endpointAddress,
     endpointState,
     inboundEndpoint,
     newInboundToken,
     newSigningSecret,
-    WEBHOOKS_OPEN,
     webhookAgo,
 } from "@/lib/webhook-settings";
-import type { EndpointState, WebhookAgo, WebhookEndpoint } from "@/lib/webhook-settings";
+import type { EndpointState, WebhookAgo, WebhookEndpoint, WebhookStatusView } from "@/lib/webhook-settings";
 import { useAtomAction } from "@/state/use-atom-action";
 import {
     addEndpointCommand,
@@ -71,7 +71,7 @@ function agoText(t: TranslateFn, at: number, now: number): string {
 }
 
 export function Webhooks() {
-    return WEBHOOKS_OPEN ? <WebhookSettings /> : <Redirect href="/settings/integrations" />;
+    return useWebhooksOpen() ? <WebhookSettings /> : <Redirect href="/settings/integrations" />;
 }
 
 function WebhookSettings() {
@@ -80,10 +80,60 @@ function WebhookSettings() {
     const entitled = useProEntitled();
     const syncOn = useSyncStatus(db).enabled;
 
-    return accountId !== null && entitled && syncOn ? <WebhookSections /> : <FreePlan />;
+    if (accountId === null) {
+        return <FreePlan />;
+    }
+
+    return <SignedInWebhooks ready={entitled && syncOn} />;
+}
+
+function SignedInWebhooks({ ready }: { ready: boolean }) {
+    const t = useTranslation();
+    const status = useWebhookStatus();
+
+    if (status.kind === "loading") {
+        return <SettingsScreen>{null}</SettingsScreen>;
+    }
+
+    if (status.kind === "error") {
+        return (
+            <SettingsScreen>
+                <View className="pt-4">
+                    <InlineFailure message={t("settings.webhooks.failed")} />
+                </View>
+            </SettingsScreen>
+        );
+    }
+
+    const configured = status.status.inbound !== null || status.status.endpoints.length > 0;
+    if (!(ready || configured)) {
+        return <FreePlan />;
+    }
+
+    return <WebhookSections canManage={ready} status={status.status} />;
 }
 
 function FreePlan() {
+    return (
+        <SettingsScreen>
+            <PlanIntro />
+            <PlanPrompts />
+        </SettingsScreen>
+    );
+}
+
+function PlanIntro() {
+    const t = useTranslation();
+
+    return (
+        <View className="gap-2 pt-6">
+            <Text className="text-foreground font-sans-semibold text-title">{t("pro.entry.value")}</Text>
+            <Text className="text-muted text-subtitle leading-snug">{t("settings.webhooks.free.body")}</Text>
+        </View>
+    );
+}
+
+function PlanPrompts() {
     const t = useTranslation();
     const router = useRouter();
     const openPaywall = useOpenPaywall();
@@ -94,44 +144,44 @@ function FreePlan() {
     const syncReady = accountId !== null && syncOn;
 
     return (
-        <SettingsScreen>
-            <View className="gap-2 pt-6">
-                <Text className="text-foreground font-sans-semibold text-title">{t("pro.entry.value")}</Text>
-                <Text className="text-muted text-subtitle leading-snug">{t("settings.webhooks.free.body")}</Text>
-            </View>
-            <SettingsSection>
-                {entitled ? null : (
-                    <LinkRow
-                        icon="Sparkles"
-                        onPress={() => openPaywall("settings")}
-                        title={t("pro.entry.title")}
-                        value={t("pro.entry.value")}
-                    />
-                )}
-                {syncReady ? null : (
-                    <LinkRow
-                        icon="Cloud"
-                        onPress={() => router.push("/settings/sync")}
-                        title={t("settings.sync.navTitle")}
-                        value={t("settings.sync.off")}
-                    />
-                )}
-            </SettingsSection>
-        </SettingsScreen>
+        <SettingsSection>
+            {entitled ? null : (
+                <LinkRow
+                    icon="Sparkles"
+                    onPress={() => openPaywall("settings")}
+                    title={t("pro.entry.title")}
+                    value={t("pro.entry.value")}
+                />
+            )}
+            {syncReady ? null : (
+                <LinkRow
+                    icon="Cloud"
+                    onPress={() => router.push("/settings/sync")}
+                    title={t("settings.sync.navTitle")}
+                    value={t("settings.sync.off")}
+                />
+            )}
+        </SettingsSection>
     );
 }
 
-function WebhookSections() {
+function WebhookSections({ canManage, status }: { canManage: boolean; status: WebhookStatusView }) {
     const t = useTranslation();
     const colors = useColors();
-    const status = useWebhookStatus();
-    const [now] = useState(Date.now);
+    const [now, setNow] = useState(Date.now);
     const addRef = useRef<BottomSheetModal>(null);
     const secretRef = useRef<BottomSheetModal>(null);
     const [shownSecret, setShownSecret] = useState<ShownSecret | null>(null);
-    const mintedSecret = useRef<string | null>(null);
-    const pendingSecret = useRef<string | null>(null);
+    const [addUrl, setAddUrl] = useState("");
+    const [addError, setAddError] = useState<string | null>(null);
+    const [addBusy, setAddBusy] = useState(false);
+    // One secret at a time: a second save finishing behind the sheet would replace the first before it is copied.
+    const minting = useRef(false);
     const inbound = inboundEndpoint(CONVEX_SITE_URL);
+
+    useOnChange([status], () => {
+        setNow(Date.now());
+    });
 
     useOnChange([shownSecret], ([next]) => {
         if (next !== null) {
@@ -143,10 +193,11 @@ function WebhookSections() {
 
     const saveToken = useAtomAction(setInboundTokenCommand, {
         onFailure: fail,
-        onSuccess: (saved) => {
-            const token = mintedSecret.current;
-            mintedSecret.current = null;
-            if (!saved || token === null) {
+        onSettled: () => {
+            minting.current = false;
+        },
+        onSuccess: ({ saved, token }) => {
+            if (!saved) {
                 fail();
                 return;
             }
@@ -164,26 +215,57 @@ function WebhookSections() {
     });
     const saveEndpointSecret = useAtomAction(setEndpointSecretCommand, {
         onFailure: fail,
-        onSuccess: (saved) => {
-            const secret = mintedSecret.current;
-            mintedSecret.current = null;
-            if (!saved || secret === null) {
+        onSettled: () => {
+            minting.current = false;
+        },
+        onSuccess: ({ saved, secret }) => {
+            if (!saved) {
                 fail();
                 return;
             }
             setShownSecret({ kind: "signing", value: secret });
         },
     });
+    const addEndpoint = useAtomAction(addEndpointCommand, {
+        onFailure: () => setAddError(t("settings.webhooks.add.failed")),
+        onSettled: () => {
+            minting.current = false;
+            setAddBusy(false);
+        },
+        onSuccess: ({ result, secret }) => {
+            switch (result.kind) {
+                case "added": {
+                    setShownSecret({ kind: "signing", value: secret });
+                    addRef.current?.dismiss();
+                    break;
+                }
+                case "invalidUrl": {
+                    setAddError(t("settings.webhooks.add.invalidUrl"));
+                    break;
+                }
+                case "invalidSecret": {
+                    setAddError(t("settings.webhooks.add.invalidSecret"));
+                    break;
+                }
+                case "tooMany": {
+                    setAddError(t("settings.webhooks.add.tooMany"));
+                    break;
+                }
+                default: {
+                    setAddError(t("settings.webhooks.add.failed"));
+                    break;
+                }
+            }
+        },
+    });
     const removeEndpoint = useAtomAction(removeEndpointCommand, { onFailure: fail });
 
-    if (status === undefined) {
-        return <SettingsScreen>{null}</SettingsScreen>;
-    }
-
     const createToken = () => {
-        const token = newInboundToken();
-        mintedSecret.current = token;
-        saveToken({ token });
+        if (minting.current) {
+            return;
+        }
+        minting.current = true;
+        saveToken({ token: newInboundToken() });
     };
 
     const confirmRevoke = () =>
@@ -197,9 +279,11 @@ function WebhookSections() {
         ]);
 
     const rotateSecret = (endpoint: WebhookEndpoint) => {
-        const secret = newSigningSecret();
-        mintedSecret.current = secret;
-        saveEndpointSecret({ endpointId: endpoint._id, secret });
+        if (minting.current) {
+            return;
+        }
+        minting.current = true;
+        saveEndpointSecret({ endpointId: endpoint._id, secret: newSigningSecret() });
     };
 
     const confirmRemove = (endpoint: WebhookEndpoint) =>
@@ -212,126 +296,172 @@ function WebhookSections() {
             },
         ]);
 
-    const actionsFor = (endpoint: WebhookEndpoint): ActionMenuItem[] => [
-        { id: "test", label: t("settings.webhooks.test"), onPress: () => testEndpoint({ endpointId: endpoint._id }) },
-        { id: "secret", label: t("settings.webhooks.newSecret"), onPress: () => rotateSecret(endpoint) },
-        {
+    const actionsFor = (endpoint: WebhookEndpoint): ActionMenuItem[] => {
+        const remove: ActionMenuItem = {
             destructive: true,
             id: "remove",
             label: t("settings.webhooks.remove"),
             onPress: () => confirmRemove(endpoint),
-        },
-    ];
+        };
+        if (!canManage) {
+            return [remove];
+        }
+        return [
+            {
+                id: "test",
+                label: t("settings.webhooks.test"),
+                onPress: () => testEndpoint({ endpointId: endpoint._id }),
+            },
+            { id: "secret", label: t("settings.webhooks.newSecret"), onPress: () => rotateSecret(endpoint) },
+            remove,
+        ];
+    };
+
+    const submitAdd = () => {
+        const url = addUrl.trim();
+        if (minting.current || url === "") {
+            return;
+        }
+        minting.current = true;
+        setAddBusy(true);
+        addEndpoint({ secret: newSigningSecret(), url });
+    };
+
+    const changeAddUrl = (next: string) => {
+        setAddUrl(next);
+        setAddError(null);
+    };
+
+    const closeAdd = () => {
+        setAddUrl("");
+        setAddError(null);
+    };
+
+    const showReceive = status.inbound !== null || canManage;
+    const showSend = status.endpoints.length > 0 || canManage;
 
     return (
         <>
             <SettingsScreen>
-                <SettingsSection footer={t("settings.webhooks.receiveFooter")} title={t("settings.webhooks.receive")}>
-                    {status.inbound === null ? (
-                        <LinkRow icon="Key01" onPress={createToken} title={t("settings.webhooks.createToken")} />
-                    ) : (
-                        <>
-                            {inbound === null ? null : (
-                                <Pressable
-                                    accessibilityLabel={t("settings.webhooks.copyUrl")}
-                                    accessibilityRole="button"
-                                    className="active:opacity-60"
-                                    onPress={() => Clipboard.setString(inbound.full)}
-                                >
-                                    <RowShell icon="Link01" title={t("settings.webhooks.url")}>
-                                        <View className="flex-row items-center gap-2">
-                                            <Text
-                                                className="text-muted text-caption shrink font-mono"
-                                                numberOfLines={1}
-                                            >
-                                                {inbound.display}
-                                            </Text>
-                                            <HugeiconsIcon
-                                                color={colors.tint}
-                                                icon={Copy01Icon}
-                                                size={16}
-                                                strokeWidth={2.2}
-                                            />
-                                        </View>
-                                    </RowShell>
-                                </Pressable>
-                            )}
-                            <RowShell icon="Key01" title={t("settings.webhooks.token")}>
-                                <Text className="text-muted text-caption font-mono">{`${TOKEN_HINT}${status.inbound.hint}`}</Text>
-                            </RowShell>
-                            <LinkRow
-                                icon="Clock01"
-                                title={t("settings.webhooks.lastUsed")}
-                                value={
-                                    status.inbound.lastUsedAt === undefined
-                                        ? t("settings.webhooks.never")
-                                        : agoText(t, status.inbound.lastUsedAt, now)
-                                }
-                            />
-                            <LinkRow
-                                icon="ArrowReloadHorizontal"
-                                onPress={createToken}
-                                title={t("settings.webhooks.rotate")}
-                            />
-                            <LinkRow
-                                destructive
-                                icon="Delete02"
-                                onPress={confirmRevoke}
-                                title={t("settings.webhooks.revoke")}
-                            />
-                        </>
-                    )}
-                </SettingsSection>
+                {canManage ? null : <PlanPrompts />}
+                {showReceive ? (
+                    <SettingsSection
+                        footer={t("settings.webhooks.receiveFooter")}
+                        title={t("settings.webhooks.receive")}
+                    >
+                        {status.inbound === null && canManage ? (
+                            <LinkRow icon="Key01" onPress={createToken} title={t("settings.webhooks.createToken")} />
+                        ) : null}
+                        {status.inbound === null ? null : (
+                            <>
+                                {inbound === null ? null : (
+                                    <Pressable
+                                        accessibilityLabel={t("settings.webhooks.copyUrl")}
+                                        accessibilityRole="button"
+                                        className="active:opacity-60"
+                                        onPress={() => Clipboard.setString(inbound.full)}
+                                    >
+                                        <RowShell icon="Link01" title={t("settings.webhooks.url")}>
+                                            <View className="flex-row items-center gap-2">
+                                                <Text
+                                                    className="text-muted text-caption shrink font-mono"
+                                                    numberOfLines={1}
+                                                >
+                                                    {inbound.display}
+                                                </Text>
+                                                <HugeiconsIcon
+                                                    color={colors.tint}
+                                                    icon={Copy01Icon}
+                                                    size={16}
+                                                    strokeWidth={2.2}
+                                                />
+                                            </View>
+                                        </RowShell>
+                                    </Pressable>
+                                )}
+                                <RowShell icon="Key01" title={t("settings.webhooks.token")}>
+                                    <Text className="text-muted text-caption font-mono">{`${TOKEN_HINT}${status.inbound.hint}`}</Text>
+                                </RowShell>
+                                <LinkRow
+                                    icon="Clock01"
+                                    title={t("settings.webhooks.lastUsed")}
+                                    value={
+                                        status.inbound.lastUsedAt === undefined
+                                            ? t("settings.webhooks.never")
+                                            : agoText(t, status.inbound.lastUsedAt, now)
+                                    }
+                                />
+                                {canManage ? (
+                                    <LinkRow
+                                        icon="ArrowReloadHorizontal"
+                                        onPress={createToken}
+                                        title={t("settings.webhooks.rotate")}
+                                    />
+                                ) : null}
+                                <LinkRow
+                                    destructive
+                                    icon="Delete02"
+                                    onPress={confirmRevoke}
+                                    title={t("settings.webhooks.revoke")}
+                                />
+                            </>
+                        )}
+                    </SettingsSection>
+                ) : null}
 
-                <SettingsSection
-                    accessory={
-                        <Pressable
-                            accessibilityRole="button"
-                            className="flex-row items-center gap-1 active:opacity-60"
-                            onPress={() => addRef.current?.present()}
-                        >
-                            <HugeiconsIcon color={colors.tint} icon={PlusSignIcon} size={15} strokeWidth={2.4} />
-                            <Text className="text-tint text-subtitle font-sans-semibold">
-                                {t("settings.webhooks.add")}
-                            </Text>
-                        </Pressable>
-                    }
-                    footer={t("settings.webhooks.sendFooter")}
-                    title={t("settings.webhooks.send")}
-                >
-                    {status.endpoints.length === 0 ? (
-                        <LinkRow
-                            icon="Plug"
-                            onPress={() => addRef.current?.present()}
-                            title={t("settings.webhooks.addAddress")}
-                        />
-                    ) : (
-                        status.endpoints.map((endpoint) => (
-                            <EndpointRow
-                                actions={actionsFor(endpoint)}
-                                colors={colors}
-                                endpoint={endpoint}
-                                key={endpoint._id}
-                                now={now}
+                {showSend ? (
+                    <SettingsSection
+                        accessory={
+                            canManage ? (
+                                <Pressable
+                                    accessibilityRole="button"
+                                    className="flex-row items-center gap-1 active:opacity-60"
+                                    onPress={() => addRef.current?.present()}
+                                >
+                                    <HugeiconsIcon
+                                        color={colors.tint}
+                                        icon={PlusSignIcon}
+                                        size={15}
+                                        strokeWidth={2.4}
+                                    />
+                                    <Text className="text-tint text-subtitle font-sans-semibold">
+                                        {t("settings.webhooks.add")}
+                                    </Text>
+                                </Pressable>
+                            ) : undefined
+                        }
+                        footer={t("settings.webhooks.sendFooter")}
+                        title={t("settings.webhooks.send")}
+                    >
+                        {status.endpoints.length === 0 ? (
+                            <LinkRow
+                                icon="Plug"
+                                onPress={() => addRef.current?.present()}
+                                title={t("settings.webhooks.addAddress")}
                             />
-                        ))
-                    )}
-                </SettingsSection>
+                        ) : (
+                            status.endpoints.map((endpoint) => (
+                                <EndpointRow
+                                    actions={actionsFor(endpoint)}
+                                    colors={colors}
+                                    endpoint={endpoint}
+                                    key={endpoint._id}
+                                    now={now}
+                                />
+                            ))
+                        )}
+                    </SettingsSection>
+                ) : null}
             </SettingsScreen>
 
             <AddEndpointSheet
-                onAdded={(secret) => {
-                    pendingSecret.current = secret;
-                    addRef.current?.dismiss();
-                }}
-                onDismiss={() => {
-                    const secret = pendingSecret.current;
-                    pendingSecret.current = null;
-                    if (secret !== null) {
-                        setShownSecret({ kind: "signing", value: secret });
-                    }
-                }}
+                busy={addBusy}
+                error={addError}
+                onChangeUrl={changeAddUrl}
+                onDismiss={closeAdd}
+                onSubmit={submitAdd}
                 ref={addRef}
+                url={addUrl}
             />
             <SecretSheet onDismiss={() => setShownSecret(null)} ref={secretRef} secret={shownSecret} />
         </>
@@ -382,7 +512,8 @@ function EndpointRow({
                         }}
                     />
                 }
-                title={endpointHost(endpoint.url)}
+                title={endpointAddress(endpoint.url)}
+                titleEllipsizeMode="middle"
             >
                 <Text className={`text-body ${VALUE_TONE[state]}`}>{t(`settings.webhooks.state.${state}`)}</Text>
             </RowShell>
@@ -392,79 +523,33 @@ function EndpointRow({
 
 function AddEndpointSheet({
     ref,
-    onAdded,
+    busy,
+    error,
+    onChangeUrl,
     onDismiss,
+    onSubmit,
+    url,
 }: {
     ref: RefObject<BottomSheetModal | null>;
-    onAdded: (secret: string) => void;
+    busy: boolean;
+    error: string | null;
+    onChangeUrl: (url: string) => void;
     onDismiss: () => void;
+    onSubmit: () => void;
+    url: string;
 }) {
     const t = useTranslation();
     const colors = useColors();
     const sheetSurface = useSheetSurface();
-    const [url, setUrl] = useState("");
-    const [error, setError] = useState<string | null>(null);
-    const [busy, setBusy] = useState(false);
-    const minted = useRef<string | null>(null);
-
-    const add = useAtomAction(addEndpointCommand, {
-        onFailure: () => setError(t("settings.webhooks.add.failed")),
-        onSettled: () => setBusy(false),
-        onSuccess: (result) => {
-            const secret = minted.current;
-            minted.current = null;
-            switch (result.kind) {
-                case "added": {
-                    if (secret === null) {
-                        setError(t("settings.webhooks.add.failed"));
-                        return;
-                    }
-                    onAdded(secret);
-                    break;
-                }
-                case "invalidUrl": {
-                    setError(t("settings.webhooks.add.invalidUrl"));
-                    break;
-                }
-                case "invalidSecret": {
-                    setError(t("settings.webhooks.add.invalidSecret"));
-                    break;
-                }
-                case "tooMany": {
-                    setError(t("settings.webhooks.add.tooMany"));
-                    break;
-                }
-                default: {
-                    setError(t("settings.webhooks.add.failed"));
-                    break;
-                }
-            }
-        },
-    });
-
-    const reset = () => {
-        minted.current = null;
-        setUrl("");
-        setError(null);
-        setBusy(false);
-        onDismiss();
-    };
-
-    const submit = () => {
-        const secret = newSigningSecret();
-        minted.current = secret;
-        setBusy(true);
-        add({ secret, url: url.trim() });
-    };
 
     return (
         <BottomSheetModal
             backgroundStyle={{ backgroundColor: sheetSurface }}
             enableDynamicSizing
-            enablePanDownToClose
+            enablePanDownToClose={!busy}
             keyboardBehavior="interactive"
             keyboardBlurBehavior="restore"
-            onDismiss={reset}
+            onDismiss={onDismiss}
             ref={ref}
         >
             <BottomSheetView style={{ paddingBottom: 24 }}>
@@ -483,10 +568,7 @@ function AddEndpointSheet({
                                 autoCorrect={false}
                                 autoFocus
                                 keyboardType="url"
-                                onChangeText={(next) => {
-                                    setUrl(next);
-                                    setError(null);
-                                }}
+                                onChangeText={onChangeUrl}
                                 placeholder={t("settings.webhooks.add.placeholder")}
                                 placeholderTextColor={colors.muted}
                                 returnKeyType="done"
@@ -508,7 +590,7 @@ function AddEndpointSheet({
                             className="rounded-full"
                             disabled={busy || url.trim() === ""}
                             fullWidth
-                            onPress={submit}
+                            onPress={onSubmit}
                             size="lg"
                             variant="primary"
                         >

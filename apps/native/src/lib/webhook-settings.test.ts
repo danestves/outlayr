@@ -2,6 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
     encodeBase64Url,
+    endpointAddress,
     endpointState,
     INBOUND_TOKEN_PREFIX,
     inboundEndpoint,
@@ -45,6 +46,17 @@ describe("inbound endpoint", () => {
             display: "calm-otter-12.convex.site/hooks/in",
             full: "https://calm-otter-12.convex.site/hooks/in",
         });
+    });
+});
+
+describe("endpoint address", () => {
+    it("keeps the path so two addresses on one host stay distinct", () => {
+        const first = endpointAddress("https://hooks.zapier.com/hooks/catch/123/abc");
+        const second = endpointAddress("https://hooks.zapier.com/hooks/catch/456/def");
+        expect(first).toBe("hooks.zapier.com/hooks/catch/123/abc");
+        expect(first).not.toBe(second);
+        expect(endpointAddress("https://example.com/hooks/")).toBe("example.com/hooks/");
+        expect(endpointAddress("https://example.com/")).toBe("example.com");
     });
 });
 

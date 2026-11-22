@@ -1,6 +1,7 @@
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import type { ReactNode } from "react";
 import { View } from "react-native";
+import type { TextProps } from "react-native";
 
 import type { SettingsIconName } from "@/components/settings/settings-icons";
 import { settingsIcon } from "@/components/settings/settings-icons";
@@ -24,6 +25,7 @@ export interface RowShellProps {
     leading?: ReactNode;
     onTitleLines?: (lines: number) => void;
     title: string;
+    titleEllipsizeMode?: TextProps["ellipsizeMode"];
     titleLines?: number;
 }
 
@@ -32,6 +34,7 @@ export function RowShell({
     leading,
     title,
     titleLines = 1,
+    titleEllipsizeMode,
     destructive,
     detail,
     children,
@@ -56,7 +59,8 @@ export function RowShell({
                     ) : null)}
                 <Text
                     className={cn("text-body flex-1", destructive ? "text-danger" : "text-foreground")}
-                    numberOfLines={largeText ? Math.max(titleLines, 2) : titleLines}
+                    ellipsizeMode={titleEllipsizeMode}
+                    numberOfLines={titleEllipsizeMode === undefined && largeText ? Math.max(titleLines, 2) : titleLines}
                     onTextLayout={onTitleLines ? (event) => onTitleLines(event.nativeEvent.lines.length) : undefined}
                 >
                     {title}

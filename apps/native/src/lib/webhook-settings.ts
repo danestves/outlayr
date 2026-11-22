@@ -5,7 +5,9 @@ export type WebhookStatusView = typeof WebhookStatus.Type;
 export type WebhookEndpoint = WebhookStatusView["endpoints"][number];
 export type WebhookEndpointId = WebhookEndpoint["_id"];
 
-export const WEBHOOKS_OPEN = Date.now() >= WEBHOOKS_EFFECTIVE_AT_MS;
+export function webhooksOpen(now: number): boolean {
+    return now >= WEBHOOKS_EFFECTIVE_AT_MS;
+}
 
 export const INBOUND_TOKEN_PREFIX = "olh_";
 export const SIGNING_SECRET_PREFIX = "whsec_";
@@ -77,8 +79,13 @@ export function inboundEndpoint(siteUrl: string | undefined): { display: string;
     };
 }
 
-export function endpointHost(url: string): string {
-    return URL.parse(url)?.host ?? url;
+export function endpointAddress(url: string): string {
+    const parsed = URL.parse(url);
+    if (parsed === null) {
+        return url;
+    }
+    const path = parsed.pathname === "/" ? "" : parsed.pathname;
+    return `${parsed.host}${path}`;
 }
 
 export type EndpointState = "active" | "failing" | "off";
