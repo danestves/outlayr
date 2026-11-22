@@ -71,10 +71,16 @@ describe("archiving a ledger", () => {
         await Effect.runPromise(restoreArchive(fresh, parsed));
 
         const [account] = await fresh.select().from(accounts);
+        if (account === undefined) {
+            throw new Error("expected account");
+        }
         expect(account.name).toBe("Checking");
         expect(account.initialBalance).toBe(250);
         expect(account.initialBalanceDate.getTime()).toBe(1_700_000_000_000);
         const [row] = await fresh.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.accountId).toBe("a1");
     });
 
@@ -131,6 +137,9 @@ describe("archiving a ledger", () => {
         await Effect.runPromise(restoreArchive(target, parsed));
 
         const [goal] = await target.select().from(savingsGoals);
+        if (goal === undefined) {
+            throw new Error("expected goal");
+        }
         expect(goal.name).toBe("Trip");
         expect(goal.targetDate.getTime()).toBe(1_800_000_000_000);
         await expect(target.select({ id: tags.id }).from(tags)).resolves.toStrictEqual([{ id: "tag1" }]);
@@ -138,8 +147,14 @@ describe("archiving a ledger", () => {
             { id: "tt1" },
         ]);
         const [split] = await target.select().from(transactionSplits);
+        if (split === undefined) {
+            throw new Error("expected split");
+        }
         expect(split.amount).toBe(12.5);
         const [photo] = await target.select().from(transactionPhotos);
+        if (photo === undefined) {
+            throw new Error("expected photo");
+        }
         expect(photo.imageKey).toBe("photos/u1/p1.jpg");
     });
 
@@ -180,6 +195,9 @@ describe("archiving a ledger", () => {
         await Effect.runPromise(restoreArchive(fresh, parsed));
 
         const [row] = await fresh.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.date instanceof Date).toBeTruthy();
         expect(row.date.getTime()).toBe(when.getTime());
     });
@@ -196,6 +214,9 @@ describe("archiving a ledger", () => {
         await Effect.runPromise(restoreArchive(fresh, parsed));
 
         const [row] = await fresh.select().from(transactions);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.deletedAt instanceof Date).toBeTruthy();
     });
 

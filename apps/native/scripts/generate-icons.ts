@@ -2,13 +2,13 @@
 // `gen:icons <dir>` redoes one set and leaves the rest alone.
 
 import { writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 
 import { loadIcon, resetDirectory, toSvg } from "./hugeicon-raster";
 import { SETS } from "./icon-sets";
 import type { IconSet } from "./icon-sets";
 
-const appDir = resolve(dirname(process.argv[1]), "..");
+const appDir = resolve(import.meta.dirname, "..");
 
 async function writeSet(set: IconSet): Promise<number> {
     const outDir = join(appDir, "assets", set.dir);

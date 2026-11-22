@@ -245,6 +245,7 @@ function PlanEditorBody({
     const closed = opened.filter((month) => month.locked);
     const copySource = touched ?? editable[0]?.key ?? null;
     const copyTargets = copySource === null ? [] : editable.filter((month) => month.key > copySource);
+    const [firstCopy] = copyTargets;
 
     const notes: string[] = [];
     const high = aboveTypical(months, typical);
@@ -270,8 +271,9 @@ function PlanEditorBody({
     };
 
     let closedLabel: string | null = null;
-    if (closed.length > 0) {
-        const first = closed[0].key;
+    const [firstClosed] = closed;
+    if (firstClosed !== undefined) {
+        const first = firstClosed.key;
         const last = closed.at(-1)?.key ?? first;
         closedLabel =
             closed.length <= 2
@@ -427,7 +429,7 @@ function PlanEditorBody({
 
             {typing ? null : (
                 <View className="px-5 pt-4">
-                    {copySource !== null && copyTargets.length > 0 ? (
+                    {copySource !== null && firstCopy !== undefined ? (
                         <EditorRow
                             label={t("budgets.plan.editor.copyForward", { month: monthName(copySource, language) })}
                             onPress={() => {
@@ -441,12 +443,7 @@ function PlanEditorBody({
                                     return draft;
                                 });
                             }}
-                            value={monthRange(
-                                copyTargets[0].key,
-                                copyTargets.at(-1)?.key ?? copyTargets[0].key,
-                                language,
-                                t
-                            )}
+                            value={monthRange(firstCopy.key, copyTargets.at(-1)?.key ?? firstCopy.key, language, t)}
                         />
                     ) : null}
                     <View className="border-border border-b py-3.5">

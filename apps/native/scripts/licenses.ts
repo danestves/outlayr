@@ -75,12 +75,16 @@ function addPackages(map: string): void {
 function downloadedPods(lock: string): Map<string, string> {
     const [pods = "", rest = ""] = lock.split("\nDEPENDENCIES:");
     const versions = new Map(
-        [...pods.matchAll(/^ {2}- ([^/\s]+)\S* \(([^)]+)\)/gm)].map(([, name, version]) => [name, version])
+        [...pods.matchAll(/^ {2}- ([^/\s]+)\S* \(([^)]+)\)/gm)].flatMap(([, name, version]) =>
+            name === undefined || version === undefined ? [] : [[name, version] as const]
+        )
     );
     const specRepos = rest.split("SPEC REPOS:")[1]?.split("\n\n")[0] ?? "";
     const names = [
-        ...[...specRepos.matchAll(/^ {4}- (\S+)$/gm)].map(([, name]) => name),
-        ...[...rest.matchAll(/^ {2}(\S+):\n(?: {4}.+\n)*? {4}:tag:/gm)].map(([, name]) => name),
+        ...[...specRepos.matchAll(/^ {4}- (\S+)$/gm)].flatMap(([, name]) => (name === undefined ? [] : [name])),
+        ...[...rest.matchAll(/^ {2}(\S+):\n(?: {4}.+\n)*? {4}:tag:/gm)].flatMap(([, name]) =>
+            name === undefined ? [] : [name]
+        ),
     ];
     return new Map(names.map((name) => [name, versions.get(name) ?? ""]));
 }

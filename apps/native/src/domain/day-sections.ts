@@ -95,12 +95,11 @@ export function valueRows<T extends DayGroupable>(
         income: row.income,
     }));
     const values = valueRowsIn(valuables, currency, rates);
-    const valued = new Map(
-        counted.map((row, index): [T, number | null] => [
-            row,
-            isExact(valuables[index], currency, rates) ? values[index] : null,
-        ])
-    );
+    const valued = new Map<T, number | null>();
+    for (const [index, row] of counted.entries()) {
+        const valuable = valuables[index];
+        valued.set(row, valuable !== undefined && isExact(valuable, currency, rates) ? (values[index] ?? null) : null);
+    }
     return rows.map((row) => ({ ...row, valued: valued.get(row) ?? null }));
 }
 

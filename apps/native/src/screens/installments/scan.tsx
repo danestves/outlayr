@@ -229,8 +229,9 @@ function AccountChoice({ photos }: { photos: readonly ScanPhoto[] }) {
     const liabilities = useLiabilities();
     const [account, setAccount] = useState<Account | null>(null);
     // Latched, so a second liability arriving through sync mid-scan cannot unmount the flow.
-    if (account === null && liabilities.length === 1) {
-        setAccount(liabilities[0]);
+    const [onlyLiability] = liabilities;
+    if (account === null && liabilities.length === 1 && onlyLiability !== undefined) {
+        setAccount(onlyLiability);
     }
 
     const addLiability: BarAction = {

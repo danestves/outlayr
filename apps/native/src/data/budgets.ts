@@ -135,7 +135,7 @@ export function expenseContributionsFrom(
     const valued = valueDatedRowsIn(rows, displayCurrency, rates);
     return rows.map((row, index) => ({
         // `amount` is the valued amount from here down, not the row's stored one.
-        amount: valued[index],
+        amount: valued[index] ?? 0,
         categoryId: row.categoryId,
         date: row.date,
         parentId: row.categoryId ? (categoryMeta.get(row.categoryId)?.parentId ?? null) : null,

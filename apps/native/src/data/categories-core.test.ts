@@ -38,9 +38,9 @@ describe("ensureCategoryByName", () => {
         const id = await Effect.runPromise(ensureCategoryByName(db, "Entertainment", false, "FilmRoll01", "#AF52DE"));
         const rows = await liveCategories(db, false);
         expect(rows).toHaveLength(1);
-        expect(rows[0].id).toBe(id);
-        expect(rows[0].name).toBe("Entertainment");
-        expect(rows[0].icon).toBe("FilmRoll01");
+        expect(rows.at(0)?.id).toBe(id);
+        expect(rows.at(0)?.name).toBe("Entertainment");
+        expect(rows.at(0)?.icon).toBe("FilmRoll01");
     });
 
     it("resolves to the existing category on a same-namespace name collision instead of duplicating it", async () => {

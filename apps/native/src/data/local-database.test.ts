@@ -31,7 +31,7 @@ const legacyLog = (sqlite: BetterSqlite3.Database, upTo = "9999"): void => {
     )`);
     const insert = sqlite.prepare(`INSERT INTO "__drizzle_migrations" ("hash", "created_at") VALUES ('', ?)`);
     for (const [when, name] of LEGACY_MIGRATION_NAMES) {
-        if (name.split("_")[1] <= upTo) {
+        if ((name.split("_")[1] ?? "") <= upTo) {
             insert.run(when);
         }
     }

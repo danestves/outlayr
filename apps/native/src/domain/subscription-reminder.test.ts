@@ -128,7 +128,7 @@ describe("planning what to arm", () => {
             time: NINE_AM,
         });
         expect(plan.arm).toHaveLength(1);
-        expect(plan.arm[0].fireAt).toStrictEqual(new Date(2026, 2, 12, 9, 0));
+        expect(plan.arm.at(0)?.fireAt).toStrictEqual(new Date(2026, 2, 12, 9, 0));
     });
 
     it("keeps the soonest charges when it has to truncate", () => {
@@ -163,7 +163,7 @@ describe("planning what to arm", () => {
         }));
         const plan = reminderPlan({ candidates, now, time: NINE_AM });
         expect(plan.arm).toHaveLength(MAX_PENDING_SUBSCRIPTION_REMINDERS);
-        expect(plan.arm[0].localId).toBe("sub-0");
+        expect(plan.arm.at(0)?.localId).toBe("sub-0");
     });
 });
 

@@ -67,8 +67,12 @@ export function SplitSheet({ db, income, total, code, minorUnits, allocations, o
     const amountSheetRef = useRef<BottomSheetModal>(null);
 
     const editAmount = (index: number) => {
+        const allocation = allocations[index];
+        if (allocation === undefined) {
+            return;
+        }
         setEditing(index);
-        setAmountText(numberToNumpad(allocations[index].amount, minorUnits));
+        setAmountText(numberToNumpad(allocation.amount, minorUnits));
         amountSheetRef.current?.present();
     };
 
@@ -220,7 +224,7 @@ export function SplitSheet({ db, income, total, code, minorUnits, allocations, o
                     ref={categoryRef}
                     selectedId={
                         editing != null && editing < allocations.length
-                            ? (allocations[editing].categoryId ?? null)
+                            ? (allocations[editing]?.categoryId ?? null)
                             : null
                     }
                 />

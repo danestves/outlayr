@@ -12,6 +12,9 @@ const previewFailed = (cause: unknown) => new FilePreviewError({ cause });
 export const previewFiles: typeof iosPreviewFiles = Effect.fn("FilePreview.previewFiles")(
     function* previewFiles(files, index) {
         const file = files[index];
+        if (file === undefined) {
+            return;
+        }
         const { startActivityAsync } = yield* Effect.try({
             catch: previewFailed,
             // SAFETY: untyped `require`, asserted to that module's own type.

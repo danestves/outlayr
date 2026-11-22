@@ -20,7 +20,7 @@ vi.mock("@/lib/logo-cache", () => ({
 
 const LOGO_BYTES = new Uint8Array(1024)
     .fill(0x42)
-    .map((byte, index) => (index < 4 ? [0x89, 0x50, 0x4e, 0x47][index] : byte));
+    .map((byte, index) => (index < 4 ? (([0x89, 0x50, 0x4e, 0x47] as const)[index] ?? byte) : byte));
 
 let inFlight = 0;
 let mostInFlight = 0;

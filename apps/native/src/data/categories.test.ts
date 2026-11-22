@@ -684,6 +684,9 @@ describe("categoriesRepo.addSuggested", () => {
 
     it("adds a preset and skips it on a second attempt", async () => {
         const [preset] = SUGGESTED_CATEGORY_PRESETS.expense;
+        if (preset === undefined) {
+            throw new Error("expected a preset");
+        }
         const id = await Effect.runPromise(
             categoriesRepo.addSuggested(db, {
                 color: preset.color,
@@ -733,7 +736,7 @@ describe("categoriesRepo.remove cascade", () => {
         expect(getCategoryById(db, id)).toBeNull();
         const categoryRows = await db.select().from(categories).where(eq(categories.id, id));
         expect(categoryRows).toHaveLength(1);
-        expect(categoryRows[0].deletedAt).not.toBeNull();
+        expect(categoryRows.at(0)?.deletedAt).not.toBeNull();
 
         const readable = await db
             .select()
@@ -765,6 +768,9 @@ describe("categoriesRepo.remove cascade", () => {
         await Effect.runPromise(categoriesRepo.remove(db, id));
 
         const [row] = await db.select().from(transactions).where(eq(transactions.categoryId, id));
+        if (row === undefined) {
+            throw new Error("expected a row");
+        }
         expect(row.imageUri).toBeNull();
         expect(row.recurringType).toBe(0);
         expect(row.note).toBe("Flat white");
@@ -789,11 +795,11 @@ describe("categoriesRepo.remove cascade", () => {
         await Effect.runPromise(categoriesRepo.remove(db, id));
 
         const second = await db.select().from(transactions);
-        expect(second[0].deletedAt?.getTime()).toBe(first[0].deletedAt?.getTime());
-        expect(second[0].updatedAt.getTime()).toBe(first[0].updatedAt.getTime());
+        expect(second.at(0)?.deletedAt?.getTime()).toBe(first.at(0)?.deletedAt?.getTime());
+        expect(second.at(0)?.updatedAt.getTime()).toBe(first.at(0)?.updatedAt.getTime());
         const secondCategory = await db.select().from(categories);
-        expect(secondCategory[0].deletedAt?.getTime()).toBe(firstCategory[0].deletedAt?.getTime());
-        expect(secondCategory[0].updatedAt.getTime()).toBe(firstCategory[0].updatedAt.getTime());
+        expect(secondCategory.at(0)?.deletedAt?.getTime()).toBe(firstCategory.at(0)?.deletedAt?.getTime());
+        expect(secondCategory.at(0)?.updatedAt.getTime()).toBe(firstCategory.at(0)?.updatedAt.getTime());
     });
 
     it("promotes subcategories to the top level", async () => {
@@ -850,7 +856,7 @@ describe("categoriesRepo.remove cascade", () => {
         expect(readable).toHaveLength(0);
         const replicable = await db.select().from(budgets).where(eq(budgets.id, "b1"));
         expect(replicable).toHaveLength(1);
-        expect(replicable[0].deletedAt).not.toBeNull();
+        expect(replicable.at(0)?.deletedAt).not.toBeNull();
     });
 
     it("tombstones the category's monthly plans so peers drop them too", async () => {
@@ -864,6 +870,9 @@ describe("categoriesRepo.remove cascade", () => {
         await Effect.runPromise(categoriesRepo.remove(db, id));
 
         const [plan] = await db.select().from(budgetPlans).where(eq(budgetPlans.id, "p1"));
+        if (plan === undefined) {
+            throw new Error("expected a plan");
+        }
         expect(plan.deletedAt).not.toBeNull();
     });
 

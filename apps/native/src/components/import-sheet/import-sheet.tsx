@@ -45,10 +45,14 @@ const STEP_BACK = {
 
 export function resolveLegalStep(flow: ImportFlowState, step: ImportStep): ImportStep {
     let index = IMPORT_STEPS.indexOf(step);
-    while (index > 0 && !canAdvance(flow, IMPORT_STEPS[index - 1])) {
+    while (index > 0) {
+        const previous = IMPORT_STEPS[index - 1];
+        if (previous === undefined || canAdvance(flow, previous)) {
+            break;
+        }
         index -= 1;
     }
-    return IMPORT_STEPS[index];
+    return IMPORT_STEPS[index] ?? step;
 }
 
 function openPaywall() {

@@ -31,11 +31,12 @@ function relativeLuminance(hex: string): number {
     }
     const int = Number.parseInt(value, 16);
     const channels = [(int >> 16) & 255, (int >> 8) & 255, int & 255];
-    return channels.reduce((sum, channel, index) => {
+    const [red = 0, green = 0, blue = 0] = channels;
+    const linear = (channel: number) => {
         const v = channel / 255;
-        const linear = v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-        return sum + CHANNEL_WEIGHTS[index] * linear;
-    }, 0);
+        return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    };
+    return CHANNEL_WEIGHTS[0] * linear(red) + CHANNEL_WEIGHTS[1] * linear(green) + CHANNEL_WEIGHTS[2] * linear(blue);
 }
 
 function contrastRatio(a: string, b: string): number {
@@ -90,7 +91,11 @@ function themeTokens(theme: Theme): Map<string, string> {
     if (open === -1) {
         throw new Error(`global.css no longer declares @variant ${theme}`);
     }
-    return new Map([...braced(open).matchAll(/--([\w-]+):\s*([^;]+);/g)].map((match) => [match[1], match[2].trim()]));
+    return new Map(
+        [...braced(open).matchAll(/--([\w-]+):\s*([^;]+);/g)].flatMap(([, name, raw]) =>
+            name === undefined || raw === undefined ? [] : [[name, raw.trim()] as const]
+        )
+    );
 }
 
 function exposedTokens(): Map<string, string> {
@@ -99,7 +104,9 @@ function exposedTokens(): Map<string, string> {
         throw new Error("global.css no longer declares @theme inline");
     }
     return new Map(
-        [...braced(open).matchAll(/--color-([\w-]+):\s*var\(--([\w-]+)\);/g)].map((match) => [match[1], match[2]])
+        [...braced(open).matchAll(/--color-([\w-]+):\s*var\(--([\w-]+)\);/g)].flatMap(([, name, target]) =>
+            name === undefined || target === undefined ? [] : [[name, target] as const]
+        )
     );
 }
 
@@ -132,7 +139,10 @@ function textUtilities(): Set<string> {
     for (const file of sourceFiles(join(nativeRoot, "src"))) {
         const source = readFileSync(file, "utf-8");
         for (const match of source.matchAll(/\btext-([a-z][a-z-]*[a-z])\b/g)) {
-            names.add(match[1]);
+            const [, name] = match;
+            if (name !== undefined) {
+                names.add(name);
+            }
         }
     }
     return names;

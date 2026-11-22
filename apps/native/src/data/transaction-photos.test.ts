@@ -42,11 +42,11 @@ describe("moving existing photos into their own table", () => {
 
         const rows = sqlite.prepare("SELECT * FROM transactionPhotos").all() as Record<string, unknown>[];
         expect(rows).toHaveLength(1);
-        expect(rows[0].transactionId).toBe("t1");
-        expect(rows[0].imageUri).toBe("file:///photos/a.jpg");
-        expect(rows[0].imageKey).toBe("transaction-photos/u1/a.jpg");
-        expect(rows[0].imageColor).toBe("#abcdef");
-        expect(rows[0].sortOrder).toBe(0);
+        expect(rows.at(0)?.transactionId).toBe("t1");
+        expect(rows.at(0)?.imageUri).toBe("file:///photos/a.jpg");
+        expect(rows.at(0)?.imageKey).toBe("transaction-photos/u1/a.jpg");
+        expect(rows.at(0)?.imageColor).toBe("#abcdef");
+        expect(rows.at(0)?.sortOrder).toBe(0);
     });
 
     it("carries a row that has a key but no local file", () => {

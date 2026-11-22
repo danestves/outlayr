@@ -14,18 +14,27 @@ describe("a transfer sits in the day's list without touching its total", () => {
             [row(6.4, false), row(100, false, { excludedFromTotals: true }), row(40, false)],
             "USD"
         );
+        if (section === undefined) {
+            throw new Error("expected a section");
+        }
 
         expect(section.total).toBe(-46.4);
     });
 
     it("still lists the transfer among the day's rows", () => {
         const [section] = groupByDay([row(6.4, false), row(100, false, { excludedFromTotals: true })], "USD");
+        if (section === undefined) {
+            throw new Error("expected a section");
+        }
 
         expect(section.data).toHaveLength(2);
     });
 
     it("reports a zero total for a day that holds nothing but transfers", () => {
         const [section] = groupByDay([row(100, false, { excludedFromTotals: true })], "USD");
+        if (section === undefined) {
+            throw new Error("expected a section");
+        }
 
         expect(section.total).toBe(0);
         expect(section.data).toHaveLength(1);
@@ -36,6 +45,9 @@ describe("a transfer sits in the day's list without touching its total", () => {
         const sent = row(15, false, { id: "sent", transferId: "t1" });
         const received = row(16.05, false, { id: "received", transferId: "t1" });
         const [section] = groupByDay([transfer, sent, received], "USD");
+        if (section === undefined) {
+            throw new Error("expected a section");
+        }
 
         expect(section.data).toStrictEqual([{ ...transfer, fees: [sent, received] }]);
         expect(section.total).toBeCloseTo(-31.05);

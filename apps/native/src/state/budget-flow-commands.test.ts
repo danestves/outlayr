@@ -59,6 +59,9 @@ describe("createGoalFromAccountCommand", () => {
         expect(AsyncResult.isSuccess(result)).toBe(true);
         expect(dismiss).toHaveBeenCalledOnce();
         const [saved] = await savingsGoalsQuery(db);
+        if (saved === undefined) {
+            throw new Error("expected a savings goal");
+        }
         expect(saved.startAmount).toBe(120);
     });
 });

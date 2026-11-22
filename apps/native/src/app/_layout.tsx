@@ -158,14 +158,13 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
     const { theme } = useTheme();
     const isDark = theme === "dark";
     const [splashHidden, setSplashHidden] = useState(false);
-    // SAFETY: every name below is declared in global.css, so each slot resolves.
     const [background, card, text, border, primary] = useCSSVariable([
         "--background",
         "--color-card",
         "--foreground",
         "--border",
         "--color-tint",
-    ]) as string[];
+    ]);
 
     const hideSplash = () => {
         hideAsync();
@@ -196,7 +195,14 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
                             value={{
                                 ...base,
                                 // `primary` too, or React Navigation keeps its own iOS blue on native toolbar buttons.
-                                colors: { ...base.colors, background, border, card, primary, text },
+                                colors: {
+                                    ...base.colors,
+                                    background: background ?? base.colors.background,
+                                    border: border ?? base.colors.border,
+                                    card: card ?? base.colors.card,
+                                    primary: primary ?? base.colors.primary,
+                                    text: text ?? base.colors.text,
+                                },
                                 dark: isDark,
                             }}
                         >

@@ -17,5 +17,11 @@ function sameRow<TRow extends object>(a: TRow, b: TRow): boolean {
 
 // Lets `useLiveQuery` keep its cached array when drizzle rebuilt identical row objects.
 export function sameRows<TRow extends object>(a: readonly TRow[], b: readonly TRow[]): boolean {
-    return a.length === b.length && a.every((row, i) => sameRow(row, b[i]));
+    return (
+        a.length === b.length &&
+        a.every((row, i) => {
+            const other = b[i];
+            return other !== undefined && sameRow(row, other);
+        })
+    );
 }

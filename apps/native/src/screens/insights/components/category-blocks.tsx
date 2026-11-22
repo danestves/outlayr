@@ -75,19 +75,22 @@ export function CategoryBlocks({ code, entries, measure, onSelect, selectedId, s
         <View>
             <View onLayout={onLayout} style={{ height }}>
                 {width > 0
-                    ? shown.map((entry, index) => (
-                          <Block
-                              code={code}
-                              dimmed={selectedId != null && selectedId !== entry.id}
-                              entry={entry}
-                              key={entry.id}
-                              measure={measure}
-                              onPress={() => onSelect(selectedId === entry.id ? null : entry.id)}
-                              rect={rects[index]}
-                              selected={selectedId === entry.id}
-                              showCents={showCents}
-                          />
-                      ))
+                    ? shown.map((entry, index) => {
+                          const rect = rects[index];
+                          return rect === undefined ? null : (
+                              <Block
+                                  code={code}
+                                  dimmed={selectedId != null && selectedId !== entry.id}
+                                  entry={entry}
+                                  key={entry.id}
+                                  measure={measure}
+                                  onPress={() => onSelect(selectedId === entry.id ? null : entry.id)}
+                                  rect={rect}
+                                  selected={selectedId === entry.id}
+                                  showCents={showCents}
+                              />
+                          );
+                      })
                     : null}
                 {width > 0 && restRect ? (
                     <Pressable

@@ -85,8 +85,12 @@ describe("settledAccountsCellQuery", () => {
 
         const rows = await settledAccountsCellQuery(db, JUNE_1);
         expect(rows).toHaveLength(1);
-        expect(rows[0].accountId).toBe("a1");
-        expect(toCurrencyCell(rows[0]).amount).toBe(4);
+        const [onlyRow] = rows;
+        if (onlyRow === undefined) {
+            throw new Error("expected a cell row");
+        }
+        expect(onlyRow.accountId).toBe("a1");
+        expect(toCurrencyCell(onlyRow).amount).toBe(4);
     });
 
     it("values an account to the cent its own read does when a UTC day spans two local days", async () => {

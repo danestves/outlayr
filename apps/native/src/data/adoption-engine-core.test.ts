@@ -246,6 +246,9 @@ describe("discardAccountLedger", () => {
             .select({ updatedAt: transactions.updatedAt })
             .from(transactions)
             .where(eq(transactions.id, "shared"));
+        if (row === undefined) {
+            throw new Error("expected a transaction");
+        }
         expect((await Effect.runPromise(candidateLogoIds(db))).get("shared")).toBe(row.updatedAt.getTime());
     });
 

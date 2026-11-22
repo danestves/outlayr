@@ -88,22 +88,25 @@ export function ReorderList<T>({ db, items, keyOf, labelOf, reorder, renderItem 
 
     return (
         <View style={{ height: rowHeight * items.length }}>
-            {items.map((item, index) => (
-                <ReorderRow
-                    commit={commit}
-                    count={items.length}
-                    drag={drag}
-                    id={keys[index]}
-                    index={index}
-                    key={keys[index]}
-                    keys={keys}
-                    label={labelOf(item)}
-                    onLayout={index === 0 ? measure : undefined}
-                    rowHeight={rowHeight}
-                >
-                    {renderItem(item)}
-                </ReorderRow>
-            ))}
+            {items.map((item, index) => {
+                const key = keys[index];
+                return key === undefined ? null : (
+                    <ReorderRow
+                        commit={commit}
+                        count={items.length}
+                        drag={drag}
+                        id={key}
+                        index={index}
+                        key={key}
+                        keys={keys}
+                        label={labelOf(item)}
+                        onLayout={index === 0 ? measure : undefined}
+                        rowHeight={rowHeight}
+                    >
+                        {renderItem(item)}
+                    </ReorderRow>
+                );
+            })}
         </View>
     );
 }

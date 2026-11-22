@@ -52,6 +52,9 @@ describe("budgetsRepo.createBudget", () => {
             })
         );
         const [row] = await db.select().from(budgets).where(eq(budgets.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row?.startDate?.getTime()).toBe(BACKDATE.getTime());
     });
 
@@ -65,6 +68,9 @@ describe("budgetsRepo.createBudget", () => {
             })
         );
         const [row] = await db.select().from(budgets).where(eq(budgets.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row?.startDate?.getTime()).toBe(
             startOfPeriod(new Date(), BUDGET_TYPE.week, {
                 firstDayOfMonth: 1,
@@ -83,6 +89,9 @@ describe("budgetsRepo.createBudget", () => {
             })
         );
         const [row] = await db.select().from(budgets).where(eq(budgets.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row?.startDate?.getTime()).toBe(
             startOfPeriod(new Date(), BUDGET_TYPE.month, {
                 firstDayOfMonth: 25,
@@ -129,6 +138,9 @@ describe("budgetsRepo.createMainBudget", () => {
             })
         );
         const [row] = await db.select().from(mainBudget).where(eq(mainBudget.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row?.startDate?.getTime()).toBe(BACKDATE.getTime());
     });
 
@@ -141,6 +153,9 @@ describe("budgetsRepo.createMainBudget", () => {
             })
         );
         const [row] = await db.select().from(mainBudget).where(eq(mainBudget.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row?.startDate?.getTime()).toBe(
             startOfPeriod(new Date(), BUDGET_TYPE.month, {
                 firstDayOfMonth: 1,
@@ -371,6 +386,9 @@ describe("budgetsRepo.patchMainBudget", () => {
         await Effect.runPromise(budgetsRepo.patchMainBudget(db, id, { amount: 2400 }));
 
         const [row] = await db.select().from(mainBudget).where(eq(mainBudget.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row?.amount).toBe(2400);
         expect(row?.name).toBe("Household");
         expect(row?.rollover).toBe(true);
@@ -385,6 +403,9 @@ describe("budgetsRepo.patchMainBudget", () => {
         await Effect.runPromise(budgetsRepo.patchMainBudget(db, id, { type: BUDGET_TYPE.week }));
 
         const [row] = await db.select().from(mainBudget).where(eq(mainBudget.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row?.amount).toBe(2000);
         expect(row?.rollover).toBe(true);
         expect(row?.name).toBeNull();
@@ -474,6 +495,9 @@ describe("budgetsRepo stamps the currency it was set in", () => {
         );
 
         const [row] = await db.select({ amountUsd: budgets.amountUsd }).from(budgets).where(eq(budgets.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         // 400 EUR / 0.9, February's rate, not 0.5, the rate on the day of the write.
         expect(Math.round((row.amountUsd ?? 0) * 100) / 100).toBe(444.44);
     });
@@ -490,6 +514,9 @@ describe("budgetsRepo stamps the currency it was set in", () => {
             })
         );
         const [row] = await db.select({ amount: budgets.amount }).from(budgets).where(eq(budgets.id, id));
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.amount).toBe(250);
     });
 });
@@ -551,6 +578,9 @@ describe("budgetsRepo.deleteBudget", () => {
         await Effect.runPromise(budgetsRepo.deleteBudget(db, id));
 
         const [row] = await db.select().from(budgets);
+        if (row === undefined) {
+            throw new Error("expected row");
+        }
         expect(row.name).toBeNull();
         expect(row.amount).toBe(0);
         expect(row.type).toBe(0);
@@ -578,11 +608,17 @@ describe("budgetsRepo.deleteBudget", () => {
         const id = await add("cat-1");
         await Effect.runPromise(budgetsRepo.deleteBudget(db, id));
         const [first] = await db.select().from(budgets);
+        if (first === undefined) {
+            throw new Error("expected first");
+        }
         await db.delete(outbox);
 
         await Effect.runPromise(budgetsRepo.deleteBudget(db, id));
 
         const [second] = await db.select().from(budgets);
+        if (second === undefined) {
+            throw new Error("expected second");
+        }
         expect(second.deletedAt?.getTime()).toBe(first.deletedAt?.getTime());
         expect(second.updatedAt.getTime()).toBe(first.updatedAt.getTime());
         await expect(queued(db)).resolves.toStrictEqual([]);

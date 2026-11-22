@@ -45,7 +45,7 @@ describe("categoryMovers", () => {
         const prior = [entry("rent", 4000), entry("gum", 10)];
         const movers = categoryMovers(current, prior, 4830);
 
-        expect(movers[0].id).toBe("rent");
+        expect(movers.at(0)?.id).toBe("rent");
         expect(movers).toHaveLength(1);
     });
 
@@ -79,8 +79,8 @@ describe("categoryMovers", () => {
         const current = [entry("up", 300), entry("down", 100)];
         const prior = [entry("up", 100), entry("down", 900)];
         const movers = categoryMovers(current, prior, 400);
-        expect(movers[0].id).toBe("down");
-        expect(movers[0].delta < 0).toBeTruthy();
+        expect(movers.at(0)?.id).toBe("down");
+        expect((movers.at(0)?.delta ?? 0) < 0).toBeTruthy();
     });
 
     it("stays quiet on an empty window rather than dividing by it", () => {
@@ -91,16 +91,25 @@ describe("categoryMovers", () => {
 describe("withCategoryDeltas", () => {
     it("expresses the change as a fraction of what came before", () => {
         const [only] = withCategoryDeltas([entry("a", 150)], [entry("a", 100)]);
+        if (only === undefined) {
+            throw new Error("expected a mover");
+        }
         expect(only.delta).toBe(0.5);
     });
 
     it("leaves a category with no prior spend null", () => {
         const [only] = withCategoryDeltas([entry("a", 50)], []);
+        if (only === undefined) {
+            throw new Error("expected a mover");
+        }
         expect(only.delta).toBeNull();
     });
 
     it("never divides by a zero prior amount", () => {
         const [only] = withCategoryDeltas([entry("a", 50)], [entry("a", 0)]);
+        if (only === undefined) {
+            throw new Error("expected a mover");
+        }
         expect(only.delta).toBeNull();
     });
 });
@@ -188,6 +197,6 @@ describe("categoryBreakdownWithin", () => {
         };
         const breakdown = categoryBreakdownWithin(mixed, meta, "income", bounds, now);
         expect(breakdown).toHaveLength(1);
-        expect(breakdown[0].amount).toBe(700);
+        expect(breakdown.at(0)?.amount).toBe(700);
     });
 });

@@ -19,7 +19,7 @@ describe("insights blocks", () => {
 
         expect(rects).toHaveLength(OCTOBER.length);
         for (const [index, rect] of rects.entries()) {
-            expect(rect.width * rect.height).toBeCloseTo((OCTOBER[index] / total) * width * height, 6);
+            expect(rect.width * rect.height).toBeCloseTo(((OCTOBER[index] ?? 0) / total) * width * height, 6);
             expect(rect.x).toBeGreaterThanOrEqual(-1e-9);
             expect(rect.y).toBeGreaterThanOrEqual(-1e-9);
             expect(rect.x + rect.width).toBeLessThanOrEqual(width + 1e-9);
@@ -38,7 +38,11 @@ describe("insights blocks", () => {
         const day = layoutBlocks([entry("rent", 1850), entry("netflix", 22.99)], 362, 188);
         expect(day.shown.map((e) => e.id)).toStrictEqual(["rent"]);
         expect(day.rest.map((e) => e.id)).toStrictEqual(["netflix"]);
-        expect(Math.min(day.rects[1].width, day.rects[1].height)).toBeGreaterThanOrEqual(12);
+        const [, restRect] = day.rects;
+        if (restRect === undefined) {
+            throw new Error("expected a rest rect");
+        }
+        expect(Math.min(restRect.width, restRect.height)).toBeGreaterThanOrEqual(12);
 
         const month = layoutBlocks(
             OCTOBER.map((amount, index) => entry(`c${index}`, amount)),

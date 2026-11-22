@@ -67,7 +67,9 @@ describe("useDiscardGuard", () => {
 
         expect(mockDisablePrevention).toHaveBeenCalledOnce();
         expect(mockBack).toHaveBeenCalledOnce();
-        expect(mockDisablePrevention.mock.invocationCallOrder[0]).toBeLessThan(mockBack.mock.invocationCallOrder[0]);
+        expect(mockDisablePrevention.mock.invocationCallOrder[0] ?? 0).toBeLessThan(
+            mockBack.mock.invocationCallOrder[0] ?? 0
+        );
         expect(alert).not.toHaveBeenCalled();
     });
 

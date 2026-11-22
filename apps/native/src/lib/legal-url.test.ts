@@ -9,11 +9,15 @@ const LEGAL_DIR = join(import.meta.dirname, "..", "..", "..", "site", "content",
 const HEADING = /^#{2,6}\s+(.+)$/gm;
 
 const headingIds = (markdown: string) =>
-    [...markdown.matchAll(HEADING)].map(([, title]) =>
-        title
-            .toLowerCase()
-            .replaceAll(/[^\p{L}\p{N}\s-]/gu, "")
-            .replaceAll(/\s/g, "-")
+    [...markdown.matchAll(HEADING)].flatMap(([, title]) =>
+        title === undefined
+            ? []
+            : [
+                  title
+                      .toLowerCase()
+                      .replaceAll(/[^\p{L}\p{N}\s-]/gu, "")
+                      .replaceAll(/\s/g, "-"),
+              ]
     );
 
 test.each(["en", "es", "fr", "pt"] as const)("links to privacy sections that exist on the %s page", (language) => {

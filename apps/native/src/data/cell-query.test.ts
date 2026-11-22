@@ -148,6 +148,9 @@ describe("logCellQuery", () => {
         const rows = await logCellQuery(db, null, NOW);
         expect(rows).toHaveLength(1);
         const [cell] = toCurrencyCells(rows);
+        if (cell === undefined) {
+            throw new Error("expected a cell");
+        }
         expect(cell.amount).toBe(140);
         expect(cell.amountUsd).toBe(100);
         expect(cell.unconvertedAmount).toBe(40);

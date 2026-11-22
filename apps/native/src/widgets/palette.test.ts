@@ -34,7 +34,7 @@ function variantBlock(variant: "light" | "dark"): string {
 
 function declaredValue(block: string, variable: string): string | null {
     const match = block.match(new RegExp(`${variable}\\s*:\\s*([^;]+);`));
-    return match ? match[1].trim() : null;
+    return match?.[1]?.trim() ?? null;
 }
 
 describe("widget palette", () => {

@@ -39,7 +39,10 @@ export function parseSentence(template: string): readonly SentenceCluster[] {
     let cursor = 0;
     for (const match of template.matchAll(PLACEHOLDER)) {
         pushText(template.slice(cursor, match.index));
-        current.push({ kind: "slot", value: match[1] });
+        const [, name] = match;
+        if (name !== undefined) {
+            current.push({ kind: "slot", value: name });
+        }
         cursor = match.index + match[0].length;
     }
     pushText(template.slice(cursor));
@@ -49,5 +52,8 @@ export function parseSentence(template: string): readonly SentenceCluster[] {
 }
 
 export function sentenceSlotNames(template: string): readonly string[] {
-    return [...template.matchAll(PLACEHOLDER)].map((match) => match[1]);
+    return [...template.matchAll(PLACEHOLDER)].flatMap((match) => {
+        const [, name] = match;
+        return name === undefined ? [] : [name];
+    });
 }

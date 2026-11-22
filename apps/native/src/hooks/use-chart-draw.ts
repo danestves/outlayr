@@ -43,9 +43,10 @@ function morphBetween(from: string, to: string): Morph | null {
 
 function tween({ from, gaps, to }: Morph, progress: number): string {
     "worklet";
-    let [path] = gaps;
+    let path = gaps[0] ?? "";
     for (const [index, end] of to.entries()) {
-        path += `${from[index] + (end - from[index]) * progress}${gaps[index + 1]}`;
+        const start = from[index] ?? end;
+        path += `${start + (end - start) * progress}${gaps[index + 1] ?? ""}`;
     }
     return path;
 }

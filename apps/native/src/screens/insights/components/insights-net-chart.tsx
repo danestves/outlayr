@@ -30,10 +30,13 @@ const HEADROOM = 0.1;
 
 function liveBucketCount(buckets: readonly InsightsBucket[], nowMs: number): number {
     let count = buckets.length;
-    while (count > 1 && buckets[count - 1].start.getTime() > nowMs) {
+    for (;;) {
+        const last = buckets[count - 1];
+        if (count <= 1 || last === undefined || last.start.getTime() <= nowMs) {
+            return count;
+        }
         count -= 1;
     }
-    return count;
 }
 
 function netPlot(live: readonly number[], bucketCount: number, width: number) {
@@ -233,23 +236,29 @@ export function InsightsNetChart({
 
                     {/* Invisible siblings give VoiceOver the per-slot readout the Skia path cannot. */}
                     <View pointerEvents="none" style={{ ...StyleSheetAbsoluteFill, flexDirection: "row" }}>
-                        {live.map((value, index) => (
-                            <View
-                                accessibilityLabel={t(
-                                    value < 0 ? "insights.net.slotBehind" : "insights.net.slotAhead",
-                                    {
-                                        amount: formatAmount(Math.abs(value), code, false, language),
-                                        date: bucketDateLabel(period, buckets[index].start),
-                                    }
-                                )}
-                                accessibilityRole="button"
-                                accessibilityState={{ selected: selectedIndex === index }}
-                                accessible
-                                key={buckets[index].start.getTime()}
-                                onAccessibilityTap={() => onCommit(selectedIndex === index ? null : index)}
-                                style={{ width: plot.step }}
-                            />
-                        ))}
+                        {live.map((value, index) => {
+                            const bucket = buckets[index];
+                            if (bucket === undefined) {
+                                return null;
+                            }
+                            return (
+                                <View
+                                    accessibilityLabel={t(
+                                        value < 0 ? "insights.net.slotBehind" : "insights.net.slotAhead",
+                                        {
+                                            amount: formatAmount(Math.abs(value), code, false, language),
+                                            date: bucketDateLabel(period, bucket.start),
+                                        }
+                                    )}
+                                    accessibilityRole="button"
+                                    accessibilityState={{ selected: selectedIndex === index }}
+                                    accessible
+                                    key={bucket.start.getTime()}
+                                    onAccessibilityTap={() => onCommit(selectedIndex === index ? null : index)}
+                                    style={{ width: plot.step }}
+                                />
+                            );
+                        })}
                     </View>
                 </View>
             </GestureDetector>

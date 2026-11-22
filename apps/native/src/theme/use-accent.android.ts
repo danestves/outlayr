@@ -29,10 +29,10 @@ export function useAccent(): Accent {
 
     useLayoutMirror([seedColor], () => {
         const apply = () => {
-            const schemes = THEMES.map((theme) => composeScheme(theme, seedColor));
-            applyMaterialScheme(JSON.stringify(schemes), () => {
-                for (const [index, theme] of THEMES.entries()) {
-                    Uniwind.updateCSSVariables(theme, materialVariables(schemes[index], theme));
+            const schemes = THEMES.map((theme) => ({ colors: composeScheme(theme, seedColor), theme }));
+            applyMaterialScheme(JSON.stringify(schemes.map((scheme) => scheme.colors)), () => {
+                for (const scheme of schemes) {
+                    Uniwind.updateCSSVariables(scheme.theme, materialVariables(scheme.colors, scheme.theme));
                 }
             });
         };

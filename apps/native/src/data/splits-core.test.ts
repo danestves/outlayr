@@ -12,7 +12,7 @@ async function seed(db: Database) {
     for (const [id, name] of [
         ["food", "Food"],
         ["travel", "Travel"],
-    ]) {
+    ] as const) {
         await db.insert(categories).values({
             id,
             income: false,
@@ -96,7 +96,7 @@ describe("splitsRepo", () => {
 
         const all = await db.select().from(transactionSplits);
         expect(all).toHaveLength(1);
-        expect(all[0].deletedAt).toBeTruthy();
+        expect(all.at(0)?.deletedAt).toBeTruthy();
     });
 
     it("retires the parts of an entry that is going", async () => {

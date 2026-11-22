@@ -76,7 +76,11 @@ function contrast(a: number, b: number): number {
 }
 
 function distance(data: Uint8Array, index: number, color: readonly [number, number, number]): number {
-    return Math.hypot(data[index] - color[0], data[index + 1] - color[1], data[index + 2] - color[2]);
+    return Math.hypot(
+        (data[index] ?? 0) - color[0],
+        (data[index + 1] ?? 0) - color[1],
+        (data[index + 2] ?? 0) - color[2]
+    );
 }
 
 function borderColor({ data, width, height }: LogoPixels): [number, number, number] | null {
@@ -88,7 +92,10 @@ function borderColor({ data, width, height }: LogoPixels): [number, number, numb
         border.push(y * width * 4, (y * width + width - 1) * 4);
     }
     const median = (offset: number) =>
-        border.map((index) => data[index + offset]).sort((a, b) => a - b)[Math.floor(border.length / 2)];
+        border
+            .map((index) => data[index + offset] ?? 0)
+            .sort((a, b) => a - b)
+            .at(Math.floor(border.length / 2)) ?? 0;
     const color: [number, number, number] = [median(0), median(1), median(2)];
     const matching = border.filter((index) => distance(data, index, color) < BORDER_TOLERANCE).length;
     return matching / border.length > BORDER_UNIFORM_SHARE ? color : null;
@@ -104,7 +111,8 @@ function plateFor({ data }: LogoPixels, marks: readonly number[]): Rgb {
     const ink = relativeLuminance(INK);
 
     for (const index of marks) {
-        const [r, g, b, a] = [data[index], data[index + 1], data[index + 2], data[index + 3] / 255];
+        const [r = 0, g = 0, b = 0, alpha = 0] = [data[index], data[index + 1], data[index + 2], data[index + 3]];
+        const a = alpha / 255;
         const luminance = relativeLuminance([r / 255, g / 255, b / 255]);
         weight += a;
         onWhite += contrast(luminance, white) >= VISIBLE_CONTRAST ? a : 0;
@@ -112,6 +120,9 @@ function plateFor({ data }: LogoPixels, marks: readonly number[]): Rgb {
         const [hue, saturation, lightness] = hsl(r, g, b);
         if (saturation > 0.3 && lightness > 0.15 && lightness < 0.85) {
             const bin = bins[Math.floor(hue / HUE_BIN_DEGREES) % HUE_BINS];
+            if (bin === undefined) {
+                continue;
+            }
             const radians = (hue * Math.PI) / 180;
             bin.cos += Math.cos(radians) * a;
             bin.sin += Math.sin(radians) * a;
@@ -120,8 +131,17 @@ function plateFor({ data }: LogoPixels, marks: readonly number[]): Rgb {
         }
     }
 
-    const top = bins.reduce((best, bin, index) => (bin.weight > bins[best].weight ? index : best), 0);
-    const near = [bins[(top + HUE_BINS - 1) % HUE_BINS], bins[top], bins[(top + 1) % HUE_BINS]];
+    let top = 0;
+    for (let index = 1; index < bins.length; index += 1) {
+        const bin = bins[index];
+        const best = bins[top];
+        if (bin !== undefined && best !== undefined && bin.weight > best.weight) {
+            top = index;
+        }
+    }
+    const near = [bins[(top + HUE_BINS - 1) % HUE_BINS], bins[top], bins[(top + 1) % HUE_BINS]].filter(
+        (bin) => bin !== undefined
+    );
     const hueShare = chroma > 0 ? near.reduce((sum, bin) => sum + bin.weight, 0) / chroma : 0;
     // The mean angle, not the mean number: reds straddle 0°, and 350° and 10° average to 0°, not 180°.
     const sin = near.reduce((sum, bin) => sum + bin.sin, 0);
@@ -145,7 +165,7 @@ export function logoPlate(pixels: LogoPixels): LogoPlate {
     const count = width * height;
     let clear = 0;
     for (let index = 3; index < count * 4; index += 4) {
-        clear += data[index] < CLEAR_ALPHA ? 1 : 0;
+        clear += (data[index] ?? 0) < CLEAR_ALPHA ? 1 : 0;
     }
     const transparent = clear > count * TRANSPARENT_SHARE;
     const ground = transparent ? null : borderColor(pixels);
@@ -154,20 +174,21 @@ export function logoPlate(pixels: LogoPixels): LogoPlate {
     }
 
     const marks: number[] = [];
-    let [left, top, right, bottom] = [width, height, -1, -1];
+    let left = width;
+    let top = height;
+    let right = -1;
+    let bottom = -1;
     for (let y = 0; y < height; y += 1) {
         for (let x = 0; x < width; x += 1) {
             const index = (y * width + x) * 4;
             const isMark =
-                ground == null ? data[index + 3] >= MARK_ALPHA : distance(data, index, ground) > MARK_DISTANCE;
+                ground == null ? (data[index + 3] ?? 0) >= MARK_ALPHA : distance(data, index, ground) > MARK_DISTANCE;
             if (isMark) {
                 marks.push(index);
-                [left, top, right, bottom] = [
-                    Math.min(left, x),
-                    Math.min(top, y),
-                    Math.max(right, x),
-                    Math.max(bottom, y),
-                ];
+                left = Math.min(left, x);
+                top = Math.min(top, y);
+                right = Math.max(right, x);
+                bottom = Math.max(bottom, y);
             }
         }
     }
