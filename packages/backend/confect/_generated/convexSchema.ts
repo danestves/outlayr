@@ -43,6 +43,7 @@ import voiceTurns from "./tables/voiceTurns";
 import webPushSubscriptions from "./tables/webPushSubscriptions";
 import webhookDeliveries from "./tables/webhookDeliveries";
 import webhookEndpoints from "./tables/webhookEndpoints";
+import webhookEvents from "./tables/webhookEvents";
 import webhookTokens from "./tables/webhookTokens";
 
 export default $defineSchema({
@@ -88,5 +89,6 @@ export default $defineSchema({
   webPushSubscriptions: $Table.tableDefinition(webPushSubscriptions),
   webhookDeliveries: $Table.tableDefinition(webhookDeliveries),
   webhookEndpoints: $Table.tableDefinition(webhookEndpoints),
+  webhookEvents: $Table.tableDefinition(webhookEvents),
   webhookTokens: $Table.tableDefinition(webhookTokens),
 });

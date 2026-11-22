@@ -5,6 +5,7 @@ export const addEndpoint = registeredFunctions.addEndpoint;
 export const deliver = registeredFunctions.deliver;
 export const delivery = registeredFunctions.delivery;
 export const inbox = registeredFunctions.inbox;
+export const pump = registeredFunctions.pump;
 export const receive = registeredFunctions.receive;
 export const removeEndpoint = registeredFunctions.removeEndpoint;
 export const revokeInboundToken = registeredFunctions.revokeInboundToken;

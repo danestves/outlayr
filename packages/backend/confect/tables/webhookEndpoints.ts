@@ -10,6 +10,7 @@ export default Table.make(() =>
         failures: Schema.Number,
         lastDelivery: Schema.optional(LastDelivery),
         secret: Schema.String,
+        testedAt: Schema.optional(Schema.Number),
         url: Schema.String,
         userId: Schema.String,
     })

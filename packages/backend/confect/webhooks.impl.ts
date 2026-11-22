@@ -23,7 +23,7 @@ import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
 import { sha256Hex } from "./lib/sha256Hex";
 import { refuseWhileDeleting } from "./lib/syncGuards";
-import { isoAt, queueEvent } from "./lib/webhookEvents";
+import { isoAt, queueEvent, wakePump } from "./lib/webhookEvents";
 import { endpointUrl, signatureHeader } from "./lib/webhooks";
 import { isPro, requirePro } from "./revenuecat";
 import spec, { MAX_ENDPOINTS, MAX_FAILURES, MAX_INBOX, MAX_SECRET_LENGTH, MIN_SECRET_LENGTH } from "./webhooks.spec";
@@ -31,6 +31,11 @@ import spec, { MAX_ENDPOINTS, MAX_FAILURES, MAX_INBOX, MAX_SECRET_LENGTH, MIN_SE
 const HINT_LENGTH = 4;
 const DELIVERY_TIMEOUT_MS = 10_000;
 const RETRY_DELAYS_MS = [60_000, 300_000, 1_800_000, 7_200_000, 21_600_000];
+const PUMP_BATCH = 50;
+// Longer than any delivery can run, so a claim only lapses when its action died without settling.
+const CLAIM_MS = 300_000;
+const TEST_COOLDOWN_MS = 60_000;
+const TOKEN_FORMAT = /^[A-Za-z0-9_-]{32,128}$/;
 
 const refusals = {
     AccountDeleting: dieAsConvexError,
@@ -54,6 +59,41 @@ const proUser = Effect.fn("Webhooks.proUser")(function* proUser() {
     return userId;
 });
 
+const accountDeleting = (userId: string) =>
+    refuseWhileDeleting(userId).pipe(
+        Effect.as(false),
+        Effect.catchTags({ AccountDeleting: () => Effect.succeed(true) })
+    );
+
+const endpointById = Effect.fn("Webhooks.endpointById")(function* endpointById(endpointId: Id<"webhookEndpoints">) {
+    return yield* (yield* DatabaseReader)
+        .table("webhookEndpoints")
+        .get(endpointId)
+        .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
+});
+
+const deliveryById = Effect.fn("Webhooks.deliveryById")(function* deliveryById(deliveryId: Id<"webhookDeliveries">) {
+    return yield* (yield* DatabaseReader)
+        .table("webhookDeliveries")
+        .get(deliveryId)
+        .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
+});
+
+const dropDelivery = Effect.fn("Webhooks.dropDelivery")(function* dropDelivery(delivery: {
+    readonly _id: Id<"webhookDeliveries">;
+    readonly eventRef: Id<"webhookEvents">;
+}) {
+    const writer = yield* DatabaseWriter;
+    yield* writer.table("webhookDeliveries").delete(delivery._id);
+    const sibling = yield* (yield* DatabaseReader)
+        .table("webhookDeliveries")
+        .index("by_eventRef", (q) => q.eq("eventRef", delivery.eventRef))
+        .first();
+    if (Option.isNone(sibling)) {
+        yield* writer.table("webhookEvents").delete(delivery.eventRef);
+    }
+});
+
 const userTokens = Effect.fn("Webhooks.userTokens")(function* userTokens(userId: string) {
     return yield* (yield* DatabaseReader)
         .table("webhookTokens")
@@ -72,10 +112,7 @@ const ownEndpoint = Effect.fn("Webhooks.ownEndpoint")(function* ownEndpoint(
     userId: string,
     endpointId: Id<"webhookEndpoints">
 ) {
-    const endpoint = yield* (yield* DatabaseReader)
-        .table("webhookEndpoints")
-        .get(endpointId)
-        .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
+    const endpoint = yield* endpointById(endpointId);
     return endpoint?.userId === userId ? endpoint : null;
 });
 
@@ -115,7 +152,15 @@ const setInboundToken = FunctionImpl.make(
     Effect.fn("Webhooks.setInboundToken")(
         function* setInboundToken({ token }) {
             const userId = yield* proUser();
-            if (!validSecret(token) || !(yield* opened())) {
+            if (!TOKEN_FORMAT.test(token) || !(yield* opened())) {
+                return false;
+            }
+            const tokenHash = yield* sha256Hex(token);
+            const taken = yield* (yield* DatabaseReader)
+                .table("webhookTokens")
+                .index("by_tokenHash", (q) => q.eq("tokenHash", tokenHash))
+                .first();
+            if (Option.isSome(taken) && taken.value.userId !== userId) {
                 return false;
             }
             const writer = yield* DatabaseWriter;
@@ -125,7 +170,7 @@ const setInboundToken = FunctionImpl.make(
             yield* writer.table("webhookTokens").insert({
                 createdAt: yield* Clock.currentTimeMillis,
                 hint: token.slice(-HINT_LENGTH),
-                tokenHash: yield* sha256Hex(token),
+                tokenHash,
                 userId,
             });
             return true;
@@ -196,15 +241,7 @@ const removeEndpoint = FunctionImpl.make(
             const userId = yield* requireUserId(yield* MutationCtx);
             const endpoint = yield* ownEndpoint(userId, endpointId);
             if (endpoint !== null) {
-                const writer = yield* DatabaseWriter;
-                const pending = yield* (yield* DatabaseReader)
-                    .table("webhookDeliveries")
-                    .index("by_endpointId", (q) => q.eq("endpointId", endpointId))
-                    .collect();
-                for (const delivery of pending) {
-                    yield* writer.table("webhookDeliveries").delete(delivery._id);
-                }
-                yield* writer.table("webhookEndpoints").delete(endpointId);
+                yield* (yield* DatabaseWriter).table("webhookEndpoints").delete(endpointId);
             }
             return null;
         },
@@ -244,11 +281,15 @@ const testEndpoint = FunctionImpl.make(
                 return false;
             }
             const now = yield* Clock.currentTimeMillis;
-            const live = { ...endpoint, disabledAt: undefined, failures: 0 };
+            if (endpoint.testedAt !== undefined && now - endpoint.testedAt < TEST_COOLDOWN_MS) {
+                return false;
+            }
+            const live = { ...endpoint, disabledAt: undefined, failures: 0, testedAt: now };
             yield* (yield* DatabaseWriter)
                 .table("webhookEndpoints")
-                .patch(endpointId, { disabledAt: undefined, failures: 0 });
-            yield* queueEvent([live], { createdAt: isoAt(now), data: {}, id: `evt_ping_${now}`, type: "ping" });
+                .patch(endpointId, { disabledAt: undefined, failures: 0, testedAt: now });
+            yield* queueEvent([live], { createdAt: isoAt(now), data: {}, id: `evt_ping_${now}`, type: "ping" }, now);
+            yield* wakePump(Duration.zero);
             return true;
         },
         Effect.catchTags(refusals),
@@ -306,19 +347,16 @@ const receive = FunctionImpl.make(
     "receive",
     Effect.fn("Webhooks.receive")(function* receive({ tokenHash, write }) {
         const reader = yield* DatabaseReader;
-        const token = yield* reader
+        const found = yield* reader
             .table("webhookTokens")
-            .get("by_tokenHash", tokenHash)
-            .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
-        if (token === null) {
+            .index("by_tokenHash", (q) => q.eq("tokenHash", tokenHash))
+            .first();
+        if (Option.isNone(found)) {
             return { kind: "unknownToken" as const };
         }
+        const token = found.value;
         const ctx = yield* MutationCtx;
-        const deleting = yield* refuseWhileDeleting(token.userId).pipe(
-            Effect.as(false),
-            Effect.catchTags({ AccountDeleting: () => Effect.succeed(true) })
-        );
-        if (deleting || !(yield* opened()) || !(yield* isPro(ctx, token.userId))) {
+        if ((yield* accountDeleting(token.userId)) || !(yield* opened()) || !(yield* isPro(ctx, token.userId))) {
             return { kind: "refused" as const };
         }
         const queued = yield* reader
@@ -336,32 +374,66 @@ const receive = FunctionImpl.make(
     }, Effect.orDie)
 );
 
+const pump = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "pump",
+    Effect.fn("Webhooks.pump")(function* pump() {
+        if (!(yield* opened())) {
+            return null;
+        }
+        const now = yield* Clock.currentTimeMillis;
+        const due = yield* (yield* DatabaseReader)
+            .table("webhookDeliveries")
+            .index("by_dueAt", (q) => q.lte("dueAt", now))
+            .take(PUMP_BATCH);
+        const writer = yield* DatabaseWriter;
+        const scheduler = yield* Scheduler;
+        for (const row of due) {
+            const endpoint = yield* endpointById(row.endpointId);
+            const spent = row.attempt > RETRY_DELAYS_MS.length;
+            if (
+                endpoint === null ||
+                endpoint.disabledAt !== undefined ||
+                spent ||
+                (yield* accountDeleting(row.userId))
+            ) {
+                yield* dropDelivery(row);
+                continue;
+            }
+            const attempt = row.attempt + 1;
+            yield* writer.table("webhookDeliveries").patch(row._id, { attempt, dueAt: now + CLAIM_MS });
+            yield* scheduler.runAfter(Duration.zero, refs.internal.webhooks.deliver, { attempt, deliveryId: row._id });
+        }
+        if (due.length === PUMP_BATCH) {
+            yield* wakePump(Duration.zero);
+        }
+        return null;
+    }, Effect.orDie)
+);
+
 const delivery = FunctionImpl.make(
     databaseSchema,
     spec,
     "delivery",
-    Effect.fn("Webhooks.delivery")(function* delivery({ deliveryId }) {
-        const reader = yield* DatabaseReader;
-        const row = yield* reader
-            .table("webhookDeliveries")
-            .get(deliveryId)
+    Effect.fn("Webhooks.delivery")(function* delivery({ attempt, deliveryId }) {
+        const row = yield* deliveryById(deliveryId);
+        if (row === null || row.attempt !== attempt) {
+            return null;
+        }
+        const endpoint = yield* endpointById(row.endpointId);
+        const event = yield* (yield* DatabaseReader)
+            .table("webhookEvents")
+            .get(row.eventRef)
             .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
-        const endpoint =
-            row === null
-                ? null
-                : yield* reader
-                      .table("webhookEndpoints")
-                      .get(row.endpointId)
-                      .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
-        if (row === null || endpoint === null || endpoint.disabledAt !== undefined) {
+        if (endpoint === null || endpoint.disabledAt !== undefined || event === null) {
             return null;
         }
         return {
-            attempt: row.attempt,
-            body: row.body,
-            eventId: row.eventId,
+            body: event.body,
+            eventId: event.eventId,
             secret: endpoint.secret,
-            type: row.type,
+            type: event.type,
             url: endpoint.url,
         };
     }, Effect.orDie)
@@ -371,29 +443,22 @@ const settleDelivery = FunctionImpl.make(
     databaseSchema,
     spec,
     "settleDelivery",
-    Effect.fn("Webhooks.settleDelivery")(function* settleDelivery({ deliveryId, status }) {
-        const reader = yield* DatabaseReader;
-        const writer = yield* DatabaseWriter;
-        const row = yield* reader
-            .table("webhookDeliveries")
-            .get(deliveryId)
-            .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
-        if (row === null) {
+    Effect.fn("Webhooks.settleDelivery")(function* settleDelivery({ attempt, deliveryId, status }) {
+        const row = yield* deliveryById(deliveryId);
+        if (row === null || row.attempt !== attempt) {
             return null;
         }
-        const endpoint = yield* reader
-            .table("webhookEndpoints")
-            .get(row.endpointId)
-            .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
+        const endpoint = yield* endpointById(row.endpointId);
         if (endpoint === null || endpoint.disabledAt !== undefined) {
-            yield* writer.table("webhookDeliveries").delete(deliveryId);
+            yield* dropDelivery(row);
             return null;
         }
+        const writer = yield* DatabaseWriter;
         const now = yield* Clock.currentTimeMillis;
         const lastDelivery = { at: now, status };
         if (isOk(status)) {
             yield* writer.table("webhookEndpoints").patch(endpoint._id, { failures: 0, lastDelivery });
-            yield* writer.table("webhookDeliveries").delete(deliveryId);
+            yield* dropDelivery(row);
             return null;
         }
         const failures = endpoint.failures + 1;
@@ -403,13 +468,13 @@ const settleDelivery = FunctionImpl.make(
             failures,
             lastDelivery,
         });
-        const wait = RETRY_DELAYS_MS[row.attempt];
+        const wait = RETRY_DELAYS_MS[attempt - 1];
         if (disabled || wait === undefined) {
-            yield* writer.table("webhookDeliveries").delete(deliveryId);
+            yield* dropDelivery(row);
             return null;
         }
-        yield* writer.table("webhookDeliveries").patch(deliveryId, { attempt: row.attempt + 1 });
-        yield* (yield* Scheduler).runAfter(Duration.millis(wait), refs.internal.webhooks.deliver, { deliveryId });
+        yield* writer.table("webhookDeliveries").patch(deliveryId, { dueAt: now + wait });
+        yield* wakePump(Duration.millis(wait));
         return null;
     }, Effect.orDie)
 );
@@ -421,12 +486,11 @@ const deliver = FunctionImpl.make(
     spec,
     "deliver",
     Effect.fn("Webhooks.deliver")(
-        function* deliver({ deliveryId }) {
+        function* deliver({ attempt, deliveryId }) {
             const { runQuery } = yield* QueryRunner;
             const { runMutation } = yield* MutationRunner;
-            const pending = yield* runQuery(refs.internal.webhooks.delivery, { deliveryId });
+            const pending = yield* runQuery(refs.internal.webhooks.delivery, { attempt, deliveryId });
             if (pending === null) {
-                yield* runMutation(refs.internal.webhooks.settleDelivery, { deliveryId, status: 0 });
                 return null;
             }
             const nowSeconds = Math.floor((yield* Clock.currentTimeMillis) / 1000);
@@ -448,7 +512,7 @@ const deliver = FunctionImpl.make(
                 });
                 return response.status;
             }).pipe(Effect.catchCause(() => Effect.succeed(0)));
-            yield* runMutation(refs.internal.webhooks.settleDelivery, { deliveryId, status });
+            yield* runMutation(refs.internal.webhooks.settleDelivery, { attempt, deliveryId, status });
             return null;
         },
         Effect.catchCause((cause) => Console.warn("[webhooks] delivery not settled", cause).pipe(Effect.as(null)))
@@ -466,6 +530,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(inbox),
     Layer.provide(ackInbox),
     Layer.provide(receive),
+    Layer.provide(pump),
     Layer.provide(delivery),
     Layer.provide(settleDelivery),
     Layer.provide(deliver),

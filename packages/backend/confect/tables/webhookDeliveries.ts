@@ -6,12 +6,12 @@ import { Id } from "../_generated/id";
 export default Table.make(() =>
     Schema.Struct({
         attempt: Schema.Number,
-        body: Schema.String,
+        dueAt: Schema.Number,
         endpointId: Id("webhookEndpoints"),
-        eventId: Schema.String,
-        type: Schema.String,
+        eventRef: Id("webhookEvents"),
         userId: Schema.String,
     })
 )
-    .index("by_endpointId", ["endpointId"])
+    .index("by_dueAt", ["dueAt"])
+    .index("by_eventRef", ["eventRef"])
     .index("by_userId", ["userId"]);

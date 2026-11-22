@@ -43,6 +43,7 @@ export type VoiceTurnsDoc = Document.Document<typeof schemaDefinition, "voiceTur
 export type WebPushSubscriptionsDoc = Document.Document<typeof schemaDefinition, "webPushSubscriptions">;
 export type WebhookDeliveriesDoc = Document.Document<typeof schemaDefinition, "webhookDeliveries">;
 export type WebhookEndpointsDoc = Document.Document<typeof schemaDefinition, "webhookEndpoints">;
+export type WebhookEventsDoc = Document.Document<typeof schemaDefinition, "webhookEvents">;
 export type WebhookTokensDoc = Document.Document<typeof schemaDefinition, "webhookTokens">;
 
 export interface Docs {
@@ -88,5 +89,6 @@ export interface Docs {
   webPushSubscriptions: WebPushSubscriptionsDoc;
   webhookDeliveries: WebhookDeliveriesDoc;
   webhookEndpoints: WebhookEndpointsDoc;
+  webhookEvents: WebhookEventsDoc;
   webhookTokens: WebhookTokensDoc;
 }

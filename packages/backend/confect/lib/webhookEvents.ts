@@ -52,24 +52,38 @@ export const liveEndpoints = Effect.fn("WebhookEvents.liveEndpoints")(function* 
     return endpoints.filter((endpoint) => endpoint.disabledAt === undefined);
 });
 
+export const wakePump = Effect.fn("WebhookEvents.wakePump")(function* wakePump(delay: Duration.Duration) {
+    yield* (yield* Scheduler).runAfter(delay, refs.internal.webhooks.pump, {});
+});
+
+// Schedules nothing per delivery: a sync push can file 500 entries for 5 endpoints, past Convex's per-mutation
+// cap on scheduled functions. The pump claims due rows in pages instead.
 export const queueEvent = Effect.fn("WebhookEvents.queueEvent")(function* queueEvent(
     endpoints: readonly Endpoint[],
-    event: typeof WebhookEvent.Type
+    event: typeof WebhookEvent.Type,
+    now: number
 ) {
+    const [first] = endpoints;
+    if (first === undefined) {
+        return 0;
+    }
     const writer = yield* DatabaseWriter;
-    const scheduler = yield* Scheduler;
-    const body = encodeEvent(event);
+    const eventRef = yield* writer.table("webhookEvents").insert({
+        body: encodeEvent(event),
+        eventId: event.id,
+        type: event.type,
+        userId: first.userId,
+    });
     for (const endpoint of endpoints) {
-        const deliveryId = yield* writer.table("webhookDeliveries").insert({
+        yield* writer.table("webhookDeliveries").insert({
             attempt: 0,
-            body,
+            dueAt: now,
             endpointId: endpoint._id,
-            eventId: event.id,
-            type: event.type,
+            eventRef,
             userId: endpoint.userId,
         });
-        yield* scheduler.runAfter(Duration.zero, refs.internal.webhooks.deliver, { deliveryId });
     }
+    return endpoints.length;
 });
 
 const nameOf = Effect.fn("WebhookEvents.nameOf")(function* nameOf(
@@ -87,17 +101,22 @@ const nameOf = Effect.fn("WebhookEvents.nameOf")(function* nameOf(
     return row?.name ?? null;
 });
 
-// Turning sync on uploads the whole history as new rows; only entries written after the endpoint was added count.
+const RECENT_PURCHASE_MS = 7 * 86_400_000;
+const FUTURE_PURCHASE_MS = 86_400_000;
+
+// Turning sync on uploads the whole history as new rows, and an import files old purchases: only entries written
+// after the endpoint was added, for a purchase in the last week, count as filed.
 export const emitEntriesFiled = Effect.fn("WebhookEvents.emitEntriesFiled")(function* emitEntriesFiled(
     userId: string,
     entries: readonly FiledEntry[],
     now: number
 ) {
-    if (entries.length === 0) {
-        return;
-    }
-    const endpoints = yield* liveEndpoints(userId);
-    for (const entry of endpoints.length === 0 ? [] : entries) {
+    const recent = entries.filter(
+        (entry) => entry.date >= now - RECENT_PURCHASE_MS && entry.date <= now + FUTURE_PURCHASE_MS
+    );
+    const endpoints = recent.length === 0 ? [] : yield* liveEndpoints(userId);
+    let queued = 0;
+    for (const entry of endpoints.length === 0 ? [] : recent) {
         const listening = endpoints.filter((endpoint) => endpoint.createdAt <= entry.updatedAt);
         if (listening.length > 0) {
             const data = {
@@ -112,12 +131,14 @@ export const emitEntriesFiled = Effect.fn("WebhookEvents.emitEntriesFiled")(func
                     note: entry.note,
                 },
             };
-            yield* queueEvent(listening, {
-                createdAt: isoAt(now),
-                data,
-                id: `evt_${entry.localId}`,
-                type: "entry.filed",
-            });
+            queued += yield* queueEvent(
+                listening,
+                { createdAt: isoAt(now), data, id: `evt_${entry.localId}`, type: "entry.filed" },
+                now
+            );
         }
+    }
+    if (queued > 0) {
+        yield* wakePump(Duration.zero);
     }
 });

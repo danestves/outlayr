@@ -9,6 +9,7 @@ import * as Option from "effect/Option";
 import { afterEach, beforeEach, describe, expect, it, vi, test } from "vite-plus/test";
 
 import { api, internal } from "../convex/_generated/api";
+import type { Id } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
 import { WEBHOOKS_EFFECTIVE_AT_MS } from "./legal";
 import { purgeUserBatch } from "./lib/account";
@@ -103,6 +104,7 @@ async function plantToken(t: TestClient, user: SeededIdentity, token: string) {
 }
 
 const deliveries = (t: TestClient) => t.run((ctx) => ctx.db.query("webhookDeliveries").collect());
+const events = (t: TestClient) => t.run((ctx) => ctx.db.query("webhookEvents").collect());
 
 function only<T>(rows: readonly T[]): T {
     const [row] = rows;
@@ -151,6 +153,19 @@ describe("inbound webhooks", () => {
         await expect(post(t, { amount: 1 }, "l".repeat(40))).resolves.toBe(403);
     });
 
+    it("will not hand one account's token to another", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        const copycat = await seedProUser(t);
+        await authenticatedAs(t, owner).mutation(api.webhooks.setInboundToken, { token: TOKEN });
+
+        await expect(
+            authenticatedAs(t, copycat).mutation(api.webhooks.setInboundToken, { token: TOKEN })
+        ).resolves.toBeFalsy();
+        await expect(post(t, { amount: 1 })).resolves.toBe(202);
+        await expect(authenticatedAs(t, owner).query(api.webhooks.inbox, {})).resolves.toHaveLength(1);
+    });
+
     it("takes no token and no POST before the privacy notice takes effect", async () => {
         vi.useRealTimers();
         vi.useFakeTimers({ now: WEBHOOKS_EFFECTIVE_AT_MS - 86_400_000 });
@@ -178,47 +193,83 @@ describe("inbound webhooks", () => {
 });
 
 describe("outbound webhooks", () => {
-    it("sends entry.filed once per new entry, never for history uploaded after the endpoint was added", async () => {
+    it("sends entry.filed once per new entry, never for history uploaded or imported", async () => {
         const t = setup();
         const user = await seedProUser(t);
         await endpointFor(t, user);
         const push = (rows: TransactionRow[]) =>
             authenticatedAs(t, user).mutation(api.sync.push, { deviceId: "phone", rows });
+        const fresh = entry("imported", OPEN_AT + 1);
+        const imported = { ...fresh, fields: { ...fresh.fields, date: OPEN_AT - 30 * 86_400_000 } };
 
-        await push([entry("old", OPEN_AT - 86_400_000), entry("new", OPEN_AT + 1)]);
+        await push([entry("old", OPEN_AT - 86_400_000), entry("new", OPEN_AT + 1), imported]);
         await push([entry("new", OPEN_AT + 2)]);
 
-        const sent = await deliveries(t);
-        expect(sent.map((row) => row.eventId)).toStrictEqual(["evt_new"]);
-        expect(JSON.parse(only(sent).body)).toMatchObject({
+        const sent = only(await events(t));
+        expect(sent.eventId).toBe("evt_new");
+        expect(JSON.parse(sent.body)).toMatchObject({
             data: { entry: { amount: 12.5, currency: "USD", id: "new", note: "coffee" } },
             type: "entry.filed",
         });
+        expect(only(await deliveries(t)).eventRef).toBe(sent._id);
     });
 
-    it("retries a failing endpoint, disables it at the limit, and a test brings it back", async () => {
+    it("retries a failing endpoint, ignores a stale claim, disables at the limit, and a test brings it back", async () => {
         const t = setup();
         const user = await seedProUser(t);
         const endpointId = await endpointFor(t, user);
-        await authenticatedAs(t, user).mutation(api.webhooks.testEndpoint, { endpointId });
-        const first = only(await deliveries(t));
+        const settle = (deliveryId: Id<"webhookDeliveries">, attempt: number, status: number) =>
+            t.mutation(internal.webhooks.settleDelivery, { attempt, deliveryId, status });
+        const pump = () => t.mutation(internal.webhooks.pump, {});
 
-        await t.mutation(internal.webhooks.settleDelivery, { deliveryId: first._id, status: 500 });
-        expect((await deliveries(t))[0]?.attempt).toBe(1);
+        await expect(
+            authenticatedAs(t, user).mutation(api.webhooks.testEndpoint, { endpointId })
+        ).resolves.toBeTruthy();
+        await pump();
+        const first = only(await deliveries(t));
+        expect(first.attempt).toBe(1);
+
+        await settle(first._id, 1, 500);
+        await pump();
+        expect(only(await deliveries(t)).attempt).toBe(1);
+
+        vi.advanceTimersByTime(61_000);
+        await pump();
+        expect(only(await deliveries(t)).attempt).toBe(2);
 
         await t.run((ctx) => ctx.db.patch(endpointId, { failures: MAX_FAILURES - 1 }));
-        await t.mutation(internal.webhooks.settleDelivery, { deliveryId: first._id, status: 0 });
-        const disabled = await t.run((ctx) => ctx.db.get(endpointId));
-        expect(disabled?.disabledAt).toBeDefined();
+        await settle(first._id, 1, 0);
+        expect((await t.run((ctx) => ctx.db.get(endpointId)))?.disabledAt).toBeUndefined();
+        await settle(first._id, 2, 0);
+        expect((await t.run((ctx) => ctx.db.get(endpointId)))?.disabledAt).toBeDefined();
         await expect(deliveries(t)).resolves.toStrictEqual([]);
+        await expect(events(t)).resolves.toStrictEqual([]);
 
-        await authenticatedAs(t, user).mutation(api.webhooks.testEndpoint, { endpointId });
+        await expect(
+            authenticatedAs(t, user).mutation(api.webhooks.testEndpoint, { endpointId })
+        ).resolves.toBeTruthy();
+        await expect(authenticatedAs(t, user).mutation(api.webhooks.testEndpoint, { endpointId })).resolves.toBeFalsy();
+        await pump();
         const ping = only(await deliveries(t));
-        await t.mutation(internal.webhooks.settleDelivery, { deliveryId: ping._id, status: 204 });
+        await settle(ping._id, 1, 204);
         const healthy = await t.run((ctx) => ctx.db.get(endpointId));
         expect(healthy?.disabledAt).toBeUndefined();
         expect(healthy).toMatchObject({ failures: 0, lastDelivery: { status: 204 } });
         await expect(deliveries(t)).resolves.toStrictEqual([]);
+        await expect(events(t)).resolves.toStrictEqual([]);
+    });
+
+    it("drops a removed endpoint's queued events instead of sending them", async () => {
+        const t = setup();
+        const user = await seedProUser(t);
+        const endpointId = await endpointFor(t, user);
+        await authenticatedAs(t, user).mutation(api.webhooks.testEndpoint, { endpointId });
+        await authenticatedAs(t, user).mutation(api.webhooks.removeEndpoint, { endpointId });
+
+        await t.mutation(internal.webhooks.pump, {});
+
+        await expect(deliveries(t)).resolves.toStrictEqual([]);
+        await expect(events(t)).resolves.toStrictEqual([]);
     });
 
     it("signs the way a stock HMAC-SHA256 verifier expects", async () => {
@@ -265,6 +316,7 @@ test("removes every webhook row when the account is deleted", async () => {
         ...(await ctx.db.query("webhookTokens").collect()),
         ...(await ctx.db.query("webhookEndpoints").collect()),
         ...(await ctx.db.query("webhookDeliveries").collect()),
+        ...(await ctx.db.query("webhookEvents").collect()),
         ...(await ctx.db.query("inboundWrites").collect()),
     ]);
     expect(left).toStrictEqual([]);

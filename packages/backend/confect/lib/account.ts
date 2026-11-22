@@ -11,11 +11,39 @@ export const PURGE_BATCH = 200;
 
 const CELLS_PURGE_BATCH = 8;
 
-/** Photos first: they live outside Convex, so a half-finished purge could orphan one forever. */
+/** Webhooks first, so nothing is sent while the rest goes; then photos, which live outside Convex. */
 export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purgeUserBatch(
     ctx: MutationCtx,
     userId: string
 ) {
+    for (const table of ["webhookDeliveries", "webhookEvents", "inboundWrites"] as const) {
+        const queued = yield* Effect.promise(() =>
+            ctx.db
+                .query(table)
+                .withIndex("by_userId", (q) => q.eq("userId", userId))
+                .take(PURGE_BATCH)
+        );
+        if (queued.length > 0) {
+            yield* Effect.all(
+                queued.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
+                { concurrency: "unbounded", discard: true }
+            );
+            return { done: false, removed: queued.length };
+        }
+    }
+    for (const table of ["webhookEndpoints", "webhookTokens"] as const) {
+        const rows = yield* Effect.promise(() =>
+            ctx.db
+                .query(table)
+                .withIndex("by_userId", (q) => q.eq("userId", userId))
+                .collect()
+        );
+        yield* Effect.all(
+            rows.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
+            { concurrency: "unbounded", discard: true }
+        );
+    }
+
     const photos = yield* Effect.promise(() =>
         ctx.db
             .query("photoSizes")
@@ -143,34 +171,6 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
         pushRows.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
         { concurrency: "unbounded", discard: true }
     );
-
-    for (const table of ["webhookDeliveries", "inboundWrites"] as const) {
-        const queued = yield* Effect.promise(() =>
-            ctx.db
-                .query(table)
-                .withIndex("by_userId", (q) => q.eq("userId", userId))
-                .take(PURGE_BATCH)
-        );
-        if (queued.length > 0) {
-            yield* Effect.all(
-                queued.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
-                { concurrency: "unbounded", discard: true }
-            );
-            return { done: false, removed: queued.length };
-        }
-    }
-    for (const table of ["webhookEndpoints", "webhookTokens"] as const) {
-        const rows = yield* Effect.promise(() =>
-            ctx.db
-                .query(table)
-                .withIndex("by_userId", (q) => q.eq("userId", userId))
-                .collect()
-        );
-        yield* Effect.all(
-            rows.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
-            { concurrency: "unbounded", discard: true }
-        );
-    }
 
     const sharedRows = yield* Effect.promise(() =>
         ctx.db

@@ -9,7 +9,7 @@ import { sha256Hex } from "./lib/sha256Hex";
 import type { InboundWrite } from "./tables/inboundWrites";
 
 const MAX_BODY_LENGTH = 8000;
-const BEARER = /^Bearer\s+(\S+)$/;
+const BEARER = /^Bearer\s+([A-Za-z0-9_-]{32,128})$/;
 const MAX_AMOUNT = 1e12;
 
 const Text = (max: number) => Schema.String.check(Schema.isMaxLength(max));
@@ -67,6 +67,9 @@ export const receiveInbound = Effect.fn("Webhooks.receiveInbound")(function* rec
     const token = BEARER.exec(request.headers.get("Authorization") ?? "")?.[1];
     if (token === undefined) {
         return reply(401, { error: "unauthorized" });
+    }
+    if (Number(request.headers.get("Content-Length") ?? 0) > MAX_BODY_LENGTH) {
+        return reply(413, { error: "too_large" });
     }
     const text = yield* Effect.promise(() => request.text());
     const write = parseInbound(text, yield* Clock.currentTimeMillis);

@@ -17,6 +17,7 @@ export default {
 ["inbox"]: RegisteredConvexFunction.register({ ...definitions["inbox"], handler: forward(definitions["inbox"].handler) }),
 ["ackInbox"]: RegisteredConvexFunction.register({ ...definitions["ackInbox"], handler: forward(definitions["ackInbox"].handler) }),
 ["receive"]: RegisteredConvexFunction.register({ ...definitions["receive"], handler: forward(definitions["receive"].handler) }),
+["pump"]: RegisteredConvexFunction.register({ ...definitions["pump"], handler: forward(definitions["pump"].handler) }),
 ["delivery"]: RegisteredConvexFunction.register({ ...definitions["delivery"], handler: forward(definitions["delivery"].handler) }),
 ["settleDelivery"]: RegisteredConvexFunction.register({ ...definitions["settleDelivery"], handler: forward(definitions["settleDelivery"].handler) }),
 ["deliver"]: RegisteredConvexFunction.register({ ...definitions["deliver"], handler: forward(definitions["deliver"].handler) }),

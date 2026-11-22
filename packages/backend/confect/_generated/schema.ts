@@ -42,6 +42,7 @@ import voiceTurns from "./tables/voiceTurns";
 import webPushSubscriptions from "./tables/webPushSubscriptions";
 import webhookDeliveries from "./tables/webhookDeliveries";
 import webhookEndpoints from "./tables/webhookEndpoints";
+import webhookEvents from "./tables/webhookEvents";
 import webhookTokens from "./tables/webhookTokens";
 
 const databaseSchema: $DatabaseSchema.DatabaseSchema<{
@@ -87,6 +88,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly webPushSubscriptions: typeof webPushSubscriptions;
   readonly webhookDeliveries: typeof webhookDeliveries;
   readonly webhookEndpoints: typeof webhookEndpoints;
+  readonly webhookEvents: typeof webhookEvents;
   readonly webhookTokens: typeof webhookTokens;
 }> = $DatabaseSchema.make({
   accountDeletionJobs,
@@ -131,6 +133,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   webPushSubscriptions,
   webhookDeliveries,
   webhookEndpoints,
+  webhookEvents,
   webhookTokens,
 });
 

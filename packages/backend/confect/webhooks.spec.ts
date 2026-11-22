@@ -40,7 +40,6 @@ export const Received = Schema.Union([
 export const InboxRow = Schema.Struct({ id: Id("inboundWrites"), receivedAt: Schema.Number, write: InboundWrite });
 
 export const PendingDelivery = Schema.Struct({
-    attempt: Schema.Number,
     body: Schema.String,
     eventId: Schema.String,
     secret: Schema.String,
@@ -120,22 +119,29 @@ export default GroupSpec.make()
         })
     )
     .addFunction(
+        FunctionSpec.internalMutation({
+            args: () => ({}),
+            name: "pump",
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
         FunctionSpec.internalQuery({
-            args: () => ({ deliveryId: Id("webhookDeliveries") }),
+            args: () => ({ attempt: Schema.Number, deliveryId: Id("webhookDeliveries") }),
             name: "delivery",
             returns: () => Schema.NullOr(PendingDelivery),
         })
     )
     .addFunction(
         FunctionSpec.internalMutation({
-            args: () => ({ deliveryId: Id("webhookDeliveries"), status: Schema.Number }),
+            args: () => ({ attempt: Schema.Number, deliveryId: Id("webhookDeliveries"), status: Schema.Number }),
             name: "settleDelivery",
             returns: () => Schema.Null,
         })
     )
     .addFunction(
         FunctionSpec.internalAction({
-            args: () => ({ deliveryId: Id("webhookDeliveries") }),
+            args: () => ({ attempt: Schema.Number, deliveryId: Id("webhookDeliveries") }),
             name: "deliver",
             returns: () => Schema.Null,
         })
