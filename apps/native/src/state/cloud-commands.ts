@@ -30,7 +30,7 @@ import type { SecureStorageError } from "@/lib/secure-storage";
 import { SecureStorage } from "@/lib/secure-storage";
 
 import { createCommand, createRuntimeCommand } from "./atom-command";
-import { signOutToPersonal } from "./profiles-commands";
+import { settleBeforeSignOut, signOutToPersonal } from "./profiles-commands";
 
 type AuthClient = NonNullable<typeof authClient>;
 
@@ -53,19 +53,22 @@ const quiesce = (db: Database) => () => setSyncEnabled(db, false);
 
 export const signOutCommand = createRuntimeCommand(appRuntime, {
     execute: (input: { allowLocal: () => void; client: AuthClient; db: Database; navigateToLedger: () => void }) =>
-        runAccountLifecycle<ProfilesError | SyncOutboxError | UnknownError, never>("signOut", {
-            allowLocal: input.allowLocal,
-            navigateToLedger: input.navigateToLedger,
-            quiesce: quiesce(input.db),
-            signOut: () =>
-                signOutToPersonal(
-                    input.db,
-                    forgetCaptureLookup().pipe(
-                        Effect.andThen(Effect.tryPromise(() => input.client.signOut())),
-                        Effect.asVoid
-                    )
-                ),
-        }),
+        settleBeforeSignOut(input.db).pipe(
+            Effect.andThen(
+                runAccountLifecycle<ProfilesError | SyncOutboxError | UnknownError, never>("signOut", {
+                    allowLocal: input.allowLocal,
+                    navigateToLedger: input.navigateToLedger,
+                    quiesce: quiesce(input.db),
+                    signOut: () =>
+                        signOutToPersonal(
+                            forgetCaptureLookup().pipe(
+                                Effect.andThen(Effect.tryPromise(() => input.client.signOut())),
+                                Effect.asVoid
+                            )
+                        ),
+                })
+            )
+        ),
     label: "cloud:sign-out",
 });
 

@@ -11,7 +11,12 @@ import { databaseNameFor, parseProfileId } from "@/domain/profiles";
 import migrationsBundle from "../../drizzle/migrations";
 import { bootstrapLocalData } from "./bootstrap";
 import { useLiveQuery } from "./live-query";
-import { deleteProfileLedger, markProfileLedgerReady, profileLedgerFileExists } from "./profile-ledger-files";
+import {
+    clearProfileLedgerReady,
+    deleteProfileLedger,
+    markProfileLedgerReady,
+    profileLedgerFileExists,
+} from "./profile-ledger-files";
 import { profileRegistry } from "./profile-registry";
 import { insertProfile, ProfilesError, seedProfileLedger, tombstoneProfile } from "./profiles-core";
 import type { Profile, ProfileIdentity } from "./profiles-core";
@@ -35,7 +40,7 @@ export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function
     const existed = profileLedgerFileExists(id);
     if (!existed) {
         // A marker outliving its ledger would bless this one before its seed finishes.
-        yield* deleteProfileLedger(id);
+        yield* Effect.try({ catch: failed("create"), try: () => clearProfileLedgerReady(id) });
     }
     const ledger = yield* Effect.try({ catch: failed("create"), try: () => openDatabase(databaseNameFor(id)) });
     yield* Effect.gen(function* seed() {

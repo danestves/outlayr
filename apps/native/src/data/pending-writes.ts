@@ -39,7 +39,8 @@ export const drainDevicePendingWritesOrFail = Effect.fn("PendingWrites.drainDevi
             db,
             claimPendingWritesOrThrow,
             releasePendingWritesOrThrow,
-            readNotifications
+            readNotifications,
+            "own"
         );
     }
 );

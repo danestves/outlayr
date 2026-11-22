@@ -36,19 +36,19 @@ const enter = Effect.fn("Profiles.enter")(function* enter(profileId: string | un
     yield* reload;
 });
 
-// Draining while still signed in keeps a failure retryable; the reverted file keeps a failed sign-out here.
+// Runs before sync is turned off, so a failed drain leaves the session and its outbox untouched for a retry.
+export const settleBeforeSignOut = (db: Database) =>
+    Effect.suspend(() => (activeProfileId() === undefined ? Effect.void : settleLedger(db)));
+
+// The auth client can drop the local session even when its request fails, so the device lands on Personal either way.
 export const signOutToPersonal = Effect.fn("Profiles.signOutToPersonal")(function* signOutToPersonal<E>(
-    db: Database,
     signOut: Effect.Effect<void, E>
 ) {
-    const from = activeProfileId();
-    if (from === undefined) {
+    if (activeProfileId() === undefined) {
         return yield* signOut;
     }
-    yield* settleLedger(db);
     yield* Effect.try({ catch: switchFailed, try: () => writeActiveProfile(undefined) });
-    yield* signOut.pipe(Effect.tapError(() => Effect.try(() => writeActiveProfile(from)).pipe(Effect.ignore)));
-    yield* reload;
+    yield* signOut.pipe(Effect.ensuring(reload.pipe(Effect.ignore)));
 });
 
 export const switchProfileCommand = createRuntimeCommand(appRuntime, {

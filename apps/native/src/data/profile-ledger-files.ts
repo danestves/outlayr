@@ -17,6 +17,13 @@ export const profileLedgerFileExists = (id: string) => ledgerFile(id).exists;
 // A killed first switch leaves a half-seeded database behind, so the file alone does not mean the seed finished.
 export const profileLedgerExists = (id: string) => readyMarker(id).exists && ledgerFile(id).exists;
 
+export function clearProfileLedgerReady(id: string): void {
+    const marker = readyMarker(id);
+    if (marker.exists) {
+        marker.delete();
+    }
+}
+
 export function markProfileLedgerReady(id: string): void {
     readyMarker(id).create({ intermediates: true, overwrite: true });
 }

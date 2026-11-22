@@ -20,38 +20,30 @@ vi.mock("@/data/pending-writes", async (importOriginal) => ({
 }));
 vi.mock("@/data/use-deferred-delete", () => ({ flushDeferredDeletes: Effect.void }));
 vi.mock("expo-updates", () => ({ reloadAsync: () => Promise.resolve() }));
-import { signOutToPersonal } from "./profiles-commands";
+import { settleBeforeSignOut, signOutToPersonal } from "./profiles-commands";
 
 const db = {} as Database;
 
-describe("signOutToPersonal from a profile", () => {
+describe("signing out from a profile", () => {
     beforeEach(() => {
         vi.stubGlobal("__DEV__", false);
         activeFile = WORK;
         drain = Effect.void;
     });
 
-    it("keeps the session when the profile's captures can't be drained", async () => {
+    it("keeps the profile and its session when its captures can't be drained", async () => {
         drain = Effect.fail(new Error("queue unreadable"));
-        const signOut = vi.fn();
 
-        const exit = await Effect.runPromiseExit(signOutToPersonal(db, Effect.sync(signOut)));
-
-        expect(Exit.isFailure(exit)).toBe(true);
-        expect(signOut).not.toHaveBeenCalled();
-        expect(activeFile).toBe(WORK);
-    });
-
-    it("stays on the profile when the sign-out itself fails", async () => {
-        const exit = await Effect.runPromiseExit(signOutToPersonal(db, Effect.fail(new Error("offline"))));
+        const exit = await Effect.runPromiseExit(settleBeforeSignOut(db));
 
         expect(Exit.isFailure(exit)).toBe(true);
         expect(activeFile).toBe(WORK);
     });
 
-    it("comes back on Personal once signed out", async () => {
-        await Effect.runPromise(signOutToPersonal(db, Effect.void));
+    it("lands on Personal even when the sign-out request fails", async () => {
+        const exit = await Effect.runPromiseExit(signOutToPersonal(Effect.fail(new Error("offline"))));
 
+        expect(Exit.isFailure(exit)).toBe(true);
         expect(activeFile).toBeUndefined();
     });
 });
