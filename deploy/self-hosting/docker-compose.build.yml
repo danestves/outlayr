@@ -12,3 +12,9 @@ services:
             dockerfile: deploy/self-hosting/app.Dockerfile
             args:
                 VITE_PUBLIC_POSTHOG_PROJECT_TOKEN: ${VITE_PUBLIC_POSTHOG_PROJECT_TOKEN:-}
+
+    egress:
+        image: outlayr-egress:source
+        build:
+            context: ../..
+            dockerfile: deploy/self-hosting/egress.Dockerfile

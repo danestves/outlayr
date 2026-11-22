@@ -38,7 +38,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                image: [backend, app]
+                image: [backend, app, egress]
                 arch: [amd64, arm64]
                 include:
                     - arch: amd64
@@ -99,7 +99,7 @@ jobs:
             packages: write
         strategy:
             matrix:
-                image: [backend, app]
+                image: [backend, app, egress]
         steps:
             - uses: actions/download-artifact@v8
               with:

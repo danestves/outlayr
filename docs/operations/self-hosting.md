@@ -1,15 +1,16 @@
 # Self-hosting
 
-The Outlayr backend and web app run on any Docker host from two published images and the official Convex images. The bundle lives in `deploy/self-hosting/`. The marketing site and the mobile apps are not part of it.
+The Outlayr backend and web app run on any Docker host from three published images and the official Convex images. The bundle lives in `deploy/self-hosting/`. The marketing site and the mobile apps are not part of it.
 
 | Service | Image | Port | Runs |
 |---|---|---|---|
 | `convex` | `ghcr.io/convex/convex-backend`, pinned | 3210 (API), 3211 (HTTP actions) | Always |
 | `convex-dashboard` | `ghcr.io/convex/convex-dashboard`, pinned | 6791 | Always |
+| `egress` | `ghcr.io/danestves/outlayr-egress` | none | Always: every `fetch` from a Convex action goes through it, and it refuses private and local addresses |
 | `backend` | `ghcr.io/danestves/outlayr-backend` | none | Once per start: sets the deployment's variables, deploys the functions, exits 0 |
 | `app` | `ghcr.io/danestves/outlayr-app` | 3080 | Always, once `backend` succeeded |
 
-The Convex engine is Convex's own image at the commit in `docker-compose.yml`, never rebuilt or forked. Outlayr's images hold only the functions with the Convex CLI, and the built web app on Node. `.github/workflows/self-hosting-images.yml` publishes both for amd64 and arm64: `edge` from `main`, `vX.Y.Z` from a `vX.Y.Z` tag, and `latest` from a stable one. Until the first release only `edge` exists, so it is the default.
+The Convex engine is Convex's own image at the commit in `docker-compose.yml`, never rebuilt or forked. Outlayr's images hold only the functions with the Convex CLI, the built web app on Node, and Stripe's Smokescreen proxy. `.github/workflows/self-hosting-images.yml` publishes all three for amd64 and arm64: `edge` from `main`, `vX.Y.Z` from a `vX.Y.Z` tag, and `latest` from a stable one. Until the first release only `edge` exists, so it is the default.
 
 ## Quick start
 
@@ -78,6 +79,7 @@ Builds need no Hugeicons Pro token: only the native app and the marketing site u
 | `INSTANCE_NAME`, `INSTANCE_SECRET` | No | Empty, Convex generates the secret and keeps it in the `convex-data` volume. A new secret invalidates every admin key. |
 | `CONVEX_VERSION` | No | Convex engine and dashboard image tag. Convex tags images by commit. |
 | `DISABLE_BEACON` | No | `true` stops the Convex backend's anonymous usage beacon. Leave it unset otherwise: an empty value stops Convex from starting. |
+| `EGRESS_ALLOW_RANGES` | No | Comma-separated CIDR ranges actions may still reach, such as a LAN origin or a MinIO bucket on a private address. |
 
 ### `convex.env`: the deployment's variables
 
@@ -171,6 +173,7 @@ From a checkout, add `-f docker-compose.yml -f docker-compose.build.yml` after `
 
 - **Never localhost.** The app server calls `CONVEX_SITE_ORIGIN` for auth, and Convex fetches its own JWKS from `CONVEX_SITE_ORIGIN` while `JWKS` is empty. Inside a container, `localhost` is that container. A LAN IP or a domain works from both sides.
 - **Host firewalls.** With ufw or another default-deny firewall, containers cannot reach the host's own published ports, so the app's auth calls time out (`ConnectTimeoutError` in `docker compose logs app`). Allow the Compose network's subnet (`docker network inspect outlayr_default`) to the Convex ports, or serve the origins through a reverse proxy on ports the firewall already allows.
+- **Private origins need an allowed range.** Convex reaches the network only through `egress`, which refuses private, loopback and link-local addresses so a user's webhook URL can't probe the host. With origins or an S3 endpoint on a LAN IP, add that range to `EGRESS_ALLOW_RANGES`, or JWKS and file calls fail with a 407 in `docker compose logs egress`.
 - **Comment out, do not blank.** An empty line in `convex.env` sets the variable to an empty string. Email treats an empty variable as unset, but an empty Google variable still switches Google sign-in on, with blank credentials.
 - **Removed lines stay.** Deleting a line from `convex.env` does not unset it. Remove it in the dashboard under Settings, Environment Variables.
 - **The admin key follows the instance secret.** Losing the volume or changing `INSTANCE_SECRET` makes a new secret, so generate a new key.
