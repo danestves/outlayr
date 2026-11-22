@@ -6,21 +6,22 @@ import { closeDatabase, openDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
 import { profiles } from "@/db/schema";
 import { newId } from "@/domain/ids";
-import { databaseNameFor } from "@/domain/profiles";
+import { databaseNameFor, parseProfileId } from "@/domain/profiles";
 
 import migrationsBundle from "../../drizzle/migrations";
 import { bootstrapLocalData } from "./bootstrap";
 import { useLiveQuery } from "./live-query";
-import { deleteProfileLedger, markProfileLedgerReady } from "./profile-ledger-files";
+import { deleteProfileLedger, markProfileLedgerReady, profileLedgerFileExists } from "./profile-ledger-files";
 import { profileRegistry } from "./profile-registry";
 import { insertProfile, ProfilesError, seedProfileLedger, tombstoneProfile } from "./profiles-core";
 import type { Profile, ProfileIdentity } from "./profiles-core";
 
 export function useProfiles(): Profile[] {
     const registry = profileRegistry();
-    return useLiveQuery(profiles, () =>
+    const rows = useLiveQuery(profiles, () =>
         registry.select().from(profiles).where(isNull(profiles.deletedAt)).orderBy(profiles.sortOrder)
     );
+    return rows.filter((row) => parseProfileId(row.id) !== undefined);
 }
 
 const failed = (operation: "create") => (cause: unknown) => new ProfilesError({ cause, operation });
@@ -30,6 +31,8 @@ export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function
     from: Database,
     currency: string | undefined
 ) {
+    // An existing file may hold entries from before ready markers, so only a fresh one is safe to delete.
+    const existed = profileLedgerFileExists(id);
     const ledger = yield* Effect.try({ catch: failed("create"), try: () => openDatabase(databaseNameFor(id)) });
     yield* Effect.gen(function* seed() {
         yield* Effect.tryPromise({ catch: failed("create"), try: () => migrate(ledger, migrationsBundle) });
@@ -37,7 +40,7 @@ export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function
         yield* seedProfileLedger(from, ledger, currency);
     }).pipe(
         Effect.ensuring(closeDatabase(ledger).pipe(Effect.ignore)),
-        Effect.onError(() => deleteProfileLedger(id))
+        Effect.onError(() => (existed ? Effect.void : deleteProfileLedger(id)))
     );
     yield* Effect.try({ catch: failed("create"), try: () => markProfileLedgerReady(id) });
 });

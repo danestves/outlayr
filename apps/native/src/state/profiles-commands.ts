@@ -3,7 +3,7 @@ import { reloadAsync } from "expo-updates";
 import { DevSettings } from "react-native";
 
 import { drainDevicePendingWrites } from "@/data/pending-writes";
-import { deleteProfileLedger, profileLedgerExists } from "@/data/profile-ledger-files";
+import { profileLedgerExists } from "@/data/profile-ledger-files";
 import { profileRegistry } from "@/data/profile-registry";
 import { createProfile, deleteProfile, prepareProfileLedger } from "@/data/profiles";
 import { ProfilesError, updateProfile } from "@/data/profiles-core";
@@ -47,8 +47,7 @@ export const switchProfileCommand = createRuntimeCommand(appRuntime, {
         profileId: string | undefined;
     }) {
         if (input.profileId !== undefined && !profileLedgerExists(input.profileId)) {
-            // The marker only exists after a full seed, so anything else left on disk is a killed first switch.
-            yield* deleteProfileLedger(input.profileId);
+            // Migrate, bootstrap and seed are idempotent, so finishing in place keeps what the ledger holds.
             yield* prepareProfileLedger(input.profileId, input.from, undefined);
         }
         yield* switchTo(input.profileId, input.from);
