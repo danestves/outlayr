@@ -41,7 +41,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Anonymous account ID, sessions, IP address, device type, purchase records | Buying or restoring Pro without an account | Our servers, RevenueCat | Until you sign in, or ask us to delete it |
 | Merchant and category names | Smart fill | Our servers, Anthropic | Until answered |
 | iPhone push address, an encryption key | Smart fill with the Apple Pay automation | Our servers, Apple’s push service | Until you turn Smart fill off, sign out, or delete your account |
-| Title and text of a notification that shows an amount, or message text sent to a webhook | Logging from notifications or webhooks, with Smart fill | Our servers, Anthropic | Not kept |
+| Title and text of a notification that shows an amount | Logging from notifications, with Smart fill | Our servers, Anthropic | Not kept |
 | Voice recording | Voice entry | Our servers (Cloudflare), ElevenLabs | Not kept |
 | Transcript and draft | Voice entry | Our servers, ElevenLabs, Anthropic | Until closed, or 1 hour idle |
 | Receipt photo | Receipt scan | Our servers, Anthropic | Not kept |
@@ -64,7 +64,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Entries, balances, budgets, upcoming charges | AI assistant you approve | The assistant’s company | Their policies |
 | Assistant name and address, your approval, access keys | AI assistant you approve | Our servers | Until account deletion |
 | Tool name, timing, and failure of each assistant request, connection ID | AI assistant you approve | PostHog | PostHog’s policy |
-| Webhook token hash and its last 4 characters, entries sent with it | Receiving webhooks (Pro) | Our servers, your device | Token: until you remove it or delete your account. Entries: until a device collects them |
+| Webhook token hash and its last 4 characters, entries sent with it | Receiving webhooks (Pro) | Our servers, your device. Message text that shows an amount: Anthropic, with Smart fill | Token: until you remove it or delete your account. Entries: until a device collects them |
 | Web addresses you add, their secrets, delivery results | Sending webhooks (Pro) | Our servers | Until you remove them or delete your account |
 | New entries: amount, currency, date, note, category and account names | Sending webhooks (Pro) | The addresses you add | Their operators’ policies |
 | Your emails | You write | Our inbox | As long as needed |
@@ -253,9 +253,9 @@ To keep the connection working, we store the assistant's name and web address, y
 
 With Outlayr Pro, you can connect Outlayr to automation tools such as IFTTT, Zapier, or Tasker in **Settings › Integrations › Webhooks**. Nothing is received or sent until you set it up there.
 
-Under **Receive**, you create a token. Anything that sends that token to our server can add an expense or income to your account: an amount, and if it includes them, a currency, date, note, category, card or app name, and the text of a message. We keep the token only as a one-way hash, with its last 4 characters so you can tell it apart, and when it was created and last used. Each entry waits on our server until one of your devices collects it, then it’s deleted there and filed like any other entry. Up to 200 can wait at once. Message text is read on your device like a [bank notification](#reading-bank-notifications), so with Smart fill on, Anthropic reads it too.
+Under **Receive**, you create a token. Anything that sends that token to our server can add an expense or income to your account: an amount, and if it includes them, a currency, date, note, category, card or app name, and the text of a message. We keep the token only as a one-way hash, with its last 4 characters so you can tell it apart, and when it was created and last used. Each entry waits on our server until one of your devices collects it, then it’s deleted there and filed like any other entry. Up to 200 can wait at once. Message text is read on your device like a [bank notification](#reading-bank-notifications), so if it shows an amount and Smart fill is on, Anthropic reads it too.
 
-Under **Send**, you add up to 5 web addresses. When a new entry reaches our server, through sync or an AI assistant, we send it to each address: its ID, amount, currency, date, note, whether it’s income, and the names of its category and account. Only entries added after the address, for a purchase in the past week, are sent, so turning sync on or importing doesn’t send your history. Each request is signed with a secret the app makes for that address, so the receiver can check it came from Outlayr. If an address doesn’t answer, we retry for about 9 hours, and after 20 failures in a row we stop sending to it until you test it again.
+Under **Send**, you add up to 5 web addresses. When a new entry reaches our server, through sync or an AI assistant, we send it to each address: its ID, amount, currency, date, note, whether it’s income, and the names of its category and account. Only entries saved after you added the address, for a purchase in the past week, are sent, so turning sync on doesn’t send your history. Recent purchases you import or edit after adding it can be sent. Each request is signed with a secret the app makes for that address, so the receiver can check it came from Outlayr. If an address doesn’t answer, we retry for about 9 hours, and after 20 failures in a row we stop sending to it until you test it again.
 
 What reaches an address is handled by whoever runs it, under their own policy, so only add one you control or trust. We store each address and its secret, when it was added and last tested, and the time and result of its last delivery, until you remove it or delete your account. An entry waiting to be sent is kept until it’s delivered or its retries run out.
 
@@ -381,7 +381,7 @@ Open **Settings › Account › Delete account**. You may be asked to sign in ag
 
 - Outlayr’s access to your Apple or Google sign-in is revoked. For Apple, our server asks Apple to revoke it. For Google, the app does.
 - If you connected Notion, our server asks Notion to revoke Outlayr’s access key.
-- Your webhook token, addresses, and entries waiting to be received or sent are deleted, so nothing more is sent.
+- Your webhook token, addresses, and entries waiting to be received or sent are deleted, so nothing new is sent. A delivery already under way can still finish.
 - Your synced ledger, deletion records, backed-up photos, and pending suggestion requests are deleted from our servers.
 - Your customer records at RevenueCat and Stripe and our copy of your subscription status are deleted.
 - Your profile at PostHog and every analytics event linked to it are deleted. PostHog erases the events in a later batch, so they can remain for a while after the app reports the deletion finished.
