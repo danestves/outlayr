@@ -8,11 +8,12 @@ import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import Store01Icon from "@hugeicons/core-free-icons/Store01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { accountLook } from "@outlayr/money/ledger-log";
+import { useEventListener, useOnMount } from "@outlayr/shared/lifecycle";
 import { Link } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Menu } from "panelui-web/menu";
 import { Sheet } from "panelui-web/sheet";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -504,49 +505,49 @@ function useSheetKeys(
     onStep: (by: 1 | -1) => void,
     categoryTrigger: RefObject<HTMLButtonElement | null>
 ) {
-    const onKeyEvent = useEffectEvent((event: KeyboardEvent) => {
-        if (
-            event.metaKey ||
-            event.ctrlKey ||
-            event.altKey ||
-            (event.target instanceof Element && event.target.closest(HUSHED_TARGETS))
-        ) {
-            return;
+    useEventListener(
+        (listener) => {
+            document.addEventListener("keydown", listener);
+            return () => document.removeEventListener("keydown", listener);
+        },
+        (event: KeyboardEvent) => {
+            if (
+                event.metaKey ||
+                event.ctrlKey ||
+                event.altKey ||
+                (event.target instanceof Element && event.target.closest(HUSHED_TARGETS))
+            ) {
+                return;
+            }
+            if (event.key === "Delete" || event.key === "Backspace") {
+                onDelete();
+            } else if (event.key === "c") {
+                event.preventDefault();
+                categoryTrigger.current?.click();
+            } else if (event.key === "j" || event.key === "k") {
+                onStep(event.key === "j" ? 1 : -1);
+            }
         }
-        if (event.key === "Delete" || event.key === "Backspace") {
-            onDelete();
-        } else if (event.key === "c") {
-            event.preventDefault();
-            categoryTrigger.current?.click();
-        } else if (event.key === "j" || event.key === "k") {
-            onStep(event.key === "j" ? 1 : -1);
-        }
-    });
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the keyboard is an external system.
-    useEffect(() => {
-        document.addEventListener("keydown", onKeyEvent);
-        return () => document.removeEventListener("keydown", onKeyEvent);
-    }, []);
+    );
 }
 
 function useOpenedPicker(trigger: RefObject<HTMLButtonElement | null> | null) {
-    const openPicker = useEffectEvent(async (isLive: () => boolean) => {
-        await new Promise(requestAnimationFrame);
-        await new Promise(requestAnimationFrame);
-        const animations = trigger?.current?.closest("[role=dialog]")?.getAnimations() ?? [];
-        await Promise.allSettled(animations.map((animation) => animation.finished));
-        if (isLive()) {
-            trigger?.current?.click();
-        }
-    });
-    // oxlint-disable-next-line outlayr/react-effect-budget -- a picker measured mid-slide lands off its trigger.
-    useEffect(() => {
+    // A picker measured mid-slide lands off its trigger.
+    useOnMount(() => {
         let live = true;
-        void openPicker(() => live);
+        void (async () => {
+            await new Promise(requestAnimationFrame);
+            await new Promise(requestAnimationFrame);
+            const animations = trigger?.current?.closest("[role=dialog]")?.getAnimations() ?? [];
+            await Promise.allSettled(animations.map((animation) => animation.finished));
+            if (live) {
+                trigger?.current?.click();
+            }
+        })();
         return () => {
             live = false;
         };
-    }, []);
+    });
 }
 
 function EntryBody({

@@ -1,6 +1,7 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { ledgerGlance } from "@outlayr/money/ledger-view";
 import type { LedgerOpening } from "@outlayr/money/ledger-view";
+import { useEventListener, useMirror, useTimers } from "@outlayr/shared/lifecycle";
 import { useQuery } from "@tanstack/react-query";
 import {
     Navigate,
@@ -15,7 +16,7 @@ import type { ErrorComponentProps } from "@tanstack/react-router";
 import { ConvexError } from "convex/values";
 import { Button } from "panelui-web/button";
 import { Toast, useToast } from "panelui-web/toast";
-import { Suspense, lazy, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { Suspense, lazy, useMemo, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -173,34 +174,35 @@ function Pending() {
 const MIN_WAIT_MS = 15_000;
 
 function useTurnover(nextChangeAt: number, advance: (asOf: number) => void) {
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the clock is an external system.
-    useEffect(() => {
-        let timer: ReturnType<typeof setTimeout>;
+    const timers = useTimers();
+    useMirror([advance, nextChangeAt], () => {
+        let stop: () => void = () => undefined;
         const arm = (delay: number) => {
-            timer = setTimeout(() => {
+            stop = timers.after(delay, () => {
                 advance(Date.now());
                 arm(MIN_WAIT_MS);
-            }, delay);
+            });
         };
         arm(Math.max(nextChangeAt - Date.now(), 0));
-        const onVisible = () => {
+        return () => stop();
+    });
+    useEventListener(
+        (listener) => {
+            document.addEventListener("visibilitychange", listener);
+            return () => document.removeEventListener("visibilitychange", listener);
+        },
+        () => {
             if (document.visibilityState === "visible" && Date.now() >= nextChangeAt) {
                 advance(Date.now());
             }
-        };
-        document.addEventListener("visibilitychange", onVisible);
-        return () => {
-            clearTimeout(timer);
-            document.removeEventListener("visibilitychange", onVisible);
-        };
-    }, [advance, nextChangeAt]);
+        }
+    );
 }
 
 function useLiveLedger(userId: string | undefined, onLanded: (outcome: "landed" | Error) => void) {
     const { dbClient, queryClient } = Route.useRouteContext();
     const router = useRouter();
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the Convex connection, other tabs and the keyboard are external systems.
-    useEffect(() => {
+    useMirror([dbClient, onLanded, queryClient, router, userId], () => {
         dropOldCopy();
         ledgerCommitter(dbClient, userId).resume();
         warmAccountState(queryClient);
@@ -230,7 +232,7 @@ function useLiveLedger(userId: string | undefined, onLanded: (outcome: "landed" 
                 stop?.();
             }
         };
-    }, [dbClient, onLanded, queryClient, router, userId]);
+    });
 }
 
 function LiveDashboard({ bare, books, children }: { bare: boolean; books: LedgerBooks; children: ReactNode }) {

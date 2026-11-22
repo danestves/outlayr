@@ -12,6 +12,7 @@ import {
     referralsEarnOnPayment,
 } from "@outlayr/money/contract";
 import { earnedThisYear, monthsEarned, rewardsToAnnounce } from "@outlayr/money/referrals";
+import { useWhen } from "@outlayr/shared/lifecycle";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Alert } from "panelui-web/alert";
 import { Avatar } from "panelui-web/avatar";
@@ -23,7 +24,7 @@ import { Input } from "panelui-web/input";
 import { Kpi } from "panelui-web/kpi";
 import { Table } from "panelui-web/table";
 import { useToast } from "panelui-web/toast";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 import { Skeleton } from "skullet/react";
@@ -430,12 +431,9 @@ export function Invite() {
         retry: 3,
     });
     const unminted = overview !== null && overview.code === null;
-    // oxlint-disable-next-line outlayr/react-effect-budget -- Convex is an external system.
-    useEffect(() => {
-        if (unminted) {
-            mint();
-        }
-    }, [mint, unminted]);
+    useWhen(unminted, () => {
+        mint();
+    });
     const code = overview?.code ?? minted ?? null;
     const [now] = useState(() => Date.now());
     const share = useShareInvite(code);

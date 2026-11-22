@@ -1,7 +1,8 @@
+import { useMirror, useOnMount, useTimers } from "@outlayr/shared/lifecycle";
 import { useRouteContext } from "@tanstack/react-router";
 import { Dialog } from "panelui-web/dialog";
 import { createToaster, Toast } from "panelui-web/toast";
-import { lazy, Suspense, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -93,8 +94,8 @@ const flowToasts = createToaster();
 function ShowToast({ onDone, toast }: { onDone: () => void; toast: Notice }) {
     const { flows } = useIntlayer("dashboard-accounts");
     const undo = flows.undo.value;
-    // oxlint-disable-next-line outlayr/react-effect-budget -- a timer is an external system.
-    useEffect(() => {
+    const timers = useTimers();
+    useMirror([onDone, toast, undo], () => {
         const id = flowToasts.add({
             actionProps: toast.onUndo
                 ? {
@@ -110,15 +111,15 @@ function ShowToast({ onDone, toast }: { onDone: () => void; toast: Notice }) {
             title: toast.text,
             type: toast.failed ? "destructive" : "success",
         });
-        const timer = setTimeout(() => {
+        const stop = timers.after(TOAST_MS, () => {
             toast.onExpire?.();
             onDone();
-        }, TOAST_MS);
+        });
         return () => {
-            clearTimeout(timer);
+            stop();
             flowToasts.close(id);
         };
-    }, [onDone, toast, undo]);
+    });
     return null;
 }
 
@@ -130,10 +131,10 @@ export function AccountFlowsProvider({ children }: { children: ReactNode }) {
     const [toast, setToast] = useState<Notice | null>(null);
     const db = useLedgerDb();
     const shown = useRef<Notice | null>(null);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- a click on Add must not wait on the network for its form.
-    useEffect(() => {
+    // A click on Add must not wait on the network for its form.
+    useOnMount(() => {
         void loadFlowDialogs();
-    }, []);
+    });
     const clearToast = useMemo(
         () => () => {
             shown.current = null;

@@ -2,6 +2,7 @@ import geist from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff
 import { startAnalytics } from "@outlayr/shared/analytics";
 import { LANGUAGES, fallbackLocale, localeFromParam, pageUrl, publishedLocales } from "@outlayr/shared/i18n";
 import type { Locale } from "@outlayr/shared/i18n";
+import { useLayoutMirror, useMirror } from "@outlayr/shared/lifecycle";
 import { THEME_SCRIPT, paintTheme, readTheme } from "@outlayr/shared/theme";
 import { SITE_URL, SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import { HeadContent, Scripts, createRootRoute, useMatches, useParams } from "@tanstack/react-router";
@@ -9,7 +10,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import * as Effect from "effect/Effect";
 import { getIntlayer, getPathWithoutLocale } from "intlayer";
-import { useEffect, useLayoutEffect } from "react";
 import type { ReactNode } from "react";
 import { IntlayerProvider } from "react-intlayer";
 
@@ -193,15 +193,14 @@ function RootDocument({ children }: { children: ReactNode }) {
     const ownChrome = useMatches({
         select: (matches) => matches.some((match) => OWN_CHROME.has(match.routeId)),
     });
-    // oxlint-disable-next-line outlayr/react-effect-budget -- starts the analytics SDK once after hydration, with the visitor's country
-    useEffect(() => {
+    useMirror([country], () => {
         Effect.runFork(startAnalytics(ANALYTICS_TOKEN, country).pipe(Effect.ignoreCause));
-    }, [country]);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- a hydration that falls back to a client render strips what THEME_SCRIPT stamped on <html>.
-    useLayoutEffect(() => {
+    });
+    // A hydration that falls back to a client render strips what THEME_SCRIPT stamped on <html>.
+    useLayoutMirror([], () => {
         document.documentElement.classList.add("js");
         paintTheme(readTheme());
-    }, []);
+    });
     return (
         <html lang={LANGUAGES[locale].lang} suppressHydrationWarning>
             <head>
