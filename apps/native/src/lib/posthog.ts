@@ -2,7 +2,6 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { useSegments } from "expo-router";
 import PostHog from "posthog-react-native";
-import { useEffect } from "react";
 import { Platform } from "react-native";
 
 import { META } from "@/data/app-meta-registry";
@@ -10,6 +9,7 @@ import { groupStacklessExceptions } from "@/domain/exception-grouping";
 import { scrubQueryParams } from "@/domain/exception-scrub";
 import { dropLaunchUrl } from "@/domain/launch-url-scrub";
 import { ENV } from "@/env";
+import { useMirror } from "@/lib/lifecycle";
 import { purchaseListener } from "@/lib/purchase-listener";
 
 export const posthog =
@@ -49,10 +49,9 @@ export function paywallVariant(devOverride?: string | string[]): typeof PaywallV
 
 export function useScreenTracking() {
     const screen = useSegments().join("/");
-    // oxlint-disable-next-line outlayr/react-effect-budget -- reports the current screen to the PostHog client
-    useEffect(() => {
+    useMirror([screen], () => {
         if (screen) {
             posthog?.screen(screen);
         }
-    }, [screen]);
+    });
 }

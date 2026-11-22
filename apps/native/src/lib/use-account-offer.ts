@@ -1,6 +1,6 @@
 import * as Cause from "effect/Cause";
 import { useSegments } from "expo-router";
-import { useEffect, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 
 import { useUpdateWaiting } from "@/components/update-sheet";
 import { useAccountOfferHeld } from "@/data/onboarding";
@@ -9,6 +9,7 @@ import type { Database } from "@/db/client";
 import { accountOfferDue } from "@/domain/account-offer";
 import { useAuthSession } from "@/lib/auth-session";
 import { freshEntries } from "@/lib/fresh-entries";
+import { useWhen } from "@/lib/lifecycle";
 import { SILENT } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
 import { awaitReminderPromptCommand, releaseAccountOfferCommand } from "@/state/onboarding-commands";
@@ -35,9 +36,8 @@ export function useAccountOffer(db: Database, ready: boolean): void {
         updateDue,
     });
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- waits out the OS reminder prompt
-    useEffect(() => {
-        if (!due || released) {
+    useWhen(due, () => {
+        if (released) {
             return;
         }
         let live = true;
@@ -70,5 +70,5 @@ export function useAccountOffer(db: Database, ready: boolean): void {
         return () => {
             live = false;
         };
-    }, [db, due]);
+    });
 }

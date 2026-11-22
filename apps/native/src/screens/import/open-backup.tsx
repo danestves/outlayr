@@ -1,11 +1,12 @@
 import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { View } from "react-native";
 
 import { BusyText } from "@/components/busy-text";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useTranslation } from "@/i18n/context";
+import { useOnMount } from "@/lib/lifecycle";
 import { moneyManagerSession } from "@/lib/money-manager-session";
 import { notifyFailure } from "@/lib/notify";
 import { SILENT } from "@/state/atom-command";
@@ -38,8 +39,7 @@ export function MoneyManagerOpenBackup() {
 
     const started = useRef(false);
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- reads the backup the native intent handed over, once per arrival
-    useEffect(() => {
+    useOnMount(() => {
         // takePending empties the slot, so a second run would bounce a good backup to the intro.
         if (started.current) {
             return;
@@ -51,7 +51,7 @@ export function MoneyManagerOpenBackup() {
             return;
         }
         load({ db, source });
-    }, [db, load, paths.intro, router]);
+    });
 
     return (
         <SettingsScreen>

@@ -7,9 +7,9 @@ import {
 } from "expo-notifications";
 import type { NotificationResponse } from "expo-notifications";
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
 
 import type { Database } from "@/db/client";
+import { useMirror } from "@/lib/lifecycle";
 import { SILENT } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
 import { resolveWalletPushTapCommand } from "@/state/surfaces-commands";
@@ -22,8 +22,7 @@ let handled: string | null = null;
 export function useWalletPushTaps(db: Database, ready: boolean): void {
     const router = useRouter();
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to Expo's notification response listener, which has no React-side source
-    useEffect(() => {
+    useMirror([db, ready, router], () => {
         if (!ready) {
             return;
         }
@@ -59,5 +58,5 @@ export function useWalletPushTaps(db: Database, ready: boolean): void {
             disposed = true;
             subscription.remove();
         };
-    }, [db, ready, router]);
+    });
 }
