@@ -5,8 +5,8 @@ import type { Href } from "expo-router";
 
 import { readPlans } from "@/data/installments-core";
 import { dropNotificationDebt, findNotificationDebt } from "@/data/notification-debts";
-import { drainDevicePendingWrites } from "@/data/pending-writes";
-import { dismissPendingWrite, filedThisSession, pendingWriteTxId } from "@/data/pending-writes-core";
+import { dismissDeviceWrite, drainDevicePendingWrites } from "@/data/pending-writes";
+import { filedThisSession, pendingWriteTxId } from "@/data/pending-writes-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";
 import { getTransactionById, transactionsRepo } from "@/data/transactions-core";
 import { cardAccount, cardStillAsks, fileWaitingPurchases } from "@/data/wallet-state-core";
@@ -137,7 +137,7 @@ export const resolveWalletPushTap = Effect.fn("NotificationTaps.resolveWalletPus
 export const settleWalletPushAction = Effect.fn("NotificationTaps.settleWalletPushAction")(
     function* settleWalletPushAction(db: Database, walletWrite: string, action: ChargeAction) {
         if (action === "delete") {
-            dismissPendingWrite(walletWrite);
+            dismissDeviceWrite(walletWrite);
         }
         const txId = yield* settleWalletWrites(db, walletWrite);
         if (action !== "delete") {

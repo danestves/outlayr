@@ -11,7 +11,7 @@ import {
 import type { NotificationResponse } from "expo-notifications";
 import { useRouter } from "expo-router";
 
-import { dismissPendingWrite } from "@/data/pending-writes-core";
+import { dismissDeviceWrite } from "@/data/pending-writes";
 import type { Database } from "@/db/client";
 import { ChargeAction } from "@/lib/charge-actions";
 import { useMirror } from "@/lib/lifecycle";
@@ -34,7 +34,7 @@ const recordDismissal = (response: NotificationResponse | null) => {
     }
     const parsed = decodeWalletPushTap(response.notification.request.content.data);
     if (Option.isSome(parsed)) {
-        dismissPendingWrite(parsed.value.walletWrite);
+        dismissDeviceWrite(parsed.value.walletWrite);
     }
 };
 

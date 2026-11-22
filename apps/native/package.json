@@ -2,7 +2,7 @@
     "name": "@outlayr/native",
     "version": "1.0.0",
     "private": true,
-    "main": "expo-router/entry",
+    "main": "./index.ts",
     "scripts": {
         "android": "expo run:android",
         "bench:bundle": "node --import tsx scripts/bench/bundle.ts",
@@ -76,6 +76,7 @@
         "expo-store-review": "~58.0.2",
         "expo-symbols": "~58.0.4",
         "expo-system-ui": "~58.0.7",
+        "expo-task-manager": "~58.0.14",
         "expo-updates": "~58.0.20",
         "expo-web-browser": "~58.0.7",
         "expo-widgets": "~58.0.26",
