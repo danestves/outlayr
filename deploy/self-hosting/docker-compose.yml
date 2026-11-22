@@ -16,7 +16,7 @@ services:
             INSTANCE_SECRET: ${INSTANCE_SECRET:-}
             CONVEX_CLOUD_ORIGIN: ${CONVEX_CLOUD_ORIGIN:?Set CONVEX_CLOUD_ORIGIN in .env}
             CONVEX_SITE_ORIGIN: ${CONVEX_SITE_ORIGIN:?Set CONVEX_SITE_ORIGIN in .env}
-            DISABLE_BEACON: ${DISABLE_BEACON:-}
+            DISABLE_BEACON:
         healthcheck:
             test: ["CMD", "curl", "-fsS", "http://localhost:3210/version"]
             interval: 5s
