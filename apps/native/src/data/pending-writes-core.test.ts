@@ -198,6 +198,21 @@ describe("applyPendingWrites", () => {
         await expect(liveRows(db)).resolves.toMatchObject([{ note: "Kept" }]);
     });
 
+    it("keeps a dismissed purchase's sibling copy from landing too", async () => {
+        const copy = walletWrite("twin-copy", { dedupeKey: "wallet:expense:twin:640", note: "Twin" });
+        const dismissedCopy = walletWrite("twin-dismissed", {
+            date: NOW.getTime() + 30_000,
+            dedupeKey: "wallet:expense:twin:640",
+            note: "Twin again",
+        });
+
+        dismissPendingWrite("twin-dismissed");
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [copy, dismissedCopy], NOW));
+
+        expect(applied).toBe(0);
+        await expect(liveRows(db)).resolves.toStrictEqual([]);
+    });
+
     it("drafts a debt from a push instead of filing it, once, and keeps a dismissed draft dismissed", async () => {
         const job = walletWrite("iou", {
             amount: 0,

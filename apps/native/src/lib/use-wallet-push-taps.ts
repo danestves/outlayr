@@ -24,9 +24,10 @@ import { decodeWalletPushTap } from "./notification-taps";
 
 let handled: string | null = null;
 
+const settling = new Set<string>();
+
 const decodeChargeAction = Schema.decodeUnknownOption(ChargeAction);
 
-// A cold launch can drain before this hook mounts, so a Delete must be recorded before any drain runs.
 const recordDismissal = (response: NotificationResponse | null) => {
     if (response?.actionIdentifier !== "delete") {
         return;
@@ -81,18 +82,28 @@ export function useWalletPushTaps(db: Database, ready: boolean, actionsReady: bo
             if (!actionsReady || Option.isNone(action)) {
                 return;
             }
+            if (settling.has(id)) {
+                return;
+            }
+            settling.add(id);
             fireAtomCommand(
                 appAtomRegistry,
                 settleWalletPushActionCommand,
                 { action: action.value, db, walletWrite: parsed.value.walletWrite },
                 {
-                    onFailure: (cause) => console.warn("[outlayr] wallet push action failed", Cause.squash(cause)),
+                    onFailure: (cause) => {
+                        settling.delete(id);
+                        console.warn("[outlayr] wallet push action failed", Cause.squash(cause));
+                    },
                     onSuccess: () => {
+                        settling.delete(id);
                         if (disposed || id === handled) {
                             return;
                         }
                         handled = id;
-                        clearLastNotificationResponse();
+                        if (getLastNotificationResponse()?.notification.request.identifier === id) {
+                            clearLastNotificationResponse();
+                        }
                         void dismissNotificationAsync(id);
                     },
                 },

@@ -164,9 +164,19 @@ interface DrainResult {
 const NOTHING_DRAINED: DrainResult = { applied: 0, autologged: 0 };
 
 const dismissed = new Set<string>();
+const dismissedPurchases = new Map<string, number>();
+const filedFresh = new Map<string, { date: number; key: string | undefined }>();
 
 export function dismissPendingWrite(id: string): void {
     dismissed.add(id);
+    const filed = filedFresh.get(id);
+    if (filed?.key) {
+        dismissedPurchases.set(filed.key, filed.date);
+    }
+}
+
+export function filedThisSession(id: string): boolean {
+    return filedFresh.has(id);
 }
 
 type Batch = Pick<PendingWriteFacts, "access" | "captured" | "ledger" | "usage">;
@@ -445,6 +455,24 @@ const draftDebt = Effect.fn("PendingWrites.draftDebt")(function* draftDebt(
     );
 });
 
+const isDismissedPurchase = (job: PendingWrite) => {
+    if (dismissed.has(job.id)) {
+        return true;
+    }
+    const key = job.dedupeKey?.trim();
+    const recorded = key ? dismissedPurchases.get(key) : undefined;
+    return recorded !== undefined && Math.abs(recorded - job.date) <= WALLET_DEDUPE_WINDOW_MS;
+};
+
+const rememberDismissedPurchases = (jobs: readonly PendingWrite[]) => {
+    for (const job of jobs) {
+        const key = job.dedupeKey?.trim();
+        if (key && dismissed.has(job.id)) {
+            dismissedPurchases.set(key, job.date);
+        }
+    }
+};
+
 // Each pending write is recorded against its row in the same SQLite transaction as the insert, which collapses the
 // queue's at-least-once delivery to exactly once.
 export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(function* applyPendingWrites(
@@ -458,6 +486,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     if (jobs.length === 0) {
         return NOTHING_DRAINED;
     }
+    rememberDismissedPurchases(jobs);
     const at = now.getTime();
     let ledger = yield* readLedger(db);
     let applied = 0;
@@ -468,7 +497,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     // Exactly-once depends on this pending write seeing the ledger row the previous one's SQLite transaction
     // committed, so they must land one at a time.
     for (const queued of jobs) {
-        if (dismissed.has(queued.id)) {
+        if (isDismissedPurchase(queued)) {
             continue;
         }
         const debt = readDebt(queued, reads);
@@ -515,6 +544,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
         }
         ({ ledger, usage } = yield* fileDecision(db, write, decision, { ledger, usage }, now));
         if (decision.kind === "file") {
+            filedFresh.set(write.id, { date: queued.date, key: queued.dedupeKey?.trim() });
             captureEntrySaved({ income: write.income, mode: "create", source: decision.autolog });
             autologged += autologExpenseCount(decision.autolog, write.income);
         }

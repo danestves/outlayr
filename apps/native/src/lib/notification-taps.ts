@@ -6,9 +6,9 @@ import type { Href } from "expo-router";
 import { readPlans } from "@/data/installments-core";
 import { dropNotificationDebt, findNotificationDebt } from "@/data/notification-debts";
 import { drainDevicePendingWrites } from "@/data/pending-writes";
-import { dismissPendingWrite, pendingWriteTxId } from "@/data/pending-writes-core";
+import { dismissPendingWrite, filedThisSession, pendingWriteTxId } from "@/data/pending-writes-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";
-import { getTransactionById } from "@/data/transactions-core";
+import { getTransactionById, transactionsRepo } from "@/data/transactions-core";
 import { cardAccount, cardStillAsks, fileWaitingPurchases } from "@/data/wallet-state-core";
 import type { Database } from "@/db/client";
 import type { NotificationDebt } from "@/domain/meta-values";
@@ -145,7 +145,9 @@ export const settleWalletPushAction = Effect.fn("NotificationTaps.settleWalletPu
         }
         yield* dropNotificationDebt(db, walletWrite);
         if (txId !== null) {
-            yield* Effect.logWarning("[outlayr] a deleted charge landed before its dismissal");
+            yield* filedThisSession(walletWrite)
+                ? transactionsRepo.remove(db, txId)
+                : Effect.logWarning("[outlayr] a deleted charge landed before its dismissal");
         }
     }
 );
