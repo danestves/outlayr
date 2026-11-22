@@ -2,7 +2,7 @@ name: outlayr
 
 services:
     convex:
-        image: ghcr.io/convex/convex-backend:${CONVEX_VERSION:-21f6fe42d4a5e4b8530f69b9a188dabcdb316e06}
+        image: ghcr.io/convex/convex-backend:${CONVEX_VERSION:-cf39368b85da10d95522e27960d57833c048ea56}
         restart: unless-stopped
         stop_grace_period: 10s
         stop_signal: SIGINT
@@ -25,7 +25,7 @@ services:
             start_period: 10s
 
     convex-dashboard:
-        image: ghcr.io/convex/convex-dashboard:${CONVEX_VERSION:-21f6fe42d4a5e4b8530f69b9a188dabcdb316e06}
+        image: ghcr.io/convex/convex-dashboard:${CONVEX_VERSION:-cf39368b85da10d95522e27960d57833c048ea56}
         restart: unless-stopped
         stop_grace_period: 10s
         stop_signal: SIGINT
