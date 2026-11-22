@@ -38,6 +38,11 @@ describe("resolveDeepLink", () => {
         expect(resolveDeepLink("outlayr://budgets?from=widget")).toBe("/balances?view=categories&from=widget");
     });
 
+    it("keeps the screen under a section host instead of stopping at the section", () => {
+        expect(resolveDeepLink("outlayr://insights/plan")).toBe("/insights/plan");
+        expect(resolveDeepLink("/insights/breakdown?from=widget")).toBe("/insights/breakdown?from=widget");
+    });
+
     it("degrades a host with no id to its section rather than to not-found", () => {
         expect(resolveDeepLink("outlayr://transaction")).toBe("/");
     });

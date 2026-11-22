@@ -91,7 +91,7 @@ export const features = {
         link: "/settings/categories",
         proves: "The categories list opens and its New category action opens the create sheet.",
         says: ["edit my categories", "add a category", "manage category names"],
-        steps: [{ press: 'label="New category"' }, { see: "New Category" }],
+        steps: [{ see: "New category" }, { press: 'label="New category"' }, { see: "Add Category" }],
     },
     "settings-appearance": {
         link: "/settings",

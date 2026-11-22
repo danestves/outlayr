@@ -11,3 +11,20 @@ index 93581e6..0e57e07 100644
              return {
                  type: 'xcasset',
                  name: iconComponentProps.xcasset
+diff --git a/ios/Toolbar/RouterToolbarModule.swift b/ios/Toolbar/RouterToolbarModule.swift
+index 1bee03c..e41e462 100644
+--- a/ios/Toolbar/RouterToolbarModule.swift
++++ b/ios/Toolbar/RouterToolbarModule.swift
+@@ -71,10 +71,10 @@ public class RouterToolbarModule: Module {
+         view.titleStyle = style?.toTitleStyle()
+       }
+       Prop("accessibilityLabel") { (view: RouterToolbarItemView, accessibilityLabel: String?) in
+-        view.accessibilityLabel = accessibilityLabel
++        view.routerAccessibilityLabel = accessibilityLabel
+       }
+       Prop("accessibilityHint") { (view: RouterToolbarItemView, accessibilityHint: String?) in
+-        view.accessibilityHint = accessibilityHint
++        view.routerAccessibilityHint = accessibilityHint
+       }
+       Prop("disabled") { (view: RouterToolbarItemView, disabled: Bool?) in
+         view.disabled = disabled ?? false
