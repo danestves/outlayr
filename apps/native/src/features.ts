@@ -21,7 +21,7 @@ export const features = {
         link: "/settings/about",
         proves: "The licenses list opens from About and shows a bundled package.",
         says: ["open source licenses", "the licenses screen", "third-party notices"],
-        steps: [{ press: 'label="Open source licenses"' }, { see: "@babel/runtime" }],
+        steps: [{ press: 'label="Open source licenses"' }, { see: "@babel/runtime, MIT" }],
     },
     "add-expense": {
         link: "/transactions/create",
