@@ -48,6 +48,7 @@ import type * as sharedReports from "../sharedReports.js";
 import type * as sync from "../sync.js";
 import type * as voiceEntry from "../voiceEntry.js";
 import type * as webPush from "../webPush.js";
+import type * as webhooks from "../webhooks.js";
 
 import type {
   ApiFromModules,
@@ -96,6 +97,7 @@ declare const fullApi: ApiFromModules<{
   sync: typeof sync;
   voiceEntry: typeof voiceEntry;
   webPush: typeof webPush;
+  webhooks: typeof webhooks;
 }>;
 
 /**

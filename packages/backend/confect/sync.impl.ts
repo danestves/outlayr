@@ -3,6 +3,7 @@ import type { Document } from "@confect/server";
 import { utcDayStart } from "@outlayr/money/ledger-zone";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { ConvexError } from "convex/values";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -17,6 +18,8 @@ import type { MoneyTable } from "./lib/ledgerCells";
 import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
 import { incomingWins, SYNCED_TABLES } from "./lib/syncTables";
 import type { SyncedTable } from "./lib/syncTables";
+import { emitEntriesFiled } from "./lib/webhookEvents";
+import type { FiledEntry } from "./lib/webhookEvents";
 import { noteLoggedDay } from "./referrals";
 import { requirePro } from "./revenuecat";
 import {
@@ -188,6 +191,7 @@ const push = FunctionImpl.make(
             let accepted = 0;
             let skipped = 0;
             let loggedEntry = false;
+            const filed: FiledEntry[] = [];
             const movedCells: number[] = [];
             const reEmittedPolicyWinners = new Set<string>();
 
@@ -230,7 +234,10 @@ const push = FunctionImpl.make(
                 movedCells.push(...cellInstants(row, existing));
                 nextSeq += 1;
                 accepted += 1;
-                loggedEntry ||= row.table === "transactions" && existing === null && row.deletedAt === null;
+                if (row.table === "transactions" && existing === null && row.deletedAt === null) {
+                    loggedEntry = true;
+                    filed.push({ ...row.fields, localId: row.localId, updatedAt: row.updatedAt });
+                }
             }
 
             yield* counter.advanceTo(nextSeq);
@@ -238,6 +245,7 @@ const push = FunctionImpl.make(
             if (loggedEntry) {
                 yield* noteLoggedDay(userId);
             }
+            yield* emitEntriesFiled(userId, filed, yield* Clock.currentTimeMillis);
 
             return { accepted, nextSeq, skipped };
         },

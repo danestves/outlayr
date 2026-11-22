@@ -17,6 +17,9 @@ export const NOVEMBER_NOTICE_AT_MS = Date.UTC(2026, 10, 19);
 
 export const CAPTURE_PUSH_EFFECTIVE_AT_MS = NOVEMBER_NOTICE_AT_MS;
 
+// Nothing is received or sent for a user webhook before the privacy notice that announces them takes effect.
+export const WEBHOOKS_EFFECTIVE_AT_MS = Date.UTC(2027, 0, 1);
+
 const GUEST_PURCHASE_AT_MS = Date.UTC(2026, 10, 21);
 
 export const POLICY_NOTICES: readonly PolicyNotice[] = [

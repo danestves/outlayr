@@ -11,6 +11,7 @@ import categories from "./tables/categories";
 import enrichmentJobs from "./tables/enrichmentJobs";
 import exchangeRates from "./tables/exchangeRates";
 import groundedSpend from "./tables/groundedSpend";
+import inboundWrites from "./tables/inboundWrites";
 import installmentPlans from "./tables/installmentPlans";
 import installments from "./tables/installments";
 import ledgerCells from "./tables/ledgerCells";
@@ -40,6 +41,9 @@ import voiceStreamCredits from "./tables/voiceStreamCredits";
 import voiceThreads from "./tables/voiceThreads";
 import voiceTurns from "./tables/voiceTurns";
 import webPushSubscriptions from "./tables/webPushSubscriptions";
+import webhookDeliveries from "./tables/webhookDeliveries";
+import webhookEndpoints from "./tables/webhookEndpoints";
+import webhookTokens from "./tables/webhookTokens";
 
 export default $defineSchema({
   accountDeletionJobs: $Table.tableDefinition(accountDeletionJobs),
@@ -52,6 +56,7 @@ export default $defineSchema({
   enrichmentJobs: $Table.tableDefinition(enrichmentJobs),
   exchangeRates: $Table.tableDefinition(exchangeRates),
   groundedSpend: $Table.tableDefinition(groundedSpend),
+  inboundWrites: $Table.tableDefinition(inboundWrites),
   installmentPlans: $Table.tableDefinition(installmentPlans),
   installments: $Table.tableDefinition(installments),
   ledgerCells: $Table.tableDefinition(ledgerCells),
@@ -81,4 +86,7 @@ export default $defineSchema({
   voiceThreads: $Table.tableDefinition(voiceThreads),
   voiceTurns: $Table.tableDefinition(voiceTurns),
   webPushSubscriptions: $Table.tableDefinition(webPushSubscriptions),
+  webhookDeliveries: $Table.tableDefinition(webhookDeliveries),
+  webhookEndpoints: $Table.tableDefinition(webhookEndpoints),
+  webhookTokens: $Table.tableDefinition(webhookTokens),
 });
