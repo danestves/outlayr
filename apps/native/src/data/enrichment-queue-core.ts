@@ -6,11 +6,12 @@ import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
+import { presetForName } from "@/domain/category-presets";
 import type { CloudError } from "@/lib/cloud-error";
 import type { LogoOutcome, MerchantImageRequest } from "@/lib/logo-fetch";
 
 import { Meta } from "./app-meta-core";
-import { ensureCategoryByName, presetForName } from "./categories-core";
+import { ensureCategoryByName } from "./categories-core";
 import { rememberMerchant } from "./merchant-book-core";
 import { tagIdsForQuery, tagsRepo } from "./tags-core";
 

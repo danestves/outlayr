@@ -1,8 +1,8 @@
 import type { BudgetWindow } from "@outlayr/money/budget-window";
 import { addDays } from "@outlayr/money/calendar";
 
-import type { InsightsPeriod } from "@/data/insights";
 import { formatSentenceDate, monthAbbrev, weekdayInitial } from "@/domain/dates";
+import type { InsightsPeriod } from "@/domain/insights";
 import { daysBetween } from "@/domain/local-day";
 import type { Language } from "@/i18n/languages";
 

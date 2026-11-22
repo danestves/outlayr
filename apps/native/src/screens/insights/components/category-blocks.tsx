@@ -7,7 +7,7 @@ import { CategoryIcon } from "@/components/category-icon";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
-import type { CategoryBreakdownEntry, InsightsMeasure } from "@/data/insights";
+import type { CategoryBreakdownEntry, InsightsMeasure } from "@/domain/insights";
 import { formatAmount } from "@/domain/money";
 import { LARGEST_STANDARD_FONT_SCALE } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";

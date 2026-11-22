@@ -4,11 +4,11 @@ import * as Cause from "effect/Cause";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
-import { presetForName } from "@/data/categories-core";
 import { useLiveQuery } from "@/data/live-query";
 import { applyCategoryOverrides, buildImportPlan, CsvTransferError } from "@/data/transfer-core";
 import type { CategoryOverride, ImportEntry, ImportPlan, PlannedCategory, SkipReason } from "@/data/transfer-core";
 import { categories, transactions } from "@/db/schema";
+import { presetForName } from "@/domain/category-presets";
 import { fingerprintsOf, flagDuplicates } from "@/domain/import-dedup";
 import type { ImportCommitState, ImportFlowState } from "@/domain/import-flow";
 import { importOutTotals } from "@/domain/import-totals";

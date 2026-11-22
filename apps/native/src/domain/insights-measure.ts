@@ -1,4 +1,4 @@
-import type { InsightsMeasure } from "@/data/insights";
+import type { InsightsMeasure } from "@/domain/insights";
 
 export const INSIGHTS_MEASURE_ORDER: readonly InsightsMeasure[] = ["spent", "income", "net"];
 

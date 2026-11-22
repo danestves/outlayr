@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-import type { InsightsMeasure, InsightsPeriod } from "@/data/insights";
+import type { InsightsMeasure, InsightsPeriod } from "@/domain/insights";
 import { useTranslation } from "@/i18n/context";
 
 import { MEASURE_KEY } from "../measure-label";

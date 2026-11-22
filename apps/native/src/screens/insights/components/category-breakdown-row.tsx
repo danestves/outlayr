@@ -7,7 +7,7 @@ import { CategoryIconTile } from "@/components/category-icon-tile";
 import { ROW_TYPE } from "@/components/row-type";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
-import type { CategoryBreakdownEntry, InsightsMeasure } from "@/data/insights";
+import type { CategoryBreakdownEntry, InsightsMeasure } from "@/domain/insights";
 import { breakdownRiseIsFavourable } from "@/domain/insights-measure";
 import { formatAmount } from "@/domain/money";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";

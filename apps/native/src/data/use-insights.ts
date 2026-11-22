@@ -3,8 +3,6 @@ import { and, gte, isNull, lte, min } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
-import { useLanguage } from "@/i18n/context";
-
 import {
     aggregateInsightsWindows,
     categoryMovers,
@@ -17,7 +15,7 @@ import {
     windowShortLabel,
     windowStart,
     withCategoryDeltas,
-} from "./insights";
+} from "@/domain/insights";
 import type {
     CategoryBreakdownEntry,
     CategoryMeta,
@@ -27,7 +25,9 @@ import type {
     InsightsContribution,
     InsightsMeasure,
     InsightsPeriod,
-} from "./insights";
+} from "@/domain/insights";
+import { useLanguage } from "@/i18n/context";
+
 import { useLiveQuery } from "./live-query";
 import { useValuation } from "./use-valuation";
 

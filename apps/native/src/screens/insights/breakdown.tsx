@@ -14,6 +14,12 @@ import { useDisplaySettings, useSetting } from "@/contexts/display-settings-cont
 import { useDatabase } from "@/contexts/local-data-context";
 import { useNetWorth } from "@/data/accounts";
 import { useGlobalCurrency } from "@/data/app-meta";
+import { useWindowTransactions } from "@/data/insights-transactions";
+import { useDeferredDelete } from "@/data/use-deferred-delete";
+import { useInsights } from "@/data/use-insights";
+import type { UseInsightsResult } from "@/data/use-insights";
+import { useNow } from "@/data/use-now";
+import { BALANCES_ACCOUNTS } from "@/domain/balances";
 import {
     bucketDateLabel,
     categoryBreakdownWithin,
@@ -23,7 +29,7 @@ import {
     runningTotals,
     subcategoryBreakdown,
     subcategoryBreakdownWithin,
-} from "@/data/insights";
+} from "@/domain/insights";
 import type {
     CategoryBreakdownEntry,
     CategoryMeta,
@@ -32,13 +38,7 @@ import type {
     InsightsContribution,
     InsightsMeasure,
     InsightsPeriod,
-} from "@/data/insights";
-import { useWindowTransactions } from "@/data/insights-transactions";
-import { useDeferredDelete } from "@/data/use-deferred-delete";
-import { useInsights } from "@/data/use-insights";
-import type { UseInsightsResult } from "@/data/use-insights";
-import { useNow } from "@/data/use-now";
-import { BALANCES_ACCOUNTS } from "@/domain/balances";
+} from "@/domain/insights";
 import {
     INSIGHTS_MEASURE_ORDER,
     insightsMeasureAlternatives,

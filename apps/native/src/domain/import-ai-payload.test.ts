@@ -1,7 +1,8 @@
 import { parseCsvAmount, parseCsvDate } from "@outlayr/money/csv-read";
 import { describe, expect, it } from "vite-plus/test";
 
-import type { ColumnMapping, ParsedImportFile } from "@/data/transfer-core";
+import type { ParsedImportFile } from "@/data/transfer-core";
+import type { ColumnMapping } from "@/domain/import-header";
 
 import { buildClassificationPayload, MAX_LABELS, scrubLabel } from "./import-ai-payload";
 

@@ -6,8 +6,9 @@ import * as SubscriptionRef from "effect/SubscriptionRef";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { categoryKey } from "@/data/transfer-core";
-import type { ColumnMapping, ParsedImportFile } from "@/data/transfer-core";
+import type { ParsedImportFile } from "@/data/transfer-core";
 import type { ImportFlowEvent } from "@/domain/import-flow";
+import type { ColumnMapping } from "@/domain/import-header";
 import type { CsvImportFn, CsvImportOutcome } from "@/lib/cloud-ai";
 
 import * as CsvImport from "./csv-import";

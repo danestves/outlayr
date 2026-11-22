@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
-import { growing } from "@/lib/growing";
+import { growing } from "@/domain/growing";
 
 import { useCategoryMeta } from "./categories";
 import { NO_READ, NO_ROWS, useLiveQuery, useLiveRead, useLiveValue } from "./live-query";

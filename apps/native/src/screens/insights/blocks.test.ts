@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import type { CategoryBreakdownEntry } from "@/data/insights";
+import type { CategoryBreakdownEntry } from "@/domain/insights";
 
 import { layoutBlocks, squarify } from "./blocks";
 

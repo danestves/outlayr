@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { categoryBreakdownWithin, categoryMovers, runningTotals, withCategoryDeltas } from "./insights";
-import type { CategoryBreakdownEntry, CategoryMeta, InsightsBucket, InsightsContribution } from "./insights";
+import { categoryBreakdownWithin, categoryMovers, runningTotals, withCategoryDeltas } from "@/domain/insights";
+import type { CategoryBreakdownEntry, CategoryMeta, InsightsBucket, InsightsContribution } from "@/domain/insights";
 
 function entry(id: string, amount: number): CategoryBreakdownEntry {
     return {
