@@ -281,6 +281,20 @@ describe("days logged", () => {
         expect(rc.grants).toContainEqual({ endsAt, userId: inviter.userId });
         await expect(t.run((ctx) => runEdge(isPro(ctx, inviter.userId)))).resolves.toBeTruthy();
     });
+
+    it("counts a day logged in another profile as the friend's day", async () => {
+        const t = harness();
+        const { code } = await inviterWithCode(t);
+        const friend = await joinedFriend(t, code);
+
+        await authenticatedAs(t, friend).mutation(api.sync.push, {
+            deviceId: "device-aaaa",
+            profileId: "6f1c2b3a-4d5e-4f60-8a7b-9c0d1e2f3a4b",
+            rows: [entry()],
+        });
+
+        await expect(referralOf(t, friend)).resolves.toMatchObject({ daysLogged: 1, status: "counting" });
+    });
 });
 
 describe("invites earned by a paying friend", () => {

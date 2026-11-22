@@ -6,9 +6,9 @@ import type { Database } from "@/db/client";
 import { appMeta, profiles } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 
-import { META_KEYS, setMeta } from "./app-meta-core";
-import { SETTING_DEFAULTS } from "./settings-core";
-import { SYNCED_META_KEYS } from "./sync-tables";
+import { Meta } from "./app-meta-core";
+import { META, SETTING_NAMES } from "./app-meta-registry";
+import type { MetaName } from "./app-meta-registry";
 
 export type Profile = typeof profiles.$inferSelect;
 
@@ -20,18 +20,19 @@ export interface ProfileIdentity {
     imageUri: string | null;
 }
 
-export const CARRIED_META_KEYS: readonly string[] = [
-    ...Object.keys(SETTING_DEFAULTS),
-    META_KEYS.accountDeferred,
-    META_KEYS.favouriteCurrencies,
-    META_KEYS.onboardingComplete,
-    META_KEYS.onboardingGateMigrated,
-    META_KEYS.reminderAsked,
-    META_KEYS.reminderChosen,
-    META_KEYS.timeZone,
+// `currency` is set from the pick, and `walletCards` names Personal's accounts.
+export const CARRIED_META_KEYS: readonly MetaName[] = [
+    ...SETTING_NAMES.filter((name) => name !== "currency" && name !== "walletCards"),
+    "accountDeferred",
+    "favouriteCurrencies",
+    "onboardingComplete",
+    "onboardingGateMigrated",
+    "reminderAsked",
+    "reminderChosen",
+    "timeZone",
 ];
 
-const DEVICE_META_KEYS = CARRIED_META_KEYS.filter((key) => !SYNCED_META_KEYS.some((synced) => synced === key));
+const DEVICE_META_KEYS = CARRIED_META_KEYS.filter((name) => META[name].scope === "device");
 
 const ProfilesOperation = Schema.Literals(["create", "seed", "update", "delete", "switch"]);
 
@@ -64,12 +65,17 @@ export const seedProfileLedger = Effect.fn("Profiles.seedLedger")(function* seed
         Effect.gen(function* write() {
             for (const { key, value } of carried) {
                 if (value !== null) {
-                    yield* setMeta(to, key, value);
+                    yield* query("seed", () =>
+                        to
+                            .insert(appMeta)
+                            .values({ key, value })
+                            .onConflictDoUpdate({ set: { value }, target: appMeta.key })
+                    );
                 }
             }
             if (currency !== undefined) {
-                yield* setMeta(to, META_KEYS.currency, currency);
-                yield* setMeta(to, META_KEYS.currencyChosen, "true");
+                yield* Meta.set(to, "currency", currency);
+                yield* Meta.set(to, "currencyChosen", true);
             }
         }),
         (cause) => new ProfilesError({ cause, operation: "seed" })
