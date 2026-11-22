@@ -178,23 +178,31 @@ export function adoptPendingWrites(jobs: PendingWrite[]): boolean {
  * Nothing is deleted here: the caller commits, then calls {@link releasePendingWrites}, so a force-quit mid-drain
  * replays. That is safe because `applyPendingWrites` records each enqueue id in the same SQLite transaction.
  */
+export function claimPendingWritesOrThrow(): ClaimedWrites {
+    adoptLegacyQueue();
+    const claimed = claimQueue(queueFiles);
+    return { ...claimed, captured: new Set(captureIds(claimed).filter((id) => answerOf(id) != null)) };
+}
+
 export function claimPendingWrites(): ClaimedWrites {
     try {
-        adoptLegacyQueue();
-        const claimed = claimQueue(queueFiles);
-        return { ...claimed, captured: new Set(captureIds(claimed).filter((id) => answerOf(id) != null)) };
+        return claimPendingWritesOrThrow();
     } catch (error) {
         console.warn("[outlayr] pending writes unreadable", error);
         return { jobs: [], names: [] };
     }
 }
 
+export function releasePendingWritesOrThrow(claimed: ClaimedWrites): void {
+    releaseQueue(queueFiles, claimed);
+    for (const id of captureIds(claimed)) {
+        sharedStore?.remove(`${CAPTURE_ANSWER_PREFIX}${id}`);
+    }
+}
+
 export function releasePendingWrites(claimed: ClaimedWrites): void {
     try {
-        releaseQueue(queueFiles, claimed);
-        for (const id of captureIds(claimed)) {
-            sharedStore?.remove(`${CAPTURE_ANSWER_PREFIX}${id}`);
-        }
+        releasePendingWritesOrThrow(claimed);
     } catch (error) {
         console.warn("[outlayr] pending writes not released", error);
     }

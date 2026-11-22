@@ -33,6 +33,10 @@ export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function
 ) {
     // An existing file may hold entries from before ready markers, so only a fresh one is safe to delete.
     const existed = profileLedgerFileExists(id);
+    if (!existed) {
+        // A marker outliving its ledger would bless this one before its seed finishes.
+        yield* deleteProfileLedger(id);
+    }
     const ledger = yield* Effect.try({ catch: failed("create"), try: () => openDatabase(databaseNameFor(id)) });
     yield* Effect.gen(function* seed() {
         yield* Effect.tryPromise({ catch: failed("create"), try: () => migrate(ledger, migrationsBundle) });

@@ -30,7 +30,7 @@ import type { SecureStorageError } from "@/lib/secure-storage";
 import { SecureStorage } from "@/lib/secure-storage";
 
 import { createCommand, createRuntimeCommand } from "./atom-command";
-import { leaveProfile } from "./profiles-commands";
+import { signOutToPersonal } from "./profiles-commands";
 
 type AuthClient = NonNullable<typeof authClient>;
 
@@ -58,10 +58,12 @@ export const signOutCommand = createRuntimeCommand(appRuntime, {
             navigateToLedger: input.navigateToLedger,
             quiesce: quiesce(input.db),
             signOut: () =>
-                forgetCaptureLookup().pipe(
-                    Effect.andThen(Effect.tryPromise(() => input.client.signOut())),
-                    Effect.andThen(leaveProfile(input.db)),
-                    Effect.asVoid
+                signOutToPersonal(
+                    input.db,
+                    forgetCaptureLookup().pipe(
+                        Effect.andThen(Effect.tryPromise(() => input.client.signOut())),
+                        Effect.asVoid
+                    )
                 ),
         }),
     label: "cloud:sign-out",

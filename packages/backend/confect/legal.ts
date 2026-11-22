@@ -25,6 +25,7 @@ export const WEBHOOKS_EFFECTIVE_AT_MS = JANUARY_NOTICE_AT_MS;
 export const REMINDER_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
 
 const GUEST_PURCHASE_AT_MS = Date.UTC(2026, 10, 21);
+const PROFILES_AT_MS = JANUARY_NOTICE_AT_MS;
 
 export const POLICY_NOTICES: readonly PolicyNotice[] = [
     {
@@ -1122,6 +1123,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "With Share analytics on: when the app sets the reminder for your second entry, and when you open the app from a reminder. Never amounts, names or notes.",
                     label: "Reminders in analytics",
                 },
+                {
+                    detail: "With Pro you can keep separate profiles, such as Work or Family. Each profile's name, icon, and color sync with its own ledger. The web app, a connected AI assistant, and Notion see only your Personal profile.",
+                    label: "Profiles",
+                },
             ],
             de: [
                 {
@@ -1131,6 +1136,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Mit eingeschaltetem „Analysedaten teilen“: wann die App die Erinnerung an deinen zweiten Eintrag plant und wann du die App über eine Erinnerung öffnest. Nie Beträge, Namen oder Notizen.",
                     label: "Erinnerungen in Analysen",
+                },
+                {
+                    detail: "Mit Pro kannst du getrennte Profile führen, etwa Arbeit oder Familie. Name, Symbol und Farbe jedes Profils werden mit seinem eigenen Haushaltsbuch synchronisiert. Die Web-App, ein verbundener KI-Assistent und Notion sehen nur dein Profil „Privat“.",
+                    label: "Profile",
                 },
             ],
             es: [
@@ -1142,6 +1151,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Con Compartir analíticas activado: cuándo la app programa el recordatorio de tu segunda entrada y cuándo abres la app desde un recordatorio. Nunca montos, nombres ni notas.",
                     label: "Recordatorios en analíticas",
                 },
+                {
+                    detail: "Con Pro puedes tener perfiles separados, como Trabajo o Familia. El nombre, el ícono y el color de cada perfil se sincronizan con su propio registro. La app web, un asistente de IA conectado y Notion solo ven tu perfil Personal.",
+                    label: "Perfiles",
+                },
             ],
             fr: [
                 {
@@ -1151,6 +1164,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Avec Partager les données d'analyse activé : quand l'app programme le rappel de votre deuxième opération, et quand vous ouvrez l'app depuis un rappel. Jamais de montants, de noms ni de notes.",
                     label: "Rappels dans les statistiques",
+                },
+                {
+                    detail: "Avec Pro, vous pouvez tenir des profils séparés, comme Travail ou Famille. Le nom, l'icône et la couleur de chaque profil se synchronisent avec son propre registre. L'app web, un assistant IA connecté et Notion ne voient que votre profil Personnel.",
+                    label: "Profils",
                 },
             ],
             pt: [
@@ -1162,10 +1179,26 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Com Compartilhar análises ativado: quando o app agenda o lembrete do seu segundo lançamento e quando você abre o app a partir de um lembrete. Nunca valores, nomes ou notas.",
                     label: "Lembretes nas análises",
                 },
+                {
+                    detail: "Com o Pro você pode manter perfis separados, como Trabalho ou Família. O nome, o ícone e a cor de cada perfil sincronizam com o registro próprio dele. O app web, um assistente de IA conectado e o Notion veem só o seu perfil Pessoal.",
+                    label: "Perfis",
+                },
             ],
         },
         document: "privacy",
         effectiveAtMs: JANUARY_NOTICE_AT_MS,
+        postedAtMs: Date.UTC(2026, 10, 24),
+    },
+    {
+        changes: {
+            en: [{ label: "Profiles are part of Pro. The free plan keeps one ledger." }],
+            de: [{ label: "Profile gehören zu Pro. Der kostenlose Plan behält ein Haushaltsbuch." }],
+            es: [{ label: "Los perfiles son parte de Pro. El plan gratis mantiene un registro." }],
+            fr: [{ label: "Les profils font partie de Pro. L'offre gratuite garde un registre." }],
+            pt: [{ label: "Os perfis fazem parte do Pro. O plano grátis mantém um registro." }],
+        },
+        document: "terms",
+        effectiveAtMs: PROFILES_AT_MS,
         postedAtMs: Date.UTC(2026, 10, 24),
     },
 ];

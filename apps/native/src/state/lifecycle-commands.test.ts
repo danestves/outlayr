@@ -95,7 +95,7 @@ describe("reconcileAdoptionCommand", () => {
     it("pushes a new profile's chosen currency from the phone that made it", async () => {
         mockProfile = "6f1c2b3a-4d5e-4f60-8a7b-9c0d1e2f3a4b";
         mockEngine = engineReading("empty").engine;
-        await Effect.runPromise(Meta.set(db, "currencyChosen", true));
+        await Effect.runPromise(Meta.set(db, "profileMadeHere", true));
 
         await expect(reconcile(db)).resolves.toBe("settled");
 

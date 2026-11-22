@@ -87,8 +87,7 @@ export const reconcileAdoption = Effect.fn("Adoption.reconcile")(function* recon
         return "defer";
     }
     // The phone that made a profile chose its currency, and only a push carries it to the account other phones read.
-    // Another phone's copy holds only the bootstrap default, which must not overwrite that choice.
-    const madeHere = plan === "fresh" && activeProfileId() !== undefined && (yield* Meta.get(db, "currencyChosen"));
+    const madeHere = plan === "fresh" && activeProfileId() !== undefined && (yield* Meta.get(db, "profileMadeHere"));
     const actions = madeHere ? adoptionActions("adopt") : adoptionActions(plan);
     if (actions) {
         yield* completeAdoption(db, engine, actions, accountId);

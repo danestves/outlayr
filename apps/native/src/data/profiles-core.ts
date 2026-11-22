@@ -76,6 +76,7 @@ export const seedProfileLedger = Effect.fn("Profiles.seedLedger")(function* seed
             if (currency !== undefined) {
                 yield* Meta.set(to, "currency", currency);
                 yield* Meta.set(to, "currencyChosen", true);
+                yield* Meta.set(to, "profileMadeHere", true);
             }
         }),
         (cause) => new ProfilesError({ cause, operation: "seed" })

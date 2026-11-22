@@ -146,6 +146,8 @@ const BOOKKEEPING = defineMeta({
     pdfImport: { default: null, schema: Schema.fromJsonString(FileImportRecord), scope: "device" },
     // Written in the same SQLite transaction as the row it records, so a replayed queue file never logs twice.
     pendingWriteLedger: { elements: PendingWriteLedgerEntry, scope: "device" },
+    // Only the maker may push an empty profile, or a second phone's default overwrites its currency.
+    profileMadeHere: { default: false, schema: BoolText, scope: "device" },
     recurrenceRepaired: { default: false, schema: BoolText, scope: "device" },
     referralRewardSeen: { default: 0, schema: NumberText, scope: "device" },
     reminderAsked: { default: false, schema: BoolText, scope: "device" },
