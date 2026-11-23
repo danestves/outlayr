@@ -71,7 +71,7 @@ export interface StageAction {
     onPress: () => void;
 }
 
-export type StageFooter = StageAction & { tone?: StageTone };
+export type StageFooter = StageAction & { lead?: ReactNode; tone?: StageTone };
 
 interface StageContentProps {
     /** No surface and no header: the step floats over the form, its field living in the sentence. */
@@ -136,23 +136,26 @@ export function TransactionStage({
 
     const button =
         footer && !keyboardShown ? (
-            <Pressable
-                accessibilityLabel={footer.label}
-                accessibilityRole="button"
-                className={cn(
-                    "min-h-[48px] items-center justify-center rounded-[14px] px-4 py-2 active:opacity-80",
-                    buttonOnly ? null : "mt-4",
-                    FOOTER_FILL[tone]
-                )}
-                onPress={footer.onPress}
-                testID="stage-footer"
-            >
-                <Animated.View entering={FOOTER_LABEL_ENTERING} key={footer.label}>
-                    <Text className={cn("font-sans-semibold text-callout text-center", FOOTER_INK[tone])}>
-                        {footer.label}
-                    </Text>
-                </Animated.View>
-            </Pressable>
+            <>
+                {footer.lead == null ? null : <View className={buttonOnly ? "pb-3" : "pt-4"}>{footer.lead}</View>}
+                <Pressable
+                    accessibilityLabel={footer.label}
+                    accessibilityRole="button"
+                    className={cn(
+                        "min-h-[48px] items-center justify-center rounded-[14px] px-4 py-2 active:opacity-80",
+                        buttonOnly ? null : "mt-4",
+                        FOOTER_FILL[tone]
+                    )}
+                    onPress={footer.onPress}
+                    testID="stage-footer"
+                >
+                    <Animated.View entering={FOOTER_LABEL_ENTERING} key={footer.label}>
+                        <Text className={cn("font-sans-semibold text-callout text-center", FOOTER_INK[tone])}>
+                            {footer.label}
+                        </Text>
+                    </Animated.View>
+                </Pressable>
+            </>
         ) : null;
 
     if (buttonOnly) {

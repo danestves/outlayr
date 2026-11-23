@@ -31,16 +31,17 @@ interface StepWhenProps {
      * rather than this file minting copy.
      */
     pickLabel?: string;
+    daysOffered?: number;
 }
 
-export function StepWhen({ date, now, onPick, onSelect, pickLabel }: StepWhenProps) {
+export function StepWhen({ date, daysOffered = DAYS_OFFERED, now, onPick, onSelect, pickLabel }: StepWhenProps) {
     const t = useTranslation();
     const { language } = useLanguage();
 
     const today = startOfDay(now);
     const chosen = startOfDay(date).getTime();
 
-    const days = Array.from({ length: DAYS_OFFERED }, (_, back) => {
+    const days = Array.from({ length: daysOffered }, (_, back) => {
         const day = addDays(today, -back);
         const named = NAMED_DAYS[back];
         return {
@@ -61,7 +62,8 @@ export function StepWhen({ date, now, onPick, onSelect, pickLabel }: StepWhenPro
     const pick = (id: WhenOptionId) => {
         const picked = days.find((option) => option.id === id);
         if (picked) {
-            onSelect(atSameTime(picked.day, date));
+            // Rebuilding the same day can land on the other side of a DST repeat hour.
+            onSelect(picked.day.getTime() === chosen ? date : atSameTime(picked.day, date));
             return;
         }
         onPick();

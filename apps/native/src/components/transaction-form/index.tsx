@@ -39,7 +39,7 @@ import { suggestMerchants } from "@/domain/merchant-suggest";
 import { formatAmount, minorUnitsFor } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
 import type { LogAgainDraft } from "@/domain/transaction-actions";
-import { ctaKey, transactionWhenLabel } from "@/domain/transaction-form-labels";
+import { ctaKey, transactionWhenLabel, whenIsToday } from "@/domain/transaction-form-labels";
 import { transactionFormErrors } from "@/domain/transaction-form-validate";
 import { resolveTransactionIdentity } from "@/domain/transaction-identity";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
@@ -77,7 +77,7 @@ import { sentenceLabelsOf } from "./sentence/sentence-labels";
 import { MetaLine } from "./stage/meta-line";
 import { StagePartContext, TransactionStage } from "./stage/stage";
 import type { StageFooter } from "./stage/stage";
-import { advanceFrom, backStepOf, entryWhole, footerPlan, STEP_SLOTS } from "./stage/stage-steps";
+import { advanceFrom, backStepOf, entryWhole, footerPlan, offersSaveDays, STEP_SLOTS } from "./stage/stage-steps";
 import type { GuidedAnswers, StageNavigation, StagePosition, StageStep, StageStepContent } from "./stage/stage-steps";
 import { StepAccount } from "./stage/step-account";
 import { StepAccountInstallments } from "./stage/step-account-installments";
@@ -661,6 +661,25 @@ export function TransactionForm(props: TransactionFormProps) {
         const { onward, saves } = footerPlan(answersFor(amountNumber, merchant, chosen), stageStep);
         return {
             label: saves ? ctaLabel : t("common.next"),
+            lead:
+                saves &&
+                offersSaveDays({
+                    create: mode === "create",
+                    repeating: schedule.interval !== null,
+                    step: stageStep,
+                }) ? (
+                    <StepWhen
+                        date={date}
+                        daysOffered={2}
+                        now={new Date(nowMs)}
+                        onPick={() => enterStep("date")}
+                        onSelect={(next) => {
+                            namePickRef.current += 1;
+                            rate.handleDateChange(next);
+                        }}
+                        pickLabel={t("transaction.sentence.when.pick")}
+                    />
+                ) : undefined,
             onPress: () => {
                 if (onward === null) {
                     pressSubmit(form);
@@ -1059,6 +1078,11 @@ export function TransactionForm(props: TransactionFormProps) {
                                         }
                                         merchantTile={merchantTile}
                                         when={whenLabel}
+                                        whenDefault={whenIsToday({
+                                            date,
+                                            interval: schedule.interval,
+                                            now: new Date(nowMs),
+                                        })}
                                     />
                                 </FormScrollItem>
                             );

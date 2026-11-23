@@ -116,15 +116,19 @@ interface WhenOptions {
     now: Date;
 }
 
+export function whenIsToday({ date, interval, now }: Omit<WhenOptions, "language">): boolean {
+    return interval === null && startOfDay(date).getTime() === startOfDay(now).getTime();
+}
+
 export function transactionWhenLabel(t: TranslateFn, { date, interval, language, now }: WhenOptions): string {
     if (interval !== null) {
         return t("transaction.sentence.when.repeating", { date: formatSentenceDate(date, language), interval });
     }
-    const midnight = startOfDay(now).getTime();
-    const target = startOfDay(date).getTime();
-    if (target === midnight) {
+    if (whenIsToday({ date, interval, now })) {
         return t("transaction.sentence.when.today");
     }
+    const midnight = startOfDay(now).getTime();
+    const target = startOfDay(date).getTime();
     if (target === addDays(new Date(midnight), -1).getTime()) {
         return t("transaction.sentence.when.yesterday");
     }

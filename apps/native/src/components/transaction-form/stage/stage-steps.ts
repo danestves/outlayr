@@ -101,3 +101,8 @@ export function footerPlan(answers: GuidedAnswers, step: StageStep) {
         saves: whole || (step === "account" && entryWhole(answers, "account")),
     };
 }
+
+// Most entries save from whatever step they end on, so the save button is the one place every new entry passes.
+export function offersSaveDays({ create, repeating, step }: { create: boolean; repeating: boolean; step: StageStep }) {
+    return create && !repeating && step !== "when" && step !== "date";
+}

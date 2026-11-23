@@ -595,9 +595,17 @@ const debts = {
         "debts.plan.payBackBy": t({
             en: "Pay back by",
             de: "Zurückzahlen bis",
-            es: "Fecha de pago",
+            es: "Fecha límite",
             fr: "Rembourser avant le",
-            pt: "Data de pagamento",
+            pt: "Prazo",
+        }),
+        "debts.plan.payBackByEmpty": t({
+            en: "Add a date",
+            de: "Datum hinzufügen",
+            es: "Agregar fecha",
+            "es-ES": "Añadir fecha",
+            fr: "Ajouter une date",
+            pt: "Adicionar data",
         }),
         "debts.plan.payOffBy": t({
             en: "Pay off by",

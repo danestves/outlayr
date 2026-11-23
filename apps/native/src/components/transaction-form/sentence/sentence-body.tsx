@@ -54,6 +54,7 @@ interface SentenceBodyProps {
     rest?: { addAccessibilityLabel: string; addLabel: string; onWake: () => void };
     verbs: readonly SentenceVerb[];
     when: string;
+    whenDefault?: boolean;
 }
 
 export function TransactionSentenceBody({
@@ -92,6 +93,7 @@ export function TransactionSentenceBody({
     rest,
     verbs,
     when,
+    whenDefault,
 }: SentenceBodyProps) {
     const chips: readonly SentenceVerb[] =
         rest === undefined
@@ -151,6 +153,7 @@ export function TransactionSentenceBody({
                 paidVia={paidVia}
                 rate={rate}
                 when={when}
+                whenDefault={whenDefault}
             />
 
             {feeLine === undefined ? null : (
