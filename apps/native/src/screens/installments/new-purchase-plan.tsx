@@ -154,6 +154,7 @@ export function NewPurchasePlan({
                             placeholder={t("installments.new.name")}
                             placeholderTextColor={colors.muted}
                             returnKeyType="done"
+                            testID="installment-name"
                             style={{
                                 color: colors.foreground,
                                 fontFamily: ROUNDED,
