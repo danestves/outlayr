@@ -153,22 +153,6 @@ const pro = {
             pt: "Os próximos {count} dias, registrados por você.",
             "pt-PT": "Os próximos {count} dias, registados por si.",
         }),
-        "pro.band.onlyHere_one": t({
-            en: "Your first entry lives only on this phone.",
-            de: "Dein erster Eintrag ist nur auf diesem Handy.",
-            es: "Tu primer registro solo está en este teléfono.",
-            fr: "Votre première opération n'existe que sur ce téléphone.",
-            pt: "Seu primeiro lançamento só existe neste celular.",
-            "pt-PT": "O seu primeiro registo só existe neste telemóvel.",
-        }),
-        "pro.band.onlyHere_other": t({
-            en: "Your {count} entries live only on this phone.",
-            de: "Deine {count} Einträge sind nur auf diesem Handy.",
-            es: "Tus {count} registros solo están en este teléfono.",
-            fr: "Vos {count} opérations n'existent que sur ce téléphone.",
-            pt: "Seus {count} lançamentos só existem neste celular.",
-            "pt-PT": "Os seus {count} registos só existem neste telemóvel.",
-        }),
         "pro.band.ranOut": t({
             en: "Free ran out",
             de: "Gratis aufgebraucht",
