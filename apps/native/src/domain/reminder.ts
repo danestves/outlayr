@@ -92,6 +92,14 @@ export function reminderReconcile(enabled: boolean, permission: ReminderPermissi
     return permission === "granted" ? "schedule" : "disable";
 }
 
+const SECOND_ENTRY_WINDOW_DAYS = 2;
+
+export function secondEntryNudge({ entries, now, savedAt }: { entries: number; now: Date; savedAt: number }) {
+    const saved = new Date(savedAt);
+    const expired = now.getTime() >= addDays(startOfDay(saved), SECOND_ENTRY_WINDOW_DAYS).getTime();
+    return entries > 1 || expired ? null : saved;
+}
+
 export const DAILY_REMINDER_PREFIX = "outlayr.daily-reminder";
 
 const DAILY_REMINDER_DAYS = 7;
@@ -112,6 +120,7 @@ export interface DailyReminderInput {
     language?: Language;
     last: LastEntry | null;
     now: Date;
+    secondEntryAfter?: Date | null;
     time: TimeOfDay;
 }
 
@@ -120,6 +129,7 @@ export function dailyReminderNotices({
     language = runtimeLanguage(),
     last,
     now,
+    secondEntryAfter = null,
     time,
 }: DailyReminderInput): DatedReminder[] {
     const say = (key: string, params?: TranslationParams) =>
@@ -127,6 +137,7 @@ export function dailyReminderNotices({
     const weekday = (day: Date) => say(`dates.weekdayLong.${day.getDay()}`);
     const morning = time.hour < MORNING_ENDS_HOUR;
     const lastDay = last === null ? null : startOfDay(last.date);
+    const secondEntryDay = secondEntryAfter === null ? null : startOfDay(secondEntryAfter);
     const entry =
         last === null
             ? ""
@@ -156,16 +167,31 @@ export function dailyReminderNotices({
                 return [
                     {
                         body: say("reminder.daily.first"),
-                        data: { open: "create" },
+                        data: { kind: "daily", open: "create" },
                         fireAt,
                         id,
                         title: say("reminder.daily.empty"),
                     },
                 ];
             }
+            if (
+                secondEntryDay !== null &&
+                lastDay.getTime() === secondEntryDay.getTime() &&
+                fireDay.getTime() === addDays(secondEntryDay, 1).getTime()
+            ) {
+                return [
+                    {
+                        body: say("reminder.secondEntry.body", { entry }),
+                        data: { kind: "second_entry", open: "create" },
+                        fireAt,
+                        id,
+                        title: say("reminder.secondEntry.title"),
+                    },
+                ];
+            }
             const data: Record<string, string> = morning
-                ? { date: String(addDays(fireAt, -1).getTime()), open: "create" }
-                : { open: "create" };
+                ? { date: String(addDays(fireAt, -1).getTime()), kind: "daily", open: "create" }
+                : { kind: "daily", open: "create" };
             if (daysBetween(lastDay.getTime(), subject.getTime()) > 1) {
                 return [
                     {

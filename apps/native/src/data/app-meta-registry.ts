@@ -148,6 +148,8 @@ const BOOKKEEPING = defineMeta({
     referralRewardSeen: { default: 0, schema: NumberText, scope: "device" },
     reminderAsked: { default: false, schema: BoolText, scope: "device" },
     reminderChosen: { default: false, schema: BoolText, scope: "device" },
+    // Epoch ms of the onboarding save that armed the second-entry nudge; 0 means none.
+    secondEntryNudgeDay: { default: 0, schema: NumberText, scope: "device" },
     repricedSubscriptions: { elements: RepricedSubscription, scope: "device" },
     reviewPending: { default: false, schema: BitText, scope: "device" },
     syncAccountSubject: { default: null, schema: Schema.String, scope: "device" },

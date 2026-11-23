@@ -172,6 +172,7 @@ const STORED_TODAY = {
     reminderChosen: BOOL,
     repricedSubscriptions: [JSON.stringify([{ currency: "USD", from: 9.99, note: "Spotify", to: 11.99 }]), "[]"],
     reviewPending: BIT,
+    secondEntryNudgeDay: ["0", "1762650000000"],
     sentenceCoachSeen: BOOL,
     shareAnalytics: BOOL,
     showCents: BOOL,

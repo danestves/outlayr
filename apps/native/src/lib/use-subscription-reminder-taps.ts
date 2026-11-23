@@ -16,6 +16,7 @@ import { resolveReminderTapCommand } from "@/state/surfaces-commands";
 import { fireAtomCommand } from "@/state/use-atom-action";
 
 import { decodeReminderTap } from "./notification-taps";
+import { posthog } from "./posthog";
 
 let handled: string | null = null;
 
@@ -33,10 +34,11 @@ export function useSubscriptionReminderTaps(db: Database, ready: boolean): void 
                 return;
             }
             const tap = `${response.notification.request.identifier}@${response.notification.date}`;
+            const decoded = parsed.value;
             fireAtomCommand(
                 appAtomRegistry,
                 resolveReminderTapCommand,
-                { db, tap: parsed.value },
+                { db, tap: decoded },
                 {
                     onFailure: (cause) =>
                         console.warn("[outlayr] subscription reminder tap failed", Cause.squash(cause)),
@@ -45,6 +47,9 @@ export function useSubscriptionReminderTaps(db: Database, ready: boolean): void 
                             return;
                         }
                         router.navigate(target);
+                        if ("open" in decoded && decoded.open === "create" && decoded.kind !== undefined) {
+                            posthog?.capture("notification_opened", { kind: decoded.kind });
+                        }
                         handled = tap;
                         clearLastNotificationResponse();
                     },
