@@ -94,8 +94,8 @@ const help = {
                                 es: "En iOS 27, toca Obtener el atajo y agrégalo. En la app Atajos, abre Biblioteca › Automatización y activa Outlayr - Apple Pay.",
                             }),
                             t({
-                                en: "On iOS 26 or earlier, build it in Shortcuts: Automation, then +, choose Wallet, pick your cards and turn on Run Immediately.",
-                                es: "En iOS 26 o anterior, créala en Atajos: Automatización, luego +, elige Wallet, escoge tus tarjetas y activa Ejecutar de inmediato.",
+                                en: "On iOS 26 or earlier, build it in Shortcuts: Automation, then +, choose Wallet (Transaction on iOS 18), pick your cards and turn on Run Immediately.",
+                                es: "En iOS 26 o anterior, créala en Atajos: Automatización, luego +, elige Wallet (Transacción en iOS 18), escoge tus tarjetas y activa Ejecutar de inmediato.",
                             }),
                             t({
                                 en: "Still on iOS 26 or earlier, add Outlayr's Log a Wallet Transaction action and fill Amount, Merchant and Card from the Shortcut Input.",
