@@ -1,6 +1,6 @@
 import { MenuView } from "@expo/ui/community/menu";
 import type { MenuState } from "@expo/ui/community/menu";
-import ArrowDown01Icon from "@hugeicons-pro/core-solid-rounded/ArrowDown01Icon";
+import ArrowDown01Icon from "@hugeicons-pro/core-stroke-rounded/ArrowDown01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { Stack, useRouter } from "expo-router";
 import { View } from "react-native";
@@ -96,13 +96,13 @@ function ProfileChip() {
                 accessibilityHint={t("profiles.a11y.switch")}
                 accessibilityLabel={name}
                 accessibilityRole="button"
-                className="flex-row items-center gap-2"
+                className="min-h-11 flex-row items-center px-2"
             >
                 <AccountTile account={active ? { ...active, kind: "asset" } : PERSONAL_IDENTITY} size={TILE_SIZE} />
-                <Text className="text-foreground font-sans-semibold shrink text-[17px]" numberOfLines={1}>
+                <Text className="text-foreground font-sans-semibold mr-1 ml-2 shrink text-[17px]" numberOfLines={1}>
                     {name}
                 </Text>
-                <HugeiconsIcon color={colors.muted} icon={ArrowDown01Icon} size={14} />
+                <HugeiconsIcon color={colors.muted} icon={ArrowDown01Icon} size={14} strokeWidth={2} />
             </View>
         </MenuView>
     );
