@@ -230,7 +230,7 @@ describe("claimPendingWrites across a switch", () => {
 
         expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["late-gap"]);
         expect(disk.has(QUEUE_FILE)).toBe(false);
-        expect(disk.has("claimed-2.jsonl")).toBe(false);
+        expect(disk.has("claimed-1.jsonl")).toBe(false);
     });
 
     it("ignores a cutoff dated after now instead of routing a capture to its ledger", () => {
@@ -401,19 +401,19 @@ describe("claimPendingWrites with purchase routes", () => {
     });
 
     it("falls back to the cutoff when the sibling is outside the window", () => {
-        const settlement = write("settlement", { date: T2 + 60_000, dedupeKey: PURCHASE });
+        const settlement = write("settlement", { date: T1 + 30_000, dedupeKey: PURCHASE });
         const { files } = makeFiles({ [QUEUE_FILE]: lines(settlement) });
 
         const claimed = claimPendingWrites(files, {
             cutoffs,
             key: "C",
             now: NOW,
-            purchases: [{ at: T1 - 600_000, key: PURCHASE, ledger: "A" }],
+            purchases: [{ at: T1 - siblingWindowMs - 1, key: PURCHASE, ledger: "A" }],
             siblingWindowMs,
         });
 
-        expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["settlement"]);
-        expect(claimed.held).toBeUndefined();
+        expect(claimed.jobs).toStrictEqual([]);
+        expect(claimed.held).toStrictEqual([{ jobs: [settlement], name: "held-B-1.jsonl" }]);
     });
 
     it("does not let a covered capture anchor the purchase that follows it", () => {
