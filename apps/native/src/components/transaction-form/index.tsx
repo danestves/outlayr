@@ -673,7 +673,10 @@ export function TransactionForm(props: TransactionFormProps) {
                         daysOffered={2}
                         now={new Date(nowMs)}
                         onPick={() => enterStep("date")}
-                        onSelect={rate.handleDateChange}
+                        onSelect={(next) => {
+                            namePickRef.current += 1;
+                            rate.handleDateChange(next);
+                        }}
                         pickLabel={t("transaction.sentence.when.pick")}
                     />
                 ) : undefined,

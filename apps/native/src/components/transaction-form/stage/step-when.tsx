@@ -62,7 +62,8 @@ export function StepWhen({ date, daysOffered = DAYS_OFFERED, now, onPick, onSele
     const pick = (id: WhenOptionId) => {
         const picked = days.find((option) => option.id === id);
         if (picked) {
-            onSelect(atSameTime(picked.day, date));
+            // Rebuilding the same day can land on the other side of a DST repeat hour.
+            onSelect(picked.day.getTime() === chosen ? date : atSameTime(picked.day, date));
             return;
         }
         onPick();
