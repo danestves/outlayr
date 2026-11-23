@@ -14,7 +14,7 @@ describe("proPrices", () => {
 
     it("splits the cents off at the decimal, not at a group separator", () => {
         expect(proPrices("ES", "es").monthly).toEqual({ fraction: ",99 €", whole: "5" });
-        expect(proPrices("CO", "es").monthly).toEqual({ fraction: "", whole: "$ 9.650" });
+        expect(proPrices("CO", "es").monthly).toEqual({ fraction: "", whole: "$ 13.000" });
     });
 
     it("writes US prices in Spanish the way the FAQ does", () => {
