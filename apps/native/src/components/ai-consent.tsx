@@ -120,10 +120,10 @@ export function AiConsentGate() {
         }
     };
     return (
-        <View className="bg-background flex-1">
+        <View className="bg-background android:pt-safe flex-1">
             {/* panelui's default resolves to its own white `--color-background`, not the app's `--background`. */}
             <ScrollFade className="flex-1" color={colors.background}>
-                <ScrollView contentContainerClassName="px-5 pt-8 pb-5 android:pt-safe-offset-8">
+                <ScrollView contentContainerClassName="px-5 pt-8 pb-5">
                     <AiConsentIntro />
                 </ScrollView>
             </ScrollFade>
