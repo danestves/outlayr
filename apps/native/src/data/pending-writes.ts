@@ -1,3 +1,4 @@
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
@@ -12,9 +13,11 @@ export function dismissDeviceWrite(id: string): void {
     dismissPendingWrite(id);
 }
 
-export const drainDevicePendingWrites = (db: Database) =>
-    Effect.sync(() => {
-        for (const id of readDismissals(Date.now())) {
-            dismissPendingWrite(id);
-        }
-    }).pipe(Effect.andThen(drainPendingWrites(db, claimPendingWrites, releasePendingWrites, readNotifications)));
+export const drainDevicePendingWrites = Effect.fn("PendingWrites.drainDevicePendingWrites")(function* drainDevice(
+    db: Database
+) {
+    for (const id of readDismissals(yield* Clock.currentTimeMillis)) {
+        dismissPendingWrite(id);
+    }
+    return yield* drainPendingWrites(db, claimPendingWrites, releasePendingWrites, readNotifications);
+});

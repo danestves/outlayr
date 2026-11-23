@@ -293,6 +293,9 @@ const decide = Effect.fn("PendingWrites.decide")(function* decide(
     if (decision.kind !== "land") {
         return decision;
     }
+    if (isDismissedPurchase(write)) {
+        return decision.otherwise;
+    }
     const occurrence = yield* writeLanding(db, decision, now);
     return occurrence ? ({ filing: decision.filing, kind: "settle", occurrence } as const) : decision.otherwise;
 });
@@ -525,6 +528,9 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
             continue;
         }
         const decision = yield* decide(db, write, { access, captured, ledger, usage }, now);
+        if (isDismissedPurchase(queued)) {
+            continue;
+        }
         if (decision.kind === "duplicate") {
             if (decision.relink) {
                 const entry = { at, date: write.date, id: write.id, key: null, txId: decision.txId };
