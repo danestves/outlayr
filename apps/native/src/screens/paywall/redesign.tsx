@@ -20,6 +20,7 @@ import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
+import { useAuthSession } from "@/lib/auth-session";
 import { proTermAtom, UNKNOWN_PRO_TERM } from "@/lib/pro-status";
 import { openWebLink } from "@/lib/web-link";
 import { useColors } from "@/theme/use-colors";
@@ -71,15 +72,15 @@ function PitchBand({
     autolog,
     block,
     daysLeft,
+    localOnly,
     stats,
-    synced,
     waitingAccounts,
 }: {
     autolog: { cap: number; total: number; used: number };
     block: TopBlock;
     daysLeft: number;
+    localOnly: boolean;
     stats: LedgerStats;
-    synced: boolean;
     waitingAccounts: number;
 }) {
     const t = useTranslation();
@@ -117,7 +118,7 @@ function PitchBand({
                 <ProBand
                     subtitle={t("pro.top.sync")}
                     title={
-                        stats.entries > 0 && !synced
+                        stats.entries > 0 && localOnly
                             ? t("pro.band.onlyHere", { count: stats.entries })
                             : t("pro.band.everyPhone")
                     }
@@ -185,7 +186,9 @@ export function PaywallRedesign({
     const now = useNow();
     const stats = useLedgerStats(db, now);
     const waitingAccounts = useMeta(db, "onboardingWaitingAccounts").length;
-    const synced = useMeta(db, "syncedAt") !== null;
+    const { accountId } = useAuthSession();
+    const syncedAt = useMeta(db, "syncedAt");
+    const localOnly = accountId === null && syncedAt === null;
     const { manageUrl, status } = useProTerm();
     const then = thenLabel(flow.plan, t);
     const daysLeft = daysLeftInMonth(new Date(now));
@@ -318,8 +321,8 @@ export function PaywallRedesign({
                             autolog={flow.autolog}
                             block={flow.block}
                             daysLeft={daysLeft}
+                            localOnly={localOnly}
                             stats={stats}
-                            synced={synced}
                             waitingAccounts={waitingAccounts}
                         />
                     )}
