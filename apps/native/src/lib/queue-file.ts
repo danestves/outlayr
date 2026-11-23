@@ -50,7 +50,7 @@ export interface SwitchCutoff {
     from: string;
 }
 
-/** Where a keyed capture went: its settlement follows it there, even across a later switch. */
+/** Where a keyed capture went: a later capture with the same key follows it there, even across a later switch. */
 export interface PurchaseRoute {
     at: number;
     key: string;
@@ -58,23 +58,20 @@ export interface PurchaseRoute {
 }
 
 export interface ClaimLedger {
-    /** Ids the user dismissed: they stay in the current claim so the drain learns the purchase a settlement repeats. */
-    dismissed?: ReadonlySet<string>;
     /** Switch cutoffs, oldest first: a capture older than one belongs to the ledger it names. */
     cutoffs?: readonly SwitchCutoff[];
     /** `ledgerKey` of the profile this launch opened. */
     key: string;
     /** When the claim ran, for the grace that decides which cutoffs the bridge keeps persisting. */
     now: number;
-    /** Purchases already routed, so a settlement follows its authorization instead of a cutoff. */
+    /** Anchors already routed, so a settlement follows its authorization instead of a cutoff. */
     purchases?: readonly PurchaseRoute[];
-    /** The window an authorization and its settlement can be apart, `WALLET_DEDUPE_WINDOW_MS`. */
+    /** The window a later capture can follow an anchor across, `WALLET_DEDUPE_WINDOW_MS`. */
     siblingWindowMs?: number;
 }
 
 export interface ClaimRoute {
     cutoffs: readonly SwitchCutoff[];
-    dismissed?: ReadonlySet<string>;
     key: string;
     purchases?: readonly PurchaseRoute[];
     siblingWindowMs?: number;
@@ -91,7 +88,7 @@ export interface ClaimedWrites {
     names: string[];
     /** The routes inside their horizon plus the ones this claim made, for the bridge to persist with the release. */
     purchases?: PurchaseRoute[];
-    /** How a late append routes: the same cutoffs, ledger and dismissals the claim used. */
+    /** How a late append routes: the same cutoffs, ledger and anchors the claim used. */
     route?: ClaimRoute;
     /** Every job id read during the claim, so a release can tell a late append from what it already took. */
     seen: ReadonlySet<string>;
@@ -146,6 +143,14 @@ function uniqueById(jobs: PendingWrite[]): PendingWrite[] {
     });
 }
 
+/** A held authorization must drain before a live settlement captured after it. */
+function byCaptureDate(jobs: PendingWrite[]): PendingWrite[] {
+    return jobs
+        .map((job, index) => ({ index, job }))
+        .sort((a, b) => a.job.date - b.job.date || a.index - b.index)
+        .map((entry) => entry.job);
+}
+
 function addJob(buckets: Map<string, PendingWrite[]>, key: string, job: PendingWrite): void {
     const bucket = buckets.get(key);
     if (bucket === undefined) {
@@ -169,26 +174,24 @@ function purchaseKeyOf(job: PendingWrite): string | null {
     return job.dedupeKey?.trim() || null;
 }
 
-function siblingLedgerOf(
-    job: PendingWrite,
-    key: string,
-    known: readonly PurchaseRoute[],
-    window: number | undefined
-): string | null {
+/**
+ * The earliest anchor that can cover the capture: an anchor only routes what was captured after it, so a settlement
+ * never becomes one for a later charge with the same key.
+ */
+function anchorOf(job: PendingWrite, key: string, known: readonly PurchaseRoute[], window: number | undefined) {
     if (window === undefined) {
         return null;
     }
     let best: PurchaseRoute | null = null;
     for (const entry of known) {
-        const gap = Math.abs(entry.at - job.date);
-        if (entry.key !== key || gap > window) {
+        if (entry.key !== key || entry.at > job.date || job.date > entry.at + window) {
             continue;
         }
-        if (best === null || gap < Math.abs(best.at - job.date)) {
+        if (best === null || entry.at < best.at) {
             best = entry;
         }
     }
-    return best?.ledger ?? null;
+    return best;
 }
 
 /** A held file for the current ledger already names it, so its jobs cannot move. */
@@ -197,7 +200,7 @@ interface Placement {
     own: boolean;
 }
 
-/** Capture-date order, so an authorization decides before the settlement that follows it. */
+/** Capture-date order, so an authorization anchors before the settlement that follows it. */
 function routePlacements(
     placements: readonly Placement[],
     route: ClaimRoute,
@@ -210,7 +213,7 @@ function routePlacements(
     }));
     const byDate = placements
         .map((placement, index) => ({ date: placement.job.date, index }))
-        .sort((a, b) => a.date - b.date);
+        .sort((a, b) => a.date - b.date || a.index - b.index);
     const routes: PurchaseRoute[] = [];
     const seen: PurchaseRoute[] = [...known];
     for (const { index } of byDate) {
@@ -219,17 +222,12 @@ function routePlacements(
             continue;
         }
         const key = purchaseKeyOf(placement.job);
-        const dismissed = route.dismissed?.has(placement.job.id) === true;
-        let followed = false;
+        const anchor = key === null ? null : anchorOf(placement.job, key, seen, window);
         if (!placement.own) {
-            const sibling = key === null ? null : siblingLedgerOf(placement.job, key, seen, window);
-            followed = !dismissed && sibling !== null;
-            const destination = sibling ?? destinationOf(placement.job, route);
-            placement.ledger = dismissed ? route.key : destination;
+            placement.ledger = anchor?.ledger ?? destinationOf(placement.job, route);
         }
-        // A capture that followed a sibling is covered by the route it followed: recording it again would move the
-        // window forward, so a later charge with the same key would be parked there and filed as a new transaction.
-        if (key !== null && !followed) {
+        // A covered capture already has an anchor; recording it again would extend the window onto a later purchase.
+        if (key !== null && anchor === null) {
             const entry = { at: placement.job.date, key, ledger: placement.ledger };
             routes.push(entry);
             seen.push(entry);
@@ -374,7 +372,6 @@ export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): Cla
             ? undefined
             : {
                   cutoffs: full,
-                  dismissed: ledger.dismissed,
                   key: ledger.key,
                   purchases: ledger.purchases,
                   siblingWindowMs: ledger.siblingWindowMs,
@@ -409,7 +406,7 @@ export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): Cla
             }
         }
     }
-    const claimed: ClaimedWrites = { jobs: uniqueById(jobs), names, seen };
+    const claimed: ClaimedWrites = { jobs: byCaptureDate(uniqueById(jobs)), names, seen };
     if (ledger !== undefined && route !== undefined) {
         claimed.cutoffs = cutoffs;
         claimed.route = route;

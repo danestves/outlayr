@@ -8,7 +8,6 @@ import {
     writeProfileSwitch,
 } from "./active-profile";
 import type { ProfileSwitch } from "./active-profile";
-import { readDismissals } from "./dismissed-writes";
 import { readPurchaseRoutes, retargetPurchaseRoutes, writePurchaseRoutes } from "./purchase-routes";
 import { queueDirectory } from "./queue-directory";
 import {
@@ -256,13 +255,12 @@ export function claimPendingWritesOrThrow(): ClaimedWrites {
     const now = Date.now();
     const claimed = claimQueue(queueFiles, {
         cutoffs: readProfileSwitch(),
-        dismissed: new Set(readDismissals(now, heldPendingWriteIds())),
         key: ledgerKey(activeProfileId()),
         now,
         purchases: readPurchaseRoutes(),
         siblingWindowMs: WALLET_DEDUPE_WINDOW_MS,
     });
-    // A replay matches each job to its own route at gap 0, so the same claim still lands in the same ledgers.
+    // Persisted anchors keep a replay routing each capture to the ledger the first pass chose.
     if (claimed.purchases !== undefined) {
         persistPurchases(claimed.purchases);
     }
