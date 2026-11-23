@@ -1,10 +1,7 @@
 import { isPickableCurrency } from "@outlayr/money/currency";
 import { useLocalSearchParams } from "expo-router";
 
-import { CloseToolbar } from "@/components/close-toolbar";
-import { ScreenHeader } from "@/components/screen-header";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
-import { useTranslation } from "@/i18n/context";
 import { NewInstallmentPurchase } from "@/screens/installments/new-purchase";
 
 const PLAIN_DECIMAL = /^\d+(?:\.\d+)?$/;
@@ -27,7 +24,6 @@ function currencyParam(value: string | undefined) {
 
 export default function NewInstallmentPurchaseRoute() {
     const { leave, setDirty } = useDiscardGuard();
-    const t = useTranslation();
     const params = useLocalSearchParams<{
         accountId?: string | string[];
         amount?: string | string[];
@@ -35,16 +31,12 @@ export default function NewInstallmentPurchaseRoute() {
     }>();
 
     return (
-        <>
-            <ScreenHeader title={t("accounts.add.installments")} />
-            <CloseToolbar placement="left" />
-            <NewInstallmentPurchase
-                accountId={single(params.accountId)}
-                amount={amountParam(single(params.amount))}
-                currency={currencyParam(single(params.currency))}
-                onDirtyChange={setDirty}
-                onDone={leave}
-            />
-        </>
+        <NewInstallmentPurchase
+            accountId={single(params.accountId)}
+            amount={amountParam(single(params.amount))}
+            currency={currencyParam(single(params.currency))}
+            onDirtyChange={setDirty}
+            onDone={leave}
+        />
     );
 }

@@ -5,6 +5,7 @@ import type { InstallmentDraft } from "@outlayr/money/installment-draft";
 import type { EntryRateType } from "@outlayr/money/rates";
 import type * as Effect from "effect/Effect";
 import { useRouter } from "expo-router";
+import type { Href } from "expo-router";
 import { useRef, useState } from "react";
 
 import type { Account } from "@/data/accounts-core";
@@ -33,6 +34,8 @@ interface InstallmentOrderArgs {
     db: Database;
     /** Prices a plan in dollars. */
     entryRate: { rate: number | null; type: EntryRateType };
+    /** Opens the guided order in the form's place; without it the order opens over the form. */
+    handOff?: (href: Href) => void;
     hasPrice: boolean;
     income: boolean;
     initial: Transaction | undefined;
@@ -51,6 +54,7 @@ export function useInstallmentOrder({
     date,
     db,
     entryRate,
+    handOff,
     income,
     initial,
     intent,
@@ -97,14 +101,19 @@ export function useInstallmentOrder({
         if (seeded === undefined) {
             const liability = account !== null && toAccountKind(account.kind) === "liability";
             const planAmount = price === undefined || !liability ? price : planPriceOf(price, entryRate.rate);
-            router.push({
+            const href: Href = {
                 params: {
                     accountId: liability ? account.id : undefined,
                     amount: planAmount === undefined || planAmount === null ? undefined : String(planAmount),
                     currency: liability ? account.currency : currency,
                 },
                 pathname: "/installments/new",
-            });
+            };
+            if (handOff) {
+                handOff(href);
+            } else {
+                router.push(href);
+            }
             return;
         }
         if (draft === null) {

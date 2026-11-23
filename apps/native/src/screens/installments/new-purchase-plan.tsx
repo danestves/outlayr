@@ -20,8 +20,6 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
-import { StepHeader } from "./new-purchase-step-header";
-
 interface NewPurchasePlanProps {
     account: Account;
     amount: number;
@@ -30,7 +28,6 @@ interface NewPurchasePlanProps {
     draft: InstallmentDraft;
     funding: readonly Account[];
     name: string;
-    onBack: () => void;
     onCategory: (category: Category) => void;
     onDraft: (draft: InstallmentDraft) => void;
     onName: (name: string) => void;
@@ -69,7 +66,6 @@ export function NewPurchasePlan({
     draft,
     funding,
     name,
-    onBack,
     onCategory,
     onDraft,
     onName,
@@ -119,7 +115,6 @@ export function NewPurchasePlan({
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
             >
-                <StepHeader onBack={onBack} title={t("installments.new.plan")} />
                 <Pressable
                     accessibilityRole="button"
                     className="border-border border-b py-3.5 active:opacity-60"

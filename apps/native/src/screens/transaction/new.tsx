@@ -14,7 +14,7 @@ import { entrySeed } from "@/state/entry-params";
 import type { EntryParams } from "@/state/entry-params";
 
 export function NewTransaction({ from, ...params }: EntryParams & { from?: string | string[] }) {
-    const { leave, setDirty } = useDiscardGuard();
+    const { handOff, leave, setDirty } = useDiscardGuard();
     const db = useDatabase();
     const t = useTranslation();
     // A row that no longer resolves opens an empty form: the menu's row may since be deleted.
@@ -51,6 +51,7 @@ export function NewTransaction({ from, ...params }: EntryParams & { from?: strin
                 mode="create"
                 onDirtyChange={setDirty}
                 onDone={leave}
+                onHandOff={handOff}
                 seed={seed}
             />
         </>

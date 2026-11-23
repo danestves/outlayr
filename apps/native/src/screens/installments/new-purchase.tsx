@@ -27,6 +27,7 @@ import { askForInstallmentReminders } from "@/state/surfaces-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 import { NewPurchasePlan } from "./new-purchase-plan";
+import { PurchaseToolbar } from "./new-purchase-toolbar";
 import { NewPurchaseWhere } from "./new-purchase-where";
 
 type Step = "plan" | "total" | "where";
@@ -112,7 +113,7 @@ export function NewInstallmentPurchase({
 
     const back = () => {
         setForward(false);
-        setStep("where");
+        setStep(step === "plan" ? "total" : "where");
     };
 
     const next = () => {
@@ -196,68 +197,73 @@ export function NewInstallmentPurchase({
     };
 
     if (step === "where" || account === null) {
-        return <NewPurchaseWhere accounts={bankAccounts} onPick={pick} selectedId={account?.id ?? null} />;
+        return (
+            <>
+                <PurchaseToolbar title={t("installments.new.where")} />
+                <NewPurchaseWhere accounts={bankAccounts} onPick={pick} selectedId={account?.id ?? null} />
+            </>
+        );
     }
 
     if (step === "total" || draft === null) {
         return (
-            <ScrollView
-                className="bg-background flex-1"
-                contentContainerClassName="px-5 pb-safe-offset-10"
-                contentInsetAdjustmentBehavior="automatic"
-                keyboardShouldPersistTaps="handled"
-            >
-                <TransactionFormAmountPad
-                    backLabel={t("common.back")}
-                    code={account.currency}
-                    footer={{ label: t("common.next"), onPress: next, tone: total > 0 ? "primary" : "muted" }}
-                    forward={forward}
-                    label={t("installments.new.total")}
-                    minorUnits={minorUnitsFor(account.currency)}
-                    onBack={back}
-                    onChange={(nextText) => {
-                        setTouched(true);
-                        setProblem(null);
-                        setAmountText(nextText);
-                    }}
-                    showDisplay
-                    stepKey="installments-new-total"
-                    value={amountText}
-                />
-            </ScrollView>
+            <>
+                <PurchaseToolbar onBack={back} title={t("installments.new.total")} />
+                <ScrollView
+                    className="bg-background flex-1"
+                    contentContainerClassName="px-5 pb-safe-offset-10"
+                    contentInsetAdjustmentBehavior="automatic"
+                    keyboardShouldPersistTaps="handled"
+                >
+                    <TransactionFormAmountPad
+                        code={account.currency}
+                        footer={{ label: t("common.next"), onPress: next, tone: total > 0 ? "primary" : "muted" }}
+                        forward={forward}
+                        label={t("transaction.field.amount")}
+                        minorUnits={minorUnitsFor(account.currency)}
+                        onChange={(nextText) => {
+                            setTouched(true);
+                            setProblem(null);
+                            setAmountText(nextText);
+                        }}
+                        showDisplay
+                        stepKey="installments-new-total"
+                        value={amountText}
+                    />
+                </ScrollView>
+            </>
         );
     }
 
     return (
-        <NewPurchasePlan
-            account={account}
-            amount={total}
-            category={category}
-            db={db}
-            draft={draft}
-            funding={funding}
-            name={name}
-            onBack={() => {
-                setForward(false);
-                setStep("total");
-            }}
-            onCategory={(picked) => {
-                setTouched(true);
-                setCategory(picked);
-            }}
-            onDraft={(nextDraft) => {
-                setTouched(true);
-                setProblem(null);
-                setDraft(nextDraft);
-            }}
-            onName={(nextName) => {
-                setTouched(true);
-                setName(nextName);
-            }}
-            onSave={save}
-            problem={problem}
-            purchaseDay={purchaseDay}
-            saving={saving}
-        />
+        <>
+            <PurchaseToolbar onBack={back} title={t("installments.new.plan")} />
+            <NewPurchasePlan
+                account={account}
+                amount={total}
+                category={category}
+                db={db}
+                draft={draft}
+                funding={funding}
+                name={name}
+                onCategory={(picked) => {
+                    setTouched(true);
+                    setCategory(picked);
+                }}
+                onDraft={(nextDraft) => {
+                    setTouched(true);
+                    setProblem(null);
+                    setDraft(nextDraft);
+                }}
+                onName={(nextName) => {
+                    setTouched(true);
+                    setName(nextName);
+                }}
+                onSave={save}
+                problem={problem}
+                purchaseDay={purchaseDay}
+                saving={saving}
+            />
+        </>
     );
 }

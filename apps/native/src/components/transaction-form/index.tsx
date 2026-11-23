@@ -6,6 +6,7 @@ import { useField, useForm, useSelector } from "@tanstack/react-form";
 import type * as Effect from "effect/Effect";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
+import type { Href } from "expo-router";
 import { PortalHost, PortalProvider } from "panelui-native/primitives/portal";
 import type { ComponentProps, RefObject } from "react";
 import { useRef, useState } from "react";
@@ -121,6 +122,7 @@ interface TransactionFormShared {
     onDelete?: () => void;
     onDirtyChange?: (dirty: boolean) => void;
     onDone: () => void;
+    onHandOff?: (href: Href) => void;
     draftRef?: RefObject<(() => TransactionFormDraft) | null>;
     rest?: SheetRest;
     restore?: TransactionFormDraft;
@@ -148,7 +150,7 @@ function offeredWebsiteMerchant(showCoach: boolean, identity: IdentitySelection,
 
 export function TransactionForm(props: TransactionFormProps) {
     const nowMs = useNow();
-    const { db, draftRef, mode, onDelete, onDirtyChange, onDone, rest, restore } = props;
+    const { db, draftRef, mode, onDelete, onDirtyChange, onDone, onHandOff, rest, restore } = props;
     const { copyOf, initial, seed } = entrySources(props);
     const resting = rest !== undefined;
     const colors = useColors();
@@ -493,6 +495,7 @@ export function TransactionForm(props: TransactionFormProps) {
         date,
         db,
         entryRate: { rate: rate.inForce, type: rate.selection.exchangeRateType },
+        handOff: onHandOff,
         hasPrice: hasAmount,
         income,
         initial,

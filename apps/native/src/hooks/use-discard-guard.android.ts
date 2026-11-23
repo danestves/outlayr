@@ -1,5 +1,5 @@
 import { useNavigation, usePreventRemove, useRouter } from "expo-router";
-import type { NativeStackNavigationProp } from "expo-router";
+import type { Href, NativeStackNavigationProp } from "expo-router";
 import type { ParamListBase } from "expo-router/react-navigation";
 import { useRef, useState } from "react";
 import { Alert } from "react-native";
@@ -77,16 +77,20 @@ export const useDiscardGuard: typeof useDiscardGuardBase = <Draft>(
         armed?.();
     });
 
-    const leave = () => {
+    const go = (navigate: () => void) => {
         if (leaving.current) {
             return false;
         }
         leaving.current = true;
         setDirty(false);
         disablePrevention();
-        setExit(() => () => router.back());
+        setExit(() => navigate);
         return true;
     };
 
-    return { leave, setDirty };
+    const leave = () => go(() => router.back());
+
+    const handOff = (href: Href) => go(() => router.replace(href));
+
+    return { handOff, leave, setDirty };
 };

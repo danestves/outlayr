@@ -29,7 +29,6 @@ import { voidAppFlowCommand } from "@/state/entry-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
-import { StepHeader } from "./new-purchase-step-header";
 import { termsSubtitle } from "./new-purchase-terms";
 
 const TILE = 22;
@@ -116,8 +115,7 @@ export function NewPurchaseWhere({ accounts, onPick, selectedId }: NewPurchaseWh
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
         >
-            <StepHeader title={t("installments.new.where")} />
-            <View className="pt-3">
+            <View>
                 {liabilities.map((account) => (
                     <ChoiceRow
                         detail={termsSubtitle(t, termsFor(account))}
