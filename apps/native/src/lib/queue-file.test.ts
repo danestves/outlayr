@@ -13,7 +13,7 @@ import {
     releasePendingWrites,
     WALLET_DEDUPE_WINDOW_MS,
 } from "./queue-file";
-import type { CaptureAssignment, PendingWrite, PurchaseRoute, QueueFiles } from "./queue-file";
+import type { PendingWrite, QueueFiles } from "./queue-file";
 
 function write(id: string, overrides: Partial<PendingWrite> = {}): PendingWrite {
     return {
@@ -112,7 +112,7 @@ describe("claimPendingWrites", () => {
     it("claims nothing when the queue is empty", () => {
         const { files } = makeFiles();
 
-        expect(claimPendingWrites(files)).toStrictEqual({ jobs: [], names: [], seen: new Set() });
+        expect(claimPendingWrites(files)).toStrictEqual({ jobs: [], names: [] });
     });
 
     it("leaves the claim in place until it is released", () => {
@@ -240,19 +240,7 @@ describe("claimPendingWrites across a switch", () => {
         expect(claimed.held).toStrictEqual([{ jobs: [watch], key: "A" }]);
     });
 
-    it("parks a late append for the ledger its cutoff names instead of adopting it", () => {
-        const { disk, files } = makeFiles({ [QUEUE_FILE]: lines(late("current")) });
-
-        const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: NOW });
-        files.write("claimed-1.jsonl", lines(late("current"), early("late-gap")));
-        releasePendingWrites(files, claimed);
-
-        expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["late-gap"]);
-        expect(disk.has(QUEUE_FILE)).toBe(false);
-        expect(disk.has("claimed-1.jsonl")).toBe(false);
-    });
-
-    it("ignores a cutoff dated after now instead of routing a capture to its ledger", () => {
+    it("ignores a counter-less cutoff dated after now instead of routing a capture to its ledger", () => {
         const gap = early("gap");
         const { files } = makeFiles({ [QUEUE_FILE]: lines(gap) });
 
@@ -260,7 +248,86 @@ describe("claimPendingWrites across a switch", () => {
 
         expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["gap"]);
         expect(claimed.held).toBeUndefined();
-        expect(claimed.route?.cutoffs).toStrictEqual([]);
+    });
+
+    it("routes a stamped capture by the counter even when its date falls after the switch", () => {
+        const capture = write("capture", { date: T2 + 60_000, sequence: 4 });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(capture) });
+
+        const claimed = claimPendingWrites(files, {
+            cutoffs: [
+                { at: T1, from: "A", sequence: 5 },
+                { at: T2, from: "B", sequence: 9 },
+            ],
+            key: "C",
+            now: NOW,
+        });
+
+        expect(claimed.jobs).toStrictEqual([]);
+        expect(claimed.held).toStrictEqual([{ jobs: [capture], key: "A" }]);
+    });
+
+    it("keeps a stamped capture current when the clock moved back before its date", () => {
+        const capture = write("capture", { date: T1 - 60_000, sequence: 7 });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(capture) });
+
+        const claimed = claimPendingWrites(files, {
+            cutoffs: [{ at: T1, from: "A", sequence: 5 }],
+            key: "B",
+            now: NOW,
+        });
+
+        expect(claimed.jobs).toStrictEqual([capture]);
+        expect(claimed.held).toBeUndefined();
+    });
+
+    it("routes unstamped watch captures by their date against a cutoff that has a counter", () => {
+        const older = write("older", { date: T1 - 60_000 });
+        const newer = write("newer", { date: T1 + 60_000 });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(older, newer) });
+
+        const claimed = claimPendingWrites(files, {
+            cutoffs: [{ at: T1, from: "A", sequence: 5 }],
+            key: "B",
+            now: NOW,
+        });
+
+        expect(claimed.held).toStrictEqual([{ jobs: [older], key: "A" }]);
+        expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["newer"]);
+    });
+
+    it("routes a stamped capture by a cutoff dated after now, and an unstamped one ignores it", () => {
+        const stamped = write("stamped", { date: T2 + 60_000, sequence: 4 });
+        const watch = write("watch", { date: T1 - 60_000 });
+        const cutoff = { at: T2, from: "A", sequence: 5 };
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(stamped, watch) });
+
+        const claimed = claimPendingWrites(files, { cutoffs: [cutoff], key: "C", now: T1 });
+
+        expect(claimed.cutoffs).toStrictEqual([cutoff]);
+        expect(claimed.held).toStrictEqual([{ jobs: [stamped], key: "A" }]);
+        expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["watch"]);
+    });
+
+    it("follows switch order when a later switch recorded an earlier clock", () => {
+        const first = write("first", { date: T2 + 30_000, sequence: 4 });
+        const second = write("second", { date: T2 + 30_000, sequence: 7 });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(first, second) });
+
+        const claimed = claimPendingWrites(files, {
+            cutoffs: [
+                { at: T2, from: "A", sequence: 5 },
+                { at: T1, from: "B", sequence: 9 },
+            ],
+            key: "C",
+            now: NOW,
+        });
+
+        expect(claimed.held).toStrictEqual([
+            { jobs: [first], key: "A" },
+            { jobs: [second], key: "B" },
+        ]);
+        expect(claimed.jobs).toStrictEqual([]);
     });
 
     it("passes a parked capture through its key's claim even when a cutoff names another ledger", () => {
@@ -479,54 +546,6 @@ describe("claimPendingWrites with purchase routes", () => {
         expect(claimed.purchases).toStrictEqual([{ at: job.date, key: "wallet:fresh", ledger: "C" }, fresh]);
     });
 
-    it("routes a late settlement by the anchor its authorization made in the claim", () => {
-        const current = write("current", { date: T2 + 60_000 });
-        const authorization = write("authorization", { date: T1 - 60_000, dedupeKey: PURCHASE });
-        const settlement = write("settlement", { date: T2 + 60_000, dedupeKey: PURCHASE });
-        const { files } = makeFiles({ [QUEUE_FILE]: lines(current, authorization) });
-
-        const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: NOW, siblingWindowMs });
-        files.write("claimed-1.jsonl", lines(current, authorization, settlement));
-        releasePendingWrites(files, claimed);
-
-        expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["authorization"]);
-        expect(parseQueue(files.read("held-A-2.jsonl")).map((job) => job.id)).toStrictEqual(["settlement"]);
-    });
-
-    it("hands the release's own anchors to the caller so a later settlement follows them", () => {
-        const current = write("current", { date: T2 + 60_000 });
-        const authorization = write("authorization", { date: T1 - 60_000, dedupeKey: PURCHASE });
-        const { files } = makeFiles({ [QUEUE_FILE]: lines(current) });
-
-        const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: NOW, siblingWindowMs });
-        files.write("claimed-1.jsonl", lines(current, authorization));
-        const routed: { assignments: CaptureAssignment[]; purchases: PurchaseRoute[] }[] = [];
-        releasePendingWrites(files, claimed, (released) => routed.push(released));
-
-        expect(routed).toStrictEqual([
-            {
-                assignments: [
-                    { id: "current", ledger: "C" },
-                    { id: "authorization", ledger: "A" },
-                ],
-                purchases: [{ at: authorization.date, key: PURCHASE, ledger: "A" }],
-            },
-        ]);
-
-        const settlement = write("settlement", { date: T2 + 60_000, dedupeKey: PURCHASE });
-        const next = makeFiles({ [QUEUE_FILE]: lines(settlement) });
-        const later = claimPendingWrites(next.files, {
-            cutoffs,
-            key: "C",
-            now: NOW,
-            purchases: routed[0]?.purchases,
-            siblingWindowMs,
-        });
-
-        expect(later.jobs).toStrictEqual([]);
-        expect(later.held).toStrictEqual([{ jobs: [settlement], key: "A" }]);
-    });
-
     it("keeps a replayed capture on the ledger its first claim assigned when an earlier anchor arrives", () => {
         const minute = 60_000;
         const base = T1;
@@ -564,46 +583,6 @@ describe("claimPendingWrites with purchase routes", () => {
 });
 
 describe("releasePendingWrites", () => {
-    it("keeps a job the intent appended to the claimed file after the claim read it", () => {
-        const { disk, files } = makeFiles({ [QUEUE_FILE]: lines(write("a")) });
-
-        const claimed = claimPendingWrites(files);
-        files.write("claimed-1.jsonl", lines(write("a"), write("late")));
-        releasePendingWrites(files, claimed);
-
-        expect(disk.has("claimed-1.jsonl")).toBe(false);
-        expect(parseQueue(files.read("claimed-2.jsonl")).map((job) => job.id)).toStrictEqual(["late"]);
-
-        const next = claimPendingWrites(files);
-        expect(next.jobs.map((job) => job.id)).toStrictEqual(["late"]);
-    });
-
-    it("parks a late append for the current ledger so the next claim passes it through", () => {
-        const t1 = 1_700_000_100_000;
-        const t2 = t1 + 60_000;
-        const current = write("current", { date: t2 + 60_000 });
-        const cutoffs = [
-            { at: t1, from: "A" },
-            { at: t2, from: "B" },
-        ];
-        const { files } = makeFiles({ [QUEUE_FILE]: lines(current) });
-
-        const claimed = claimPendingWrites(files, { cutoffs, key: "B", now: t2 + 120_000 });
-        files.write("claimed-1.jsonl", lines(current, write("late-own", { date: t2 + 120_000 })));
-        releasePendingWrites(files, claimed);
-
-        expect(parseQueue(files.read("held-B-1.jsonl")).map((job) => job.id)).toStrictEqual(["late-own"]);
-
-        const back = claimPendingWrites(files, {
-            cutoffs: [...cutoffs, { at: t2 + 200_000, from: "C" }],
-            key: "B",
-            now: t2 + 400_000,
-        });
-
-        expect(back.jobs.map((job) => job.id)).toStrictEqual(["late-own"]);
-        expect(back.held).toBeUndefined();
-    });
-
     it("writes a held bucket under a fresh name when a hold took the one the claim saw", () => {
         const t1 = 1_700_000_100_000;
         const t2 = t1 + 60_000;

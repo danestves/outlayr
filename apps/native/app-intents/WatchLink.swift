@@ -72,7 +72,9 @@ final class WatchLink: NSObject, WCSessionDelegate {
               write.amount > 0 else {
             return false
         }
-        await SharedStore.enqueue(write)
+        // The watch captured this before it reached the phone, possibly hours earlier, so it routes by date, not
+        // this device's counter.
+        await SharedStore.enqueue(write, sequenced: false)
         NotificationCenter.default.post(name: Self.pendingWriteNotification, object: nil)
         return true
     }

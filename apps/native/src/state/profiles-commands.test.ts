@@ -53,7 +53,7 @@ import { settleBeforeSignOut, signOutToPersonal, switchProfileCommand } from "./
 
 const db = {} as Database;
 
-const emptyClaim = () => ({ jobs: [], names: [], seen: new Set<string>() });
+const emptyClaim = () => ({ jobs: [], names: [] });
 
 describe("signing out from a profile", () => {
     beforeEach(() => {

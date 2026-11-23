@@ -12,9 +12,11 @@ export interface PurchaseSender {
 interface PurchaseListenerModule {
     allowMessages: () => void;
     apps: () => string[];
+    claimQueue: (name: string) => boolean;
     isEnabled: () => boolean;
     messagesApp: () => string | null;
     openSettings: () => void;
+    queueSequence: () => number | null;
     senders: () => PurchaseSender[];
     setApps: (packages: string[]) => void;
     setSender: (from: string, on: boolean) => void;

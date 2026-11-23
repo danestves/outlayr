@@ -34,6 +34,10 @@ enum SharedStore {
     static let queueDirectory = "pending-writes"
     static let queueFile = "queue.jsonl"
 
+    private static let queueLockFile = "queue.lock"
+
+    private static let queueSequenceFile = "sequence"
+
     static var store: UserDefaults? {
         UserDefaults(suiteName: appGroup)
     }
@@ -56,24 +60,46 @@ enum SharedStore {
         return try? JSONDecoder().decode(type, from: data)
     }
 
-    /// Appends one line to a file rather than rewriting a queue held in a single
-    /// `UserDefaults` string. Several intents can run while the app is closed,
-    /// and read-append-write let two of them overwrite each other; an `O_APPEND`
-    /// write reserves its own offset in the kernel, so nothing is read first and
-    /// there is nothing to lose. The app never edits this file in place either —
-    /// it renames it aside to drain it.
+    /// One JSON line per capture, appended under `queue.lock`. The lock spans open, write and close, and the app
+    /// claims under the same lock, so no intent can append into a claimed file after the app read it.
     @discardableResult
-    static func enqueue(_ write: PendingWrite) async -> Bool {
-        guard let url = queueURL(),
-              var line = try? JSONEncoder().encode(write) else { return false }
-        line.append(0x0A)
-        guard append(line, to: url) else { return false }
+    static func enqueue(_ write: PendingWrite, sequenced: Bool = true) async -> Bool {
+        let appended = withQueueLock { directory in
+            var pending = write
+            pending.sequence = sequenced ? nextSequence(in: directory) : nil
+            guard var line = try? JSONEncoder().encode(pending) else { return false }
+            line.append(0x0A)
+            return append(line, to: directory.appendingPathComponent(queueFile, isDirectory: false))
+        } ?? false
+        guard appended else { return false }
         let center = UNUserNotificationCenter.current()
         let reminders = await center.pendingNotificationRequests()
             .map(\.identifier)
             .filter { $0.hasPrefix(dailyReminderPrefix) }
         center.removePendingNotificationRequests(withIdentifiers: reminders)
         return true
+    }
+
+    /// Renames the live queue under the lock, so an appender can never open it before the rename and write after.
+    static func claimQueue(as name: String) -> Bool {
+        guard name.range(of: #"^claimed-[0-9]+\.jsonl$"#, options: .regularExpression) != nil else {
+            return false
+        }
+        return withQueueLock { directory in
+            let live = directory.appendingPathComponent(queueFile, isDirectory: false)
+            guard let attributes = try? FileManager.default.attributesOfItem(atPath: live.path),
+                  let size = attributes[.size] as? NSNumber,
+                  size.intValue > 0 else {
+                return false
+            }
+            let claimed = directory.appendingPathComponent(name, isDirectory: false)
+            return Darwin.rename(live.path, claimed.path) == 0
+        } ?? false
+    }
+
+    /// The counter a switch records as its cutoff, nil when the container or the counter itself is unreadable.
+    static func queueSequence() -> Int64? {
+        withQueueLock { sequence(in: $0) } ?? nil
     }
 
     /// Posts the app's own push from an intent, once per purchase key within
@@ -171,7 +197,7 @@ enum SharedStore {
         "\(missedTapPrefix).\(Int(at))"
     }
 
-    private static func queueURL() -> URL? {
+    private static func queueDirectoryURL() -> URL? {
         guard let container = FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: appGroup) else {
             return nil
@@ -191,7 +217,57 @@ enum SharedStore {
                 .protectionKey: FileProtectionType.completeUntilFirstUserAuthentication
             ]
         )
-        return directory.appendingPathComponent(queueFile, isDirectory: false)
+        return directory
+    }
+
+    /// `flock` because intents and the app are separate processes, and the lock file is only ever opened, never
+    /// replaced, since `flock` follows the inode. The body stays synchronous: a lock held while the process is
+    /// suspended in the shared container gets it killed.
+    private static func withQueueLock<T>(_ body: (URL) -> T) -> T? {
+        guard let directory = queueDirectoryURL() else { return nil }
+        let descriptor = open(
+            directory.appendingPathComponent(queueLockFile, isDirectory: false).path,
+            O_RDWR | O_CREAT,
+            0o644
+        )
+        guard descriptor >= 0 else { return nil }
+        defer { close(descriptor) }
+        while Darwin.flock(descriptor, Darwin.LOCK_EX) != 0 {
+            if errno != Darwin.EINTR {
+                return nil
+            }
+        }
+        defer { Darwin.flock(descriptor, Darwin.LOCK_UN) }
+        return body(directory)
+    }
+
+    /// Missing is a fresh install at zero; unreadable is nil, so a capture is appended without a stamp rather than
+    /// restarting the counter under captures that already carry one.
+    private static func sequence(in directory: URL) -> Int64? {
+        let url = directory.appendingPathComponent(queueSequenceFile, isDirectory: false)
+        guard FileManager.default.fileExists(atPath: url.path) else { return 0 }
+        guard let data = try? Data(contentsOf: url),
+              let text = String(data: data, encoding: .utf8),
+              let value = Int64(text.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return nil
+        }
+        return value
+    }
+
+    private static func nextSequence(in directory: URL) -> Int64? {
+        guard let current = sequence(in: directory) else { return nil }
+        let next = current + 1
+        let url = directory.appendingPathComponent(queueSequenceFile, isDirectory: false)
+        do {
+            // The atomic write's temp file does not inherit the directory's class, so a locked-phone run pins it.
+            try Data(String(next).utf8).write(
+                to: url,
+                options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]
+            )
+        } catch {
+            return nil
+        }
+        return next
     }
 
     private static func append(_ bytes: Data, to url: URL) -> Bool {
@@ -292,6 +368,8 @@ struct PendingWrite: Codable {
     /// Set when the intent asks the server about the merchant; the app files the
     /// row under this id, which is where the server keeps the answer.
     var captureId: String? = nil
+    /// The native append counter, so routing survives a clock that moved back. Nil on Watch captures.
+    var sequence: Int64? = nil
 }
 
 struct WalletPushSnapshot: Codable {

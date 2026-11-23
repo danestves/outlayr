@@ -61,5 +61,15 @@ class PurchaseListenerModule : Module() {
         PurchaseListenerStore.allowMessages(context)
       }
     }
+
+    Function("claimQueue") { name: String ->
+      val context = appContext.reactContext
+      context != null && PurchaseListenerStore.claimQueue(context, name)
+    }
+
+    Function("queueSequence") {
+      val context = appContext.reactContext
+      if (context == null) null else PurchaseListenerStore.queueSequence(context)?.toDouble()
+    }
   }
 }

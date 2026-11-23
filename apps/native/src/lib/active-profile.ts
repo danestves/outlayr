@@ -7,6 +7,7 @@ import { parseProfileId } from "@/domain/profiles";
 import { clearClaimAssignments } from "./claim-assignments";
 import { clearDurably, readDurably, writeDurably } from "./durable-file";
 import { clearPurchaseRoutes } from "./purchase-routes";
+import { queueLock } from "./queue-lock";
 
 const activeProfileFile = () => new File(Paths.document, "active-profile");
 
@@ -15,6 +16,8 @@ const profileSwitchFile = () => new File(Paths.document, "profile-switch");
 const ProfileSwitch = Schema.Struct({
     at: Schema.Finite,
     from: Schema.String,
+    /** The native counter at the switch, absent on cutoffs written by older builds. */
+    sequence: Schema.optional(Schema.Finite),
 });
 
 /** One cutoff: at `at` this launch left the ledger `from`, so older captures still belong to it. */
@@ -74,12 +77,13 @@ export function clearProfileSwitch(): void {
 
 // Call before `writeActiveProfile`: `activeProfileId()` still holds the launch profile, the one being left.
 // Keeps expired cutoffs, which a queued capture can still need; only a drain that routed it prunes. A cutoff from
-// the future means the clock moved back, so it would claim captures made after it.
+// the future with no counter means the clock moved back, so only those are dropped.
 export function recordProfileSwitch(): void {
     const now = Date.now();
-    const kept = readProfileSwitch().filter((entry) => entry.at <= now);
-    const next = [...kept, { at: now, from: ledgerKey(activeProfileId()) }].sort((a, b) => a.at - b.at);
-    writeProfileSwitch(next);
+    const kept = readProfileSwitch().filter((entry) => entry.at <= now || entry.sequence !== undefined);
+    const entry = { at: now, from: ledgerKey(activeProfileId()) };
+    const sequence = queueLock?.queueSequence() ?? null;
+    writeProfileSwitch([...kept, sequence === null ? entry : { ...entry, sequence }]);
 }
 
 // A deleted ledger never opens again: its cutoffs move to `to` so its late captures follow, and no held file for it
