@@ -24,6 +24,7 @@ const ReminderTap = Schema.Union([
     Schema.Struct({
         card: Schema.optional(Schema.String),
         date: Schema.optional(Schema.String),
+        kind: Schema.optional(Schema.Literals(["daily", "second_entry"])),
         note: Schema.optional(Schema.String),
         open: Schema.Literal("create"),
     }),

@@ -31,6 +31,10 @@ export const saveFirstEntryCommand = createRuntimeCommand(appRuntime, {
         if (outcome.kind === "failed") {
             return false;
         }
+        yield* Effect.all([
+            Meta.set(input.db, "secondEntryNudgeSavedAt", now.getTime()),
+            Meta.set(input.db, "secondEntryNudgeArmedAt", 0),
+        ]).pipe(Effect.catchCause((cause) => Effect.logError("Marking the second-entry nudge failed", cause)));
         posthog?.capture("onboarding_first_entry", { outcome: "saved" });
         return true;
     }),

@@ -85,6 +85,8 @@ const SETTINGS = defineMeta({
     notificationOption: { default: 1, schema: NumberText, scope: "device" },
     numberEntryType: { default: 2, schema: NumberText, scope: "device" },
     privacyNoticeSeen: { default: 0, schema: NumberText, scope: "device" },
+    secondEntryNudgeArmedAt: { default: 0, schema: NumberText, scope: "device" },
+    secondEntryNudgeSavedAt: { default: 0, schema: NumberText, scope: "device" },
     sentenceCoachSeen: { default: false, schema: BoolText, scope: "device" },
     shareAnalytics: {
         default: analyticsOnByDefault(firstLocale()?.regionCode),

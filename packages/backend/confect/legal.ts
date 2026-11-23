@@ -17,8 +17,12 @@ export const NOVEMBER_NOTICE_AT_MS = Date.UTC(2026, 10, 19);
 
 export const CAPTURE_PUSH_EFFECTIVE_AT_MS = NOVEMBER_NOTICE_AT_MS;
 
+export const JANUARY_NOTICE_AT_MS = Date.UTC(2027, 0, 1);
+
 // Nothing is received or sent for a user webhook before the privacy notice that announces them takes effect.
-export const WEBHOOKS_EFFECTIVE_AT_MS = Date.UTC(2027, 0, 1);
+export const WEBHOOKS_EFFECTIVE_AT_MS = JANUARY_NOTICE_AT_MS;
+
+export const REMINDER_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
 
 const GUEST_PURCHASE_AT_MS = Date.UTC(2026, 10, 21);
 
@@ -1114,11 +1118,19 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "With Pro, automation tools can add entries with a token you create, and they wait on our servers until your device collects them. Web addresses you add receive each new entry's amount, currency, date, note, and category and account names. Both are kept until you remove them.",
                     label: "Webhooks",
                 },
+                {
+                    detail: "With Share analytics on: when the app sets the reminder for your second entry, and when you open the app from a reminder. Never amounts, names or notes.",
+                    label: "Reminders in analytics",
+                },
             ],
             de: [
                 {
                     detail: "Mit Pro können Automatisierungsdienste mit einem Token, das du erstellst, Einträge hinzufügen, die auf unseren Servern warten, bis dein Gerät sie abholt. Webadressen, die du hinzufügst, erhalten von jedem neuen Eintrag Betrag, Währung, Datum, Notiz und die Namen von Kategorie und Konto. Beides bleibt gespeichert, bis du es entfernst.",
                     label: "Webhooks",
+                },
+                {
+                    detail: "Mit eingeschaltetem „Analysedaten teilen“: wann die App die Erinnerung an deinen zweiten Eintrag plant und wann du die App über eine Erinnerung öffnest. Nie Beträge, Namen oder Notizen.",
+                    label: "Erinnerungen in Analysen",
                 },
             ],
             es: [
@@ -1126,11 +1138,19 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Con Pro, las herramientas de automatización pueden agregar entradas con un token que creas, y esperan en nuestros servidores hasta que tu dispositivo las recoge. Las direcciones web que agregas reciben de cada entrada nueva el monto, la moneda, la fecha, la nota y los nombres de la categoría y la cuenta. Ambos se guardan hasta que los quites.",
                     label: "Webhooks",
                 },
+                {
+                    detail: "Con Compartir analíticas activado: cuándo la app programa el recordatorio de tu segunda entrada y cuándo abres la app desde un recordatorio. Nunca montos, nombres ni notas.",
+                    label: "Recordatorios en analíticas",
+                },
             ],
             fr: [
                 {
                     detail: "Avec Pro, des outils d'automatisation peuvent ajouter des opérations avec un jeton que vous créez, et elles attendent sur nos serveurs que votre appareil les récupère. Les adresses web que vous ajoutez reçoivent, pour chaque nouvelle opération, le montant, la devise, la date, la note et les noms de la catégorie et du compte. Les deux sont conservés jusqu'à ce que vous les retiriez.",
                     label: "Webhooks",
+                },
+                {
+                    detail: "Avec Partager les données d'analyse activé : quand l'app programme le rappel de votre deuxième opération, et quand vous ouvrez l'app depuis un rappel. Jamais de montants, de noms ni de notes.",
+                    label: "Rappels dans les statistiques",
                 },
             ],
             pt: [
@@ -1138,11 +1158,15 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Com o Pro, ferramentas de automação podem adicionar lançamentos com um token que você cria, e eles esperam nos nossos servidores até o seu dispositivo buscá-los. Os endereços web que você adiciona recebem, de cada lançamento novo, o valor, a moeda, a data, a nota e os nomes da categoria e da conta. Os dois ficam guardados até você removê-los.",
                     label: "Webhooks",
                 },
+                {
+                    detail: "Com Compartilhar análises ativado: quando o app agenda o lembrete do seu segundo lançamento e quando você abre o app a partir de um lembrete. Nunca valores, nomes ou notas.",
+                    label: "Lembretes nas análises",
+                },
             ],
         },
         document: "privacy",
-        effectiveAtMs: WEBHOOKS_EFFECTIVE_AT_MS,
-        postedAtMs: Date.UTC(2026, 10, 23),
+        effectiveAtMs: JANUARY_NOTICE_AT_MS,
+        postedAtMs: Date.UTC(2026, 10, 24),
     },
 ];
 

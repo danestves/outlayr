@@ -10,6 +10,7 @@ import {
     REMINDER_MORNING,
     reminderReconcile,
     reminderTime,
+    secondEntryNudge,
 } from "./reminder";
 
 describe("reminder time", () => {
@@ -130,7 +131,7 @@ describe("daily reminder", () => {
             ["Nothing logged today", "Last: Mercadona €12.40, yesterday."],
             ["Nothing logged since Tuesday", "Last: Mercadona €12.40. Tap to catch up."],
         ]);
-        expect(notices[0]?.data).toStrictEqual({ open: "create" });
+        expect(notices[0]?.data).toStrictEqual({ kind: "daily", open: "create" });
     });
 
     it("asks a morning reminder about the day before and dates the tap to it", () => {
@@ -138,7 +139,7 @@ describe("daily reminder", () => {
 
         expect(first).toStrictEqual({
             body: "Last: Mercadona €12.40, Tuesday.",
-            data: { date: String(new Date(2026, 9, 14, 8, 0).getTime()), open: "create" },
+            data: { date: String(new Date(2026, 9, 14, 8, 0).getTime()), kind: "daily", open: "create" },
             fireAt: new Date(2026, 9, 15, 8, 0),
             id: `outlayr.daily-reminder.${new Date(2026, 9, 15).getTime()}`,
             title: "Nothing logged yesterday",
@@ -158,5 +159,48 @@ describe("daily reminder", () => {
 
         expect(notices).toHaveLength(6);
         expect(notices[0]).toMatchObject({ body: "Tap to add your first expense.", title: "Nothing logged yet" });
+    });
+
+    it("asks for a second entry the evening after the first, then returns to the daily copy", () => {
+        const notices = plan({ secondEntryAfter: mercadona.date });
+
+        expect(notices[0]).toStrictEqual({
+            body: "Yesterday was Mercadona €12.40. Tap to add today's.",
+            data: { kind: "second_entry", open: "create" },
+            fireAt: new Date(2026, 9, 14, 20, 0),
+            id: `outlayr.daily-reminder.${new Date(2026, 9, 14).getTime()}`,
+            title: "What did you spend today?",
+        });
+        expect(notices[1]).toMatchObject({
+            body: "Last: Mercadona €12.40. Tap to catch up.",
+            data: { kind: "daily", open: "create" },
+            title: "Nothing logged since Tuesday",
+        });
+        expect(notices.filter(({ data }) => data.kind === "second_entry")).toHaveLength(1);
+    });
+});
+
+describe("second entry nudge", () => {
+    const savedAt = new Date(2026, 9, 13, 23, 30).getTime();
+
+    it("keeps the nudge through the next day while the onboarding entry is the only one", () => {
+        expect(secondEntryNudge({ armedAt: 0, entries: 1, now: new Date(2026, 9, 14, 21, 0), savedAt })).toStrictEqual(
+            new Date(savedAt)
+        );
+    });
+
+    it("drops it as soon as a second entry exists", () => {
+        expect(secondEntryNudge({ armedAt: 0, entries: 2, now: new Date(2026, 9, 13, 23, 45), savedAt })).toBeNull();
+    });
+
+    it("drops it once the armed slot has passed, so a later reminder time can't deliver it twice", () => {
+        const armedAt = new Date(2026, 9, 14, 20, 0).getTime();
+
+        expect(secondEntryNudge({ armedAt, entries: 1, now: new Date(2026, 9, 14, 19, 59), savedAt })).not.toBeNull();
+        expect(secondEntryNudge({ armedAt, entries: 1, now: new Date(2026, 9, 14, 20, 0), savedAt })).toBeNull();
+    });
+
+    it("drops it once the day after the first entry is over", () => {
+        expect(secondEntryNudge({ armedAt: 0, entries: 1, now: new Date(2026, 9, 15, 0, 0), savedAt })).toBeNull();
     });
 });

@@ -157,6 +157,7 @@ export interface TransactionInput extends EntryInput {
 const TransactionsOperation = Schema.Literals([
     "attachAccount",
     "create",
+    "entryCount",
     "hasEntries",
     "lastEntry",
     "remove",
@@ -587,6 +588,13 @@ export function getTransactionById(db: Database, id: string): Transaction | null
     const rows = db.select().from(transactions).where(eq(transactions.id, id)).limit(1).all();
     return rows[0] ?? null;
 }
+
+export const liveEntryCount = Effect.fn("Transactions.liveEntryCount")(function* liveEntryCount(db: Database) {
+    const [row] = yield* query("entryCount", () =>
+        db.select({ total: count() }).from(transactions).where(isNull(transactions.deletedAt))
+    );
+    return row?.total ?? 0;
+});
 
 export const hasEntriesBetween = Effect.fn("Transactions.hasEntriesBetween")(function* hasEntriesBetween(
     db: Database,
