@@ -175,8 +175,8 @@ function purchaseKeyOf(job: PendingWrite): string | null {
 }
 
 /**
- * The earliest anchor that can cover the capture: an anchor only routes what was captured after it, so a settlement
- * never becomes one for a later charge with the same key.
+ * The earliest anchor within the window on either side: an authorization appended after its settlement drained still
+ * follows it, and earliest-first keeps a replay on the anchor the first pass used.
  */
 function anchorOf(job: PendingWrite, key: string, known: readonly PurchaseRoute[], window: number | undefined) {
     if (window === undefined) {
@@ -184,7 +184,7 @@ function anchorOf(job: PendingWrite, key: string, known: readonly PurchaseRoute[
     }
     let best: PurchaseRoute | null = null;
     for (const entry of known) {
-        if (entry.key !== key || entry.at > job.date || job.date > entry.at + window) {
+        if (entry.key !== key || Math.abs(job.date - entry.at) > window) {
             continue;
         }
         if (best === null || entry.at < best.at) {

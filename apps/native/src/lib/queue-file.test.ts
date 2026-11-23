@@ -286,6 +286,22 @@ describe("claimPendingWrites with purchase routes", () => {
         expect(disk.has(QUEUE_FILE)).toBe(false);
     });
 
+    it("sends an authorization appended after its settlement drained to the settlement's ledger", () => {
+        const authorization = write("authorization", { date: T2 - 60_000, dedupeKey: PURCHASE });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(authorization) });
+
+        const claimed = claimPendingWrites(files, {
+            cutoffs,
+            key: "C",
+            now: NOW,
+            purchases: [{ at: T2 + 60_000, key: PURCHASE, ledger: "C" }],
+            siblingWindowMs,
+        });
+
+        expect(claimed.jobs).toStrictEqual([authorization]);
+        expect(claimed.held).toBeUndefined();
+    });
+
     it("keeps an authorization and its settlement together when the switch lands between them", () => {
         const settlement = write("settlement", { date: T2 + 60_000, dedupeKey: PURCHASE });
         const authorization = write("authorization", { date: T1 - 60_000, dedupeKey: PURCHASE });
