@@ -122,6 +122,23 @@ export async function grantPro(t: AnyTestConvex, identity: Pick<SeededIdentity, 
     );
 }
 
+export async function revokePro(t: AnyTestConvex, identity: Pick<SeededIdentity, "userId">): Promise<void> {
+    await t.run((ctx) =>
+        silentRevenuecat.syncSubscriber(ctx, {
+            appUserId: identity.userId,
+            subscriber: {
+                entitlements: {
+                    [PRO_ENTITLEMENT_ID]: {
+                        expires_date: new Date(Date.now() - 1000).toISOString(),
+                        product_identifier: "com.tryoutlayr.app.pro.monthly",
+                        purchase_date: new Date(Date.now() - 86_400_000).toISOString(),
+                    },
+                },
+            },
+        })
+    );
+}
+
 export async function linkNotionAccount(t: AnyTestConvex, userId: string, accessToken = "notion-token"): Promise<void> {
     ensureAuthComponentRegistered(t);
     const now = Date.now();

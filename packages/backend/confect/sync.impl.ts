@@ -191,7 +191,7 @@ const push = FunctionImpl.make(
             let accepted = 0;
             let skipped = 0;
             let loggedEntry = false;
-            const filed: FiledEntry[] = [];
+            const filed = new Map<string, FiledEntry>();
             const movedCells: number[] = [];
             const reEmittedPolicyWinners = new Set<string>();
 
@@ -234,9 +234,17 @@ const push = FunctionImpl.make(
                 movedCells.push(...cellInstants(row, existing));
                 nextSeq += 1;
                 accepted += 1;
-                if (row.table === "transactions" && existing === null && row.deletedAt === null) {
-                    loggedEntry = true;
-                    filed.push({ ...row.fields, localId: row.localId, updatedAt: row.updatedAt });
+                if (row.table === "transactions" && row.deletedAt === null) {
+                    // A later row for an entry filed earlier in this batch replaces it, so the event shows what
+                    // was kept.
+                    if (existing === null || filed.has(row.localId)) {
+                        filed.set(row.localId, { ...row.fields, localId: row.localId, updatedAt: row.updatedAt });
+                    }
+                    if (existing === null) {
+                        loggedEntry = true;
+                    }
+                } else if (row.table === "transactions") {
+                    filed.delete(row.localId);
                 }
             }
 
@@ -245,7 +253,7 @@ const push = FunctionImpl.make(
             if (loggedEntry) {
                 yield* noteLoggedDay(userId);
             }
-            yield* emitEntriesFiled(userId, filed, yield* Clock.currentTimeMillis);
+            yield* emitEntriesFiled(userId, [...filed.values()], yield* Clock.currentTimeMillis);
 
             return { accepted, nextSeq, skipped };
         },

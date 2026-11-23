@@ -389,6 +389,17 @@ const pump = FunctionImpl.make(
             .take(PUMP_BATCH);
         const writer = yield* DatabaseWriter;
         const scheduler = yield* Scheduler;
+        const ctx = yield* MutationCtx;
+        const entitled = new Map<string, boolean>();
+        const stillPro = Effect.fn("Webhooks.stillPro")(function* stillPro(userId: string) {
+            const known = entitled.get(userId);
+            if (known !== undefined) {
+                return known;
+            }
+            const pro = yield* isPro(ctx, userId);
+            entitled.set(userId, pro);
+            return pro;
+        });
         for (const row of due) {
             const endpoint = yield* endpointById(row.endpointId);
             const spent = row.attempt > RETRY_DELAYS_MS.length;
@@ -396,7 +407,8 @@ const pump = FunctionImpl.make(
                 endpoint === null ||
                 endpoint.disabledAt !== undefined ||
                 spent ||
-                (yield* accountDeleting(row.userId))
+                (yield* accountDeleting(row.userId)) ||
+                !(yield* stillPro(row.userId))
             ) {
                 yield* dropDelivery(row);
                 continue;

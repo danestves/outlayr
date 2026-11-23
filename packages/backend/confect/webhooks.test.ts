@@ -16,7 +16,7 @@ import { purgeUserBatch } from "./lib/account";
 import { runEdge } from "./lib/runEdge";
 import { sha256Hex } from "./lib/sha256Hex";
 import { endpointUrl, signatureHeader } from "./lib/webhooks";
-import { authenticatedAs, seedAuthUser, seedProUser } from "./test.helpers";
+import { authenticatedAs, revokePro, seedAuthUser, seedProUser } from "./test.helpers";
 import type { SeededIdentity } from "./test.helpers";
 import { parseInbound, receiveInbound } from "./webhooks";
 import { MAX_FAILURES } from "./webhooks.spec";
@@ -153,6 +153,14 @@ describe("inbound webhooks", () => {
         await expect(post(t, { amount: 1 }, "l".repeat(40))).resolves.toBe(403);
     });
 
+    it("refuses a body past the cap even without a Content-Length", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        await authenticatedAs(t, owner).mutation(api.webhooks.setInboundToken, { token: TOKEN });
+        await expect(post(t, { amount: 1, note: "x".repeat(9000) })).resolves.toBe(413);
+        await expect(post(t, { amount: 1 })).resolves.toBe(202);
+    });
+
     it("will not hand one account's token to another", async () => {
         const t = setup();
         const owner = await seedProUser(t);
@@ -212,6 +220,36 @@ describe("outbound webhooks", () => {
             type: "entry.filed",
         });
         expect(only(await deliveries(t)).eventRef).toBe(sent._id);
+    });
+
+    it("sends what a push kept when it files and edits an entry together, and nothing when it also deletes it", async () => {
+        const t = setup();
+        const user = await seedProUser(t);
+        await endpointFor(t, user);
+        const filed = entry("edited", OPEN_AT + 1);
+        const edited = { ...filed, fields: { ...filed.fields, amount: 40 }, updatedAt: OPEN_AT + 2 };
+        const dropped = entry("dropped", OPEN_AT + 1);
+
+        await authenticatedAs(t, user).mutation(api.sync.push, {
+            deviceId: "phone",
+            rows: [filed, edited, dropped, { ...dropped, deletedAt: OPEN_AT + 2, updatedAt: OPEN_AT + 2 }],
+        });
+
+        const sent = only(await events(t));
+        expect(JSON.parse(sent.body)).toMatchObject({ data: { entry: { amount: 40, id: "edited" } } });
+    });
+
+    it("drops a queued delivery once the account loses Pro", async () => {
+        const t = setup();
+        const user = await seedProUser(t);
+        const endpointId = await endpointFor(t, user);
+        await authenticatedAs(t, user).mutation(api.webhooks.testEndpoint, { endpointId });
+        await revokePro(t, user);
+
+        await t.mutation(internal.webhooks.pump, {});
+
+        await expect(deliveries(t)).resolves.toStrictEqual([]);
+        await expect(events(t)).resolves.toStrictEqual([]);
     });
 
     it("retries a failing endpoint, ignores a stale claim, disables at the limit, and a test brings it back", async () => {

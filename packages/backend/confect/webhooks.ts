@@ -60,6 +60,44 @@ const REFUSED = {
     unknownToken: [401, "unauthorized"],
 } as const;
 
+// Content-Length is optional on a chunked request, so the cap holds while reading.
+async function readCapped(request: Request): Promise<string | null> {
+    if (request.body === null) {
+        return "";
+    }
+    const chunks: Uint8Array[] = [];
+    const size = await readChunks(request.body.getReader(), chunks, 0);
+    return size === null ? null : new TextDecoder().decode(concatBytes(chunks, size));
+}
+
+async function readChunks(
+    reader: ReadableStreamDefaultReader<Uint8Array>,
+    chunks: Uint8Array[],
+    size: number
+): Promise<number | null> {
+    const { done, value } = await reader.read();
+    if (done) {
+        return size;
+    }
+    const next = size + value.byteLength;
+    if (next > MAX_BODY_LENGTH) {
+        await reader.cancel();
+        return null;
+    }
+    chunks.push(value);
+    return await readChunks(reader, chunks, next);
+}
+
+function concatBytes(chunks: readonly Uint8Array[], size: number): Uint8Array {
+    const bytes = new Uint8Array(size);
+    let offset = 0;
+    for (const chunk of chunks) {
+        bytes.set(chunk, offset);
+        offset += chunk.byteLength;
+    }
+    return bytes;
+}
+
 export const receiveInbound = Effect.fn("Webhooks.receiveInbound")(function* receiveInbound(
     ctx: ReceiveCtx,
     request: Request
@@ -71,7 +109,10 @@ export const receiveInbound = Effect.fn("Webhooks.receiveInbound")(function* rec
     if (Number(request.headers.get("Content-Length") ?? 0) > MAX_BODY_LENGTH) {
         return reply(413, { error: "too_large" });
     }
-    const text = yield* Effect.promise(() => request.text());
+    const text = yield* Effect.promise(() => readCapped(request));
+    if (text === null) {
+        return reply(413, { error: "too_large" });
+    }
     const write = parseInbound(text, yield* Clock.currentTimeMillis);
     if (Option.isNone(write)) {
         return reply(400, { error: "invalid_body" });
