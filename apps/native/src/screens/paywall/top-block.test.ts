@@ -13,9 +13,14 @@ describe("topBlockOf", () => {
         expect(topBlockOf("autolog", 0)).toBe("generic");
     });
 
-    it("falls back to the headline for triggers without a block of their own", () => {
-        expect(topBlockOf("settings", 12)).toBe("generic");
-        expect(topBlockOf("unknown", 12)).toBe("generic");
+    it("leads with sync where no feature opened the paywall", () => {
+        expect(topBlockOf("settings", 12)).toBe("sync");
+        expect(topBlockOf("unknown", 12)).toBe("sync");
+    });
+
+    it("keeps a gated feature off the sync lead", () => {
+        expect(topBlockOf("webhooks", 0)).toBe("generic");
+        expect(topBlockOf("people", 0)).toBe("generic");
     });
 });
 

@@ -137,10 +137,10 @@ function SyncScene({ color }: { color: string }) {
 }
 
 const FEATURES = [
+    { color: "#6C7BBD", key: "sync", Scene: SyncScene },
     { color: "#4B9263", key: "autolog", Scene: AutologScene },
     { color: "#AB723A", key: "captures", Scene: CapturesScene },
     { color: "#1190A5", key: "accounts", Scene: AccountsScene },
-    { color: "#6C7BBD", key: "sync", Scene: SyncScene },
 ] as const;
 
 /** Each scene is one object washed in its feature's hue and one solid badge, so the four read as a set. */

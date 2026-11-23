@@ -104,7 +104,18 @@ function PitchBand({
                     subtitle={
                         waitingAccounts > 0
                             ? t("pro.top.accountsWaiting", { count: waitingAccounts })
-                            : t("pro.top.generic")
+                            : t("pro.top.syncAlso")
+                    }
+                    title={t("pro.band.everyPhone")}
+                />
+            );
+        }
+        case "sync": {
+            return (
+                <ProBand
+                    subtitle={t("pro.top.sync")}
+                    title={
+                        stats.entries > 0 ? t("pro.band.onlyHere", { count: stats.entries }) : t("pro.band.everyPhone")
                     }
                 />
             );
@@ -174,6 +185,7 @@ export function PaywallRedesign({
     const then = thenLabel(flow.plan, t);
     const daysLeft = daysLeftInMonth(new Date(now));
     const showMonth = flow.block === "autolog" && daysLeft > 0;
+    const listsFeatures = flow.isPro || flow.block === "sync";
     const monthLabel =
         flow.autolog.used >= flow.autolog.cap
             ? t("pro.band.ranOut")
@@ -306,8 +318,8 @@ export function PaywallRedesign({
                         />
                     )}
                     <View className="bg-background grow px-5 pb-4">
-                        {flow.isPro ? <FeatureRows /> : null}
-                        {flow.isPro ? null : (
+                        {listsFeatures ? <FeatureRows /> : null}
+                        {listsFeatures ? null : (
                             <PitchHero
                                 monthLabel={showMonth ? monthLabel : null}
                                 now={now}

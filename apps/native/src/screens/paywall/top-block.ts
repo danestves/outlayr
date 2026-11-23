@@ -7,7 +7,8 @@ export type TopBlock =
     | "first_entry"
     | "generic"
     | "installment_apps"
-    | "onboarding";
+    | "onboarding"
+    | "sync";
 
 export type AlsoRow = "autolog" | "currencies" | "installments" | "sync";
 
@@ -29,6 +30,13 @@ export function topBlockOf(trigger: typeof PaywallTrigger.Type, autologUsed: num
         case "onboarding": {
             return trigger;
         }
+        case "settings":
+        case "sync":
+        case "trial_reminder":
+        case "unknown":
+        case "usage": {
+            return "sync";
+        }
         default: {
             return "generic";
         }
@@ -43,6 +51,7 @@ const COVERED = {
     generic: null,
     installment_apps: "installments",
     onboarding: null,
+    sync: "sync",
 } as const satisfies Record<TopBlock, AlsoRow | null>;
 
 export function alsoRowsFor(block: TopBlock): AlsoRow[] {
