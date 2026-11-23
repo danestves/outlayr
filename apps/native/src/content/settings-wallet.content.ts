@@ -446,11 +446,11 @@ const settingsWallet = {
             pt: "Escolha Carteira",
         }),
         "settings.wallet.step2Detail": t({
-            en: "Called Transaction before iOS 26",
-            de: "Vor iOS 26 hieß es Transaktion",
-            es: "Se llama Transacción antes de iOS 26",
-            fr: "Appelé Transaction avant iOS 26",
-            pt: "Chamado Transação antes do iOS 26",
+            en: "On iOS 18, choose Transaction",
+            de: "Unter iOS 18 wähle Transaktion",
+            es: "En iOS 18, elige Transacción",
+            fr: "Sous iOS 18, choisissez Transaction",
+            pt: "No iOS 18, escolha Transação",
         }),
         "settings.wallet.step3": t({
             en: "Pick your cards",
