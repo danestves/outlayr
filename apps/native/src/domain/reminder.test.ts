@@ -184,16 +184,23 @@ describe("second entry nudge", () => {
     const savedAt = new Date(2026, 9, 13, 23, 30).getTime();
 
     it("keeps the nudge through the next day while the onboarding entry is the only one", () => {
-        expect(secondEntryNudge({ entries: 1, now: new Date(2026, 9, 14, 21, 0), savedAt })).toStrictEqual(
+        expect(secondEntryNudge({ armedAt: 0, entries: 1, now: new Date(2026, 9, 14, 21, 0), savedAt })).toStrictEqual(
             new Date(savedAt)
         );
     });
 
     it("drops it as soon as a second entry exists", () => {
-        expect(secondEntryNudge({ entries: 2, now: new Date(2026, 9, 13, 23, 45), savedAt })).toBeNull();
+        expect(secondEntryNudge({ armedAt: 0, entries: 2, now: new Date(2026, 9, 13, 23, 45), savedAt })).toBeNull();
+    });
+
+    it("drops it once the armed slot has passed, so a later reminder time can't deliver it twice", () => {
+        const armedAt = new Date(2026, 9, 14, 20, 0).getTime();
+
+        expect(secondEntryNudge({ armedAt, entries: 1, now: new Date(2026, 9, 14, 19, 59), savedAt })).not.toBeNull();
+        expect(secondEntryNudge({ armedAt, entries: 1, now: new Date(2026, 9, 14, 20, 0), savedAt })).toBeNull();
     });
 
     it("drops it once the day after the first entry is over", () => {
-        expect(secondEntryNudge({ entries: 1, now: new Date(2026, 9, 15, 0, 0), savedAt })).toBeNull();
+        expect(secondEntryNudge({ armedAt: 0, entries: 1, now: new Date(2026, 9, 15, 0, 0), savedAt })).toBeNull();
     });
 });

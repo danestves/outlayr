@@ -4,7 +4,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
 import { Meta } from "@/data/app-meta-core";
-import { hasEntriesBetween, lastLoggedEntry, visibleEntryCount } from "@/data/transactions-core";
+import { hasEntriesBetween, lastLoggedEntry, liveEntryCount } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { previousMonth } from "@/domain/recap-month";
 import {
@@ -55,12 +55,15 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
     const now = yield* DateTime.nowAsDate;
     const time = decision === "schedule" ? yield* readReminderTime(db) : null;
     const notices: DatedReminder[] = [];
+    const [savedAt, armedAt] = yield* Effect.all(
+        [Meta.get(db, "secondEntryNudgeSavedAt"), Meta.get(db, "secondEntryNudgeArmedAt")],
+        { concurrency: "unbounded" }
+    );
     if (time !== null) {
-        const savedAt = yield* Meta.get(db, "secondEntryNudgeDay");
         const secondEntryAfter =
-            savedAt > 0 ? secondEntryNudge({ entries: yield* visibleEntryCount(db, now), now, savedAt }) : null;
+            savedAt > 0 ? secondEntryNudge({ armedAt, entries: yield* liveEntryCount(db), now, savedAt }) : null;
         if (savedAt > 0 && secondEntryAfter === null) {
-            yield* Meta.set(db, "secondEntryNudgeDay", 0);
+            yield* Meta.set(db, "secondEntryNudgeSavedAt", 0);
         }
         notices.push(
             ...dailyReminderNotices({
@@ -81,16 +84,20 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
 
     const keep = new Set(notices.map((notice) => notice.id));
     const pending = yield* reminders.pendingIds();
-    const nudgeArmed = notices.some(({ data, id }) => data.kind === "second_entry" && !pending.includes(id));
-    if (nudgeArmed && now.getTime() >= REMINDER_ANALYTICS_AT_MS) {
-        posthog?.capture("second_entry_nudge_armed");
-    }
     yield* reminders.cancel(
         pending.filter(
             (id) => (id.startsWith(DAILY_REMINDER_PREFIX) || id.startsWith(RECAP_REMINDER_PREFIX)) && !keep.has(id)
         )
     );
     yield* armReminders(notices);
+
+    const nudge = notices.find(({ data }) => data.kind === "second_entry");
+    if (nudge !== undefined && nudge.fireAt.getTime() !== armedAt) {
+        yield* Meta.set(db, "secondEntryNudgeArmedAt", nudge.fireAt.getTime());
+        if (armedAt === 0 && now.getTime() >= REMINDER_ANALYTICS_AT_MS) {
+            posthog?.capture("second_entry_nudge_armed");
+        }
+    }
 
     if (decision === "disable") {
         yield* Meta.set(db, "showNotifications", false);

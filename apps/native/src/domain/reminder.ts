@@ -94,10 +94,18 @@ export function reminderReconcile(enabled: boolean, permission: ReminderPermissi
 
 const SECOND_ENTRY_WINDOW_DAYS = 2;
 
-export function secondEntryNudge({ entries, now, savedAt }: { entries: number; now: Date; savedAt: number }) {
+export interface SecondEntryNudgeInput {
+    armedAt: number;
+    entries: number;
+    now: Date;
+    savedAt: number;
+}
+
+export function secondEntryNudge({ armedAt, entries, now, savedAt }: SecondEntryNudgeInput): Date | null {
     const saved = new Date(savedAt);
     const expired = now.getTime() >= addDays(startOfDay(saved), SECOND_ENTRY_WINDOW_DAYS).getTime();
-    return entries > 1 || expired ? null : saved;
+    const delivered = armedAt > 0 && now.getTime() >= armedAt;
+    return entries > 1 || expired || delivered ? null : saved;
 }
 
 export const DAILY_REMINDER_PREFIX = "outlayr.daily-reminder";
@@ -176,8 +184,8 @@ export function dailyReminderNotices({
             }
             if (
                 secondEntryDay !== null &&
-                lastDay.getTime() === secondEntryDay.getTime() &&
-                fireDay.getTime() === addDays(secondEntryDay, 1).getTime()
+                daysBetween(secondEntryDay.getTime(), lastDay.getTime()) === 0 &&
+                daysBetween(secondEntryDay.getTime(), fireDay.getTime()) === 1
             ) {
                 return [
                     {

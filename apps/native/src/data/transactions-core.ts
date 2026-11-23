@@ -589,12 +589,9 @@ export function getTransactionById(db: Database, id: string): Transaction | null
     return rows[0] ?? null;
 }
 
-export const visibleEntryCount = Effect.fn("Transactions.visibleEntryCount")(function* visibleEntryCount(
-    db: Database,
-    now: Date
-) {
+export const liveEntryCount = Effect.fn("Transactions.liveEntryCount")(function* liveEntryCount(db: Database) {
     const [row] = yield* query("entryCount", () =>
-        db.select({ total: count() }).from(transactions).where(visibleAt(now.getTime()))
+        db.select({ total: count() }).from(transactions).where(isNull(transactions.deletedAt))
     );
     return row?.total ?? 0;
 });
