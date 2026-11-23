@@ -26,6 +26,7 @@ vi.mock("@/data/pending-writes-core", () => ({
     appliedWriteIds: () => Effect.succeed(["watch-write"]),
 }));
 vi.mock("@/lib/watch-link", () => ({ publishWatchSnapshot: vi.fn() }));
+vi.mock("@/lib/charge-actions", () => ({ registerChargeActions: Effect.void }));
 
 const updates = {
     Budget: vi.mocked(budget.updateTimeline),

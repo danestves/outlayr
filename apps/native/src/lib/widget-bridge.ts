@@ -1,24 +1,15 @@
-import Constants from "expo-constants";
-import { Directory, File, Paths } from "expo-file-system";
-import { Platform } from "react-native";
+import { File } from "expo-file-system";
 
+import { queueDirectory } from "./queue-directory";
 import {
     adoptQueue,
     claimPendingWrites as claimQueue,
     parseLegacyQueue,
-    QUEUE_DIRECTORY,
     QUEUE_FILE,
     releasePendingWrites as releaseQueue,
 } from "./queue-file";
 import type { ClaimedWrites, PendingWrite, QueueFiles } from "./queue-file";
 import { sharedStore } from "./shared-store";
-
-/**
- * Read from `extra` rather than repeated, so the app and the intents cannot drift onto different containers.
- * Widgets do not use this group: `expo-widgets` owns its own transport.
- */
-// SAFETY: as in `device-data-stores`: `extra` is an open record.
-const APP_GROUP = Constants.expoConfig?.extra?.appGroup as string | undefined;
 
 /** Retired: one JSON string let two intents overwrite each other. `adoptLegacyQueue` migrates what remains. */
 export const PENDING_WRITES_KEY = "pendingWrites";
@@ -98,24 +89,6 @@ export function publishIntentSnapshot(snapshot: IntentSnapshot): void {
     } catch (error) {
         console.warn("[outlayr] intent snapshot failed", error);
     }
-}
-
-function queueDirectory(): Directory | null {
-    if (Platform.OS === "android") {
-        const directory = new Directory(Paths.document, QUEUE_DIRECTORY);
-        directory.create({ idempotent: true, intermediates: true });
-        return directory;
-    }
-    if (Platform.OS !== "ios" || !APP_GROUP) {
-        return null;
-    }
-    const container = Paths.appleSharedContainers[APP_GROUP];
-    if (!container) {
-        return null;
-    }
-    const directory = new Directory(container, QUEUE_DIRECTORY);
-    directory.create({ idempotent: true, intermediates: true });
-    return directory;
 }
 
 const queueFiles: QueueFiles = {

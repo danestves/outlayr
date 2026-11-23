@@ -4,16 +4,17 @@ import * as Schema from "effect/Schema";
 import type { Href } from "expo-router";
 
 import { readPlans } from "@/data/installments-core";
-import { findNotificationDebt } from "@/data/notification-debts";
-import { drainDevicePendingWrites } from "@/data/pending-writes";
-import { pendingWriteTxId } from "@/data/pending-writes-core";
+import { dropNotificationDebt, findNotificationDebt } from "@/data/notification-debts";
+import { dismissDeviceWrite, drainDevicePendingWrites } from "@/data/pending-writes";
+import { filedThisSession, pendingWriteTxId } from "@/data/pending-writes-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";
-import { getTransactionById } from "@/data/transactions-core";
+import { getTransactionById, transactionsRepo } from "@/data/transactions-core";
 import { cardAccount, cardStillAsks, fileWaitingPurchases } from "@/data/wallet-state-core";
 import type { Database } from "@/db/client";
 import type { NotificationDebt } from "@/domain/meta-values";
 import { paywallHref } from "@/domain/paywall-trigger";
 
+import type { ChargeAction } from "./charge-actions";
 import { warnAndContinue } from "./warn-and-continue";
 
 const SubscriptionTap = Schema.Struct({ charge: Schema.String, subscription: Schema.String });
@@ -132,3 +133,21 @@ export const resolveWalletPushTap = Effect.fn("NotificationTaps.resolveWalletPus
     }
     return target;
 });
+
+export const settleWalletPushAction = Effect.fn("NotificationTaps.settleWalletPushAction")(
+    function* settleWalletPushAction(db: Database, walletWrite: string, action: ChargeAction) {
+        if (action === "delete") {
+            dismissDeviceWrite(walletWrite);
+        }
+        const txId = yield* settleWalletWrites(db, walletWrite);
+        if (action !== "delete") {
+            return;
+        }
+        yield* dropNotificationDebt(db, walletWrite);
+        if (txId !== null) {
+            yield* filedThisSession(walletWrite)
+                ? transactionsRepo.remove(db, txId)
+                : Effect.logWarning("[outlayr] a deleted charge landed before its dismissal");
+        }
+    }
+);

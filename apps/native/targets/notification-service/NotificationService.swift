@@ -72,6 +72,7 @@ final class NotificationService: UNNotificationServiceExtension {
         }
         content.title = shown.isEmpty ? amount : "\(amount) · \(shown)"
         content.body = [push.answer.categoryName, posted["cardLabel"] as? String].compactMap { $0 }.joined(separator: " · ")
+        content.categoryIdentifier = "detected-charge"
         var tap: [String: Any] = ["walletWrite": walletWrite, "pickCard": posted["pickCard"] as? Bool ?? false]
         if let card = posted["card"] as? String {
             tap["card"] = card

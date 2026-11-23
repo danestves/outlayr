@@ -17,7 +17,7 @@ import { Platform } from "react-native";
 import { cancelLogoBackfill } from "./logo-backfill";
 import { clearStoredPhotos } from "./photo-storage";
 import { PROVIDER_BINDING_KEY } from "./provider-revocation";
-import { QUEUE_DIRECTORY } from "./queue-file";
+import { QUEUE_DIRECTORY } from "./queue-directory";
 import { SecureStorage } from "./secure-storage";
 import { sharedStore } from "./shared-store";
 import { INTENT_SNAPSHOT_KEY, PENDING_WRITES_KEY, PUSHED_PURCHASES_KEY, WALLET_PUSH_KEY } from "./widget-bridge";

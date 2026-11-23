@@ -8,6 +8,7 @@ import type { Database } from "@/db/client";
 import { formatUpcomingDate } from "@/domain/dates";
 import { amountParts } from "@/domain/money";
 import { translateNow } from "@/i18n/runtime";
+import { registerChargeActions } from "@/lib/charge-actions";
 import { warnAndContinue } from "@/lib/warn-and-continue";
 import { publishWatchSnapshot } from "@/lib/watch-link";
 import { publishIntentSnapshot, publishWalletPush } from "@/lib/widget-bridge";
@@ -123,4 +124,5 @@ export const publishWidgets = Effect.fn("Widgets.publish")(function* publishWidg
         ),
         warnAndContinue("[outlayr] wallet push build failed")
     );
+    yield* registerChargeActions.pipe(warnAndContinue("[outlayr] charge actions failed to register"));
 });

@@ -17,8 +17,6 @@ export function autologSourceOf(write: PendingWrite): AutologSource {
     return kind === "wallet" || kind === "notification" ? kind : "shortcut";
 }
 
-export const QUEUE_DIRECTORY = "pending-writes";
-
 export const QUEUE_FILE = "queue.jsonl";
 
 const CLAIM_NAME = /^claimed-(\d+)\.jsonl$/;

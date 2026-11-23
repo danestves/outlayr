@@ -5,6 +5,7 @@ import { AndroidImportance, setNotificationChannelAsync } from "expo-notificatio
 
 import { buildWalletPush } from "@/data/wallet-push";
 import { translateNow } from "@/i18n/runtime";
+import { registerChargeActions } from "@/lib/charge-actions";
 import { purchaseListener } from "@/lib/purchase-listener";
 import { warnAndContinue } from "@/lib/warn-and-continue";
 import type { publishWidgets as iosPublishWidgets } from "@/widgets/publish";
@@ -48,5 +49,6 @@ export const publishWidgets: typeof iosPublishWidgets = Effect.fn("Widgets.publi
                 name: translateNow("settings.wallet.pushChannel"),
             })
         );
+        yield* registerChargeActions;
     }).pipe(warnAndContinue("[outlayr] wallet push build failed"));
 });
