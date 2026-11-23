@@ -37,6 +37,10 @@ export function fullAccountCaps(accounts: readonly Omit<CappedAccount, "currency
     };
 }
 
+export function freeAccountsUsed(accounts: readonly Omit<CappedAccount, "currency">[], locked: boolean): number | null {
+    return locked ? accounts.filter((account) => !isInstallmentAppAccount(account)).length : null;
+}
+
 const uncapped = (account: CappedAccount) => isPerson(account) || isInstallmentAppAccount(account);
 
 export function blocksNewCurrency(account: CappedAccount, others: readonly CappedAccount[], locked: boolean): boolean {

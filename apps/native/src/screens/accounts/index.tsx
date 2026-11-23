@@ -95,8 +95,20 @@ export function Accounts({ addMenu, onAddGoal, toggle }: AccountsProps) {
     const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
-    const { archivedCount, assets, currency, db, debts, deleteAccount, empty, goals, openDetail, openGoal, rows } =
-        useAccountList();
+    const {
+        archivedCount,
+        assets,
+        census,
+        currency,
+        db,
+        debts,
+        deleteAccount,
+        empty,
+        goals,
+        openDetail,
+        openGoal,
+        rows,
+    } = useAccountList();
     const sortMenu = useSortMenu(rows.length);
     const rowGround = groupedRows(colors);
 
@@ -125,12 +137,7 @@ export function Accounts({ addMenu, onAddGoal, toggle }: AccountsProps) {
                         </Section>
                         <LedgerTotals currency={currency} debts={debts} />
                         {assets.length > 0 ? (
-                            <Section
-                                header={
-                                    <Eyebrow colors={colors}>{t("accounts.census", { count: assets.length })}</Eyebrow>
-                                }
-                                modifiers={[rowGround]}
-                            >
+                            <Section header={<Eyebrow colors={colors}>{census}</Eyebrow>} modifiers={[rowGround]}>
                                 {assets.map((account) => (
                                     <AccountRow
                                         account={account}

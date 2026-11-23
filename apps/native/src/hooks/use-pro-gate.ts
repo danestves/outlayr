@@ -15,6 +15,7 @@ import {
     FREE_PAYOFF_PLANS,
     FREE_PEOPLE,
     fillsFullCap,
+    freeAccountsUsed,
     fullAccountCaps,
 } from "@/domain/pro-limits";
 import { useProLocked } from "@/hooks/use-pro-locked";
@@ -32,6 +33,10 @@ export function useProCapped(count: number, limit: number): boolean {
 
 export function useAccountCaps(): ReturnType<typeof fullAccountCaps> {
     return fullAccountCaps(useCappedAccounts(useDatabase()), useProLocked());
+}
+
+export function useFreeAccountsUsed(): number | null {
+    return freeAccountsUsed(useCappedAccounts(useDatabase()), useProLocked());
 }
 
 type Named = Pick<Account, "kind" | "name">;

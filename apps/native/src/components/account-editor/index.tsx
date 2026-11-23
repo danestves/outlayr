@@ -26,6 +26,7 @@ import {
 import { InlineFailure } from "@/components/form/inline-failure";
 import { IdentityCurtain } from "@/components/identity-curtain";
 import { HERO_RING, IdentityFlyUpLayer } from "@/components/identity-fly-up";
+import { Text } from "@/components/text";
 import { toolbarIcon } from "@/components/toolbar-icons";
 import { useKeyboardEvent } from "@/hooks/use-keyboard-height";
 import { useTranslation } from "@/i18n/context";
@@ -65,6 +66,7 @@ export default function AccountEditor(props: AccountEditorProps) {
         fields,
         floatProgress,
         isSubmitting,
+        lastFree,
         limitSheet,
         name,
         openPicker,
@@ -193,6 +195,9 @@ export default function AccountEditor(props: AccountEditorProps) {
                 <InlineFailure message={failure} />
 
                 <View onLayout={(event) => setCtaHeight(event.nativeEvent.layout.height)}>
+                    {lastFree ? (
+                        <Text className="text-footnote text-muted px-1 pb-2">{t("accounts.lastFree")}</Text>
+                    ) : null}
                     <EditorCta
                         busy={isSubmitting}
                         canSave={canSave}

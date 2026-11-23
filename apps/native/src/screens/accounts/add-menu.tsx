@@ -3,7 +3,7 @@ import { Stack, useRouter } from "expo-router";
 import { toolbarIcon } from "@/components/toolbar-icons";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useMeta } from "@/data/app-meta";
-import { useCreateAccount } from "@/hooks/use-pro-gate";
+import { useAccountCaps, useCreateAccount } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
 import { useNewDebtItems } from "@/screens/debts/use-new-debt-items";
 import { setBoolSettingCommand } from "@/state/settings-commands";
@@ -19,12 +19,17 @@ interface AddMenuActions {
 export function useAddMenu({ onCategoryLimit, onGoal, onOverallLimit }: AddMenuActions) {
     const t = useTranslation();
     const createAccount = useCreateAccount();
+    const accountsCapped = useAccountCaps().accounts;
     const debtItems = useNewDebtItems();
 
     return (
         <Stack.Toolbar.Menu accessibilityLabel={t("balances.add.prompt")}>
             <Stack.Toolbar.Icon {...toolbarIcon("add")} />
-            <Stack.Toolbar.MenuAction icon="building.columns" onPress={createAccount}>
+            <Stack.Toolbar.MenuAction
+                icon="building.columns"
+                onPress={createAccount}
+                subtitle={accountsCapped ? t("pro.col.pro") : undefined}
+            >
                 {t("accounts.add.account")}
             </Stack.Toolbar.MenuAction>
             <Stack.Toolbar.Menu inline title={t("debts.title")}>
