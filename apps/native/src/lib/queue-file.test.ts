@@ -437,6 +437,18 @@ describe("claimPendingWrites with purchase routes", () => {
         expect(claimed.purchases?.some((entry) => entry.at === settlement.date)).toBe(false);
     });
 
+    it("keeps an anchor older than a day while a queued capture still needs it", () => {
+        const day = 24 * 60 * 60 * 1000;
+        const old = { at: NOW - day - 120_000, key: PURCHASE, ledger: "A" };
+        const settlement = write("settlement", { date: old.at + 60_000, dedupeKey: PURCHASE });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(settlement) });
+
+        const claimed = claimPendingWrites(files, { key: "C", now: NOW, purchases: [old], siblingWindowMs });
+
+        expect(claimed.held).toStrictEqual([{ jobs: [settlement], name: "held-A-1.jsonl" }]);
+        expect(claimed.purchases).toStrictEqual([old]);
+    });
+
     it("keeps new anchors and drops the ones older than a day", () => {
         const job = write("job", { date: NOW - 300_000, dedupeKey: "wallet:fresh" });
         const fresh = { at: NOW - 60_000, key: PURCHASE, ledger: "B" };

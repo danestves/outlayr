@@ -215,6 +215,7 @@ function routePlacements(
         .map((placement, index) => ({ date: placement.job.date, index }))
         .sort((a, b) => a.date - b.date || a.index - b.index);
     const routes: PurchaseRoute[] = [];
+    const matched: PurchaseRoute[] = [];
     const seen: PurchaseRoute[] = [...known];
     for (const { index } of byDate) {
         const placement = routed[index];
@@ -223,6 +224,9 @@ function routePlacements(
         }
         const key = purchaseKeyOf(placement.job);
         const anchor = key === null ? null : anchorOf(placement.job, key, seen, window);
+        if (anchor !== null) {
+            matched.push(anchor);
+        }
         if (!placement.own) {
             placement.ledger = anchor?.ledger ?? destinationOf(placement.job, route);
         }
@@ -233,7 +237,7 @@ function routePlacements(
             seen.push(entry);
         }
     }
-    return { placements: routed, routes };
+    return { matched, placements: routed, routes };
 }
 
 function prunePurchases(input: readonly PurchaseRoute[], made: readonly PurchaseRoute[], now: number): PurchaseRoute[] {
@@ -397,7 +401,8 @@ export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): Cla
         }
     } else {
         const routed = routePlacements(placements, route, ledger.purchases ?? [], ledger.siblingWindowMs);
-        made.push(...routed.routes);
+        // An anchor this claim used stays past the horizon, so a replay of this claim still finds it.
+        made.push(...routed.routes, ...routed.matched);
         for (const { job, ledger: destination } of routed.placements) {
             if (destination === route.key) {
                 jobs.push(job);
