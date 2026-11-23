@@ -10,6 +10,7 @@ import { Alert, Clipboard, Pressable, View } from "react-native";
 
 import { ActionMenu } from "@/components/action-menu";
 import type { ActionMenuItem } from "@/components/action-menu";
+import { BusyText } from "@/components/busy-text";
 import { InlineFailure } from "@/components/form/inline-failure";
 import { LinkRow, SettingsSection } from "@/components/list/list-row";
 import { RowShell } from "@/components/list/row-shell";
@@ -18,6 +19,7 @@ import { SheetGestureRoot } from "@/components/sheet-gesture-root";
 import { ROUNDED, Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useSyncStatus } from "@/data/use-sync-status";
+import { useLongWait } from "@/hooks/use-long-wait";
 import { useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
@@ -578,6 +580,7 @@ function AddEndpointSheet({
     const t = useTranslation();
     const colors = useColors();
     const sheetSurface = useSheetSurface();
+    const slow = useLongWait(busy);
 
     return (
         <BottomSheetModal
@@ -631,7 +634,13 @@ function AddEndpointSheet({
                             size="lg"
                             variant="primary"
                         >
-                            {t("settings.webhooks.add")}
+                            {slow ? (
+                                <BusyText className="text-[18px] font-medium" color={colors.primaryForeground}>
+                                    {t("settings.webhooks.add.busy")}
+                                </BusyText>
+                            ) : (
+                                t("settings.webhooks.add")
+                            )}
                         </Button>
                     </View>
                 </SheetGestureRoot>

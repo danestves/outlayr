@@ -47,7 +47,12 @@ export const pullInboundWrites = Effect.fn("InboundWrites.pullInboundWrites")(fu
         return 0;
     }
     const rows = yield* transport.inbox();
-    if (rows.length === 0 || !adoptPendingWrites(rows.map(inboundPendingWrite))) {
+    if (rows.length === 0) {
+        // A claim left by an earlier failed drain still has to land when nothing new arrives.
+        yield* drainDevicePendingWrites(db);
+        return 0;
+    }
+    if (!adoptPendingWrites(rows.map(inboundPendingWrite))) {
         return 0;
     }
     yield* transport.ack(rows.map(({ id }) => id));

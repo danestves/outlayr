@@ -31,6 +31,13 @@ const settingsWebhooks = {
             fr: "Ajouter",
             pt: "Adicionar",
         }),
+        "settings.webhooks.add.busy": t({
+            en: "Adding…",
+            de: "Wird hinzugefügt…",
+            es: "Añadiendo…",
+            fr: "Ajout…",
+            pt: "Adicionando…",
+        }),
         "settings.webhooks.addAddress": t({
             en: "Add an address",
             de: "Adresse hinzufügen",
@@ -123,11 +130,11 @@ const settingsWebhooks = {
             pt: "IFTTT, Zapier ou Tasker podem publicar uma despesa aqui com este token. Ela aparece no app na próxima sincronização.",
         }),
         "settings.webhooks.sendFooter": t({
-            en: "Each new entry sends a signed entry.filed event to these addresses.",
-            de: "Jeder neue Eintrag sendet ein signiertes entry.filed-Ereignis an diese Adressen.",
-            es: "Cada registro nuevo envía un evento entry.filed firmado a estas direcciones.",
-            fr: "Chaque nouvelle opération envoie un événement entry.filed signé à ces adresses.",
-            pt: "Cada lançamento novo envia um evento entry.filed assinado para estes endereços.",
+            en: "Each new entry for a purchase in the past week sends a signed entry.filed event to these addresses.",
+            de: "Jeder neue Eintrag für einen Kauf aus der letzten Woche sendet ein signiertes entry.filed-Ereignis an diese Adressen.",
+            es: "Cada registro nuevo de una compra de la última semana envía un evento entry.filed firmado a estas direcciones.",
+            fr: "Chaque nouvelle entrée pour un achat de la semaine passée envoie un événement entry.filed signé à ces adresses.",
+            pt: "Cada novo registro de uma compra da última semana envia um evento entry.filed assinado para estes endereços.",
         }),
         "settings.webhooks.test": t({
             en: "Send test",
@@ -235,11 +242,11 @@ const settingsWebhooks = {
             pt: "Desligado após várias falhas. Envie um teste para ligar de novo.",
         }),
         "settings.webhooks.add.disclosure": t({
-            en: "Every entry you file from now on sends its amount, currency, date, note, category and account name to this address. Only add an address you control or trust.",
-            de: "Jeder Eintrag, den du ab jetzt speicherst, sendet Betrag, Währung, Datum, Notiz, Kategorie und Kontoname an diese Adresse. Füge nur eine Adresse hinzu, die dir gehört oder der du vertraust.",
-            es: "Cada registro que guardes desde ahora envía su monto, moneda, fecha, nota, categoría y nombre de cuenta a esta dirección. Solo añade una dirección que controles o en la que confíes.",
-            fr: "Chaque opération que vous enregistrez désormais envoie son montant, sa devise, sa date, sa note, sa catégorie et le nom du compte à cette adresse. N'ajoutez qu'une adresse que vous contrôlez ou à laquelle vous faites confiance.",
-            pt: "Cada lançamento que você salvar a partir de agora envia valor, moeda, data, nota, categoria e nome da conta para este endereço. Adicione apenas um endereço que você controle ou em que confie.",
+            en: "Every entry you file from now on for a purchase in the past week sends its amount, currency, date, note, category and account name to this address. Only add an address you control or trust.",
+            de: "Jeder Eintrag für einen Kauf aus der letzten Woche, den du ab jetzt speicherst, sendet Betrag, Währung, Datum, Notiz, Kategorie und Kontoname an diese Adresse. Füge nur eine Adresse hinzu, die dir gehört oder der du vertraust.",
+            es: "Cada registro de una compra de la última semana que guardes desde ahora envía su monto, moneda, fecha, nota, categoría y nombre de cuenta a esta dirección. Solo añade una dirección que controles o en la que confíes.",
+            fr: "Chaque entrée pour un achat de la semaine passée que vous enregistrez désormais envoie son montant, sa devise, sa date, sa note, sa catégorie et le nom du compte à cette adresse. N'ajoutez qu'une adresse que vous contrôlez ou à laquelle vous faites confiance.",
+            pt: "Cada registro de uma compra da última semana que você salvar a partir de agora envia valor, moeda, data, nota, categoria e nome da conta para este endereço. Adicione apenas um endereço que você controle ou em que confie.",
         }),
         "settings.webhooks.add.field": t({
             en: "Address",
