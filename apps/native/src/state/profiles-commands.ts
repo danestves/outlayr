@@ -34,7 +34,7 @@ const settleLedger = Effect.fn("Profiles.settleLedger")(function* settleLedger(d
     // Only the transition that closed the gate may drain or reopen it: a second one, like a switch tapped mid sign-out,
     // would run its strict pass against the ledger that transition is already leaving.
     if (!acquireDrains()) {
-        return yield* Effect.fail(switchFailed(new Error("another profile transition still holds the drains shut")));
+        return yield* switchFailed(new Error("another profile transition still holds the drains shut"));
     }
     leftLedger = false;
     yield* Effect.gen(function* settle() {
@@ -126,12 +126,9 @@ export const switchProfileCommand = createRuntimeCommand(appRuntime, {
         // Settling can let sync tombstone the profile this switch set out to open.
         yield* Effect.gen(function* guardTarget() {
             if (input.profileId !== undefined && !(yield* profileIsLive(profileRegistry(), input.profileId))) {
-                return yield* Effect.fail(new Error("profile was deleted"));
+                return yield* switchFailed(new Error("profile was deleted"));
             }
-        }).pipe(
-            Effect.mapError(switchFailed),
-            Effect.onError(() => Effect.sync(reopenDrains))
-        );
+        }).pipe(Effect.onError(() => Effect.sync(reopenDrains)));
         yield* withRollback(enter(input.profileId));
     }),
     label: "profiles:switch",
