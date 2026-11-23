@@ -57,6 +57,15 @@ describe("readDismissals", () => {
         expect(files.get("dismissed.jsonl")).toBe(`${stale}\n`);
     });
 
+    it("returns every dismissal, expired included, when the held scan failed", () => {
+        const stale = JSON.stringify({ at: NOW - 91 * DAY, id: "stale" });
+        const fresh = JSON.stringify({ at: NOW - DAY, id: "fresh" });
+        files.set("dismissed.jsonl", `${stale}\n${fresh}\n`);
+
+        expect(readDismissals(NOW, null)).toStrictEqual(["stale", "fresh"]);
+        expect(files.get("dismissed.jsonl")).toBe(`${stale}\n${fresh}\n`);
+    });
+
     it("returns nothing when no dismissal was ever written", () => {
         expect(readDismissals(NOW, new Set())).toStrictEqual([]);
     });

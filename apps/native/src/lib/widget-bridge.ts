@@ -178,13 +178,13 @@ export function adoptPendingWrites(jobs: PendingWrite[]): boolean {
     }
 }
 
-/** Ids parked in any ledger's held file, so their dismissal survives the file. */
-export function heldPendingWriteIds(): ReadonlySet<string> {
+/** Ids parked in any ledger's held file, so their dismissal survives the file. Null means the scan failed. */
+export function heldPendingWriteIds(): ReadonlySet<string> | null {
     try {
         return heldIds(queueFiles);
     } catch (error) {
         console.warn("[outlayr] held writes unreadable", error);
-        return new Set();
+        return null;
     }
 }
 

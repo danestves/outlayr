@@ -14,7 +14,7 @@ import {
 
 import { dismissPendingWrite, drainPendingWrites } from "./pending-writes-core";
 
-export { closeDrains, reopenDrains } from "./pending-writes-core";
+export { closeDrains, drainsClosed, reopenDrains } from "./pending-writes-core";
 
 export function dismissDeviceWrite(id: string): void {
     persistDismissal(id);

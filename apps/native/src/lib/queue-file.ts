@@ -49,7 +49,7 @@ export interface ClaimLedger {
     cutoffs?: readonly SwitchCutoff[];
     /** `ledgerKey` of the profile this launch opened. */
     key: string;
-    /** When the claim ran, for the grace a cutoff needs before it settles. */
+    /** When the claim ran, for the grace that decides which cutoffs the bridge keeps persisting. */
     now: number;
 }
 
@@ -225,8 +225,11 @@ export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): Cla
     const parked = ledger === undefined ? [] : heldNames(files, ledger.key);
     names.push(...parked);
     const ownHeld = new Set(parked);
-    const cutoffs = ledger === undefined ? [] : pruneCutoffs(ledger.cutoffs ?? [], ledger.now);
-    const route = ledger === undefined ? undefined : { cutoffs, dismissed: ledger.dismissed, key: ledger.key };
+    // Routing reads every cutoff on disk: a capture dated before one belongs to its ledger even after the grace, which
+    // only decides what the bridge persists once the release lands.
+    const full = ledger === undefined ? [] : [...(ledger.cutoffs ?? [])].sort((a, b) => a.at - b.at);
+    const cutoffs = ledger === undefined ? [] : pruneCutoffs(full, ledger.now);
+    const route = ledger === undefined ? undefined : { cutoffs: full, dismissed: ledger.dismissed, key: ledger.key };
     const jobs: PendingWrite[] = [];
     const leaving = new Map<string, PendingWrite[]>();
     const seen = new Set<string>();

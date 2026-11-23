@@ -7,7 +7,7 @@ import * as Schema from "effect/Schema";
 import { reloadAsync } from "expo-updates";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { drainPendingWrites, reopenDrains } from "@/data/pending-writes-core";
+import { closeDrains, drainPendingWrites, reopenDrains } from "@/data/pending-writes-core";
 import type { Database } from "@/db/client";
 import { appRuntime } from "@/lib/runtime";
 
@@ -119,5 +119,20 @@ describe("switching profiles", () => {
         const claim = vi.fn(emptyClaim);
         await Effect.runPromise(Effect.exit(drainPendingWrites(db, claim, () => undefined)));
         expect(claim).toHaveBeenCalledOnce();
+    });
+
+    it("refuses a switch while another transition still holds the drains shut", async () => {
+        await Effect.runPromise(closeDrains());
+        const registry = AtomRegistry.make({ initialValues: [[appRuntime.layer, Layer.empty]] });
+
+        const result = await switchProfileCommand.run(registry, { from: db, profileId: undefined });
+        registry.dispose();
+
+        expect(AsyncResult.isFailure(result)).toBe(true);
+        expect(recordedSwitches).toBe(0);
+
+        const claim = vi.fn(emptyClaim);
+        await Effect.runPromise(Effect.exit(drainPendingWrites(db, claim, () => undefined)));
+        expect(claim).not.toHaveBeenCalled();
     });
 });

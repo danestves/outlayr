@@ -2,7 +2,7 @@ import * as Effect from "effect/Effect";
 import { reloadAsync } from "expo-updates";
 import { DevSettings } from "react-native";
 
-import { closeDrains, drainDevicePendingWritesOrFail, reopenDrains } from "@/data/pending-writes";
+import { closeDrains, drainsClosed, drainDevicePendingWritesOrFail, reopenDrains } from "@/data/pending-writes";
 import { profileLedgerExists } from "@/data/profile-ledger-files";
 import { profileRegistry } from "@/data/profile-registry";
 import { createProfile, deleteProfile, prepareProfileLedger } from "@/data/profiles";
@@ -31,6 +31,12 @@ let leftLedger = false;
 
 // A queued capture carries ids from the open ledger, so a failed drain stays put rather than land in the next one.
 const settleLedger = Effect.fn("Profiles.settleLedger")(function* settleLedger(db: Database) {
+    // Only the transition that closed the gate may drain: a second one, like a switch tapped mid sign-out, would run
+    // its strict pass against the ledger that transition is already leaving. Failing before `closeDrains` keeps this
+    // path from reopening what it did not close.
+    if (drainsClosed()) {
+        return yield* Effect.fail(switchFailed(new Error("another profile transition still holds the drains shut")));
+    }
     leftLedger = false;
     yield* closeDrains();
     yield* Effect.gen(function* settle() {

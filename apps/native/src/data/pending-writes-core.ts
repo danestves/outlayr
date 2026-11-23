@@ -661,6 +661,11 @@ export function reopenDrains(): void {
     closed = false;
 }
 
+/** A transition that already closed the gate owns the drain; a second one must not drain the ledger being left. */
+export function drainsClosed(): boolean {
+    return closed;
+}
+
 // One drain at a time: `claimPendingWrites` re-returns an unreleased claim (crash recovery), so overlapping drains
 // get the same jobs, both pass `alreadyApplied`, and insert twice. Mount and a cold launch's first "active" overlap.
 // "join" settles on another caller's pass, so its callbacks run too; "own" waits one out so its own callbacks run.

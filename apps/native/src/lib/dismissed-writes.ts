@@ -35,7 +35,8 @@ export function persistDismissal(id: string): void {
 }
 
 // `retain` holds ids a held file still references: dropping their dismissal early would file them days later.
-export function readDismissals(now: number, retain: ReadonlySet<string>): string[] {
+// A null `retain` means the held scan failed, so nothing can be pruned and the file is left alone.
+export function readDismissals(now: number, retain: ReadonlySet<string> | null): string[] {
     try {
         const directory = queueDirectory();
         if (!directory) {
@@ -53,11 +54,11 @@ export function readDismissals(now: number, retain: ReadonlySet<string>): string
         const kept: Dismissal[] = [];
         for (const line of lines) {
             const dismissal = parseDismissal(line);
-            if (dismissal && (now - dismissal.at <= RETENTION_MS || retain.has(dismissal.id))) {
+            if (dismissal && (retain === null || now - dismissal.at <= RETENTION_MS || retain.has(dismissal.id))) {
                 kept.push(dismissal);
             }
         }
-        if (kept.length !== lines.length) {
+        if (retain !== null && kept.length !== lines.length) {
             file.writeSync(kept.map((dismissal) => `${JSON.stringify(dismissal)}\n`).join(""));
         }
         return kept.map((dismissal) => dismissal.id);

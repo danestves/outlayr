@@ -196,14 +196,26 @@ describe("claimPendingWrites across a switch", () => {
         expect(back.jobs.map((job) => job.id)).toStrictEqual(["gap"]);
     });
 
-    it("settles a cutoff once its grace passes, so an older capture belongs to the current ledger", () => {
+    it("prunes an expired cutoff for persistence but still routes by it", () => {
         const gap = early("gap");
         const { files } = makeFiles({ [QUEUE_FILE]: lines(gap) });
 
         const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: T2 + SWITCH_GRACE_MS });
 
         expect(claimed.cutoffs).toStrictEqual([]);
-        expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["gap"]);
+        expect(claimed.jobs).toStrictEqual([]);
+        expect(claimed.held).toStrictEqual([{ jobs: [gap], name: "held-A-1.jsonl" }]);
+    });
+
+    it("routes by a cutoff whose grace passed while a later one is still live", () => {
+        const gap = early("gap");
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(gap) });
+
+        const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: T1 + SWITCH_GRACE_MS + 50_000 });
+
+        expect(claimed.jobs).toStrictEqual([]);
+        expect(claimed.held).toStrictEqual([{ jobs: [gap], name: "held-A-1.jsonl" }]);
+        expect(claimed.cutoffs).toStrictEqual([{ at: T2, from: "B" }]);
     });
 
     it("drops a dismissed capture instead of parking it", () => {
