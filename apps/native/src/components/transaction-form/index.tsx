@@ -965,15 +965,16 @@ export function TransactionForm(props: TransactionFormProps) {
                       addLabel: t("transaction.sentence.add.more"),
                       onWake: rest.onWake,
                   },
+        // Installments sits up front: in the last row it wrapped below the fold and people never found it.
         verbs: [
             iconVerb,
+            ...installmentOrder.verbs(hasAmount, installmentPrice),
             tags.verb,
             split.verb,
             schedule.verb,
             note.verb,
             attachmentDraft.verb,
             ...cardFee.verbs,
-            ...installmentOrder.verbs(hasAmount, installmentPrice),
         ],
     } satisfies Partial<ComponentProps<typeof TransactionSentenceBody>>;
 
