@@ -246,7 +246,7 @@ function PayBackByField({ form }: { form: ReturnType<typeof useNewDebtForm> }) {
     const m3 = useMaterialColors();
     const label = t("debts.plan.payBackBy");
     if (form.payBackBy === null) {
-        const empty = t("debts.field.notePlaceholder");
+        const empty = t("debts.plan.payBackByEmpty");
         return (
             <OutlinedSelectField
                 accessibilityValue={empty}

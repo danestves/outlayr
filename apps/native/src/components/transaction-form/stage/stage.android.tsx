@@ -109,27 +109,30 @@ export const TransactionStage: typeof TransactionStageBase = ({
 
     const button =
         footer && !keyboardShown ? (
-            <Pressable
-                accessibilityLabel={footer.label}
-                accessibilityRole="button"
-                android_ripple={{ color: withAlpha(ready ? m3.onPrimary : m3.onSurface, PRESSED_ALPHA) }}
-                className={cn(
-                    "min-h-14 items-center justify-center overflow-hidden rounded-full px-6 py-2",
-                    buttonOnly ? null : "mt-4"
-                )}
-                onPress={footer.onPress}
-                style={{ backgroundColor: ready ? m3.primary : withAlpha(m3.onSurface, DISABLED_CONTAINER_ALPHA) }}
-                testID="stage-footer"
-            >
-                <Animated.View entering={FOOTER_LABEL_ENTERING} key={footer.label}>
-                    <Text
-                        className="font-sans-medium text-body text-center"
-                        style={{ color: ready ? m3.onPrimary : withAlpha(m3.onSurface, DISABLED_CONTENT_ALPHA) }}
-                    >
-                        {footer.label}
-                    </Text>
-                </Animated.View>
-            </Pressable>
+            <>
+                {footer.lead == null ? null : <View className={buttonOnly ? "pb-3" : "pt-4"}>{footer.lead}</View>}
+                <Pressable
+                    accessibilityLabel={footer.label}
+                    accessibilityRole="button"
+                    android_ripple={{ color: withAlpha(ready ? m3.onPrimary : m3.onSurface, PRESSED_ALPHA) }}
+                    className={cn(
+                        "min-h-14 items-center justify-center overflow-hidden rounded-full px-6 py-2",
+                        buttonOnly ? null : "mt-4"
+                    )}
+                    onPress={footer.onPress}
+                    style={{ backgroundColor: ready ? m3.primary : withAlpha(m3.onSurface, DISABLED_CONTAINER_ALPHA) }}
+                    testID="stage-footer"
+                >
+                    <Animated.View entering={FOOTER_LABEL_ENTERING} key={footer.label}>
+                        <Text
+                            className="font-sans-medium text-body text-center"
+                            style={{ color: ready ? m3.onPrimary : withAlpha(m3.onSurface, DISABLED_CONTENT_ALPHA) }}
+                        >
+                            {footer.label}
+                        </Text>
+                    </Animated.View>
+                </Pressable>
+            </>
         ) : null;
 
     if (buttonOnly) {

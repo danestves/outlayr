@@ -81,6 +81,8 @@ interface TransactionSentenceProps {
     paidVia?: TransactionPaidViaClause;
     rate?: TransactionRateClause;
     when: string;
+    /** Today is the default, not an answer: drawn like an optional blank so it reads as changeable. */
+    whenDefault?: boolean;
 }
 
 // The template decides where each slot sits, so this names the slots but never their order.
@@ -113,6 +115,7 @@ export function TransactionSentence({
     paidVia,
     rate,
     when,
+    whenDefault,
 }: TransactionSentenceProps) {
     let { template } = labels;
     if (rate !== undefined) {
@@ -308,7 +311,15 @@ export function TransactionSentence({
                             value={rate.source}
                         />
                     ),
-                when: (
+                when: whenDefault ? (
+                    <SentenceBlank
+                        accessibilityLabel={labels.when.field}
+                        active={activeSlot === "when"}
+                        label={when}
+                        onPress={onWhenPress}
+                        optional
+                    />
+                ) : (
                     <SentenceValue
                         accessibilityLabel={labels.when.field}
                         active={activeSlot === "when"}

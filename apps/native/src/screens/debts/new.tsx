@@ -255,7 +255,7 @@ function PayBackByField({ form }: { form: ReturnType<typeof useNewDebtForm> }) {
     const colors = useColors();
     const dateLocale = useDatePickerLocale();
     const label = t("debts.plan.payBackBy");
-    const placeholder = t("debts.field.notePlaceholder");
+    const placeholder = t("debts.plan.payBackByEmpty");
     const empty = form.payBackBy === null;
     return (
         <HStack
