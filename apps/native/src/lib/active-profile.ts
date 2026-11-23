@@ -72,11 +72,12 @@ export function clearProfileSwitch(): void {
 }
 
 // Call before `writeActiveProfile`: `activeProfileId()` still holds the launch profile, the one being left.
-// Prunes nothing: a capture already queued can still need an expired cutoff, so only a drain that routed it prunes.
+// Keeps expired cutoffs, which a queued capture can still need; only a drain that routed it prunes. A cutoff from
+// the future means the clock moved back, so it would claim captures made after it.
 export function recordProfileSwitch(): void {
-    const next = [...readProfileSwitch(), { at: Date.now(), from: ledgerKey(activeProfileId()) }].sort(
-        (a, b) => a.at - b.at
-    );
+    const now = Date.now();
+    const kept = readProfileSwitch().filter((entry) => entry.at <= now);
+    const next = [...kept, { at: now, from: ledgerKey(activeProfileId()) }].sort((a, b) => a.at - b.at);
     writeProfileSwitch(next);
 }
 

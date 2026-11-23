@@ -37,8 +37,8 @@ const settleLedger = Effect.fn("Profiles.settleLedger")(function* settleLedger(d
         return yield* Effect.fail(switchFailed(new Error("another profile transition still holds the drains shut")));
     }
     leftLedger = false;
-    yield* closeDrains();
     yield* Effect.gen(function* settle() {
+        yield* closeDrains();
         yield* flushDeferredDeletes;
         yield* drainDevicePendingWritesOrFail(db).pipe(Effect.mapError(switchFailed));
     }).pipe(Effect.onError(() => Effect.sync(reopenDrains)));
