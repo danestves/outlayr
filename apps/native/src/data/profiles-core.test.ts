@@ -106,4 +106,13 @@ describe("updateProfile", () => {
 
         await expect(storedKey(registry)).resolves.toBe("profile-photos/user/photo.jpg");
     });
+
+    it("clears the key of an unfetched photo when an emoji replaces it", async () => {
+        const registry = migratedDatabase();
+        await insert(registry, "profile-photos/user/photo.jpg", null);
+
+        await Effect.runPromise(updateProfile(registry, "profile-work", { ...IDENTITY, emoji: "💼", name: "Work" }));
+
+        await expect(storedKey(registry)).resolves.toBeNull();
+    });
 });

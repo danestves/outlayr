@@ -33,14 +33,18 @@ export const openProfileRegistry = Effect.fn("ProfileRegistry.open")(function* o
     if (registry?.own) {
         return;
     }
-    const personal = yield* Effect.try(() => openDatabase(PERSONAL_DATABASE));
-    // Until `registry` owns this connection nothing else can close it, so a failed install closes it here.
-    yield* Effect.gen(function* install() {
-        yield* Effect.tryPromise(() => migrate(personal, migrationsBundle));
-        // Profile edits from here must still queue for Personal's next push, and its triggers are built at boot.
-        yield* Effect.try(() => ensureOutboxTriggers(personal, SYNCED_SPECS));
-    }).pipe(Effect.onError(() => closeDatabase(personal).pipe(Effect.ignore)));
-    registry = { db: personal, own: true };
+    // Until `registry` owns this connection nothing else can close it, so no failure or interrupt may land in between.
+    yield* Effect.uninterruptible(
+        Effect.gen(function* own() {
+            const personal = yield* Effect.try(() => openDatabase(PERSONAL_DATABASE));
+            yield* Effect.gen(function* install() {
+                yield* Effect.tryPromise(() => migrate(personal, migrationsBundle));
+                // Profile edits from here must still queue for Personal's push; its triggers are built at boot.
+                yield* Effect.try(() => ensureOutboxTriggers(personal, SYNCED_SPECS));
+            }).pipe(Effect.onError(() => closeDatabase(personal).pipe(Effect.ignore)));
+            registry = { db: personal, own: true };
+        })
+    );
 });
 
 export function profileRegistry(): Database {

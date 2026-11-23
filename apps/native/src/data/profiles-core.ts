@@ -119,8 +119,9 @@ export const updateProfile = Effect.fn("Profiles.update")(function* updateProfil
             .where(and(eq(profiles.id, id), isNull(profiles.deletedAt)))
             .limit(1)
     );
-    // Like `removesLogo` in accounts-core.ts: a photo this device never fetched also has a null path.
-    const removesPhoto = existing != null && existing.imageUri != null && patch.imageUri == null;
+    // A photo this device never fetched also has a null path, so only a picked emoji or icon proves it was replaced.
+    const replacesPhoto = patch.emoji !== null || patch.icon !== null;
+    const removesPhoto = existing != null && patch.imageUri === null && (existing.imageUri !== null || replacesPhoto);
     yield* query("update", () =>
         registry
             .update(profiles)
