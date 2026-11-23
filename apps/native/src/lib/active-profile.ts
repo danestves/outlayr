@@ -82,6 +82,8 @@ export function recordProfileSwitch(): void {
     const now = Date.now();
     const kept = readProfileSwitch().filter((entry) => entry.at <= now || entry.sequence !== undefined);
     const entry = { at: now, from: ledgerKey(activeProfileId()) };
+    // A failed read throws so the switch rolls back: a cutoff with no counter reads every queued stamped capture as
+    // after the switch, filing the old ledger's captures in the new one.
     const sequence = queueLock?.queueSequence() ?? null;
     writeProfileSwitch([...kept, sequence === null ? entry : { ...entry, sequence }]);
 }

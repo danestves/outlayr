@@ -40,6 +40,8 @@ enum SharedStore {
     private static let queueSequenceFile = "sequence"
 
     enum QueueError: Error {
+        case container
+        case counter
         case lock(Int32)
         case rename(Int32)
     }
@@ -107,9 +109,28 @@ enum SharedStore {
         } ?? false
     }
 
-    /// The counter a switch records as its cutoff, nil when the container or the counter itself is unreadable.
-    static func queueSequence() -> Int64? {
-        (try? withQueueLock { sequence(in: $0) }) ?? nil
+    /// Throws rather than returning nil: a cutoff with no counter reads every queued stamped capture as after the
+    /// switch, so a failed read must roll the switch back instead.
+    static func queueSequence() throws -> Int64 {
+        guard let read = try withQueueLock({ directory -> Int64? in sequence(in: directory) }),
+              let value = read else {
+            throw QueueError.counter
+        }
+        return value
+    }
+
+    /// Deletes every capture under the lock while keeping the lock and counter file: deleting the lock lets a second
+    /// writer lock a new inode, and resetting the counter dates a new capture before a surviving cutoff.
+    static func eraseQueue() throws {
+        let erased = try withQueueLock { directory -> Bool in
+            let kept = [queueLockFile, queueSequenceFile]
+            let names = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+            for name in names where !kept.contains(name) {
+                try FileManager.default.removeItem(at: directory.appendingPathComponent(name, isDirectory: false))
+            }
+            return true
+        }
+        guard erased == true else { throw QueueError.container }
     }
 
     /// Posts the app's own push from an intent, once per purchase key within
@@ -236,16 +257,9 @@ enum SharedStore {
     private static func withQueueLock<T>(_ body: (URL) throws -> T) throws -> T? {
         guard let directory = queueDirectoryURL() else { return nil }
         // Background time covers the lock: iOS kills a process suspended while holding one in a shared container.
-        var task = UIBackgroundTaskIdentifier.invalid
-        task = UIApplication.shared.beginBackgroundTask(withName: "outlayr.queue-lock") {
-            UIApplication.shared.endBackgroundTask(task)
-            task = .invalid
-        }
-        defer {
-            if task != .invalid {
-                UIApplication.shared.endBackgroundTask(task)
-            }
-        }
+        let time = QueueBackgroundTime()
+        // Declared before the lock file opens, so the unlock and close below run before the assertion ends.
+        defer { time.end() }
         let descriptor = open(
             directory.appendingPathComponent(queueLockFile, isDirectory: false).path,
             O_RDWR | O_CREAT,
@@ -313,6 +327,41 @@ enum SharedStore {
                 written += count
             }
             return true
+        }
+    }
+}
+
+/// Ends the background assertion once, whether the expiration handler or the lock's `defer` reaches it first.
+private final class QueueBackgroundTime {
+    private let lock = NSLock()
+    private var identifier: UIBackgroundTaskIdentifier = .invalid
+    private var ended = false
+
+    init() {
+        let task = UIApplication.shared.beginBackgroundTask(withName: "outlayr.queue-lock") { [weak self] in
+            self?.end()
+        }
+        let expired = lock.withLock { () -> Bool in
+            if ended {
+                return true
+            }
+            identifier = task
+            return false
+        }
+        if expired {
+            UIApplication.shared.endBackgroundTask(task)
+        }
+    }
+
+    func end() {
+        let task = lock.withLock { () -> UIBackgroundTaskIdentifier in
+            ended = true
+            let taken = identifier
+            identifier = .invalid
+            return taken
+        }
+        if task != .invalid {
+            UIApplication.shared.endBackgroundTask(task)
         }
     }
 }

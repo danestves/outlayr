@@ -217,10 +217,26 @@ internal object PurchaseListenerStore {
     }
   }
 
-  fun queueSequence(context: Context): Long? {
+  fun queueSequence(context: Context): Long {
     synchronized(lock) {
-      val directory = queueDirectory(context) ?: return null
+      val directory = queueDirectory(context)
+        ?: throw IOException("The pending writes directory is unavailable")
       return sequence(directory)
+        ?: throw IOException("The pending writes counter is unreadable")
+    }
+  }
+
+  // Keeps `sequence`: resetting it would date a new capture before a cutoff that survives the erase.
+  fun eraseQueue(context: Context) {
+    synchronized(lock) {
+      val directory = queueDirectory(context)
+        ?: throw IOException("The pending writes directory is unavailable")
+      val entries = directory.listFiles()
+        ?: throw IOException("The pending writes could not be listed")
+      for (entry in entries) {
+        if (entry.name == QUEUE_SEQUENCE) continue
+        if (!entry.delete()) throw IOException("The pending writes could not be erased")
+      }
     }
   }
 

@@ -154,20 +154,53 @@ interface OrderedJob {
     job: PendingWrite;
 }
 
-// The counter decides when both carry one: a clock that moved back dates a later capture earlier.
-function captureOrder(a: OrderedJob, b: OrderedJob): number {
-    if (a.job.sequence !== undefined && b.job.sequence !== undefined) {
-        return a.job.sequence - b.job.sequence || a.index - b.index;
+interface StampedJob extends OrderedJob {
+    job: PendingWrite & { sequence: number };
+}
+
+const isStamped = (entry: OrderedJob): entry is StampedJob => entry.job.sequence !== undefined;
+
+function beforeStamp(unstamped: OrderedJob, stamped: OrderedJob): boolean {
+    return (
+        unstamped.job.date < stamped.job.date ||
+        (unstamped.job.date === stamped.job.date && unstamped.index < stamped.index)
+    );
+}
+
+/**
+ * Merged, not compared: sequence and date disagree across stamped and unstamped captures, and one comparator lets an
+ * unstamped watch capture slip between an authorization and its settlement. Stamped keeps its counter order.
+ */
+function mergeCaptureOrder(stamped: StampedJob[], unstamped: OrderedJob[]): OrderedJob[] {
+    const merged: OrderedJob[] = [];
+    let index = 0;
+    for (const head of unstamped) {
+        while (index < stamped.length) {
+            const next = stamped[index];
+            if (next === undefined || beforeStamp(head, next)) {
+                break;
+            }
+            merged.push(next);
+            index += 1;
+        }
+        merged.push(head);
     }
-    return a.job.date - b.job.date || a.index - b.index;
+    merged.push(...stamped.slice(index));
+    return merged;
+}
+
+function captureOrder(jobs: readonly OrderedJob[]): OrderedJob[] {
+    return mergeCaptureOrder(
+        jobs.filter(isStamped).sort((a, b) => a.job.sequence - b.job.sequence || a.index - b.index),
+        jobs
+            .filter((entry) => entry.job.sequence === undefined)
+            .sort((a, b) => a.job.date - b.job.date || a.index - b.index)
+    );
 }
 
 /** A held authorization must drain before a live settlement captured after it. */
 function byCaptureOrder(jobs: PendingWrite[]): PendingWrite[] {
-    return jobs
-        .map((job, index) => ({ index, job }))
-        .sort(captureOrder)
-        .map((entry) => entry.job);
+    return captureOrder(jobs.map((job, index) => ({ index, job }))).map((entry) => entry.job);
 }
 
 function addJob(buckets: Map<string, PendingWrite[]>, key: string, job: PendingWrite): void {
@@ -262,7 +295,7 @@ function routePlacements(
         ...placement,
         ledger: placement.own ? route.key : (assigned.get(placement.job.id) ?? ""),
     }));
-    const ordered = placements.map((placement, index) => ({ index, job: placement.job })).sort(captureOrder);
+    const ordered = captureOrder(placements.map((placement, index) => ({ index, job: placement.job })));
     const routes: PurchaseRoute[] = [];
     const matched: PurchaseRoute[] = [];
     const seen: PurchaseRoute[] = [...known];

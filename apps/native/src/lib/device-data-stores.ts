@@ -23,6 +23,7 @@ import { cancelLogoBackfill } from "./logo-backfill";
 import { clearStoredPhotos } from "./photo-storage";
 import { PROVIDER_BINDING_KEY } from "./provider-revocation";
 import { QUEUE_DIRECTORY, QUEUE_LOCK_FILE, QUEUE_SEQUENCE_FILE } from "./queue-directory";
+import { queueLock } from "./queue-lock";
 import { SecureStorage } from "./secure-storage";
 import { sharedStore } from "./shared-store";
 import { INTENT_SNAPSHOT_KEY, PENDING_WRITES_KEY, PUSHED_PURCHASES_KEY, WALLET_PUSH_KEY } from "./widget-bridge";
@@ -105,6 +106,10 @@ function clearQueueDirectory(directory: Directory): void {
     if (!directory.exists) {
         return;
     }
+    if (queueLock) {
+        queueLock.eraseQueue();
+        return;
+    }
     for (const entry of directory.list()) {
         if (entry instanceof File && (entry.name === QUEUE_LOCK_FILE || entry.name === QUEUE_SEQUENCE_FILE)) {
             continue;
@@ -143,6 +148,10 @@ const clearBetterAuthCredentials = Effect.fn("DeviceStores.clearCredentials")(fu
 });
 
 function clearWidgetStorage(): void {
+    if (Platform.OS === "android") {
+        queueLock?.eraseQueue();
+        return;
+    }
     if (Platform.OS !== "ios" || !APP_GROUP) {
         return;
     }

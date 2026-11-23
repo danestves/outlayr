@@ -5,7 +5,8 @@ import { sharedStore } from "./shared-store";
 
 interface QueueLock {
     claimQueue: (name: string) => boolean;
-    queueSequence: () => number | null;
+    eraseQueue: () => void;
+    queueSequence: () => number;
 }
 
 function platformQueue(): QueueLock | null {
@@ -18,5 +19,5 @@ function platformQueue(): QueueLock | null {
     return null;
 }
 
-/** The service that appends natively on this platform, which also holds the queue lock. */
+/** The service that appends natively holds the lock a claim takes, so a capture never lands in a claimed file. */
 export const queueLock: QueueLock | null = platformQueue();

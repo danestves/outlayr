@@ -69,7 +69,14 @@ class PurchaseListenerModule : Module() {
 
     Function("queueSequence") {
       val context = appContext.reactContext
-      if (context == null) null else PurchaseListenerStore.queueSequence(context)?.toDouble()
+        ?: throw IllegalStateException("Purchase listener has no context")
+      PurchaseListenerStore.queueSequence(context).toDouble()
+    }
+
+    Function("eraseQueue") {
+      val context = appContext.reactContext
+        ?: throw IllegalStateException("Purchase listener has no context")
+      PurchaseListenerStore.eraseQueue(context)
     }
   }
 }

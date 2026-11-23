@@ -422,6 +422,19 @@ describe("claimPendingWrites with purchase routes", () => {
         expect(claimed.held).toStrictEqual([{ jobs: [authorization, settlement], key: "A" }]);
     });
 
+    it("keeps a settlement with its authorization around an unstamped watch capture", () => {
+        const cutoff = { at: T1 + 30_000, from: "A", sequence: 10 };
+        const authorization = write("authorization", { date: T1, dedupeKey: PURCHASE, sequence: 10 });
+        const watch = write("watch", { categoryId: "category", date: T1 - 100_000 });
+        const settlement = write("settlement", { date: T1 - 120_000, dedupeKey: PURCHASE, sequence: 11 });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(settlement, watch, authorization) });
+
+        const claimed = claimPendingWrites(files, { cutoffs: [cutoff], key: "B", now: NOW, siblingWindowMs });
+
+        expect(claimed.jobs).toStrictEqual([]);
+        expect(claimed.held).toStrictEqual([{ jobs: [settlement, watch, authorization], key: "A" }]);
+    });
+
     it("routes a replay to the same ledgers and never lets a settlement anchor a later purchase", () => {
         const minute = 60_000;
         const base = T1;

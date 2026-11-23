@@ -28,8 +28,12 @@ final class SharedStoreModule: Module {
       try SharedStore.claimQueue(as: name)
     }
 
-    Function("queueSequence") { () -> Double? in
-      SharedStore.queueSequence().map { Double($0) }
+    Function("queueSequence") { () throws -> Double in
+      Double(try SharedStore.queueSequence())
+    }
+
+    Function("eraseQueue") { () throws -> Void in
+      try SharedStore.eraseQueue()
     }
   }
 }

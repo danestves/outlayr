@@ -43,7 +43,7 @@ final class PhoneLink: NSObject, WCSessionDelegate {
             return
         }
         session.sendMessage(message) { reply in
-            guard reply["ok"] as? Bool == false else { return }
+            guard reply["ok"] as? Bool == false, reply["retry"] as? Bool != true else { return }
             Task { @MainActor in self.reject(write.id) }
         } errorHandler: { _ in
             session.transferUserInfo(message)
@@ -57,8 +57,23 @@ final class PhoneLink: NSObject, WCSessionDelegate {
         WKInterfaceDevice.current().play(.failure)
     }
 
+    @MainActor
+    private func resend() {
+        let inFlight = Set(WCSession.default.outstandingUserInfoTransfers.compactMap { Self.writeId($0.userInfo) })
+        for write in unsynced where !inFlight.contains(write.id) {
+            send(write)
+        }
+    }
+
     func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
         receive(session.receivedApplicationContext, latest: false)
+        guard state == .activated else { return }
+        Task { @MainActor in self.resend() }
+    }
+
+    func sessionReachabilityDidChange(_ session: WCSession) {
+        guard session.isReachable else { return }
+        Task { @MainActor in self.resend() }
     }
 
     func session(_ session: WCSession, didReceiveApplicationContext context: [String: Any]) {
