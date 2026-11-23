@@ -45,12 +45,20 @@ describe("readDismissals", () => {
             ].join("\n")
         );
 
-        expect(readDismissals(NOW)).toStrictEqual(["fresh"]);
+        expect(readDismissals(NOW, new Set())).toStrictEqual(["fresh"]);
         expect(files.get("dismissed.jsonl")).toBe(`${JSON.stringify({ at: NOW - DAY, id: "fresh" })}\n`);
     });
 
+    it("keeps an expired dismissal while a held file still names it", () => {
+        const stale = JSON.stringify({ at: NOW - 91 * DAY, id: "parked" });
+        files.set("dismissed.jsonl", `${stale}\n`);
+
+        expect(readDismissals(NOW, new Set(["parked"]))).toStrictEqual(["parked"]);
+        expect(files.get("dismissed.jsonl")).toBe(`${stale}\n`);
+    });
+
     it("returns nothing when no dismissal was ever written", () => {
-        expect(readDismissals(NOW)).toStrictEqual([]);
+        expect(readDismissals(NOW, new Set())).toStrictEqual([]);
     });
 });
 
@@ -59,6 +67,6 @@ describe("persistDismissal", () => {
         persistDismissal("wallet-1");
         persistDismissal("wallet-2");
 
-        expect(readDismissals(Date.now())).toStrictEqual(["wallet-1", "wallet-2"]);
+        expect(readDismissals(Date.now(), new Set())).toStrictEqual(["wallet-1", "wallet-2"]);
     });
 });

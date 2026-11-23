@@ -4,6 +4,8 @@ import { File, Paths } from "expo-file-system";
 
 import { parseProfileId } from "@/domain/profiles";
 
+import { SWITCH_GRACE_MS } from "./queue-file";
+
 const activeProfileFile = () => new File(Paths.document, "active-profile");
 
 const profileSwitchFile = () => new File(Paths.document, "profile-switch");
@@ -13,10 +15,12 @@ const ProfileSwitch = Schema.Struct({
     from: Schema.String,
 });
 
-/** The ledger a switch left: its captured writes must reach `from`, not whichever ledger opens next. */
+/** One cutoff: at `at` this launch left the ledger `from`, so older captures still belong to it. */
 export type ProfileSwitch = typeof ProfileSwitch.Type;
 
-const decodeProfileSwitch = Schema.decodeUnknownOption(ProfileSwitch);
+const ProfileSwitches = Schema.Array(ProfileSwitch);
+
+const decodeProfileSwitches = Schema.decodeUnknownOption(ProfileSwitches);
 
 let active: { id: string | undefined } | null = null;
 
@@ -44,13 +48,22 @@ export function writeActiveProfile(profileId: string | undefined): void {
     }
 }
 
-export function readProfileSwitch(): ProfileSwitch | null {
+// Garbled or missing reads as no marker: a half-written list must not route a capture anywhere.
+export function readProfileSwitch(): readonly ProfileSwitch[] {
     try {
         const file = profileSwitchFile();
-        return file.exists ? Option.getOrNull(decodeProfileSwitch(JSON.parse(file.textSync()))) : null;
+        return file.exists ? Option.getOrElse(decodeProfileSwitches(JSON.parse(file.textSync())), () => []) : [];
     } catch {
-        return null;
+        return [];
     }
+}
+
+export function writeProfileSwitch(switches: readonly ProfileSwitch[]): void {
+    if (switches.length === 0) {
+        clearProfileSwitch();
+        return;
+    }
+    profileSwitchFile().writeSync(JSON.stringify(switches));
 }
 
 export function clearProfileSwitch(): void {
@@ -60,17 +73,18 @@ export function clearProfileSwitch(): void {
     }
 }
 
-export function restoreProfileSwitch(previous: ProfileSwitch | null): void {
-    if (previous === null) {
-        clearProfileSwitch();
-    } else {
-        profileSwitchFile().writeSync(JSON.stringify(previous));
-    }
-}
-
 // Call before `writeActiveProfile`: `activeProfileId()` still holds the launch profile, the one being left.
 export function recordProfileSwitch(): void {
-    profileSwitchFile().writeSync(JSON.stringify({ at: Date.now(), from: ledgerKey(activeProfileId()) }));
+    const now = Date.now();
+    const kept = readProfileSwitch().filter((entry) => entry.at <= now && now - entry.at < SWITCH_GRACE_MS);
+    const next = [...kept, { at: now, from: ledgerKey(activeProfileId()) }].sort((a, b) => a.at - b.at);
+    writeProfileSwitch(next);
+}
+
+// A deleted ledger never opens again: its cutoffs move to `to` so its late captures follow, and no held file for it
+// is ever written.
+export function retargetProfileSwitch(from: string, to: string): void {
+    writeProfileSwitch(readProfileSwitch().map((entry) => (entry.from === from ? { ...entry, from: to } : entry)));
 }
 
 export function resetActiveProfile(): void {

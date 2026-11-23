@@ -36,28 +36,42 @@ export interface QueueFiles {
     write: (name: string, text: string) => void;
 }
 
+/** A switch marker cutoff: at `at`, the launch left the ledger `from`. */
+export interface SwitchCutoff {
+    at: number;
+    from: string;
+}
+
 export interface ClaimLedger {
     /** Ids the user dismissed: a dismissed capture is dropped even when the switch would have parked it. */
     dismissed?: ReadonlySet<string>;
-    /** `ledgerKey` of the profile this launch opened: captures older than `left.at` are not its own. */
+    /** Switch cutoffs, oldest first: a capture older than one belongs to the ledger it names. */
+    cutoffs?: readonly SwitchCutoff[];
+    /** `ledgerKey` of the profile this launch opened. */
     key: string;
-    /** The switch that opened this launch left another ledger behind. */
-    left?: { at: number; from: string };
-    /** When the claim ran, for the grace a switch needs before its marker can clear. */
+    /** When the claim ran, for the grace a cutoff needs before it settles. */
     now: number;
+}
+
+export interface ClaimRoute {
+    cutoffs: readonly SwitchCutoff[];
+    dismissed?: ReadonlySet<string>;
+    key: string;
 }
 
 export interface ClaimedWrites {
     /** Capture ids the intent stored a server reply for; see `CaptureLookup.swift`. */
     captured?: ReadonlySet<string>;
-    /** Captures a switch left behind, for the ledger they were made on; `release` writes them to `name`. */
-    held?: { jobs: PendingWrite[]; name: string };
+    /** The marker's cutoffs still inside their grace, for the bridge to persist once the release lands. */
+    cutoffs?: SwitchCutoff[];
+    /** Captures a switch left behind, one file per destination ledger; `release` writes each to `name`. */
+    held?: { jobs: PendingWrite[]; name: string }[];
     jobs: PendingWrite[];
     names: string[];
+    /** How a late append routes: the same cutoffs, ledger and dismissals the claim used. */
+    route?: ClaimRoute;
     /** Every job id read during the claim, so a release can tell a late append from what it already took. */
     seen: ReadonlySet<string>;
-    /** A release settles the switch by clearing its marker. */
-    settlesSwitch?: boolean;
 }
 
 function claimOrder(name: string): number {
@@ -109,6 +123,25 @@ function uniqueById(jobs: PendingWrite[]): PendingWrite[] {
     });
 }
 
+function addJob(buckets: Map<string, PendingWrite[]>, key: string, job: PendingWrite): void {
+    const bucket = buckets.get(key);
+    if (bucket === undefined) {
+        buckets.set(key, [job]);
+    } else {
+        bucket.push(job);
+    }
+}
+
+function pruneCutoffs(cutoffs: readonly SwitchCutoff[], now: number): SwitchCutoff[] {
+    return cutoffs.filter((entry) => entry.at <= now && now - entry.at < SWITCH_GRACE_MS).sort((a, b) => a.at - b.at);
+}
+
+function destinationOf(job: PendingWrite, route: ClaimRoute): string {
+    // The earliest cutoff after the capture: the first ledger it could not have reached.
+    const cutoff = route.cutoffs.find((entry) => entry.at > job.date);
+    return cutoff === undefined || cutoff.from === route.key ? route.key : cutoff.from;
+}
+
 const decodePendingWrite = Schema.decodeUnknownOption(PendingWrite);
 
 const decodeLegacyQueue = Schema.decodeUnknownOption(
@@ -137,6 +170,22 @@ export function parseQueue(text: string): PendingWrite[] {
         }
     }
     return jobs;
+}
+
+const HELD_NAME = /^held-.+-\d+\.jsonl$/;
+
+/** Every id parked in any ledger's held file: a dismissal must outlive them or a parked capture files itself later. */
+export function heldIds(files: QueueFiles): Set<string> {
+    const ids = new Set<string>();
+    for (const name of files.list()) {
+        if (!HELD_NAME.test(name)) {
+            continue;
+        }
+        for (const job of parseQueue(files.read(name))) {
+            ids.add(job.id);
+        }
+    }
+    return ids;
 }
 
 function toQueueText(jobs: PendingWrite[]): string {
@@ -173,59 +222,83 @@ export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): Cla
     if (files.claim(next)) {
         names.push(next);
     }
-    const key = ledger?.key;
-    const left = ledger?.left;
-    const holding = key !== undefined && left !== undefined && left.from !== key ? left : undefined;
-    const dismissed = ledger?.dismissed;
-    const now = ledger?.now;
-    const held = key === undefined ? [] : heldNames(files, key);
-    names.push(...held);
-    const hidden = new Set(held);
+    const parked = ledger === undefined ? [] : heldNames(files, ledger.key);
+    names.push(...parked);
+    const ownHeld = new Set(parked);
+    const cutoffs = ledger === undefined ? [] : pruneCutoffs(ledger.cutoffs ?? [], ledger.now);
+    const route = ledger === undefined ? undefined : { cutoffs, dismissed: ledger.dismissed, key: ledger.key };
     const jobs: PendingWrite[] = [];
-    const leaving: PendingWrite[] = [];
+    const leaving = new Map<string, PendingWrite[]>();
     const seen = new Set<string>();
     for (const name of names) {
         const parsed = parseQueue(files.read(name));
         for (const job of parsed) {
             seen.add(job.id);
         }
-        if (hidden.has(name) || holding === undefined) {
+        // A held file for this ledger already names it, so routing its jobs again could only move them.
+        if (route === undefined || ownHeld.has(name)) {
             jobs.push(...parsed);
-        } else {
-            // Dismissals expire, so a parked one would only file itself in the old ledger days later.
-            for (const job of parsed) {
-                if (job.date >= holding.at) {
-                    jobs.push(job);
-                } else if (!dismissed?.has(job.id)) {
-                    leaving.push(job);
-                }
+            continue;
+        }
+        for (const job of parsed) {
+            const destination = destinationOf(job, route);
+            if (destination === route.key) {
+                jobs.push(job);
+            } else if (!route.dismissed?.has(job.id)) {
+                addJob(leaving, destination, job);
             }
         }
     }
     const claimed: ClaimedWrites = { jobs: uniqueById(jobs), names, seen };
-    if (holding !== undefined && now !== undefined) {
-        // A clock moved back makes the marker's date useless, so treating it as settled is the safer read.
-        if (now < holding.at || now - holding.at >= SWITCH_GRACE_MS) {
-            claimed.settlesSwitch = true;
-        }
-        if (leaving.length > 0) {
-            claimed.held = { jobs: uniqueById(leaving), name: heldName(files, holding.from) };
-        }
+    if (route !== undefined) {
+        claimed.cutoffs = cutoffs;
+        claimed.route = route;
+    }
+    if (leaving.size > 0) {
+        claimed.held = [...leaving].map(([key, bucket]) => ({
+            jobs: uniqueById(bucket),
+            name: heldName(files, key),
+        }));
     }
     return claimed;
 }
 
 /** Writes a name nothing has used before discarding: a crash in between replays the claims into another held file. */
 export function releasePendingWrites(files: QueueFiles, claimed: ClaimedWrites): void {
-    const { held } = claimed;
-    if (held !== undefined && held.jobs.length > 0) {
-        files.write(held.name, toQueueText(held.jobs));
+    for (const { jobs, name } of claimed.held ?? []) {
+        files.write(name, toQueueText(jobs));
+        if (!files.list().includes(name)) {
+            throw new Error(`Held pending writes were not stored in ${name}, so their claim files stay for a replay`);
+        }
     }
-    // An intent that opened the live queue before the rename appends to the claimed file after the claim read it.
-    const late = claimed.names.flatMap((name) =>
-        parseQueue(files.read(name)).filter((job) => !claimed.seen.has(job.id))
-    );
-    if (!adoptQueue(files, uniqueById(late))) {
+    const { route } = claimed;
+    const own: PendingWrite[] = [];
+    const leaving = new Map<string, PendingWrite[]>();
+    for (const name of claimed.names) {
+        // An intent that opened the live queue before the rename appends to the claimed file after the claim read it.
+        const late = parseQueue(files.read(name)).filter((job) => !claimed.seen.has(job.id));
+        // A held file for this ledger already names it, so a late append there is the current ledger's.
+        if (route === undefined || heldOrder(name, route.key) !== null) {
+            own.push(...late);
+            continue;
+        }
+        for (const job of late) {
+            const destination = destinationOf(job, route);
+            if (destination === route.key) {
+                own.push(job);
+            } else if (!route.dismissed?.has(job.id)) {
+                addJob(leaving, destination, job);
+            }
+        }
+    }
+    for (const [key, bucket] of leaving) {
+        const name = heldName(files, key);
+        files.write(name, toQueueText(uniqueById(bucket)));
+        if (!files.list().includes(name)) {
+            throw new Error(`Held pending writes were not stored in ${name}, so their claim files stay for a replay`);
+        }
+    }
+    if (!adoptQueue(files, uniqueById(own))) {
         throw new Error("Late pending writes could not be parked, so their claim files stay for a replay");
     }
     for (const name of claimed.names) {

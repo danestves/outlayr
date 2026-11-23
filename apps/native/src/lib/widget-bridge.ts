@@ -1,11 +1,13 @@
 import { File } from "expo-file-system";
 
-import { activeProfileId, clearProfileSwitch, ledgerKey, readProfileSwitch } from "./active-profile";
+import { activeProfileId, ledgerKey, readProfileSwitch, writeProfileSwitch } from "./active-profile";
+import type { ProfileSwitch } from "./active-profile";
 import { readDismissals } from "./dismissed-writes";
 import { queueDirectory } from "./queue-directory";
 import {
     adoptQueue,
     claimPendingWrites as claimQueue,
+    heldIds,
     parseLegacyQueue,
     QUEUE_FILE,
     releasePendingWrites as releaseQueue,
@@ -176,6 +178,26 @@ export function adoptPendingWrites(jobs: PendingWrite[]): boolean {
     }
 }
 
+/** Ids parked in any ledger's held file, so their dismissal survives the file. */
+export function heldPendingWriteIds(): ReadonlySet<string> {
+    try {
+        return heldIds(queueFiles);
+    } catch (error) {
+        console.warn("[outlayr] held writes unreadable", error);
+        return new Set();
+    }
+}
+
+function persistCutoffs(cutoffs: readonly ProfileSwitch[]): void {
+    const current = readProfileSwitch();
+    const same =
+        current.length === cutoffs.length &&
+        current.every((entry, index) => entry.at === cutoffs[index]?.at && entry.from === cutoffs[index]?.from);
+    if (!same) {
+        writeProfileSwitch(cutoffs);
+    }
+}
+
 /**
  * Nothing is deleted here: the caller commits, then calls {@link releasePendingWrites}, so a force-quit mid-drain
  * replays. That is safe because `applyPendingWrites` records each enqueue id in the same SQLite transaction.
@@ -184,14 +206,14 @@ export function claimPendingWritesOrThrow(): ClaimedWrites {
     adoptLegacyQueue();
     const now = Date.now();
     const claimed = claimQueue(queueFiles, {
-        dismissed: new Set(readDismissals(now)),
+        cutoffs: readProfileSwitch(),
+        dismissed: new Set(readDismissals(now, heldPendingWriteIds())),
         key: ledgerKey(activeProfileId()),
-        left: readProfileSwitch() ?? undefined,
         now,
     });
-    // A drain with nothing claimed returns before releasing, so it never clears the marker itself.
-    if (claimed.settlesSwitch && claimed.names.length === 0) {
-        clearProfileSwitch();
+    // A drain with nothing claimed returns before releasing, so it persists the pruned marker here instead.
+    if (claimed.names.length === 0) {
+        persistCutoffs(claimed.cutoffs ?? []);
     }
     return { ...claimed, captured: new Set(captureIds(claimed).filter((id) => answerOf(id) != null)) };
 }
@@ -207,9 +229,8 @@ export function claimPendingWrites(): ClaimedWrites {
 
 export function releasePendingWritesOrThrow(claimed: ClaimedWrites): void {
     releaseQueue(queueFiles, claimed);
-    // A drain in the opened ledger settles the switch; the drain before the reload saw `from === key`.
-    if (claimed.settlesSwitch) {
-        clearProfileSwitch();
+    if (claimed.cutoffs !== undefined) {
+        persistCutoffs(claimed.cutoffs);
     }
     for (const id of captureIds(claimed)) {
         sharedStore?.remove(`${CAPTURE_ANSWER_PREFIX}${id}`);

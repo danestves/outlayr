@@ -7,6 +7,7 @@ import { readNotifications } from "@/lib/notification-read";
 import {
     claimPendingWrites,
     claimPendingWritesOrThrow,
+    heldPendingWriteIds,
     releasePendingWrites,
     releasePendingWritesOrThrow,
 } from "@/lib/widget-bridge";
@@ -21,7 +22,7 @@ export function dismissDeviceWrite(id: string): void {
 }
 
 const applyDismissals = Effect.gen(function* applyDismissals() {
-    for (const id of readDismissals(yield* Clock.currentTimeMillis)) {
+    for (const id of readDismissals(yield* Clock.currentTimeMillis, heldPendingWriteIds())) {
         dismissPendingWrite(id);
     }
 });

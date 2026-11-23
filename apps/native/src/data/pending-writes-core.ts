@@ -650,10 +650,11 @@ let rerun = false;
 let closed = false;
 
 export const closeDrains = Effect.fn("PendingWrites.closeDrains")(function* closeDrains() {
+    // Closed before the wait: a pass starting while it waits must not claim into the ledger being left.
+    closed = true;
     for (let pass = draining; pass !== null; pass = draining) {
         yield* Deferred.await(pass).pipe(Effect.ignore);
     }
-    closed = true;
 });
 
 export function reopenDrains(): void {
@@ -672,7 +673,8 @@ export const drainPendingWrites = Effect.fn("PendingWrites.drainPendingWrites")(
     reader?: NotificationReader,
     mode: DrainMode = "join"
 ) {
-    if (closed) {
+    // "own" is the strict pass a switch settles with: it runs past a close, where a "join" must not claim.
+    if (closed && mode === "join") {
         return NOTHING_DRAINED;
     }
     if (mode === "own") {

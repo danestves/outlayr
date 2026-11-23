@@ -1189,4 +1189,34 @@ describe("closeDrains", () => {
         await Effect.runPromise(drainPendingWrites(db, claim, () => undefined));
         expect(claim).toHaveBeenCalledOnce();
     });
+
+    it("shuts a join while it waits out the pass in flight, and still lets the strict pass in", async () => {
+        const entered = Deferred.makeUnsafe<null>();
+        const gate = Deferred.makeUnsafe<null>();
+        const running = Effect.runPromise(
+            drainPendingWrites(
+                db,
+                () => claiming([walletWrite("wallet-1")], ["a.jsonl"]),
+                () => undefined,
+                () => Deferred.succeed(entered, null).pipe(Effect.andThen(Deferred.await(gate)), Effect.as(new Map()))
+            )
+        );
+        await Effect.runPromise(Deferred.await(entered));
+
+        const closing = Effect.runPromise(closeDrains());
+        const join = vi.fn(() => claiming([walletWrite("wallet-2", { dedupeKey: "wallet:expense:other:100" })]));
+        await expect(Effect.runPromise(drainPendingWrites(db, join, () => undefined))).resolves.toStrictEqual({
+            applied: 0,
+            autologged: 0,
+        });
+        expect(join).not.toHaveBeenCalled();
+
+        const own = vi.fn(() => claiming([]));
+        const strict = Effect.runPromise(drainPendingWrites(db, own, () => undefined, undefined, "own"));
+        await Effect.runPromise(Deferred.succeed(gate, null));
+        await Promise.all([running, closing]);
+        await strict;
+
+        expect(own).toHaveBeenCalledOnce();
+    });
 });

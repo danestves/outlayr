@@ -30,7 +30,7 @@ import type { SecureStorageError } from "@/lib/secure-storage";
 import { SecureStorage } from "@/lib/secure-storage";
 
 import { createCommand, createRuntimeCommand } from "./atom-command";
-import { settleBeforeSignOut, signOutToPersonal } from "./profiles-commands";
+import { reopenDrainsIfStillInLedger, settleBeforeSignOut, signOutToPersonal } from "./profiles-commands";
 
 type AuthClient = NonNullable<typeof authClient>;
 
@@ -67,7 +67,9 @@ export const signOutCommand = createRuntimeCommand(appRuntime, {
                             )
                         ),
                 })
-            )
+            ),
+            // A step that fails before the active file moves must leave the drains open for a retry.
+            Effect.onError(() => reopenDrainsIfStillInLedger)
         ),
     label: "cloud:sign-out",
 });

@@ -34,7 +34,8 @@ export function persistDismissal(id: string): void {
     }
 }
 
-export function readDismissals(now: number): string[] {
+// `retain` holds ids a held file still references: dropping their dismissal early would file them days later.
+export function readDismissals(now: number, retain: ReadonlySet<string>): string[] {
     try {
         const directory = queueDirectory();
         if (!directory) {
@@ -52,7 +53,7 @@ export function readDismissals(now: number): string[] {
         const kept: Dismissal[] = [];
         for (const line of lines) {
             const dismissal = parseDismissal(line);
-            if (dismissal && now - dismissal.at <= RETENTION_MS) {
+            if (dismissal && (now - dismissal.at <= RETENTION_MS || retain.has(dismissal.id))) {
                 kept.push(dismissal);
             }
         }
