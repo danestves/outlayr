@@ -1,3 +1,4 @@
+import { REMINDER_ANALYTICS_AT_MS } from "@outlayr/backend/confect/legal";
 import { addMonths, firstOfMonth } from "@outlayr/money/calendar";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -80,7 +81,8 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
 
     const keep = new Set(notices.map((notice) => notice.id));
     const pending = yield* reminders.pendingIds();
-    if (notices.some(({ data, id }) => data.kind === "second_entry" && !pending.includes(id))) {
+    const nudgeArmed = notices.some(({ data, id }) => data.kind === "second_entry" && !pending.includes(id));
+    if (nudgeArmed && now.getTime() >= REMINDER_ANALYTICS_AT_MS) {
         posthog?.capture("second_entry_nudge_armed");
     }
     yield* reminders.cancel(

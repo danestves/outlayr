@@ -1,3 +1,4 @@
+import { REMINDER_ANALYTICS_AT_MS } from "@outlayr/backend/confect/legal";
 import * as Cause from "effect/Cause";
 import * as Option from "effect/Option";
 import {
@@ -47,7 +48,8 @@ export function useSubscriptionReminderTaps(db: Database, ready: boolean): void 
                             return;
                         }
                         router.navigate(target);
-                        if ("open" in decoded && decoded.open === "create" && decoded.kind !== undefined) {
+                        const reported = Date.now() >= REMINDER_ANALYTICS_AT_MS;
+                        if (reported && "open" in decoded && decoded.open === "create" && decoded.kind !== undefined) {
                             posthog?.capture("notification_opened", { kind: decoded.kind });
                         }
                         handled = tap;
