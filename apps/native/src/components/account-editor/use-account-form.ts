@@ -2,6 +2,7 @@ import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { isPerson, toAccountKind } from "@outlayr/money/account-kind";
 import type { AccountKind } from "@outlayr/money/account-kind";
+import { isInstallmentAppAccount } from "@outlayr/money/institution-map";
 import { useForm, useSelector } from "@tanstack/react-form";
 import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
@@ -24,9 +25,10 @@ import { useGlobalCurrency } from "@/data/app-meta";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { formatAmount, minorUnitsFor, roundToMinorUnits } from "@/domain/money";
 import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
+import { FREE_ACCOUNTS } from "@/domain/pro-limits";
 import { useAccountIdentity } from "@/hooks/use-account-identity";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
-import { useAccountSaveCapped, useCurrencyBlocked, useOpenPaywall } from "@/hooks/use-pro-gate";
+import { useAccountSaveCapped, useCurrencyBlocked, useFreeAccountsUsed, useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
@@ -97,6 +99,7 @@ export function useAccountForm(props: AccountEditorProps) {
     const openPaywall = useOpenPaywall();
     const currencyBlocked = useCurrencyBlocked(editId);
     const accountCapped = useAccountSaveCapped();
+    const freeUsed = useFreeAccountsUsed();
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
@@ -400,6 +403,11 @@ export function useAccountForm(props: AccountEditorProps) {
         fields,
         floatProgress,
         isSubmitting,
+        lastFree:
+            mode === "create" &&
+            !person &&
+            freeUsed === FREE_ACCOUNTS - 1 &&
+            !isInstallmentAppAccount({ kind: formKind(person, liability), name }),
         name,
         openPicker,
         person,

@@ -11,6 +11,8 @@ import { useSavingsGoals } from "@/data/savings-goals";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import { displayOrder } from "@/domain/account-order";
+import { FREE_ACCOUNTS } from "@/domain/pro-limits";
+import { useFreeAccountsUsed } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
 
 export function useAccountList() {
@@ -30,10 +32,16 @@ export function useAccountList() {
     const byHand = useMeta(db, "accountsByHand");
     const balances = new Map(debts.overview?.rows.map((row) => [row.id, row.balance]));
     const assets = rows.filter((account) => toAccountKind(account.kind) === "asset");
+    const freeUsed = useFreeAccountsUsed();
+    const count = t("accounts.census", { count: assets.length });
 
     return {
         archivedCount,
         assets: displayOrder(assets, byHand, (account) => balances.get(account.id) ?? 0),
+        census:
+            freeUsed === null
+                ? count
+                : `${count} · ${t("accounts.freeUsed", { limit: FREE_ACCOUNTS, used: freeUsed })}`,
         currency,
         db,
         debts,

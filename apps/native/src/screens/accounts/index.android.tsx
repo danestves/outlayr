@@ -53,8 +53,20 @@ export function Accounts({ addMenu, onAddGoal, toggle }: AccountsProps) {
     const t = useTranslation();
     const colors = useColors();
     const insets = useSafeAreaInsets();
-    const { archivedCount, assets, currency, db, debts, deleteAccount, empty, goals, openDetail, openGoal, rows } =
-        useAccountList();
+    const {
+        archivedCount,
+        assets,
+        census,
+        currency,
+        db,
+        debts,
+        deleteAccount,
+        empty,
+        goals,
+        openDetail,
+        openGoal,
+        rows,
+    } = useAccountList();
     const sortMenu = useSortMenu(rows.length);
 
     const openEditor = (id: string) => {
@@ -80,7 +92,7 @@ export function Accounts({ addMenu, onAddGoal, toggle }: AccountsProps) {
                     <LedgerTotals currency={currency} debts={debts} />
                     {assets.length > 0 ? (
                         <View className="px-4 pt-4 pb-2">
-                            <Eyebrow colors={colors}>{t("accounts.census", { count: assets.length })}</Eyebrow>
+                            <Eyebrow colors={colors}>{census}</Eyebrow>
                         </View>
                     ) : null}
                     {assets.map((account) => (

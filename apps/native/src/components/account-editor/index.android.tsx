@@ -11,6 +11,7 @@ import { CurrencyPickerSheet } from "@/components/currency-picker-sheet";
 import { InlineFailure } from "@/components/form/inline-failure";
 import { IdentityHero } from "@/components/identity-hero";
 import { SheetHeader, SheetHeaderIconButton, SheetHeaderTextButton } from "@/components/sheet-header";
+import { Text } from "@/components/text";
 import { identityPickerResetAtom } from "@/contexts/identity-draft-context";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import { useTranslation } from "@/i18n/context";
@@ -41,6 +42,7 @@ export default function AccountEditor(props: AccountEditorProps) {
         draft,
         failure,
         fields,
+        lastFree,
         limitSheet,
         name,
         openPicker,
@@ -108,6 +110,9 @@ export default function AccountEditor(props: AccountEditorProps) {
                 <View className="px-4">
                     <InlineFailure message={failure} />
                     <AccountDetailsFields {...fields} name={name} nameFieldRef={nameRef} />
+                    {lastFree ? (
+                        <Text className="text-footnote text-muted px-1 pt-3">{t("accounts.lastFree")}</Text>
+                    ) : null}
                 </View>
             </ScrollView>
 

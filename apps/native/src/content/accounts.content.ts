@@ -443,6 +443,20 @@ const accounts = {
             fr: "Date du relevé",
             pt: "Fechamento da fatura",
         }),
+        "accounts.freeUsed": t({
+            en: "{used} of {limit} free",
+            de: "{used} von {limit} gratis",
+            es: "{used} de {limit} gratis",
+            fr: "{used} sur {limit} gratuits",
+            pt: "{used} de {limit} grátis",
+        }),
+        "accounts.lastFree": t({
+            en: "Your last free account. Pro adds more.",
+            de: "Dein letztes Gratis-Konto. Pro fügt mehr hinzu.",
+            es: "Tu última cuenta gratis. Pro agrega más.",
+            fr: "Votre dernier compte gratuit. Pro en ajoute d'autres.",
+            pt: "Sua última conta grátis. O Pro adiciona mais.",
+        }),
         "accounts.multiCurrency": t({
             en: "Multi-currency",
             de: "Mehrere Währungen",

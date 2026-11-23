@@ -69,6 +69,18 @@ export const features = {
         says: ["balances", "my accounts", "where my money sits"],
         steps: [{ see: "Balances" }],
     },
+    "free-accounts": {
+        link: "/balances",
+        proves: "A Free ledger shows how many of its 3 free accounts it uses before the paywall.",
+        says: ["how many free accounts I have", "the free account limit", "accounts left on Free"],
+        steps: [{ see: "of 3 free" }],
+    },
+    "last-free-account": {
+        link: "/accounts/create",
+        proves: "Creating the third account on Free says it is the last free one before Save.",
+        says: ["my last free account", "adding a third account on Free"],
+        steps: [{ see: "Your last free account. Pro adds more." }],
+    },
     "new-debt": {
         link: "/debts/new",
         proves: "The new debt sheet opens with its title.",
