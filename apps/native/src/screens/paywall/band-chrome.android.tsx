@@ -13,6 +13,8 @@ export function BandChrome() {
                     headerShadowVisible: false,
                     headerStyle: { backgroundColor: colors.pro },
                     headerTintColor: colors.proForeground,
+                    // The first-run step's header is transparent, and only iOS insets the scroll view under it.
+                    headerTransparent: false,
                 }}
             />
             <StatusBar style="dark" />

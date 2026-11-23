@@ -109,7 +109,7 @@ export function AiConsentGate() {
     return (
         <ScrollView
             className="bg-background flex-1"
-            contentContainerClassName="px-5 pt-8"
+            contentContainerClassName="px-5 pt-8 android:pt-safe-offset-8"
             contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) }}
         >
             <AiConsentPrompt onAnswer={answer} />

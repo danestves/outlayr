@@ -26,6 +26,7 @@ import { useColors } from "@/theme/use-colors";
 
 import { useAccountLimit } from "./account-top";
 import type { AccountTrigger } from "./account-top";
+import { BandChrome } from "./band-chrome";
 import { ExitOfferSheet, useExitOffer } from "./exit-offer";
 import { FeatureRows } from "./feature-rows";
 import { KeepsLine } from "./keeps-line";
@@ -288,6 +289,7 @@ export function PaywallRedesign({
 
     return (
         <View className="bg-background flex-1">
+            <BandChrome />
             <View
                 accessibilityElementsHidden={exit.offer !== null}
                 className="flex-1"
