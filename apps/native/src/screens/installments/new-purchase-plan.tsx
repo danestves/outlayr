@@ -29,6 +29,7 @@ interface NewPurchasePlanProps {
     funding: readonly Account[];
     name: string;
     onCategory: (category: Category) => void;
+    onContentHeight: (height: number) => void;
     onDraft: (draft: InstallmentDraft) => void;
     onName: (name: string) => void;
     onSave: () => void;
@@ -67,6 +68,7 @@ export function NewPurchasePlan({
     funding,
     name,
     onCategory,
+    onContentHeight,
     onDraft,
     onName,
     onSave,
@@ -107,12 +109,15 @@ export function NewPurchasePlan({
 
     return (
         <KeyboardAvoidingView behavior="padding" className="bg-background flex-1" enabled={Platform.OS === "android"}>
+            {/* react-native-screens resizes a ScrollView on a formSheet's first-child chain to the whole sheet. */}
+            <View collapsable={false} />
             <ScrollView
                 automaticallyAdjustKeyboardInsets
                 className="flex-1"
                 contentContainerClassName="px-5 pb-safe-offset-10"
                 contentInsetAdjustmentBehavior="automatic"
                 keyboardShouldPersistTaps="handled"
+                onContentSizeChange={(_, height) => onContentHeight(height)}
                 showsVerticalScrollIndicator={false}
             >
                 <Pressable

@@ -83,6 +83,7 @@ export function NewInstallmentPurchase({
     const [touched, setTouched] = useState(false);
     const [forward, setForward] = useState(true);
     const [purchaseDay] = useState(() => new Date());
+    const [contentHeight, setContentHeight] = useState<number | null>(null);
     // Set before React re-renders, so two taps inside one commit cannot both place an order.
     const placing = useRef(false);
 
@@ -199,8 +200,13 @@ export function NewInstallmentPurchase({
     if (step === "where" || account === null) {
         return (
             <>
-                <PurchaseToolbar title={t("installments.new.where")} />
-                <NewPurchaseWhere accounts={bankAccounts} onPick={pick} selectedId={account?.id ?? null} />
+                <PurchaseToolbar contentHeight={contentHeight} title={t("installments.new.where")} />
+                <NewPurchaseWhere
+                    accounts={bankAccounts}
+                    onContentHeight={setContentHeight}
+                    onPick={pick}
+                    selectedId={account?.id ?? null}
+                />
             </>
         );
     }
@@ -208,12 +214,13 @@ export function NewInstallmentPurchase({
     if (step === "total" || draft === null) {
         return (
             <>
-                <PurchaseToolbar onBack={back} title={t("installments.new.total")} />
+                <PurchaseToolbar contentHeight={contentHeight} onBack={back} title={t("installments.new.total")} />
                 <ScrollView
                     className="bg-background flex-1"
                     contentContainerClassName="px-5 pb-safe-offset-10"
                     contentInsetAdjustmentBehavior="automatic"
                     keyboardShouldPersistTaps="handled"
+                    onContentSizeChange={(_, height) => setContentHeight(height)}
                 >
                     <TransactionFormAmountPad
                         code={account.currency}
@@ -237,7 +244,7 @@ export function NewInstallmentPurchase({
 
     return (
         <>
-            <PurchaseToolbar onBack={back} title={t("installments.new.plan")} />
+            <PurchaseToolbar contentHeight={contentHeight} onBack={back} title={t("installments.new.plan")} />
             <NewPurchasePlan
                 account={account}
                 amount={total}
@@ -246,6 +253,7 @@ export function NewInstallmentPurchase({
                 draft={draft}
                 funding={funding}
                 name={name}
+                onContentHeight={setContentHeight}
                 onCategory={(picked) => {
                     setTouched(true);
                     setCategory(picked);

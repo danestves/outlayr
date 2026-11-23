@@ -40,6 +40,7 @@ export function stackChrome(m3: MaterialRoleColors): StackChrome {
         bareModal: { animation: "slide_from_bottom", headerShown: false, presentation: "modal" },
         // Sized by its content, not by detents (`use-resting-sheet.android.ts`).
         entrySheet: { ...sheet, sheetAllowedDetents: "fitToContents", sheetResizeAnimationEnabled: false, title: "" },
+        fitSheet: (title) => ({ ...dialog, title }),
         firstRunStep: { animation: "fade", headerShadowVisible: false, headerTransparent: true, title: "" },
         headless: { headerShown: false },
         // Dimmed, unlike iOS: at an undimmed detent the editor under the picker takes taps.

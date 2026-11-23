@@ -38,11 +38,12 @@ const presetFor = (app: InstallmentApp) => startingDraft({ kind: "liability", na
 
 interface NewPurchaseWhereProps {
     accounts: readonly Account[];
+    onContentHeight: (height: number) => void;
     onPick: (account: Account) => void;
     selectedId: string | null;
 }
 
-export function NewPurchaseWhere({ accounts, onPick, selectedId }: NewPurchaseWhereProps) {
+export function NewPurchaseWhere({ accounts, onContentHeight, onPick, selectedId }: NewPurchaseWhereProps) {
     const db = useDatabase();
     const t = useTranslation();
     const runFlow = useAtomCommand(voidAppFlowCommand);
@@ -113,6 +114,7 @@ export function NewPurchaseWhere({ accounts, onPick, selectedId }: NewPurchaseWh
             contentContainerClassName="px-5 pb-safe-offset-10"
             contentInsetAdjustmentBehavior="automatic"
             keyboardShouldPersistTaps="handled"
+            onContentSizeChange={(_, height) => onContentHeight(height)}
             showsVerticalScrollIndicator={false}
         >
             <View>
