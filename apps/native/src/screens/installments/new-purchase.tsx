@@ -11,6 +11,7 @@ import { TransactionFormAmountPad } from "@/components/transaction-form/amount-p
 import { useDatabase } from "@/contexts/local-data-context";
 import { useBankAccounts } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
+import { getCategoryById } from "@/data/categories-core";
 import type { Category } from "@/data/categories-core";
 import { lastPlanRows, paymentRate } from "@/data/installment-reads";
 import type { PaymentSource } from "@/data/installments-core";
@@ -35,7 +36,10 @@ type Step = "plan" | "total" | "where";
 interface NewInstallmentPurchaseProps {
     accountId?: string;
     amount?: number;
+    categoryId?: string;
     currency?: string;
+    day?: Date;
+    name?: string;
     onDirtyChange: (dirty: boolean) => void;
     onDone: () => void;
 }
@@ -43,7 +47,10 @@ interface NewInstallmentPurchaseProps {
 export function NewInstallmentPurchase({
     accountId,
     amount,
+    categoryId,
     currency,
+    day,
+    name: initialName,
     onDirtyChange,
     onDone,
 }: NewInstallmentPurchaseProps) {
@@ -76,13 +83,19 @@ export function NewInstallmentPurchase({
         }
         return amountText === "" ? "total" : "plan";
     });
-    const [category, setCategory] = useState<Category | null>(null);
-    const [name, setName] = useState("");
+    const [category, setCategory] = useState<Category | null>(() => {
+        if (categoryId === undefined) {
+            return null;
+        }
+        const row = getCategoryById(db, categoryId);
+        return row !== null && !row.income ? row : null;
+    });
+    const [name, setName] = useState(initialName ?? "");
     const [problem, setProblem] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
     const [touched, setTouched] = useState(false);
     const [forward, setForward] = useState(true);
-    const [purchaseDay] = useState(() => new Date());
+    const [purchaseDay] = useState(() => day ?? new Date());
     const [contentHeight, setContentHeight] = useState<number | null>(null);
     // Set before React re-renders, so two taps inside one commit cannot both place an order.
     const placing = useRef(false);

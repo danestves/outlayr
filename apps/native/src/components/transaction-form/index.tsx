@@ -144,6 +144,11 @@ function entrySources(props: TransactionFormProps) {
         : { copyOf: props.copyOf, initial: undefined, seed: props.seed };
 }
 
+// A call, not a ternary at the hook: `TransactionForm` sits at its complexity ceiling.
+function categoryIdOf(category: Category | null) {
+    return category?.id ?? null;
+}
+
 function offeredWebsiteMerchant(showCoach: boolean, identity: IdentitySelection, merchant: string | null) {
     return showCoach || identity.photoUri || identity.emoji || identity.icon ? null : merchant;
 }
@@ -491,6 +496,7 @@ export function TransactionForm(props: TransactionFormProps) {
     const installmentOrder = useInstallmentOrder({
         account,
         banks: allAccounts,
+        categoryId: categoryIdOf(category),
         currency,
         date,
         db,
@@ -502,6 +508,7 @@ export function TransactionForm(props: TransactionFormProps) {
         intent: seed?.installments === true,
         isSubscription,
         mode,
+        readMerchant: () => form.state.values.merchant,
         seeded: seed?.installmentDraft,
         turn: stageTurn,
     });

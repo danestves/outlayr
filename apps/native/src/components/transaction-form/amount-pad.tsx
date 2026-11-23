@@ -41,7 +41,7 @@ export function TransactionFormAmountPad({
     onBack,
     onChange,
     onCodePress,
-    showDisplay,
+    showDisplay = false,
     stepKey,
     value,
 }: TransactionFormAmountPadProps) {

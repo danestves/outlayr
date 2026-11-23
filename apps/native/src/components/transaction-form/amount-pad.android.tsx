@@ -25,7 +25,7 @@ export const TransactionFormAmountPad: typeof TransactionFormAmountPadBase = ({
     onBack,
     onChange,
     onCodePress,
-    showDisplay,
+    showDisplay = false,
     stepKey,
     value,
 }) => {

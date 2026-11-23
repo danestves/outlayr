@@ -29,6 +29,7 @@ import type { SentenceVerb } from "./sentence/fact-glyphs";
 interface InstallmentOrderArgs {
     account: Account | null;
     banks: readonly Account[];
+    categoryId: string | null;
     currency: string;
     date: Date;
     db: Database;
@@ -42,6 +43,8 @@ interface InstallmentOrderArgs {
     intent: boolean;
     isSubscription: boolean;
     mode: "create" | "edit";
+    /** Read on open, not selected: the form's values would re-render the screen on every keystroke. */
+    readMerchant: () => string;
     seeded: InstallmentSeed | undefined;
     turn: number;
 }
@@ -50,6 +53,7 @@ interface InstallmentOrderArgs {
 export function useInstallmentOrder({
     account,
     banks,
+    categoryId,
     currency,
     date,
     db,
@@ -61,6 +65,7 @@ export function useInstallmentOrder({
     hasPrice: priced,
     isSubscription,
     mode,
+    readMerchant,
     seeded,
     turn,
 }: InstallmentOrderArgs) {
@@ -101,11 +106,15 @@ export function useInstallmentOrder({
         if (seeded === undefined) {
             const liability = account !== null && toAccountKind(account.kind) === "liability";
             const planAmount = price === undefined || !liability ? price : planPriceOf(price, entryRate.rate);
+            const merchant = readMerchant().trim();
             const href: Href = {
                 params: {
                     accountId: liability ? account.id : undefined,
                     amount: planAmount === undefined || planAmount === null ? undefined : String(planAmount),
+                    categoryId: categoryId ?? undefined,
                     currency: liability ? account.currency : currency,
+                    day: String(date.getTime()),
+                    name: merchant === "" ? undefined : merchant,
                 },
                 pathname: "/installments/new",
             };
