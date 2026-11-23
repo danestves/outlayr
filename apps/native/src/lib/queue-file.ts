@@ -219,12 +219,17 @@ function routePlacements(
             continue;
         }
         const key = purchaseKeyOf(placement.job);
+        const dismissed = route.dismissed?.has(placement.job.id) === true;
+        let followed = false;
         if (!placement.own) {
             const sibling = key === null ? null : siblingLedgerOf(placement.job, key, seen, window);
+            followed = !dismissed && sibling !== null;
             const destination = sibling ?? destinationOf(placement.job, route);
-            placement.ledger = route.dismissed?.has(placement.job.id) ? route.key : destination;
+            placement.ledger = dismissed ? route.key : destination;
         }
-        if (key !== null) {
+        // A capture that followed a sibling is covered by the route it followed: recording it again would move the
+        // window forward, so a later charge with the same key would be parked there and filed as a new transaction.
+        if (key !== null && !followed) {
             const entry = { at: placement.job.date, key, ledger: placement.ledger };
             routes.push(entry);
             seen.push(entry);

@@ -349,6 +349,27 @@ describe("claimPendingWrites with purchase routes", () => {
         expect(claimed.held).toBeUndefined();
     });
 
+    it("does not extend a purchase route through the capture that followed it", () => {
+        const minute = 60_000;
+        const base = NOW - 30 * minute;
+        const anchor = { at: base, key: PURCHASE, ledger: "A" };
+        const settlement = write("settlement", { date: base + 8 * minute, dedupeKey: PURCHASE });
+        const third = write("third", { date: base + 16 * minute, dedupeKey: PURCHASE });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(settlement, third) });
+
+        const claimed = claimPendingWrites(files, {
+            cutoffs: [{ at: base + minute, from: "A" }],
+            key: "C",
+            now: NOW,
+            purchases: [anchor],
+            siblingWindowMs,
+        });
+
+        expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["third"]);
+        expect(claimed.held).toStrictEqual([{ jobs: [settlement], name: "held-A-1.jsonl" }]);
+        expect(claimed.purchases?.some((entry) => entry.at === settlement.date)).toBe(false);
+    });
+
     it("keeps new routes and drops the ones older than a day", () => {
         const job = write("job", { date: NOW - 300_000, dedupeKey: "wallet:fresh" });
         const fresh = { at: NOW - 60_000, key: PURCHASE, ledger: "B" };

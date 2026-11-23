@@ -12,28 +12,31 @@ import { activeProfileId } from "@/lib/active-profile";
 import { hasPendingQueueWork, retireLedger } from "@/lib/widget-bridge";
 
 import migrationsBundle from "../../drizzle/migrations";
-import { deleteProfileLedger, profileLedgerExists } from "./profile-ledger-files";
+import { deleteProfileLedger, profileLedgerDeletionPending } from "./profile-ledger-files";
 
 let registry: { db: Database; own: boolean } | null = null;
 
 /** Tombstones arrive from the server, so this reruns after a Personal sync, not only when the registry opens. */
-export const retireDeletedProfiles = Effect.fn("ProfileRegistry.retireDeleted")(function* retireDeletedProfiles(
+/** Tombstoned profiles whose ledger, held captures or routes are still on this device. */
+export const deletedProfilesOwed = Effect.fn("ProfileRegistry.deletedOwed")(function* deletedProfilesOwed(
     db: Database
 ) {
     const deleted = yield* Effect.tryPromise(() =>
         db.select({ id: profiles.id }).from(profiles).where(isNotNull(profiles.deletedAt))
     );
+    const owed: string[] = [];
     for (const row of deleted) {
         // Registry rows arrive from the server, so an id that names no ledger is not ours to delete.
         const id = parseProfileId(row.id);
-        if (id === undefined) {
-            continue;
+        if (id !== undefined && (profileLedgerDeletionPending(id) || hasPendingQueueWork(id))) {
+            owed.push(id);
         }
-        // A ledger already gone with nothing parked or routed for it was retired by an earlier pass.
-        const work = yield* Effect.sync(() => profileLedgerExists(id) || hasPendingQueueWork(id));
-        if (!work) {
-            continue;
-        }
+    }
+    return owed;
+});
+
+export const retireProfiles = Effect.fn("ProfileRegistry.retire")(function* retireProfiles(ids: readonly string[]) {
+    for (const id of ids) {
         yield* Effect.sync(() => retireLedger(id));
         yield* deleteProfileLedger(id);
     }
@@ -42,7 +45,7 @@ export const retireDeletedProfiles = Effect.fn("ProfileRegistry.retireDeleted")(
 export const openProfileRegistry = Effect.fn("ProfileRegistry.open")(function* openProfileRegistry(active: Database) {
     if (activeProfileId() === undefined) {
         registry = { db: active, own: false };
-        yield* retireDeletedProfiles(active);
+        yield* retireProfiles(yield* deletedProfilesOwed(active));
         return;
     }
     if (registry?.own) {

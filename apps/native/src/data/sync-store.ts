@@ -10,7 +10,8 @@ import { syncTransport } from "@/lib/cloud-sync";
 import { inboundWritesTransport } from "@/lib/cloud-webhooks";
 
 import { pullInboundWrites } from "./inbound-writes";
-import { retireDeletedProfiles } from "./profile-registry";
+import { acquireDrains, closeDrains, reopenDrains } from "./pending-writes";
+import { deletedProfilesOwed, retireProfiles } from "./profile-registry";
 import { runSync } from "./sync-engine-core";
 import type { SyncCoreError } from "./sync-engine-core";
 import { getSyncCursor, isSyncEnabled, outboxPendingCount, setSyncedAt } from "./sync-outbox-core";
@@ -65,9 +66,18 @@ export const make = Effect.gen(function* make() {
         const { tables } = yield* runSync(db, transport).pipe(surfaced("pass"));
         // Outside the write transaction, so nothing repaints rows a rollback is about to remove.
         yield* Effect.try({ catch: failedAt("pass"), try: () => invalidateAll(tables) });
-        // A tombstone can arrive in this pass, after the registry opened and retired the ones it knew.
+        // A tombstone can arrive in this pass, after the registry opened. Retiring writes held files and routes, so it
+        // takes the drain gate, and only when there is work: a transition refuses to start while the gate is held.
         if (activeProfileId() === undefined) {
-            yield* retireDeletedProfiles(db).pipe(
+            yield* deletedProfilesOwed(db).pipe(
+                Effect.flatMap((owed) =>
+                    owed.length > 0 && acquireDrains()
+                        ? closeDrains().pipe(
+                              Effect.andThen(retireProfiles(owed)),
+                              Effect.ensuring(Effect.sync(reopenDrains))
+                          )
+                        : Effect.void
+                ),
                 Effect.catchCause((cause) => Effect.logWarning("[outlayr] deleted profiles not retired", cause))
             );
         }

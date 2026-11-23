@@ -249,6 +249,7 @@ function persistPurchases(purchases: readonly PurchaseRoute[]): void {
 /**
  * Nothing is deleted here: the caller commits, then calls {@link releasePendingWrites}, so a force-quit mid-drain
  * replays. That is safe because `applyPendingWrites` records each enqueue id in the same SQLite transaction.
+ * Routes persist before the drain applies anything, so a crash after its commit keeps them.
  */
 export function claimPendingWritesOrThrow(): ClaimedWrites {
     adoptLegacyQueue();
@@ -261,12 +262,13 @@ export function claimPendingWritesOrThrow(): ClaimedWrites {
         purchases: readPurchaseRoutes(),
         siblingWindowMs: WALLET_DEDUPE_WINDOW_MS,
     });
+    // A replay matches each job to its own route at gap 0, so the same claim still lands in the same ledgers.
+    if (claimed.purchases !== undefined) {
+        persistPurchases(claimed.purchases);
+    }
     // A drain with nothing claimed returns before releasing, so it persists the pruned marker here instead.
     if (claimed.names.length === 0) {
         persistCutoffs(claimed.cutoffs ?? []);
-        if (claimed.purchases !== undefined) {
-            persistPurchases(claimed.purchases);
-        }
     }
     return { ...claimed, captured: new Set(captureIds(claimed).filter((id) => answerOf(id) != null)) };
 }
@@ -284,9 +286,6 @@ export function releasePendingWritesOrThrow(claimed: ClaimedWrites): void {
     releaseQueue(queueFiles, claimed);
     if (claimed.cutoffs !== undefined) {
         persistCutoffs(claimed.cutoffs);
-    }
-    if (claimed.purchases !== undefined) {
-        persistPurchases(claimed.purchases);
     }
     for (const id of captureIds(claimed)) {
         sharedStore?.remove(`${CAPTURE_ANSWER_PREFIX}${id}`);
