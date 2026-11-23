@@ -10,7 +10,7 @@ import { ProfilesError, updateProfile } from "@/data/profiles-core";
 import type { ProfileIdentity } from "@/data/profiles-core";
 import { flushDeferredDeletes } from "@/data/use-deferred-delete";
 import type { Database } from "@/db/client";
-import { activeProfileId, writeActiveProfile } from "@/lib/active-profile";
+import { activeProfileId, clearProfileSwitch, recordProfileSwitch, writeActiveProfile } from "@/lib/active-profile";
 import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand } from "./atom-command";
@@ -31,8 +31,16 @@ const reload = Effect.suspend(() => {
     return Effect.tryPromise({ catch: switchFailed, try: () => reloadAsync() });
 });
 
-const enter = Effect.fn("Profiles.enter")(function* enter(profileId: string | undefined) {
-    yield* Effect.try({ catch: switchFailed, try: () => writeActiveProfile(profileId) });
+const writeActive = (profileId: string | undefined) =>
+    Effect.try({ catch: switchFailed, try: () => writeActiveProfile(profileId) });
+
+/**
+ * A marker first, so a capture enqueued after this drain is held for the ledger being left rather than landing in
+ * the next one. Deleting a profile clears it instead: that ledger never opens again.
+ */
+const enter = Effect.fn("Profiles.enter")(function* enter(profileId: string | undefined, marker: "clear" | "record") {
+    yield* Effect.try({ catch: switchFailed, try: marker === "record" ? recordProfileSwitch : clearProfileSwitch });
+    yield* writeActive(profileId);
     yield* reload;
 });
 
@@ -47,7 +55,8 @@ export const signOutToPersonal = Effect.fn("Profiles.signOutToPersonal")(functio
     if (activeProfileId() === undefined) {
         return yield* signOut;
     }
-    yield* Effect.try({ catch: switchFailed, try: () => writeActiveProfile(undefined) });
+    yield* Effect.try({ catch: switchFailed, try: recordProfileSwitch });
+    yield* writeActive(undefined);
     yield* signOut.pipe(Effect.ensuring(reload.pipe(Effect.ignore)));
 });
 
@@ -61,7 +70,7 @@ export const switchProfileCommand = createRuntimeCommand(appRuntime, {
             yield* prepareProfileLedger(input.profileId, input.from, undefined);
         }
         yield* settleLedger(input.from);
-        yield* enter(input.profileId);
+        yield* enter(input.profileId, "record");
     }),
     label: "profiles:switch",
 });
@@ -70,12 +79,13 @@ export const createProfileCommand = createRuntimeCommand(appRuntime, {
     execute: Effect.fn("Profiles.createAndSwitch")(function* createAndSwitch(input: {
         currency: string;
         from: Database;
+        id: string;
         identity: ProfileIdentity;
         name: string;
     }) {
         // Before the registry row, so a failed drain can be retried without making a second profile.
         yield* settleLedger(input.from);
-        yield* enter(yield* createProfile(input));
+        yield* enter(yield* createProfile(input), "record");
     }),
     label: "profiles:create",
 });
@@ -90,7 +100,7 @@ export const deleteProfileCommand = createRuntimeCommand(appRuntime, {
     execute: Effect.fn("Profiles.deleteAndLeave")(function* deleteAndLeave(input: { from: Database; id: string }) {
         yield* settleLedger(input.from);
         yield* deleteProfile(input.id);
-        yield* enter(undefined);
+        yield* enter(undefined, "clear");
     }),
     label: "profiles:delete",
 });

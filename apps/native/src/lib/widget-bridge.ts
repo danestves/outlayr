@@ -1,5 +1,6 @@
 import { File } from "expo-file-system";
 
+import { activeProfileId, clearProfileSwitch, ledgerKey, readProfileSwitch } from "./active-profile";
 import { queueDirectory } from "./queue-directory";
 import {
     adoptQueue,
@@ -180,7 +181,10 @@ export function adoptPendingWrites(jobs: PendingWrite[]): boolean {
  */
 export function claimPendingWritesOrThrow(): ClaimedWrites {
     adoptLegacyQueue();
-    const claimed = claimQueue(queueFiles);
+    const claimed = claimQueue(queueFiles, {
+        key: ledgerKey(activeProfileId()),
+        left: readProfileSwitch() ?? undefined,
+    });
     return { ...claimed, captured: new Set(captureIds(claimed).filter((id) => answerOf(id) != null)) };
 }
 
@@ -195,6 +199,10 @@ export function claimPendingWrites(): ClaimedWrites {
 
 export function releasePendingWritesOrThrow(claimed: ClaimedWrites): void {
     releaseQueue(queueFiles, claimed);
+    // A drain in the opened ledger settles the switch; the drain before the reload saw `from === key`.
+    if (claimed.settlesSwitch) {
+        clearProfileSwitch();
+    }
     for (const id of captureIds(claimed)) {
         sharedStore?.remove(`${CAPTURE_ANSWER_PREFIX}${id}`);
     }

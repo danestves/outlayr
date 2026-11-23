@@ -130,6 +130,30 @@ export const updateProfile = Effect.fn("Profiles.update")(function* updateProfil
     );
 });
 
+const profileRowExists = Effect.fn("Profiles.rowExists")(function* profileRowExists(registry: Database, id: string) {
+    const [row] = yield* query("create", () =>
+        registry
+            .select({ id: profiles.id })
+            .from(profiles)
+            .where(and(eq(profiles.id, id), isNull(profiles.deletedAt)))
+            .limit(1)
+    );
+    return row != null;
+});
+
+/** A create retried after a failed switch reuses its id, so the second attempt lands on the first row. */
+export const createOrUpdateProfile = Effect.fn("Profiles.createOrUpdate")(function* createOrUpdateProfile(
+    registry: Database,
+    input: ProfileIdentity & { id: string; name: string }
+) {
+    const { id, ...patch } = input;
+    if (yield* profileRowExists(registry, id)) {
+        yield* updateProfile(registry, id, patch);
+        return;
+    }
+    yield* insertProfile(registry, input);
+});
+
 export const tombstoneProfile = Effect.fn("Profiles.tombstone")(function* tombstoneProfile(
     registry: Database,
     id: string

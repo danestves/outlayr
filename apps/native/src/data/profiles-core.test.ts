@@ -8,7 +8,7 @@ import { migratedDatabase } from "@/db/test-database";
 import { Meta } from "./app-meta-core";
 import type { MetaName } from "./app-meta-registry";
 import { bootstrapLocalData } from "./bootstrap";
-import { seedProfileLedger, updateProfile } from "./profiles-core";
+import { createOrUpdateProfile, seedProfileLedger, updateProfile } from "./profiles-core";
 import type { ProfileIdentity } from "./profiles-core";
 
 vi.mock("expo-localization", () => ({ getLocales: () => [] }));
@@ -66,6 +66,21 @@ describe("seedProfileLedger", () => {
         await expect(Effect.runPromise(Meta.get(work, "onboardingComplete"))).resolves.toBe(true);
         await expect(has("showCents")).resolves.toBe(false);
         await expect(has("currencyChosen")).resolves.toBe(false);
+    });
+});
+
+describe("createOrUpdateProfile", () => {
+    it("leaves one row with the retry's name when a create runs twice on the same id", async () => {
+        const registry = migratedDatabase();
+        const create = (name: string) =>
+            Effect.runPromise(createOrUpdateProfile(registry, { ...IDENTITY, id: "profile-work", name }));
+
+        await create("Work");
+        await create("Studio");
+
+        await expect(registry.select({ id: profiles.id, name: profiles.name }).from(profiles)).resolves.toStrictEqual([
+            { id: "profile-work", name: "Studio" },
+        ]);
     });
 });
 

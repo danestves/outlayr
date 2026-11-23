@@ -14,6 +14,8 @@ let drain: Effect.Effect<void, QueueUnreadable> = Effect.void;
 
 vi.mock("@/lib/active-profile", () => ({
     activeProfileId: () => WORK,
+    clearProfileSwitch: () => undefined,
+    recordProfileSwitch: () => undefined,
     writeActiveProfile: (id: string | undefined) => {
         activeFile = id;
     },

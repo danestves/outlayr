@@ -16,6 +16,7 @@ import {
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useProfiles } from "@/data/profiles";
+import { newId } from "@/domain/ids";
 import { useTranslation } from "@/i18n/context";
 import { activeProfileId } from "@/lib/active-profile";
 import { posthog } from "@/lib/posthog";
@@ -58,6 +59,8 @@ export function useProfileForm(mode: ProfileEditorMode) {
 
     const [name, setName] = useState(loaded?.name ?? "");
     const [currency, setCurrency] = useState(globalCurrency);
+    // Kept across a failed submit, so its retry lands on the profile the first attempt may already have made.
+    const [createdId] = useState(newId);
     const [busy, setBusy] = useState(false);
     const [failure, setFailure] = useState<string | null>(null);
     const currencySheetRef = useRef<BottomSheetModal>(null);
@@ -86,7 +89,12 @@ export function useProfileForm(mode: ProfileEditorMode) {
         const input = { identity, name: name.trim() };
         const result =
             loaded === null
-                ? await runAtomCommand(registry, createProfileCommand, { ...input, currency, from: db }, SILENT)
+                ? await runAtomCommand(
+                      registry,
+                      createProfileCommand,
+                      { ...input, currency, from: db, id: createdId },
+                      SILENT
+                  )
                 : await runAtomCommand(registry, saveProfileCommand, { ...input, id: loaded.id }, SILENT);
         setBusy(false);
         if (AsyncResult.isFailure(result)) {

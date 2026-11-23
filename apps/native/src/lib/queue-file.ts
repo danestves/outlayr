@@ -29,11 +29,22 @@ export interface QueueFiles {
     write: (name: string, text: string) => void;
 }
 
+export interface ClaimLedger {
+    /** `ledgerKey` of the profile this launch opened: captures older than `left.at` are not its own. */
+    key: string;
+    /** The switch that opened this launch left another ledger behind. */
+    left?: { at: number; from: string };
+}
+
 export interface ClaimedWrites {
     /** Capture ids the intent stored a server reply for; see `CaptureLookup.swift`. */
     captured?: ReadonlySet<string>;
+    /** Captures a switch left behind, for the ledger they were made on; `release` appends them to `name`. */
+    held?: { jobs: PendingWrite[]; name: string };
     jobs: PendingWrite[];
     names: string[];
+    /** A release settles the switch by clearing its marker. */
+    settlesSwitch?: boolean;
 }
 
 function claimOrder(name: string): number {
@@ -109,19 +120,59 @@ export function adoptQueue(files: QueueFiles, jobs: PendingWrite[]): boolean {
  * Renamed rather than read-and-cleared, so a concurrent append lands in the claim or the fresh file, never in
  * between. Earlier claims never released replay too, so a force-quit mid-drain does not drop writes.
  */
-export function claimPendingWrites(files: QueueFiles): ClaimedWrites {
+export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): ClaimedWrites {
     const names = claimNames(files);
     const next = claimName(files);
     if (files.claim(next)) {
         names.push(next);
     }
-    return {
-        jobs: names.flatMap((name) => parseQueue(files.read(name))),
-        names,
-    };
+    const key = ledger?.key;
+    const left = ledger?.left;
+    const holding = key !== undefined && left !== undefined && left.from !== key ? left : undefined;
+    const heldName = key === undefined ? undefined : `held-${key}.jsonl`;
+    if (heldName !== undefined && files.list().includes(heldName)) {
+        names.push(heldName);
+    }
+    const jobs: PendingWrite[] = [];
+    const leaving: PendingWrite[] = [];
+    for (const name of names) {
+        const parsed = parseQueue(files.read(name));
+        if (name === heldName || holding === undefined) {
+            jobs.push(...parsed);
+        } else {
+            for (const job of parsed) {
+                if (job.date < holding.at) {
+                    leaving.push(job);
+                } else {
+                    jobs.push(job);
+                }
+            }
+        }
+    }
+    const claimed: ClaimedWrites = { jobs, names };
+    if (holding !== undefined) {
+        claimed.settlesSwitch = true;
+        if (leaving.length > 0) {
+            claimed.held = { jobs: leaving, name: `held-${holding.from}.jsonl` };
+        }
+    }
+    return claimed;
 }
 
+/** Appends before discarding: a crash between the two replays the claims, so the held file dedupes by id. */
 export function releasePendingWrites(files: QueueFiles, claimed: ClaimedWrites): void {
+    const { held } = claimed;
+    if (held !== undefined && held.jobs.length > 0) {
+        const existing = parseQueue(files.read(held.name));
+        const ids = new Set(existing.map((job) => job.id));
+        for (const job of held.jobs) {
+            if (!ids.has(job.id)) {
+                ids.add(job.id);
+                existing.push(job);
+            }
+        }
+        files.write(held.name, toQueueText(existing));
+    }
     for (const name of claimed.names) {
         files.discard(name);
     }

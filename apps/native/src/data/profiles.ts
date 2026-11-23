@@ -5,7 +5,6 @@ import * as Effect from "effect/Effect";
 import { closeDatabase, openDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
 import { profiles } from "@/db/schema";
-import { newId } from "@/domain/ids";
 import { databaseNameFor, parseProfileId } from "@/domain/profiles";
 
 import migrationsBundle from "../../drizzle/migrations";
@@ -15,10 +14,11 @@ import {
     clearProfileLedgerReady,
     deleteProfileLedger,
     markProfileLedgerReady,
+    profileLedgerExists,
     profileLedgerFileExists,
 } from "./profile-ledger-files";
 import { profileRegistry } from "./profile-registry";
-import { insertProfile, ProfilesError, seedProfileLedger, tombstoneProfile } from "./profiles-core";
+import { createOrUpdateProfile, ProfilesError, seedProfileLedger, tombstoneProfile } from "./profiles-core";
 import type { Profile, ProfileIdentity } from "./profiles-core";
 
 export function useProfiles(): Profile[] {
@@ -57,13 +57,16 @@ export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function
 export const createProfile = Effect.fn("Profiles.create")(function* createProfile(input: {
     currency: string;
     from: Database;
+    id: string;
     identity: ProfileIdentity;
     name: string;
 }) {
-    const id = newId();
-    yield* prepareProfileLedger(id, input.from, input.currency);
-    yield* insertProfile(profileRegistry(), { ...input.identity, id, name: input.name });
-    return id;
+    // A retry after a failed switch must not reseed the ledger the first attempt already finished.
+    if (!profileLedgerExists(input.id)) {
+        yield* prepareProfileLedger(input.id, input.from, input.currency);
+    }
+    yield* createOrUpdateProfile(profileRegistry(), { ...input.identity, id: input.id, name: input.name });
+    return input.id;
 });
 
 export const deleteProfile = Effect.fn("Profiles.delete")(function* deleteProfile(id: string) {

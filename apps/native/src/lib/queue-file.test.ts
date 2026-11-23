@@ -122,6 +122,47 @@ describe("claimPendingWrites", () => {
     });
 });
 
+describe("claimPendingWrites across a switch", () => {
+    const AT = 1_700_000_100_000;
+    const early = (id: string) => write(id, { date: AT - 60_000 });
+    const late = (id: string) => write(id, { date: AT + 60_000 });
+
+    it("holds a capture dated before the switch for the ledger it left, and the next claim there takes it", () => {
+        const gap = early("gap");
+        const fresh = late("fresh");
+        const { disk, files } = makeFiles({ [QUEUE_FILE]: lines(gap, fresh) });
+
+        const claimed = claimPendingWrites(files, { key: "B", left: { at: AT, from: "A" } });
+
+        expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["fresh"]);
+        expect(claimed.held).toStrictEqual({ jobs: [gap], name: "held-A.jsonl" });
+        expect(claimed.settlesSwitch).toBe(true);
+
+        releasePendingWrites(files, claimed);
+
+        expect(disk.has(QUEUE_FILE)).toBe(false);
+        expect(parseQueue(files.read("held-A.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
+
+        const back = claimPendingWrites(files, { key: "A" });
+        expect(back.names).toStrictEqual(["held-A.jsonl"]);
+        expect(back.jobs.map((job) => job.id)).toStrictEqual(["gap"]);
+
+        releasePendingWrites(files, back);
+        expect(disk.has("held-A.jsonl")).toBe(false);
+    });
+
+    it("keeps one copy per id when a replayed claim merges into a held file", () => {
+        const gap = early("gap");
+        const { files } = makeFiles({ "held-A.jsonl": lines(gap), [QUEUE_FILE]: lines(gap) });
+
+        const claimed = claimPendingWrites(files, { key: "B", left: { at: AT, from: "A" } });
+
+        releasePendingWrites(files, claimed);
+
+        expect(parseQueue(files.read("held-A.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
+    });
+});
+
 describe("adoptQueue", () => {
     it("parks the pre-file queue ahead of anything appended since", () => {
         const { files } = makeFiles({ [QUEUE_FILE]: lines(write("new")) });
