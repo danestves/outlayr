@@ -1,3 +1,4 @@
+import { isPickableCurrency } from "@outlayr/money/currency";
 import { useLocalSearchParams } from "expo-router";
 
 import { CloseToolbar } from "@/components/close-toolbar";
@@ -20,10 +21,18 @@ function amountParam(value: string | undefined) {
     return Number.isFinite(amount) && amount > 0 ? amount : undefined;
 }
 
+function currencyParam(value: string | undefined) {
+    return value !== undefined && isPickableCurrency(value) ? value : undefined;
+}
+
 export default function NewInstallmentPurchaseRoute() {
     const { leave, setDirty } = useDiscardGuard();
     const t = useTranslation();
-    const params = useLocalSearchParams<{ accountId?: string | string[]; amount?: string | string[] }>();
+    const params = useLocalSearchParams<{
+        accountId?: string | string[];
+        amount?: string | string[];
+        currency?: string | string[];
+    }>();
 
     return (
         <>
@@ -32,6 +41,7 @@ export default function NewInstallmentPurchaseRoute() {
             <NewInstallmentPurchase
                 accountId={single(params.accountId)}
                 amount={amountParam(single(params.amount))}
+                currency={currencyParam(single(params.currency))}
                 onDirtyChange={setDirty}
                 onDone={leave}
             />

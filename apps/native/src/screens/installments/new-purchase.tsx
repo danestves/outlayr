@@ -4,7 +4,7 @@ import type { InstallmentDraft } from "@outlayr/money/installment-draft";
 import { startingDraft } from "@outlayr/money/installment-terms";
 import * as Effect from "effect/Effect";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ScrollView } from "react-native";
 
 import { TransactionFormAmountPad } from "@/components/transaction-form/amount-pad";
@@ -15,12 +15,13 @@ import type { Category } from "@/data/categories-core";
 import { lastPlanRows, paymentRate } from "@/data/installment-reads";
 import type { PaymentSource } from "@/data/installments-core";
 import { paymentSource, paymentSources } from "@/domain/installment-payment";
-import { minorUnitsFor } from "@/domain/money";
+import { DEFAULT_CURRENCY, minorUnitsFor } from "@/domain/money";
 import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
 import { useTranslation } from "@/i18n/context";
 import { useMirror } from "@/lib/lifecycle";
 import { notifyFailure } from "@/lib/notify";
 import { voidAppFlowCommand } from "@/state/entry-commands";
+import { rememberSavedEntry } from "@/state/entry-commit";
 import { placeOrder } from "@/state/installment-orders";
 import { askForInstallmentReminders } from "@/state/surfaces-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
@@ -33,11 +34,18 @@ type Step = "plan" | "total" | "where";
 interface NewInstallmentPurchaseProps {
     accountId?: string;
     amount?: number;
+    currency?: string;
     onDirtyChange: (dirty: boolean) => void;
     onDone: () => void;
 }
 
-export function NewInstallmentPurchase({ accountId, amount, onDirtyChange, onDone }: NewInstallmentPurchaseProps) {
+export function NewInstallmentPurchase({
+    accountId,
+    amount,
+    currency,
+    onDirtyChange,
+    onDone,
+}: NewInstallmentPurchaseProps) {
     const db = useDatabase();
     const t = useTranslation();
     const runFlow = useAtomCommand(voidAppFlowCommand);
@@ -46,9 +54,13 @@ export function NewInstallmentPurchase({ accountId, amount, onDirtyChange, onDon
         () => bankAccounts.find((row) => row.id === accountId && toAccountKind(row.kind) === "liability") ?? null
     );
     const prefill = amount !== undefined && Number.isFinite(amount) && amount > 0 ? amount : undefined;
-    const [amountText, setAmountText] = useState(() =>
-        prefill === undefined ? "" : numberToNumpad(prefill, minorUnitsFor(account?.currency ?? "USD"))
-    );
+    const [amountText, setAmountText] = useState(() => {
+        // A link states its amount in its own currency; reinterpreting it in the account's would change the price.
+        if (prefill === undefined || (account !== null && currency !== undefined && currency !== account.currency)) {
+            return "";
+        }
+        return numberToNumpad(prefill, minorUnitsFor(currency ?? account?.currency ?? DEFAULT_CURRENCY));
+    });
     const [draft, setDraft] = useState<InstallmentDraft | null>(() => {
         if (account === null) {
             return null;
@@ -61,7 +73,7 @@ export function NewInstallmentPurchase({ accountId, amount, onDirtyChange, onDon
         if (account === null) {
             return "where";
         }
-        return prefill === undefined ? "total" : "plan";
+        return amountText === "" ? "total" : "plan";
     });
     const [category, setCategory] = useState<Category | null>(null);
     const [name, setName] = useState("");
@@ -70,6 +82,8 @@ export function NewInstallmentPurchase({ accountId, amount, onDirtyChange, onDon
     const [touched, setTouched] = useState(false);
     const [forward, setForward] = useState(true);
     const [purchaseDay] = useState(() => new Date());
+    // Set before React re-renders, so two taps inside one commit cannot both place an order.
+    const placing = useRef(false);
 
     useMirror([touched], () => {
         onDirtyChange(touched);
@@ -87,7 +101,8 @@ export function NewInstallmentPurchase({ accountId, amount, onDirtyChange, onDon
         setTouched(true);
         setProblem(null);
         setForward(true);
-        if (account !== null && account.currency !== picked.currency) {
+        const typedIn = account?.currency ?? currency;
+        if (typedIn !== undefined && typedIn !== picked.currency) {
             setAmountText("");
         }
         setAccount(picked);
@@ -111,7 +126,7 @@ export function NewInstallmentPurchase({ accountId, amount, onDirtyChange, onDon
     };
 
     const save = () => {
-        if (account === null || draft === null || category === null || saving || !(total > 0)) {
+        if (account === null || draft === null || category === null || saving || placing.current || !(total > 0)) {
             return;
         }
         const schedule = draftSchedule(draft, total, purchaseDay, account.currency);
@@ -138,6 +153,7 @@ export function NewInstallmentPurchase({ accountId, amount, onDirtyChange, onDon
             return;
         }
         setProblem(null);
+        placing.current = true;
         setSaving(true);
         const flow = placeOrder(
             db,
@@ -163,6 +179,7 @@ export function NewInstallmentPurchase({ accountId, amount, onDirtyChange, onDon
                 onOrdered: () => undefined,
             }
         ).pipe(
+            Effect.tap((id) => rememberSavedEntry(db, account.id, { id, merchant: name.trim() })),
             Effect.tapCause((cause) => Effect.logError("Failed to place the installment purchase", cause)),
             Effect.catch(() => Effect.succeed(null))
         );
@@ -172,6 +189,7 @@ export function NewInstallmentPurchase({ accountId, amount, onDirtyChange, onDon
                 onDone();
                 return;
             }
+            placing.current = false;
             setSaving(false);
             setProblem(t("installments.failedBody"));
         });
@@ -202,6 +220,7 @@ export function NewInstallmentPurchase({ accountId, amount, onDirtyChange, onDon
                         setProblem(null);
                         setAmountText(nextText);
                     }}
+                    showDisplay
                     stepKey="installments-new-total"
                     value={amountText}
                 />

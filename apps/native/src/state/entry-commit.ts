@@ -215,6 +215,20 @@ export const queueLookup = Effect.fn("EntryCommit.queueLookup")(function* queueL
     yield* Effect.ignore(sendEnrichmentQueue(db));
 });
 
+/** What a saved create leaves behind: the account to remember and, when named, its merchant lookup. */
+export const rememberSavedEntry = Effect.fn("EntryCommit.rememberSavedEntry")(function* rememberSavedEntry(
+    db: Database,
+    accountId: string | null,
+    lookup: { id: string; merchant: string } | null
+) {
+    if (accountId !== null) {
+        yield* logged("Failed to remember the account")(rememberLastUsedAccount(db, accountId));
+    }
+    if (lookup !== null && lookup.merchant.trim() !== "") {
+        yield* logged("Failed to queue the merchant lookup")(queueLookup(db, lookup.id));
+    }
+});
+
 const detached = <E>(message: string, step: Step<E>) => Effect.forkDetach(logged(message)(step));
 
 export const commitEntry = Effect.fn("EntryCommit.commit")(function* commitEntry<E>(commit: EntryCommit<E>) {
@@ -241,12 +255,7 @@ export const commitEntry = Effect.fn("EntryCommit.commit")(function* commitEntry
         source: commit.source,
     });
     // The row is committed: nothing below may reopen a form that would write it twice.
-    if (draft.accountId !== null) {
-        yield* logged("Failed to remember the account")(rememberLastUsedAccount(db, draft.accountId));
-    }
-    if (mode === "create" && draft.merchant.trim() !== "") {
-        yield* logged("Failed to queue the merchant lookup")(queueLookup(db, id));
-    }
+    yield* rememberSavedEntry(db, draft.accountId, mode === "create" ? { id, merchant: draft.merchant } : null);
     const carry = commit.carry?.(id) ?? null;
     if (carry !== null) {
         yield* detached("Failed to carry the merchant lookup to its other rows", carry);

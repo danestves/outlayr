@@ -112,7 +112,10 @@ export function DebtSections({ currency, debts }: SectionsProps) {
         <>
             <PushedDebts currency={currency} />
             {header(t("debts.title"))}
-            {withoutInstallmentApps(debts.youOwe.filter((item) => item.kind === "liability")).map(row)}
+            {withoutInstallmentApps(
+                debts.youOwe.filter((item) => item.kind === "liability"),
+                debts.installments
+            ).map(row)}
             <AddDebtRow />
             <InstallmentSection debts={debts} />
             {people.length === 0 ? null : (

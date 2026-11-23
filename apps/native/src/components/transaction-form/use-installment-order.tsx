@@ -97,10 +97,11 @@ export function useInstallmentOrder({
         if (seeded === undefined) {
             const liability = account !== null && toAccountKind(account.kind) === "liability";
             const planAmount = price === undefined || !liability ? price : planPriceOf(price, entryRate.rate);
-            router.replace({
+            router.push({
                 params: {
                     accountId: liability ? account.id : undefined,
                     amount: planAmount === undefined || planAmount === null ? undefined : String(planAmount),
+                    currency: liability ? account.currency : currency,
                 },
                 pathname: "/installments/new",
             });

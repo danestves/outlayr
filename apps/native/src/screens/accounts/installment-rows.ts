@@ -18,9 +18,16 @@ export interface OpenInstallment {
     plan: PlanWithStanding;
 }
 
-/** An installment app's own balance is its open plans, so it never reads as a card. */
-export function withoutInstallmentApps<Row extends { account: Account }>(rows: readonly Row[]): Row[] {
-    return rows.filter((row) => !isInstallmentAppAccount(row.account));
+/** An installment app's own balance is its open plans, so it leaves Debts only while those plans are listed apart. */
+export function withoutInstallmentApps<Row extends { account: Account; amount: number }>(
+    rows: readonly Row[],
+    installments: DebtsScreenOverview["installments"]
+): Row[] {
+    return rows.filter(
+        (row) =>
+            !isInstallmentAppAccount(row.account) ||
+            (installments.get(row.account.id) === undefined && Math.abs(row.amount) > 0)
+    );
 }
 
 export function openInstallments(plans: readonly PlanWithStanding[], accounts: readonly Account[]): OpenInstallment[] {

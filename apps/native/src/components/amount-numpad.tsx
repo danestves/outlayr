@@ -31,6 +31,8 @@ const ROWS: NumpadTileKey[][] = [
 
 interface AmountNumpadProps {
     code: string;
+    /** Replaces the field label above the display. */
+    displayLabel?: string;
     minorUnits: number;
     /** Overrides `numberEntryType` for a field that is not money, such as an exchange rate. */
     mode?: NumpadMode;
@@ -44,6 +46,7 @@ export function AmountNumpad({
     value,
     minorUnits,
     code,
+    displayLabel,
     toneClass,
     mode: modeOverride,
     onChange,
@@ -79,7 +82,9 @@ export function AmountNumpad({
             {showDisplay ? (
                 <>
                     <View className="items-center pt-2">
-                        <Text className="text-body text-muted font-sans">{t("transaction.field.amount")}</Text>
+                        <Text className="text-body text-muted font-sans">
+                            {displayLabel ?? t("transaction.field.amount")}
+                        </Text>
                     </View>
                     <View className="min-h-14 items-center justify-center px-4 pt-2 pb-7">
                         <Text

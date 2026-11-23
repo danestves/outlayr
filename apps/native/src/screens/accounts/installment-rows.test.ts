@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import type { Account } from "@/data/accounts-core";
+import { installmentsByAccount } from "@/data/debts-due";
 import type { PlanWithStanding } from "@/data/installments-core";
 
 import { openInstallments, withoutInstallmentApps } from "./installment-rows";
@@ -66,9 +67,16 @@ describe("the open installments on the Accounts tab", () => {
         expect(rows[0]?.account.name).toBe("Affirm");
     });
 
-    it("drops an installment app from Debts while cards and people stay", () => {
-        const rows = [account("cashea", "Cashea"), account("visa", "Visa"), account("ana", "Ana", "person")];
-        const listed = withoutInstallmentApps(rows.map((entry) => ({ account: entry })));
-        expect(listed.map((row) => row.account.id)).toStrictEqual(["visa", "ana"]);
+    it("drops an installment app once it has open plans or nothing left, while a balance with no plan stays", () => {
+        const installments = installmentsByAccount([plan("open", "cashea", "2026-03-10")]);
+        const rows = [
+            { account: account("cashea", "Cashea"), amount: -50_000 },
+            { account: account("krece", "Krece"), amount: -12_000 },
+            { account: account("lysto", "Lysto"), amount: 0 },
+            { account: account("visa", "Visa"), amount: -3000 },
+            { account: account("ana", "Ana", "person"), amount: -1000 },
+        ];
+        const listed = withoutInstallmentApps(rows, installments);
+        expect(listed.map((row) => row.account.id)).toStrictEqual(["krece", "visa", "ana"]);
     });
 });

@@ -74,6 +74,13 @@ export function NewPurchaseWhere({ accounts, onPick, selectedId }: NewPurchaseWh
 
     const termsFor = (account: Account) => startingDraft(account, lastPlanRows(db, account.id), null);
 
+    // A creation in flight picks its own account; a newer tap would otherwise supersede it only to lose to it.
+    const pick = (account: Account) => {
+        if (adding === null) {
+            onPick(account);
+        }
+    };
+
     const add = (app: InstallmentApp) => {
         if (adding !== null) {
             return;
@@ -94,6 +101,9 @@ export function NewPurchaseWhere({ accounts, onPick, selectedId }: NewPurchaseWh
     };
 
     const create = () => {
+        if (adding !== null) {
+            return;
+        }
         before.current = new Set(accounts.map((account) => account.id));
         createLiability();
     };
@@ -114,7 +124,7 @@ export function NewPurchaseWhere({ accounts, onPick, selectedId }: NewPurchaseWh
                         key={account.id}
                         label={account.name}
                         leading={<AccountTile account={account} radius={6} size={TILE} />}
-                        onPress={() => onPick(account)}
+                        onPress={() => pick(account)}
                         selected={account.id === selectedId}
                     />
                 ))}

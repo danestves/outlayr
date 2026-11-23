@@ -23,6 +23,7 @@ interface TransactionFormAmountPadProps {
     onBack?: () => void;
     onChange: (next: string, key: NumpadKey) => void;
     onCodePress?: () => void;
+    showDisplay?: boolean;
     stepKey: string;
     value: string;
 }
@@ -40,6 +41,7 @@ export function TransactionFormAmountPad({
     onBack,
     onChange,
     onCodePress,
+    showDisplay,
     stepKey,
     value,
 }: TransactionFormAmountPadProps) {
@@ -66,15 +68,16 @@ export function TransactionFormAmountPad({
     const body = (
         <AmountNumpad
             code={code}
+            displayLabel={label}
             minorUnits={minorUnits}
             mode={mode}
             onChange={onChange}
-            showDisplay={false}
+            showDisplay={showDisplay}
             value={value}
         />
     );
     const shared =
-        onCodePress && !largeText
+        showDisplay || (onCodePress && !largeText)
             ? { footer, forward, right: currency, stepKey }
             : { footer, forward, right: currency, stepKey, title: label };
 

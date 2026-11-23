@@ -132,7 +132,10 @@ export function DebtSections({ currency, debts }: SectionsProps) {
             />
         );
     };
-    const cards = withoutInstallmentApps(debts.youOwe.filter((item) => item.kind === "liability"));
+    const cards = withoutInstallmentApps(
+        debts.youOwe.filter((item) => item.kind === "liability"),
+        debts.installments
+    );
     const people = [...debts.youOwe.filter((item) => item.kind === "person"), ...debts.owedToYou];
 
     return (

@@ -1,3 +1,4 @@
+import { Redirect } from "expo-router";
 import { useState } from "react";
 
 import { CloseToolbar } from "@/components/close-toolbar";
@@ -22,6 +23,22 @@ export function NewTransaction({ from, ...params }: EntryParams & { from?: strin
         const source = copied ? getTransactionById(db, copied) : null;
         return source ? logAgainDraft(source) : undefined;
     });
+    const seed = entrySeed(params);
+
+    // Old "buy in installments" links predate the guided order; a plain entry would lose the plan.
+    if (seed.installments === true && seed.installmentDraft === undefined) {
+        return (
+            <Redirect
+                href={{
+                    params: {
+                        accountId: seed.accountId,
+                        amount: seed.amount === undefined ? undefined : String(seed.amount),
+                    },
+                    pathname: "/installments/new",
+                }}
+            />
+        );
+    }
 
     return (
         <>
@@ -34,7 +51,7 @@ export function NewTransaction({ from, ...params }: EntryParams & { from?: strin
                 mode="create"
                 onDirtyChange={setDirty}
                 onDone={leave}
-                seed={entrySeed(params)}
+                seed={seed}
             />
         </>
     );

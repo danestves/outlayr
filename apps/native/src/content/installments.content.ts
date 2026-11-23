@@ -572,6 +572,15 @@ const installments = {
             fr: "{today} aujourd'hui, puis {count} × {each} · {every}",
             pt: "{today} hoje, depois {count} × {each} · {every}",
         }),
+        "installments.new.summary.mixed": t({
+            en: "{today} today, then {count} payments · {every}",
+            de: "{today} heute, dann {count} Raten · {every}",
+            es: "{today} hoy, luego {count} cuotas · {every}",
+            "es-ES": "{today} hoy, luego {count} plazos · {every}",
+            fr: "{today} aujourd'hui, puis {count} échéances · {every}",
+            pt: "{today} hoje, depois {count} parcelas · {every}",
+            "pt-PT": "{today} hoje, depois {count} prestações · {every}",
+        }),
         "installments.new.summary.plain": t({
             en: "{count} × {each} · {every}",
             de: "{count} × {each} · {every}",

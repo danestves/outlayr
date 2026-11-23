@@ -25,6 +25,7 @@ export const TransactionFormAmountPad: typeof TransactionFormAmountPadBase = ({
     onBack,
     onChange,
     onCodePress,
+    showDisplay,
     stepKey,
     value,
 }) => {
@@ -50,15 +51,16 @@ export const TransactionFormAmountPad: typeof TransactionFormAmountPadBase = ({
     const body = (
         <AmountNumpad
             code={code}
+            displayLabel={label}
             minorUnits={minorUnits}
             mode={mode}
             onChange={onChange}
-            showDisplay={false}
+            showDisplay={showDisplay}
             value={value}
         />
     );
     const shared =
-        onCodePress && !largeText
+        showDisplay || (onCodePress && !largeText)
             ? { footer, forward, right: currency, stepKey }
             : { footer, forward, right: currency, stepKey, title: label };
 

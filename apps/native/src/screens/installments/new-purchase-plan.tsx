@@ -17,6 +17,7 @@ import type { Database } from "@/db/client";
 import { formatChargeDate } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import type { TranslateFn } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
 import { StepHeader } from "./new-purchase-step-header";
@@ -37,6 +38,27 @@ interface NewPurchasePlanProps {
     problem: string | null;
     purchaseDay: Date;
     saving: boolean;
+}
+
+interface PlanSummary {
+    count: number;
+    each: string;
+    every: string;
+    /** True when the scheduled payments do not all share one amount. */
+    mixed: boolean;
+    t: TranslateFn;
+    today: string | null;
+}
+
+function planSummary({ count, each, every, mixed, t, today }: PlanSummary): string {
+    if (mixed) {
+        return today === null
+            ? `${t("installments.new.terms.plain", { count })} · ${every}`
+            : t("installments.new.summary.mixed", { count, every, today });
+    }
+    return today === null
+        ? t("installments.new.summary.plain", { count, each, every })
+        : t("installments.new.summary", { count, each, every, today });
 }
 
 export function NewPurchasePlan({
@@ -65,14 +87,19 @@ export function NewPurchasePlan({
     const schedule = draftSchedule(draft, amount, purchaseDay, currency);
     const upfront = upfrontOf(draft, amount, currency);
     const installments = schedule?.filter((row) => row.sequence > 0) ?? [];
-    const each = draft.each ?? installments[0]?.amount ?? 0;
+    const [first] = installments;
+    const each = draft.each ?? first?.amount ?? 0;
+    const sameEach = first !== undefined && installments.every((row) => row.amount === first.amount);
     const from = funding.find((row) => row.id === draft.upfrontAccountId) ?? null;
     const money = (value: number) => formatAmount(value, currency, true, language);
-    const every = t(`installments.every.${draft.every}`);
-    const summary =
-        upfront > 0
-            ? t("installments.new.summary", { count: draft.count, each: money(each), every, today: money(upfront) })
-            : t("installments.new.summary.plain", { count: draft.count, each: money(each), every });
+    const summary = planSummary({
+        count: draft.count,
+        each: money(each),
+        every: t(`installments.every.${draft.every}`),
+        mixed: !sameEach,
+        t,
+        today: upfront > 0 ? money(upfront) : null,
+    });
     const present = () => sheetRef.current?.present();
     const submit = () => {
         if (category === null) {

@@ -502,9 +502,7 @@ export function TransactionForm(props: TransactionFormProps) {
         seeded: seed?.installmentDraft,
         turn: stageTurn,
     });
-    const installmentPrice = useSelector(form.store, (s) =>
-        installmentOrder.drafting ? numpadToNumber(s.values.amount) : 0
-    );
+    const installmentPrice = useSelector(form.store, (s) => numpadToNumber(s.values.amount));
     const [accountDeclined, setAccountDeclined] = useState(
         () => restore?.accountDeclined ?? (initial != null && initial.accountId == null)
     );
