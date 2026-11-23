@@ -405,9 +405,9 @@ export function useAccountForm(props: AccountEditorProps) {
         isSubmitting,
         lastFree:
             mode === "create" &&
-            !person &&
             freeUsed === FREE_ACCOUNTS - 1 &&
-            !isInstallmentAppAccount({ kind: formKind(person, liability), name }),
+            !isInstallmentAppAccount({ kind: formKind(person, liability), name }) &&
+            !currencyBlocked({ currency, kind: formKind(person, liability), name }),
         name,
         openPicker,
         person,

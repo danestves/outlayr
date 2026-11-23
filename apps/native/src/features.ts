@@ -73,7 +73,7 @@ export const features = {
         link: "/balances",
         proves: "A Free ledger shows how many of its 3 free accounts it uses before the paywall.",
         says: ["how many free accounts I have", "the free account limit", "accounts left on Free"],
-        steps: [{ see: "of 3 free" }],
+        steps: [{ see: "3 of 3 free" }],
     },
     "last-free-account": {
         link: "/accounts/create",
