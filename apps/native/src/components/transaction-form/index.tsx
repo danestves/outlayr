@@ -6,6 +6,7 @@ import { useField, useForm, useSelector } from "@tanstack/react-form";
 import type * as Effect from "effect/Effect";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
+import type { Href } from "expo-router";
 import { PortalHost, PortalProvider } from "panelui-native/primitives/portal";
 import type { ComponentProps, RefObject } from "react";
 import { useRef, useState } from "react";
@@ -121,6 +122,7 @@ interface TransactionFormShared {
     onDelete?: () => void;
     onDirtyChange?: (dirty: boolean) => void;
     onDone: () => void;
+    onHandOff?: (href: Href) => void;
     draftRef?: RefObject<(() => TransactionFormDraft) | null>;
     rest?: SheetRest;
     restore?: TransactionFormDraft;
@@ -142,13 +144,18 @@ function entrySources(props: TransactionFormProps) {
         : { copyOf: props.copyOf, initial: undefined, seed: props.seed };
 }
 
+// A call, not a ternary at the hook: `TransactionForm` sits at its complexity ceiling.
+function categoryIdOf(category: Category | null) {
+    return category?.id ?? null;
+}
+
 function offeredWebsiteMerchant(showCoach: boolean, identity: IdentitySelection, merchant: string | null) {
     return showCoach || identity.photoUri || identity.emoji || identity.icon ? null : merchant;
 }
 
 export function TransactionForm(props: TransactionFormProps) {
     const nowMs = useNow();
-    const { db, draftRef, mode, onDelete, onDirtyChange, onDone, rest, restore } = props;
+    const { db, draftRef, mode, onDelete, onDirtyChange, onDone, onHandOff, rest, restore } = props;
     const { copyOf, initial, seed } = entrySources(props);
     const resting = rest !== undefined;
     const colors = useColors();
@@ -489,22 +496,23 @@ export function TransactionForm(props: TransactionFormProps) {
     const installmentOrder = useInstallmentOrder({
         account,
         banks: allAccounts,
+        categoryId: categoryIdOf(category),
         currency,
         date,
         db,
         entryRate: { rate: rate.inForce, type: rate.selection.exchangeRateType },
+        handOff: onHandOff,
         hasPrice: hasAmount,
         income,
         initial,
         intent: seed?.installments === true,
         isSubscription,
         mode,
+        readMerchant: () => form.state.values.merchant,
         seeded: seed?.installmentDraft,
         turn: stageTurn,
     });
-    const installmentPrice = useSelector(form.store, (s) =>
-        installmentOrder.drafting ? numpadToNumber(s.values.amount) : 0
-    );
+    const installmentPrice = useSelector(form.store, (s) => numpadToNumber(s.values.amount));
     const [accountDeclined, setAccountDeclined] = useState(
         () => restore?.accountDeclined ?? (initial != null && initial.accountId == null)
     );
@@ -964,15 +972,16 @@ export function TransactionForm(props: TransactionFormProps) {
                       addLabel: t("transaction.sentence.add.more"),
                       onWake: rest.onWake,
                   },
+        // Installments sits up front: in the last row it wrapped below the fold and people never found it.
         verbs: [
             iconVerb,
+            ...installmentOrder.verbs(hasAmount, installmentPrice),
             tags.verb,
             split.verb,
             schedule.verb,
             note.verb,
             attachmentDraft.verb,
             ...cardFee.verbs,
-            ...installmentOrder.verbs(hasAmount, installmentPrice),
         ],
     } satisfies Partial<ComponentProps<typeof TransactionSentenceBody>>;
 

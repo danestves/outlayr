@@ -33,6 +33,7 @@ export const AmountNumpad: typeof AmountNumpadBase = ({
     value,
     minorUnits,
     code,
+    displayLabel,
     toneClass,
     mode: modeOverride,
     onChange,
@@ -64,7 +65,9 @@ export const AmountNumpad: typeof AmountNumpadBase = ({
             {showDisplay ? (
                 <>
                     <View className="items-center pt-2">
-                        <Text className="text-body text-m3-on-surface-variant">{t("transaction.field.amount")}</Text>
+                        <Text className="text-body text-m3-on-surface-variant">
+                            {displayLabel ?? t("transaction.field.amount")}
+                        </Text>
                     </View>
                     <View className="min-h-14 items-center justify-center px-4 pt-2 pb-7">
                         <Text

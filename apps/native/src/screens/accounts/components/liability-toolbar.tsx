@@ -19,12 +19,12 @@ export function LiabilityToolbar({ account, plan }: { account: Account; plan: Pa
                     icon="cart.badge.plus"
                     onPress={() =>
                         router.push({
-                            params: { accountId: account.id, installments: "1" },
-                            pathname: "/transactions/create",
+                            params: { accountId: account.id },
+                            pathname: "/installments/new",
                         })
                     }
                 >
-                    {t("installments.newPurchase")}
+                    {t("accounts.add.installments")}
                 </Stack.Toolbar.MenuAction>
                 <Stack.Toolbar.MenuAction icon="text.viewfinder" onPress={importScreenshot}>
                     {t("installments.scan.import")}

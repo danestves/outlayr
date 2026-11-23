@@ -63,12 +63,12 @@ export function InstallmentSections({ account, db, nowMs }: { account: Account; 
                     className="border-border border-b py-3 active:opacity-60"
                     onPress={() =>
                         router.push({
-                            params: { accountId: account.id, installments: "1" },
-                            pathname: "/transactions/create",
+                            params: { accountId: account.id },
+                            pathname: "/installments/new",
                         })
                     }
                 >
-                    <Text className="text-tint text-body">{t("installments.newPurchase")}</Text>
+                    <Text className="text-tint text-body">{t("accounts.add.installments")}</Text>
                 </Pressable>
                 <Pressable
                     accessibilityRole="button"

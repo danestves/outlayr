@@ -33,7 +33,8 @@ const toLine = (step: Step) => {
 };
 
 const toScript = (feature: Feature) =>
-    [`open ${quote(`${SCHEME}${feature.link.slice(1)}`)}`, ...feature.steps.map(toLine), ""].join("\n");
+    // A tap while a deep-linked modal is still sliding in lands on a moving ScrollView and is dropped.
+    [`open ${quote(`${SCHEME}${feature.link.slice(1)}`)}`, "wait stable", ...feature.steps.map(toLine), ""].join("\n");
 
 const isFeatureId = (id: string): id is keyof typeof features => Object.hasOwn(features, id);
 

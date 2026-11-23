@@ -15,7 +15,7 @@ type Row<Kind extends keyof StackChrome, Fields = unknown> = Fields & {
 
 export type RootScreen =
     | Row<"bareModal" | "entrySheet" | "firstRunStep" | "headless" | "paywall" | "pushed">
-    | Row<"modal" | "search" | "titled", { titleKey: TranslationKey }>
+    | Row<"fitSheet" | "modal" | "search" | "titled", { titleKey: TranslationKey }>
     | Row<"sheet", { detent: number; titleKey: TranslationKey }>
     /** Sized from the window height when the stack renders. */
     | Row<"identityPicker" | "pickerSheet">;
@@ -159,6 +159,7 @@ export const ROOT_STACK: readonly { group: RootStackGroup; screens: readonly Roo
             { chrome: "modal", name: "debts/owe", titleKey: "debts.owe.title" },
             { chrome: "modal", name: "recap/index", titleKey: "insights.recap.title" },
             { chrome: "modal", name: "recap/share", titleKey: "insights.recap.title" },
+            { chrome: "fitSheet", name: "installments/new", titleKey: "accounts.add.installments" },
             { chrome: "modal", name: "transactions/create", titleKey: "nav.newTransaction" },
             { chrome: "modal", name: "transactions/transfers/create", titleKey: "transfers.title" },
             { chrome: "modal", name: "year", titleKey: "pro.year.title" },

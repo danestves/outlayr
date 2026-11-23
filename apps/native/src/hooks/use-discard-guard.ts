@@ -1,4 +1,5 @@
 import { usePreventRemove, useRouter } from "expo-router";
+import type { Href } from "expo-router";
 import { useRef, useState } from "react";
 import { Alert } from "react-native";
 
@@ -31,16 +32,21 @@ export function useDiscardGuard<Draft>(_recovery?: SwipeDiscardRecovery<Draft>, 
         ]);
     });
 
-    const leave = () => {
+    const go = (navigate: () => void) => {
         if (leaving.current) {
             return false;
         }
         leaving.current = true;
         setDirty(false);
         disablePrevention();
-        router.back();
+        navigate();
         return true;
     };
 
-    return { leave, setDirty };
+    const leave = () => go(() => router.back());
+
+    // Moves the draft to another screen in this one's place, so there is nothing to discard.
+    const handOff = (href: Href) => go(() => router.replace(href));
+
+    return { handOff, leave, setDirty };
 }

@@ -279,6 +279,7 @@ function RootStack() {
     const chromeOptions = (screen: RootScreen): NativeStackNavigationOptions => {
         switch (screen.chrome) {
             case "titled":
+            case "fitSheet":
             case "modal":
             case "search": {
                 return chrome[screen.chrome](t(screen.titleKey));

@@ -1,5 +1,6 @@
 import type { NativeStackNavigationOptions } from "expo-router";
 
+import { LARGE_ONLY } from "@/lib/sheet-detents";
 import type { MaterialRoleColors } from "@/theme/material-roles";
 
 type Options = NativeStackNavigationOptions;
@@ -18,6 +19,8 @@ export interface StackChrome {
     /** iOS rests it undimmed so the editor's identity can fly up into it; Android dims it instead. */
     identityPicker: (detent: number) => Options;
     modal: (title: string) => Options;
+    /** The screen sizes it to its content on iOS; Android keeps the modal dialog and its app bar. */
+    fitSheet: (title: string) => Options;
     bareModal: Options;
     search: (title: string) => Options;
     paywall: Options;
@@ -40,6 +43,13 @@ const pickerSheet = (detent: number): Options => ({
 const CHROME: StackChrome = {
     bareModal: { headerShown: false, presentation: "modal" },
     entrySheet: { ...TRANSPARENT_HEADER, presentation: "formSheet", title: "" },
+    fitSheet: (title) => ({
+        ...TRANSPARENT_HEADER,
+        ...MINIMAL_BACK,
+        presentation: "formSheet",
+        sheetAllowedDetents: LARGE_ONLY,
+        title,
+    }),
     firstRunStep: {
         animation: "fade",
         headerBackButtonDisplayMode: "minimal",

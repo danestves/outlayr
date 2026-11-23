@@ -50,7 +50,7 @@ interface StepAccountInstallmentsProps {
     searchable: boolean;
 }
 
-const addInstallmentApp = Effect.fn("StepAccountInstallments.add")(function* addInstallmentApp(
+export const addInstallmentApp = Effect.fn("StepAccountInstallments.add")(function* addInstallmentApp(
     db: Database,
     app: InstallmentApp,
     done: { onFailed: () => void; onPicked: (account: Account) => void; onSettled: () => void }
@@ -218,7 +218,7 @@ export function StepAccountInstallments({ accounts, onPick, searchable }: StepAc
     );
 }
 
-function InstallmentAppMark({ domain }: { domain: string }) {
+export function InstallmentAppMark({ domain }: { domain: string }) {
     const colors = useColors();
     const uri = useMerchantMark(null, domain);
     return uri === null ? null : (
