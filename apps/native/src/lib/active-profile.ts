@@ -4,6 +4,7 @@ import { File, Paths } from "expo-file-system";
 
 import { parseProfileId } from "@/domain/profiles";
 
+import { clearClaimAssignments } from "./claim-assignments";
 import { clearPurchaseRoutes } from "./purchase-routes";
 
 const activeProfileFile = () => new File(Paths.document, "active-profile");
@@ -96,5 +97,6 @@ export function resetActiveProfile(): void {
     writeActiveProfile(undefined);
     clearProfileSwitch();
     clearPurchaseRoutes();
+    clearClaimAssignments();
     active = { id: undefined };
 }

@@ -4,16 +4,16 @@ import {
     adoptQueue,
     autologSourceOf,
     claimPendingWrites,
+    CUTOFF_RETENTION_MS,
     foldHeld,
     holdQueue,
     parseLegacyQueue,
     parseQueue,
     QUEUE_FILE,
     releasePendingWrites,
-    SWITCH_GRACE_MS,
     WALLET_DEDUPE_WINDOW_MS,
 } from "./queue-file";
-import type { PendingWrite, QueueFiles } from "./queue-file";
+import type { CaptureAssignment, PendingWrite, PurchaseRoute, QueueFiles } from "./queue-file";
 
 function write(id: string, overrides: Partial<PendingWrite> = {}): PendingWrite {
     return {
@@ -149,8 +149,8 @@ describe("claimPendingWrites across a switch", () => {
         expect(claimed.cutoffs).toStrictEqual(cutoffs);
         expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["current"]);
         expect(claimed.held).toStrictEqual([
-            { jobs: [first], name: "held-A-1.jsonl" },
-            { jobs: [second], name: "held-B-1.jsonl" },
+            { jobs: [first], key: "A" },
+            { jobs: [second], key: "B" },
         ]);
 
         releasePendingWrites(files, claimed);
@@ -168,7 +168,7 @@ describe("claimPendingWrites across a switch", () => {
         const claimed = claimPendingWrites(files, { cutoffs, key: "B", now: NOW });
 
         expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["fresh"]);
-        expect(claimed.held).toStrictEqual([{ jobs: [gap], name: "held-A-1.jsonl" }]);
+        expect(claimed.held).toStrictEqual([{ jobs: [gap], key: "A" }]);
 
         releasePendingWrites(files, claimed);
 
@@ -199,26 +199,45 @@ describe("claimPendingWrites across a switch", () => {
         expect(back.jobs.map((job) => job.id)).toStrictEqual(["gap"]);
     });
 
-    it("prunes an expired cutoff for persistence but still routes by it", () => {
+    it("prunes a cutoff past its retention for persistence but still routes by it", () => {
         const gap = early("gap");
         const { files } = makeFiles({ [QUEUE_FILE]: lines(gap) });
 
-        const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: T2 + SWITCH_GRACE_MS });
+        const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: T2 + CUTOFF_RETENTION_MS });
 
         expect(claimed.cutoffs).toStrictEqual([]);
         expect(claimed.jobs).toStrictEqual([]);
-        expect(claimed.held).toStrictEqual([{ jobs: [gap], name: "held-A-1.jsonl" }]);
+        expect(claimed.held).toStrictEqual([{ jobs: [gap], key: "A" }]);
     });
 
-    it("routes by a cutoff whose grace passed while a later one is still live", () => {
+    it("routes by a cutoff whose retention passed while a later one is still live", () => {
         const gap = early("gap");
         const { files } = makeFiles({ [QUEUE_FILE]: lines(gap) });
 
-        const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: T1 + SWITCH_GRACE_MS + 50_000 });
+        const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: T1 + CUTOFF_RETENTION_MS + 50_000 });
 
         expect(claimed.jobs).toStrictEqual([]);
-        expect(claimed.held).toStrictEqual([{ jobs: [gap], name: "held-A-1.jsonl" }]);
+        expect(claimed.held).toStrictEqual([{ jobs: [gap], key: "A" }]);
         expect(claimed.cutoffs).toStrictEqual([{ at: T2, from: "B" }]);
+    });
+
+    it("keeps a cutoff an hour past the switch, so a late watch capture still parks for the old ledger", () => {
+        const { files } = makeFiles();
+
+        const drained = claimPendingWrites(files, { cutoffs, key: "C", now: T2 + 30 * 60_000 });
+        expect(drained.cutoffs).toStrictEqual(cutoffs);
+
+        const watch = early("watch");
+        files.write(QUEUE_FILE, lines(watch));
+        const claimed = claimPendingWrites(files, {
+            cutoffs: drained.cutoffs ?? [],
+            key: "C",
+            now: T2 + 60 * 60_000,
+        });
+
+        expect(claimed.cutoffs).toStrictEqual(cutoffs);
+        expect(claimed.jobs).toStrictEqual([]);
+        expect(claimed.held).toStrictEqual([{ jobs: [watch], key: "A" }]);
     });
 
     it("parks a late append for the ledger its cutoff names instead of adopting it", () => {
@@ -281,7 +300,7 @@ describe("claimPendingWrites with purchase routes", () => {
         releasePendingWrites(files, claimed);
 
         expect(claimed.jobs).toStrictEqual([]);
-        expect(claimed.held).toStrictEqual([{ jobs: [settlement], name: "held-A-1.jsonl" }]);
+        expect(claimed.held).toStrictEqual([{ jobs: [settlement], key: "A" }]);
         expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["settlement"]);
         expect(disk.has(QUEUE_FILE)).toBe(false);
     });
@@ -310,7 +329,7 @@ describe("claimPendingWrites with purchase routes", () => {
         const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: NOW, siblingWindowMs });
 
         expect(claimed.jobs).toStrictEqual([]);
-        expect(claimed.held?.map((entry) => entry.name)).toStrictEqual(["held-A-1.jsonl"]);
+        expect(claimed.held?.map((entry) => entry.key)).toStrictEqual(["A"]);
         expect(claimed.held?.[0]?.jobs.map((job) => job.id).sort()).toStrictEqual(["authorization", "settlement"]);
     });
 
@@ -332,7 +351,7 @@ describe("claimPendingWrites with purchase routes", () => {
         });
 
         expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["purchase"]);
-        expect(claimed.held).toStrictEqual([{ jobs: [settlement], name: "held-A-1.jsonl" }]);
+        expect(claimed.held).toStrictEqual([{ jobs: [settlement], key: "A" }]);
         expect(claimed.purchases).toStrictEqual([anchor, { at: purchase.date, key: PURCHASE, ledger: "B" }]);
 
         const replay = makeFiles({ [QUEUE_FILE]: lines(settlement, purchase) });
@@ -345,7 +364,7 @@ describe("claimPendingWrites with purchase routes", () => {
         });
 
         expect(again.jobs.map((job) => job.id)).toStrictEqual(["purchase"]);
-        expect(again.held).toStrictEqual([{ jobs: [settlement], name: "held-A-1.jsonl" }]);
+        expect(again.held).toStrictEqual([{ jobs: [settlement], key: "A" }]);
         expect(again.purchases).toStrictEqual(claimed.purchases);
     });
 
@@ -386,7 +405,7 @@ describe("claimPendingWrites with purchase routes", () => {
         });
 
         expect(claimed.jobs).toStrictEqual([]);
-        expect(claimed.held).toStrictEqual([{ jobs: [authorization, settlement], name: "held-A-1.jsonl" }]);
+        expect(claimed.held).toStrictEqual([{ jobs: [authorization, settlement], key: "A" }]);
         expect(claimed.purchases).toStrictEqual([first, second]);
     });
 
@@ -413,7 +432,7 @@ describe("claimPendingWrites with purchase routes", () => {
         });
 
         expect(claimed.jobs).toStrictEqual([]);
-        expect(claimed.held).toStrictEqual([{ jobs: [settlement], name: "held-B-1.jsonl" }]);
+        expect(claimed.held).toStrictEqual([{ jobs: [settlement], key: "B" }]);
     });
 
     it("does not let a covered capture anchor the purchase that follows it", () => {
@@ -433,7 +452,7 @@ describe("claimPendingWrites with purchase routes", () => {
         });
 
         expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["third"]);
-        expect(claimed.held).toStrictEqual([{ jobs: [settlement], name: "held-A-1.jsonl" }]);
+        expect(claimed.held).toStrictEqual([{ jobs: [settlement], key: "A" }]);
         expect(claimed.purchases?.some((entry) => entry.at === settlement.date)).toBe(false);
     });
 
@@ -445,7 +464,7 @@ describe("claimPendingWrites with purchase routes", () => {
 
         const claimed = claimPendingWrites(files, { key: "C", now: NOW, purchases: [old], siblingWindowMs });
 
-        expect(claimed.held).toStrictEqual([{ jobs: [settlement], name: "held-A-1.jsonl" }]);
+        expect(claimed.held).toStrictEqual([{ jobs: [settlement], key: "A" }]);
         expect(claimed.purchases).toStrictEqual([old]);
     });
 
@@ -472,6 +491,75 @@ describe("claimPendingWrites with purchase routes", () => {
 
         expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["authorization"]);
         expect(parseQueue(files.read("held-A-2.jsonl")).map((job) => job.id)).toStrictEqual(["settlement"]);
+    });
+
+    it("hands the release's own anchors to the caller so a later settlement follows them", () => {
+        const current = write("current", { date: T2 + 60_000 });
+        const authorization = write("authorization", { date: T1 - 60_000, dedupeKey: PURCHASE });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(current) });
+
+        const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: NOW, siblingWindowMs });
+        files.write("claimed-1.jsonl", lines(current, authorization));
+        const routed: { assignments: CaptureAssignment[]; purchases: PurchaseRoute[] }[] = [];
+        releasePendingWrites(files, claimed, (released) => routed.push(released));
+
+        expect(routed).toStrictEqual([
+            {
+                assignments: [
+                    { id: "current", ledger: "C" },
+                    { id: "authorization", ledger: "A" },
+                ],
+                purchases: [{ at: authorization.date, key: PURCHASE, ledger: "A" }],
+            },
+        ]);
+
+        const settlement = write("settlement", { date: T2 + 60_000, dedupeKey: PURCHASE });
+        const next = makeFiles({ [QUEUE_FILE]: lines(settlement) });
+        const later = claimPendingWrites(next.files, {
+            cutoffs,
+            key: "C",
+            now: NOW,
+            purchases: routed[0]?.purchases,
+            siblingWindowMs,
+        });
+
+        expect(later.jobs).toStrictEqual([]);
+        expect(later.held).toStrictEqual([{ jobs: [settlement], key: "A" }]);
+    });
+
+    it("keeps a replayed capture on the ledger its first claim assigned when an earlier anchor arrives", () => {
+        const minute = 60_000;
+        const base = T1;
+        const anchor = { at: base + 8 * minute, key: PURCHASE, ledger: "B" };
+        const switched = [{ at: base, from: "A" }];
+        const settlement = write("settlement", { date: base + 4 * minute, dedupeKey: PURCHASE });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(settlement) });
+
+        const first = claimPendingWrites(files, {
+            cutoffs: switched,
+            key: "C",
+            now: base + 30 * minute,
+            purchases: [anchor],
+            siblingWindowMs,
+        });
+
+        expect(first.jobs).toStrictEqual([]);
+        expect(first.held).toStrictEqual([{ jobs: [settlement], key: "B" }]);
+        expect(first.assignments).toStrictEqual([{ id: "settlement", ledger: "B" }]);
+
+        const authorization = write("authorization", { date: base - 4 * minute, dedupeKey: PURCHASE });
+        files.write("claimed-1.jsonl", lines(settlement, authorization));
+        const again = claimPendingWrites(files, {
+            assignments: first.assignments,
+            cutoffs: switched,
+            key: "A",
+            now: base + 40 * minute,
+            purchases: first.purchases,
+            siblingWindowMs,
+        });
+
+        expect(again.jobs.map((job) => job.id)).toStrictEqual(["authorization"]);
+        expect(again.held).toStrictEqual([{ jobs: [settlement], key: "B" }]);
     });
 });
 
@@ -514,6 +602,28 @@ describe("releasePendingWrites", () => {
 
         expect(back.jobs.map((job) => job.id)).toStrictEqual(["late-own"]);
         expect(back.held).toBeUndefined();
+    });
+
+    it("writes a held bucket under a fresh name when a hold took the one the claim saw", () => {
+        const t1 = 1_700_000_100_000;
+        const t2 = t1 + 60_000;
+        const cutoffs = [
+            { at: t1, from: "A" },
+            { at: t2, from: "B" },
+        ];
+        const gap = write("gap", { date: t1 - 60_000 });
+        const adopted = write("adopted", { date: t2 + 60_000 });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(gap) });
+
+        const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: t2 + 120_000 });
+        expect(claimed.held).toStrictEqual([{ jobs: [gap], key: "A" }]);
+
+        // adoptPendingWrites or foldHeld parked for the same ledger between the claim and the release.
+        holdQueue(files, "A", [adopted]);
+        releasePendingWrites(files, claimed);
+
+        expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["adopted"]);
+        expect(parseQueue(files.read("held-A-2.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
     });
 });
 
