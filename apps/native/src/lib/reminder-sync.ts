@@ -59,12 +59,12 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
         [Meta.get(db, "secondEntryNudgeSavedAt"), Meta.get(db, "secondEntryNudgeArmedAt")],
         { concurrency: "unbounded" }
     );
+    const secondEntryAfter =
+        savedAt > 0 ? secondEntryNudge({ armedAt, entries: yield* liveEntryCount(db), now, savedAt }) : null;
+    if (savedAt > 0 && secondEntryAfter === null) {
+        yield* Meta.set(db, "secondEntryNudgeSavedAt", 0);
+    }
     if (time !== null) {
-        const secondEntryAfter =
-            savedAt > 0 ? secondEntryNudge({ armedAt, entries: yield* liveEntryCount(db), now, savedAt }) : null;
-        if (savedAt > 0 && secondEntryAfter === null) {
-            yield* Meta.set(db, "secondEntryNudgeSavedAt", 0);
-        }
         notices.push(
             ...dailyReminderNotices({
                 hideAmounts,
