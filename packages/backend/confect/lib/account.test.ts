@@ -27,6 +27,7 @@ type TestClient = TestConvex<typeof schema>;
 type PushRows = FunctionArgs<typeof api.sync.push>["rows"];
 
 const DEVICE = "device-aaaa";
+const WORK = "6f1c2b3a-4d5e-4f60-8a7b-9c0d1e2f3a4b";
 
 function transactionRow(localId: string): PushRows[number] {
     return {
@@ -146,19 +147,21 @@ describe("purging an account", () => {
         expect(stateAtEnd).toBeNull();
     });
 
-    it("removes the cells summed from the caller's ledger and leaves another account's", async () => {
+    it("removes the cells summed from every one of the caller's ledgers and leaves another account's", async () => {
         const t = harness();
         const owner = await seedProUser(t);
         const other = await seedProUser(t, { email: "other@example.com" });
         await t.run(async (ctx) => {
             await ctx.db.insert("ledgerCells", { cells: [], month: "2026-01", userId: owner.userId });
+            await ctx.db.insert("ledgerCells", { cells: [], month: "2026-01", userId: `${owner.userId}:${WORK}` });
             await ctx.db.insert("ledgerCells", { cells: [], month: "2026-01", userId: other.userId });
+            await ctx.db.insert("ledgerCells", { cells: [], month: "2026-01", userId: `${other.userId}:${WORK}` });
         });
 
         await purgeAll(t, owner.userId);
 
         const left = await t.run((ctx) => ctx.db.query("ledgerCells").collect());
-        expect(left.map((row) => row.userId)).toStrictEqual([other.userId]);
+        expect(left.map((row) => row.userId).toSorted()).toStrictEqual([other.userId, `${other.userId}:${WORK}`]);
     });
 
     it("frees the account's photos and forgets what they weighed", async () => {

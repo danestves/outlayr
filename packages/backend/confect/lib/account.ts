@@ -103,12 +103,21 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
     }
 
     // After the rows: a refresh still queued then finds no rows and writes nothing back.
-    const cells = yield* Effect.promise(() =>
+    const ownCells = yield* Effect.promise(() =>
         ctx.db
             .query("ledgerCells")
             .withIndex("by_user_and_month", (q) => q.eq("userId", userId))
             .take(CELLS_PURGE_BATCH)
     );
+    const cells =
+        ownCells.length > 0
+            ? ownCells
+            : yield* Effect.promise(() =>
+                  ctx.db
+                      .query("ledgerCells")
+                      .withIndex("by_user_and_month", (q) => q.gt("userId", `${userId}:`).lt("userId", `${userId};`))
+                      .take(CELLS_PURGE_BATCH)
+              );
     if (cells.length > 0) {
         yield* Effect.all(
             cells.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
