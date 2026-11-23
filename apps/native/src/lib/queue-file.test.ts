@@ -4,6 +4,8 @@ import {
     adoptQueue,
     autologSourceOf,
     claimPendingWrites,
+    foldHeld,
+    holdQueue,
     parseLegacyQueue,
     parseQueue,
     QUEUE_FILE,
@@ -247,6 +249,27 @@ describe("claimPendingWrites across a switch", () => {
         expect(disk.has(QUEUE_FILE)).toBe(false);
         expect(disk.has("claimed-2.jsonl")).toBe(false);
     });
+
+    it("ignores a cutoff dated after now instead of routing a capture to its ledger", () => {
+        const gap = early("gap");
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(gap) });
+
+        const claimed = claimPendingWrites(files, { cutoffs: [{ at: T2, from: "A" }], key: "C", now: T1 });
+
+        expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["gap"]);
+        expect(claimed.held).toBeUndefined();
+        expect(claimed.route?.cutoffs).toStrictEqual([]);
+    });
+
+    it("passes a parked capture through its key's claim even when a cutoff names another ledger", () => {
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(late("live")) });
+        holdQueue(files, "B", [early("parked")]);
+
+        const claimed = claimPendingWrites(files, { cutoffs, key: "B", now: NOW });
+
+        expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["live", "parked"]);
+        expect(claimed.held).toBeUndefined();
+    });
 });
 
 describe("releasePendingWrites", () => {
@@ -262,6 +285,55 @@ describe("releasePendingWrites", () => {
 
         const next = claimPendingWrites(files);
         expect(next.jobs.map((job) => job.id)).toStrictEqual(["late"]);
+    });
+
+    it("parks a late append for the current ledger so the next claim passes it through", () => {
+        const t1 = 1_700_000_100_000;
+        const t2 = t1 + 60_000;
+        const current = write("current", { date: t2 + 60_000 });
+        const cutoffs = [
+            { at: t1, from: "A" },
+            { at: t2, from: "B" },
+        ];
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(current) });
+
+        const claimed = claimPendingWrites(files, { cutoffs, key: "B", now: t2 + 120_000 });
+        files.write("claimed-1.jsonl", lines(current, write("late-own", { date: t2 + 120_000 })));
+        releasePendingWrites(files, claimed);
+
+        expect(parseQueue(files.read("held-B-1.jsonl")).map((job) => job.id)).toStrictEqual(["late-own"]);
+
+        const back = claimPendingWrites(files, {
+            cutoffs: [...cutoffs, { at: t2 + 200_000, from: "C" }],
+            key: "B",
+            now: t2 + 400_000,
+        });
+
+        expect(back.jobs.map((job) => job.id)).toStrictEqual(["late-own"]);
+        expect(back.held).toBeUndefined();
+    });
+});
+
+describe("foldHeld", () => {
+    it("moves a deleted ledger's held captures so Personal's claim returns them", () => {
+        const { disk, files } = makeFiles({
+            "held-GONE-1.jsonl": lines(write("a")),
+            "held-GONE-2.jsonl": lines(write("b")),
+        });
+
+        foldHeld(files, "GONE", "personal");
+
+        expect([...disk.keys()].sort()).toStrictEqual(["held-personal-1.jsonl", "held-personal-2.jsonl"]);
+        const claimed = claimPendingWrites(files, { key: "personal", now: 1_700_000_000_000 });
+        expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["a", "b"]);
+    });
+
+    it("keeps the source when the copy is not listed", () => {
+        const { files } = makeFiles({ "held-GONE-1.jsonl": lines(write("a")) });
+        const readOnly: QueueFiles = { ...files, write: () => undefined };
+
+        expect(() => foldHeld(readOnly, "GONE", "personal")).toThrow(Error);
+        expect(parseQueue(files.read("held-GONE-1.jsonl")).map((job) => job.id)).toStrictEqual(["a"]);
     });
 });
 

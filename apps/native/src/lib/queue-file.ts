@@ -211,6 +211,26 @@ export function adoptQueue(files: QueueFiles, jobs: PendingWrite[]): boolean {
     return files.list().includes(name);
 }
 
+/** Parks jobs only for `key`, whose own claim passes its held files through instead of routing them again. */
+export function holdQueue(files: QueueFiles, key: string, jobs: PendingWrite[]): boolean {
+    if (jobs.length === 0) {
+        return true;
+    }
+    const name = heldName(files, key);
+    files.write(name, toQueueText(jobs));
+    return files.list().includes(name);
+}
+
+/** A deleted ledger never opens again, so its held captures move under a key that still claims them. */
+export function foldHeld(files: QueueFiles, from: string, to: string): void {
+    for (const name of heldNames(files, from)) {
+        if (!holdQueue(files, to, parseQueue(files.read(name)))) {
+            throw new Error(`Held pending writes were not stored for ${to}, so ${name} stays for a replay`);
+        }
+        files.discard(name);
+    }
+}
+
 /**
  * Renamed rather than read-and-cleared, so a concurrent append lands in the claim or the fresh file, never in
  * between. Earlier claims never released replay too, so a force-quit mid-drain does not drop writes, and a replay can
@@ -225,9 +245,12 @@ export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): Cla
     const parked = ledger === undefined ? [] : heldNames(files, ledger.key);
     names.push(...parked);
     const ownHeld = new Set(parked);
-    // Routing reads every cutoff on disk: a capture dated before one belongs to its ledger even after the grace, which
-    // only decides what the bridge persists once the release lands.
-    const full = ledger === undefined ? [] : [...(ledger.cutoffs ?? [])].sort((a, b) => a.at - b.at);
+    // Routing reads every cutoff up to now: a capture dated before one belongs to its ledger even after the grace,
+    // which only decides what the bridge persists. A cutoff after now means the clock moved back, so it routes nothing.
+    const full =
+        ledger === undefined
+            ? []
+            : [...(ledger.cutoffs ?? [])].filter((entry) => entry.at <= ledger.now).sort((a, b) => a.at - b.at);
     const cutoffs = ledger === undefined ? [] : pruneCutoffs(full, ledger.now);
     const route = ledger === undefined ? undefined : { cutoffs: full, dismissed: ledger.dismissed, key: ledger.key };
     const jobs: PendingWrite[] = [];
@@ -301,7 +324,11 @@ export function releasePendingWrites(files: QueueFiles, claimed: ClaimedWrites):
             throw new Error(`Held pending writes were not stored in ${name}, so their claim files stay for a replay`);
         }
     }
-    if (!adoptQueue(files, uniqueById(own))) {
+    // With a route, a held file for the current ledger makes the next claim pass its jobs through instead of routing
+    // them again, which a later cutoff would do.
+    const parked =
+        route === undefined ? adoptQueue(files, uniqueById(own)) : holdQueue(files, route.key, uniqueById(own));
+    if (!parked) {
         throw new Error("Late pending writes could not be parked, so their claim files stay for a replay");
     }
     for (const name of claimed.names) {

@@ -84,7 +84,10 @@ export function recordProfileSwitch(): void {
 // A deleted ledger never opens again: its cutoffs move to `to` so its late captures follow, and no held file for it
 // is ever written.
 export function retargetProfileSwitch(from: string, to: string): void {
-    writeProfileSwitch(readProfileSwitch().map((entry) => (entry.from === from ? { ...entry, from: to } : entry)));
+    const switches = readProfileSwitch();
+    if (switches.some((entry) => entry.from === from)) {
+        writeProfileSwitch(switches.map((entry) => (entry.from === from ? { ...entry, from: to } : entry)));
+    }
 }
 
 export function resetActiveProfile(): void {

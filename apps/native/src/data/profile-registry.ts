@@ -9,6 +9,7 @@ import { ensureOutboxTriggers } from "@/db/outbox-triggers";
 import { profiles } from "@/db/schema";
 import { parseProfileId, PERSONAL_DATABASE } from "@/domain/profiles";
 import { activeProfileId } from "@/lib/active-profile";
+import { retireLedger } from "@/lib/widget-bridge";
 
 import migrationsBundle from "../../drizzle/migrations";
 import { deleteProfileLedger } from "./profile-ledger-files";
@@ -25,6 +26,7 @@ export const openProfileRegistry = Effect.fn("ProfileRegistry.open")(function* o
             // Registry rows arrive from the server, so an id that names no ledger is not ours to delete.
             const id = parseProfileId(row.id);
             if (id !== undefined) {
+                yield* Effect.sync(() => retireLedger(id));
                 yield* deleteProfileLedger(id);
             }
         }

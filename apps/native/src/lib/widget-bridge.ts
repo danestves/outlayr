@@ -1,13 +1,21 @@
 import { File } from "expo-file-system";
 
-import { activeProfileId, ledgerKey, readProfileSwitch, writeProfileSwitch } from "./active-profile";
+import {
+    activeProfileId,
+    ledgerKey,
+    readProfileSwitch,
+    retargetProfileSwitch,
+    writeProfileSwitch,
+} from "./active-profile";
 import type { ProfileSwitch } from "./active-profile";
 import { readDismissals } from "./dismissed-writes";
 import { queueDirectory } from "./queue-directory";
 import {
     adoptQueue,
     claimPendingWrites as claimQueue,
+    foldHeld,
     heldIds,
+    holdQueue,
     parseLegacyQueue,
     QUEUE_FILE,
     releasePendingWrites as releaseQueue,
@@ -169,12 +177,23 @@ const captureIds = ({ jobs }: ClaimedWrites) => jobs.flatMap((job) => (job.captu
 
 const answerOf = (captureId: string) => sharedStore?.get(`${CAPTURE_ANSWER_PREFIX}${captureId}`) ?? null;
 
+// An inbox row carries the expense date, which can be days old, so its claim must never route it to a closed ledger.
 export function adoptPendingWrites(jobs: PendingWrite[]): boolean {
     try {
-        return adoptQueue(queueFiles, jobs);
+        return holdQueue(queueFiles, ledgerKey(activeProfileId()), jobs);
     } catch (error) {
         console.warn("[outlayr] pending writes not adopted", error);
         return false;
+    }
+}
+
+/** A profile deleted on another device never opens again: its held captures and cutoffs follow Personal. */
+export function retireLedger(key: string): void {
+    try {
+        retargetProfileSwitch(key, "personal");
+        foldHeld(queueFiles, key, "personal");
+    } catch (error) {
+        console.warn("[outlayr] deleted profile queue not retired", error);
     }
 }
 
