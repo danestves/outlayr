@@ -450,6 +450,22 @@ const accounts = {
             fr: "{used} sur {limit} gratuits",
             pt: "{used} de {limit} grátis",
         }),
+        "accounts.installments.progress": t({
+            en: "{provider} · {paid} of {total} paid",
+            de: "{provider} · {paid} von {total} bezahlt",
+            es: "{provider} · {paid} de {total} pagadas",
+            fr: "{provider} · {paid} sur {total} payées",
+            pt: "{provider} · {paid} de {total} pagas",
+            "pt-PT": "{provider} · {paid} de {total} pagas",
+        }),
+        "accounts.installments.title": t({
+            en: "Installments",
+            de: "Raten",
+            es: "Cuotas",
+            fr: "En plusieurs fois",
+            pt: "Parcelas",
+            "pt-PT": "Prestações",
+        }),
         "accounts.lastFree": t({
             en: "Your last free account. Pro adds more.",
             de: "Dein letztes Gratis-Konto. Pro fügt mehr hinzu.",

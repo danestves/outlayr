@@ -34,6 +34,8 @@ import { TILE_WASH_OPACITY, withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 import type { ThemeColors } from "@/theme/use-colors";
 
+import { InstallmentSection } from "./installment-list";
+import { withoutInstallmentApps } from "./installment-rows";
 import { PushedDebts } from "./pushed-debts";
 
 type DebtListRow = DebtsScreenOverview["youOwe"][number];
@@ -130,7 +132,7 @@ export function DebtSections({ currency, debts }: SectionsProps) {
             />
         );
     };
-    const cards = debts.youOwe.filter((item) => item.kind === "liability");
+    const cards = withoutInstallmentApps(debts.youOwe.filter((item) => item.kind === "liability"));
     const people = [...debts.youOwe.filter((item) => item.kind === "person"), ...debts.owedToYou];
 
     return (
@@ -140,6 +142,7 @@ export function DebtSections({ currency, debts }: SectionsProps) {
                 {cards.map(row)}
                 <AddDebtRow colors={colors} />
             </Section>
+            <InstallmentSection debts={debts} />
             {people.length > 0 ? (
                 <Section
                     header={<Eyebrow colors={colors}>{t("accounts.section.people")}</Eyebrow>}

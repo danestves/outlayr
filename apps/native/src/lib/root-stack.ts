@@ -159,6 +159,7 @@ export const ROOT_STACK: readonly { group: RootStackGroup; screens: readonly Roo
             { chrome: "modal", name: "debts/owe", titleKey: "debts.owe.title" },
             { chrome: "modal", name: "recap/index", titleKey: "insights.recap.title" },
             { chrome: "modal", name: "recap/share", titleKey: "insights.recap.title" },
+            { chrome: "modal", name: "installments/new", titleKey: "accounts.add.installments" },
             { chrome: "modal", name: "transactions/create", titleKey: "nav.newTransaction" },
             { chrome: "modal", name: "transactions/transfers/create", titleKey: "transfers.title" },
             { chrome: "modal", name: "year", titleKey: "pro.year.title" },

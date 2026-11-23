@@ -1,0 +1,244 @@
+import { toAccountKind } from "@outlayr/money/account-kind";
+import { draftSchedule, paidBeforeCount, upfrontOf } from "@outlayr/money/installment-draft";
+import type { InstallmentDraft } from "@outlayr/money/installment-draft";
+import { startingDraft } from "@outlayr/money/installment-terms";
+import * as Effect from "effect/Effect";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import { useState } from "react";
+import { ScrollView } from "react-native";
+
+import { TransactionFormAmountPad } from "@/components/transaction-form/amount-pad";
+import { useDatabase } from "@/contexts/local-data-context";
+import { useBankAccounts } from "@/data/accounts";
+import type { Account } from "@/data/accounts-core";
+import type { Category } from "@/data/categories-core";
+import { lastPlanRows, paymentRate } from "@/data/installment-reads";
+import type { PaymentSource } from "@/data/installments-core";
+import { paymentSource, paymentSources } from "@/domain/installment-payment";
+import { minorUnitsFor } from "@/domain/money";
+import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
+import { useTranslation } from "@/i18n/context";
+import { useMirror } from "@/lib/lifecycle";
+import { notifyFailure } from "@/lib/notify";
+import { voidAppFlowCommand } from "@/state/entry-commands";
+import { placeOrder } from "@/state/installment-orders";
+import { askForInstallmentReminders } from "@/state/surfaces-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
+
+import { NewPurchasePlan } from "./new-purchase-plan";
+import { NewPurchaseWhere } from "./new-purchase-where";
+
+type Step = "plan" | "total" | "where";
+
+interface NewInstallmentPurchaseProps {
+    accountId?: string;
+    amount?: number;
+    onDirtyChange: (dirty: boolean) => void;
+    onDone: () => void;
+}
+
+export function NewInstallmentPurchase({ accountId, amount, onDirtyChange, onDone }: NewInstallmentPurchaseProps) {
+    const db = useDatabase();
+    const t = useTranslation();
+    const runFlow = useAtomCommand(voidAppFlowCommand);
+    const bankAccounts = useBankAccounts(db);
+    const [account, setAccount] = useState<Account | null>(
+        () => bankAccounts.find((row) => row.id === accountId && toAccountKind(row.kind) === "liability") ?? null
+    );
+    const prefill = amount !== undefined && Number.isFinite(amount) && amount > 0 ? amount : undefined;
+    const [amountText, setAmountText] = useState(() =>
+        prefill === undefined ? "" : numberToNumpad(prefill, minorUnitsFor(account?.currency ?? "USD"))
+    );
+    const [draft, setDraft] = useState<InstallmentDraft | null>(() => {
+        if (account === null) {
+            return null;
+        }
+        const fundingId =
+            paymentSources(bankAccounts, account.id).find((row) => toAccountKind(row.kind) !== "liability")?.id ?? null;
+        return startingDraft(account, lastPlanRows(db, account.id), fundingId);
+    });
+    const [step, setStep] = useState<Step>(() => {
+        if (account === null) {
+            return "where";
+        }
+        return prefill === undefined ? "total" : "plan";
+    });
+    const [category, setCategory] = useState<Category | null>(null);
+    const [name, setName] = useState("");
+    const [problem, setProblem] = useState<string | null>(null);
+    const [saving, setSaving] = useState(false);
+    const [touched, setTouched] = useState(false);
+    const [forward, setForward] = useState(true);
+    const [purchaseDay] = useState(() => new Date());
+
+    useMirror([touched], () => {
+        onDirtyChange(touched);
+    });
+
+    const fundingFor = (picked: Account) =>
+        paymentSources(bankAccounts, picked.id).find((row) => toAccountKind(row.kind) !== "liability")?.id ?? null;
+
+    const termsFor = (picked: Account) => startingDraft(picked, lastPlanRows(db, picked.id), fundingFor(picked));
+
+    const total = numpadToNumber(amountText);
+    const funding = account === null ? [] : paymentSources(bankAccounts, account.id);
+
+    const pick = (picked: Account) => {
+        setTouched(true);
+        setProblem(null);
+        setForward(true);
+        if (account !== null && account.currency !== picked.currency) {
+            setAmountText("");
+        }
+        setAccount(picked);
+        setDraft(termsFor(picked));
+        setStep("total");
+    };
+
+    const back = () => {
+        setForward(false);
+        setStep("where");
+    };
+
+    const next = () => {
+        if (!(total > 0)) {
+            return;
+        }
+        setTouched(true);
+        setProblem(null);
+        setForward(true);
+        setStep("plan");
+    };
+
+    const save = () => {
+        if (account === null || draft === null || category === null || saving || !(total > 0)) {
+            return;
+        }
+        const schedule = draftSchedule(draft, total, purchaseDay, account.currency);
+        if (schedule === null) {
+            setProblem(t("installments.nothingLeft"));
+            return;
+        }
+        const upfrontAmount = upfrontOf(draft, total, account.currency);
+        const source = funding.find((row) => row.id === draft.upfrontAccountId) ?? null;
+        let upfrontSource: PaymentSource | null | undefined;
+        if (upfrontAmount > 0) {
+            upfrontSource =
+                source === null
+                    ? null
+                    : (paymentSource(
+                          upfrontAmount,
+                          source,
+                          account.currency,
+                          paymentRate(db, source.currency, account.currency, purchaseDay)
+                      ) ?? undefined);
+        }
+        if (upfrontAmount > 0 && upfrontSource === undefined) {
+            setProblem(t("installments.noRate"));
+            return;
+        }
+        setProblem(null);
+        setSaving(true);
+        const flow = placeOrder(
+            db,
+            {
+                installmentsPaidOutside: paidBeforeCount(draft, schedule, new Date()),
+                purchase: {
+                    accountId: account.id,
+                    amount: total,
+                    categoryId: category.id,
+                    currency: account.currency,
+                    date: purchaseDay,
+                    details: null,
+                    income: false,
+                    note: name.trim(),
+                },
+                schedule,
+                upfront: schedule.some((row) => row.sequence === 0) ? upfrontSource : undefined,
+            },
+            [],
+            {
+                onFeesFailed: () =>
+                    notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") }),
+                onOrdered: () => undefined,
+            }
+        ).pipe(
+            Effect.tapCause((cause) => Effect.logError("Failed to place the installment purchase", cause)),
+            Effect.catch(() => Effect.succeed(null))
+        );
+        void runFlow(flow).then((result) => {
+            if (AsyncResult.isSuccess(result) && result.value !== null) {
+                askForInstallmentReminders(db);
+                onDone();
+                return;
+            }
+            setSaving(false);
+            setProblem(t("installments.failedBody"));
+        });
+    };
+
+    if (step === "where" || account === null) {
+        return <NewPurchaseWhere accounts={bankAccounts} onPick={pick} selectedId={account?.id ?? null} />;
+    }
+
+    if (step === "total" || draft === null) {
+        return (
+            <ScrollView
+                className="bg-background flex-1"
+                contentContainerClassName="px-5 pb-safe-offset-10"
+                contentInsetAdjustmentBehavior="automatic"
+                keyboardShouldPersistTaps="handled"
+            >
+                <TransactionFormAmountPad
+                    backLabel={t("common.back")}
+                    code={account.currency}
+                    footer={{ label: t("common.next"), onPress: next, tone: total > 0 ? "primary" : "muted" }}
+                    forward={forward}
+                    label={t("installments.new.total")}
+                    minorUnits={minorUnitsFor(account.currency)}
+                    onBack={back}
+                    onChange={(nextText) => {
+                        setTouched(true);
+                        setProblem(null);
+                        setAmountText(nextText);
+                    }}
+                    stepKey="installments-new-total"
+                    value={amountText}
+                />
+            </ScrollView>
+        );
+    }
+
+    return (
+        <NewPurchasePlan
+            account={account}
+            amount={total}
+            category={category}
+            db={db}
+            draft={draft}
+            funding={funding}
+            name={name}
+            onBack={() => {
+                setForward(false);
+                setStep("total");
+            }}
+            onCategory={(picked) => {
+                setTouched(true);
+                setCategory(picked);
+            }}
+            onDraft={(nextDraft) => {
+                setTouched(true);
+                setProblem(null);
+                setDraft(nextDraft);
+            }}
+            onName={(nextName) => {
+                setTouched(true);
+                setName(nextName);
+            }}
+            onSave={save}
+            problem={problem}
+            purchaseDay={purchaseDay}
+            saving={saving}
+        />
+    );
+}

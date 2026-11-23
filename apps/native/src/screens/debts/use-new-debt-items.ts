@@ -47,7 +47,7 @@ export function useNewDebtItems(): readonly NewDebtItem[] {
             icon: "cart",
             id: "installments",
             label: t("accounts.add.installments"),
-            onPress: () => router.push({ params: { installments: "1" }, pathname: "/transactions/create" }),
+            onPress: () => router.push("/installments/new"),
         },
     ];
 }

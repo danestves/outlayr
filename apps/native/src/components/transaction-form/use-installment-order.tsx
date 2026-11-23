@@ -2,14 +2,13 @@ import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { toAccountKind } from "@outlayr/money/account-kind";
 import { draftSchedule, paidBeforeCount, planPrice, upfrontOf } from "@outlayr/money/installment-draft";
 import type { InstallmentDraft } from "@outlayr/money/installment-draft";
-import { startingDraft } from "@outlayr/money/installment-terms";
 import type { EntryRateType } from "@outlayr/money/rates";
 import type * as Effect from "effect/Effect";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 
 import type { Account } from "@/data/accounts-core";
-import { lastPlanRows, paymentRate, planIdForPurchase } from "@/data/installment-reads";
+import { paymentRate, planIdForPurchase } from "@/data/installment-reads";
 import type { PaymentSource } from "@/data/installments-core";
 import type { Transaction, TransactionInput } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
@@ -69,7 +68,6 @@ export function useInstallmentOrder({
     const [prompted, setPrompted] = useState(!intent);
     const [seenTurn, setSeenTurn] = useState<number | null>(null);
     const [draft, setDraft] = useState<InstallmentDraft | null>(null);
-    const [draftFor, setDraftFor] = useState<string | null>(null);
     // The sheet mounts with the draft, a render after the tap that makes it.
     const [presented, setPresented] = useState(0);
     const [planId] = useState(() => (initial ? planIdForPurchase(db, initial.id) : null));
@@ -77,10 +75,9 @@ export function useInstallmentOrder({
     const from = sources.find((bank) => bank.id === draft?.upfrontAccountId) ?? null;
     const offered =
         mode === "create" &&
-        account !== null &&
-        toAccountKind(account.kind) === "liability" &&
         !income &&
-        !isSubscription;
+        !isSubscription &&
+        (seeded === undefined || (account !== null && toAccountKind(account.kind) === "liability"));
     // The purchase stays in its own currency; the plan is in the account's.
     const planCurrency = account?.currency ?? currency;
     const planPriceOf = (price: number, rate: number | null) =>
@@ -95,33 +92,29 @@ export function useInstallmentOrder({
         }
     });
 
-    const termsFor = (picked: Account) =>
-        startingDraft(
-            picked,
-            lastPlanRows(db, picked.id),
-            sources.find((source) => toAccountKind(source.kind) !== "liability")?.id ?? null
-        );
-
-    const open = () => {
+    const open = (price?: number) => {
         setPrompted(true);
-        if (draft === null && seeded !== undefined) {
+        if (seeded === undefined) {
+            const liability = account !== null && toAccountKind(account.kind) === "liability";
+            const planAmount = price === undefined || !liability ? price : planPriceOf(price, entryRate.rate);
+            router.replace({
+                params: {
+                    accountId: liability ? account.id : undefined,
+                    amount: planAmount === undefined || planAmount === null ? undefined : String(planAmount),
+                },
+                pathname: "/installments/new",
+            });
+            return;
+        }
+        if (draft === null) {
             setDraft(seeded.draft);
-        } else if (draft === null && account !== null) {
-            setDraft(termsFor(account));
-            setDraftFor(account.id);
         }
         setPresented((count) => count + 1);
     };
 
-    // Terms belong to the app they were drawn from, so picking another account redraws them.
-    if (draft !== null && draftFor !== null && account !== null && draftFor !== account.id) {
-        setDraftFor(account.id);
-        setDraft(termsFor(account));
-    }
-
     if (turn !== seenTurn) {
         setSeenTurn(turn);
-        if (!prompted && offered && priced) {
+        if (!prompted && offered && priced && seeded !== undefined) {
             open();
         }
     }
@@ -140,6 +133,17 @@ export function useInstallmentOrder({
         if (!offered) {
             return [];
         }
+        if (seeded === undefined) {
+            return [
+                {
+                    active: false,
+                    disabled: !hasPrice,
+                    key: "installments",
+                    label: t("installments.chip"),
+                    onPress: () => open(price),
+                },
+            ];
+        }
         const plan = planPriceOf(price, entryRate.rate);
         const first =
             draft === null || plan === null
@@ -157,7 +161,7 @@ export function useInstallmentOrder({
                               count: draft.count,
                           })
                         : t("installments.chip"),
-                onPress: open,
+                onPress: () => open(),
                 onRemove: () => setDraft(null),
                 removeAccessibilityLabel: t("installments.chip"),
             },
