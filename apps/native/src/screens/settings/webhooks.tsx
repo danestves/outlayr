@@ -57,7 +57,7 @@ const TICK_MS = 60_000;
 
 const VALUE_TONE: Record<EndpointState, string> = {
     active: "text-income",
-    failing: "text-warning",
+    failing: "text-warning-foreground",
     off: "text-danger",
 };
 
