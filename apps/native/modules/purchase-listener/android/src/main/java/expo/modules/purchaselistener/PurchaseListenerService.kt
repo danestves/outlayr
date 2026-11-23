@@ -22,6 +22,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.security.MessageDigest
 import java.text.Normalizer
 import java.util.UUID
@@ -208,7 +209,11 @@ internal object PurchaseListenerStore {
       val directory = queueDirectory(context) ?: return false
       val live = File(directory, QUEUE_FILE)
       if (!live.isFile || live.length() <= 0) return false
-      return live.renameTo(File(directory, name))
+      // A failed rename throws, so the app never reads it as a drained queue.
+      if (!live.renameTo(File(directory, name))) {
+        throw IOException("Pending writes could not be claimed")
+      }
+      return true
     }
   }
 

@@ -38,6 +38,11 @@ enum SharedStore {
 
     private static let queueSequenceFile = "sequence"
 
+    enum QueueError: Error {
+        case lock(Int32)
+        case rename(Int32)
+    }
+
     static var store: UserDefaults? {
         UserDefaults(suiteName: appGroup)
     }
@@ -64,13 +69,13 @@ enum SharedStore {
     /// claims under the same lock, so no intent can append into a claimed file after the app read it.
     @discardableResult
     static func enqueue(_ write: PendingWrite, sequenced: Bool = true) async -> Bool {
-        let appended = withQueueLock { directory in
+        let appended = (try? withQueueLock { directory in
             var pending = write
             pending.sequence = sequenced ? nextSequence(in: directory) : nil
             guard var line = try? JSONEncoder().encode(pending) else { return false }
             line.append(0x0A)
             return append(line, to: directory.appendingPathComponent(queueFile, isDirectory: false))
-        } ?? false
+        }) ?? false
         guard appended else { return false }
         let center = UNUserNotificationCenter.current()
         let reminders = await center.pendingNotificationRequests()
@@ -81,25 +86,29 @@ enum SharedStore {
     }
 
     /// Renames the live queue under the lock, so an appender can never open it before the rename and write after.
-    static func claimQueue(as name: String) -> Bool {
+    /// False only for an absent or empty queue: a failed lock or rename throws, so the app never reads it as drained.
+    static func claimQueue(as name: String) throws -> Bool {
         guard name.range(of: #"^claimed-[0-9]+\.jsonl$"#, options: .regularExpression) != nil else {
             return false
         }
-        return withQueueLock { directory in
+        return try withQueueLock { directory in
             let live = directory.appendingPathComponent(queueFile, isDirectory: false)
-            guard let attributes = try? FileManager.default.attributesOfItem(atPath: live.path),
-                  let size = attributes[.size] as? NSNumber,
-                  size.intValue > 0 else {
+            let attributes: [FileAttributeKey: Any]
+            do {
+                attributes = try FileManager.default.attributesOfItem(atPath: live.path)
+            } catch CocoaError.fileReadNoSuchFile {
                 return false
             }
+            guard let size = attributes[.size] as? NSNumber, size.intValue > 0 else { return false }
             let claimed = directory.appendingPathComponent(name, isDirectory: false)
-            return Darwin.rename(live.path, claimed.path) == 0
+            guard Darwin.rename(live.path, claimed.path) == 0 else { throw QueueError.rename(errno) }
+            return true
         } ?? false
     }
 
     /// The counter a switch records as its cutoff, nil when the container or the counter itself is unreadable.
     static func queueSequence() -> Int64? {
-        withQueueLock { sequence(in: $0) } ?? nil
+        (try? withQueueLock { sequence(in: $0) }) ?? nil
     }
 
     /// Posts the app's own push from an intent, once per purchase key within
@@ -223,31 +232,34 @@ enum SharedStore {
     /// `flock` because intents and the app are separate processes, and the lock file is only ever opened, never
     /// replaced, since `flock` follows the inode. The body stays synchronous: a lock held while the process is
     /// suspended in the shared container gets it killed.
-    private static func withQueueLock<T>(_ body: (URL) -> T) -> T? {
+    private static func withQueueLock<T>(_ body: (URL) throws -> T) throws -> T? {
         guard let directory = queueDirectoryURL() else { return nil }
         let descriptor = open(
             directory.appendingPathComponent(queueLockFile, isDirectory: false).path,
             O_RDWR | O_CREAT,
             0o644
         )
-        guard descriptor >= 0 else { return nil }
+        guard descriptor >= 0 else { throw QueueError.lock(errno) }
         defer { close(descriptor) }
-        while Darwin.flock(descriptor, Darwin.LOCK_EX) != 0 {
-            if errno != Darwin.EINTR {
-                return nil
-            }
+        while flock(descriptor, LOCK_EX) != 0 {
+            guard errno == EINTR else { throw QueueError.lock(errno) }
         }
-        defer { Darwin.flock(descriptor, Darwin.LOCK_UN) }
-        return body(directory)
+        defer { flock(descriptor, LOCK_UN) }
+        return try body(directory)
     }
 
     /// Missing is a fresh install at zero; unreadable is nil, so a capture is appended without a stamp rather than
     /// restarting the counter under captures that already carry one.
     private static func sequence(in directory: URL) -> Int64? {
-        let url = directory.appendingPathComponent(queueSequenceFile, isDirectory: false)
-        guard FileManager.default.fileExists(atPath: url.path) else { return 0 }
-        guard let data = try? Data(contentsOf: url),
-              let text = String(data: data, encoding: .utf8),
+        let data: Data
+        do {
+            data = try Data(contentsOf: directory.appendingPathComponent(queueSequenceFile, isDirectory: false))
+        } catch CocoaError.fileReadNoSuchFile {
+            return 0
+        } catch {
+            return nil
+        }
+        guard let text = String(data: data, encoding: .utf8),
               let value = Int64(text.trimmingCharacters(in: .whitespacesAndNewlines)) else {
             return nil
         }

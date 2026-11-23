@@ -22,7 +22,7 @@ import { resetActiveProfile } from "./active-profile";
 import { cancelLogoBackfill } from "./logo-backfill";
 import { clearStoredPhotos } from "./photo-storage";
 import { PROVIDER_BINDING_KEY } from "./provider-revocation";
-import { QUEUE_DIRECTORY } from "./queue-directory";
+import { QUEUE_DIRECTORY, QUEUE_LOCK_FILE, QUEUE_SEQUENCE_FILE } from "./queue-directory";
 import { SecureStorage } from "./secure-storage";
 import { sharedStore } from "./shared-store";
 import { INTENT_SNAPSHOT_KEY, PENDING_WRITES_KEY, PUSHED_PURCHASES_KEY, WALLET_PUSH_KEY } from "./widget-bridge";
@@ -99,6 +99,20 @@ function deleteDirectoryIfPresent(directory: Directory): void {
     }
 }
 
+// The lock and the counter outlive an erase: deleting the lock lets a second writer lock a new inode, and resetting
+// the counter makes a new capture compare as older than a surviving cutoff.
+function clearQueueDirectory(directory: Directory): void {
+    if (!directory.exists) {
+        return;
+    }
+    for (const entry of directory.list()) {
+        if (entry instanceof File && (entry.name === QUEUE_LOCK_FILE || entry.name === QUEUE_SEQUENCE_FILE)) {
+            continue;
+        }
+        entry.delete();
+    }
+}
+
 const chunkKeys = (stored: readonly (readonly [string, string | null])[]) =>
     stored.flatMap(([key, value]) => {
         if (!value?.startsWith(BETTER_AUTH_CHUNK_MARKER)) {
@@ -141,7 +155,7 @@ function clearWidgetStorage(): void {
     if (!container) {
         throw new Error("App Group container is unavailable");
     }
-    deleteDirectoryIfPresent(new Directory(container, QUEUE_DIRECTORY));
+    clearQueueDirectory(new Directory(container, QUEUE_DIRECTORY));
 }
 
 const clearSpotlight = Effect.fn("DeviceStores.clearSpotlight")(function* clearSpotlight() {

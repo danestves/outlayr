@@ -74,7 +74,7 @@ final class WatchLink: NSObject, WCSessionDelegate {
         }
         // The watch captured this before it reached the phone, possibly hours earlier, so it routes by date, not
         // this device's counter.
-        await SharedStore.enqueue(write, sequenced: false)
+        guard await SharedStore.enqueue(write, sequenced: false) else { return false }
         NotificationCenter.default.post(name: Self.pendingWriteNotification, object: nil)
         return true
     }

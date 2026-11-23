@@ -250,6 +250,16 @@ describe("claimPendingWrites across a switch", () => {
         expect(claimed.held).toBeUndefined();
     });
 
+    it("keeps a stamped capture current when the only cutoff predates stamping", () => {
+        const capture = write("capture", { date: T2 - 300_000, sequence: 1 });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(capture) });
+
+        const claimed = claimPendingWrites(files, { cutoffs: [{ at: T2, from: "A" }], key: "B", now: NOW });
+
+        expect(claimed.jobs).toStrictEqual([capture]);
+        expect(claimed.held).toBeUndefined();
+    });
+
     it("routes a stamped capture by the counter even when its date falls after the switch", () => {
         const capture = write("capture", { date: T2 + 60_000, sequence: 4 });
         const { files } = makeFiles({ [QUEUE_FILE]: lines(capture) });
@@ -398,6 +408,18 @@ describe("claimPendingWrites with purchase routes", () => {
         expect(claimed.jobs).toStrictEqual([]);
         expect(claimed.held?.map((entry) => entry.key)).toStrictEqual(["A"]);
         expect(claimed.held?.[0]?.jobs.map((job) => job.id).sort()).toStrictEqual(["authorization", "settlement"]);
+    });
+
+    it("keeps a settlement with its authorization when a clock moved back between them", () => {
+        const cutoff = { at: T1 + 30_000, from: "A", sequence: 10 };
+        const authorization = write("authorization", { date: T1, dedupeKey: PURCHASE, sequence: 10 });
+        const settlement = write("settlement", { date: T1 - 120_000, dedupeKey: PURCHASE, sequence: 11 });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(authorization, settlement) });
+
+        const claimed = claimPendingWrites(files, { cutoffs: [cutoff], key: "B", now: NOW, siblingWindowMs });
+
+        expect(claimed.jobs).toStrictEqual([]);
+        expect(claimed.held).toStrictEqual([{ jobs: [authorization, settlement], key: "A" }]);
     });
 
     it("routes a replay to the same ledgers and never lets a settlement anchor a later purchase", () => {

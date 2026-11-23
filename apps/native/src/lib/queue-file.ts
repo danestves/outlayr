@@ -149,11 +149,24 @@ function uniqueById(jobs: readonly PendingWrite[]): PendingWrite[] {
     });
 }
 
+interface OrderedJob {
+    index: number;
+    job: PendingWrite;
+}
+
+// The counter decides when both carry one: a clock that moved back dates a later capture earlier.
+function captureOrder(a: OrderedJob, b: OrderedJob): number {
+    if (a.job.sequence !== undefined && b.job.sequence !== undefined) {
+        return a.job.sequence - b.job.sequence || a.index - b.index;
+    }
+    return a.job.date - b.job.date || a.index - b.index;
+}
+
 /** A held authorization must drain before a live settlement captured after it. */
-function byCaptureDate(jobs: PendingWrite[]): PendingWrite[] {
+function byCaptureOrder(jobs: PendingWrite[]): PendingWrite[] {
     return jobs
         .map((job, index) => ({ index, job }))
-        .sort((a, b) => a.job.date - b.job.date || a.index - b.index)
+        .sort(captureOrder)
         .map((entry) => entry.job);
 }
 
@@ -170,12 +183,15 @@ function pruneCutoffs(cutoffs: readonly SwitchCutoff[], now: number): SwitchCuto
     return cutoffs.filter((entry) => now - entry.at < CUTOFF_RETENTION_MS);
 }
 
-/** The counter wins when both sides carry one: a clock that moved back would otherwise misdate the capture. */
+/**
+ * A cutoff without a counter predates stamping, so every stamped capture came after it. Otherwise the counter wins,
+ * since a clock that moved back would misdate the capture.
+ */
 function before(cutoff: SwitchCutoff, job: PendingWrite, now: number): boolean {
-    if (job.sequence !== undefined && cutoff.sequence !== undefined) {
-        return job.sequence <= cutoff.sequence;
+    if (job.sequence === undefined) {
+        return cutoff.at <= now && job.date < cutoff.at;
     }
-    return cutoff.at <= now && job.date < cutoff.at;
+    return cutoff.sequence !== undefined && job.sequence <= cutoff.sequence;
 }
 
 function destinationOf(job: PendingWrite, route: ClaimRoute): string {
@@ -232,7 +248,7 @@ function assignmentMap(assignments: readonly CaptureAssignment[] | undefined): R
 }
 
 /**
- * Capture-date order, so an authorization anchors before the settlement that follows it. An assigned capture keeps
+ * Capture order, so an authorization anchors before the settlement that follows it. An assigned capture keeps
  * the ledger an earlier pass chose even when an earlier anchor would now win.
  */
 function routePlacements(
@@ -246,13 +262,11 @@ function routePlacements(
         ...placement,
         ledger: placement.own ? route.key : (assigned.get(placement.job.id) ?? ""),
     }));
-    const byDate = placements
-        .map((placement, index) => ({ date: placement.job.date, index }))
-        .sort((a, b) => a.date - b.date || a.index - b.index);
+    const ordered = placements.map((placement, index) => ({ index, job: placement.job })).sort(captureOrder);
     const routes: PurchaseRoute[] = [];
     const matched: PurchaseRoute[] = [];
     const seen: PurchaseRoute[] = [...known];
-    for (const { index } of byDate) {
+    for (const { index } of ordered) {
         const placement = routed[index];
         if (placement === undefined) {
             continue;
@@ -447,7 +461,7 @@ export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): Cla
             }
         }
     }
-    const claimed: ClaimedWrites = { jobs: byCaptureDate(uniqueById(jobs)), names };
+    const claimed: ClaimedWrites = { jobs: byCaptureOrder(uniqueById(jobs)), names };
     if (ledger !== undefined && route !== undefined) {
         claimed.assignments = assignments;
         claimed.cutoffs = cutoffs;
