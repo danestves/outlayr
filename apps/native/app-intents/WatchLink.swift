@@ -59,8 +59,14 @@ final class WatchLink: NSObject, WCSessionDelegate {
         Task { _ = await self.enqueue(message) }
     }
 
+    // A background transfer has no reply, so a failed save goes back the same way for the watch to resend.
     func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
-        Task { _ = await self.enqueue(userInfo) }
+        Task {
+            let reply = await self.enqueue(userInfo)
+            if reply["retry"] as? Bool == true, let id = reply["id"] as? String {
+                session.transferUserInfo(["type": "retry", "id": id])
+            }
+        }
     }
 
     /// A failed save asks for a retry rather than a drop: the watch holds the only durable copy.
@@ -75,7 +81,7 @@ final class WatchLink: NSObject, WCSessionDelegate {
         // The watch captured this before it reached the phone, possibly hours earlier, so it routes by date, not
         // this device's counter.
         guard await SharedStore.enqueue(write, sequenced: false) else {
-            return ["ok": false, "retry": true]
+            return ["id": write.id, "ok": false, "retry": true]
         }
         NotificationCenter.default.post(name: Self.pendingWriteNotification, object: nil)
         return ["ok": true]

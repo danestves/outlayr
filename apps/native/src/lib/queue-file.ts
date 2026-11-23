@@ -167,10 +167,8 @@ function beforeStamp(unstamped: OrderedJob, stamped: OrderedJob): boolean {
     );
 }
 
-/**
- * Merged, not compared: sequence and date disagree across stamped and unstamped captures, and one comparator lets an
- * unstamped watch capture slip between an authorization and its settlement. Stamped keeps its counter order.
- */
+// Merged, not compared: one comparator over sequence and date is not transitive, and stamped captures must
+// keep their counter order.
 function mergeCaptureOrder(stamped: StampedJob[], unstamped: OrderedJob[]): OrderedJob[] {
     const merged: OrderedJob[] = [];
     let index = 0;

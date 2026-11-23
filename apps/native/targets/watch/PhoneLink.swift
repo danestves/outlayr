@@ -11,15 +11,21 @@ final class PhoneLink: NSObject, WCSessionDelegate {
     static let appGroup = "group.com.tryoutlayr.app"
     static let snapshotKey = "watchSnapshot"
     static let unsyncedKey = "unsyncedWrites"
+    static let retryKey = "retryWrites"
+    private static let retryDelay: Duration = .seconds(60)
 
     private(set) var snapshot: WatchSnapshot?
     private(set) var unsynced: [WatchWrite] = []
     @ObservationIgnored private var backgroundTasks: [WKWatchConnectivityRefreshBackgroundTask] = []
+    // Only writes the phone failed to save: one it accepted is never resent, so a missed snapshot cannot file it
+    // twice or bring it back after an erase.
+    @ObservationIgnored private var retrying: Set<String> = []
 
     private override init() {
         super.init()
         snapshot = Self.restore()
         unsynced = Self.restoreUnsynced()
+        retrying = Set(UserDefaults.standard.stringArray(forKey: Self.retryKey) ?? [])
         WCSession.default.delegate = self
         WCSession.default.activate()
     }
@@ -43,8 +49,14 @@ final class PhoneLink: NSObject, WCSessionDelegate {
             return
         }
         session.sendMessage(message) { reply in
-            guard reply["ok"] as? Bool == false, reply["retry"] as? Bool != true else { return }
-            Task { @MainActor in self.reject(write.id) }
+            guard reply["ok"] as? Bool == false else { return }
+            Task { @MainActor in
+                if reply["retry"] as? Bool == true {
+                    self.retry(write.id)
+                } else {
+                    self.reject(write.id)
+                }
+            }
         } errorHandler: { _ in
             session.transferUserInfo(message)
         }
@@ -53,16 +65,29 @@ final class PhoneLink: NSObject, WCSessionDelegate {
     @MainActor
     private func reject(_ id: String) {
         unsynced.removeAll { $0.id == id }
+        retrying.remove(id)
         persistUnsynced()
         WKInterfaceDevice.current().play(.failure)
     }
 
     @MainActor
-    private func resend() {
-        let inFlight = Set(WCSession.default.outstandingUserInfoTransfers.compactMap { Self.writeId($0.userInfo) })
-        for write in unsynced where !inFlight.contains(write.id) {
-            send(write)
+    private func retry(_ id: String) {
+        guard unsynced.contains(where: { $0.id == id }) else { return }
+        retrying.insert(id)
+        persistUnsynced()
+        Task { @MainActor in
+            try? await Task.sleep(for: Self.retryDelay)
+            self.resend()
         }
+    }
+
+    // Handed over again, a write leaves the set until the phone reports another failed save.
+    @MainActor
+    private func resend() {
+        let pending = unsynced.filter { retrying.contains($0.id) }
+        retrying.subtract(pending.map(\.id))
+        persistUnsynced()
+        pending.forEach(send)
     }
 
     func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
@@ -91,6 +116,9 @@ final class PhoneLink: NSObject, WCSessionDelegate {
 
     private func receive(_ payload: [String: Any], latest: Bool) {
         Task { @MainActor in
+            if payload["type"] as? String == "retry", let id = payload["id"] as? String {
+                self.retry(id)
+            }
             if let snapshot = Self.load(from: payload),
                latest || snapshot.publishedAt >= self.snapshot?.publishedAt ?? 0 {
                 self.apply(snapshot)
@@ -105,7 +133,10 @@ final class PhoneLink: NSObject, WCSessionDelegate {
         let landed = Set((snapshot.applied?.ids ?? []) + snapshot.entries.compactMap(\.writeId))
         let since = snapshot.applied?.since ?? 0
         let inFlight = Set(WCSession.default.outstandingUserInfoTransfers.compactMap { Self.writeId($0.userInfo) })
-        unsynced.removeAll { landed.contains($0.id) || ($0.date < since && !inFlight.contains($0.id)) }
+        unsynced.removeAll {
+            landed.contains($0.id) || ($0.date < since && !inFlight.contains($0.id) && !retrying.contains($0.id))
+        }
+        retrying.formIntersection(unsynced.map(\.id))
         persistUnsynced()
         if let data = try? JSONEncoder().encode(snapshot) {
             UserDefaults(suiteName: Self.appGroup)?.set(data, forKey: Self.snapshotKey)
@@ -115,6 +146,7 @@ final class PhoneLink: NSObject, WCSessionDelegate {
 
     private func persistUnsynced() {
         UserDefaults.standard.set(try? JSONEncoder().encode(unsynced), forKey: Self.unsyncedKey)
+        UserDefaults.standard.set(Array(retrying), forKey: Self.retryKey)
     }
 
     private func releaseIfIdle() {
