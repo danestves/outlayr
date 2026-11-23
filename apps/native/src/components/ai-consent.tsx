@@ -2,9 +2,10 @@ import * as Cause from "effect/Cause";
 import { useRouter, useSegments } from "expo-router";
 import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
+import { ScrollFade } from "panelui-native/components/scroll-fade";
 import { cn } from "panelui-native/utils/cn";
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 import { SafeAreaInsetsContext, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAppLockOpen } from "@/components/app-lock-gate";
@@ -34,6 +35,9 @@ const FEATURES = [
     { sends: "aiConsent.notificationsSends", title: "aiConsent.notifications" },
     { sends: "aiConsent.lookupSends", title: "aiConsent.lookup" },
 ] as const satisfies readonly { sends: TranslationKey; title: TranslationKey }[];
+
+// Leaves the sheet room for the buttons: the intro outgrows a phone screen at the default text size.
+const INTRO_MAX_SCREEN_SHARE = 0.6;
 
 export function useRecordAiConsent() {
     const saveAiConsent = useAtomAction(
@@ -72,7 +76,7 @@ export function AiConsentDetails() {
     );
 }
 
-function AiConsentPrompt({ onAnswer }: { onAnswer: (allowed: boolean) => void }) {
+function AiConsentIntro() {
     const t = useTranslation();
     return (
         <View>
@@ -81,10 +85,18 @@ function AiConsentPrompt({ onAnswer }: { onAnswer: (allowed: boolean) => void })
             </Text>
             <Text className="text-muted text-subtitle pt-1 pb-4 leading-snug">{t("aiConsent.lead")}</Text>
             <AiConsentDetails />
-            <Button className="mt-5 rounded-full" fullWidth onPress={() => onAnswer(true)} size="md" variant="primary">
+        </View>
+    );
+}
+
+function AiConsentActions({ onAnswer }: { onAnswer: (allowed: boolean) => void }) {
+    const t = useTranslation();
+    return (
+        <View className="gap-2.5">
+            <Button className="rounded-full" fullWidth onPress={() => onAnswer(true)} size="md" variant="primary">
                 {t("aiConsent.allow")}
             </Button>
-            <Button className="mt-2.5 rounded-full" fullWidth onPress={() => onAnswer(false)} size="md" variant="ghost">
+            <Button className="rounded-full" fullWidth onPress={() => onAnswer(false)} size="md" variant="ghost">
                 {t("aiConsent.notNow")}
             </Button>
         </View>
@@ -96,6 +108,7 @@ export function AiConsentGate() {
     const db = useDatabase();
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const colors = useColors();
     const consent = useAiConsent(db);
     const recordAiConsent = useRecordAiConsent();
     const answer = (allowed: boolean) => {
@@ -107,13 +120,17 @@ export function AiConsentGate() {
         }
     };
     return (
-        <ScrollView
-            className="bg-background flex-1"
-            contentContainerClassName="px-5 pt-8"
-            contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) }}
-        >
-            <AiConsentPrompt onAnswer={answer} />
-        </ScrollView>
+        <View className="bg-background android:pt-safe flex-1">
+            {/* panelui's default resolves to its own white `--color-background`, not the app's `--background`. */}
+            <ScrollFade className="flex-1" color={colors.background}>
+                <ScrollView contentContainerClassName="px-5 pt-8 pb-5">
+                    <AiConsentIntro />
+                </ScrollView>
+            </ScrollFade>
+            <View className="px-5 pt-3" style={{ paddingBottom: Math.max(insets.bottom, 20) }}>
+                <AiConsentActions onAnswer={answer} />
+            </View>
+        </View>
     );
 }
 
@@ -143,6 +160,7 @@ function AiConsentSheetBody({ consent }: { consent: AiConsent }) {
 export function AiConsentPromptSheet({ onAnswer, open }: { onAnswer: (allowed: boolean) => void; open: boolean }) {
     const colors = useColors();
     const sheetInsets = useSheetInsets();
+    const { height: screenHeight } = useWindowDimensions();
     return (
         <BottomSheet
             native
@@ -157,7 +175,12 @@ export function AiConsentPromptSheet({ onAnswer, open }: { onAnswer: (allowed: b
         >
             <SafeAreaInsetsContext.Provider value={sheetInsets}>
                 <BottomSheet.Content size="auto">
-                    <AiConsentPrompt onAnswer={onAnswer} />
+                    <BottomSheet.Body style={{ maxHeight: screenHeight * INTRO_MAX_SCREEN_SHARE }}>
+                        <AiConsentIntro />
+                    </BottomSheet.Body>
+                    <View className="android:pb-safe pt-5">
+                        <AiConsentActions onAnswer={onAnswer} />
+                    </View>
                 </BottomSheet.Content>
             </SafeAreaInsetsContext.Provider>
         </BottomSheet>
