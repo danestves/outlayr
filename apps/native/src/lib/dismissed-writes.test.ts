@@ -45,7 +45,7 @@ describe("readDismissals", () => {
             ].join("\n")
         );
 
-        expect(readDismissals(NOW, new Set())).toStrictEqual(["fresh"]);
+        expect(readDismissals(NOW, new Set())).toStrictEqual([{ at: NOW - DAY, id: "fresh" }]);
         expect(files.get("dismissed.jsonl")).toBe(`${JSON.stringify({ at: NOW - DAY, id: "fresh" })}\n`);
     });
 
@@ -53,17 +53,17 @@ describe("readDismissals", () => {
         const stale = JSON.stringify({ at: NOW - 91 * DAY, id: "parked" });
         files.set("dismissed.jsonl", `${stale}\n`);
 
-        expect(readDismissals(NOW, new Set(["parked"]))).toStrictEqual(["parked"]);
+        expect(readDismissals(NOW, new Set(["parked"]))).toStrictEqual([{ at: NOW - 91 * DAY, id: "parked" }]);
         expect(files.get("dismissed.jsonl")).toBe(`${stale}\n`);
     });
 
     it("returns every dismissal, expired included, when the held scan failed", () => {
-        const stale = JSON.stringify({ at: NOW - 91 * DAY, id: "stale" });
-        const fresh = JSON.stringify({ at: NOW - DAY, id: "fresh" });
-        files.set("dismissed.jsonl", `${stale}\n${fresh}\n`);
+        const stale = { at: NOW - 91 * DAY, id: "stale" };
+        const fresh = { at: NOW - DAY, id: "fresh" };
+        files.set("dismissed.jsonl", `${JSON.stringify(stale)}\n${JSON.stringify(fresh)}\n`);
 
-        expect(readDismissals(NOW, null)).toStrictEqual(["stale", "fresh"]);
-        expect(files.get("dismissed.jsonl")).toBe(`${stale}\n${fresh}\n`);
+        expect(readDismissals(NOW, null)).toStrictEqual([stale, fresh]);
+        expect(files.get("dismissed.jsonl")).toBe(`${JSON.stringify(stale)}\n${JSON.stringify(fresh)}\n`);
     });
 
     it("returns nothing when no dismissal was ever written", () => {
@@ -76,6 +76,14 @@ describe("persistDismissal", () => {
         persistDismissal("wallet-1");
         persistDismissal("wallet-2");
 
-        expect(readDismissals(Date.now(), new Set())).toStrictEqual(["wallet-1", "wallet-2"]);
+        expect(readDismissals(Date.now(), new Set()).map((entry) => entry.id)).toStrictEqual(["wallet-1", "wallet-2"]);
+    });
+
+    it("keeps the purchase a dismissal names so a settlement can follow it after a relaunch", () => {
+        persistDismissal("wallet-1", { date: NOW - 60_000, key: "wallet:expense:cafe:640" });
+
+        expect(readDismissals(NOW, new Set())).toStrictEqual([
+            { at: expect.any(Number), date: NOW - 60_000, id: "wallet-1", key: "wallet:expense:cafe:640" },
+        ]);
     });
 });

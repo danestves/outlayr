@@ -26,6 +26,7 @@ import {
     drainPendingWrites,
     pendingWriteTxId,
     reopenDrains,
+    restoreDismissedPurchase,
 } from "./pending-writes-core";
 import { backfillRecurring } from "./recurrence-backfill";
 import { transactionsRepo } from "./transactions-core";
@@ -219,6 +220,19 @@ describe("applyPendingWrites", () => {
 
         expect(applied).toBe(0);
         await expect(liveRows(db)).resolves.toStrictEqual([]);
+    });
+
+    it("restores a persisted purchase dismissal so a settlement from an earlier launch is not filed", async () => {
+        const settlement = walletWrite("late-settlement", {
+            dedupeKey: "wallet:expense:relaunch:640",
+            note: "Relaunched",
+        });
+        restoreDismissedPurchase("wallet:expense:relaunch:640", NOW.getTime());
+
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [settlement], NOW));
+
+        expect(applied).toBe(0);
+        await expect(undeleted(db)).resolves.toStrictEqual([]);
     });
 
     it("drafts a debt from a push instead of filing it, once, and keeps a dismissed draft dismissed", async () => {

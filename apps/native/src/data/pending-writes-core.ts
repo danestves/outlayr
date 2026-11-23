@@ -167,12 +167,24 @@ const dismissed = new Set<string>();
 const dismissedPurchases = new Map<string, number>();
 const filedFresh = new Map<string, { date: number; key: string | undefined }>();
 
-export function dismissPendingWrite(id: string): void {
+export function dismissPendingWrite(id: string): { date: number; key: string } | null {
     dismissed.add(id);
     const filed = filedFresh.get(id);
-    if (filed?.key) {
-        dismissedPurchases.set(filed.key, filed.date);
+    if (!filed?.key) {
+        return null;
     }
+    dismissedPurchases.set(filed.key, filed.date);
+    return { date: filed.date, key: filed.key };
+}
+
+/** True once a dismissal names the write, so a claim can record the purchase that dismissal still lacks. */
+export function isDismissedWrite(id: string): boolean {
+    return dismissed.has(id);
+}
+
+/** Restores a persisted purchase dismissal, so its settlement is not filed after a relaunch. */
+export function restoreDismissedPurchase(key: string, date: number): void {
+    dismissedPurchases.set(key, date);
 }
 
 export function filedThisSession(id: string): boolean {
