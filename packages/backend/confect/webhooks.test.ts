@@ -239,13 +239,19 @@ describe("outbound webhooks", () => {
         expect(JSON.parse(sent.body)).toMatchObject({ data: { entry: { amount: 40, id: "edited" } } });
     });
 
-    it("drops a queued delivery once the account loses Pro", async () => {
+    it("sends nothing once the account loses Pro, even a delivery already claimed", async () => {
         const t = setup();
         const user = await seedProUser(t);
         const endpointId = await endpointFor(t, user);
         await authenticatedAs(t, user).mutation(api.webhooks.testEndpoint, { endpointId });
+        await t.mutation(internal.webhooks.pump, {});
+        const claimed = only(await deliveries(t));
         await revokePro(t, user);
 
+        await expect(
+            t.query(internal.webhooks.delivery, { attempt: claimed.attempt, deliveryId: claimed._id })
+        ).resolves.toBeNull();
+        vi.advanceTimersByTime(6 * 60_000);
         await t.mutation(internal.webhooks.pump, {});
 
         await expect(deliveries(t)).resolves.toStrictEqual([]);

@@ -441,6 +441,10 @@ const delivery = FunctionImpl.make(
         if (endpoint === null || endpoint.disabledAt !== undefined || event === null) {
             return null;
         }
+        // A send scheduled before Pro lapsed stays claimed instead, and the next pump drops it.
+        if (!(yield* isPro(yield* QueryCtx, row.userId))) {
+            return null;
+        }
         return {
             body: event.body,
             eventId: event.eventId,
