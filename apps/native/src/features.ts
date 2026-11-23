@@ -123,6 +123,12 @@ export const features = {
         says: ["what Pro gives me", "the paywall", "upgrade to Pro"],
         steps: [{ see: "Outlayr Pro" }],
     },
+    webhooks: {
+        link: "/settings/integrations/webhooks",
+        proves: "A Pro account with sync on and no inbound token yet creates one and sees it once.",
+        says: ["webhooks", "connect Zapier or IFTTT", "send entries to my server"],
+        steps: [{ press: 'label="Create token"' }, { see: "Copy it now. You won't see it again." }],
+    },
 } as const satisfies Record<string, Feature>;
 
 export type FeatureId = keyof typeof features;

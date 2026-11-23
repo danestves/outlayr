@@ -64,6 +64,9 @@ Todos los tipos de datos que maneja Outlayr, en un solo lugar. Las secciones sig
 | Entradas, saldos, presupuestos, próximos cobros | Asistente de IA que apruebas | La empresa del asistente | Según sus políticas |
 | Nombre y dirección del asistente, tu aprobación, claves de acceso | Asistente de IA que apruebas | Nuestros servidores | Hasta la eliminación de la cuenta |
 | Nombre de la herramienta, duración y falla de cada solicitud del asistente, ID de conexión | Asistente de IA que apruebas | PostHog | Según la política de PostHog |
+| Hash del token de webhook y sus últimos 4 caracteres, entradas enviadas con él | Recibir webhooks (Pro) | Nuestros servidores, tu dispositivo. Texto de un mensaje con monto: Anthropic, con Autocompletado | Token: hasta que lo quites o elimines tu cuenta. Entradas: hasta que un dispositivo las recoja |
+| Direcciones web que agregas, sus secretos, resultados de entrega | Enviar webhooks (Pro) | Nuestros servidores | Hasta que las quites o elimines tu cuenta |
+| Entradas nuevas: monto, moneda, fecha, nota, nombres de categoría y cuenta | Enviar webhooks (Pro) | Las direcciones que agregas | Según las políticas de quienes las operan |
 | Tus correos | Cuando nos escribes | Nuestra bandeja de entrada | Mientras sea necesario |
 
 ## Lo que se queda en tu dispositivo
@@ -246,6 +249,16 @@ Cada vez que el asistente usa una de las herramientas de Outlayr, como leer sald
 
 Para que la conexión siga funcionando, guardamos el nombre y la dirección web del asistente, tu aprobación y lo que puede hacer, cuándo usó su acceso por última vez y sus claves de acceso, que guardamos solo como un hash irreversible. Las claves de acceso duran una hora, y el asistente las renueva mientras sigas conectado. Una clave de renovación que pasa 30 días sin usarse vence. Un asistente conectado desde un enlace recibe una clave de una hora que no puede renovar. Si quitas Outlayr del asistente, su acceso vence en un máximo de 30 días. Eliminar tu cuenta lo quita de inmediato, y puedes escribir a [support@tryoutlayr.com](mailto:support@tryoutlayr.com) para que lo quitemos antes.
 
+## Webhooks
+
+Con Outlayr Pro, puedes conectar Outlayr con herramientas de automatización como IFTTT, Zapier o Tasker en **Configuración › Integraciones › Webhooks**. No se recibe ni se envía nada hasta que lo configures ahí.
+
+En **Recibir**, creas un token. Cualquier cosa que envíe ese token a nuestro servidor puede agregar un gasto o un ingreso a tu cuenta: un monto y, si los incluye, una moneda, una fecha, una nota, una categoría, el nombre de una tarjeta o app y el texto de un mensaje. Guardamos el token solo como un hash irreversible, con sus últimos 4 caracteres para que lo reconozcas, y cuándo se creó y se usó por última vez. Cada entrada espera en nuestro servidor hasta que uno de tus dispositivos la recoge; luego se elimina de ahí y se registra como cualquier otra entrada. Pueden esperar hasta 200 a la vez. El texto de un mensaje se lee en tu dispositivo como una [notificación del banco](#leer-notificaciones-del-banco), así que si muestra un monto y el Autocompletado está activado, también lo lee Anthropic.
+
+En **Enviar**, agregas hasta 5 direcciones web. Cuando una entrada nueva llega a nuestro servidor, por la sincronización o un asistente de IA, la enviamos a cada dirección: su ID, monto, moneda, fecha, nota, si es un ingreso y los nombres de su categoría y su cuenta. Solo se envían las entradas guardadas después de agregar la dirección y de una compra de la última semana, así que activar la sincronización no envía tu historial. Las compras recientes que importes o edites después sí pueden enviarse. Cada solicitud va firmada con un secreto que la app crea para esa dirección, para que quien la recibe pueda comprobar que viene de Outlayr. Si una dirección no responde, reintentamos durante unas 9 horas, y tras 20 fallas seguidas dejamos de enviarle hasta que la pruebes de nuevo.
+
+Lo que llega a una dirección lo maneja quien la opera, según su propia política, así que agrega solo una que controles o en la que confíes. Guardamos cada dirección y su secreto, cuándo se agregó y se probó por última vez, y la hora y el resultado de su última entrega, hasta que la quites o elimines tu cuenta. Una entrada pendiente de envío se conserva hasta que se entrega o se agotan sus reintentos.
+
 ## Outlayr Pro
 
 Los pagos de Outlayr Pro se hacen a través de tu tienda de apps (el App Store de Apple en iPhone, Google Play en Android). Nunca vemos los datos de tu tarjeta ni los de tu cuenta de la tienda de apps.
@@ -327,7 +340,7 @@ Si estás en el Espacio Económico Europeo o en el Reino Unido, estas son las ba
 
 | Finalidad | Base legal |
 | --- | --- |
-| Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, la importación de estados de cuenta en PDF, la conexión con Notion, el recordatorio diario en la web, Pro, las invitaciones y las conexiones con asistentes de IA | Contrato: necesitamos estos datos para darte lo que pides. |
+| Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, la importación de estados de cuenta en PDF, la conexión con Notion, el recordatorio diario en la web, Pro, las invitaciones, las conexiones con asistentes de IA y los webhooks | Contrato: necesitamos estos datos para darte lo que pides. |
 | Las notas de bienvenida y de Pro, y los avisos de cambios en esta política o nuestros Términos | Contrato: son parte de la cuenta y la suscripción que pediste. |
 | El envío a Anthropic y ElevenLabs de entradas por voz, fotos de recibos, capturas de planes de cuotas, descripciones de CSV, estados de cuenta en PDF, texto de notificaciones y nombres de comercios | Tu consentimiento, dado con Permitir cuando la app lo pregunta y retirado en **Configuración › Enviar datos a proveedores de IA**. |
 | Las sugerencias de comercios, la lectura de notificaciones, las búsquedas web, la lista compartida de comercios y los logos | Intereses legítimos: agilizar el registro de entradas y hacerlo más preciso. Las sugerencias, la lectura de notificaciones y las búsquedas web solo llegan a Anthropic una vez que lo permites, y desactivar Autocompletado es la forma de oponerte. |
@@ -348,6 +361,7 @@ La [tabla de arriba](#datos-de-un-vistazo) indica cuánto tiempo se conserva cad
 - Las grabaciones pasan por nuestro servidor hacia ElevenLabs, y las fotos de recibos, las capturas de planes de cuotas y el texto de las notificaciones hacia Anthropic. No almacenamos ninguno.
 - La clave de acceso de Notion y tu ID de usuario de Notion se conservan hasta que desconectes Notion o elimines tu cuenta. Las filas leídas de Notion no se conservan en nuestros servidores.
 - Las conexiones con asistentes de IA (el nombre y la dirección del asistente, tu aprobación y sus claves de acceso) se conservan hasta que elimines tu cuenta. Las claves de acceso dejan de funcionar tras una hora, o tras 30 días sin renovarse.
+- Los tokens y las direcciones de webhooks se conservan hasta que los quites o elimines tu cuenta. Una entrada recibida espera hasta que uno de tus dispositivos la recoja, y una por enviar, hasta que se entregue o se agoten unas 9 horas de reintentos.
 - Las solicitudes de sugerencias de comercios no se conservan una vez respondidas. Las que quedan en cola en segundo plano esperan en nuestro servidor hasta que tu dispositivo recoja la respuesta.
 - El idioma de tu app y el registro de qué correos de bienvenida, de Pro y de cambios recibiste se eliminan con tu cuenta.
 - Los contadores de uso que aplican los límites de escaneos, entradas por voz, sugerencias y lectura de notificaciones guardan solo cantidades, asociadas a tu ID de cuenta, y se eliminan con tu cuenta.
@@ -367,6 +381,7 @@ Abre **Configuración › Cuenta › Eliminar cuenta**. Es posible que se te pid
 
 - Se revoca el acceso de Outlayr a tu inicio de sesión con Apple o Google. En el caso de Apple, nuestro servidor le pide a Apple que lo revoque. En el caso de Google, lo hace la app.
 - Si conectaste Notion, nuestro servidor le pide a Notion que revoque la clave de acceso de Outlayr.
+- Tu token de webhook, tus direcciones y las entradas pendientes de recibir o enviar se eliminan, para que no se envíe nada nuevo. Una entrega ya en curso todavía puede completarse.
 - Tu registro sincronizado, los registros de eliminación, las fotos respaldadas y las solicitudes de sugerencia pendientes se eliminan de nuestros servidores.
 - Se eliminan tus registros de cliente en RevenueCat y Stripe y nuestra copia del estado de tu suscripción.
 - Se eliminan tu perfil en PostHog y todos los eventos de analíticas vinculados a él. PostHog borra los eventos en un lote posterior, así que pueden seguir ahí un tiempo después de que la app indique que la eliminación terminó.

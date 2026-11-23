@@ -10,6 +10,7 @@ import categories from "./tables/categories";
 import enrichmentJobs from "./tables/enrichmentJobs";
 import exchangeRates from "./tables/exchangeRates";
 import groundedSpend from "./tables/groundedSpend";
+import inboundWrites from "./tables/inboundWrites";
 import installmentPlans from "./tables/installmentPlans";
 import installments from "./tables/installments";
 import ledgerCells from "./tables/ledgerCells";
@@ -39,6 +40,10 @@ import voiceStreamCredits from "./tables/voiceStreamCredits";
 import voiceThreads from "./tables/voiceThreads";
 import voiceTurns from "./tables/voiceTurns";
 import webPushSubscriptions from "./tables/webPushSubscriptions";
+import webhookDeliveries from "./tables/webhookDeliveries";
+import webhookEndpoints from "./tables/webhookEndpoints";
+import webhookEvents from "./tables/webhookEvents";
+import webhookTokens from "./tables/webhookTokens";
 
 const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly accountDeletionJobs: typeof accountDeletionJobs;
@@ -51,6 +56,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly enrichmentJobs: typeof enrichmentJobs;
   readonly exchangeRates: typeof exchangeRates;
   readonly groundedSpend: typeof groundedSpend;
+  readonly inboundWrites: typeof inboundWrites;
   readonly installmentPlans: typeof installmentPlans;
   readonly installments: typeof installments;
   readonly ledgerCells: typeof ledgerCells;
@@ -80,6 +86,10 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly voiceThreads: typeof voiceThreads;
   readonly voiceTurns: typeof voiceTurns;
   readonly webPushSubscriptions: typeof webPushSubscriptions;
+  readonly webhookDeliveries: typeof webhookDeliveries;
+  readonly webhookEndpoints: typeof webhookEndpoints;
+  readonly webhookEvents: typeof webhookEvents;
+  readonly webhookTokens: typeof webhookTokens;
 }> = $DatabaseSchema.make({
   accountDeletionJobs,
   accounts,
@@ -91,6 +101,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   enrichmentJobs,
   exchangeRates,
   groundedSpend,
+  inboundWrites,
   installmentPlans,
   installments,
   ledgerCells,
@@ -120,6 +131,10 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   voiceThreads,
   voiceTurns,
   webPushSubscriptions,
+  webhookDeliveries,
+  webhookEndpoints,
+  webhookEvents,
+  webhookTokens,
 });
 
 export default databaseSchema;

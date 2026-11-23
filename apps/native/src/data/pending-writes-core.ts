@@ -29,6 +29,7 @@ import {
 import type { SpendDb } from "./budget-spent";
 import { queueEnrichment } from "./enrichment-queue-core";
 import { captureEntrySaved, usualCardFee } from "./entry-filed-core";
+import { inboundEntryId } from "./inbound-entry-id";
 import { readPlans } from "./installments-core";
 import {
     alreadyApplied,
@@ -127,6 +128,21 @@ const stillOnLedger = Effect.fn("PendingWrites.stillOnLedger")(function* stillOn
             .from(transactions)
             .where(and(eq(transactions.id, txId), isNull(transactions.deletedAt)))
             .limit(1)
+    );
+    return rows[0] != null;
+});
+
+// Another device filed this inbox row under the same id and sync brought it here, deleted or not.
+const filedElsewhere = Effect.fn("PendingWrites.filedElsewhere")(function* filedElsewhere(
+    db: Database,
+    write: PendingWrite
+) {
+    const txId = inboundEntryId(write.id);
+    if (txId === null) {
+        return false;
+    }
+    const rows = yield* attempt("read", () =>
+        db.select({ id: transactions.id }).from(transactions).where(eq(transactions.id, txId)).limit(1)
     );
     return rows[0] != null;
 });
@@ -327,7 +343,7 @@ const createEntry = Effect.fn("PendingWrites.createEntry")(function* createEntry
             income: write.income,
             note,
         },
-        { id: write.captureId ?? undefined, logoCandidate }
+        { id: write.captureId ?? inboundEntryId(write.id) ?? undefined, logoCandidate }
     );
     if (lookup) {
         yield* queueEnrichment(db, id);
@@ -465,6 +481,9 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
             );
         }
         if (!write) {
+            continue;
+        }
+        if (yield* filedElsewhere(db, write)) {
             continue;
         }
         const decision = yield* decide(db, write, { access, captured, ledger, usage }, now);

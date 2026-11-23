@@ -4,6 +4,7 @@ import { LinkRow, SettingsSection } from "@/components/list/list-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { useDatabase } from "@/contexts/local-data-context";
 import { onOffLabel } from "@/data/settings-core";
+import { useWebhooksOpen } from "@/hooks/use-webhooks-open";
 import { useTranslation } from "@/i18n/context";
 import { usePurchaseListener } from "@/lib/use-purchase-listener";
 import type { Integrations as IosIntegrations } from "@/screens/settings/integrations";
@@ -15,6 +16,7 @@ export const Integrations: typeof IosIntegrations = () => {
     const router = useRouter();
     const t = useTranslation();
     const [listener] = usePurchaseListener();
+    const webhooksOn = useWebhooksOpen();
 
     return (
         <SettingsScreen>
@@ -25,6 +27,13 @@ export const Integrations: typeof IosIntegrations = () => {
                     title={t("nav.settings.wallet")}
                     value={t(onOffLabel(listener.enabled && listener.allowed.size > 0))}
                 />
+                {webhooksOn ? (
+                    <LinkRow
+                        icon="Plug"
+                        onPress={() => router.push("/settings/integrations/webhooks")}
+                        title={t("nav.settings.webhooks")}
+                    />
+                ) : null}
             </SettingsSection>
             <CardsSection db={db} />
         </SettingsScreen>

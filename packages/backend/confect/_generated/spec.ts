@@ -37,6 +37,7 @@ import sharedReports from "../sharedReports.spec";
 import sync from "../sync.spec";
 import voiceEntry from "../voiceEntry.spec";
 import webPush from "../webPush.spec";
+import webhooks from "../webhooks.spec";
 
 const spec: Spec.Spec<{
   readonly accountDeletion: GroupSpec.NamedAt<typeof accountDeletion, "accountDeletion">;
@@ -77,6 +78,7 @@ const spec: Spec.Spec<{
   readonly sync: GroupSpec.NamedAt<typeof sync, "sync">;
   readonly voiceEntry: GroupSpec.NamedAt<typeof voiceEntry, "voiceEntry">;
   readonly webPush: GroupSpec.NamedAt<typeof webPush, "webPush">;
+  readonly webhooks: GroupSpec.NamedAt<typeof webhooks, "webhooks">;
 }> = Spec.fromGroups({
   ["accountDeletion"]: accountDeletion,
   ["billing"]: billing,
@@ -116,6 +118,7 @@ const spec: Spec.Spec<{
   ["sync"]: sync,
   ["voiceEntry"]: voiceEntry,
   ["webPush"]: webPush,
+  ["webhooks"]: webhooks,
 }) as typeof spec;
 
 export default spec;

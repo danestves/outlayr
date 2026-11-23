@@ -64,6 +64,9 @@ Jede Art von Daten, die Outlayr verarbeitet, an einer Stelle. Die folgenden Absc
 | Einträge, Kontostände, Budgets, anstehende Abbuchungen | KI-Assistent, den du freigibst | Das Unternehmen des Assistenten | Deren Richtlinien |
 | Name und Adresse des Assistenten, deine Freigabe, Zugriffsschlüssel | KI-Assistent, den du freigibst | Unsere Server | Bis zur Kontolöschung |
 | Werkzeugname, Dauer und Fehlschlag jeder Anfrage des Assistenten, Verbindungs-ID | KI-Assistent, den du freigibst | PostHog | Richtlinie von PostHog |
+| Webhook-Token als Hash und seine letzten 4 Zeichen, damit gesendete Einträge | Webhooks empfangen (Pro) | Unsere Server, dein Gerät. Nachrichtentext mit Betrag: Anthropic, mit Intelligentem Ausfüllen | Token: bis du es entfernst oder dein Konto löschst. Einträge: bis ein Gerät sie abholt |
+| Webadressen, die du hinzufügst, ihre Geheimnisse, Zustellergebnisse | Webhooks senden (Pro) | Unsere Server | Bis du sie entfernst oder dein Konto löschst |
+| Neue Einträge: Betrag, Währung, Datum, Notiz, Namen von Kategorie und Konto | Webhooks senden (Pro) | Die Adressen, die du hinzufügst | Richtlinien ihrer Betreiber |
 | Deine E-Mails | Du schreibst | Unser Posteingang | So lange wie nötig |
 
 ## Was auf deinem Gerät bleibt
@@ -246,6 +249,16 @@ Jedes Mal, wenn der Assistent eines der Werkzeuge von Outlayr nutzt, etwa Kontos
 
 Damit die Verbindung funktioniert, speichern wir den Namen und die Webadresse des Assistenten, deine Freigabe und was er darf, wann er seinen Zugriff zuletzt genutzt hat und seine Zugriffsschlüssel, die wir nur als Einweg-Hash speichern. Zugriffsschlüssel gelten eine Stunde, und der Assistent erneuert sie, solange du verbunden bleibst. Ein Erneuerungsschlüssel, der 30 Tage nicht genutzt wird, läuft ab. Ein über einen Link verbundener Assistent erhält einen Schlüssel für eine Stunde, den er nicht erneuern kann. Wenn du Outlayr aus dem Assistenten entfernst, läuft sein Zugriff innerhalb von 30 Tagen ab. Wenn du dein Konto löschst, wird er sofort entfernt, und du kannst an [support@tryoutlayr.com](mailto:support@tryoutlayr.com) schreiben, damit er früher entfernt wird.
 
+## Webhooks
+
+Mit Outlayr Pro kannst du Outlayr unter **Einstellungen › Integrationen › Webhooks** mit Automatisierungsdiensten wie IFTTT, Zapier oder Tasker verbinden. Nichts wird empfangen oder gesendet, bevor du es dort einrichtest.
+
+Unter **Empfangen** erstellst du ein Token. Alles, was dieses Token an unseren Server sendet, kann deinem Konto eine Ausgabe oder Einnahme hinzufügen: einen Betrag und, falls enthalten, eine Währung, ein Datum, eine Notiz, eine Kategorie, den Namen einer Karte oder App und den Text einer Nachricht. Wir speichern das Token nur als Einweg-Hash, mit seinen letzten 4 Zeichen, damit du es erkennst, und wann es erstellt und zuletzt genutzt wurde. Jeder Eintrag wartet auf unserem Server, bis eines deiner Geräte ihn abholt, dann wird er dort gelöscht und wie jeder andere Eintrag erfasst. Bis zu 200 können gleichzeitig warten. Nachrichtentext wird auf deinem Gerät wie eine [Bankbenachrichtigung](#bank-benachrichtigungen-lesen) gelesen: Zeigt er einen Betrag und ist Intelligentes Ausfüllen an, liest ihn auch Anthropic.
+
+Unter **Senden** fügst du bis zu 5 Webadressen hinzu. Wenn ein neuer Eintrag unseren Server erreicht, über die Synchronisierung oder einen KI-Assistenten, senden wir ihn an jede Adresse: seine ID, Betrag, Währung, Datum, Notiz, ob es eine Einnahme ist, und die Namen seiner Kategorie und seines Kontos. Gesendet werden nur Einträge, die nach dem Hinzufügen der Adresse gespeichert wurden und einen Kauf der letzten Woche betreffen, sodass das Einschalten der Synchronisierung deine bisherigen Einträge nicht sendet. Kürzliche Käufe, die du danach importierst oder bearbeitest, können gesendet werden. Jede Anfrage ist mit einem Geheimnis signiert, das die App für diese Adresse erzeugt, damit der Empfänger prüfen kann, dass sie von Outlayr kommt. Antwortet eine Adresse nicht, versuchen wir es etwa 9 Stunden lang erneut, und nach 20 Fehlschlägen in Folge senden wir nichts mehr an sie, bis du sie erneut testest.
+
+Was eine Adresse erreicht, verarbeitet ihr Betreiber nach seiner eigenen Richtlinie, also füge nur eine hinzu, die du kontrollierst oder der du vertraust. Wir speichern jede Adresse und ihr Geheimnis, wann sie hinzugefügt und zuletzt getestet wurde, und Zeitpunkt und Ergebnis der letzten Zustellung, bis du sie entfernst oder dein Konto löschst. Ein Eintrag, der auf den Versand wartet, wird aufbewahrt, bis er zugestellt ist oder seine Wiederholungen ausgeschöpft sind.
+
 ## Outlayr Pro
 
 Zahlungen für Outlayr Pro laufen über deinen App Store (Apples App Store auf dem iPhone, Google Play unter Android). Wir sehen nie deine Kartendaten oder die Daten deines App-Store-Kontos.
@@ -327,7 +340,7 @@ Wenn du dich im Europäischen Wirtschaftsraum oder im Vereinigten Königreich be
 
 | Zweck | Rechtsgrundlage |
 | --- | --- |
-| Dein Konto, die Synchronisierung, die Fotospeicherung, die Spracheingabe, Belegscans, der Import von Ratenplänen, der CSV-Import, der Import von PDF-Kontoauszügen, die Notion-Verbindung, die tägliche Web-Erinnerung, Pro, Einladungen und Verbindungen von KI-Assistenten | Vertrag: Wir brauchen diese Daten, um bereitzustellen, worum du bittest. |
+| Dein Konto, die Synchronisierung, die Fotospeicherung, die Spracheingabe, Belegscans, der Import von Ratenplänen, der CSV-Import, der Import von PDF-Kontoauszügen, die Notion-Verbindung, die tägliche Web-Erinnerung, Pro, Einladungen, Verbindungen von KI-Assistenten und Webhooks | Vertrag: Wir brauchen diese Daten, um bereitzustellen, worum du bittest. |
 | Die Willkommens- und Pro-Nachrichten und Mitteilungen über Änderungen dieser Erklärung oder unserer Nutzungsbedingungen | Vertrag: Sie gehören zu dem Konto und dem Abo, um die du gebeten hast. |
 | Das Senden von Spracheingaben, Belegfotos, Screenshots von Ratenplänen, CSV-Beschreibungen, PDF-Kontoauszügen, Benachrichtigungstext und Händlernamen an Anthropic und ElevenLabs | Deine Einwilligung, erteilt mit „Erlauben“, wenn die App fragt, und widerrufen unter **Einstellungen › Daten an KI-Anbieter senden**. |
 | Händlervorschläge, das Lesen von Benachrichtigungen, Websuchen, die gemeinsame Händlerliste und Logos | Berechtigte Interessen: Einträge schneller und genauer zuordnen. Vorschläge, das Lesen von Benachrichtigungen und Websuchen erreichen Anthropic erst, wenn du es erlaubst, und das Ausschalten von „Intelligentes Ausfüllen“ ist die Art, wie du widersprichst. |
@@ -348,6 +361,7 @@ Die [Tabelle oben](#daten-auf-einen-blick) nennt, wie lange jede Art von Daten a
 - Aufnahmen laufen über unseren Server zu ElevenLabs, und Belegfotos, Screenshots von Ratenplänen und Benachrichtigungstext zu Anthropic. Wir speichern keines davon.
 - Der Notion-Zugriffsschlüssel und deine Notion-Nutzer-ID werden aufbewahrt, bis du Notion trennst oder dein Konto löschst. Aus Notion gelesene Zeilen werden nicht auf unseren Servern aufbewahrt.
 - Verbindungen von KI-Assistenten (Name und Adresse des Assistenten, deine Freigabe und seine Zugriffsschlüssel) werden aufbewahrt, bis du dein Konto löschst. Zugriffsschlüssel funktionieren nach einer Stunde nicht mehr, oder nach 30 Tagen ohne Erneuerung.
+- Webhook-Tokens und -Adressen werden aufbewahrt, bis du sie entfernst oder dein Konto löschst. Ein empfangener Eintrag wartet, bis eines deiner Geräte ihn abholt, und ein zu sendender Eintrag, bis er zugestellt ist oder etwa 9 Stunden Wiederholungen vorbei sind.
 - Anfragen für Händlervorschläge werden nach der Antwort nicht aufbewahrt. Im Hintergrund eingereihte warten auf unserem Server, bis dein Gerät die Antwort abholt.
 - Deine App-Sprache und der Nachweis, welche Willkommens-, Pro- und Änderungsmitteilungen du erhalten hast, werden mit deinem Konto gelöscht.
 - Nutzungszähler, die Limits für Scans, Spracheingaben, Vorschläge und das Lesen von Benachrichtigungen durchsetzen, enthalten nur Zählwerte, sind deiner Konto-ID zugeordnet und werden mit deinem Konto gelöscht.
@@ -367,6 +381,7 @@ Die [Tabelle oben](#daten-auf-einen-blick) nennt, wie lange jede Art von Daten a
 
 - Der Zugriff von Outlayr auf deine Anmeldung mit Apple oder Google wird widerrufen. Bei Apple bittet unser Server Apple, ihn zu widerrufen. Bei Google tut es die App.
 - Wenn du Notion verbunden hast, bittet unser Server Notion, den Zugriffsschlüssel von Outlayr zu widerrufen.
+- Dein Webhook-Token, deine Adressen und Einträge, die auf Empfang oder Versand warten, werden gelöscht, damit nichts Neues gesendet wird. Eine bereits laufende Zustellung kann noch abgeschlossen werden.
 - Dein synchronisiertes Haushaltsbuch, Löschvermerke, gesicherte Fotos und ausstehende Vorschlagsanfragen werden von unseren Servern gelöscht.
 - Deine Kundendatensätze bei RevenueCat und Stripe und unsere Kopie deines Abostatus werden gelöscht.
 - Dein Profil bei PostHog und jedes damit verknüpfte Analyseereignis werden gelöscht. PostHog löscht die Ereignisse in einem späteren Durchlauf, sodass sie noch eine Weile bestehen können, nachdem die App die abgeschlossene Löschung meldet.

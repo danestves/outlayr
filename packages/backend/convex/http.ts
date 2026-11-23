@@ -11,6 +11,7 @@ import { revenueCatWebhookAuth, siteUrl } from "../confect/lib/config";
 import { runEdge, runEdgeSync } from "../confect/lib/runEdge";
 import { mcp } from "../confect/mcp";
 import { revenuecat } from "../confect/revenuecat";
+import { receiveInbound } from "../confect/webhooks";
 import { components, internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 
@@ -59,6 +60,12 @@ http.route({
     handler: httpAction((ctx, request) => runEdge(captureEnrich(ctx, request))),
     method: "POST",
     path: "/capture/enrich",
+});
+
+http.route({
+    handler: httpAction((ctx, request) => runEdge(receiveInbound(ctx, request))),
+    method: "POST",
+    path: "/hooks/in",
 });
 
 http.route({

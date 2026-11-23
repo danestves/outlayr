@@ -64,6 +64,9 @@ Chaque type de données traité par Outlayr, au même endroit. Les sections ci-d
 | Opérations, soldes, budgets, prélèvements à venir | Assistant IA que vous approuvez | La société de l’assistant | Ses politiques |
 | Nom et adresse de l’assistant, votre approbation, clés d’accès | Assistant IA que vous approuvez | Nos serveurs | Jusqu’à la suppression du compte |
 | Nom de l’outil, durée et échec de chaque requête de l’assistant, identifiant de connexion | Assistant IA que vous approuvez | PostHog | Politique de PostHog |
+| Empreinte du jeton de webhook et ses 4 derniers caractères, opérations envoyées avec lui | Réception de webhooks (Pro) | Nos serveurs, votre appareil. Texte d’un message avec montant : Anthropic, avec le Remplissage intelligent | Jeton : jusqu’à ce que vous le retiriez ou supprimiez votre compte. Opérations : jusqu’à ce qu’un appareil les récupère |
+| Adresses web que vous ajoutez, leurs secrets, résultats de livraison | Envoi de webhooks (Pro) | Nos serveurs | Jusqu’à ce que vous les retiriez ou supprimiez votre compte |
+| Nouvelles opérations : montant, devise, date, note, noms de la catégorie et du compte | Envoi de webhooks (Pro) | Les adresses que vous ajoutez | Politiques de leurs gestionnaires |
 | Vos e-mails | Vous nous écrivez | Notre boîte de réception | Aussi longtemps que nécessaire |
 
 ## Ce qui reste sur votre appareil
@@ -246,6 +249,16 @@ Chaque fois que l’assistant utilise un des outils d’Outlayr, comme lire les 
 
 Pour que la connexion fonctionne, nous conservons le nom et l’adresse web de l’assistant, votre approbation et ce qu’il est autorisé à faire, la date de sa dernière utilisation de son accès, ainsi que ses clés d’accès, que nous ne gardons que sous forme d’empreinte à sens unique. Les clés d’accès durent une heure, et l’assistant les renouvelle tant que vous restez connecté. Une clé de renouvellement inutilisée pendant 30 jours expire. Un assistant connecté à partir d’un lien reçoit une clé d’une heure qu’il ne peut pas renouveler. Si vous retirez Outlayr de l’assistant, son accès expire dans un délai de 30 jours. Supprimer votre compte le supprime immédiatement, et vous pouvez écrire à [support@tryoutlayr.com](mailto:support@tryoutlayr.com) pour le faire supprimer plus tôt.
 
+## Webhooks
+
+Avec Outlayr Pro, vous pouvez relier Outlayr à des outils d’automatisation comme IFTTT, Zapier ou Tasker dans **Réglages › Intégrations › Webhooks**. Rien n’est reçu ni envoyé tant que vous ne l’avez pas configuré à cet endroit.
+
+Sous **Recevoir**, vous créez un jeton. Tout ce qui envoie ce jeton à notre serveur peut ajouter une dépense ou un revenu à votre compte : un montant et, s’ils sont fournis, une devise, une date, une note, une catégorie, le nom d’une carte ou d’une app et le texte d’un message. Nous ne gardons le jeton que sous forme d’empreinte à sens unique, avec ses 4 derniers caractères pour que vous le reconnaissiez, ainsi que sa date de création et de dernière utilisation. Chaque opération attend sur notre serveur qu’un de vos appareils la récupère, puis elle y est supprimée et enregistrée comme toute autre opération. Jusqu’à 200 peuvent attendre en même temps. Le texte d’un message est lu sur votre appareil comme une [notification bancaire](#lecture-des-notifications-bancaires), donc s’il affiche un montant et que le Remplissage intelligent est activé, Anthropic le lit aussi.
+
+Sous **Envoyer**, vous ajoutez jusqu’à 5 adresses web. Quand une nouvelle opération arrive sur notre serveur, par la synchronisation ou un assistant IA, nous l’envoyons à chaque adresse : son identifiant, son montant, sa devise, sa date, sa note, s’il s’agit d’un revenu, et les noms de sa catégorie et de son compte. Seules les opérations enregistrées après l’ajout de l’adresse, pour un achat de la semaine écoulée, sont envoyées : activer la synchronisation n’envoie donc pas votre historique. Les achats récents que vous importez ou modifiez ensuite peuvent être envoyés. Chaque requête est signée avec un secret que l’app crée pour cette adresse, afin que le destinataire puisse vérifier qu’elle vient d’Outlayr. Si une adresse ne répond pas, nous réessayons pendant environ 9 heures, et après 20 échecs d’affilée nous cessons de lui envoyer quoi que ce soit jusqu’à ce que vous la testiez à nouveau.
+
+Ce qui arrive à une adresse est traité par celui qui la gère, selon sa propre politique : n’ajoutez donc qu’une adresse que vous contrôlez ou en laquelle vous avez confiance. Nous conservons chaque adresse et son secret, la date de son ajout et de son dernier test, ainsi que l’heure et le résultat de sa dernière livraison, jusqu’à ce que vous la retiriez ou supprimiez votre compte. Une opération en attente d’envoi est conservée jusqu’à sa livraison ou jusqu’à la fin de ses nouvelles tentatives.
+
 ## Outlayr Pro
 
 Les paiements d’Outlayr Pro passent par votre boutique d’applications (l’App Store d’Apple sur iPhone, Google Play sur Android). Nous ne voyons jamais les détails de votre carte ni ceux de votre compte de boutique d’applications.
@@ -327,7 +340,7 @@ Si vous êtes dans l’Espace économique européen ou au Royaume-Uni, nous nous
 
 | Finalité | Base juridique |
 | --- | --- |
-| Votre compte, la synchronisation, le stockage des photos, la saisie vocale, le scan de tickets, l’import d’échéanciers, l’import CSV, l’import de relevé bancaire PDF, la connexion Notion, le rappel quotidien sur le web, Pro, les invitations et les connexions d’assistants IA | Contrat : nous avons besoin de ces données pour fournir ce que vous demandez. |
+| Votre compte, la synchronisation, le stockage des photos, la saisie vocale, le scan de tickets, l’import d’échéanciers, l’import CSV, l’import de relevé bancaire PDF, la connexion Notion, le rappel quotidien sur le web, Pro, les invitations, les connexions d’assistants IA et les webhooks | Contrat : nous avons besoin de ces données pour fournir ce que vous demandez. |
 | Les messages de bienvenue et de Pro, et le préavis de modification de cette politique ou de nos Conditions | Contrat : ils font partie du compte et de l’abonnement que vous avez demandés. |
 | L’envoi des saisies vocales, des photos de tickets, des captures d’écran d’échéanciers, des libellés CSV, des relevés PDF, du texte des notifications et des noms de commerçants à Anthropic et ElevenLabs | Votre consentement, donné avec Autoriser lorsque l’app le demande et retiré dans **Réglages › Envoyer les données aux fournisseurs d’IA**. |
 | Les suggestions de commerçants, la lecture des notifications, les recherches web, la liste partagée des commerçants et les logos | Intérêts légitimes : rendre les opérations plus rapides à saisir et mieux classées. Les suggestions, la lecture des notifications et les recherches web ne parviennent à Anthropic qu’une fois que vous l’avez autorisé, et désactiver le Remplissage intelligent est la façon de vous y opposer. |
@@ -348,6 +361,7 @@ Le [tableau ci-dessus](#aperçu-des-données) indique combien de temps chaque ty
 - Les enregistrements transitent par notre serveur jusqu’à ElevenLabs, et les photos de tickets, les captures d’écran d’échéanciers et le texte des notifications jusqu’à Anthropic. Nous n’en conservons aucun.
 - La clé d’accès Notion et votre identifiant utilisateur Notion sont conservés jusqu’à ce que vous déconnectiez Notion ou supprimiez votre compte. Les lignes lues dans Notion ne sont pas conservées sur nos serveurs.
 - Les connexions d’assistants IA (le nom et l’adresse de l’assistant, votre approbation et ses clés d’accès) sont conservées jusqu’à ce que vous supprimiez votre compte. Les clés d’accès cessent de fonctionner au bout d’une heure, ou après 30 jours sans renouvellement.
+- Les jetons et adresses de webhooks sont conservés jusqu’à ce que vous les retiriez ou supprimiez votre compte. Une opération reçue attend qu’un de vos appareils la récupère, et une opération à envoyer attend sa livraison ou la fin d’environ 9 heures de nouvelles tentatives.
 - Les demandes de suggestion de commerçant ne sont pas conservées une fois la réponse donnée. Celles mises en file d’attente en arrière-plan attendent sur notre serveur jusqu’à ce que votre appareil récupère la réponse.
 - La langue de votre app et la trace des messages de bienvenue, de Pro et de préavis de modification que vous avez reçus sont supprimées avec votre compte.
 - Les compteurs d’utilisation qui appliquent les limites sur les scans, les saisies vocales, les suggestions et la lecture des notifications ne contiennent que des nombres, associés à votre identifiant de compte, et sont supprimés avec votre compte.
@@ -367,6 +381,7 @@ Ouvrez **Réglages › Compte › Supprimer le compte**. Il peut vous être dema
 
 - L’accès d’Outlayr à votre connexion Apple ou Google est révoqué. Pour Apple, notre serveur demande à Apple de le révoquer. Pour Google, c’est l’app qui le fait.
 - Si vous avez connecté Notion, notre serveur demande à Notion de révoquer la clé d’accès d’Outlayr.
+- Votre jeton de webhook, vos adresses et les opérations en attente de réception ou d’envoi sont supprimés, afin que rien de nouveau ne soit envoyé. Une livraison déjà en cours peut encore aboutir.
 - Votre journal synchronisé, les traces de suppression, les photos sauvegardées et les demandes de suggestion en attente sont supprimés de nos serveurs.
 - Vos fiches client chez RevenueCat et Stripe et notre copie du statut de votre abonnement sont supprimées.
 - Votre profil chez PostHog et chaque événement d’analyse qui y est lié sont supprimés. PostHog efface les événements lors d’un traitement ultérieur, ils peuvent donc subsister un moment après que l’app a indiqué la fin de la suppression.

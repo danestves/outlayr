@@ -9,6 +9,8 @@ services:
         ports:
             - "${BIND_ADDRESS:-0.0.0.0}:${CONVEX_PORT:-3210}:3210"
             - "${BIND_ADDRESS:-0.0.0.0}:${CONVEX_SITE_PORT:-3211}:3211"
+        # Every action fetch goes through egress, so a user's webhook URL can't resolve to this network.
+        command: ["--convex-http-proxy", "http://egress:4750"]
         volumes:
             - convex-data:/convex/data
         environment:
@@ -23,6 +25,14 @@ services:
             timeout: 5s
             retries: 12
             start_period: 10s
+        depends_on:
+            - egress
+
+    egress:
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-danestves}/outlayr-egress:${IMAGE_TAG:-edge}
+        restart: unless-stopped
+        environment:
+            EGRESS_ALLOW_RANGES: ${EGRESS_ALLOW_RANGES:-}
 
     convex-dashboard:
         image: ghcr.io/convex/convex-dashboard:${CONVEX_VERSION:-cf39368b85da10d95522e27960d57833c048ea56}

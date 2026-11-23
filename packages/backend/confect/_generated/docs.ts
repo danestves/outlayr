@@ -11,6 +11,7 @@ export type CategoriesDoc = Document.Document<typeof schemaDefinition, "categori
 export type EnrichmentJobsDoc = Document.Document<typeof schemaDefinition, "enrichmentJobs">;
 export type ExchangeRatesDoc = Document.Document<typeof schemaDefinition, "exchangeRates">;
 export type GroundedSpendDoc = Document.Document<typeof schemaDefinition, "groundedSpend">;
+export type InboundWritesDoc = Document.Document<typeof schemaDefinition, "inboundWrites">;
 export type InstallmentPlansDoc = Document.Document<typeof schemaDefinition, "installmentPlans">;
 export type InstallmentsDoc = Document.Document<typeof schemaDefinition, "installments">;
 export type LedgerCellsDoc = Document.Document<typeof schemaDefinition, "ledgerCells">;
@@ -40,6 +41,10 @@ export type VoiceStreamCreditsDoc = Document.Document<typeof schemaDefinition, "
 export type VoiceThreadsDoc = Document.Document<typeof schemaDefinition, "voiceThreads">;
 export type VoiceTurnsDoc = Document.Document<typeof schemaDefinition, "voiceTurns">;
 export type WebPushSubscriptionsDoc = Document.Document<typeof schemaDefinition, "webPushSubscriptions">;
+export type WebhookDeliveriesDoc = Document.Document<typeof schemaDefinition, "webhookDeliveries">;
+export type WebhookEndpointsDoc = Document.Document<typeof schemaDefinition, "webhookEndpoints">;
+export type WebhookEventsDoc = Document.Document<typeof schemaDefinition, "webhookEvents">;
+export type WebhookTokensDoc = Document.Document<typeof schemaDefinition, "webhookTokens">;
 
 export interface Docs {
   accountDeletionJobs: AccountDeletionJobsDoc;
@@ -52,6 +57,7 @@ export interface Docs {
   enrichmentJobs: EnrichmentJobsDoc;
   exchangeRates: ExchangeRatesDoc;
   groundedSpend: GroundedSpendDoc;
+  inboundWrites: InboundWritesDoc;
   installmentPlans: InstallmentPlansDoc;
   installments: InstallmentsDoc;
   ledgerCells: LedgerCellsDoc;
@@ -81,4 +87,8 @@ export interface Docs {
   voiceThreads: VoiceThreadsDoc;
   voiceTurns: VoiceTurnsDoc;
   webPushSubscriptions: WebPushSubscriptionsDoc;
+  webhookDeliveries: WebhookDeliveriesDoc;
+  webhookEndpoints: WebhookEndpointsDoc;
+  webhookEvents: WebhookEventsDoc;
+  webhookTokens: WebhookTokensDoc;
 }

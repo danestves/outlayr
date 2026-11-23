@@ -6,6 +6,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { onOffLabel } from "@/data/settings-core";
 import { useWalletState } from "@/data/use-wallet-state";
 import { formatSentenceDate } from "@/domain/dates";
+import { useWebhooksOpen } from "@/hooks/use-webhooks-open";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { TRIGGERS_IN_SHORTCUTS } from "@/lib/wallet-shortcut";
 
@@ -21,6 +22,7 @@ export function Integrations() {
         at === undefined
             ? undefined
             : t("settings.wallet.lastTap", { when: formatSentenceDate(new Date(at), language) });
+    const webhooksOn = useWebhooksOpen();
 
     return (
         <SettingsScreen>
@@ -39,6 +41,13 @@ export function Integrations() {
                         onPress={() => router.push("/settings/integrations/bank")}
                         title={t("settings.wallet.bankSection")}
                         value={t(onOffLabel(lastNotification != null))}
+                    />
+                ) : null}
+                {webhooksOn ? (
+                    <LinkRow
+                        icon="Plug"
+                        onPress={() => router.push("/settings/integrations/webhooks")}
+                        title={t("nav.settings.webhooks")}
                     />
                 ) : null}
             </SettingsSection>

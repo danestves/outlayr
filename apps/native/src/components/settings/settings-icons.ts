@@ -1,4 +1,5 @@
 import ArchiveRestoreIcon from "@hugeicons-pro/core-stroke-rounded/ArchiveRestoreIcon";
+import ArrowReloadHorizontalIcon from "@hugeicons-pro/core-stroke-rounded/ArrowReloadHorizontalIcon";
 import BadgeCentIcon from "@hugeicons-pro/core-stroke-rounded/BadgeCentIcon";
 import BankIcon from "@hugeicons-pro/core-stroke-rounded/BankIcon";
 import BanknoteIcon from "@hugeicons-pro/core-stroke-rounded/BanknoteIcon";
@@ -31,6 +32,7 @@ import GiftIcon from "@hugeicons-pro/core-stroke-rounded/GiftIcon";
 import HandIcon from "@hugeicons-pro/core-stroke-rounded/HandIcon";
 import HistoryIcon from "@hugeicons-pro/core-stroke-rounded/HistoryIcon";
 import InformationCircleIcon from "@hugeicons-pro/core-stroke-rounded/InformationCircleIcon";
+import Key01Icon from "@hugeicons-pro/core-stroke-rounded/Key01Icon";
 import LandmarkIcon from "@hugeicons-pro/core-stroke-rounded/LandmarkIcon";
 import LanguagesIcon from "@hugeicons-pro/core-stroke-rounded/LanguagesIcon";
 import LayoutTable01Icon from "@hugeicons-pro/core-stroke-rounded/LayoutTable01Icon";
@@ -38,6 +40,7 @@ import LegalDocument01Icon from "@hugeicons-pro/core-stroke-rounded/LegalDocumen
 import LicenseIcon from "@hugeicons-pro/core-stroke-rounded/LicenseIcon";
 import LifebuoyIcon from "@hugeicons-pro/core-stroke-rounded/LifebuoyIcon";
 import LightbulbIcon from "@hugeicons-pro/core-stroke-rounded/LightbulbIcon";
+import Link01Icon from "@hugeicons-pro/core-stroke-rounded/Link01Icon";
 import Logout01Icon from "@hugeicons-pro/core-stroke-rounded/Logout01Icon";
 import Mail01Icon from "@hugeicons-pro/core-stroke-rounded/Mail01Icon";
 import Mic01Icon from "@hugeicons-pro/core-stroke-rounded/Mic01Icon";
@@ -67,6 +70,7 @@ import type { IconSvgElement } from "@hugeicons/react-native";
 
 const REGISTRY = {
     ArchiveRestore: ArchiveRestoreIcon,
+    ArrowReloadHorizontal: ArrowReloadHorizontalIcon,
     BadgeCent: BadgeCentIcon,
     Bank: BankIcon,
     Calculator01: Calculator01Icon,
@@ -88,6 +92,7 @@ const REGISTRY = {
     LayoutTable01: LayoutTable01Icon,
     LegalDocument01: LegalDocument01Icon,
     License: LicenseIcon,
+    Link01: Link01Icon,
     Logout01: Logout01Icon,
     Mail01: Mail01Icon,
     Mic01: Mic01Icon,
@@ -119,6 +124,7 @@ const REGISTRY = {
     Gift: GiftIcon,
     Hand: HandIcon,
     History: HistoryIcon,
+    Key01: Key01Icon,
     Landmark: LandmarkIcon,
     Languages: LanguagesIcon,
     DashboardSquare01: DashboardSquare01Icon,

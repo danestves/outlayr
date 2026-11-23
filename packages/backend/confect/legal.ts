@@ -17,6 +17,9 @@ export const NOVEMBER_NOTICE_AT_MS = Date.UTC(2026, 10, 19);
 
 export const CAPTURE_PUSH_EFFECTIVE_AT_MS = NOVEMBER_NOTICE_AT_MS;
 
+// Nothing is received or sent for a user webhook before the privacy notice that announces them takes effect.
+export const WEBHOOKS_EFFECTIVE_AT_MS = Date.UTC(2027, 0, 1);
+
 const GUEST_PURCHASE_AT_MS = Date.UTC(2026, 10, 21);
 
 export const POLICY_NOTICES: readonly PolicyNotice[] = [
@@ -1103,6 +1106,43 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         document: "terms",
         effectiveAtMs: GUEST_PURCHASE_AT_MS,
         postedAtMs: Date.UTC(2026, 10, 22),
+    },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "With Pro, automation tools can add entries with a token you create, and they wait on our servers until your device collects them. Web addresses you add receive each new entry's amount, currency, date, note, and category and account names. Both are kept until you remove them.",
+                    label: "Webhooks",
+                },
+            ],
+            de: [
+                {
+                    detail: "Mit Pro können Automatisierungsdienste mit einem Token, das du erstellst, Einträge hinzufügen, die auf unseren Servern warten, bis dein Gerät sie abholt. Webadressen, die du hinzufügst, erhalten von jedem neuen Eintrag Betrag, Währung, Datum, Notiz und die Namen von Kategorie und Konto. Beides bleibt gespeichert, bis du es entfernst.",
+                    label: "Webhooks",
+                },
+            ],
+            es: [
+                {
+                    detail: "Con Pro, las herramientas de automatización pueden agregar entradas con un token que creas, y esperan en nuestros servidores hasta que tu dispositivo las recoge. Las direcciones web que agregas reciben de cada entrada nueva el monto, la moneda, la fecha, la nota y los nombres de la categoría y la cuenta. Ambos se guardan hasta que los quites.",
+                    label: "Webhooks",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Avec Pro, des outils d'automatisation peuvent ajouter des opérations avec un jeton que vous créez, et elles attendent sur nos serveurs que votre appareil les récupère. Les adresses web que vous ajoutez reçoivent, pour chaque nouvelle opération, le montant, la devise, la date, la note et les noms de la catégorie et du compte. Les deux sont conservés jusqu'à ce que vous les retiriez.",
+                    label: "Webhooks",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Com o Pro, ferramentas de automação podem adicionar lançamentos com um token que você cria, e eles esperam nos nossos servidores até o seu dispositivo buscá-los. Os endereços web que você adiciona recebem, de cada lançamento novo, o valor, a moeda, a data, a nota e os nomes da categoria e da conta. Os dois ficam guardados até você removê-los.",
+                    label: "Webhooks",
+                },
+            ],
+        },
+        document: "privacy",
+        effectiveAtMs: WEBHOOKS_EFFECTIVE_AT_MS,
+        postedAtMs: Date.UTC(2026, 10, 23),
     },
 ];
 

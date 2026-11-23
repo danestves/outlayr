@@ -14,6 +14,7 @@ import type { PendingWrite } from "@/lib/queue-file";
 import { Meta } from "./app-meta-core";
 import { readAutologWaiting, writeAutologAccess } from "./autolog-cap-core";
 import { cardFeeFor } from "./card-fees-core";
+import { inboundEntryId } from "./inbound-entry-id";
 import { WALLET_DEDUPE_WINDOW_MS } from "./pending-write-decision";
 import { appliedWriteIds, applyPendingWrites, drainPendingWrites, pendingWriteTxId } from "./pending-writes-core";
 import { backfillRecurring } from "./recurrence-backfill";
@@ -134,6 +135,22 @@ describe("applyPendingWrites", () => {
         const [row] = await db.select({ categoryId: transactions.categoryId, id: transactions.id }).from(transactions);
         expect(row).toStrictEqual({ categoryId: null, id: "cap-1" });
         await expect(Effect.runPromise(Meta.get(db, "enrichmentOutbox"))).resolves.toStrictEqual([]);
+    });
+
+    it("files an inbox row under one id on every device, and skips it once another device's copy synced in", async () => {
+        const inbound = walletWrite("inbound:row-1", { category: "Food", dedupeKey: null, note: "Lunch" });
+
+        await Effect.runPromise(applyPendingWrites(db, [inbound], NOW));
+        const [filed] = await liveRows(db);
+        expect(filed?.id).toBe(inboundEntryId("inbound:row-1"));
+
+        // A second device has no ledger entry for the write, only the synced row, deleted there or not.
+        await Effect.runPromise(Meta.set(db, "pendingWriteLedger", []));
+        await db.update(transactions).set({ deletedAt: NOW });
+        await Effect.runPromise(applyPendingWrites(db, [inbound], NOW));
+
+        await expect(liveRows(db)).resolves.toHaveLength(1);
+        await expect(undeleted(db)).resolves.toStrictEqual([]);
     });
 
     it("reads a notification job's amount and merchant, and files it by account", async () => {

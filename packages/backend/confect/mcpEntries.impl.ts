@@ -18,6 +18,7 @@ import { dieAsConvexError } from "./lib/convexError";
 import { scheduleCellRefresh } from "./lib/ledgerCells";
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
+import { emitEntriesFiled } from "./lib/webhookEvents";
 import {
     CategoryRequired,
     choicesOf,
@@ -228,6 +229,23 @@ const logEntry = FunctionImpl.make(
             });
             yield* counter.advanceTo(counter.nextSeq + 1);
             yield* scheduleCellRefresh(userId, counter.cells, [date]);
+            yield* emitEntriesFiled(
+                userId,
+                [
+                    {
+                        accountId: row.accountId,
+                        amount: row.amount,
+                        categoryId: row.categoryId,
+                        currency: row.currency,
+                        date,
+                        income: row.income,
+                        localId,
+                        note: row.note,
+                        updatedAt: now,
+                    },
+                ],
+                now
+            );
             return entry;
         },
         Effect.catchTags({

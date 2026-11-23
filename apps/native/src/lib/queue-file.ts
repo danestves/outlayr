@@ -97,11 +97,14 @@ export function parseLegacyQueue(raw: string): PendingWrite[] {
     }
 }
 
-export function adoptQueue(files: QueueFiles, jobs: PendingWrite[]): void {
+/** True once the claim file exists, so an unwritable container never acks a write it did not park. */
+export function adoptQueue(files: QueueFiles, jobs: PendingWrite[]): boolean {
     if (jobs.length === 0) {
-        return;
+        return true;
     }
-    files.write(claimName(files), toQueueText(jobs));
+    const name = claimName(files);
+    files.write(name, toQueueText(jobs));
+    return files.list().includes(name);
 }
 
 /**
