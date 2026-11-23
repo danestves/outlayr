@@ -87,9 +87,9 @@ export const saveProfileCommand = createRuntimeCommand(appRuntime, {
 });
 
 export const deleteProfileCommand = createRuntimeCommand(appRuntime, {
-    execute: Effect.fn("Profiles.deleteAndLeave")(function* deleteAndLeave(id: string) {
-        yield* flushDeferredDeletes;
-        yield* deleteProfile(id);
+    execute: Effect.fn("Profiles.deleteAndLeave")(function* deleteAndLeave(input: { from: Database; id: string }) {
+        yield* settleLedger(input.from);
+        yield* deleteProfile(input.id);
         yield* enter(undefined);
     }),
     label: "profiles:delete",

@@ -2,7 +2,9 @@ import { MenuView } from "@expo/ui/community/menu";
 import type { MenuState } from "@expo/ui/community/menu";
 import ArrowDown01Icon from "@hugeicons-pro/core-stroke-rounded/ArrowDown01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import * as Cause from "effect/Cause";
 import { Stack, useRouter } from "expo-router";
+import { useRef } from "react";
 import { View } from "react-native";
 
 import { AccountTile } from "@/components/account-tile";
@@ -13,6 +15,7 @@ import { useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useProLocked } from "@/hooks/use-pro-locked";
 import { useTranslation } from "@/i18n/context";
 import { activeProfileId } from "@/lib/active-profile";
+import { notifyFailure } from "@/lib/notify";
 import { switchProfileCommand } from "@/state/profiles-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
@@ -41,7 +44,15 @@ function ProfileChip() {
     const router = useRouter();
     const locked = useProLocked();
     const openPaywall = useOpenPaywall();
-    const switchProfile = useAtomAction(switchProfileCommand);
+    // A switch reloads the app, so only a failure clears this.
+    const switching = useRef(false);
+    const switchProfile = useAtomAction(switchProfileCommand, {
+        onFailure: (cause) => {
+            switching.current = false;
+            console.warn("[outlayr] profile switch failed", Cause.pretty(cause));
+            notifyFailure({ title: t("profiles.error.switchFailed") });
+        },
+    });
     const profiles = useProfiles();
     const activeId = activeProfileId();
     const active = profiles.find((profile) => profile.id === activeId);
@@ -88,6 +99,10 @@ function ProfileChip() {
                     openPaywall("profiles");
                     return;
                 }
+                if (switching.current) {
+                    return;
+                }
+                switching.current = true;
                 switchProfile({ from: db, profileId: target });
             }}
             shouldOpenOnLongPress={false}

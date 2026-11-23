@@ -1,6 +1,8 @@
 import { occurrenceId } from "@outlayr/money/occurrence";
 import { eq, isNull, ne, sql } from "drizzle-orm";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { beforeEach, describe, expect, it, vi, test } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
@@ -884,6 +886,30 @@ describe("drainPendingWrites", () => {
         await Effect.runPromise(drainPendingWrites(db, claim, () => undefined));
 
         await expect(db.select().from(transactions)).resolves.toHaveLength(2);
+    });
+
+    it("runs its own claim instead of joining a pass that started first", async () => {
+        const entered = Deferred.makeUnsafe<null>();
+        const gate = Deferred.makeUnsafe<null>();
+        const lenient = Effect.runPromise(
+            drainPendingWrites(
+                db,
+                () => ({ jobs: [walletWrite("wallet-1")], names: ["a.jsonl"] }),
+                () => undefined,
+                () => Deferred.succeed(entered, null).pipe(Effect.andThen(Deferred.await(gate)), Effect.as(new Map()))
+            )
+        );
+        await Effect.runPromise(Deferred.await(entered));
+
+        const strict = vi.fn<() => { jobs: PendingWrite[]; names: string[] }>(() => {
+            throw new Error("unreadable queue");
+        });
+        const own = Effect.runPromise(Effect.exit(drainPendingWrites(db, strict, () => undefined, undefined, "own")));
+        await Effect.runPromise(Deferred.succeed(gate, null));
+
+        expect(Exit.isFailure(await own)).toBe(true);
+        expect(strict).toHaveBeenCalledOnce();
+        await lenient;
     });
 });
 

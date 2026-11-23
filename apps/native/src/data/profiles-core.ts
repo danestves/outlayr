@@ -112,10 +112,19 @@ export const updateProfile = Effect.fn("Profiles.update")(function* updateProfil
     id: string,
     patch: ProfileIdentity & { name: string }
 ) {
+    const [existing] = yield* query("update", () =>
+        registry
+            .select({ imageUri: profiles.imageUri })
+            .from(profiles)
+            .where(and(eq(profiles.id, id), isNull(profiles.deletedAt)))
+            .limit(1)
+    );
+    // Like `removesLogo` in accounts-core.ts: a photo this device never fetched also has a null path.
+    const removesPhoto = existing != null && existing.imageUri != null && patch.imageUri == null;
     yield* query("update", () =>
         registry
             .update(profiles)
-            .set({ ...patch, updatedAt: new Date() })
+            .set({ ...patch, imageKey: removesPhoto ? null : undefined, updatedAt: new Date() })
             .where(and(eq(profiles.id, id), isNull(profiles.deletedAt)))
     );
 });

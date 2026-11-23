@@ -34,9 +34,12 @@ export const openProfileRegistry = Effect.fn("ProfileRegistry.open")(function* o
         return;
     }
     const personal = yield* Effect.try(() => openDatabase(PERSONAL_DATABASE));
-    yield* Effect.tryPromise(() => migrate(personal, migrationsBundle));
-    // Profile edits from here must still queue for Personal's next push, and its triggers are built at boot.
-    yield* Effect.try(() => ensureOutboxTriggers(personal, SYNCED_SPECS));
+    // Until `registry` owns this connection nothing else can close it, so a failed install closes it here.
+    yield* Effect.gen(function* install() {
+        yield* Effect.tryPromise(() => migrate(personal, migrationsBundle));
+        // Profile edits from here must still queue for Personal's next push, and its triggers are built at boot.
+        yield* Effect.try(() => ensureOutboxTriggers(personal, SYNCED_SPECS));
+    }).pipe(Effect.onError(() => closeDatabase(personal).pipe(Effect.ignore)));
     registry = { db: personal, own: true };
 });
 

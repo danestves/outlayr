@@ -48,6 +48,14 @@ const profiles = {
             pt: "Não foi possível salvar o perfil. Tente de novo.",
             "pt-PT": "Não foi possível guardar o perfil. Tente novamente.",
         }),
+        "profiles.error.switchFailed": t({
+            en: "Couldn't switch profiles. Try again.",
+            de: "Das Profil konnte nicht gewechselt werden. Versuch es noch mal.",
+            es: "No se pudo cambiar de perfil. Inténtalo de nuevo.",
+            fr: "Impossible de changer de profil. Réessayez.",
+            pt: "Não foi possível trocar de perfil. Tente de novo.",
+            "pt-PT": "Não foi possível trocar de perfil. Tente novamente.",
+        }),
         "profiles.field.currency": t({
             en: "Main currency",
             de: "Hauptwährung",

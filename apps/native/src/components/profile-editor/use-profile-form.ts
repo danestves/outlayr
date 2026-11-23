@@ -107,7 +107,12 @@ export function useProfileForm(mode: ProfileEditorMode) {
                       {
                           onPress: () => {
                               haptics("warning");
-                              void runAtomCommand(registry, deleteProfileCommand, loaded.id, SILENT).then((result) => {
+                              void runAtomCommand(
+                                  registry,
+                                  deleteProfileCommand,
+                                  { from: db, id: loaded.id },
+                                  SILENT
+                              ).then((result) => {
                                   if (AsyncResult.isFailure(result)) {
                                       fail(result.cause);
                                   }

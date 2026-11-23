@@ -647,20 +647,21 @@ let rerun = false;
 
 // One drain at a time: `claimPendingWrites` re-returns an unreleased claim (crash recovery), so overlapping drains
 // get the same jobs, both pass `alreadyApplied`, and insert twice. Mount and a cold launch's first "active" overlap.
-// A caller that must see its own claim and release errors waits out a pass that runs another caller's callbacks.
-export const awaitIdleDrain = Effect.fn("PendingWrites.awaitIdleDrain")(function* awaitIdleDrain() {
-    for (let pass = draining; pass !== null; pass = draining) {
-        yield* Deferred.await(pass).pipe(Effect.ignore);
-    }
-});
+// "join" settles on another caller's pass, so its callbacks run too; "own" waits one out so its own callbacks run.
+export type DrainMode = "join" | "own";
 
 export const drainPendingWrites = Effect.fn("PendingWrites.drainPendingWrites")(function* drainPendingWrites(
     db: Database,
     claim: () => ClaimedWrites,
     release: (claimed: ClaimedWrites) => void,
-    reader?: NotificationReader
+    reader?: NotificationReader,
+    mode: DrainMode = "join"
 ) {
-    if (draining !== null) {
+    if (mode === "own") {
+        for (let pass = draining; pass !== null; pass = draining) {
+            yield* Deferred.await(pass).pipe(Effect.ignore);
+        }
+    } else if (draining !== null) {
         rerun = true;
         return yield* Deferred.await(draining);
     }
