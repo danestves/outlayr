@@ -9,18 +9,21 @@ import {
 } from "./active-profile";
 import type { ProfileSwitch } from "./active-profile";
 import { readDismissals } from "./dismissed-writes";
+import { readPurchaseRoutes, retargetPurchaseRoutes, writePurchaseRoutes } from "./purchase-routes";
 import { queueDirectory } from "./queue-directory";
 import {
     adoptQueue,
     claimPendingWrites as claimQueue,
     foldHeld,
+    hasHeldWrites,
     heldIds,
     holdQueue,
     parseLegacyQueue,
     QUEUE_FILE,
     releasePendingWrites as releaseQueue,
+    WALLET_DEDUPE_WINDOW_MS,
 } from "./queue-file";
-import type { ClaimedWrites, PendingWrite, QueueFiles } from "./queue-file";
+import type { ClaimedWrites, PendingWrite, PurchaseRoute, QueueFiles } from "./queue-file";
 import { sharedStore } from "./shared-store";
 
 /** Retired: one JSON string let two intents overwrite each other. `adoptLegacyQueue` migrates what remains. */
@@ -191,9 +194,20 @@ export function adoptPendingWrites(jobs: PendingWrite[]): boolean {
 export function retireLedger(key: string): void {
     try {
         retargetProfileSwitch(key, "personal");
+        retargetPurchaseRoutes(key, "personal");
         foldHeld(queueFiles, key, "personal");
     } catch (error) {
         console.warn("[outlayr] deleted profile queue not retired", error);
+    }
+}
+
+/** Held captures or routed purchases a deleted ledger still owns, so retiring it again would do work. */
+export function hasPendingQueueWork(key: string): boolean {
+    try {
+        return hasHeldWrites(queueFiles, key) || readPurchaseRoutes().some((entry) => entry.ledger === key);
+    } catch (error) {
+        console.warn("[outlayr] pending queue work unreadable", error);
+        return true;
     }
 }
 
@@ -217,6 +231,21 @@ function persistCutoffs(cutoffs: readonly ProfileSwitch[]): void {
     }
 }
 
+function persistPurchases(purchases: readonly PurchaseRoute[]): void {
+    const current = readPurchaseRoutes();
+    const same =
+        current.length === purchases.length &&
+        current.every(
+            (entry, index) =>
+                entry.at === purchases[index]?.at &&
+                entry.key === purchases[index]?.key &&
+                entry.ledger === purchases[index]?.ledger
+        );
+    if (!same) {
+        writePurchaseRoutes(purchases);
+    }
+}
+
 /**
  * Nothing is deleted here: the caller commits, then calls {@link releasePendingWrites}, so a force-quit mid-drain
  * replays. That is safe because `applyPendingWrites` records each enqueue id in the same SQLite transaction.
@@ -229,10 +258,15 @@ export function claimPendingWritesOrThrow(): ClaimedWrites {
         dismissed: new Set(readDismissals(now, heldPendingWriteIds())),
         key: ledgerKey(activeProfileId()),
         now,
+        purchases: readPurchaseRoutes(),
+        siblingWindowMs: WALLET_DEDUPE_WINDOW_MS,
     });
     // A drain with nothing claimed returns before releasing, so it persists the pruned marker here instead.
     if (claimed.names.length === 0) {
         persistCutoffs(claimed.cutoffs ?? []);
+        if (claimed.purchases !== undefined) {
+            persistPurchases(claimed.purchases);
+        }
     }
     return { ...claimed, captured: new Set(captureIds(claimed).filter((id) => answerOf(id) != null)) };
 }
@@ -250,6 +284,9 @@ export function releasePendingWritesOrThrow(claimed: ClaimedWrites): void {
     releaseQueue(queueFiles, claimed);
     if (claimed.cutoffs !== undefined) {
         persistCutoffs(claimed.cutoffs);
+    }
+    if (claimed.purchases !== undefined) {
+        persistPurchases(claimed.purchases);
     }
     for (const id of captureIds(claimed)) {
         sharedStore?.remove(`${CAPTURE_ANSWER_PREFIX}${id}`);

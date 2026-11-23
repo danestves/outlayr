@@ -4,6 +4,8 @@ import { File, Paths } from "expo-file-system";
 
 import { parseProfileId } from "@/domain/profiles";
 
+import { clearPurchaseRoutes } from "./purchase-routes";
+
 const activeProfileFile = () => new File(Paths.document, "active-profile");
 
 const profileSwitchFile = () => new File(Paths.document, "profile-switch");
@@ -93,5 +95,6 @@ export function retargetProfileSwitch(from: string, to: string): void {
 export function resetActiveProfile(): void {
     writeActiveProfile(undefined);
     clearProfileSwitch();
+    clearPurchaseRoutes();
     active = { id: undefined };
 }

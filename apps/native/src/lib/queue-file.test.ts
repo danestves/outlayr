@@ -11,6 +11,7 @@ import {
     QUEUE_FILE,
     releasePendingWrites,
     SWITCH_GRACE_MS,
+    WALLET_DEDUPE_WINDOW_MS,
 } from "./queue-file";
 import type { PendingWrite, QueueFiles } from "./queue-file";
 
@@ -286,6 +287,91 @@ describe("claimPendingWrites across a switch", () => {
 
         expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["live", "parked"]);
         expect(claimed.held).toBeUndefined();
+    });
+});
+
+describe("claimPendingWrites with purchase routes", () => {
+    const T1 = 1_700_000_100_000;
+    const T2 = T1 + 60_000;
+    const NOW = T2 + 120_000;
+    const PURCHASE = "wallet:expense:cafe:1240:visa";
+    const cutoffs = [
+        { at: T1, from: "A" },
+        { at: T2, from: "B" },
+    ];
+    const siblingWindowMs = WALLET_DEDUPE_WINDOW_MS;
+    const route = { at: T2 + 30_000, key: PURCHASE, ledger: "A" };
+
+    it("follows a persisted route when the settlement is captured after the cutoff", () => {
+        const settlement = write("settlement", { date: T2 + 60_000, dedupeKey: PURCHASE });
+        const { disk, files } = makeFiles({ [QUEUE_FILE]: lines(settlement) });
+
+        const claimed = claimPendingWrites(files, {
+            cutoffs,
+            key: "C",
+            now: NOW,
+            purchases: [route],
+            siblingWindowMs,
+        });
+        releasePendingWrites(files, claimed);
+
+        expect(claimed.jobs).toStrictEqual([]);
+        expect(claimed.held).toStrictEqual([{ jobs: [settlement], name: "held-A-1.jsonl" }]);
+        expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["settlement"]);
+        expect(disk.has(QUEUE_FILE)).toBe(false);
+    });
+
+    it("keeps an authorization and its settlement together when the switch lands between them", () => {
+        const settlement = write("settlement", { date: T2 + 60_000, dedupeKey: PURCHASE });
+        const authorization = write("authorization", { date: T1 - 60_000, dedupeKey: PURCHASE });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(settlement, authorization) });
+
+        const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: NOW, siblingWindowMs });
+
+        expect(claimed.jobs).toStrictEqual([]);
+        expect(claimed.held?.map((entry) => entry.name)).toStrictEqual(["held-A-1.jsonl"]);
+        expect(claimed.held?.[0]?.jobs.map((job) => job.id).sort()).toStrictEqual(["authorization", "settlement"]);
+    });
+
+    it("falls back to the cutoff when the sibling is outside the window", () => {
+        const settlement = write("settlement", { date: T2 + 60_000, dedupeKey: PURCHASE });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(settlement) });
+
+        const claimed = claimPendingWrites(files, {
+            cutoffs,
+            key: "C",
+            now: NOW,
+            purchases: [{ at: T1 - 600_000, key: PURCHASE, ledger: "A" }],
+            siblingWindowMs,
+        });
+
+        expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["settlement"]);
+        expect(claimed.held).toBeUndefined();
+    });
+
+    it("keeps new routes and drops the ones older than a day", () => {
+        const job = write("job", { date: NOW - 300_000, dedupeKey: "wallet:fresh" });
+        const fresh = { at: NOW - 60_000, key: PURCHASE, ledger: "B" };
+        const stale = { at: NOW - 24 * 60 * 60 * 1000 - 1, key: "wallet:stale", ledger: "A" };
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(job) });
+
+        const claimed = claimPendingWrites(files, { key: "C", now: NOW, purchases: [stale, fresh], siblingWindowMs });
+
+        expect(claimed.purchases).toStrictEqual([{ at: job.date, key: "wallet:fresh", ledger: "C" }, fresh]);
+    });
+
+    it("routes a late settlement by the route its authorization made in the claim", () => {
+        const current = write("current", { date: T2 + 60_000 });
+        const authorization = write("authorization", { date: T1 - 60_000, dedupeKey: PURCHASE });
+        const settlement = write("settlement", { date: T2 + 60_000, dedupeKey: PURCHASE });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(current, authorization) });
+
+        const claimed = claimPendingWrites(files, { cutoffs, key: "C", now: NOW, siblingWindowMs });
+        files.write("claimed-1.jsonl", lines(current, authorization, settlement));
+        releasePendingWrites(files, claimed);
+
+        expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["authorization"]);
+        expect(parseQueue(files.read("held-A-2.jsonl")).map((job) => job.id)).toStrictEqual(["settlement"]);
     });
 });
 
