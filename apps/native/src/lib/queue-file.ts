@@ -43,7 +43,7 @@ export interface SwitchCutoff {
 }
 
 export interface ClaimLedger {
-    /** Ids the user dismissed: a dismissed capture is dropped even when the switch would have parked it. */
+    /** Ids the user dismissed: they stay in the current claim so the drain learns the purchase a settlement repeats. */
     dismissed?: ReadonlySet<string>;
     /** Switch cutoffs, oldest first: a capture older than one belongs to the ledger it names. */
     cutoffs?: readonly SwitchCutoff[];
@@ -268,9 +268,9 @@ export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): Cla
         }
         for (const job of parsed) {
             const destination = destinationOf(job, route);
-            if (destination === route.key) {
+            if (destination === route.key || route.dismissed?.has(job.id)) {
                 jobs.push(job);
-            } else if (!route.dismissed?.has(job.id)) {
+            } else {
                 addJob(leaving, destination, job);
             }
         }
@@ -310,9 +310,9 @@ export function releasePendingWrites(files: QueueFiles, claimed: ClaimedWrites):
         }
         for (const job of late) {
             const destination = destinationOf(job, route);
-            if (destination === route.key) {
+            if (destination === route.key || route.dismissed?.has(job.id)) {
                 own.push(job);
-            } else if (!route.dismissed?.has(job.id)) {
+            } else {
                 addJob(leaving, destination, job);
             }
         }

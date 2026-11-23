@@ -6,7 +6,7 @@ import { acquireDrains, closeDrains, drainDevicePendingWritesOrFail, reopenDrain
 import { profileLedgerExists } from "@/data/profile-ledger-files";
 import { profileRegistry } from "@/data/profile-registry";
 import { createProfile, deleteProfile, prepareProfileLedger } from "@/data/profiles";
-import { ProfilesError, updateProfile } from "@/data/profiles-core";
+import { profileIsLive, ProfilesError, updateProfile } from "@/data/profiles-core";
 import type { ProfileIdentity } from "@/data/profiles-core";
 import { flushDeferredDeletes } from "@/data/use-deferred-delete";
 import type { Database } from "@/db/client";
@@ -123,6 +123,15 @@ export const switchProfileCommand = createRuntimeCommand(appRuntime, {
             yield* prepareProfileLedger(input.profileId, input.from, undefined);
         }
         yield* settleLedger(input.from);
+        // Settling can let sync tombstone the profile this switch set out to open.
+        yield* Effect.gen(function* guardTarget() {
+            if (input.profileId !== undefined && !(yield* profileIsLive(profileRegistry(), input.profileId))) {
+                return yield* Effect.fail(new Error("profile was deleted"));
+            }
+        }).pipe(
+            Effect.mapError(switchFailed),
+            Effect.onError(() => Effect.sync(reopenDrains))
+        );
         yield* withRollback(enter(input.profileId));
     }),
     label: "profiles:switch",

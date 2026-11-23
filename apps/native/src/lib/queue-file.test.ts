@@ -220,7 +220,7 @@ describe("claimPendingWrites across a switch", () => {
         expect(claimed.cutoffs).toStrictEqual([{ at: T2, from: "B" }]);
     });
 
-    it("drops a dismissed capture instead of parking it", () => {
+    it("returns a dismissed capture to the current claim instead of parking it", () => {
         const gap = early("gap");
         const dismissed = early("dismissed");
         const { disk, files } = makeFiles({ [QUEUE_FILE]: lines(gap, dismissed) });
@@ -233,9 +233,26 @@ describe("claimPendingWrites across a switch", () => {
         });
         releasePendingWrites(files, claimed);
 
-        expect(claimed.jobs).toStrictEqual([]);
+        expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["dismissed"]);
         expect([...disk.keys()]).toStrictEqual(["held-A-1.jsonl"]);
         expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
+    });
+
+    it("keeps a dismissed late append for the current ledger instead of parking it", () => {
+        const gap = early("gap");
+        const { disk, files } = makeFiles({ [QUEUE_FILE]: lines(gap) });
+
+        const claimed = claimPendingWrites(files, {
+            cutoffs,
+            dismissed: new Set(["late-dismissed"]),
+            key: "B",
+            now: NOW,
+        });
+        files.write("claimed-1.jsonl", lines(gap, early("late-dismissed")));
+        releasePendingWrites(files, claimed);
+
+        expect(parseQueue(files.read("held-B-1.jsonl")).map((job) => job.id)).toStrictEqual(["late-dismissed"]);
+        expect(disk.has("held-A-2.jsonl")).toBe(false);
     });
 
     it("parks a late append for the ledger its cutoff names instead of adopting it", () => {

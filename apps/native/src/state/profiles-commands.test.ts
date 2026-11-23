@@ -12,9 +12,11 @@ import type { Database } from "@/db/client";
 import { appRuntime } from "@/lib/runtime";
 
 const WORK = "6f1c2b3a-4d5e-4f60-8a7b-9c0d1e2f3a4b";
+const OTHER = "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d";
 let activeFile: string | undefined;
 let recordedSwitches = 0;
 let failSwitchMarker = false;
+let profileLive = true;
 class QueueUnreadable extends Schema.TaggedError<QueueUnreadable>()("QueueUnreadable", {}) {}
 class Offline extends Schema.TaggedError<Offline>()("Offline", {}) {}
 
@@ -41,6 +43,12 @@ vi.mock("@/data/pending-writes", async (importOriginal) => ({
 }));
 vi.mock("@/data/use-deferred-delete", () => ({ flushDeferredDeletes: Effect.void }));
 vi.mock("expo-updates", () => ({ reloadAsync: vi.fn(() => Promise.resolve()) }));
+vi.mock("@/data/profile-ledger-files", () => ({ profileLedgerExists: () => true }));
+vi.mock("@/data/profile-registry", () => ({ profileRegistry: () => ({}) }));
+vi.mock("@/data/profiles-core", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@/data/profiles-core")>()),
+    profileIsLive: () => Effect.succeed(profileLive),
+}));
 import { settleBeforeSignOut, signOutToPersonal, switchProfileCommand } from "./profiles-commands";
 
 const db = {} as Database;
@@ -105,8 +113,36 @@ describe("switching profiles", () => {
         activeFile = WORK;
         recordedSwitches = 0;
         failSwitchMarker = false;
+        profileLive = true;
         drain = Effect.void;
         reopenDrains();
+    });
+
+    it("switches into a live profile", async () => {
+        const registry = AtomRegistry.make({ initialValues: [[appRuntime.layer, Layer.empty]] });
+
+        const result = await switchProfileCommand.run(registry, { from: db, profileId: OTHER });
+        registry.dispose();
+
+        expect(AsyncResult.isSuccess(result)).toBe(true);
+        expect(recordedSwitches).toBe(1);
+        expect(activeFile).toBe(OTHER);
+    });
+
+    it("refuses a target the settle just deleted, and reopens the drains", async () => {
+        profileLive = false;
+        const registry = AtomRegistry.make({ initialValues: [[appRuntime.layer, Layer.empty]] });
+
+        const result = await switchProfileCommand.run(registry, { from: db, profileId: OTHER });
+        registry.dispose();
+
+        expect(AsyncResult.isFailure(result)).toBe(true);
+        expect(recordedSwitches).toBe(0);
+        expect(activeFile).toBe(WORK);
+
+        const claim = vi.fn(emptyClaim);
+        await Effect.runPromise(Effect.exit(drainPendingWrites(db, claim, () => undefined)));
+        expect(claim).toHaveBeenCalledOnce();
     });
 
     it("puts the launch profile back and reopens the drains when the reload fails", async () => {

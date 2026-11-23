@@ -130,8 +130,13 @@ export const updateProfile = Effect.fn("Profiles.update")(function* updateProfil
     );
 });
 
-const profileRowExists = Effect.fn("Profiles.rowExists")(function* profileRowExists(registry: Database, id: string) {
-    const [row] = yield* query("create", () =>
+/** A switch settles first, and settling can let sync tombstone the profile it was about to open. */
+export const profileIsLive = Effect.fn("Profiles.isLive")(function* profileIsLive(
+    registry: Database,
+    id: string,
+    operation: typeof ProfilesOperation.Type = "switch"
+) {
+    const [row] = yield* query(operation, () =>
         registry
             .select({ id: profiles.id })
             .from(profiles)
@@ -147,7 +152,7 @@ export const createOrUpdateProfile = Effect.fn("Profiles.createOrUpdate")(functi
     input: ProfileIdentity & { id: string; name: string }
 ) {
     const { id, ...patch } = input;
-    if (yield* profileRowExists(registry, id)) {
+    if (yield* profileIsLive(registry, id, "create")) {
         yield* updateProfile(registry, id, patch);
         return;
     }
