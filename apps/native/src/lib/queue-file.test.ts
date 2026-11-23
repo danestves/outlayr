@@ -8,6 +8,7 @@ import {
     parseQueue,
     QUEUE_FILE,
     releasePendingWrites,
+    SWITCH_GRACE_MS,
 } from "./queue-file";
 import type { PendingWrite, QueueFiles } from "./queue-file";
 
@@ -108,7 +109,7 @@ describe("claimPendingWrites", () => {
     it("claims nothing when the queue is empty", () => {
         const { files } = makeFiles();
 
-        expect(claimPendingWrites(files)).toStrictEqual({ jobs: [], names: [] });
+        expect(claimPendingWrites(files)).toStrictEqual({ jobs: [], names: [], seen: new Set() });
     });
 
     it("leaves the claim in place until it is released", () => {
@@ -124,6 +125,7 @@ describe("claimPendingWrites", () => {
 
 describe("claimPendingWrites across a switch", () => {
     const AT = 1_700_000_100_000;
+    const SETTLED = AT + SWITCH_GRACE_MS;
     const early = (id: string) => write(id, { date: AT - 60_000 });
     const late = (id: string) => write(id, { date: AT + 60_000 });
 
@@ -132,7 +134,7 @@ describe("claimPendingWrites across a switch", () => {
         const fresh = late("fresh");
         const { disk, files } = makeFiles({ [QUEUE_FILE]: lines(gap, fresh) });
 
-        const claimed = claimPendingWrites(files, { key: "B", left: { at: AT, from: "A" } });
+        const claimed = claimPendingWrites(files, { key: "B", left: { at: AT, from: "A" }, now: SETTLED });
 
         expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["fresh"]);
         expect(claimed.held).toStrictEqual({ jobs: [gap], name: "held-A-1.jsonl" });
@@ -143,7 +145,7 @@ describe("claimPendingWrites across a switch", () => {
         expect(disk.has(QUEUE_FILE)).toBe(false);
         expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
 
-        const back = claimPendingWrites(files, { key: "A" });
+        const back = claimPendingWrites(files, { key: "A", now: SETTLED });
         expect(back.names).toStrictEqual(["held-A-1.jsonl"]);
         expect(back.jobs.map((job) => job.id)).toStrictEqual(["gap"]);
 
@@ -155,17 +157,68 @@ describe("claimPendingWrites across a switch", () => {
         const gap = early("gap");
         const { files } = makeFiles({ [QUEUE_FILE]: lines(gap) });
 
-        releasePendingWrites(files, claimPendingWrites(files, { key: "B", left: { at: AT, from: "A" } }));
+        releasePendingWrites(files, claimPendingWrites(files, { key: "B", left: { at: AT, from: "A" }, now: SETTLED }));
 
         files.write("claimed-1.jsonl", lines(gap));
-        releasePendingWrites(files, claimPendingWrites(files, { key: "B", left: { at: AT, from: "A" } }));
+        releasePendingWrites(files, claimPendingWrites(files, { key: "B", left: { at: AT, from: "A" }, now: SETTLED }));
 
         expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
         expect(parseQueue(files.read("held-A-2.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
 
-        const back = claimPendingWrites(files, { key: "A" });
+        const back = claimPendingWrites(files, { key: "A", now: SETTLED });
         expect(back.names).toStrictEqual(["held-A-1.jsonl", "held-A-2.jsonl"]);
         expect(back.jobs.map((job) => job.id)).toStrictEqual(["gap"]);
+    });
+
+    it("keeps the marker through the grace, still parking gap captures, and settles once it passes", () => {
+        const gap = early("gap");
+        const fresh = late("fresh");
+        const left = { at: AT, from: "A" };
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(gap, fresh) });
+
+        const claimed = claimPendingWrites(files, { key: "B", left, now: AT + 60_000 });
+
+        expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["fresh"]);
+        expect(claimed.held).toStrictEqual({ jobs: [gap], name: "held-A-1.jsonl" });
+        expect(claimed.settlesSwitch).toBeUndefined();
+
+        releasePendingWrites(files, claimed);
+
+        expect(claimPendingWrites(files, { key: "B", left, now: SETTLED }).settlesSwitch).toBe(true);
+    });
+
+    it("drops a dismissed capture instead of parking it", () => {
+        const gap = early("gap");
+        const dismissed = early("dismissed");
+        const { disk, files } = makeFiles({ [QUEUE_FILE]: lines(gap, dismissed) });
+
+        const claimed = claimPendingWrites(files, {
+            dismissed: new Set(["dismissed"]),
+            key: "B",
+            left: { at: AT, from: "A" },
+            now: SETTLED,
+        });
+        releasePendingWrites(files, claimed);
+
+        expect(claimed.jobs).toStrictEqual([]);
+        expect([...disk.keys()]).toStrictEqual(["held-A-1.jsonl"]);
+        expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
+    });
+});
+
+describe("releasePendingWrites", () => {
+    it("keeps a job the intent appended to the claimed file after the claim read it", () => {
+        const { disk, files } = makeFiles({ [QUEUE_FILE]: lines(write("a")) });
+
+        const claimed = claimPendingWrites(files);
+        files.write("claimed-1.jsonl", lines(write("a"), write("late")));
+        releasePendingWrites(files, claimed);
+
+        expect(disk.has("claimed-1.jsonl")).toBe(false);
+        expect(parseQueue(files.read("claimed-2.jsonl")).map((job) => job.id)).toStrictEqual(["late"]);
+
+        const next = claimPendingWrites(files);
+        expect(next.jobs.map((job) => job.id)).toStrictEqual(["late"]);
     });
 });
 

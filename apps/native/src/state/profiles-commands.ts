@@ -2,7 +2,7 @@ import * as Effect from "effect/Effect";
 import { reloadAsync } from "expo-updates";
 import { DevSettings } from "react-native";
 
-import { drainDevicePendingWritesOrFail } from "@/data/pending-writes";
+import { closeDrains, drainDevicePendingWritesOrFail, reopenDrains } from "@/data/pending-writes";
 import { profileLedgerExists } from "@/data/profile-ledger-files";
 import { profileRegistry } from "@/data/profile-registry";
 import { createProfile, deleteProfile, prepareProfileLedger } from "@/data/profiles";
@@ -10,7 +10,15 @@ import { ProfilesError, updateProfile } from "@/data/profiles-core";
 import type { ProfileIdentity } from "@/data/profiles-core";
 import { flushDeferredDeletes } from "@/data/use-deferred-delete";
 import type { Database } from "@/db/client";
-import { activeProfileId, clearProfileSwitch, recordProfileSwitch, writeActiveProfile } from "@/lib/active-profile";
+import {
+    activeProfileId,
+    clearProfileSwitch,
+    readProfileSwitch,
+    recordProfileSwitch,
+    restoreProfileSwitch,
+    writeActiveProfile,
+} from "@/lib/active-profile";
+import type { ProfileSwitch } from "@/lib/active-profile";
 import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand } from "./atom-command";
@@ -34,14 +42,37 @@ const reload = Effect.suspend(() => {
 const writeActive = (profileId: string | undefined) =>
     Effect.try({ catch: switchFailed, try: () => writeActiveProfile(profileId) });
 
+// The file, the marker and the drains go back together, so a retry starts from the launch profile.
+const restoreLaunchProfile = Effect.fn("Profiles.restoreLaunchProfile")(function* restoreLaunchProfile(
+    previous: ProfileSwitch | null
+) {
+    yield* Effect.try({ catch: switchFailed, try: () => writeActiveProfile(activeProfileId()) }).pipe(Effect.ignore);
+    // A launch still inside its own switch's grace keeps parking that switch's late captures.
+    yield* Effect.try({ catch: switchFailed, try: () => restoreProfileSwitch(previous) }).pipe(Effect.ignore);
+    reopenDrains();
+});
+
+const withRollback = <A, E>(run: Effect.Effect<A, E>) =>
+    Effect.suspend(() => {
+        const previous = readProfileSwitch();
+        return run.pipe(
+            Effect.catch((error) => restoreLaunchProfile(previous).pipe(Effect.andThen(Effect.fail(error))))
+        );
+    });
+
 /**
  * A marker first, so a capture enqueued after this drain is held for the ledger being left rather than landing in
- * the next one. Deleting a profile clears it instead: that ledger never opens again.
+ * the next one. Drains stay shut until the reload, or a capture-triggered pass could still file there.
  */
-const enter = Effect.fn("Profiles.enter")(function* enter(profileId: string | undefined, marker: "clear" | "record") {
-    yield* Effect.try({ catch: switchFailed, try: marker === "record" ? recordProfileSwitch : clearProfileSwitch });
-    yield* writeActive(profileId);
-    yield* reload;
+const enter = Effect.fn("Profiles.enter")(function* enter(profileId: string | undefined) {
+    yield* closeDrains();
+    yield* withRollback(
+        Effect.gen(function* openLedger() {
+            yield* Effect.try({ catch: switchFailed, try: recordProfileSwitch });
+            yield* writeActive(profileId);
+            yield* reload;
+        })
+    );
 });
 
 // Runs before sync is turned off, so a failed drain leaves the session and its outbox untouched for a retry.
@@ -55,6 +86,7 @@ export const signOutToPersonal = Effect.fn("Profiles.signOutToPersonal")(functio
     if (activeProfileId() === undefined) {
         return yield* signOut;
     }
+    yield* closeDrains();
     yield* Effect.try({ catch: switchFailed, try: recordProfileSwitch });
     yield* writeActive(undefined);
     yield* signOut.pipe(Effect.ensuring(reload.pipe(Effect.ignore)));
@@ -70,7 +102,7 @@ export const switchProfileCommand = createRuntimeCommand(appRuntime, {
             yield* prepareProfileLedger(input.profileId, input.from, undefined);
         }
         yield* settleLedger(input.from);
-        yield* enter(input.profileId, "record");
+        yield* enter(input.profileId);
     }),
     label: "profiles:switch",
 });
@@ -85,7 +117,7 @@ export const createProfileCommand = createRuntimeCommand(appRuntime, {
     }) {
         // Before the registry row, so a failed drain can be retried without making a second profile.
         yield* settleLedger(input.from);
-        yield* enter(yield* createProfile(input), "record");
+        yield* enter(yield* createProfile(input));
     }),
     label: "profiles:create",
 });
@@ -99,8 +131,18 @@ export const saveProfileCommand = createRuntimeCommand(appRuntime, {
 export const deleteProfileCommand = createRuntimeCommand(appRuntime, {
     execute: Effect.fn("Profiles.deleteAndLeave")(function* deleteAndLeave(input: { from: Database; id: string }) {
         yield* settleLedger(input.from);
-        yield* deleteProfile(input.id);
-        yield* enter(undefined, "clear");
+        yield* closeDrains();
+        // Clearing beats recording here: that ledger never opens again. Both it and the active file change before
+        // the tombstone, so a crash cannot reopen a deleted ledger.
+        yield* withRollback(
+            Effect.gen(function* leaveLedger() {
+                yield* Effect.try({ catch: switchFailed, try: clearProfileSwitch });
+                yield* writeActive(undefined);
+                yield* deleteProfile(input.id);
+            })
+        );
+        // Past the tombstone a failed reload must not restore the deleted profile; the next launch opens Personal.
+        yield* reload;
     }),
     label: "profiles:delete",
 });

@@ -645,6 +645,21 @@ const firstCategory = Effect.fn("PendingWrites.firstCategory")(function* firstCa
 let draining: Deferred.Deferred<DrainResult, DrainFailure> | null = null;
 let rerun = false;
 
+// A switch keeps the drains shut until its reload: a pass claiming after the strict drain would commit into the old
+// ledger, and the reload kills it before release, so the next launch files the same capture again.
+let closed = false;
+
+export const closeDrains = Effect.fn("PendingWrites.closeDrains")(function* closeDrains() {
+    for (let pass = draining; pass !== null; pass = draining) {
+        yield* Deferred.await(pass).pipe(Effect.ignore);
+    }
+    closed = true;
+});
+
+export function reopenDrains(): void {
+    closed = false;
+}
+
 // One drain at a time: `claimPendingWrites` re-returns an unreleased claim (crash recovery), so overlapping drains
 // get the same jobs, both pass `alreadyApplied`, and insert twice. Mount and a cold launch's first "active" overlap.
 // "join" settles on another caller's pass, so its callbacks run too; "own" waits one out so its own callbacks run.
@@ -657,6 +672,9 @@ export const drainPendingWrites = Effect.fn("PendingWrites.drainPendingWrites")(
     reader?: NotificationReader,
     mode: DrainMode = "join"
 ) {
+    if (closed) {
+        return NOTHING_DRAINED;
+    }
     if (mode === "own") {
         for (let pass = draining; pass !== null; pass = draining) {
             yield* Deferred.await(pass).pipe(Effect.ignore);

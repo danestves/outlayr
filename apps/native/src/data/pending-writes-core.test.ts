@@ -3,7 +3,7 @@ import { eq, isNull, ne, sql } from "drizzle-orm";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import { beforeEach, describe, expect, it, vi, test } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it, test, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
@@ -11,7 +11,7 @@ import { migratedDatabase, transactionalDatabase } from "@/db/test-database";
 import { withAutologEntry } from "@/domain/autolog-cap";
 import type { AutologUsage } from "@/domain/meta-values";
 import { DEFAULT_CURRENCY } from "@/domain/money";
-import type { PendingWrite } from "@/lib/queue-file";
+import type { ClaimedWrites, PendingWrite } from "@/lib/queue-file";
 
 import { Meta } from "./app-meta-core";
 import { readAutologWaiting, writeAutologAccess } from "./autolog-cap-core";
@@ -21,9 +21,11 @@ import { WALLET_DEDUPE_WINDOW_MS } from "./pending-write-decision";
 import {
     appliedWriteIds,
     applyPendingWrites,
+    closeDrains,
     dismissPendingWrite,
     drainPendingWrites,
     pendingWriteTxId,
+    reopenDrains,
 } from "./pending-writes-core";
 import { backfillRecurring } from "./recurrence-backfill";
 import { transactionsRepo } from "./transactions-core";
@@ -65,6 +67,10 @@ function walletWrite(id: string, overrides: Partial<PendingWrite> = {}): Pending
         note: "Blue Bottle",
         ...overrides,
     };
+}
+
+function claiming(jobs: PendingWrite[], names: string[] = []): ClaimedWrites {
+    return { jobs, names, seen: new Set(jobs.map((job) => job.id)) };
 }
 
 const HOUR = 60 * 60 * 1000;
@@ -798,7 +804,7 @@ describe("drainPendingWrites", () => {
     it("applies a job once when two drains overlap", async () => {
         const job = walletWrite("wallet-1");
         let released = 0;
-        const claim = () => (released === 0 ? { jobs: [job], names: ["claimed-1.jsonl"] } : { jobs: [], names: [] });
+        const claim = () => (released === 0 ? claiming([job], ["claimed-1.jsonl"]) : claiming([]));
         const release = () => {
             released += 1;
         };
@@ -825,7 +831,7 @@ describe("drainPendingWrites", () => {
             ),
             push("held", "Card alert\nA $40.00 charge at Hotel Sol could not be completed."),
         ];
-        const claim = () => ({ jobs, names: ["claimed-1.jsonl"] });
+        const claim = () => claiming(jobs, ["claimed-1.jsonl"]);
         const reader = () =>
             Effect.succeed(
                 new Map([
@@ -857,13 +863,12 @@ describe("drainPendingWrites", () => {
 
     it("runs another pass for a drain that arrives mid-pass", async () => {
         const claim = vi
-            .fn<() => { jobs: PendingWrite[]; names: string[] }>()
-            .mockReturnValueOnce({ jobs: [walletWrite("wallet-1")], names: ["a.jsonl"] })
-            .mockReturnValueOnce({
-                jobs: [walletWrite("wallet-2", { dedupeKey: "wallet:expense:other:100" })],
-                names: ["b.jsonl"],
-            })
-            .mockReturnValue({ jobs: [], names: [] });
+            .fn<() => ClaimedWrites>()
+            .mockReturnValueOnce(claiming([walletWrite("wallet-1")], ["a.jsonl"]))
+            .mockReturnValueOnce(
+                claiming([walletWrite("wallet-2", { dedupeKey: "wallet:expense:other:100" })], ["b.jsonl"])
+            )
+            .mockReturnValue(claiming([]));
 
         await Promise.all([
             Effect.runPromise(drainPendingWrites(db, claim, () => undefined)),
@@ -875,12 +880,11 @@ describe("drainPendingWrites", () => {
 
     it("drains again once the first pass has finished", async () => {
         const claim = vi
-            .fn<() => { jobs: PendingWrite[]; names: string[] }>()
-            .mockReturnValueOnce({ jobs: [walletWrite("wallet-1")], names: ["a.jsonl"] })
-            .mockReturnValueOnce({
-                jobs: [walletWrite("wallet-2", { dedupeKey: "wallet:expense:other:100" })],
-                names: ["b.jsonl"],
-            });
+            .fn<() => ClaimedWrites>()
+            .mockReturnValueOnce(claiming([walletWrite("wallet-1")], ["a.jsonl"]))
+            .mockReturnValueOnce(
+                claiming([walletWrite("wallet-2", { dedupeKey: "wallet:expense:other:100" })], ["b.jsonl"])
+            );
 
         await Effect.runPromise(drainPendingWrites(db, claim, () => undefined));
         await Effect.runPromise(drainPendingWrites(db, claim, () => undefined));
@@ -894,14 +898,14 @@ describe("drainPendingWrites", () => {
         const lenient = Effect.runPromise(
             drainPendingWrites(
                 db,
-                () => ({ jobs: [walletWrite("wallet-1")], names: ["a.jsonl"] }),
+                () => claiming([walletWrite("wallet-1")], ["a.jsonl"]),
                 () => undefined,
                 () => Deferred.succeed(entered, null).pipe(Effect.andThen(Deferred.await(gate)), Effect.as(new Map()))
             )
         );
         await Effect.runPromise(Deferred.await(entered));
 
-        const strict = vi.fn<() => { jobs: PendingWrite[]; names: string[] }>(() => {
+        const strict = vi.fn<() => ClaimedWrites>(() => {
             throw new Error("unreadable queue");
         });
         const own = Effect.runPromise(Effect.exit(drainPendingWrites(db, strict, () => undefined, undefined, "own")));
@@ -1084,7 +1088,7 @@ describe("the free auto-log cap", () => {
         await Effect.runPromise(
             drainPendingWrites(
                 db,
-                () => ({ jobs: [], names: [] }),
+                () => claiming([]),
                 () => undefined
             )
         );
@@ -1104,9 +1108,9 @@ describe("the free auto-log cap", () => {
     it("counts only the entries that arrive fresh as auto-logged, not the ones a Pro unlock releases", async () => {
         await Effect.runPromise(applyPendingWrites(db, [fare("w1", "Blue Bottle", 0)], NOW));
         await Effect.runPromise(writeAutologAccess(db, "open"));
-        const nothingClaimed = () => ({ jobs: [], names: [] });
+        const nothingClaimed = () => claiming([]);
         const fresh = fare("w2", "Philz", 1);
-        const claimsFresh = () => ({ jobs: [fresh], names: ["claimed-1.jsonl"] });
+        const claimsFresh = () => claiming([fresh], ["claimed-1.jsonl"]);
 
         const pending = () => Effect.runPromise(Meta.get(db, "reviewPending"));
 
@@ -1125,12 +1129,64 @@ describe("the free auto-log cap", () => {
         await Effect.runPromise(
             drainPendingWrites(
                 db,
-                () => ({ jobs: [], names: [] }),
+                () => claiming([]),
                 () => undefined
             )
         );
 
         await expect(Effect.runPromise(readAutologWaiting(db))).resolves.toHaveLength(1);
         await expect(liveRows(db)).resolves.toStrictEqual([]);
+    });
+});
+
+describe("closeDrains", () => {
+    let db: Database;
+
+    beforeEach(async () => {
+        db = makeDb();
+        await seedCategories(db);
+        reopenDrains();
+    });
+
+    afterEach(() => {
+        reopenDrains();
+    });
+
+    it("waits for the pass in flight, blocks a later claim, and lets one through once reopened", async () => {
+        const entered = Deferred.makeUnsafe<null>();
+        const gate = Deferred.makeUnsafe<null>();
+        const order: string[] = [];
+        const running = Effect.runPromise(
+            drainPendingWrites(
+                db,
+                () => claiming([walletWrite("wallet-1")], ["a.jsonl"]),
+                () => {
+                    order.push("release");
+                },
+                () => Deferred.succeed(entered, null).pipe(Effect.andThen(Deferred.await(gate)), Effect.as(new Map()))
+            )
+        );
+        await Effect.runPromise(Deferred.await(entered));
+
+        const closing = Effect.runPromise(closeDrains().pipe(Effect.andThen(Effect.sync(() => order.push("closed")))));
+        await new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
+        expect(order).toStrictEqual([]);
+
+        await Effect.runPromise(Deferred.succeed(gate, null));
+        await Promise.all([running, closing]);
+        expect(order).toStrictEqual(["release", "closed"]);
+
+        const claim = vi.fn(() => claiming([]));
+        await expect(Effect.runPromise(drainPendingWrites(db, claim, () => undefined))).resolves.toStrictEqual({
+            applied: 0,
+            autologged: 0,
+        });
+        expect(claim).not.toHaveBeenCalled();
+
+        reopenDrains();
+        await Effect.runPromise(drainPendingWrites(db, claim, () => undefined));
+        expect(claim).toHaveBeenCalledOnce();
     });
 });

@@ -19,6 +19,9 @@ export function autologSourceOf(write: PendingWrite): AutologSource {
 
 export const QUEUE_FILE = "queue.jsonl";
 
+/** Some intents date a capture, then wait on a server lookup, so a capture from before a switch can arrive late. */
+export const SWITCH_GRACE_MS = 10 * 60 * 1000;
+
 const CLAIM_NAME = /^claimed-(\d+)\.jsonl$/;
 
 const DIGITS = /^\d+$/;
@@ -34,10 +37,14 @@ export interface QueueFiles {
 }
 
 export interface ClaimLedger {
+    /** Ids the user dismissed: a dismissed capture is dropped even when the switch would have parked it. */
+    dismissed?: ReadonlySet<string>;
     /** `ledgerKey` of the profile this launch opened: captures older than `left.at` are not its own. */
     key: string;
     /** The switch that opened this launch left another ledger behind. */
     left?: { at: number; from: string };
+    /** When the claim ran, for the grace a switch needs before its marker can clear. */
+    now: number;
 }
 
 export interface ClaimedWrites {
@@ -47,6 +54,8 @@ export interface ClaimedWrites {
     held?: { jobs: PendingWrite[]; name: string };
     jobs: PendingWrite[];
     names: string[];
+    /** Every job id read during the claim, so a release can tell a late append from what it already took. */
+    seen: ReadonlySet<string>;
     /** A release settles the switch by clearing its marker. */
     settlesSwitch?: boolean;
 }
@@ -167,28 +176,38 @@ export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): Cla
     const key = ledger?.key;
     const left = ledger?.left;
     const holding = key !== undefined && left !== undefined && left.from !== key ? left : undefined;
+    const dismissed = ledger?.dismissed;
+    const now = ledger?.now;
     const held = key === undefined ? [] : heldNames(files, key);
     names.push(...held);
     const hidden = new Set(held);
     const jobs: PendingWrite[] = [];
     const leaving: PendingWrite[] = [];
+    const seen = new Set<string>();
     for (const name of names) {
         const parsed = parseQueue(files.read(name));
+        for (const job of parsed) {
+            seen.add(job.id);
+        }
         if (hidden.has(name) || holding === undefined) {
             jobs.push(...parsed);
         } else {
+            // Dismissals expire, so a parked one would only file itself in the old ledger days later.
             for (const job of parsed) {
-                if (job.date < holding.at) {
-                    leaving.push(job);
-                } else {
+                if (job.date >= holding.at) {
                     jobs.push(job);
+                } else if (!dismissed?.has(job.id)) {
+                    leaving.push(job);
                 }
             }
         }
     }
-    const claimed: ClaimedWrites = { jobs: uniqueById(jobs), names };
-    if (holding !== undefined) {
-        claimed.settlesSwitch = true;
+    const claimed: ClaimedWrites = { jobs: uniqueById(jobs), names, seen };
+    if (holding !== undefined && now !== undefined) {
+        // A clock moved back makes the marker's date useless, so treating it as settled is the safer read.
+        if (now < holding.at || now - holding.at >= SWITCH_GRACE_MS) {
+            claimed.settlesSwitch = true;
+        }
         if (leaving.length > 0) {
             claimed.held = { jobs: uniqueById(leaving), name: heldName(files, holding.from) };
         }
@@ -201,6 +220,13 @@ export function releasePendingWrites(files: QueueFiles, claimed: ClaimedWrites):
     const { held } = claimed;
     if (held !== undefined && held.jobs.length > 0) {
         files.write(held.name, toQueueText(held.jobs));
+    }
+    // An intent that opened the live queue before the rename appends to the claimed file after the claim read it.
+    const late = claimed.names.flatMap((name) =>
+        parseQueue(files.read(name)).filter((job) => !claimed.seen.has(job.id))
+    );
+    if (!adoptQueue(files, uniqueById(late))) {
+        throw new Error("Late pending writes could not be parked, so their claim files stay for a replay");
     }
     for (const name of claimed.names) {
         files.discard(name);

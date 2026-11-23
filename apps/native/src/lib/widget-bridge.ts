@@ -1,6 +1,7 @@
 import { File } from "expo-file-system";
 
 import { activeProfileId, clearProfileSwitch, ledgerKey, readProfileSwitch } from "./active-profile";
+import { readDismissals } from "./dismissed-writes";
 import { queueDirectory } from "./queue-directory";
 import {
     adoptQueue,
@@ -181,9 +182,12 @@ export function adoptPendingWrites(jobs: PendingWrite[]): boolean {
  */
 export function claimPendingWritesOrThrow(): ClaimedWrites {
     adoptLegacyQueue();
+    const now = Date.now();
     const claimed = claimQueue(queueFiles, {
+        dismissed: new Set(readDismissals(now)),
         key: ledgerKey(activeProfileId()),
         left: readProfileSwitch() ?? undefined,
+        now,
     });
     // A drain with nothing claimed returns before releasing, so it never clears the marker itself.
     if (claimed.settlesSwitch && claimed.names.length === 0) {
@@ -197,7 +201,7 @@ export function claimPendingWrites(): ClaimedWrites {
         return claimPendingWritesOrThrow();
     } catch (error) {
         console.warn("[outlayr] pending writes unreadable", error);
-        return { jobs: [], names: [] };
+        return { jobs: [], names: [], seen: new Set() };
     }
 }
 

@@ -60,6 +60,14 @@ export function clearProfileSwitch(): void {
     }
 }
 
+export function restoreProfileSwitch(previous: ProfileSwitch | null): void {
+    if (previous === null) {
+        clearProfileSwitch();
+    } else {
+        profileSwitchFile().writeSync(JSON.stringify(previous));
+    }
+}
+
 // Call before `writeActiveProfile`: `activeProfileId()` still holds the launch profile, the one being left.
 export function recordProfileSwitch(): void {
     profileSwitchFile().writeSync(JSON.stringify({ at: Date.now(), from: ledgerKey(activeProfileId()) }));
