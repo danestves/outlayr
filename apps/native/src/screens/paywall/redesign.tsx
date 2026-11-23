@@ -72,12 +72,14 @@ function PitchBand({
     block,
     daysLeft,
     stats,
+    synced,
     waitingAccounts,
 }: {
     autolog: { cap: number; total: number; used: number };
     block: TopBlock;
     daysLeft: number;
     stats: LedgerStats;
+    synced: boolean;
     waitingAccounts: number;
 }) {
     const t = useTranslation();
@@ -115,7 +117,9 @@ function PitchBand({
                 <ProBand
                     subtitle={t("pro.top.sync")}
                     title={
-                        stats.entries > 0 ? t("pro.band.onlyHere", { count: stats.entries }) : t("pro.band.everyPhone")
+                        stats.entries > 0 && !synced
+                            ? t("pro.band.onlyHere", { count: stats.entries })
+                            : t("pro.band.everyPhone")
                     }
                 />
             );
@@ -181,6 +185,7 @@ export function PaywallRedesign({
     const now = useNow();
     const stats = useLedgerStats(db, now);
     const waitingAccounts = useMeta(db, "onboardingWaitingAccounts").length;
+    const synced = useMeta(db, "syncedAt") !== null;
     const { manageUrl, status } = useProTerm();
     const then = thenLabel(flow.plan, t);
     const daysLeft = daysLeftInMonth(new Date(now));
@@ -314,6 +319,7 @@ export function PaywallRedesign({
                             block={flow.block}
                             daysLeft={daysLeft}
                             stats={stats}
+                            synced={synced}
                             waitingAccounts={waitingAccounts}
                         />
                     )}
