@@ -5,6 +5,7 @@ import { File, Paths } from "expo-file-system";
 import { parseProfileId } from "@/domain/profiles";
 
 import { clearClaimAssignments } from "./claim-assignments";
+import { clearDurably, readDurably, writeDurably } from "./durable-file";
 import { clearPurchaseRoutes } from "./purchase-routes";
 
 const activeProfileFile = () => new File(Paths.document, "active-profile");
@@ -52,8 +53,8 @@ export function writeActiveProfile(profileId: string | undefined): void {
 // Garbled or missing reads as no marker: a half-written list must not route a capture anywhere.
 export function readProfileSwitch(): readonly ProfileSwitch[] {
     try {
-        const file = profileSwitchFile();
-        return file.exists ? Option.getOrElse(decodeProfileSwitches(JSON.parse(file.textSync())), () => []) : [];
+        const text = readDurably(profileSwitchFile());
+        return text === null ? [] : Option.getOrElse(decodeProfileSwitches(JSON.parse(text)), () => []);
     } catch {
         return [];
     }
@@ -64,14 +65,11 @@ export function writeProfileSwitch(switches: readonly ProfileSwitch[]): void {
         clearProfileSwitch();
         return;
     }
-    profileSwitchFile().writeSync(JSON.stringify(switches));
+    writeDurably(profileSwitchFile(), JSON.stringify(switches));
 }
 
 export function clearProfileSwitch(): void {
-    const file = profileSwitchFile();
-    if (file.exists) {
-        file.delete();
-    }
+    clearDurably(profileSwitchFile());
 }
 
 // Call before `writeActiveProfile`: `activeProfileId()` still holds the launch profile, the one being left.

@@ -2,6 +2,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { File, Paths } from "expo-file-system";
 
+import { clearDurably, readDurably, writeDurably } from "./durable-file";
 import type { PurchaseRoute } from "./queue-file";
 
 const purchaseRoutesFile = () => new File(Paths.document, "purchase-routes");
@@ -17,8 +18,8 @@ const decodePurchaseRoutes = Schema.decodeUnknownOption(Schema.Array(PurchaseRou
 // Garbled or missing reads as no routes: a half-written list must not route a capture anywhere.
 export function readPurchaseRoutes(): readonly PurchaseRoute[] {
     try {
-        const file = purchaseRoutesFile();
-        return file.exists ? Option.getOrElse(decodePurchaseRoutes(JSON.parse(file.textSync())), () => []) : [];
+        const text = readDurably(purchaseRoutesFile());
+        return text === null ? [] : Option.getOrElse(decodePurchaseRoutes(JSON.parse(text)), () => []);
     } catch {
         return [];
     }
@@ -29,14 +30,11 @@ export function writePurchaseRoutes(routes: readonly PurchaseRoute[]): void {
         clearPurchaseRoutes();
         return;
     }
-    purchaseRoutesFile().writeSync(JSON.stringify(routes));
+    writeDurably(purchaseRoutesFile(), JSON.stringify(routes));
 }
 
 export function clearPurchaseRoutes(): void {
-    const file = purchaseRoutesFile();
-    if (file.exists) {
-        file.delete();
-    }
+    clearDurably(purchaseRoutesFile());
 }
 
 // A deleted ledger never opens again: a settlement still in flight follows its authorization to `to`.

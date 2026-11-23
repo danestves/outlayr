@@ -235,6 +235,18 @@ describe("applyPendingWrites", () => {
         await expect(undeleted(db)).resolves.toStrictEqual([]);
     });
 
+    it("keeps every restored date for one purchase key, so the older day's settlement is not filed", async () => {
+        const key = "wallet:expense:two-days:640";
+        const older = walletWrite("older-day", { date: NOW.getTime() - 48 * HOUR, dedupeKey: key, note: "Older" });
+        restoreDismissedPurchase(key, older.date);
+        restoreDismissedPurchase(key, NOW.getTime());
+
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [older], NOW));
+
+        expect(applied).toBe(0);
+        await expect(undeleted(db)).resolves.toStrictEqual([]);
+    });
+
     it("drafts a debt from a push instead of filing it, once, and keeps a dismissed draft dismissed", async () => {
         const job = walletWrite("iou", {
             amount: 0,

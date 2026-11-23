@@ -57,6 +57,15 @@ describe("readDismissals", () => {
         expect(files.get("dismissed.jsonl")).toBe(`${stale}\n`);
     });
 
+    it("keeps an expired dismissal while a held capture shares its purchase key", () => {
+        const dismissal = { at: NOW - 91 * DAY, date: NOW - 95 * DAY, id: "authorization", key: "wallet:cafe:640" };
+        const stale = JSON.stringify(dismissal);
+        files.set("dismissed.jsonl", `${stale}\n`);
+
+        expect(readDismissals(NOW, new Set(["wallet:cafe:640"]))).toStrictEqual([dismissal]);
+        expect(files.get("dismissed.jsonl")).toBe(`${stale}\n`);
+    });
+
     it("returns every dismissal, expired included, when the held scan failed", () => {
         const stale = { at: NOW - 91 * DAY, id: "stale" };
         const fresh = { at: NOW - DAY, id: "fresh" };

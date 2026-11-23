@@ -16,7 +16,7 @@ import {
     claimPendingWrites as claimQueue,
     foldHeld,
     hasHeldWrites,
-    heldIds,
+    heldRefs,
     holdQueue,
     parseLegacyQueue,
     QUEUE_FILE,
@@ -216,10 +216,11 @@ export function hasPendingQueueWork(key: string): boolean {
     }
 }
 
-/** Ids parked in any ledger's held file, so their dismissal survives the file. Null means the scan failed. */
-export function heldPendingWriteIds(): ReadonlySet<string> | null {
+/** Ids and purchase keys parked in any ledger's held file, so their dismissal survives the file. Null means the
+ * scan failed. */
+export function heldPendingWriteRefs(): ReadonlySet<string> | null {
     try {
-        return heldIds(queueFiles);
+        return heldRefs(queueFiles);
     } catch (error) {
         console.warn("[outlayr] held writes unreadable", error);
         return null;

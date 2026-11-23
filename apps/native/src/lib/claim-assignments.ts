@@ -2,6 +2,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { File, Paths } from "expo-file-system";
 
+import { clearDurably, readDurably, writeDurably } from "./durable-file";
 import type { CaptureAssignment } from "./queue-file";
 
 const assignmentsFile = () => new File(Paths.document, "claim-assignments");
@@ -16,8 +17,8 @@ const decodeAssignments = Schema.decodeUnknownOption(Schema.Array(CaptureAssignm
 // Garbled or missing reads as none: a half-written list must not pin a capture to a ledger.
 export function readClaimAssignments(): readonly CaptureAssignment[] {
     try {
-        const file = assignmentsFile();
-        return file.exists ? Option.getOrElse(decodeAssignments(JSON.parse(file.textSync())), () => []) : [];
+        const text = readDurably(assignmentsFile());
+        return text === null ? [] : Option.getOrElse(decodeAssignments(JSON.parse(text)), () => []);
     } catch {
         return [];
     }
@@ -28,14 +29,11 @@ export function writeClaimAssignments(assignments: readonly CaptureAssignment[])
         clearClaimAssignments();
         return;
     }
-    assignmentsFile().writeSync(JSON.stringify(assignments));
+    writeDurably(assignmentsFile(), JSON.stringify(assignments));
 }
 
 export function clearClaimAssignments(): void {
-    const file = assignmentsFile();
-    if (file.exists) {
-        file.delete();
-    }
+    clearDurably(assignmentsFile());
 }
 
 // A deleted ledger never opens again: a capture pinned to it follows its route to `to`.

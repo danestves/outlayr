@@ -329,18 +329,25 @@ export function parseQueue(text: string): PendingWrite[] {
 
 const HELD_NAME = /^held-.+-\d+\.jsonl$/;
 
-/** Every id parked in any ledger's held file: a dismissal must outlive them or a parked capture files itself later. */
-export function heldIds(files: QueueFiles): Set<string> {
-    const ids = new Set<string>();
+/**
+ * Every id and purchase key parked in any ledger's held file: a dismissal must outlive them or a parked capture
+ * files itself later.
+ */
+export function heldRefs(files: QueueFiles): Set<string> {
+    const refs = new Set<string>();
     for (const name of files.list()) {
         if (!HELD_NAME.test(name)) {
             continue;
         }
         for (const job of parseQueue(files.read(name))) {
-            ids.add(job.id);
+            refs.add(job.id);
+            const key = job.dedupeKey?.trim();
+            if (key) {
+                refs.add(key);
+            }
         }
     }
-    return ids;
+    return refs;
 }
 
 function toQueueText(jobs: PendingWrite[]): string {

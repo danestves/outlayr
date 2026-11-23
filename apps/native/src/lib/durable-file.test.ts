@@ -1,0 +1,58 @@
+import { beforeEach, expect, test, vi } from "vite-plus/test";
+
+const files = vi.hoisted(() => new Map<string, string>());
+
+vi.mock("expo-file-system", () => {
+    class File {
+        private readonly fileName: string;
+        constructor(_directory: unknown, name: string) {
+            this.fileName = name;
+        }
+        get name() {
+            return this.fileName;
+        }
+        get parentDirectory() {
+            return {};
+        }
+        get exists() {
+            return files.has(this.fileName);
+        }
+        textSync() {
+            return files.get(this.fileName) ?? "";
+        }
+        writeSync(text: string) {
+            files.set(this.fileName, text);
+        }
+        delete() {
+            files.delete(this.fileName);
+        }
+        moveSync(destination: File) {
+            files.set(destination.name, this.textSync());
+            files.delete(this.fileName);
+        }
+    }
+    return { File, Paths: { document: {} } };
+});
+
+import { File, Paths } from "expo-file-system";
+
+import { readDurably } from "./durable-file";
+
+const durableFile = () => new File(Paths.document, "routing");
+
+beforeEach(() => {
+    files.clear();
+});
+
+test("reads the finished sibling when a crash left only the tmp copy", () => {
+    files.set("routing.tmp", "complete");
+
+    expect(readDurably(durableFile())).toBe("complete");
+});
+
+test("reads the main file when both copies exist", () => {
+    files.set("routing", "main");
+    files.set("routing.tmp", "stale");
+
+    expect(readDurably(durableFile())).toBe("main");
+});

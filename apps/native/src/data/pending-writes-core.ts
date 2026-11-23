@@ -164,8 +164,17 @@ interface DrainResult {
 const NOTHING_DRAINED: DrainResult = { applied: 0, autologged: 0 };
 
 const dismissed = new Set<string>();
-const dismissedPurchases = new Map<string, number>();
+const dismissedPurchases = new Map<string, Set<number>>();
 const filedFresh = new Map<string, { date: number; key: string | undefined }>();
+
+function rememberDismissedPurchase(key: string, date: number): void {
+    const dates = dismissedPurchases.get(key);
+    if (dates) {
+        dates.add(date);
+    } else {
+        dismissedPurchases.set(key, new Set([date]));
+    }
+}
 
 export function dismissPendingWrite(id: string): { date: number; key: string } | null {
     dismissed.add(id);
@@ -173,7 +182,7 @@ export function dismissPendingWrite(id: string): { date: number; key: string } |
     if (!filed?.key) {
         return null;
     }
-    dismissedPurchases.set(filed.key, filed.date);
+    rememberDismissedPurchase(filed.key, filed.date);
     return { date: filed.date, key: filed.key };
 }
 
@@ -184,7 +193,7 @@ export function isDismissedWrite(id: string): boolean {
 
 /** Restores a persisted purchase dismissal, so its settlement is not filed after a relaunch. */
 export function restoreDismissedPurchase(key: string, date: number): void {
-    dismissedPurchases.set(key, date);
+    rememberDismissedPurchase(key, date);
 }
 
 export function filedThisSession(id: string): boolean {
@@ -475,15 +484,15 @@ const isDismissedPurchase = (job: PendingWrite) => {
         return true;
     }
     const key = job.dedupeKey?.trim();
-    const recorded = key ? dismissedPurchases.get(key) : undefined;
-    return recorded !== undefined && Math.abs(recorded - job.date) <= WALLET_DEDUPE_WINDOW_MS;
+    const dates = key ? dismissedPurchases.get(key) : undefined;
+    return dates !== undefined && [...dates].some((date) => Math.abs(date - job.date) <= WALLET_DEDUPE_WINDOW_MS);
 };
 
 const rememberDismissedPurchases = (jobs: readonly PendingWrite[]) => {
     for (const job of jobs) {
         const key = job.dedupeKey?.trim();
         if (key && dismissed.has(job.id)) {
-            dismissedPurchases.set(key, job.date);
+            rememberDismissedPurchase(key, job.date);
         }
     }
 };
