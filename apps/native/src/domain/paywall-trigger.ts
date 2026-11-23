@@ -19,6 +19,7 @@ export const PaywallTrigger = Schema.Literals([
     "trial_reminder",
     "unknown",
     "usage",
+    "webhooks",
 ]);
 
 const readTrigger = Schema.decodeUnknownOption(PaywallTrigger);

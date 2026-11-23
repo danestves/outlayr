@@ -155,7 +155,7 @@ function PlanPrompts() {
             {entitled ? null : (
                 <LinkRow
                     icon="Sparkles"
-                    onPress={() => openPaywall("settings")}
+                    onPress={() => openPaywall("webhooks")}
                     title={t("pro.entry.title")}
                     value={t("pro.entry.value")}
                 />
