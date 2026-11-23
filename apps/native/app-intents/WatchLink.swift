@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import WatchConnectivity
 
 final class WatchLink: NSObject, WCSessionDelegate {
@@ -10,10 +11,17 @@ final class WatchLink: NSObject, WCSessionDelegate {
 
     private var activated = false
     private var latest: String?
+    private let unsavedLock = NSLock()
+    private var unsaved: [PendingWrite] = []
 
     func activate() {
         guard !activated, WCSession.isSupported() else { return }
         activated = true
+        for name in [UIApplication.protectedDataDidBecomeAvailableNotification, UIApplication.didBecomeActiveNotification] {
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { [weak self] _ in
+                Task { await self?.retryUnsaved() }
+            }
+        }
         WCSession.default.delegate = self
         WCSession.default.activate()
     }
@@ -64,6 +72,7 @@ final class WatchLink: NSObject, WCSessionDelegate {
         Task { _ = await self.enqueue(userInfo) }
     }
 
+    /// True once the write is accepted, even when it waits in memory: a false reply makes the watch drop it.
     private func enqueue(_ message: [String: Any]) async -> Bool {
         guard message["type"] as? String == "log",
               let raw = message["write"] as? [String: Any],
@@ -72,10 +81,29 @@ final class WatchLink: NSObject, WCSessionDelegate {
               write.amount > 0 else {
             return false
         }
+        await save(write)
+        return true
+    }
+
+    // Held in memory rather than on disk: a save fails when the container is unreadable, as before the first
+    // unlock, and every other store is locked then too.
+    private func save(_ write: PendingWrite) async {
         // The watch captured this before it reached the phone, possibly hours earlier, so it routes by date, not
         // this device's counter.
-        guard await SharedStore.enqueue(write, sequenced: false) else { return false }
-        NotificationCenter.default.post(name: Self.pendingWriteNotification, object: nil)
-        return true
+        if await SharedStore.enqueue(write, sequenced: false) {
+            NotificationCenter.default.post(name: Self.pendingWriteNotification, object: nil)
+        } else {
+            unsavedLock.withLock { unsaved.append(write) }
+        }
+    }
+
+    private func retryUnsaved() async {
+        let writes = unsavedLock.withLock {
+            defer { unsaved = [] }
+            return unsaved
+        }
+        for write in writes {
+            await save(write)
+        }
     }
 }

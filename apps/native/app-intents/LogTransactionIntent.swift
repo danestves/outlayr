@@ -73,7 +73,9 @@ struct LogTransactionIntent: AppIntent {
             dedupeKey: nil,
             text: nil
         )
-        await SharedStore.enqueue(write)
+        guard await SharedStore.enqueue(write) else {
+            return .result(dialog: IntentDialog("Couldn't save this entry."))
+        }
 
         let verb = side == .income ? "Recorded" : "Logged"
         let name = write.note.isEmpty ? "" : " for \(write.note)"

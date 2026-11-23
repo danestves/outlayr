@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import UIKit
 import UserNotifications
 
 /// The App Group the app shares with its widgets. Must match `APP_GROUP` in
@@ -230,10 +231,21 @@ enum SharedStore {
     }
 
     /// `flock` because intents and the app are separate processes, and the lock file is only ever opened, never
-    /// replaced, since `flock` follows the inode. The body stays synchronous: a lock held while the process is
-    /// suspended in the shared container gets it killed.
+    /// replaced, since `flock` follows the inode. The body stays synchronous so the lock is never held across a
+    /// suspension point.
     private static func withQueueLock<T>(_ body: (URL) throws -> T) throws -> T? {
         guard let directory = queueDirectoryURL() else { return nil }
+        // Background time covers the lock: iOS kills a process suspended while holding one in a shared container.
+        var task = UIBackgroundTaskIdentifier.invalid
+        task = UIApplication.shared.beginBackgroundTask(withName: "outlayr.queue-lock") {
+            UIApplication.shared.endBackgroundTask(task)
+            task = .invalid
+        }
+        defer {
+            if task != .invalid {
+                UIApplication.shared.endBackgroundTask(task)
+            }
+        }
         let descriptor = open(
             directory.appendingPathComponent(queueLockFile, isDirectory: false).path,
             O_RDWR | O_CREAT,
