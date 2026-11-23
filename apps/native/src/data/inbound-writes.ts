@@ -1,10 +1,9 @@
 import type { InboxRow as InboxRowSchema } from "@outlayr/backend/confect/webhooks.spec";
-import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
+import { activeProfileId } from "@/lib/active-profile";
 import type { CloudError } from "@/lib/cloud-error";
-import { readPulledInbox, recordPulledInbox } from "@/lib/pulled-inbox";
 import type { PendingWrite } from "@/lib/queue-file";
 import { adoptPendingWrites } from "@/lib/widget-bridge";
 
@@ -48,22 +47,18 @@ export const pullInboundWrites = Effect.fn("InboundWrites.pullInboundWrites")(fu
     if (!(yield* isSyncEnabled(db))) {
         return 0;
     }
-    const rows = yield* transport.inbox();
+    // The inbox is account-wide and only Personal is the same ledger on every device, so only it dedupes a row
+    // two devices or two profiles both pulled.
+    const rows = activeProfileId() === undefined ? yield* transport.inbox() : [];
     if (rows.length === 0) {
         // A claim left by an earlier failed drain still has to land when nothing new arrives.
         yield* drainDevicePendingWrites(db);
         return 0;
     }
-    // A ledger dedupes by write id, so an ack that failed after the park would file the row again in the next ledger.
-    const pulled = readPulledInbox(yield* Clock.currentTimeMillis);
-    const fresh = rows.filter((row) => !pulled.has(row.id));
-    if (fresh.length > 0) {
-        if (!adoptPendingWrites(fresh.map(inboundPendingWrite))) {
-            return 0;
-        }
-        recordPulledInbox(fresh.map(({ id }) => id));
+    if (!adoptPendingWrites(rows.map(inboundPendingWrite))) {
+        return 0;
     }
     yield* transport.ack(rows.map(({ id }) => id));
     yield* drainDevicePendingWrites(db);
-    return fresh.length;
+    return rows.length;
 });

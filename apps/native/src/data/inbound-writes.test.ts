@@ -7,17 +7,11 @@ const state = vi.hoisted(() => ({
     adoptResult: true,
     adopted: [] as string[][],
     drained: 0,
-    pulled: new Set<string>(),
-    recorded: [] as string[],
+    profile: undefined as string | undefined,
     sync: true,
 }));
 
-vi.mock("@/lib/pulled-inbox", () => ({
-    readPulledInbox: () => new Set(state.pulled),
-    recordPulledInbox: (ids: readonly string[]) => {
-        state.recorded.push(...ids);
-    },
-}));
+vi.mock("@/lib/active-profile", () => ({ activeProfileId: () => state.profile }));
 vi.mock("@/lib/widget-bridge", () => ({
     adoptPendingWrites: (jobs: { id: string }[]) => {
         state.adopted.push(jobs.map((job) => job.id));
@@ -63,32 +57,30 @@ beforeEach(() => {
     state.adoptResult = true;
     state.adopted = [];
     state.drained = 0;
-    state.pulled = new Set();
-    state.recorded = [];
+    state.profile = undefined;
     state.sync = true;
 });
 
 describe("pullInboundWrites", () => {
-    it("parks only the rows no ledger pulled yet", async () => {
-        state.pulled = new Set(["a"]);
-        const { acked, transport } = inbox([row("a"), row("b")]);
+    it("leaves the inbox on the server from a profile, and still drains its device captures", async () => {
+        state.profile = "6f1c2b3a-4d5e-4f60-8a7b-9c0d1e2f3a4b";
+        const { acked, transport } = inbox([row("a")]);
 
         const pulled = await Effect.runPromise(pullInboundWrites(db, transport));
 
-        expect(pulled).toBe(1);
-        expect(state.adopted).toStrictEqual([["inbound:b"]]);
-        expect(state.recorded).toStrictEqual(["b"]);
-        expect(acked).toStrictEqual(["a", "b"]);
+        expect(pulled).toBe(0);
+        expect(state.adopted).toStrictEqual([]);
+        expect(acked).toStrictEqual([]);
+        expect(state.drained).toBe(1);
     });
 
-    it("neither records nor acks when the park fails", async () => {
+    it("does not ack rows it could not park", async () => {
         state.adoptResult = false;
         const { acked, transport } = inbox([row("a")]);
 
         const pulled = await Effect.runPromise(pullInboundWrites(db, transport));
 
         expect(pulled).toBe(0);
-        expect(state.recorded).toStrictEqual([]);
         expect(acked).toStrictEqual([]);
         expect(state.drained).toBe(0);
     });
