@@ -54,7 +54,7 @@ const quiesce = (db: Database) => () => setSyncEnabled(db, false);
 export const signOutCommand = createRuntimeCommand(appRuntime, {
     execute: (input: { allowLocal: () => void; client: AuthClient; db: Database; navigateToLedger: () => void }) =>
         settleBeforeSignOut(input.db).pipe(
-            Effect.andThen(
+            Effect.flatMap((ownsDrains) =>
                 runAccountLifecycle<ProfilesError | SyncOutboxError | UnknownError, never>("signOut", {
                     allowLocal: input.allowLocal,
                     navigateToLedger: input.navigateToLedger,
@@ -66,10 +66,11 @@ export const signOutCommand = createRuntimeCommand(appRuntime, {
                                 Effect.asVoid
                             )
                         ),
-                })
-            ),
-            // A step that fails before the active file moves must leave the drains open for a retry.
-            Effect.onError(() => reopenDrainsIfStillInLedger)
+                }).pipe(
+                    // A step that fails before the active file moves must leave the drains open for a retry.
+                    Effect.onError(() => (ownsDrains ? reopenDrainsIfStillInLedger : Effect.void))
+                )
+            )
         ),
     label: "cloud:sign-out",
 });

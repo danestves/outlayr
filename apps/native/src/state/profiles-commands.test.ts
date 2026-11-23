@@ -71,7 +71,9 @@ describe("signing out from a profile", () => {
     });
 
     it("lands on Personal even when the sign-out request fails, and keeps the drains shut", async () => {
-        const exit = await Effect.runPromiseExit(signOutToPersonal(Effect.fail(new Offline())));
+        const exit = await Effect.runPromiseExit(
+            settleBeforeSignOut(db).pipe(Effect.andThen(signOutToPersonal(Effect.fail(new Offline()))))
+        );
 
         expect(Exit.isFailure(exit)).toBe(true);
         expect(activeFile).toBeUndefined();
@@ -84,7 +86,9 @@ describe("signing out from a profile", () => {
     it("restores the profile and reopens the drains when its marker can't be written", async () => {
         failSwitchMarker = true;
 
-        const exit = await Effect.runPromiseExit(signOutToPersonal(Effect.void));
+        const exit = await Effect.runPromiseExit(
+            settleBeforeSignOut(db).pipe(Effect.andThen(signOutToPersonal(Effect.void)))
+        );
 
         expect(Exit.isFailure(exit)).toBe(true);
         expect(activeFile).toBe(WORK);

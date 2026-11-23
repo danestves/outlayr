@@ -661,9 +661,13 @@ export function reopenDrains(): void {
     closed = false;
 }
 
-/** A transition that already closed the gate owns the drain; a second one must not drain the ledger being left. */
-export function drainsClosed(): boolean {
-    return closed;
+/** Check and close in one synchronous step, so two transitions can never both believe they own the gate. */
+export function acquireDrains(): boolean {
+    if (closed) {
+        return false;
+    }
+    closed = true;
+    return true;
 }
 
 // One drain at a time: `claimPendingWrites` re-returns an unreleased claim (crash recovery), so overlapping drains

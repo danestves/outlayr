@@ -4,8 +4,6 @@ import { File, Paths } from "expo-file-system";
 
 import { parseProfileId } from "@/domain/profiles";
 
-import { SWITCH_GRACE_MS } from "./queue-file";
-
 const activeProfileFile = () => new File(Paths.document, "active-profile");
 
 const profileSwitchFile = () => new File(Paths.document, "profile-switch");
@@ -74,10 +72,11 @@ export function clearProfileSwitch(): void {
 }
 
 // Call before `writeActiveProfile`: `activeProfileId()` still holds the launch profile, the one being left.
+// Prunes nothing: a capture already queued can still need an expired cutoff, so only a drain that routed it prunes.
 export function recordProfileSwitch(): void {
-    const now = Date.now();
-    const kept = readProfileSwitch().filter((entry) => entry.at <= now && now - entry.at < SWITCH_GRACE_MS);
-    const next = [...kept, { at: now, from: ledgerKey(activeProfileId()) }].sort((a, b) => a.at - b.at);
+    const next = [...readProfileSwitch(), { at: Date.now(), from: ledgerKey(activeProfileId()) }].sort(
+        (a, b) => a.at - b.at
+    );
     writeProfileSwitch(next);
 }
 

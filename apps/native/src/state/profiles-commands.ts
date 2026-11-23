@@ -2,7 +2,7 @@ import * as Effect from "effect/Effect";
 import { reloadAsync } from "expo-updates";
 import { DevSettings } from "react-native";
 
-import { closeDrains, drainsClosed, drainDevicePendingWritesOrFail, reopenDrains } from "@/data/pending-writes";
+import { acquireDrains, closeDrains, drainDevicePendingWritesOrFail, reopenDrains } from "@/data/pending-writes";
 import { profileLedgerExists } from "@/data/profile-ledger-files";
 import { profileRegistry } from "@/data/profile-registry";
 import { createProfile, deleteProfile, prepareProfileLedger } from "@/data/profiles";
@@ -31,10 +31,9 @@ let leftLedger = false;
 
 // A queued capture carries ids from the open ledger, so a failed drain stays put rather than land in the next one.
 const settleLedger = Effect.fn("Profiles.settleLedger")(function* settleLedger(db: Database) {
-    // Only the transition that closed the gate may drain: a second one, like a switch tapped mid sign-out, would run
-    // its strict pass against the ledger that transition is already leaving. Failing before `closeDrains` keeps this
-    // path from reopening what it did not close.
-    if (drainsClosed()) {
+    // Only the transition that closed the gate may drain or reopen it: a second one, like a switch tapped mid sign-out,
+    // would run its strict pass against the ledger that transition is already leaving.
+    if (!acquireDrains()) {
         return yield* Effect.fail(switchFailed(new Error("another profile transition still holds the drains shut")));
     }
     leftLedger = false;
@@ -84,9 +83,12 @@ const enter = Effect.fn("Profiles.enter")(function* enter(profileId: string | un
     yield* reload;
 });
 
-// Runs before sync is turned off, so a failed drain leaves the session and its outbox untouched for a retry.
+// Runs before sync is turned off, so a failed drain leaves the session and its outbox untouched for a retry. True when
+// this sign-out took the drain gate, so only it may reopen the gate.
 export const settleBeforeSignOut = (db: Database) =>
-    Effect.suspend(() => (activeProfileId() === undefined ? Effect.void : settleLedger(db)));
+    Effect.suspend(() =>
+        activeProfileId() === undefined ? Effect.succeed(false) : settleLedger(db).pipe(Effect.as(true))
+    );
 
 /** A sign-out that fails before the active file moves must not leave the drains shut for the rest of the run. */
 export const reopenDrainsIfStillInLedger = Effect.sync(() => {
@@ -102,7 +104,6 @@ export const signOutToPersonal = Effect.fn("Profiles.signOutToPersonal")(functio
     if (activeProfileId() === undefined) {
         return yield* signOut;
     }
-    yield* closeDrains();
     const previous = readProfileSwitch();
     yield* Effect.gen(function* leaveLedger() {
         yield* Effect.try({ catch: switchFailed, try: recordProfileSwitch });
