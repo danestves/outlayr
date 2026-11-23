@@ -135,31 +135,37 @@ describe("claimPendingWrites across a switch", () => {
         const claimed = claimPendingWrites(files, { key: "B", left: { at: AT, from: "A" } });
 
         expect(claimed.jobs.map((job) => job.id)).toStrictEqual(["fresh"]);
-        expect(claimed.held).toStrictEqual({ jobs: [gap], name: "held-A.jsonl" });
+        expect(claimed.held).toStrictEqual({ jobs: [gap], name: "held-A-1.jsonl" });
         expect(claimed.settlesSwitch).toBe(true);
 
         releasePendingWrites(files, claimed);
 
         expect(disk.has(QUEUE_FILE)).toBe(false);
-        expect(parseQueue(files.read("held-A.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
+        expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
 
         const back = claimPendingWrites(files, { key: "A" });
-        expect(back.names).toStrictEqual(["held-A.jsonl"]);
+        expect(back.names).toStrictEqual(["held-A-1.jsonl"]);
         expect(back.jobs.map((job) => job.id)).toStrictEqual(["gap"]);
 
         releasePendingWrites(files, back);
-        expect(disk.has("held-A.jsonl")).toBe(false);
+        expect(disk.has("held-A-1.jsonl")).toBe(false);
     });
 
-    it("keeps one copy per id when a replayed claim merges into a held file", () => {
+    it("returns a replayed capture once when two releases held it for the same ledger", () => {
         const gap = early("gap");
-        const { files } = makeFiles({ "held-A.jsonl": lines(gap), [QUEUE_FILE]: lines(gap) });
+        const { files } = makeFiles({ [QUEUE_FILE]: lines(gap) });
 
-        const claimed = claimPendingWrites(files, { key: "B", left: { at: AT, from: "A" } });
+        releasePendingWrites(files, claimPendingWrites(files, { key: "B", left: { at: AT, from: "A" } }));
 
-        releasePendingWrites(files, claimed);
+        files.write("claimed-1.jsonl", lines(gap));
+        releasePendingWrites(files, claimPendingWrites(files, { key: "B", left: { at: AT, from: "A" } }));
 
-        expect(parseQueue(files.read("held-A.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
+        expect(parseQueue(files.read("held-A-1.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
+        expect(parseQueue(files.read("held-A-2.jsonl")).map((job) => job.id)).toStrictEqual(["gap"]);
+
+        const back = claimPendingWrites(files, { key: "A" });
+        expect(back.names).toStrictEqual(["held-A-1.jsonl", "held-A-2.jsonl"]);
+        expect(back.jobs.map((job) => job.id)).toStrictEqual(["gap"]);
     });
 });
 

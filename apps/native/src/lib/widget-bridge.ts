@@ -185,6 +185,10 @@ export function claimPendingWritesOrThrow(): ClaimedWrites {
         key: ledgerKey(activeProfileId()),
         left: readProfileSwitch() ?? undefined,
     });
+    // A drain with nothing claimed returns before releasing, so it never clears the marker itself.
+    if (claimed.settlesSwitch && claimed.names.length === 0) {
+        clearProfileSwitch();
+    }
     return { ...claimed, captured: new Set(captureIds(claimed).filter((id) => answerOf(id) != null)) };
 }
 
