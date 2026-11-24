@@ -20,7 +20,7 @@ import * as SystemSync from "@/lib/system-sync";
 export const appRuntime = Atom.runtime(
     Layer.mergeAll(
         LocalDatabase.layer,
-        SyncEngine.layer.pipe(Layer.provide(SyncStore.layer)),
+        SyncEngine.layer.pipe(Layer.provideMerge(SyncStore.layer)),
         BackgroundProgram.layer.pipe(
             Layer.provideMerge(
                 Layer.mergeAll(

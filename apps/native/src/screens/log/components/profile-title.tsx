@@ -15,6 +15,7 @@ import { useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useProLocked } from "@/hooks/use-pro-locked";
 import { useTranslation } from "@/i18n/context";
 import { activeProfileId } from "@/lib/active-profile";
+import { useAuthSession } from "@/lib/auth-session";
 import { notifyFailure } from "@/lib/notify";
 import { switchProfileCommand } from "@/state/profiles-commands";
 import { useAtomAction } from "@/state/use-atom-action";
@@ -42,6 +43,7 @@ function ProfileChip() {
     const t = useTranslation();
     const colors = useColors();
     const router = useRouter();
+    const { accountId } = useAuthSession();
     const locked = useProLocked();
     const openPaywall = useOpenPaywall();
     // A switch reloads the app, so only a failure clears this.
@@ -103,7 +105,7 @@ function ProfileChip() {
                     return;
                 }
                 switching.current = true;
-                switchProfile({ from: db, profileId: target });
+                switchProfile({ accountId, from: db, profileId: target });
             }}
             shouldOpenOnLongPress={false}
         >

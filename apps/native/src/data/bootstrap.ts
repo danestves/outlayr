@@ -24,14 +24,14 @@ export class BootstrapError extends Schema.TaggedError<BootstrapError>()("Bootst
 }
 
 export interface BootstrapOptions {
-    /** Joined ledgers take the owner's categories by sync; seeding presets here would push them into that ledger. */
-    readonly seedCategories?: boolean;
+    /** The account a joined ledger replicates: it takes the owner's categories by sync, so nothing is seeded here. */
+    readonly replicaFor?: string;
 }
 
 // Run by `LocalDatabase.open` before `ready`, so the first screen sees its categories.
 export const bootstrapLocalData = Effect.fn("Bootstrap.bootstrapLocalData")(function* bootstrapLocalData(
     db: Database,
-    { seedCategories: seedPresetCategories = true }: BootstrapOptions = {}
+    { replicaFor }: BootstrapOptions = {}
 ) {
     if (yield* Meta.get(db, "firstLaunch")) {
         return;
@@ -49,7 +49,7 @@ export const bootstrapLocalData = Effect.fn("Bootstrap.bootstrapLocalData")(func
         Effect.gen(function* write() {
             yield* Meta.set(db, "currency", DEFAULT_CURRENCY);
             yield* Meta.set(db, "favouriteCurrencies", favourites);
-            if (seedPresetCategories) {
+            if (replicaFor === undefined) {
                 yield* seedCategories(db, resolveLanguage(locale?.languageTag));
             }
             const installedAt = yield* Clock.currentTimeMillis;

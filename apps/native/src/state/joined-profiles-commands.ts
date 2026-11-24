@@ -7,6 +7,7 @@ import { reopenDrains } from "@/data/pending-writes";
 import { deleteProfileLedger, profileLedgerDeletionPending, profileLedgerExists } from "@/data/profile-ledger-files";
 import { profileRegistry } from "@/data/profile-registry";
 import { prepareProfileLedger } from "@/data/profiles";
+import { SyncStore } from "@/data/sync-store";
 import type { Database } from "@/db/client";
 import { profiles } from "@/db/schema";
 import { activeProfileId, retargetProfileSwitch } from "@/lib/active-profile";
@@ -21,9 +22,12 @@ import { enter, reload, settleLedger, switchFailed, withRollback, writeActive } 
 
 const ProfileSharingOperation = Schema.Literals(["invite", "join", "leave", "reconcile"]);
 
+const ProfileSharingReason = Schema.Literals(["notActive", "unsynced"]);
+
 export class ProfileSharingError extends Schema.TaggedError<ProfileSharingError>()("ProfileSharingError", {
     cause: Schema.Defect(),
     operation: ProfileSharingOperation,
+    reason: Schema.optional(ProfileSharingReason),
 }) {
     override get message(): string {
         return `Profile sharing ${this.operation} failed`;
@@ -45,6 +49,10 @@ const retireDeparted = Effect.fn("JoinedProfiles.retireDeparted")(function* reti
     operation: typeof ProfileSharingOperation.Type,
     id: string
 ) {
+    // The ledger this runtime has open cannot be deleted under it, so the next launch retires it.
+    if (id === activeProfileId()) {
+        return;
+    }
     yield* Effect.sync(() => retireLedger(id));
     yield* deleteProfileLedger(id);
     if (profileLedgerDeletionPending(id)) {
@@ -60,7 +68,7 @@ const retireDeparted = Effect.fn("JoinedProfiles.retireDeparted")(function* reti
     });
 });
 
-const reconcile = Effect.fn("JoinedProfiles.reconcile")(function* reconcile() {
+export const reconcileJoinedProfiles = Effect.fn("JoinedProfiles.reconcile")(function* reconcile() {
     // A signed-out query answers with no memberships, which would read as every shared ledger being revoked.
     if (!isCloudAccount()) {
         return;
@@ -69,13 +77,16 @@ const reconcile = Effect.fn("JoinedProfiles.reconcile")(function* reconcile() {
     const activeId = activeProfileId();
     const plan = planJoinedReconcile(joinedProfilesCache(), server, activeId);
     const droppedActiveId = plan.droppedActive ? activeId : undefined;
-    yield* writeCache("reconcile", plan.cache);
+    // Leave the ledger before the cache names it departed, or a crash in between strands this device inside it.
     if (droppedActiveId !== undefined) {
         yield* Effect.try({
             catch: switchFailed,
             try: () => retargetProfileSwitch(droppedActiveId, "personal"),
         });
         yield* writeActive(undefined);
+    }
+    yield* writeCache("reconcile", plan.cache);
+    if (droppedActiveId !== undefined) {
         // No settle: the server already refuses this ledger, and the reload lands on Personal.
         yield* reload;
     }
@@ -86,24 +97,19 @@ const reconcile = Effect.fn("JoinedProfiles.reconcile")(function* reconcile() {
     }
 });
 
-let reconciling = false;
-
-export const reconcileJoinedProfiles = Effect.suspend(() => {
-    if (reconciling) {
-        return Effect.void;
-    }
-    reconciling = true;
-    return reconcile().pipe(
-        Effect.ensuring(
-            Effect.sync(() => {
-                reconciling = false;
-            })
-        )
-    );
-});
-
 export const joinProfileCommand = createRuntimeCommand(appRuntime, {
-    execute: Effect.fn("JoinedProfiles.join")(function* joinProfile(input: { code: string; from: Database }) {
+    execute: Effect.fn("JoinedProfiles.join")(function* joinProfile(input: {
+        accountId: string | null;
+        code: string;
+        from: Database;
+    }) {
+        const { accountId } = input;
+        if (accountId === null) {
+            return yield* new ProfileSharingError({
+                cause: new Error("no account is signed in"),
+                operation: "join",
+            });
+        }
         const claim = yield* cloudMutation(api.profileSharing.claim, { code: input.code });
         if (claim.status !== "joined") {
             return claim.status;
@@ -125,7 +131,7 @@ export const joinProfileCommand = createRuntimeCommand(appRuntime, {
             });
         }
         if (!profileLedgerExists(profileId)) {
-            yield* prepareProfileLedger(profileId, input.from, undefined, { seedCategories: false });
+            yield* prepareProfileLedger(profileId, input.from, undefined, { replicaFor: accountId });
         }
         yield* settleLedger(input.from);
         yield* withRollback(enter(profileId));
@@ -136,31 +142,39 @@ export const joinProfileCommand = createRuntimeCommand(appRuntime, {
 
 export const leaveProfileCommand = createRuntimeCommand(appRuntime, {
     execute: Effect.fn("JoinedProfiles.leave")(function* leaveProfile(input: { from: Database; id: string }) {
-        const active = activeProfileId() === input.id;
-        if (active) {
-            yield* settleLedger(input.from);
+        if (activeProfileId() !== input.id) {
+            return yield* new ProfileSharingError({
+                cause: new Error("only the active joined profile can leave"),
+                operation: "leave",
+                reason: "notActive",
+            });
         }
-        yield* Effect.gen(function* leave() {
-            yield* cloudMutation(api.profileSharing.leave, { profileId: input.id });
-            yield* writeCache("leave", cacheAfterLeaving(joinedProfilesCache(), input.id));
-            if (!active) {
-                yield* retireDeparted("leave", input.id);
-                return;
+        const store = yield* SyncStore;
+        yield* settleLedger(input.from);
+        yield* Effect.gen(function* flush() {
+            yield* store.sync(input.from).pipe(Effect.mapError(failed("leave")));
+            const pending = yield* store.pending(input.from).pipe(Effect.mapError(failed("leave")));
+            if (pending > 0) {
+                return yield* new ProfileSharingError({
+                    cause: new Error(`${pending} writes still pending`),
+                    operation: "leave",
+                    reason: "unsynced",
+                });
             }
-            yield* withRollback(
-                Effect.gen(function* leaveLedger() {
-                    yield* Effect.try({
-                        catch: switchFailed,
-                        try: () => retargetProfileSwitch(input.id, "personal"),
-                    });
-                    yield* writeActive(undefined);
-                })
-            );
-        }).pipe(Effect.onError(() => (active ? Effect.sync(reopenDrains) : Effect.void)));
-        if (active) {
-            // Past the marker a failed reload must not restore the ledger the server already dropped.
-            yield* reload;
-        }
+            yield* cloudMutation(api.profileSharing.leave, { profileId: input.id });
+        }).pipe(Effect.onError(() => Effect.sync(reopenDrains)));
+        yield* withRollback(
+            Effect.gen(function* leaveLedger() {
+                yield* Effect.try({
+                    catch: switchFailed,
+                    try: () => retargetProfileSwitch(input.id, "personal"),
+                });
+                yield* writeActive(undefined);
+            })
+        );
+        yield* writeCache("leave", cacheAfterLeaving(joinedProfilesCache(), input.id));
+        // Past the marker a failed reload must not restore the ledger the server already dropped.
+        yield* reload;
     }),
     label: "profiles:leave",
 });

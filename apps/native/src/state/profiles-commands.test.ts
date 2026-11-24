@@ -121,7 +121,7 @@ describe("switching profiles", () => {
     it("switches into a live profile", async () => {
         const registry = AtomRegistry.make({ initialValues: [[appRuntime.layer, Layer.empty]] });
 
-        const result = await switchProfileCommand.run(registry, { from: db, profileId: OTHER });
+        const result = await switchProfileCommand.run(registry, { accountId: null, from: db, profileId: OTHER });
         registry.dispose();
 
         expect(AsyncResult.isSuccess(result)).toBe(true);
@@ -133,7 +133,7 @@ describe("switching profiles", () => {
         profileLive = false;
         const registry = AtomRegistry.make({ initialValues: [[appRuntime.layer, Layer.empty]] });
 
-        const result = await switchProfileCommand.run(registry, { from: db, profileId: OTHER });
+        const result = await switchProfileCommand.run(registry, { accountId: null, from: db, profileId: OTHER });
         registry.dispose();
 
         expect(AsyncResult.isFailure(result)).toBe(true);
@@ -149,7 +149,7 @@ describe("switching profiles", () => {
         vi.mocked(reloadAsync).mockRejectedValueOnce(new Error("reload failed"));
         const registry = AtomRegistry.make({ initialValues: [[appRuntime.layer, Layer.empty]] });
 
-        const result = await switchProfileCommand.run(registry, { from: db, profileId: undefined });
+        const result = await switchProfileCommand.run(registry, { accountId: null, from: db, profileId: undefined });
         registry.dispose();
 
         expect(AsyncResult.isFailure(result)).toBe(true);
@@ -165,7 +165,7 @@ describe("switching profiles", () => {
         await Effect.runPromise(closeDrains());
         const registry = AtomRegistry.make({ initialValues: [[appRuntime.layer, Layer.empty]] });
 
-        const result = await switchProfileCommand.run(registry, { from: db, profileId: undefined });
+        const result = await switchProfileCommand.run(registry, { accountId: null, from: db, profileId: undefined });
         registry.dispose();
 
         expect(AsyncResult.isFailure(result)).toBe(true);

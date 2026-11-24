@@ -3,6 +3,7 @@ import * as Schema from "effect/Schema";
 import { File, Paths } from "expo-file-system";
 import { useSyncExternalStore } from "react";
 
+import { activeProfileId } from "./active-profile";
 import { clearDurably, readDurably, writeDurably } from "./durable-file";
 
 // Joined ledgers never enter the profiles registry: that table syncs to the member's own account.
@@ -68,6 +69,11 @@ export function isJoinedProfile(profileId: string): boolean {
     return joinedProfilesCache().joined.some((entry) => entry.profileId === profileId);
 }
 
+export function activeLedgerIsJoined(): boolean {
+    const active = activeProfileId();
+    return active !== undefined && isJoinedProfile(active);
+}
+
 const listeners = new Set<() => void>();
 
 export function subscribeJoinedProfiles(listener: () => void): () => void {
@@ -88,6 +94,10 @@ export function writeJoinedProfiles(next: JoinedProfilesCache): void {
     for (const listener of listeners) {
         listener();
     }
+}
+
+export function resetJoinedProfiles(): void {
+    writeJoinedProfiles(emptyCache());
 }
 
 export function useJoinedProfiles(): readonly JoinedProfile[] {
@@ -117,6 +127,11 @@ export function planJoinedReconcile(
 ): JoinedReconcilePlan {
     const serverIds = new Set(serverJoined.map((entry) => entry.profileId));
     const left = current.joined.filter((entry) => !serverIds.has(entry.profileId)).map((entry) => entry.profileId);
+    // A departed id in the active file means a crash landed the device inside a ledger the server already dropped.
+    const droppedActive =
+        activeId !== undefined &&
+        (current.departed.includes(activeId) ||
+            (current.joined.some((entry) => entry.profileId === activeId) && !serverIds.has(activeId)));
     return {
         cache: {
             departed: [...new Set([...current.departed, ...left])].filter((id) => !serverIds.has(id)),
@@ -127,9 +142,6 @@ export function planJoinedReconcile(
                 profileId,
             })),
         },
-        droppedActive:
-            activeId !== undefined &&
-            current.joined.some((entry) => entry.profileId === activeId) &&
-            !serverIds.has(activeId),
+        droppedActive,
     };
 }

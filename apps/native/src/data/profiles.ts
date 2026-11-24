@@ -10,6 +10,7 @@ import { databaseNameFor, parseProfileId } from "@/domain/profiles";
 import migrationsBundle from "../../drizzle/migrations";
 import { bootstrapLocalData } from "./bootstrap";
 import type { BootstrapOptions } from "./bootstrap";
+import { markAdopted } from "./ledger-adoption";
 import { useLiveQuery } from "./live-query";
 import {
     clearProfileLedgerReady,
@@ -21,6 +22,7 @@ import {
 import { profileRegistry } from "./profile-registry";
 import { createOrUpdateProfile, ProfilesError, seedProfileLedger, tombstoneProfile } from "./profiles-core";
 import type { Profile, ProfileIdentity } from "./profiles-core";
+import { enableSyncForAccount } from "./sync-outbox-core";
 
 export function useProfiles(): Profile[] {
     const registry = profileRegistry();
@@ -45,10 +47,16 @@ export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function
         yield* Effect.try({ catch: failed("create"), try: () => clearProfileLedgerReady(id) });
     }
     const ledger = yield* Effect.try({ catch: failed("create"), try: () => openDatabase(databaseNameFor(id)) });
+    const { replicaFor } = options;
     yield* Effect.gen(function* seed() {
         yield* Effect.tryPromise({ catch: failed("create"), try: () => migrate(ledger, migrationsBundle) });
         yield* bootstrapLocalData(ledger, options);
         yield* seedProfileLedger(from, ledger, currency);
+        // A replica syncs as the account it copies and never asks to adopt it.
+        if (replicaFor !== undefined) {
+            yield* enableSyncForAccount(ledger, replicaFor);
+            yield* markAdopted(ledger, replicaFor);
+        }
     }).pipe(
         Effect.ensuring(closeDatabase(ledger).pipe(Effect.ignore)),
         Effect.onError(() => (existed ? Effect.void : deleteProfileLedger(id)))

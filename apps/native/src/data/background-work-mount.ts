@@ -13,7 +13,7 @@ import { DailyReminderSteps } from "@/lib/daily-reminder-sync";
 import { DueReminderPasses } from "@/lib/due-reminder-sync";
 import { EnrichmentSync } from "@/lib/enrichment-sync";
 import { syncInstallmentReminders } from "@/lib/installment-reminder-sync";
-import { joinedProfilesCache, subscribeJoinedReconcile } from "@/lib/joined-profiles";
+import { subscribeJoinedReconcile } from "@/lib/joined-profiles";
 import { replateLogos } from "@/lib/logo-replate";
 import { photoFiles } from "@/lib/photo-storage";
 import { reconcileDailyReminder } from "@/lib/reminder-sync";
@@ -98,14 +98,15 @@ export const photoSyncAtom = Atom.family((db: Database) =>
 const reconcileJoinedAtom = appRuntime
     .atom(
         Effect.gen(function* joinedProfiles() {
-            const reconcile = reconcileJoinedProfiles.pipe(
+            const reconcile = reconcileJoinedProfiles().pipe(
                 Effect.catchCause((cause) => Effect.logWarning("[outlayr] joined profiles not reconciled", cause))
             );
-            const cache = joinedProfilesCache();
-            if (cache.joined.length > 0 || cache.departed.length > 0) {
-                yield* reconcile;
-            }
-            yield* signals(subscribeJoinedReconcile).pipe(Stream.runForEach(() => reconcile));
+            // Subscribed before the first pass, and it runs on every launch: a second device only learns of a
+            // membership from the server, and a claim that died before writing the cache is still recorded.
+            yield* Stream.merge(Stream.succeed(undefined), signals(subscribeJoinedReconcile)).pipe(
+                Stream.buffer({ capacity: 1, strategy: "sliding" }),
+                Stream.runForEach(() => reconcile)
+            );
         })
     )
     .pipe(Atom.withLabel("background-work:joined-profiles"));

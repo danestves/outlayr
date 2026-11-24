@@ -11,7 +11,7 @@ import { activeProfileId } from "./active-profile";
 import type { CloudError } from "./cloud-error";
 import { cloudRuntime } from "./cloud-runtime";
 import { cloudMutation, cloudQuery } from "./convex";
-import { isJoinedProfile, requestJoinedReconcile } from "./joined-profiles";
+import { activeLedgerIsJoined, requestJoinedReconcile } from "./joined-profiles";
 
 export interface SyncTransport {
     pull: PullFn;
@@ -29,8 +29,7 @@ const membershipLost = (error: CloudError) =>
 // The transport cannot import state, so the runtime atom that owns reconciliation listens for this signal.
 const noteMembershipLost = (error: CloudError) =>
     Effect.sync(() => {
-        const active = activeProfileId();
-        if (membershipLost(error) && active !== undefined && isJoinedProfile(active)) {
+        if (membershipLost(error) && activeLedgerIsJoined()) {
             requestJoinedReconcile();
         }
     });

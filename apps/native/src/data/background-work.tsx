@@ -6,10 +6,9 @@ import * as Atom from "effect/reactivity/Atom";
 import { useDatabase } from "@/contexts/local-data-context";
 import { SyncEngineMount } from "@/data/sync-engine-mount";
 import { useProEntitled } from "@/hooks/use-pro-locked";
-import { activeProfileId } from "@/lib/active-profile";
 import { useAuthSession } from "@/lib/auth-session";
 import { useCloudAuthenticated } from "@/lib/convex";
-import { isJoinedProfile } from "@/lib/joined-profiles";
+import { activeLedgerIsJoined } from "@/lib/joined-profiles";
 
 import {
     BackgroundProgramMount,
@@ -47,8 +46,7 @@ export function BackgroundWork() {
     // Held down without a confirmed entitlement and session: the server refuses a lapsed customer and a missing token.
     // A guest's purchase opens AI but not sync, which needs an account to restore the ledger to. A joined profile rides
     // the owner's Pro, which the server checks.
-    const active = activeProfileId();
-    const joinedProfile = active !== undefined && isJoinedProfile(active);
+    const joinedProfile = activeLedgerIsJoined();
     const cloudPaused = (!proEntitled && !joinedProfile) || !cloudAuthenticated || accountId === null;
     const enrichmentOn = cloudAuthenticated && (accountId !== null || proEntitled);
 

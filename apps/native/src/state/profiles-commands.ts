@@ -116,16 +116,22 @@ export const signOutToPersonal = Effect.fn("Profiles.signOutToPersonal")(functio
 
 export const switchProfileCommand = createRuntimeCommand(appRuntime, {
     execute: Effect.fn("Profiles.switch")(function* switchProfile(input: {
+        accountId: string | null;
         from: Database;
         profileId: string | undefined;
     }) {
+        const joined = input.profileId !== undefined && isJoinedProfile(input.profileId);
+        // A joined ledger has no account of its own to sync as, so opening one needs the signed-in account.
+        if (joined && input.accountId === null) {
+            return yield* switchFailed(new Error("no account is signed in"));
+        }
         if (input.profileId !== undefined && !profileLedgerExists(input.profileId)) {
             // Migrate, bootstrap and seed are idempotent, so finishing in place keeps what the ledger holds.
             yield* prepareProfileLedger(
                 input.profileId,
                 input.from,
                 undefined,
-                isJoinedProfile(input.profileId) ? { seedCategories: false } : undefined
+                joined && input.accountId !== null ? { replicaFor: input.accountId } : undefined
             );
         }
         yield* settleLedger(input.from);

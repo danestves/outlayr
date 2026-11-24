@@ -19,6 +19,7 @@ import { closeProfileRegistry } from "@/data/profile-registry";
 import { PERSONAL_DATABASE } from "@/domain/profiles";
 
 import { resetActiveProfile } from "./active-profile";
+import { resetJoinedProfiles } from "./joined-profiles";
 import { cancelLogoBackfill } from "./logo-backfill";
 import { clearStoredPhotos } from "./photo-storage";
 import { PROVIDER_BINDING_KEY } from "./provider-revocation";
@@ -189,6 +190,7 @@ const clearSqliteFiles = Effect.fn("DeviceStores.clearSqliteFiles")(function* cl
                 : [],
     });
     yield* clearSync("sqlite", resetActiveProfile);
+    yield* clearSync("sqlite", resetJoinedProfiles);
     for (const name of new Set([PERSONAL_DATABASE, ...names])) {
         yield* clearAsync("sqlite", () => deleteDatabaseAsync(name));
         yield* clearSync("sqlite", () => {
