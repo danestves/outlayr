@@ -2,7 +2,6 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import { ConvexError } from "convex/values";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Option from "effect/Option";
 
 import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
@@ -21,8 +20,8 @@ import {
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
 import { isPhotoName, merchantLogoUrl, ownsPhotoKey, photoKeyFor, photoOwnerFromKey } from "./lib/photoKeys";
+import { currentLook, dieNotProfileMember, isReferenced, resolveLedger, sharedLedgers } from "./lib/profileLedger";
 import { componentProvider, storageSetup } from "./lib/storageSetup";
-import { IMAGE_KEY_TABLES } from "./lib/syncTables";
 import {
     NotAPhotoName,
     PHOTO_QUOTA_BYTES,
@@ -118,7 +117,8 @@ const requestUpload = FunctionImpl.make(
         function* requestUpload(args) {
             const ctx = yield* MutationCtx;
             const userId = yield* requireUserId(ctx);
-            yield* requirePro(ctx, userId);
+            const ledger = yield* resolveLedger(userId, args.profileId);
+            yield* requirePro(ctx, ledger.ownerId);
             if (!isPhotoName(args.name)) {
                 return yield* new NotAPhotoName({ name: args.name });
             }
@@ -137,6 +137,7 @@ const requestUpload = FunctionImpl.make(
         },
         Effect.catchTags({
             NotAPhotoName: dieAsConvexError,
+            NotProfileMember: dieNotProfileMember,
             ProRequired: dieAsConvexError,
             Unauthenticated: dieAsConvexError,
             PhotoQuotaExceeded: ({ limit, used }) =>
@@ -255,7 +256,12 @@ const readUrls = FunctionImpl.make(
                 return yield* new PhotoReadTooLarge({ keys: args.keys.length, limit: PHOTO_URL_BATCH_LIMIT });
             }
 
-            const owned = args.keys.filter((key) => ownsPhotoKey(userId, key));
+            const own = args.keys.filter((key) => ownsPhotoKey(userId, key));
+            const shared = yield* sharedPhotoKeys(
+                userId,
+                args.keys.filter((key) => !ownsPhotoKey(userId, key) && photoOwnerFromKey(key) !== null)
+            );
+            const owned = [...own, ...shared];
             const legacy = yield* legacyUrls(owned);
             let minted: readonly { key: string; url: string }[] = [];
             if (legacy.unmapped.length > 0) {
@@ -279,20 +285,39 @@ const readUrls = FunctionImpl.make(
     )
 );
 
-// Tombstoned rows count: undo restores from them and a device that has not pulled yet still renders them.
-const isReferenced = Effect.fn("Photos.isReferenced")(function* isReferenced(userId: string, key: string) {
-    const reader = yield* DatabaseReader;
-    // The first table that names the key answers the question; running them all would read rows nobody needs.
-    for (const table of IMAGE_KEY_TABLES) {
-        const row = yield* reader
-            .table(table)
-            .index("by_user_and_imageKey", (q) => q.eq("userId", userId).eq("imageKey", key))
-            .first();
-        if (Option.isSome(row)) {
-            return true;
-        }
+// Another person's photo is readable only where a ledger they belong to names it, which only they can start
+// (`withoutForeignPhoto` in sync.impl.ts), or as a joined profile's icon. Membership also covers keys stored before.
+const sharedPhotoKeys = Effect.fn("Photos.sharedPhotoKeys")(function* sharedPhotoKeys(
+    userId: string,
+    keys: readonly string[]
+) {
+    if (keys.length === 0) {
+        return [];
     }
-    return false;
+    const shared = yield* sharedLedgers(userId);
+    const readable = yield* Effect.all(
+        keys.map((key) =>
+            Effect.gen(function* namedInSharedLedger() {
+                const uploader = photoOwnerFromKey(key);
+                for (const ledger of shared.ledgers) {
+                    if (uploader !== null && ledger.parties.has(uploader) && (yield* isReferenced(ledger.key, key))) {
+                        return true;
+                    }
+                }
+                for (const row of shared.joined) {
+                    if (
+                        uploader === row.ownerId &&
+                        (yield* currentLook(row.ownerId, row.profileId, row.look))?.imageKey === key
+                    ) {
+                        return true;
+                    }
+                }
+                return false;
+            })
+        ),
+        { concurrency: "unbounded" }
+    );
+    return keys.filter((_, index) => readable[index]);
 });
 
 // A bucket cannot share a transaction with the tombstone, so the reference goes before the bytes: a crash leaks a
@@ -315,10 +340,16 @@ const releaseUnreferenced = FunctionImpl.make(
                 .table("profiles")
                 .index("by_user_and_localId", (q) => q.eq("userId", userId))
                 .collect();
+            // Every membership, past ones too: entries stay in a profile after their author leaves it.
+            const memberships = yield* reader
+                .table("profileMembers")
+                .index("by_memberId_and_leftAt", (q) => q.eq("memberId", userId))
+                .collect();
             const owners = new Set([
                 userId,
                 syncOwner(userId, args.profileId),
                 ...profiles.map((profile) => syncOwner(userId, profile.localId)),
+                ...memberships.map((row) => syncOwner(row.ownerId, row.profileId)),
             ]);
             for (const owner of owners) {
                 if (yield* isReferenced(owner, args.key)) {

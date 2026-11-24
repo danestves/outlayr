@@ -9,7 +9,7 @@ export default GroupSpec.make()
     .addFunction(
         FunctionSpec.publicMutation({
             name: "requestUpload",
-            args: () => ({ name: Schema.String }),
+            args: () => ({ name: Schema.String, profileId: Schema.optional(ProfileId) }),
             returns: () =>
                 Schema.Struct({
                     key: Schema.String,

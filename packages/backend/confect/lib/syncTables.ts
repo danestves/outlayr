@@ -228,6 +228,16 @@ export const profileFields = {
     sortOrder: Schema.Number,
 };
 
+// Kept on an invite and a membership too, for when the owner's registry row has not reached the server yet.
+export const SharedProfileLook = Schema.Struct({
+    customColor: profileFields.customColor,
+    emoji: profileFields.emoji,
+    icon: profileFields.icon,
+    imageColor: profileFields.imageColor,
+    imageKey: profileFields.imageKey,
+    name: profileFields.name,
+});
+
 export const outsideMoveFields = {
     accountId: Schema.String,
     adjustment: Schema.optional(Schema.Boolean),

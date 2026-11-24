@@ -41,6 +41,7 @@ import type * as openStats from "../openStats.js";
 import type * as openexchangerates from "../openexchangerates.js";
 import type * as pdfImport from "../pdfImport.js";
 import type * as photos from "../photos.js";
+import type * as profileSharing from "../profileSharing.js";
 import type * as receiptScan from "../receiptScan.js";
 import type * as referrals from "../referrals.js";
 import type * as revenuecat from "../revenuecat.js";
@@ -90,6 +91,7 @@ declare const fullApi: ApiFromModules<{
   openexchangerates: typeof openexchangerates;
   pdfImport: typeof pdfImport;
   photos: typeof photos;
+  profileSharing: typeof profileSharing;
   receiptScan: typeof receiptScan;
   referrals: typeof referrals;
   revenuecat: typeof revenuecat;

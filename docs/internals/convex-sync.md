@@ -322,6 +322,19 @@ in `src/domain/profiles.ts`) and its own owner on the server.
   from the session and the profile half must be a UUID, so a profile id only namespaces rows the
   caller already owns, and every existing `userId` index scopes a profile with no new index.
   Account deletion walks the `userId:` key range for rows and counters.
+- **Sharing.** A member joins through a `profileInvites` code, and `resolveLedger`
+  (`confect/lib/profileLedger.ts`) hands them the owner's key off their `profileMembers` row, so
+  the owner's rows never move. With no membership row the profile is the caller's own, because
+  its registry row can reach the server after its ledger does. A member who leaves keeps the row
+  with `leftAt` set, so their device is refused (`NOT_PROFILE_MEMBER`) instead of syncing into an
+  empty ledger under the same id; deleting the owner's account leaves the rows as anonymous
+  markers for the same reason. Devices pick profile ids, so the first account to share an id
+  keeps it. Pro and account deletion follow the owner. Another person's photo is readable only
+  where a shared ledger names it and its uploader belongs to that profile (`sharedPhotoKeys`).
+  Keys are client-written, so a push drops another person's key unless that ledger already names
+  it (`withoutForeignPhoto` in `confect/sync.impl.ts`); membership covers keys stored before that,
+  such as a restored archive's. Invites and claims refuse with `PROFILE_SHARING_OFF` until the
+  deployment sets `PROFILE_SHARING=true`, which waits for the policy text.
 - **The registry** is the synced `profiles` table, and only Personal's file holds rows. Another
   profile reads it over a second connection (`src/data/profile-registry.ts`); edits made there
   queue in Personal's outbox and push on the next launch into Personal.

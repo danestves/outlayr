@@ -24,6 +24,8 @@ export type OutsideMovesDoc = Document.Document<typeof schemaDefinition, "outsid
 export type OutsidePaymentsDoc = Document.Document<typeof schemaDefinition, "outsidePayments">;
 export type PhotoObjectsDoc = Document.Document<typeof schemaDefinition, "photoObjects">;
 export type PhotoSizesDoc = Document.Document<typeof schemaDefinition, "photoSizes">;
+export type ProfileInvitesDoc = Document.Document<typeof schemaDefinition, "profileInvites">;
+export type ProfileMembersDoc = Document.Document<typeof schemaDefinition, "profileMembers">;
 export type ProfilesDoc = Document.Document<typeof schemaDefinition, "profiles">;
 export type ReferralCodesDoc = Document.Document<typeof schemaDefinition, "referralCodes">;
 export type ReferralRewardsDoc = Document.Document<typeof schemaDefinition, "referralRewards">;
@@ -71,6 +73,8 @@ export interface Docs {
   outsidePayments: OutsidePaymentsDoc;
   photoObjects: PhotoObjectsDoc;
   photoSizes: PhotoSizesDoc;
+  profileInvites: ProfileInvitesDoc;
+  profileMembers: ProfileMembersDoc;
   profiles: ProfilesDoc;
   referralCodes: ReferralCodesDoc;
   referralRewards: ReferralRewardsDoc;
