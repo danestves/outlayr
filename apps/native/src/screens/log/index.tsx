@@ -280,7 +280,7 @@ export function Log() {
     useTourAutoStart("log", listRows.length + tailRows.length > 0);
     useTourAutoStart(
         "subscriptions",
-        listFilter === "all" && upcomingRows.some((row) => row.recurringType !== RECURRING_TYPE.none)
+        !noRows && listFilter === "all" && upcomingRows.some((row) => row.recurringType !== RECURRING_TYPE.none)
     );
     const visibleRows = listRows.filter(
         (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
