@@ -20,7 +20,7 @@ import { useTranslation } from "@/i18n/context";
 import { activeProfileId } from "@/lib/active-profile";
 import { useAuthSession } from "@/lib/auth-session";
 import { useJoinedProfiles } from "@/lib/joined-profiles";
-import { useTimers, useWhen } from "@/lib/lifecycle";
+import { useMirror, useTimers } from "@/lib/lifecycle";
 import type { ProfileMember, ProfileMembersView } from "@/lib/profile-sharing";
 import { SILENT } from "@/state/atom-command";
 import {
@@ -106,22 +106,25 @@ function OwnerView({
     const count = seatCount(members);
     const [copied, setCopied] = useState(false);
     const [inviteFailed, setInviteFailed] = useState(false);
-    const [askedFor, setAskedFor] = useState<string | null>(null);
+    const [issued, setIssued] = useState<{ code: string; expiresAt: number } | null>(null);
     const createInvite = useAtomAction(createProfileInviteCommand, {
         onFailure: () => setInviteFailed(true),
-        onSuccess: () => setInviteFailed(false),
+        onSuccess: (next) => {
+            setInviteFailed(false);
+            setIssued(next);
+        },
     });
-    const [openedAt] = useState(Date.now);
-    // The live query never reruns just because time passed, so an invite that expired before opening is dropped here.
-    const invite = members?.invite != null && members.invite.expiresAt > openedAt ? members.invite : null;
+    const owner = members?.role === "owner";
     const full = count >= PROFILE_SEAT_LIMIT;
-    // One request per missing or stale code and seat count, so a skewed phone clock cannot loop on creating invites.
-    const askKey = `${members?.invite?.code ?? ""}:${count}`;
-    const needsInvite = members?.role === "owner" && !full && invite === null && askedFor !== askKey;
-    useWhen(needsInvite, () => {
-        setAskedFor(askKey);
-        createInvite({ profileId: id });
+    // The server reuses a live invite or mints one, so asking on open and after every seat change keeps the link
+    // valid without trusting this phone's clock or a cached query that never reruns as time passes.
+    useMirror([owner, full, count], () => {
+        if (owner && !full) {
+            createInvite({ profileId: id });
+        }
+        return undefined;
     });
+    const invite = full ? null : issued;
     const link = invite === null ? "" : profileInviteLink(invite.code);
 
     return (

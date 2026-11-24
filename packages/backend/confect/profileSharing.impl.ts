@@ -307,8 +307,7 @@ const members = FunctionImpl.make(
                       )
                       .collect()
                 : [];
-        // The newest, so a replacement the sheet asked for wins over an older code that is about to lapse.
-        const live = openInvites.findLast((row) => row.ownerId === ownerId && row.expiresAt > now);
+        const live = openInvites.find((row) => row.ownerId === ownerId && row.expiresAt > now);
         return {
             invite: live ? { code: live.code, expiresAt: live.expiresAt } : null,
             members: people,
