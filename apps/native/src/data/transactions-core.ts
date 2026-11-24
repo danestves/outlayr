@@ -42,6 +42,7 @@ export const LOG_COLUMNS = {
     amount: transactions.amount,
     amountUsd: transactions.amountUsd,
     categoryId: transactions.categoryId,
+    createdBy: transactions.createdBy,
     currency: transactions.currency,
     customColor: transactions.customColor,
     date: transactions.date,

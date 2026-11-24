@@ -15,6 +15,7 @@ import { useTranslation } from "@/i18n/context";
 import { freshEntries } from "@/lib/fresh-entries";
 
 interface SwipeableTransactionRowProps {
+    author?: string | null;
     currency: string;
     dated?: boolean;
     menuItems: readonly ActionMenuItem[];
@@ -26,6 +27,7 @@ interface SwipeableTransactionRowProps {
 
 export function SwipeableTransactionRow({
     transaction,
+    author,
     currency,
     dated = false,
     rates,
@@ -79,6 +81,7 @@ export function SwipeableTransactionRow({
                 <Animated.View className="bg-background">
                     <CompactRowsContext value>
                         <TransactionRow
+                            author={author}
                             currency={currency}
                             dated={dated}
                             menuItems={menuItems}

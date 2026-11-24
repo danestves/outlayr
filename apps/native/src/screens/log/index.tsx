@@ -78,6 +78,7 @@ import { ProfileTitle } from "./components/profile-title";
 import { SwipeableTransactionRow } from "./components/swipeable-transaction-row";
 import { logEntriesEqual } from "./entries-equal";
 import { filterScopeLabel } from "./labels";
+import { useEntryAuthors } from "./use-entry-authors";
 
 // Clears the floating add button and tab bar.
 const FAB_CLEARANCE = 100;
@@ -270,7 +271,6 @@ export function Log() {
         ? upcoming.rows.filter((row) => !goesWithPendingDelete(row, pendingId) && !pendingPurchase.has(row.id))
         : [];
     const today = startOfDay(new Date(nowMs)).getTime();
-    const view = { ...cardOptions, language, monthly };
 
     const tailTransfers = transferRows.filter((transfer) => transfer.day.getTime() < splitMs);
     const listRows = headListRows(listFilter, head, filteredRows, transferRows, splitMs);
@@ -289,6 +289,8 @@ export function Log() {
         (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
     );
     const visibleTail = keptTail.length === tailRows.length ? tailRows : keptTail;
+    const { authorKey, authorOf } = useEntryAuthors([...head, ...tail, ...filteredRows, ...transferRows]);
+    const view = { ...cardOptions, authorKey, language, monthly };
     const headSections = groupByDay(visibleRows, currency, rates);
     const tailSections = groupTail(visibleTail);
     const sections = monthly
@@ -485,6 +487,7 @@ export function Log() {
                 }}
                 renderItem={({ item }) => (
                     <SwipeableTransactionRow
+                        author={authorOf(item.createdBy)}
                         transaction={item}
                         currency={currency}
                         dated={monthly}

@@ -39,6 +39,7 @@ const HOSTS = new Map<string, string>([
     ["budgets", BUDGETS_HOME],
     ["i", "/i"],
     ["insights", "/insights"],
+    ["join", "/join"],
     ["log", "/"],
     ["new", "/transactions/create"],
     ["scan", "/transactions/scan"],
@@ -47,11 +48,12 @@ const HOSTS = new Map<string, string>([
     ["voice", "/transactions/voice"],
 ]);
 
-const ID_HOSTS = new Set(["budgets", "i", "transaction"]);
+const ID_HOSTS = new Set(["budgets", "i", "join", "transaction"]);
 
 /** `/transactions/[id]` has no index, so a bare `outlayr://transaction` would otherwise reach `+not-found`. */
 const ID_HOST_SECTION = new Map<string, string>([
     ["i", "/"],
+    ["join", "/"],
     ["transaction", "/"],
 ]);
 

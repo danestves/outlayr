@@ -6,6 +6,7 @@ import type { Account } from "@/data/accounts-core";
 import { minorUnitsFor } from "./money";
 
 export interface TransferLogSource {
+    createdBy?: string | null;
     date: Date;
     day: Date;
     exchangeRate: number | null;
@@ -45,6 +46,7 @@ export interface TransferLogRow {
     categoryIcon: null;
     categoryId: null;
     categoryName: null;
+    createdBy: string | null;
     currency: string;
     customColor: null;
     date: Date;
@@ -115,6 +117,7 @@ export function toTransferLogRow(
         categoryIcon: null,
         categoryId: null,
         categoryName: null,
+        createdBy: transfer.createdBy ?? null,
         currency: transfer.fromCurrency,
         customColor: null,
         date: transfer.date,

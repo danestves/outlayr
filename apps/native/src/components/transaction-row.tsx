@@ -244,6 +244,8 @@ function rowFigure(transaction: TransactionRowProps["transaction"], currency: st
 }
 
 interface TransactionRowProps {
+    /** First name of whoever logged someone else's entry, printed after the time. */
+    author?: string | null;
     currency: string;
     /** For a list grouped wider than a day: the subtitle carries the date, since no header does. */
     dated?: boolean;
@@ -353,6 +355,7 @@ function RowTile({
 
 export function TransactionRow({
     transaction,
+    author,
     currency,
     dated = false,
     rates,
@@ -398,6 +401,7 @@ export function TransactionRow({
         ? withGuessedCategory(formatChargeDate(date, undefined, language), transaction, false)
         : withGuessedCategory(timeLabel, transaction, swapTimeLabel);
     const subtitle = future ? (upcomingLabel ?? formatUpcomingDate(date, language)) : pastLabel;
+    const byline = author ? `${subtitle} · ${author}` : subtitle;
 
     const amount = (
         <View className={stacked ? "items-start" : "items-end"}>
@@ -464,7 +468,7 @@ export function TransactionRow({
                     rateNeeded={rateNeeded}
                     restated={original !== null}
                     stacked={stacked}
-                    subtitle={subtitle}
+                    subtitle={byline}
                     unplaced={unplaced}
                 />
             </View>

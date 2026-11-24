@@ -6,6 +6,7 @@ export const CATEGORY_DETENT = 0.65;
 export const SUBCATEGORY_DETENT = 0.55;
 export const ACCOUNT_DETENT = 0.72;
 export const INSTALLMENT_PAY_DETENT = 0.62;
+export const JOIN_DETENT = 0.62;
 
 /** Mirrors Swift `IdentityHero.pickerHeight`. */
 const PICKER_HEIGHT = 430;

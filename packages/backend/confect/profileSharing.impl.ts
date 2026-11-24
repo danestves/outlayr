@@ -46,6 +46,15 @@ const refuseWhileSharingOff = Effect.gen(function* refuseWhileSharingOff() {
 const nameOf = (ctx: ConvexQueryCtx | ConvexMutationCtx, userId: string) =>
     Effect.promise(() => authComponent.getAnyUserById(ctx, userId)).pipe(Effect.map((user) => firstName(user?.name)));
 
+const enabled = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "enabled",
+    Effect.fn("ProfileSharing.enabled")(function* enabled() {
+        return yield* profileSharingEnabled;
+    }, Effect.orDie)
+);
+
 const createInvite = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -350,6 +359,7 @@ const leave = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
+    Layer.provide(enabled),
     Layer.provide(createInvite),
     Layer.provide(invite),
     Layer.provide(claim),

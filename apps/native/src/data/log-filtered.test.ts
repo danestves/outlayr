@@ -15,6 +15,7 @@ function carrier(overrides: Partial<TransactionWithCategory> & { date: Date }): 
         categoryIcon: null,
         categoryId: null,
         categoryName: null,
+        createdBy: null,
         currency: "USD",
         customColor: null,
         day: new Date(overrides.date.getFullYear(), overrides.date.getMonth(), overrides.date.getDate()),
