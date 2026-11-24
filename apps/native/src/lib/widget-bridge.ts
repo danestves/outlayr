@@ -1,14 +1,29 @@
 import { File } from "expo-file-system";
 
+import {
+    activeProfileId,
+    ledgerKey,
+    readProfileSwitch,
+    retargetProfileSwitch,
+    writeProfileSwitch,
+} from "./active-profile";
+import type { ProfileSwitch } from "./active-profile";
+import { readClaimAssignments, retargetClaimAssignments, writeClaimAssignments } from "./claim-assignments";
+import { readPurchaseRoutes, retargetPurchaseRoutes, writePurchaseRoutes } from "./purchase-routes";
 import { queueDirectory } from "./queue-directory";
 import {
     adoptQueue,
     claimPendingWrites as claimQueue,
+    foldHeld,
+    hasHeldWrites,
+    heldRefs,
+    holdQueue,
     parseLegacyQueue,
     QUEUE_FILE,
     releasePendingWrites as releaseQueue,
+    WALLET_DEDUPE_WINDOW_MS,
 } from "./queue-file";
-import type { ClaimedWrites, PendingWrite, QueueFiles } from "./queue-file";
+import type { CaptureAssignment, ClaimedWrites, PendingWrite, PurchaseRoute, QueueFiles } from "./queue-file";
 import { sharedStore } from "./shared-store";
 
 /** Retired: one JSON string let two intents overwrite each other. `adoptLegacyQueue` migrates what remains. */
@@ -165,36 +180,145 @@ const captureIds = ({ jobs }: ClaimedWrites) => jobs.flatMap((job) => (job.captu
 
 const answerOf = (captureId: string) => sharedStore?.get(`${CAPTURE_ANSWER_PREFIX}${captureId}`) ?? null;
 
+// An inbox row carries the expense date, which can be days old, so its claim must never route it to a closed ledger.
 export function adoptPendingWrites(jobs: PendingWrite[]): boolean {
     try {
-        return adoptQueue(queueFiles, jobs);
+        return holdQueue(queueFiles, ledgerKey(activeProfileId()), jobs);
     } catch (error) {
         console.warn("[outlayr] pending writes not adopted", error);
         return false;
     }
 }
 
+/** A profile deleted on another device never opens again: its held captures, cutoffs and routes follow Personal. */
+export function retireLedger(key: string): void {
+    try {
+        retargetProfileSwitch(key, "personal");
+        retargetPurchaseRoutes(key, "personal");
+        retargetClaimAssignments(key, "personal");
+        foldHeld(queueFiles, key, "personal");
+    } catch (error) {
+        console.warn("[outlayr] deleted profile queue not retired", error);
+    }
+}
+
+/** Held captures, routed purchases or assignments a deleted ledger still owns, so retiring it again would do work. */
+export function hasPendingQueueWork(key: string): boolean {
+    try {
+        return (
+            hasHeldWrites(queueFiles, key) ||
+            readPurchaseRoutes().some((entry) => entry.ledger === key) ||
+            readClaimAssignments().some((entry) => entry.ledger === key)
+        );
+    } catch (error) {
+        console.warn("[outlayr] pending queue work unreadable", error);
+        return true;
+    }
+}
+
+/** Ids and purchase keys parked in any ledger's held file, so their dismissal survives the file. Null means the
+ * scan failed. */
+export function heldPendingWriteRefs(): ReadonlySet<string> | null {
+    try {
+        return heldRefs(queueFiles);
+    } catch (error) {
+        console.warn("[outlayr] held writes unreadable", error);
+        return null;
+    }
+}
+
+function persistCutoffs(cutoffs: readonly ProfileSwitch[]): void {
+    const current = readProfileSwitch();
+    const same =
+        current.length === cutoffs.length &&
+        current.every((entry, index) => entry.at === cutoffs[index]?.at && entry.from === cutoffs[index]?.from);
+    if (!same) {
+        writeProfileSwitch(cutoffs);
+    }
+}
+
+function persistPurchases(purchases: readonly PurchaseRoute[]): void {
+    const current = readPurchaseRoutes();
+    const same =
+        current.length === purchases.length &&
+        current.every(
+            (entry, index) =>
+                entry.at === purchases[index]?.at &&
+                entry.key === purchases[index]?.key &&
+                entry.ledger === purchases[index]?.ledger
+        );
+    if (!same) {
+        writePurchaseRoutes(purchases);
+    }
+}
+
+function persistAssignments(assignments: readonly CaptureAssignment[]): void {
+    const current = readClaimAssignments();
+    const same =
+        current.length === assignments.length &&
+        current.every(
+            (entry, index) => entry.id === assignments[index]?.id && entry.ledger === assignments[index]?.ledger
+        );
+    if (!same) {
+        writeClaimAssignments(assignments);
+    }
+}
+
 /**
  * Nothing is deleted here: the caller commits, then calls {@link releasePendingWrites}, so a force-quit mid-drain
  * replays. That is safe because `applyPendingWrites` records each enqueue id in the same SQLite transaction.
+ * Routes and assignments persist before the drain applies anything, so a crash after its commit keeps them.
  */
+export function claimPendingWritesOrThrow(): ClaimedWrites {
+    adoptLegacyQueue();
+    const now = Date.now();
+    const claimed = claimQueue(queueFiles, {
+        assignments: readClaimAssignments(),
+        cutoffs: readProfileSwitch(),
+        key: ledgerKey(activeProfileId()),
+        now,
+        purchases: readPurchaseRoutes(),
+        siblingWindowMs: WALLET_DEDUPE_WINDOW_MS,
+    });
+    // Persisted anchors and assignments keep a replay routing each capture to the ledger the first pass chose.
+    if (claimed.purchases !== undefined) {
+        persistPurchases(claimed.purchases);
+    }
+    if (claimed.assignments !== undefined) {
+        persistAssignments(claimed.assignments);
+    }
+    // A drain with nothing claimed returns before releasing, so it persists the pruned marker here instead.
+    if (claimed.names.length === 0) {
+        persistCutoffs(claimed.cutoffs ?? []);
+    }
+    return { ...claimed, captured: new Set(captureIds(claimed).filter((id) => answerOf(id) != null)) };
+}
+
 export function claimPendingWrites(): ClaimedWrites {
     try {
-        adoptLegacyQueue();
-        const claimed = claimQueue(queueFiles);
-        return { ...claimed, captured: new Set(captureIds(claimed).filter((id) => answerOf(id) != null)) };
+        return claimPendingWritesOrThrow();
     } catch (error) {
         console.warn("[outlayr] pending writes unreadable", error);
-        return { jobs: [], names: [] };
+        return { jobs: [], names: [], seen: new Set() };
+    }
+}
+
+export function releasePendingWritesOrThrow(claimed: ClaimedWrites): void {
+    releaseQueue(queueFiles, claimed, ({ assignments, purchases }) => {
+        persistPurchases(purchases);
+        persistAssignments(assignments);
+    });
+    if (claimed.cutoffs !== undefined) {
+        persistCutoffs(claimed.cutoffs);
+    }
+    for (const id of captureIds(claimed)) {
+        sharedStore?.remove(`${CAPTURE_ANSWER_PREFIX}${id}`);
     }
 }
 
 export function releasePendingWrites(claimed: ClaimedWrites): void {
     try {
-        releaseQueue(queueFiles, claimed);
-        for (const id of captureIds(claimed)) {
-            sharedStore?.remove(`${CAPTURE_ANSWER_PREFIX}${id}`);
-        }
+        releasePendingWritesOrThrow(claimed);
     } catch (error) {
         console.warn("[outlayr] pending writes not released", error);
     }

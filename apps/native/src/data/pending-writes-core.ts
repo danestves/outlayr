@@ -164,15 +164,36 @@ interface DrainResult {
 const NOTHING_DRAINED: DrainResult = { applied: 0, autologged: 0 };
 
 const dismissed = new Set<string>();
-const dismissedPurchases = new Map<string, number>();
+const dismissedPurchases = new Map<string, Set<number>>();
 const filedFresh = new Map<string, { date: number; key: string | undefined }>();
 
-export function dismissPendingWrite(id: string): void {
+function rememberDismissedPurchase(key: string, date: number): void {
+    const dates = dismissedPurchases.get(key);
+    if (dates) {
+        dates.add(date);
+    } else {
+        dismissedPurchases.set(key, new Set([date]));
+    }
+}
+
+export function dismissPendingWrite(id: string): { date: number; key: string } | null {
     dismissed.add(id);
     const filed = filedFresh.get(id);
-    if (filed?.key) {
-        dismissedPurchases.set(filed.key, filed.date);
+    if (!filed?.key) {
+        return null;
     }
+    rememberDismissedPurchase(filed.key, filed.date);
+    return { date: filed.date, key: filed.key };
+}
+
+/** True once a dismissal names the write, so a claim can record the purchase that dismissal still lacks. */
+export function isDismissedWrite(id: string): boolean {
+    return dismissed.has(id);
+}
+
+/** Restores a persisted purchase dismissal, so its settlement is not filed after a relaunch. */
+export function restoreDismissedPurchase(key: string, date: number): void {
+    rememberDismissedPurchase(key, date);
 }
 
 export function filedThisSession(id: string): boolean {
@@ -463,15 +484,15 @@ const isDismissedPurchase = (job: PendingWrite) => {
         return true;
     }
     const key = job.dedupeKey?.trim();
-    const recorded = key ? dismissedPurchases.get(key) : undefined;
-    return recorded !== undefined && Math.abs(recorded - job.date) <= WALLET_DEDUPE_WINDOW_MS;
+    const dates = key ? dismissedPurchases.get(key) : undefined;
+    return dates !== undefined && [...dates].some((date) => Math.abs(date - job.date) <= WALLET_DEDUPE_WINDOW_MS);
 };
 
 const rememberDismissedPurchases = (jobs: readonly PendingWrite[]) => {
     for (const job of jobs) {
         const key = job.dedupeKey?.trim();
         if (key && dismissed.has(job.id)) {
-            dismissedPurchases.set(key, job.date);
+            rememberDismissedPurchase(key, job.date);
         }
     }
 };
@@ -645,15 +666,52 @@ const firstCategory = Effect.fn("PendingWrites.firstCategory")(function* firstCa
 let draining: Deferred.Deferred<DrainResult, DrainFailure> | null = null;
 let rerun = false;
 
+// A switch keeps the drains shut until its reload: a pass claiming after the strict drain would commit into the old
+// ledger, and the reload kills it before release, so the next launch files the same capture again.
+let closed = false;
+
+export const closeDrains = Effect.fn("PendingWrites.closeDrains")(function* closeDrains() {
+    // Closed before the wait: a pass starting while it waits must not claim into the ledger being left.
+    closed = true;
+    for (let pass = draining; pass !== null; pass = draining) {
+        yield* Deferred.await(pass).pipe(Effect.ignore);
+    }
+});
+
+export function reopenDrains(): void {
+    closed = false;
+}
+
+/** Check and close in one synchronous step, so two transitions can never both believe they own the gate. */
+export function acquireDrains(): boolean {
+    if (closed) {
+        return false;
+    }
+    closed = true;
+    return true;
+}
+
 // One drain at a time: `claimPendingWrites` re-returns an unreleased claim (crash recovery), so overlapping drains
 // get the same jobs, both pass `alreadyApplied`, and insert twice. Mount and a cold launch's first "active" overlap.
+// "join" settles on another caller's pass, so its callbacks run too; "own" waits one out so its own callbacks run.
+export type DrainMode = "join" | "own";
+
 export const drainPendingWrites = Effect.fn("PendingWrites.drainPendingWrites")(function* drainPendingWrites(
     db: Database,
     claim: () => ClaimedWrites,
     release: (claimed: ClaimedWrites) => void,
-    reader?: NotificationReader
+    reader?: NotificationReader,
+    mode: DrainMode = "join"
 ) {
-    if (draining !== null) {
+    // "own" is the strict pass a switch settles with: it runs past a close, where a "join" must not claim.
+    if (closed && mode === "join") {
+        return NOTHING_DRAINED;
+    }
+    if (mode === "own") {
+        for (let pass = draining; pass !== null; pass = draining) {
+            yield* Deferred.await(pass).pipe(Effect.ignore);
+        }
+    } else if (draining !== null) {
         rerun = true;
         return yield* Deferred.await(draining);
     }

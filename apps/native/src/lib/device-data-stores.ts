@@ -14,6 +14,11 @@ import {
 import { deleteDatabaseAsync } from "expo-sqlite";
 import { Platform } from "react-native";
 
+import { profileReadyMarker } from "@/data/profile-ledger-files";
+import { closeProfileRegistry } from "@/data/profile-registry";
+import { PERSONAL_DATABASE } from "@/domain/profiles";
+
+import { resetActiveProfile } from "./active-profile";
 import { cancelLogoBackfill } from "./logo-backfill";
 import { clearStoredPhotos } from "./photo-storage";
 import { PROVIDER_BINDING_KEY } from "./provider-revocation";
@@ -22,7 +27,7 @@ import { SecureStorage } from "./secure-storage";
 import { sharedStore } from "./shared-store";
 import { INTENT_SNAPSHOT_KEY, PENDING_WRITES_KEY, PUSHED_PURCHASES_KEY, WALLET_PUSH_KEY } from "./widget-bridge";
 
-const DATABASE_NAME = "outlayr.db";
+const PROFILE_DATABASE = /^outlayr-[0-9a-f-]{36}\.db$/;
 const DELETION_SECRET_KEY = "outlayr.account-deletion-resume";
 const LEGACY_WATCH_NOTES_KEY = "watchNotes";
 const BETTER_AUTH_PREFIX = "outlayr";
@@ -149,16 +154,32 @@ const clearSpotlight = Effect.fn("DeviceStores.clearSpotlight")(function* clearS
 });
 
 const clearSqliteFiles = Effect.fn("DeviceStores.clearSqliteFiles")(function* clearSqliteFiles() {
-    yield* clearAsync("sqlite", () => deleteDatabaseAsync(DATABASE_NAME));
-    yield* clearSync("sqlite", () => {
-        const sqliteDirectory = new Directory(Paths.document, "SQLite");
-        for (const filename of [`${DATABASE_NAME}-wal`, `${DATABASE_NAME}-shm`]) {
-            const file = new File(sqliteDirectory, filename);
-            if (file.exists) {
-                file.delete();
-            }
-        }
+    const sqliteDirectory = new Directory(Paths.document, "SQLite");
+    const names = yield* Effect.try({
+        catch: failedStore("sqlite"),
+        try: () =>
+            sqliteDirectory.exists
+                ? sqliteDirectory
+                      .list()
+                      .map((entry) => entry.name)
+                      .filter((name) => PROFILE_DATABASE.test(name))
+                : [],
     });
+    yield* clearSync("sqlite", resetActiveProfile);
+    for (const name of new Set([PERSONAL_DATABASE, ...names])) {
+        yield* clearAsync("sqlite", () => deleteDatabaseAsync(name));
+        yield* clearSync("sqlite", () => {
+            for (const file of [
+                new File(sqliteDirectory, `${name}-wal`),
+                new File(sqliteDirectory, `${name}-shm`),
+                profileReadyMarker(name),
+            ]) {
+                if (file.exists) {
+                    file.delete();
+                }
+            }
+        });
+    }
 });
 
 function clearCache(): void {
@@ -194,6 +215,7 @@ export function createNativeDeviceDataStores<E>({
         sqlite: () =>
             cancelLogoBackfill().pipe(
                 Effect.andThen(closeDatabase.pipe(Effect.mapError(failedStore("sqlite")))),
+                Effect.andThen(closeProfileRegistry().pipe(Effect.mapError(failedStore("sqlite")))),
                 Effect.andThen(clearSqliteFiles())
             ),
         widget: () => clearSync("widget", clearWidgetStorage),

@@ -2,14 +2,20 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { File } from "expo-file-system";
 
+import { recoverDurably, writeDurably } from "./durable-file";
 import { queueDirectory } from "./queue-directory";
 
 const DISMISSED_FILE = "dismissed.jsonl";
 
 const RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
 
-const Dismissal = Schema.Struct({ at: Schema.Finite, id: Schema.String });
-type Dismissal = typeof Dismissal.Type;
+const Dismissal = Schema.Struct({
+    at: Schema.Finite,
+    date: Schema.optional(Schema.Finite),
+    id: Schema.String,
+    key: Schema.optional(Schema.String),
+});
+export type Dismissal = typeof Dismissal.Type;
 
 const decodeDismissal = Schema.decodeUnknownOption(Dismissal);
 
@@ -21,26 +27,33 @@ function parseDismissal(line: string): Dismissal | null {
     }
 }
 
-export function persistDismissal(id: string): void {
+// The purchase a filed write settled is recorded with its id: a relaunch must still know which settlement to skip.
+export function persistDismissal(id: string, purchase?: { date: number; key: string }): void {
     try {
         const directory = queueDirectory();
         if (!directory) {
             return;
         }
+        const at = Date.now();
+        const record = purchase === undefined ? { at, id } : { at, date: purchase.date, id, key: purchase.key };
         const file = new File(directory, DISMISSED_FILE);
-        file.writeSync(`${JSON.stringify({ at: Date.now(), id })}\n`, { append: true });
+        recoverDurably(file);
+        file.writeSync(`${JSON.stringify(record)}\n`, { append: true });
     } catch (error) {
         console.warn("[outlayr] dismissal not persisted", error);
     }
 }
 
-export function readDismissals(now: number): string[] {
+// `retain` holds the ids and purchase keys a held file still references: dropping their dismissal early would file
+// them days later. A null `retain` means the held scan failed, so nothing can be pruned and the file is left alone.
+export function readDismissals(now: number, retain: ReadonlySet<string> | null): Dismissal[] {
     try {
         const directory = queueDirectory();
         if (!directory) {
             return [];
         }
         const file = new File(directory, DISMISSED_FILE);
+        recoverDurably(file);
         if (!file.exists) {
             return [];
         }
@@ -52,14 +65,20 @@ export function readDismissals(now: number): string[] {
         const kept: Dismissal[] = [];
         for (const line of lines) {
             const dismissal = parseDismissal(line);
-            if (dismissal && now - dismissal.at <= RETENTION_MS) {
+            if (
+                dismissal &&
+                (retain === null ||
+                    now - dismissal.at <= RETENTION_MS ||
+                    retain.has(dismissal.id) ||
+                    (dismissal.key !== undefined && retain.has(dismissal.key)))
+            ) {
                 kept.push(dismissal);
             }
         }
-        if (kept.length !== lines.length) {
-            file.writeSync(kept.map((dismissal) => `${JSON.stringify(dismissal)}\n`).join(""));
+        if (retain !== null && kept.length !== lines.length) {
+            writeDurably(file, kept.map((dismissal) => `${JSON.stringify(dismissal)}\n`).join(""));
         }
-        return kept.map((dismissal) => dismissal.id);
+        return kept;
     } catch (error) {
         console.warn("[outlayr] dismissals unreadable", error);
         return [];

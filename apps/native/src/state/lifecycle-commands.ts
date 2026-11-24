@@ -3,6 +3,7 @@ import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
+import { Meta } from "@/data/app-meta-core";
 import { buildArchive, restoreArchive } from "@/data/archive-core";
 import { eraseData } from "@/data/erase";
 import { completeAdoption, localLedgerState, prepareAccountAdoption, runAdoption } from "@/data/ledger-adoption";
@@ -10,11 +11,13 @@ import { deferAccount, finishFirstRun } from "@/data/onboarding-core";
 import { reconcilePhotos } from "@/data/photo-store-core";
 import type { PhotoFiles } from "@/data/photo-store-core";
 import { downloadEveryPhoto } from "@/data/photo-sync-core";
+import { deviceHasProfiles } from "@/data/profile-registry";
 import { isSyncEnabled } from "@/data/sync-outbox-core";
 import { pickCardAccount } from "@/data/wallet-state-core";
 import type { Database } from "@/db/client";
 import { adoptionActions, adoptionPlan } from "@/domain/ledger-adoption";
 import type { AdoptionActions } from "@/domain/ledger-adoption";
+import { activeProfileId } from "@/lib/active-profile";
 import { adoptionEngine } from "@/lib/adoption-engine";
 import { photoTransport } from "@/lib/cloud-photos";
 import { appRuntime } from "@/lib/runtime";
@@ -36,7 +39,7 @@ export const eraseDataCommand = createRuntimeCommand(appRuntime, {
         db: Database;
         residue: Parameters<typeof eraseData>[2];
         scope: Parameters<typeof eraseData>[1];
-    }) => eraseData(input.db, input.scope, input.residue),
+    }) => eraseData(input.db, input.scope, input.residue, deviceHasProfiles()),
     label: "lifecycle:erase-data",
 });
 
@@ -64,7 +67,7 @@ export const restoreArchiveWithPhotos = Effect.fn("Lifecycle.restoreArchive")(
         files: PhotoFiles;
     }) {
         yield* restoreArchive(input.db, input.document);
-        yield* reconcilePhotos(input.db, input.files, yield* Clock.currentTimeMillis);
+        yield* reconcilePhotos(input.db, input.files, yield* Clock.currentTimeMillis, deviceHasProfiles());
     }
 );
 
@@ -83,7 +86,9 @@ export const reconcileAdoption = Effect.fn("Adoption.reconcile")(function* recon
     if (plan === "defer") {
         return "defer";
     }
-    const actions = adoptionActions(plan);
+    // The phone that made a profile chose its currency, and only a push carries it to the account other phones read.
+    const madeHere = plan === "fresh" && activeProfileId() !== undefined && (yield* Meta.get(db, "profileMadeHere"));
+    const actions = madeHere ? adoptionActions("adopt") : adoptionActions(plan);
     if (actions) {
         yield* completeAdoption(db, engine, actions, accountId);
     }

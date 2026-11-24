@@ -21,16 +21,13 @@ import {
 } from "@/domain/parse-notification";
 import { translateNow } from "@/i18n/runtime";
 import type { NotificationReads } from "@/lib/notification-read";
-import { autologSourceOf } from "@/lib/queue-file";
+import { autologSourceOf, WALLET_DEDUPE_WINDOW_MS } from "@/lib/queue-file";
 import type { AutologSource, PendingWrite } from "@/lib/queue-file";
 
 import { MIN_KEY_LENGTH } from "./enrichment-queue-core";
 import { cardStatus } from "./wallet-state-core";
 
-// One purchase can fire twice (authorize, then settle) as two intents; ten minutes covers that and a retry, and
-// `PushLedger` in `app-intents/SharedStore.swift` copies it. Not widened to next-day settlement: that would collapse
-// a real second purchase, and a missing row is unrecoverable where a duplicate isn't.
-export const WALLET_DEDUPE_WINDOW_MS = 10 * 60 * 1000;
+export { WALLET_DEDUPE_WINDOW_MS } from "@/lib/queue-file";
 
 const SETTLE_REPEAT_WINDOW_MS = 4 * 24 * 60 * 60 * 1000;
 const REPEATS_ON_SETTLE = /payoneer/i;

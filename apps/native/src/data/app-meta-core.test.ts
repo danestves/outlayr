@@ -166,6 +166,7 @@ const STORED_TODAY = {
         ]),
     ],
     privacyNoticeSeen: ["3"],
+    profileMadeHere: ["true"],
     recurrenceRepaired: ["true"],
     referralRewardSeen: ["1762650000000"],
     reminderAsked: ["true"],

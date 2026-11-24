@@ -125,6 +125,18 @@ export const ROOT_STACK: readonly { group: RootStackGroup; screens: readonly Roo
             },
             {
                 chrome: "sheet",
+                detent: ACCOUNT_DETENT,
+                name: "profiles/new",
+                titleKey: "profiles.new",
+            },
+            {
+                chrome: "sheet",
+                detent: ACCOUNT_DETENT,
+                name: "profiles/edit",
+                titleKey: "profiles.edit",
+            },
+            {
+                chrome: "sheet",
                 detent: INSTALLMENT_PAY_DETENT,
                 name: "installments/pay",
                 titleKey: "installments.pay.title",

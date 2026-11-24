@@ -27,6 +27,7 @@ import {
     PULL_PAGE_MAX,
     PUSH_BATCH_LIMIT,
     PushTooLarge,
+    syncOwner,
     toWire,
     transactionPolicyTieDecision,
     versioned,
@@ -148,6 +149,9 @@ const upsert = Effect.fn("Sync.upsert")(function* upsert(
         case "outsideMoves": {
             return yield* writeRow("outsideMoves", existing, { ...envelope, ...fields });
         }
+        case "profiles": {
+            return yield* writeRow("profiles", existing, { ...envelope, ...fields });
+        }
         case "savingsGoals": {
             // An older client omits `exchangeRate` but values a moved target at the edit date, so the stale rate is
             // cleared. A rename leaves the target alone and keeps the precise rate.
@@ -178,14 +182,15 @@ const push = FunctionImpl.make(
         function* push(args) {
             const ctx = yield* MutationCtx;
             const writer = yield* DatabaseWriter;
-            const userId = yield* requireUserId(ctx);
-            yield* requirePro(ctx, userId);
-            yield* refuseWhileDeleting(userId);
+            const accountId = yield* requireUserId(ctx);
+            yield* requirePro(ctx, accountId);
+            yield* refuseWhileDeleting(accountId);
 
             if (args.rows.length > PUSH_BATCH_LIMIT) {
                 return yield* new PushTooLarge({ limit: PUSH_BATCH_LIMIT, rows: args.rows.length });
             }
 
+            const userId = syncOwner(accountId, args.profileId);
             const counter = yield* seqCounter(userId);
             let { nextSeq } = counter;
             let accepted = 0;
@@ -251,7 +256,7 @@ const push = FunctionImpl.make(
             yield* counter.advanceTo(nextSeq);
             yield* scheduleCellRefresh(userId, counter.cells, movedCells);
             if (loggedEntry) {
-                yield* noteLoggedDay(userId);
+                yield* noteLoggedDay(accountId);
             }
             yield* emitEntriesFiled(userId, [...filed.values()], yield* Clock.currentTimeMillis);
 
@@ -277,8 +282,9 @@ const pullSince = FunctionImpl.make(
         function* pullSince(args) {
             const ctx = yield* QueryCtx;
             const reader = yield* DatabaseReader;
-            const userId = yield* requireUserId(ctx);
-            yield* requirePro(ctx, userId);
+            const accountId = yield* requireUserId(ctx);
+            yield* requirePro(ctx, accountId);
+            const userId = syncOwner(accountId, args.profileId);
             const limit = Math.min(Math.max(Math.trunc(args.limit ?? PULL_PAGE_LIMIT), 1), PULL_PAGE_MAX);
 
             const tables: readonly SyncedTable[] = args.tables ?? SYNCED_TABLES;
@@ -374,7 +380,7 @@ const currentSeq = FunctionImpl.make(
     databaseSchema,
     spec,
     "currentSeq",
-    Effect.fn("Sync.currentSeq")(function* currentSeq() {
+    Effect.fn("Sync.currentSeq")(function* currentSeq(args) {
         const ctx = yield* QueryCtx;
         const reader = yield* DatabaseReader;
         const userId = yield* optionalUserId(ctx);
@@ -383,7 +389,7 @@ const currentSeq = FunctionImpl.make(
         }
         const state = yield* reader
             .table("syncState")
-            .get("by_user", userId)
+            .get("by_user", syncOwner(userId, args.profileId))
             .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
         return state?.nextSeq ?? 0;
     }, Effect.orDie)

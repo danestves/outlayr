@@ -25,27 +25,31 @@ export class EraseResidueError extends Schema.TaggedError<EraseResidueError>()("
 
 // Spotlight is cleared even when photos refuse to go: a stale index answers device-wide search with erased notes, a
 // worse residue than orphaned files. The photo failure is reported afterwards so the screen shows a partial erase.
+// `sharedPhotos` skips the photo step: every profile writes into one directory, so erasing one must not empty it.
 export const eraseData = Effect.fn("Erase.eraseData")(function* eraseData<E>(
     db: Database,
     scope: EraseScope,
-    residue: EraseResidue<E>
+    residue: EraseResidue<E>,
+    sharedPhotos: boolean
 ) {
     yield* eraseLedger(db, scope);
 
-    const photosCleared = yield* Effect.result(
-        Effect.try({
-            catch: (cause) => new EraseResidueError({ cause, residue: "photos" }),
-            try: () => {
-                residue.clearStoredPhotos();
-            },
-        })
-    );
+    const photosCleared = sharedPhotos
+        ? null
+        : yield* Effect.result(
+              Effect.try({
+                  catch: (cause) => new EraseResidueError({ cause, residue: "photos" }),
+                  try: () => {
+                      residue.clearStoredPhotos();
+                  },
+              })
+          );
 
     yield* residue
         .clearSpotlight()
         .pipe(Effect.mapError((cause) => new EraseResidueError({ cause, residue: "spotlight" })));
 
-    if (photosCleared._tag === "Failure") {
+    if (photosCleared?._tag === "Failure") {
         return yield* photosCleared.failure;
     }
 });

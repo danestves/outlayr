@@ -311,6 +311,30 @@ file storage unless a provider variable is present. Any `R2_*` variable selects 
 `S3_REGION` defaulting to us-east-1. Bytes go through the `@outlayr/storage` component;
 `docs/internals/storage.md` collects the traps.
 
+### 3.6 Profiles: one ledger per profile
+
+Personal is the ledger every install has. A Pro user can add profiles (Work, Family), and each
+is a whole ledger of its own: its own SQLite file (`outlayr-<profileId>.db`, `databaseNameFor`
+in `src/domain/profiles.ts`) and its own owner on the server.
+
+- **Server owner.** `push`, `pullSince` and `currentSeq` take an optional `profileId` and store
+  rows under `${userId}:${profileId}` (`syncOwner` in `confect/sync.ts`). The user half comes
+  from the session and the profile half must be a UUID, so a profile id only namespaces rows the
+  caller already owns, and every existing `userId` index scopes a profile with no new index.
+  Account deletion walks the `userId:` key range for rows and counters.
+- **The registry** is the synced `profiles` table, and only Personal's file holds rows. Another
+  profile reads it over a second connection (`src/data/profile-registry.ts`); edits made there
+  queue in Personal's outbox and push on the next launch into Personal.
+- **Switching** writes the active id to a file the database open reads synchronously, then
+  reloads the app: every atom, live query and sync loop holds the old ledger. A new profile's
+  ledger is seeded before its registry row exists, carrying the person's preferences and
+  finished onboarding but none of Personal's sync bookkeeping (`CARRIED_META_KEYS`).
+- **Photos** share one device directory across ledgers, and the orphan sweep reads only the
+  active ledger, so it purges nothing once a device has a second profile.
+- **Not scoped yet:** server features that read the ledger (MCP, recap) still read Personal
+  only, and an enrichment answer that lands while another profile is open is acked unapplied. A
+  deleted profile's server rows stay until the account is deleted.
+
 ---
 
 ## 4. Conflict resolution

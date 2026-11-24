@@ -11,6 +11,7 @@ import { applyMigrations, testDatabase, withAsyncTransactions } from "@/db/test-
 import bundle from "../../drizzle/migrations";
 
 vi.mock("expo-localization", () => ({ getLocales: () => [] }));
+vi.mock("@/lib/active-profile", () => ({ activeProfileId: () => undefined }));
 
 const BUNDLE_NAMES = Object.keys(bundle.migrations).sort();
 const LAST_LEGACY_MIGRATION = "20261025034640_0037_transaction_attachments";
@@ -116,6 +117,7 @@ describe("opening local data across the drizzle 1.0 upgrade", () => {
             "0046",
             "0047",
             "0048",
+            "0049",
         ]);
         expect(applied.every((row) => row.applied_at !== null)).toBe(true);
         expect(
