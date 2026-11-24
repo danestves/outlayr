@@ -151,7 +151,10 @@ describe("a joined profile", () => {
             { ...edited, fields: { ...edited.fields, createdBy: owner.userId, note: "edited by the owner" } },
         ]);
 
-        await expect(storedAuthor("shared-entry")).resolves.toBe(member.userId);
+        const afterEdit = await authenticatedAs(t, owner).query(api.sync.pullSince, { cursor: 0, profileId: HOME });
+        const editedRow = afterEdit.rows.find((row) => row.localId === "shared-entry");
+        expect(editedRow?.fields.note).toBe("edited by the owner");
+        expect(editedRow?.fields.createdBy).toBe(member.userId);
     });
 
     it("rides on the owner's Pro, so a lapsed owner stops the member too", async () => {
