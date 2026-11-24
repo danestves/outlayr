@@ -82,7 +82,7 @@ export const claimOverBudgetMoment = Effect.fn("OverBudgetMoment.claim")(functio
         commit(next);
         yield* Effect.tryPromise({
             catch: (cause) => new OverBudgetMomentError({ cause, operation: "save" }),
-            try: () => AsyncStorage.setItem(STORAGE_KEY, encodeSeenKeys([...next])),
+            try: () => AsyncStorage.setItem(STORAGE_KEY, encodeSeenKeys(next)),
         });
         return true;
     }).pipe(inFlight.withPermits(1));
