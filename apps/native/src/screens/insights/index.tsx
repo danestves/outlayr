@@ -24,6 +24,9 @@ import type { Language } from "@/i18n/languages";
 import { SILENT } from "@/state/atom-command";
 import { setNumberSettingCommand } from "@/state/settings-commands";
 import { useAtomAction } from "@/state/use-atom-action";
+import { useTourAutoStart } from "@/tour/use-tour-auto-start";
+import { useTourScrollReveal } from "@/tour/use-tour-scroll-reveal";
+import { useTourTarget } from "@/tour/use-tour-target";
 
 import { paceTicks } from "./answers-ticks";
 import { AnswerCards } from "./components/answer-cards";
@@ -191,6 +194,10 @@ export function Insights() {
     const [offset, setOffset] = useState(0);
     const result = useInsights(db, nowMs, period, "spent", offset, calendar);
     const answered = useInsightsAnswers(db, nowMs, period, offset, calendar);
+    const { onScroll, reveal, scrollRef } = useTourScrollReveal();
+    const everything = useTourTarget("insights.everything", 22, reveal);
+    // The sample sheet renders without `EverythingElse`, so the spotlight waits for a real ledger.
+    useTourAutoStart("insights", result.hasHistory);
 
     if (!result.hasHistory) {
         return <InsightsSample onAddTransaction={() => router.push("/transactions/create")} />;
@@ -267,6 +274,9 @@ export function Insights() {
                 className="bg-background"
                 contentContainerClassName="pb-6"
                 contentInsetAdjustmentBehavior="automatic"
+                onScroll={onScroll}
+                ref={scrollRef}
+                scrollEventThrottle={16}
                 showsVerticalScrollIndicator={false}
             >
                 <View className="px-5">
@@ -342,7 +352,7 @@ export function Insights() {
                     />
                 </View>
 
-                <View className="px-5">
+                <View className="px-5" ref={everything}>
                     <EverythingElse rows={rows} />
                 </View>
             </ScrollView>

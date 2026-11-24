@@ -1,5 +1,6 @@
 import { SectionList } from "@legendapp/list/section-list";
 import { addDays, addMonths, startOfDay } from "@outlayr/money/calendar";
+import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import type { RateTable } from "@outlayr/money/valuation";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -60,6 +61,7 @@ import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
 import { markReviewedCommand } from "@/state/review-commands";
 import { setNumberSettingCommand } from "@/state/settings-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
+import { useTourAutoStart } from "@/tour/use-tour-auto-start";
 
 import { AccountsBlock } from "./components/accounts-block";
 import { AmountsEyeButton } from "./components/amounts-eye-button";
@@ -143,6 +145,10 @@ function useTailGrouping<T extends DayGroupable>(currency: string, rates: RateTa
     const next = { currency, group: groupByDayAsItGrows<T>(currency, rates), rates };
     setGrouping(next);
     return next.group;
+}
+
+function noRowsToShow(filter: LogFilter, listCount: number, tailCount: number): boolean {
+    return filter === "all" && listCount === 0 && tailCount === 0;
 }
 
 function nothingToList(sectionCount: number, filter: LogMenuFilter, upcomingCount: number) {
@@ -269,6 +275,13 @@ export function Log() {
     const tailTransfers = transferRows.filter((transfer) => transfer.day.getTime() < splitMs);
     const listRows = headListRows(listFilter, head, filteredRows, transferRows, splitMs);
     const tailRows = listFilter === "all" ? mergeByRecency(tail, tailTransfers) : [];
+    const noRows = noRowsToShow(listFilter, listRows.length, tailRows.length);
+    // Counted directly, since a day filter with no rows is not the empty state but still has nothing to point at.
+    useTourAutoStart("log", listRows.length + tailRows.length > 0);
+    useTourAutoStart(
+        "subscriptions",
+        !noRows && listFilter === "all" && upcomingRows.some((row) => row.recurringType !== RECURRING_TYPE.none)
+    );
     const visibleRows = listRows.filter(
         (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
     );
@@ -330,7 +343,7 @@ export function Log() {
         />
     );
 
-    if (listRows.length === 0 && tailRows.length === 0 && listFilter === "all") {
+    if (noRows) {
         return (
             <AmountsHiddenContext value={amountsHidden}>
                 <ProfileTitle />

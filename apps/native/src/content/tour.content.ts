@@ -1,0 +1,111 @@
+import { t } from "intlayer";
+import type { Dictionary } from "intlayer";
+
+const tour = {
+    content: {
+        "tour.balances": t({
+            en: "Tap + to add a budget, a goal or a debt.",
+            de: "Tippe auf +, um ein Budget, ein Sparziel oder eine Schuld hinzuzufügen.",
+            es: "Toca + para agregar un presupuesto, una meta o una deuda.",
+            "es-ES": "Toca + para añadir un presupuesto, una meta o una deuda.",
+            fr: "Touchez + pour ajouter un budget, un objectif ou une dette.",
+            pt: "Toque em + para adicionar um orçamento, uma meta ou uma dívida.",
+            "pt-PT": "Toque em + para adicionar um orçamento, um objetivo ou uma dívida.",
+        }),
+        "tour.done": t({
+            en: "Done",
+            de: "Fertig",
+            es: "Listo",
+            "es-ES": "Hecho",
+            fr: "Terminer",
+            pt: "Pronto",
+            "pt-PT": "Concluir",
+        }),
+        "tour.gotIt": t({
+            en: "Got it",
+            de: "Verstanden",
+            es: "Entendido",
+            fr: "Compris",
+            pt: "Entendi",
+            "pt-PT": "Percebi",
+        }),
+        "tour.insights": t({
+            en: "Open any row to dig deeper, from the breakdown to your yearly plan.",
+            de: "Öffne eine Zeile für mehr Details, von der Aufschlüsselung bis zu deinem Jahresplan.",
+            es: "Abre cualquier fila para ver más, desde el desglose hasta tu plan del año.",
+            fr: "Ouvrez une ligne pour aller plus loin, du détail à votre plan de l'année.",
+            pt: "Abra qualquer linha para ver mais, do detalhamento ao seu plano do ano.",
+            "pt-PT": "Abra qualquer linha para ver mais, da discriminação ao seu plano do ano.",
+        }),
+        "tour.log.add": t({
+            en: "Tap + to add an expense, scan a receipt or say it out loud.",
+            de: "Tippe auf +, um eine Ausgabe einzutragen, einen Beleg zu scannen oder sie zu diktieren.",
+            es: "Toca + para anotar un gasto, escanear un recibo o dictarlo.",
+            fr: "Touchez + pour ajouter une dépense, scanner un reçu ou la dicter.",
+            pt: "Toque em + para anotar um gasto, escanear um recibo ou ditá-lo.",
+            "pt-PT": "Toque em + para registar uma despesa, digitalizar um recibo ou ditá-la.",
+        }),
+        "tour.log.profiles": t({
+            en: "Tap the title to switch profiles, like work or family.",
+            de: "Tippe auf den Titel, um das Profil zu wechseln, etwa Arbeit oder Familie.",
+            es: "Toca el título para cambiar de perfil, como trabajo o familia.",
+            fr: "Touchez le titre pour changer de profil, comme travail ou famille.",
+            pt: "Toque no título para trocar de perfil, como trabalho ou família.",
+            "pt-PT": "Toque no título para mudar de perfil, como trabalho ou família.",
+        }),
+        "tour.log.search": t({
+            en: "Search past entries by note, category or amount.",
+            de: "Durchsuche vergangene Einträge nach Notiz, Kategorie oder Betrag.",
+            es: "Busca registros pasados por nota, categoría o monto.",
+            "es-ES": "Busca registros pasados por nota, categoría o importe.",
+            fr: "Recherchez les opérations passées par note, catégorie ou montant.",
+            pt: "Busque lançamentos passados por nota, categoria ou valor.",
+            "pt-PT": "Pesquise registos passados por nota, categoria ou valor.",
+        }),
+        "tour.next": t({
+            en: "Next",
+            de: "Weiter",
+            es: "Siguiente",
+            fr: "Suivant",
+            pt: "Próximo",
+            "pt-PT": "Seguinte",
+        }),
+        "tour.settings": t({
+            en: "Set up Integrations and purchases log themselves.",
+            de: "Richte Integrationen ein, dann erfassen sich Käufe von selbst.",
+            es: "Configura Integraciones y tus compras se registran solas.",
+            fr: "Configurez les intégrations et vos achats s'enregistrent seuls.",
+            pt: "Configure as Integrações e suas compras se registram sozinhas.",
+            "pt-PT": "Configure as Integrações e as suas compras registam-se sozinhas.",
+        }),
+        "tour.skip": t({
+            en: "Skip",
+            de: "Überspringen",
+            es: "Omitir",
+            fr: "Passer",
+            pt: "Pular",
+            "pt-PT": "Saltar",
+        }),
+        "tour.subscriptions": t({
+            en: "Your subscriptions and other repeating charges live here. Tap to see them all, change one or stop it.",
+            de: "Hier findest du deine Abos und andere wiederkehrende Zahlungen. Tippe, um alle zu sehen, eine zu ändern oder zu beenden.",
+            es: "Aquí están tus suscripciones y otros cobros que se repiten. Toca para verlos todos, cambiar uno o detenerlo.",
+            "es-ES":
+                "Aquí están tus suscripciones y otros cargos que se repiten. Toca para verlos todos, cambiar uno o pararlo.",
+            fr: "Vos abonnements et autres paiements récurrents sont ici. Touchez pour tous les voir, en modifier un ou l'arrêter.",
+            pt: "Aqui ficam suas assinaturas e outras cobranças recorrentes. Toque para ver todas, alterar uma ou encerrá-la.",
+            "pt-PT":
+                "Aqui ficam as suas subscrições e outras cobranças recorrentes. Toque para ver todas, alterar uma ou terminá-la.",
+        }),
+        "tour.step": t({
+            en: "{current} of {total}",
+            de: "{current} von {total}",
+            es: "{current} de {total}",
+            fr: "{current} sur {total}",
+            pt: "{current} de {total}",
+        }),
+    },
+    key: "tour" as const,
+} satisfies Dictionary;
+
+export default tour;

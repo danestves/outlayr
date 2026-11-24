@@ -31,6 +31,7 @@ import { useTranslation } from "@/i18n/context";
 import { useHaptics } from "@/lib/use-haptics";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
+import { TourTarget } from "@/tour/tour-target";
 
 const AnimatedPressable = createAnimatedComponent(Pressable);
 
@@ -148,81 +149,88 @@ export function FloatingAddButton() {
     }));
 
     return (
-        <MaterialHost matchContents style={{ bottom: EDGE, position: "absolute", right: EDGE }}>
-            <Box>
-                <RNHostView matchContents>
-                    <AnimatedPressable
-                        accessibilityLabel={t("log.add.menu")}
-                        accessibilityRole="button"
-                        accessibilityState={{ expanded: open }}
-                        android_ripple={{ color: withAlpha(m3.onPrimaryContainer, PRESSED_ALPHA) }}
-                        className="items-center justify-center overflow-hidden"
-                        onPress={() => {
-                            haptics("selection");
-                            setOpen(!open);
-                        }}
-                        style={[{ elevation: FAB_ELEVATION, height: FAB_SIZE, width: FAB_SIZE }, fabStyle]}
-                    >
-                        <Animated.View className="absolute" style={plusStyle}>
-                            <HugeiconsIcon
-                                color={m3.onPrimaryContainer}
-                                icon={PlusSignIcon}
-                                size={ICON_SIZE}
-                                strokeWidth={ICON_STROKE}
-                            />
-                        </Animated.View>
-                        <Animated.View className="absolute" style={closeStyle}>
-                            <HugeiconsIcon
-                                color={m3.onPrimary}
-                                icon={Cancel01Icon}
-                                size={ICON_SIZE}
-                                strokeWidth={ICON_STROKE}
-                            />
-                        </Animated.View>
-                    </AnimatedPressable>
-                </RNHostView>
-                <DropdownMenuPopup anchorPosition="above" expanded={open} onDismissRequest={close}>
-                    <DropdownMenuGroup>
-                        <Box>
-                            <MenuItem
-                                description={more.description}
-                                glyph={more.glyph}
-                                label={more.label}
-                                onClick={() => setMoreOpen(true)}
-                                position={{ count, index: 0 }}
-                                trailing={ArrowRight01Icon}
-                            />
-                            <DropdownMenuPopup
-                                anchorPosition="start"
-                                expanded={moreOpen}
-                                onDismissRequest={() => setMoreOpen(false)}
-                            >
-                                <DropdownMenuGroup>
-                                    {more.rows.map((row, index) => (
-                                        <MenuItem
-                                            glyph={row.glyph}
-                                            key={row.id}
-                                            label={row.label}
-                                            onClick={() => choose(row)}
-                                            position={{ count: more.rows.length, index }}
-                                        />
-                                    ))}
-                                </DropdownMenuGroup>
-                            </DropdownMenuPopup>
-                        </Box>
-                        {nearestLast.map((row, index) => (
-                            <MenuItem
-                                description={row.description}
-                                glyph={row.glyph}
-                                key={row.id}
-                                label={row.label}
-                                onClick={() => choose(row)}
-                                position={{ count, index: index + 1 }}
-                            />
-                        ))}
-                    </DropdownMenuGroup>
-                </DropdownMenuPopup>
-            </Box>
-        </MaterialHost>
+        <>
+            <MaterialHost matchContents style={{ bottom: EDGE, position: "absolute", right: EDGE }}>
+                <Box>
+                    <RNHostView matchContents>
+                        <AnimatedPressable
+                            accessibilityLabel={t("log.add.menu")}
+                            accessibilityRole="button"
+                            accessibilityState={{ expanded: open }}
+                            android_ripple={{ color: withAlpha(m3.onPrimaryContainer, PRESSED_ALPHA) }}
+                            className="items-center justify-center overflow-hidden"
+                            onPress={() => {
+                                haptics("selection");
+                                setOpen(!open);
+                            }}
+                            style={[{ elevation: FAB_ELEVATION, height: FAB_SIZE, width: FAB_SIZE }, fabStyle]}
+                        >
+                            <Animated.View className="absolute" style={plusStyle}>
+                                <HugeiconsIcon
+                                    color={m3.onPrimaryContainer}
+                                    icon={PlusSignIcon}
+                                    size={ICON_SIZE}
+                                    strokeWidth={ICON_STROKE}
+                                />
+                            </Animated.View>
+                            <Animated.View className="absolute" style={closeStyle}>
+                                <HugeiconsIcon
+                                    color={m3.onPrimary}
+                                    icon={Cancel01Icon}
+                                    size={ICON_SIZE}
+                                    strokeWidth={ICON_STROKE}
+                                />
+                            </Animated.View>
+                        </AnimatedPressable>
+                    </RNHostView>
+                    <DropdownMenuPopup anchorPosition="above" expanded={open} onDismissRequest={close}>
+                        <DropdownMenuGroup>
+                            <Box>
+                                <MenuItem
+                                    description={more.description}
+                                    glyph={more.glyph}
+                                    label={more.label}
+                                    onClick={() => setMoreOpen(true)}
+                                    position={{ count, index: 0 }}
+                                    trailing={ArrowRight01Icon}
+                                />
+                                <DropdownMenuPopup
+                                    anchorPosition="start"
+                                    expanded={moreOpen}
+                                    onDismissRequest={() => setMoreOpen(false)}
+                                >
+                                    <DropdownMenuGroup>
+                                        {more.rows.map((row, index) => (
+                                            <MenuItem
+                                                glyph={row.glyph}
+                                                key={row.id}
+                                                label={row.label}
+                                                onClick={() => choose(row)}
+                                                position={{ count: more.rows.length, index }}
+                                            />
+                                        ))}
+                                    </DropdownMenuGroup>
+                                </DropdownMenuPopup>
+                            </Box>
+                            {nearestLast.map((row, index) => (
+                                <MenuItem
+                                    description={row.description}
+                                    glyph={row.glyph}
+                                    key={row.id}
+                                    label={row.label}
+                                    onClick={() => choose(row)}
+                                    position={{ count, index: index + 1 }}
+                                />
+                            ))}
+                        </DropdownMenuGroup>
+                    </DropdownMenuPopup>
+                </Box>
+            </MaterialHost>
+            <TourTarget
+                id="log.add"
+                radius={FAB_CORNER}
+                style={{ bottom: EDGE, height: FAB_SIZE, position: "absolute", right: EDGE, width: FAB_SIZE }}
+            />
+        </>
     );
 }

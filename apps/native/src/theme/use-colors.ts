@@ -6,6 +6,7 @@ const COLOR_VARIABLES = {
     accentForeground: "--accent-foreground",
     background: "--background",
     border: "--border",
+    card: "--color-card",
     danger: "--danger",
     dangerOnWash: "--danger-on-wash",
     expense: "--expense",
