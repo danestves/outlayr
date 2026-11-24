@@ -116,15 +116,17 @@ function OwnerView({
     });
     const owner = members?.role === "owner";
     const full = count >= PROFILE_SEAT_LIMIT;
-    // The server reuses a live invite or mints one, so asking on open and after every seat change keeps the link
-    // valid without trusting this phone's clock or a cached query that never reruns as time passes.
-    useMirror([owner, full, count], () => {
+    const watched = members?.invite?.code ?? null;
+    // The server reuses a live invite or mints one, so asking on open and whenever seats or the open code change keeps
+    // the link valid without trusting this phone's clock or a cached query that never reruns as time passes.
+    useMirror([owner, full, count, watched], () => {
         if (owner && !full) {
             createInvite({ profileId: id });
         }
         return undefined;
     });
-    const invite = full ? null : issued;
+    // A mutation's writes reach the watch before it resolves, so a mismatch means the issued code was claimed since.
+    const invite = !full && issued !== null && issued.code === watched ? issued : null;
     const link = invite === null ? "" : profileInviteLink(invite.code);
 
     return (
