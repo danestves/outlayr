@@ -53,6 +53,10 @@ import { toggleAppLockCommand } from "@/state/settings-flow-commands";
 import { fireAtomCommand, useAtomAction } from "@/state/use-atom-action";
 import { THEME_DISPLAY_OPTIONS } from "@/theme/theme-preference";
 import { useIsDark } from "@/theme/use-is-dark";
+import { useTour } from "@/tour/tour-context";
+import { useTourAutoStart } from "@/tour/use-tour-auto-start";
+import { useTourScrollReveal } from "@/tour/use-tour-scroll-reveal";
+import { useTourTarget } from "@/tour/use-tour-target";
 
 import { useIntegrationsOn } from "./integrations-on";
 
@@ -111,8 +115,13 @@ export function Settings() {
     const previewAmount = formatAmount(SAMPLE_AMOUNT, currency, showCents, language);
     const centsLastAmount = formatAmount(CENTS_LAST_KEYS / 10 ** minorUnitsFor(currency), currency, true, language);
 
+    const { onScroll, reveal, scrollRef } = useTourScrollReveal();
+    const integrations = useTourTarget("settings.integrations", 0, reveal);
+    const { replay } = useTour();
+    useTourAutoStart("settings", true);
+
     return (
-        <SettingsScreen>
+        <SettingsScreen onScroll={onScroll} scrollRef={scrollRef}>
             <AccountPanel />
             <InviteFriendsRow />
 
@@ -245,16 +254,18 @@ export function Settings() {
                     title={t("settings.row.upcoming")}
                     value={t(shownHiddenLabel(showUpcoming))}
                 />
-                <LinkRow
-                    icon="Plug"
-                    onPress={() => router.push("/settings/integrations")}
-                    title={t("settings.row.integrations")}
-                    value={
-                        integrationsOn > 0
-                            ? t("settings.integrations.onCount", { count: integrationsOn })
-                            : t(onOffLabel(false))
-                    }
-                />
+                <View ref={integrations} collapsable={false}>
+                    <LinkRow
+                        icon="Plug"
+                        onPress={() => router.push("/settings/integrations")}
+                        title={t("settings.row.integrations")}
+                        value={
+                            integrationsOn > 0
+                                ? t("settings.integrations.onCount", { count: integrationsOn })
+                                : t(onOffLabel(false))
+                        }
+                    />
+                </View>
                 <ToggleRow
                     icon="WandSparkles"
                     onValueChange={(next) => {
@@ -340,6 +351,14 @@ export function Settings() {
                     icon="Lifebuoy"
                     onPress={() => emailSupport(t("settings.support.subject"))}
                     title={t("settings.row.contactSupport")}
+                />
+                <LinkRow
+                    icon="Tap01"
+                    onPress={() => {
+                        replay();
+                        router.navigate("/");
+                    }}
+                    title={t("settings.row.tour")}
                 />
             </SettingsSection>
 

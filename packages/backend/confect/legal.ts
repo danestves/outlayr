@@ -26,6 +26,8 @@ export const REMINDER_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
 
 export const VOICE_KEYTERMS_AT_MS = JANUARY_NOTICE_AT_MS;
 
+export const TOUR_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
+
 const GUEST_PURCHASE_AT_MS = Date.UTC(2026, 10, 21);
 const PROFILES_AT_MS = JANUARY_NOTICE_AT_MS;
 
@@ -1126,6 +1128,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Reminders in analytics",
                 },
                 {
+                    detail: "With Share analytics on: which step of the app tour you reach, and whether you finish, skip or replay it. Never amounts, names or notes.",
+                    label: "The app tour in analytics",
+                },
+                {
                     detail: "With Pro you can keep separate profiles, such as Work or Family. Each profile's name, icon, and color sync with its own ledger. The web app and a connected AI assistant see only your Personal profile, and Notion imports go there too.",
                     label: "Profiles",
                 },
@@ -1142,6 +1148,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Mit eingeschaltetem „Analysedaten teilen“: wann die App die Erinnerung an deinen zweiten Eintrag plant und wann du die App über eine Erinnerung öffnest. Nie Beträge, Namen oder Notizen.",
                     label: "Erinnerungen in Analysen",
+                },
+                {
+                    detail: "Mit eingeschaltetem „Analysedaten teilen“: welchen Schritt der App-Tour du erreichst und ob du sie beendest, überspringst oder neu startest. Nie Beträge, Namen oder Notizen.",
+                    label: "Die App-Tour in Analysen",
                 },
                 {
                     detail: "Mit Pro kannst du getrennte Profile führen, etwa Arbeit oder Familie. Name, Symbol und Farbe jedes Profils werden mit seinem eigenen Haushaltsbuch synchronisiert. Die Web-App und ein verbundener KI-Assistent sehen nur dein Profil „Privat“, und Notion-Importe landen ebenfalls dort.",
@@ -1162,6 +1172,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Recordatorios en analíticas",
                 },
                 {
+                    detail: "Con Compartir analíticas activado: a qué paso del recorrido por la app llegas y si lo terminas, lo saltas o lo repites. Nunca montos, nombres ni notas.",
+                    label: "El recorrido por la app en analíticas",
+                },
+                {
                     detail: "Con Pro puedes tener perfiles separados, como Trabajo o Familia. El nombre, el ícono y el color de cada perfil se sincronizan con su propio registro. La app web y un asistente de IA conectado solo ven tu perfil Personal, y las importaciones de Notion también van ahí.",
                     label: "Perfiles",
                 },
@@ -1180,6 +1194,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Rappels dans les statistiques",
                 },
                 {
+                    detail: "Avec Partager les données d'analyse activé : quelle étape de la visite de l'app vous atteignez, et si vous la terminez, la passez ou la relancez. Jamais de montants, de noms ni de notes.",
+                    label: "La visite de l'app dans les statistiques",
+                },
+                {
                     detail: "Avec Pro, vous pouvez tenir des profils séparés, comme Travail ou Famille. Le nom, l'icône et la couleur de chaque profil se synchronisent avec son propre registre. L'app web et un assistant IA connecté ne voient que votre profil Personnel, et les imports Notion y arrivent aussi.",
                     label: "Profils",
                 },
@@ -1196,6 +1214,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Com Compartilhar análises ativado: quando o app agenda o lembrete do seu segundo lançamento e quando você abre o app a partir de um lembrete. Nunca valores, nomes ou notas.",
                     label: "Lembretes nas análises",
+                },
+                {
+                    detail: "Com Compartilhar análises ativado: a qual etapa do tour do app você chega e se você o termina, pula ou refaz. Nunca valores, nomes ou notas.",
+                    label: "O tour do app nas análises",
                 },
                 {
                     detail: "Com o Pro você pode manter perfis separados, como Trabalho ou Família. O nome, o ícone e a cor de cada perfil sincronizam com o registro próprio dele. O app web e um assistente de IA conectado veem só o seu perfil Pessoal, e as importações do Notion também vão para ele.",

@@ -60,6 +60,7 @@ import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
 import { markReviewedCommand } from "@/state/review-commands";
 import { setNumberSettingCommand } from "@/state/settings-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
+import { useTourAutoStart } from "@/tour/use-tour-auto-start";
 
 import { AccountsBlock } from "./components/accounts-block";
 import { AmountsEyeButton } from "./components/amounts-eye-button";
@@ -143,6 +144,10 @@ function useTailGrouping<T extends DayGroupable>(currency: string, rates: RateTa
     const next = { currency, group: groupByDayAsItGrows<T>(currency, rates), rates };
     setGrouping(next);
     return next.group;
+}
+
+function noRowsToShow(filter: LogFilter, listCount: number, tailCount: number): boolean {
+    return filter === "all" && listCount === 0 && tailCount === 0;
 }
 
 function nothingToList(sectionCount: number, filter: LogMenuFilter, upcomingCount: number) {
@@ -269,6 +274,9 @@ export function Log() {
     const tailTransfers = transferRows.filter((transfer) => transfer.day.getTime() < splitMs);
     const listRows = headListRows(listFilter, head, filteredRows, transferRows, splitMs);
     const tailRows = listFilter === "all" ? mergeByRecency(tail, tailTransfers) : [];
+    const noRows = noRowsToShow(listFilter, listRows.length, tailRows.length);
+    // The same rows the empty state below reads, so the tour never asks an empty ledger to point at the FAB.
+    useTourAutoStart("log", !noRows);
     const visibleRows = listRows.filter(
         (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
     );
@@ -330,7 +338,7 @@ export function Log() {
         />
     );
 
-    if (listRows.length === 0 && tailRows.length === 0 && listFilter === "all") {
+    if (noRows) {
         return (
             <AmountsHiddenContext value={amountsHidden}>
                 <ProfileTitle />

@@ -19,6 +19,7 @@ import { notifyFailure } from "@/lib/notify";
 import { switchProfileCommand } from "@/state/profiles-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
+import { useTourTarget } from "@/tour/use-tour-target";
 
 const PERSONAL_ACTION = "profiles.personal";
 const NEW_ACTION = "profiles.new";
@@ -44,6 +45,7 @@ function ProfileChip() {
     const router = useRouter();
     const locked = useProLocked();
     const openPaywall = useOpenPaywall();
+    const chip = useTourTarget("log.profiles", "half");
     // A switch reloads the app, so only a failure clears this.
     const switching = useRef(false);
     const switchProfile = useAtomAction(switchProfileCommand, {
@@ -112,6 +114,7 @@ function ProfileChip() {
                 accessibilityLabel={name}
                 accessibilityRole="button"
                 className="min-h-11 flex-row items-center px-2"
+                ref={chip}
             >
                 <AccountTile account={active ? { ...active, kind: "asset" } : PERSONAL_IDENTITY} size={TILE_SIZE} />
                 <Text className="text-foreground font-sans-semibold mr-1 ml-2 shrink text-[17px]" numberOfLines={1}>

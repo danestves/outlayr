@@ -607,6 +607,14 @@ const settings = {
             fr: "Périodes",
             pt: "Períodos",
         }),
+        "settings.row.tour": t({
+            en: "Take the tour",
+            de: "Tour starten",
+            es: "Ver el recorrido",
+            fr: "Faire la visite",
+            pt: "Fazer o tour",
+            "pt-PT": "Fazer a visita guiada",
+        }),
         "settings.row.upcoming": t({
             en: "Upcoming entries",
             de: "Anstehende Einträge",

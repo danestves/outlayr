@@ -11,6 +11,7 @@ import type { AddMenuRow } from "@/components/use-log-add-menu";
 import { useLogAddMenu } from "@/components/use-log-add-menu";
 import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
+import { TourTarget } from "@/tour/tour-target";
 
 const BOTTOM_INSET = 16;
 const EDGE_INSET = 20;
@@ -38,57 +39,70 @@ export function FloatingAddButton() {
     const { more, rows } = useLogAddMenu();
 
     return (
-        <Host
-            ignoreSafeArea="keyboard"
-            style={{
-                bottom: insets.bottom + BOTTOM_INSET,
-                height: TRIGGER_SIZE,
-                position: "absolute",
-                right: EDGE_INSET,
-                width: TRIGGER_SIZE,
-            }}
-        >
-            <Menu
-                label={
-                    <RNHostView matchContents>
-                        {/* The menu owns the tap: a pressable in front of it would take the touch. */}
-                        <View pointerEvents="none" style={{ height: TRIGGER_SIZE, width: TRIGGER_SIZE }}>
-                            <ScopedVariables variables={{ "--color-primary": tint }}>
-                                <Fab
-                                    accessibilityLabel={t("log.add.menu")}
-                                    glass
-                                    icon={
-                                        <HugeiconsIcon
-                                            color={glassDrawn ? tint : accentForeground}
-                                            icon={PlusSignIcon}
-                                            size={TRIGGER_ICON_SIZE}
-                                            strokeWidth={2.2}
-                                        />
-                                    }
-                                    size="lg"
-                                />
-                            </ScopedVariables>
-                        </View>
-                    </RNHostView>
-                }
+        <>
+            <Host
+                ignoreSafeArea="keyboard"
+                style={{
+                    bottom: insets.bottom + BOTTOM_INSET,
+                    height: TRIGGER_SIZE,
+                    position: "absolute",
+                    right: EDGE_INSET,
+                    width: TRIGGER_SIZE,
+                }}
             >
-                {rows.map((row) => (
-                    <MenuRow key={row.id} row={row} />
-                ))}
                 <Menu
                     label={
-                        <>
-                            <Text>{more.label}</Text>
-                            <Text>{more.description}</Text>
-                            <Image systemName={more.icon} />
-                        </>
+                        <RNHostView matchContents>
+                            {/* The menu owns the tap: a pressable in front of it would take the touch. */}
+                            <View pointerEvents="none" style={{ height: TRIGGER_SIZE, width: TRIGGER_SIZE }}>
+                                <ScopedVariables variables={{ "--color-primary": tint }}>
+                                    <Fab
+                                        accessibilityLabel={t("log.add.menu")}
+                                        glass
+                                        icon={
+                                            <HugeiconsIcon
+                                                color={glassDrawn ? tint : accentForeground}
+                                                icon={PlusSignIcon}
+                                                size={TRIGGER_ICON_SIZE}
+                                                strokeWidth={2.2}
+                                            />
+                                        }
+                                        size="lg"
+                                    />
+                                </ScopedVariables>
+                            </View>
+                        </RNHostView>
                     }
                 >
-                    {more.rows.map((row) => (
+                    {rows.map((row) => (
                         <MenuRow key={row.id} row={row} />
                     ))}
+                    <Menu
+                        label={
+                            <>
+                                <Text>{more.label}</Text>
+                                <Text>{more.description}</Text>
+                                <Image systemName={more.icon} />
+                            </>
+                        }
+                    >
+                        {more.rows.map((row) => (
+                            <MenuRow key={row.id} row={row} />
+                        ))}
+                    </Menu>
                 </Menu>
-            </Menu>
-        </Host>
+            </Host>
+            <TourTarget
+                id="log.add"
+                radius={TRIGGER_SIZE / 2}
+                style={{
+                    bottom: insets.bottom + BOTTOM_INSET,
+                    height: TRIGGER_SIZE,
+                    position: "absolute",
+                    right: EDGE_INSET,
+                    width: TRIGGER_SIZE,
+                }}
+            />
+        </>
     );
 }
