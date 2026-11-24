@@ -1129,6 +1129,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "With Pro you can keep separate profiles, such as Work or Family. Each profile's name, icon, and color sync with its own ledger. The web app and a connected AI assistant see only your Personal profile, and Notion imports go there too.",
                     label: "Profiles",
                 },
+                {
+                    detail: "ElevenLabs now also receives your account and category names while you speak an entry, so it spells them the way your ledger does.",
+                    label: "Voice entry spelling",
+                },
             ],
             de: [
                 {
@@ -1142,6 +1146,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Mit Pro kannst du getrennte Profile führen, etwa Arbeit oder Familie. Name, Symbol und Farbe jedes Profils werden mit seinem eigenen Haushaltsbuch synchronisiert. Die Web-App und ein verbundener KI-Assistent sehen nur dein Profil „Privat“, und Notion-Importe landen ebenfalls dort.",
                     label: "Profile",
+                },
+                {
+                    detail: "ElevenLabs erhält bei der Spracheingabe jetzt auch deine Konto- und Kategorienamen, damit es sie so schreibt wie dein Haushaltsbuch.",
+                    label: "Schreibweise bei der Spracheingabe",
                 },
             ],
             es: [
@@ -1157,6 +1165,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Con Pro puedes tener perfiles separados, como Trabajo o Familia. El nombre, el ícono y el color de cada perfil se sincronizan con su propio registro. La app web y un asistente de IA conectado solo ven tu perfil Personal, y las importaciones de Notion también van ahí.",
                     label: "Perfiles",
                 },
+                {
+                    detail: "ElevenLabs ahora también recibe los nombres de tus cuentas y categorías mientras dictas una entrada, para escribirlos como están en tu registro.",
+                    label: "Ortografía en la entrada por voz",
+                },
             ],
             fr: [
                 {
@@ -1170,6 +1182,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Avec Pro, vous pouvez tenir des profils séparés, comme Travail ou Famille. Le nom, l'icône et la couleur de chaque profil se synchronisent avec son propre registre. L'app web et un assistant IA connecté ne voient que votre profil Personnel, et les imports Notion y arrivent aussi.",
                     label: "Profils",
+                },
+                {
+                    detail: "ElevenLabs reçoit désormais aussi les noms de vos comptes et catégories pendant que vous dictez une opération, pour les écrire comme dans votre journal.",
+                    label: "Orthographe de la saisie vocale",
                 },
             ],
             pt: [
@@ -1185,11 +1201,15 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Com o Pro você pode manter perfis separados, como Trabalho ou Família. O nome, o ícone e a cor de cada perfil sincronizam com o registro próprio dele. O app web e um assistente de IA conectado veem só o seu perfil Pessoal, e as importações do Notion também vão para ele.",
                     label: "Perfis",
                 },
+                {
+                    detail: "A ElevenLabs agora também recebe os nomes das suas contas e categorias enquanto você dita um lançamento, para escrevê-los como estão nos seus lançamentos.",
+                    label: "Grafia no lançamento por voz",
+                },
             ],
         },
         document: "privacy",
         effectiveAtMs: JANUARY_NOTICE_AT_MS,
-        postedAtMs: Date.UTC(2026, 10, 24),
+        postedAtMs: Date.UTC(2026, 10, 25),
     },
     {
         changes: {
