@@ -60,6 +60,12 @@ export const features = {
             { see: "Samsung A16" },
         ],
     },
+    "voice-entry": {
+        link: "/transactions/voice",
+        proves: "Dictation opens the microphone and reaches Listening before the voice session finishes loading.",
+        says: ["add by voice", "dictate an expense", "voice entry"],
+        steps: [{ see: "Listening…" }],
+    },
     "log-list": {
         link: "/",
         proves: "The Log tab opens on the ledger and renders its own title.",
