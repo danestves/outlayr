@@ -18,6 +18,7 @@ function makeDb(): SpendDb {
     const sqlite = new BetterSqlite3(":memory:");
     sqlite.exec(`
 		CREATE TABLE transactions (
+			createdBy text,
 			id text PRIMARY KEY NOT NULL,
 			amount real NOT NULL,
 			income integer NOT NULL,

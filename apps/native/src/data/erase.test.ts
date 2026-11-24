@@ -13,6 +13,7 @@ import type { EraseResidue } from "./erase";
 
 const TRANSACTIONS_DDL = `
 	CREATE TABLE transactions (
+		createdBy text,
 		id text PRIMARY KEY NOT NULL,
 		amount real NOT NULL,
 		income integer NOT NULL,
@@ -54,6 +55,7 @@ const TRANSACTIONS_DDL = `
 
 const TRANSFERS_DDL = `
 		CREATE TABLE transfers (
+			createdBy text,
 			id text PRIMARY KEY NOT NULL,
 			fromAccountId text NOT NULL,
 			toAccountId text NOT NULL,

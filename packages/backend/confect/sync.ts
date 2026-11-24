@@ -145,6 +145,8 @@ export function versioned(doc: SyncedDoc) {
 }
 
 const TRANSACTION_VALUATION_FIELDS = new Set(["amountUsd", "exchangeRate", "exchangeRateType"]);
+// The server stamps it, so a client that omits it or echoes a stale value must not swing a tie.
+const TRANSACTION_STAMPED_FIELDS = new Set(["createdBy"]);
 const TRANSACTION_LEGACY_OPTIONAL_NULLABLE_FIELDS = new Set<keyof typeof transactionFields>([
     "accountId",
     "recurringAnchorDay",
@@ -188,7 +190,11 @@ export function transactionPolicyTieDecision(row: PushRow, existing: SyncedDoc |
     // SAFETY: `Object.keys` widens to string[]; the keys are this object's own.
     for (const field of Object.keys(transactionFields) as (keyof typeof transactionFields)[]) {
         if (
-            !(TRANSACTION_VALUATION_FIELDS.has(field) || transactionFieldsEqual(field, stored[field], incoming[field]))
+            !(
+                TRANSACTION_VALUATION_FIELDS.has(field) ||
+                TRANSACTION_STAMPED_FIELDS.has(field) ||
+                transactionFieldsEqual(field, stored[field], incoming[field])
+            )
         ) {
             return null;
         }

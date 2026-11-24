@@ -50,6 +50,7 @@ import m0046 from './20261103032956_0046_card_statement/migration.sql';
 import m0047 from './20261103192730_0047_outside_move_adjustment/migration.sql';
 import m0048 from './20261108140833_0048_account_archived_at/migration.sql';
 import m0049 from './20261122221645_0049_profiles/migration.sql';
+import m0050 from './20261124211358_0050_created_by/migration.sql';
 
   export default {
     migrations: {
@@ -102,7 +103,8 @@ import m0049 from './20261122221645_0049_profiles/migration.sql';
       "20261103032956_0046_card_statement": m0046,
       "20261103192730_0047_outside_move_adjustment": m0047,
       "20261108140833_0048_account_archived_at": m0048,
-      "20261122221645_0049_profiles": m0049
+      "20261122221645_0049_profiles": m0049,
+      "20261124211358_0050_created_by": m0050
 }
   }
   

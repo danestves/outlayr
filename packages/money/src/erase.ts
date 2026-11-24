@@ -11,6 +11,7 @@ export const ERASED_TRANSACTION = {
     amount: 0,
     amountUsd: null,
     categoryId: null,
+    createdBy: null,
     currency: null,
     customColor: null,
     date: ERASED_DATE,
@@ -43,6 +44,7 @@ export const ERASED_TRANSACTION = {
 
 /** The two account ids stay: both are `notNull`, so blanking them would point the row at no account. */
 export const ERASED_TRANSFER = {
+    createdBy: null,
     date: ERASED_DATE,
     dateCreated: ERASED_DATE,
     day: ERASED_DATE,

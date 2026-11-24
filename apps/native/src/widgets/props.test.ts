@@ -70,6 +70,7 @@ function makeDb(): SpendDb {
 			deletedAt integer
 		);
 		CREATE TABLE transactions (
+			createdBy text,
 			id text PRIMARY KEY NOT NULL,
 			amount real NOT NULL,
 			income integer NOT NULL,

@@ -39,6 +39,8 @@ interface SyncedTableOptions<T extends SQLiteTable> {
     defaults?: Partial<Record<ColumnName<T>, WireDefault>>;
     deviceLocal?: readonly ColumnName<T>[];
     dormantPhotos?: true;
+    /** Pulled but never pushed, so a client can't send a field a server without it would reject. */
+    serverStamped?: readonly ColumnName<T>[];
     syncedIds?: readonly string[];
 }
 
@@ -61,6 +63,7 @@ export interface SyncedTableSpec<T extends SQLiteTable = SQLiteTable, Id extends
     readonly fields: readonly string[];
     readonly id: Id;
     readonly photos: PhotoTable | null;
+    readonly pushed: readonly string[];
     readonly scope: SQL | undefined;
     readonly syncedIds: readonly string[] | undefined;
     readonly table: T;
@@ -76,16 +79,19 @@ function synced<T extends SQLiteTable, Id extends SQLiteColumn>(
     const columns = getTableColumns(table);
     const notReplicated = new Set<string>([id.name, ...ENVELOPE, ...(options.deviceLocal ?? [])]);
     const { imageKey, imageUri } = columns;
+    const fields = Object.keys(columns).filter((name) => !notReplicated.has(name));
+    const serverStamped = new Set<string>(options.serverStamped);
     return {
         clock: "updatedAt" in columns ? "row" : "none",
         dates: Object.entries(columns)
             .filter(([, column]) => column.dataType === "object date")
             .map(([name]) => name),
         defaults: options.defaults ?? {},
-        fields: Object.keys(columns).filter((name) => !notReplicated.has(name)),
+        fields,
         id,
         photos:
             imageKey && imageUri ? { dormant: options.dormantPhotos === true, id, imageKey, imageUri, table } : null,
+        pushed: fields.filter((name) => !serverStamped.has(name)),
         scope: options.syncedIds && inArray(id, [...options.syncedIds]),
         syncedIds: options.syncedIds,
         table,
@@ -96,12 +102,13 @@ function synced<T extends SQLiteTable, Id extends SQLiteColumn>(
 export const SYNCED_SPECS = {
     categories: synced(categories, categories.id, { defaults: { customName: false } }),
     accounts: synced(accounts, accounts.id, { defaults: { kind: "asset" }, deviceLocal: ["imageUri"] }),
-    transfers: synced(transfers, transfers.id),
+    transfers: synced(transfers, transfers.id, { serverStamped: ["createdBy"] }),
     transactions: synced(transactions, transactions.id, {
         // No `imageUri`: a peer cannot resolve the device-local path, nulls it, and pushes that null back over the
         // original photo. `imageKey` replicates; the bytes travel via `photos.ts`.
         deviceLocal: ["imageUri", "reminderLeadDays"],
         defaults: { unreviewed: false },
+        serverStamped: ["createdBy"],
     }),
     budgets: synced(budgets, budgets.id),
     mainBudget: synced(mainBudget, mainBudget.id),

@@ -37,6 +37,8 @@ export const transactionFields = {
     amount: Schema.Number,
     amountUsd: Schema.NullOr(Schema.Number),
     categoryId: Schema.NullOr(Schema.String),
+    /** Server-stamped from the pushing account, never the client's value; optional so older builds still validate. */
+    createdBy: Schema.optional(Schema.NullOr(Schema.String)),
     currency: Schema.NullOr(Schema.String),
     customColor: Schema.NullOr(Schema.String),
     date: Schema.Number,
@@ -68,6 +70,8 @@ export const transactionFields = {
 };
 
 export const transferFields = {
+    /** Server-stamped from the pushing account, never the client's value; optional so older builds still validate. */
+    createdBy: Schema.optional(Schema.NullOr(Schema.String)),
     date: Schema.Number,
     dateCreated: Schema.Number,
     day: Schema.Number,

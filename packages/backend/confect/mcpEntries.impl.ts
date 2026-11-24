@@ -194,6 +194,7 @@ const logEntry = FunctionImpl.make(
                 amount: row.amount,
                 amountUsd: row.amountUsd,
                 categoryId: row.categoryId,
+                createdBy: userId,
                 currency: row.currency,
                 customColor: row.customColor,
                 date,

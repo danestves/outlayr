@@ -118,6 +118,7 @@ describe("opening local data across the drizzle 1.0 upgrade", () => {
             "0047",
             "0048",
             "0049",
+            "0050",
         ]);
         expect(applied.every((row) => row.applied_at !== null)).toBe(true);
         expect(

@@ -296,6 +296,7 @@ describe("drainOutbox", () => {
         expect(firstSeen.fields.note).toBe("lunch");
         expect(firstSeen.fields.date).toBe(5000);
         expect(firstSeen.fields.categoryId).toBeNull();
+        expect(Object.hasOwn(firstSeen.fields, "createdBy")).toBe(false);
     });
 
     it("round-trips resolved and pending custom transaction rate triples", async () => {

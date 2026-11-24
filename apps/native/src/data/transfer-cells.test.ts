@@ -43,6 +43,7 @@ function makeDb() {
     const sqlite = new BetterSqlite3(":memory:");
     sqlite.exec(`
 		CREATE TABLE transactions (
+			createdBy text,
 			id text PRIMARY KEY NOT NULL,
 			amount real NOT NULL,
 			income integer NOT NULL,
@@ -81,6 +82,7 @@ function makeDb() {
 			deletedAt integer
 		);
 		CREATE TABLE transfers (
+			createdBy text,
 			id text PRIMARY KEY NOT NULL,
 			fromAccountId text NOT NULL,
 			toAccountId text NOT NULL,
