@@ -9,6 +9,7 @@ import { databaseNameFor, parseProfileId } from "@/domain/profiles";
 
 import migrationsBundle from "../../drizzle/migrations";
 import { bootstrapLocalData } from "./bootstrap";
+import type { BootstrapOptions } from "./bootstrap";
 import { useLiveQuery } from "./live-query";
 import {
     clearProfileLedgerReady,
@@ -34,7 +35,8 @@ const failed = (operation: "create") => (cause: unknown) => new ProfilesError({ 
 export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function* prepareProfileLedger(
     id: string,
     from: Database,
-    currency: string | undefined
+    currency: string | undefined,
+    options: BootstrapOptions = {}
 ) {
     // An existing file may hold entries from before ready markers, so only a fresh one is safe to delete.
     const existed = profileLedgerFileExists(id);
@@ -45,7 +47,7 @@ export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function
     const ledger = yield* Effect.try({ catch: failed("create"), try: () => openDatabase(databaseNameFor(id)) });
     yield* Effect.gen(function* seed() {
         yield* Effect.tryPromise({ catch: failed("create"), try: () => migrate(ledger, migrationsBundle) });
-        yield* bootstrapLocalData(ledger);
+        yield* bootstrapLocalData(ledger, options);
         yield* seedProfileLedger(from, ledger, currency);
     }).pipe(
         Effect.ensuring(closeDatabase(ledger).pipe(Effect.ignore)),

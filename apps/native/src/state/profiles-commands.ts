@@ -19,18 +19,19 @@ import {
     writeProfileSwitch,
 } from "@/lib/active-profile";
 import type { ProfileSwitch } from "@/lib/active-profile";
+import { isJoinedProfile } from "@/lib/joined-profiles";
 import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand } from "./atom-command";
 
-const switchFailed = (cause: unknown) => new ProfilesError({ cause, operation: "switch" });
+export const switchFailed = (cause: unknown) => new ProfilesError({ cause, operation: "switch" });
 
 // Once the active file names Personal this runtime has left its ledger: the reload lands there, so the drains stay
 // shut even when the auth request fails.
 let leftLedger = false;
 
 // A queued capture carries ids from the open ledger, so a failed drain stays put rather than land in the next one.
-const settleLedger = Effect.fn("Profiles.settleLedger")(function* settleLedger(db: Database) {
+export const settleLedger = Effect.fn("Profiles.settleLedger")(function* settleLedger(db: Database) {
     // Only the transition that closed the gate may drain or reopen it: a second one, like a switch tapped mid sign-out,
     // would run its strict pass against the ledger that transition is already leaving.
     if (!acquireDrains()) {
@@ -44,7 +45,7 @@ const settleLedger = Effect.fn("Profiles.settleLedger")(function* settleLedger(d
     }).pipe(Effect.onError(() => Effect.sync(reopenDrains)));
 });
 
-const reload = Effect.suspend(() => {
+export const reload = Effect.suspend(() => {
     if (__DEV__) {
         DevSettings.reload();
         return Effect.void;
@@ -52,7 +53,7 @@ const reload = Effect.suspend(() => {
     return Effect.tryPromise({ catch: switchFailed, try: () => reloadAsync() });
 });
 
-const writeActive = (profileId: string | undefined) =>
+export const writeActive = (profileId: string | undefined) =>
     Effect.try({ catch: switchFailed, try: () => writeActiveProfile(profileId) });
 
 // The file, the marker and the drains go back together, so a retry starts from the launch profile.
@@ -65,7 +66,7 @@ const restoreLaunchProfile = Effect.fn("Profiles.restoreLaunchProfile")(function
     reopenDrains();
 });
 
-const withRollback = <A, E>(run: Effect.Effect<A, E>) =>
+export const withRollback = <A, E>(run: Effect.Effect<A, E>) =>
     Effect.suspend(() => {
         const previous = readProfileSwitch();
         return run.pipe(
@@ -77,7 +78,7 @@ const withRollback = <A, E>(run: Effect.Effect<A, E>) =>
  * A marker first, so a capture enqueued after the drain is held for the ledger being left rather than landing in
  * the next one. Drains stay shut until the reload, or a capture-triggered pass could still file there.
  */
-const enter = Effect.fn("Profiles.enter")(function* enter(profileId: string | undefined) {
+export const enter = Effect.fn("Profiles.enter")(function* enter(profileId: string | undefined) {
     yield* Effect.try({ catch: switchFailed, try: recordProfileSwitch });
     yield* writeActive(profileId);
     yield* reload;
@@ -120,13 +121,22 @@ export const switchProfileCommand = createRuntimeCommand(appRuntime, {
     }) {
         if (input.profileId !== undefined && !profileLedgerExists(input.profileId)) {
             // Migrate, bootstrap and seed are idempotent, so finishing in place keeps what the ledger holds.
-            yield* prepareProfileLedger(input.profileId, input.from, undefined);
+            yield* prepareProfileLedger(
+                input.profileId,
+                input.from,
+                undefined,
+                isJoinedProfile(input.profileId) ? { seedCategories: false } : undefined
+            );
         }
         yield* settleLedger(input.from);
-        // Settling can let sync tombstone the profile this switch set out to open.
+        // Settling can let sync tombstone the profile this switch set out to open, or reconcile drop a joined one.
         yield* Effect.gen(function* guardTarget() {
-            if (input.profileId !== undefined && !(yield* profileIsLive(profileRegistry(), input.profileId))) {
-                return yield* switchFailed(new Error("profile was deleted"));
+            if (input.profileId !== undefined) {
+                const live =
+                    (yield* profileIsLive(profileRegistry(), input.profileId)) || isJoinedProfile(input.profileId);
+                if (!live) {
+                    return yield* switchFailed(new Error("profile was deleted"));
+                }
             }
         }).pipe(Effect.onError(() => Effect.sync(reopenDrains)));
         yield* withRollback(enter(input.profileId));
