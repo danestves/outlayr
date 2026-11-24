@@ -1,5 +1,6 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { and, eq, isNull } from "drizzle-orm";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -157,7 +158,9 @@ export const leaveProfileCommand = createRuntimeCommand(appRuntime, {
         yield* Effect.gen(function* flush() {
             // Rows sync but photos do not, and leaving revokes the membership the upload needs.
             const transport = yield* photoTransport();
-            yield* uploadPhotos(input.from, photoFiles, transport, new Date()).pipe(Effect.mapError(failed("leave")));
+            yield* uploadPhotos(input.from, photoFiles, transport, DateTime.toDate(yield* DateTime.now)).pipe(
+                Effect.mapError(failed("leave"))
+            );
             yield* store.sync(input.from).pipe(Effect.mapError(failed("leave")));
             const pending = yield* store.pending(input.from).pipe(Effect.mapError(failed("leave")));
             const photos = yield* pendingPhotoUploads(input.from).pipe(Effect.mapError(failed("leave")));
