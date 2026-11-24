@@ -19,7 +19,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
-import { useMirror, useWhen } from "@/lib/lifecycle";
+import { useMirror, useTimers, useWhen } from "@/lib/lifecycle";
 import { useColors } from "@/theme/use-colors";
 import { useIsDark } from "@/theme/use-is-dark";
 
@@ -40,7 +40,8 @@ const OPEN = { duration: 220, easing: EASE_OUT } as const;
 const CLOSE = { duration: 140, easing: EASE_OUT } as const;
 const GLIDE = { duration: 360, easing: EASE_IN_OUT } as const;
 const BUBBLE_IN = { duration: 240, easing: EASE_OUT } as const;
-// The bubble lands as the cutout settles, so the eye follows the cutout first.
+// A first stop's bubble lands as the dim settles; later stops wait out the glide,
+// so the pointer never chases the cutout.
 const BUBBLE_DELAY_MS = 160;
 const BUBBLE_EXIT_MS = 120;
 const BUBBLE_DRIFT = 8;
@@ -196,9 +197,13 @@ function TourBubble({ reduced, stage }: TourBubbleProps) {
         ? calloutLayout({ bubble: size, insets, radius: stage.radius, target: stage.rect, window: { height, width } })
         : null;
 
+    const timers = useTimers();
+    const [live, setLive] = useState(false);
+    const delay = stage.index > 0 && !reduced ? GLIDE.duration : BUBBLE_DELAY_MS;
     const entered = useSharedValue(0);
     useWhen(layout !== null, () => {
-        entered.set(withDelay(BUBBLE_DELAY_MS, withTiming(1, BUBBLE_IN)));
+        entered.set(withDelay(delay, withTiming(1, BUBBLE_IN)));
+        timers.after(delay, () => setLive(true));
     });
     // Drifts toward its target while it lands.
     const drift = layout?.above ? -BUBBLE_DRIFT : BUBBLE_DRIFT;
@@ -240,13 +245,13 @@ function TourBubble({ reduced, stage }: TourBubbleProps) {
             pointerEvents="box-none"
             style={StyleSheet.absoluteFill}
         >
-            {/* Hidden until placed: a tap or screen reader on the unplaced bubble lands on the scrim. */}
+            {/* Hidden until it starts to show, so a quick second tap can't press a button nobody has seen. */}
             <Animated.View
-                accessibilityElementsHidden={!layout}
+                accessibilityElementsHidden={!live}
                 accessibilityViewIsModal
-                importantForAccessibility={layout ? "auto" : "no-hide-descendants"}
+                importantForAccessibility={live ? "auto" : "no-hide-descendants"}
                 onLayout={measure}
-                pointerEvents={layout ? "auto" : "none"}
+                pointerEvents={live ? "auto" : "none"}
                 style={[
                     styles.bubble,
                     {

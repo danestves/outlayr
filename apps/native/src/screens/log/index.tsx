@@ -1,5 +1,6 @@
 import { SectionList } from "@legendapp/list/section-list";
 import { addDays, addMonths, startOfDay } from "@outlayr/money/calendar";
+import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import type { RateTable } from "@outlayr/money/valuation";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -277,7 +278,10 @@ export function Log() {
     const noRows = noRowsToShow(listFilter, listRows.length, tailRows.length);
     // Counted directly, since a day filter with no rows is not the empty state but still has nothing to point at.
     useTourAutoStart("log", listRows.length + tailRows.length > 0);
-    useTourAutoStart("subscriptions", upcomingRows.length > 0);
+    useTourAutoStart(
+        "subscriptions",
+        listFilter === "all" && upcomingRows.some((row) => row.recurringType !== RECURRING_TYPE.none)
+    );
     const visibleRows = listRows.filter(
         (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
     );
