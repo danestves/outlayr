@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import { readOpenAiEvent } from "./realtime-openai";
-import { readScribeMessage, scribeUrl } from "./realtime-scribe";
+import { readScribeMessage, scribeUrl, voiceKeyterms } from "./realtime-scribe";
 import { hear, heardText, NOTHING_HEARD } from "./transcript-stream";
 import type { Heard, TranscriptEvent } from "./transcript-stream";
 
@@ -42,9 +42,20 @@ describe("readScribeMessage", () => {
     });
 
     it("asks the relay for the model the server chose", () => {
-        const url = new URL(scribeUrl({ language: "es", model: "scribe_v4_live", token: "t" }));
+        const url = new URL(scribeUrl({ keyterms: [], language: "es", model: "scribe_v4_live", token: "t" }));
         expect(url.searchParams.get("model_id")).toBe("scribe_v4_live");
         expect(url.searchParams.getAll("secondary_languages")).not.toContain("es");
+    });
+
+    it("biases toward ledger names without passing the keyterm cap a big ledger would blow", () => {
+        const accounts = Array.from({ length: 150 }, (_, at) => `Account ${at}`);
+        const keyterms = voiceKeyterms({ accounts: ["Bancamiga", ...accounts], categoryTree: [] });
+        const sent = new URL(scribeUrl({ keyterms, language: "es", model: "m", token: "t" })).searchParams.getAll(
+            "keyterms"
+        );
+        expect(sent).toHaveLength(100);
+        expect(sent).toContain("bolívares");
+        expect(sent).toContain("Bancamiga");
     });
 });
 

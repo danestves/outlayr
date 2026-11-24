@@ -20,6 +20,7 @@ const CLIP_METER_RATE = 16_000;
 export type RealtimeStart = "started" | "denied" | "failed";
 
 interface RealtimeTranscriptOptions {
+    keyterms: readonly string[];
     language: string;
     /** Every chunk, about ten a second, with the same 0..1 scale as `level`: feed `judgeSilence` from here. */
     onLevel?: (level: number, at: number) => void;
@@ -45,9 +46,13 @@ interface Session {
     stream: TranscriptStream | null;
 }
 
-function protocolFor(session: Exclude<StreamSession, { kind: "clip" }>, language: string): TranscriptProtocol {
+function protocolFor(
+    session: Exclude<StreamSession, { kind: "clip" }>,
+    language: string,
+    keyterms: readonly string[]
+): TranscriptProtocol {
     return session.kind === "elevenlabs"
-        ? scribeProtocol({ language, model: session.model, token: session.token })
+        ? scribeProtocol({ keyterms, language, model: session.model, token: session.token })
         : openAiProtocol(session);
 }
 
@@ -128,7 +133,12 @@ async function drain(session: Session, release: (session: Session) => Promise<re
     }
 }
 
-export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTranscriptOptions): RealtimeTranscript {
+export function useRealtimeTranscript({
+    keyterms,
+    language,
+    onError,
+    onLevel,
+}: RealtimeTranscriptOptions): RealtimeTranscript {
     const [partial, setPartial] = useState("");
     const level = useSharedValue(0);
     const timers = useTimers();
@@ -139,6 +149,7 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
     const latestPartial = useRef("");
     const onLevelRef = useLatest(onLevel);
     const onErrorRef = useLatest(onError);
+    const keytermsRef = useLatest(keyterms);
 
     const paintPartial = (text: string) => {
         latestPartial.current = text;
@@ -199,7 +210,7 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
         const recorder = new AudioRecorder();
         let starting = true;
         let failedEarly = false;
-        const protocol = take.kind === "clip" ? null : protocolFor(take, language);
+        const protocol = take.kind === "clip" ? null : protocolFor(take, language, keytermsRef.current);
         const stream =
             protocol &&
             openTranscriptStream(protocol, {

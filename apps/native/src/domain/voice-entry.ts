@@ -242,7 +242,7 @@ const SPEECH_FLOOR = 0.1;
 const SOUND_OVER_ROOM = 0.07;
 const SOUND_MS = 300;
 const ROOM_WINDOW_MS = 3000;
-export const TRAILING_SILENCE_MS = 2000;
+export const TRAILING_SILENCE_MS = 1200;
 export const NO_SPEECH_TIMEOUT_MS = 9000;
 export const MAX_RECORDING_MS = 45_000;
 

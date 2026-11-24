@@ -27,6 +27,7 @@ import type {
 } from "@/lib/cloud-ai";
 import type { CloudError } from "@/lib/cloud-error";
 import { useLatest, useOnMount } from "@/lib/lifecycle";
+import { voiceKeyterms } from "@/lib/realtime-scribe";
 import { TranscriptStreamError } from "@/lib/transcript-stream";
 import type { TranscriptFailureReason } from "@/lib/transcript-stream";
 import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-commands";
@@ -467,6 +468,7 @@ export function useVoiceEntry<Context>({
     const [api] = useState(() => transport ?? voiceThreadTransport());
 
     const transcript = useRealtimeTranscript({
+        keyterms: voiceKeyterms(request),
         language,
         onError: (error) => streamFailed(portsRef.current, error),
         onLevel: (sample, at) => hearLevel(portsRef.current, sample, at),

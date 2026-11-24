@@ -24,6 +24,9 @@ const CURRENCY_KEYTERMS = [
     "bolivars",
     "pesos",
 ];
+// ElevenLabs documents no cap for realtime keyterms; the batch API takes 100 of up to 50 characters.
+const MAX_KEYTERMS = 100;
+const MAX_KEYTERM_LENGTH = 50;
 
 const ServerErrorType = Schema.Literals([
     "error",
@@ -72,12 +75,25 @@ const REASON_BY_ERROR: Record<typeof ServerErrorType.Type, TranscriptFailureReas
 };
 
 export interface ScribeSession {
+    /** Names from the ledger, so a spoken "Bancamiga" is spelled like the account. */
+    readonly keyterms: readonly string[];
     readonly language: string;
     readonly model: string;
     readonly token: string;
 }
 
-export function scribeUrl({ language, model, token }: ScribeSession): string {
+export function voiceKeyterms({
+    accounts,
+    categoryTree,
+}: {
+    readonly accounts: readonly string[];
+    readonly categoryTree: readonly { readonly children: readonly string[]; readonly name: string }[];
+}): string[] {
+    const names = [...accounts, ...categoryTree.flatMap(({ children, name }) => [name, ...children])];
+    return names.map((name) => name.trim()).filter((name) => name.length > 0 && name.length <= MAX_KEYTERM_LENGTH);
+}
+
+export function scribeUrl({ keyterms, language, model, token }: ScribeSession): string {
     const query = new URLSearchParams({
         audio_format: `pcm_${SCRIBE_SAMPLE_RATE}`,
         commit_strategy: "manual",
@@ -90,7 +106,8 @@ export function scribeUrl({ language, model, token }: ScribeSession): string {
             query.append("secondary_languages", other);
         }
     }
-    for (const keyterm of CURRENCY_KEYTERMS) {
+    const terms = new Set([...CURRENCY_KEYTERMS, ...keyterms]);
+    for (const keyterm of [...terms].slice(0, MAX_KEYTERMS)) {
         query.append("keyterms", keyterm);
     }
     return `${SCRIBE_RELAY}/v1/speech-to-text/realtime?${query.toString()}`;
