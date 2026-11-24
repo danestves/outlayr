@@ -104,26 +104,22 @@ function OwnerView({
     const { accountId } = useAuthSession();
     const people = members?.members ?? [];
     const count = seatCount(members);
-    const [creating, setCreating] = useState(false);
     const [copied, setCopied] = useState(false);
     const [inviteFailed, setInviteFailed] = useState(false);
+    const [askedFor, setAskedFor] = useState<string | null>(null);
     const createInvite = useAtomAction(createProfileInviteCommand, {
-        onFailure: () => {
-            setCreating(false);
-            setInviteFailed(true);
-        },
-        onSuccess: () => {
-            setCreating(false);
-            setInviteFailed(false);
-        },
+        onFailure: () => setInviteFailed(true),
+        onSuccess: () => setInviteFailed(false),
     });
     const [openedAt] = useState(Date.now);
     // The live query never reruns just because time passed, so an invite that expired before opening is dropped here.
     const invite = members?.invite != null && members.invite.expiresAt > openedAt ? members.invite : null;
     const full = count >= PROFILE_SEAT_LIMIT;
-    const needsInvite = members?.role === "owner" && !full && invite === null && !creating && !inviteFailed;
+    // One request per missing or stale code and seat count, so a skewed phone clock cannot loop on creating invites.
+    const askKey = `${members?.invite?.code ?? ""}:${count}`;
+    const needsInvite = members?.role === "owner" && !full && invite === null && askedFor !== askKey;
     useWhen(needsInvite, () => {
-        setCreating(true);
+        setAskedFor(askKey);
         createInvite({ profileId: id });
     });
     const link = invite === null ? "" : profileInviteLink(invite.code);
