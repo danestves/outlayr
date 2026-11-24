@@ -15,7 +15,13 @@ import { profiles } from "@/db/schema";
 import { activeProfileId, retargetProfileSwitch } from "@/lib/active-profile";
 import { photoTransport } from "@/lib/cloud-photos";
 import { cloudMutation, cloudQuery, isCloudAccount } from "@/lib/convex";
-import { isJoinedProfile, joinedProfilesCache, planJoinedReconcile, writeJoinedProfiles } from "@/lib/joined-profiles";
+import {
+    isJoinedProfile,
+    joinedProfilesCache,
+    joinedProfilesWrites,
+    planJoinedReconcile,
+    writeJoinedProfiles,
+} from "@/lib/joined-profiles";
 import type { JoinedProfilesCache, SharedProfileLook } from "@/lib/joined-profiles";
 import { photoFiles } from "@/lib/photo-storage";
 import { appRuntime } from "@/lib/runtime";
@@ -77,7 +83,12 @@ export const reconcileJoinedProfiles = Effect.fn("JoinedProfiles.reconcile")(fun
     if (!isCloudAccount()) {
         return;
     }
+    const before = joinedProfilesWrites();
     const server = yield* cloudQuery(api.profileSharing.joined, {});
+    // A join that wrote while this query was in flight would read as departed and lose its ledger.
+    if (joinedProfilesWrites() !== before) {
+        return;
+    }
     const activeId = activeProfileId();
     const plan = planJoinedReconcile(joinedProfilesCache(), server, activeId);
     const droppedActiveId = plan.droppedActive ? activeId : undefined;

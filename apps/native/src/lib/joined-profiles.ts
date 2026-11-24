@@ -48,6 +48,13 @@ const decodeCache = Schema.decodeUnknownOption(JoinedProfilesCache);
 
 let cache: JoinedProfilesCache | null = null;
 
+let writes = 0;
+
+/** Bumps on every write, so a server answer that started before a join can tell it is stale. */
+export function joinedProfilesWrites(): number {
+    return writes;
+}
+
 // Garbled or missing reads as empty, like the active profile: a half-written cache must not route a switch.
 export function joinedProfilesCache(): JoinedProfilesCache {
     if (cache === null) {
@@ -91,6 +98,7 @@ export function writeJoinedProfiles(next: JoinedProfilesCache): void {
         writeDurably(file, JSON.stringify(next));
     }
     cache = next;
+    writes += 1;
     for (const listener of listeners) {
         listener();
     }
@@ -130,8 +138,8 @@ export function planJoinedReconcile(
     // A departed id in the active file means a crash landed the device inside a ledger the server already dropped.
     const droppedActive =
         activeId !== undefined &&
-        (current.departed.includes(activeId) ||
-            (current.joined.some((entry) => entry.profileId === activeId) && !serverIds.has(activeId)));
+        !serverIds.has(activeId) &&
+        (current.departed.includes(activeId) || current.joined.some((entry) => entry.profileId === activeId));
     return {
         cache: {
             departed: [...new Set([...current.departed, ...left])].filter((id) => !serverIds.has(id)),

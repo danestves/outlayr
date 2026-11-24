@@ -44,3 +44,12 @@ test("drops the active profile a crash left behind in the departed list", () => 
     expect(plan.droppedActive).toBe(true);
     expect(plan.cache.departed).toStrictEqual([crashed.profileId]);
 });
+
+test("keeps the active profile open when the server lists a departed one again", () => {
+    const rejoined = joined("4d1a7f52-3c8e-4a29-9b6f-0e5d2c7a8b10", "Home", 1);
+
+    const plan = planJoinedReconcile({ departed: [rejoined.profileId], joined: [] }, [rejoined], rejoined.profileId);
+
+    expect(plan.droppedActive).toBe(false);
+    expect(plan.cache).toStrictEqual({ departed: [], joined: [rejoined] });
+});
