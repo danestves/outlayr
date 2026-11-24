@@ -139,7 +139,9 @@ function ProfileChip() {
                 if (target === activeId) {
                     return;
                 }
-                if (target !== undefined && locked) {
+                // The owner's Pro covers a joined profile; the server refuses it if that lapses.
+                const joinedTarget = joined.some((profile) => profile.profileId === target);
+                if (target !== undefined && locked && !joinedTarget) {
                     openPaywall("profiles");
                     return;
                 }
