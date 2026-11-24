@@ -62,9 +62,9 @@ export const features = {
     },
     "voice-entry": {
         link: "/transactions/voice",
-        proves: "Dictation opens the microphone and reaches Listening before the voice session finishes loading.",
+        proves: "Dictation opens the microphone and offers Done speaking before the voice session finishes loading.",
         says: ["add by voice", "dictate an expense", "voice entry"],
-        steps: [{ see: "Listening…" }],
+        steps: [{ see: "Done speaking" }],
     },
     "log-list": {
         link: "/",
