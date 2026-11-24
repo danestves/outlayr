@@ -275,8 +275,8 @@ export function Log() {
     const listRows = headListRows(listFilter, head, filteredRows, transferRows, splitMs);
     const tailRows = listFilter === "all" ? mergeByRecency(tail, tailTransfers) : [];
     const noRows = noRowsToShow(listFilter, listRows.length, tailRows.length);
-    // The same rows the empty state below reads, so the tour never asks an empty ledger to point at the FAB.
-    useTourAutoStart("log", !noRows);
+    // Counted directly, since a day filter with no rows is not the empty state but still has nothing to point at.
+    useTourAutoStart("log", listRows.length + tailRows.length > 0);
     const visibleRows = listRows.filter(
         (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
     );

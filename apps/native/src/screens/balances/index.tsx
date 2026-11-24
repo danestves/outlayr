@@ -42,7 +42,7 @@ export function Balances() {
     const view = balancesViewFor({ hasLimit: mainRow !== null || allBudgets.length > 0, param, stored });
     const limits = useLimitFlow({ allBudgets, contributions, currency, nowMs });
     const goals = useGoalFlow();
-    useTourAutoStart("balances", true);
+    const holdTour = useTourAutoStart("balances", true);
 
     // Kept in the route too, so a later link's `view` still wins over the last pick.
     const select = (next: BalancesView) => {
@@ -53,14 +53,17 @@ export function Balances() {
 
     const addMenu = useAddMenu({
         onCategoryLimit: () => {
+            holdTour();
             select("categories");
             limits.pickCategory();
         },
         onGoal: () => {
+            holdTour();
             select("accounts");
             goals.start();
         },
         onOverallLimit: () => {
+            holdTour();
             select("categories");
             // A pending delete still holds the singleton row, and a new one would overwrite it mid-undo.
             if (mainRow) {

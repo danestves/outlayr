@@ -9,7 +9,8 @@ import type { TourId } from "./tour-state";
 const LOG_DELAY_MS = 800;
 const SPOTLIGHT_DELAY_MS = 600;
 
-export function useTourAutoStart(tour: TourId, ready: boolean): void {
+/** Returns a hold for this visit, for screens whose own menus and sheets the tour can't see opening. */
+export function useTourAutoStart(tour: TourId, ready: boolean): () => void {
     const { active, blocked, cancel, seen, start } = useTour();
     const focused = useIsFocused();
     const timers = useTimers();
@@ -32,4 +33,6 @@ export function useTourAutoStart(tour: TourId, ready: boolean): void {
             setTried(false);
         }
     });
+
+    return () => setTried(true);
 }

@@ -40,7 +40,7 @@ function knownTours(ids: readonly string[]): ReadonlySet<TourId> {
 /** A failed read is an empty set: the tour shows again rather than the app refusing to start. */
 export const readSeenTours = Effect.fn("Tour.read")(function* readSeenTours() {
     const raw = yield* attempt("read", () => AsyncStorage.getItem(STORAGE_KEY)).pipe(
-        Effect.catch(() => Effect.succeed(null))
+        Effect.catchTags({ TourStateError: () => Effect.succeed(null) })
     );
     if (raw === null) {
         return new Set<TourId>();
@@ -51,6 +51,6 @@ export const readSeenTours = Effect.fn("Tour.read")(function* readSeenTours() {
 /** A failed write leaves this session's memory as the only record; the tour shows once more next launch. */
 export const writeSeenTours = Effect.fn("Tour.write")(function* writeSeenTours(seen: ReadonlySet<TourId>) {
     yield* attempt("write", () => AsyncStorage.setItem(STORAGE_KEY, encodeStoredTours([...seen]))).pipe(
-        Effect.catch(() => Effect.void)
+        Effect.catchTags({ TourStateError: () => Effect.void })
     );
 });

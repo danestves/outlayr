@@ -48,6 +48,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
     const blocked = useTourBlocked();
     const timers = useTimers();
     const targets = useRef(new Map<string, TourTargetEntry>());
+    const reported = useRef<string | null>(null);
     const window = useWindowDimensions();
     const insets = useSafeAreaInsets();
 
@@ -129,9 +130,10 @@ export function TourProvider({ children }: { children: ReactNode }) {
     });
 
     // Unresolvable steps are skipped: the log tour moves on, and a spotlight stays unseen for a later visit.
-    useMirror([active], () => {
+    useMirror([active, window.width, window.height, insets.top, insets.bottom], () => {
         const current = active;
         if (!current) {
+            reported.current = null;
             setStage(null);
             return;
         }
@@ -158,10 +160,15 @@ export function TourProvider({ children }: { children: ReactNode }) {
                 }
                 return;
             }
-            report("tour_step_viewed", { step: step.id, tour: current.tour });
+            const key = `${current.tour}:${current.index}`;
+            // Re-measured after a resize, which is the same view, not another one.
+            if (reported.current !== key) {
+                reported.current = key;
+                report("tour_step_viewed", { step: step.id, tour: current.tour });
+            }
             setStage({
                 index: current.index,
-                key: `${current.tour}:${current.index}`,
+                key,
                 radius: resolved.radius,
                 rect: resolved.rect,
                 step,
