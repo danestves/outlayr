@@ -20,7 +20,7 @@ import { useTranslation } from "@/i18n/context";
 import { activeProfileId } from "@/lib/active-profile";
 import { useAuthSession } from "@/lib/auth-session";
 import { useJoinedProfiles } from "@/lib/joined-profiles";
-import { useOnChange, useTimers, useWhen } from "@/lib/lifecycle";
+import { useTimers, useWhen } from "@/lib/lifecycle";
 import type { ProfileMember, ProfileMembersView } from "@/lib/profile-sharing";
 import { SILENT } from "@/state/atom-command";
 import {
@@ -104,28 +104,28 @@ function OwnerView({
     const { accountId } = useAuthSession();
     const people = members?.members ?? [];
     const count = seatCount(members);
-    const [created, setCreated] = useState<{ code: string; expiresAt: number } | null>(null);
+    const [creating, setCreating] = useState(false);
     const [copied, setCopied] = useState(false);
     const [inviteFailed, setInviteFailed] = useState(false);
     const createInvite = useAtomAction(createProfileInviteCommand, {
-        onFailure: () => setInviteFailed(true),
-        onSuccess: (invite) => {
+        onFailure: () => {
+            setCreating(false);
+            setInviteFailed(true);
+        },
+        onSuccess: () => {
+            setCreating(false);
             setInviteFailed(false);
-            setCreated(invite);
         },
     });
-    const listed = members?.invite ?? null;
+    const [openedAt] = useState(Date.now);
+    // The live query never reruns just because time passed, so an invite that expired before opening is dropped here.
+    const invite = members?.invite != null && members.invite.expiresAt > openedAt ? members.invite : null;
     const full = count >= PROFILE_SEAT_LIMIT;
-    const needsInvite = members?.role === "owner" && !full && listed === null && created === null;
+    const needsInvite = members?.role === "owner" && !full && invite === null && !creating && !inviteFailed;
     useWhen(needsInvite, () => {
+        setCreating(true);
         createInvite({ profileId: id });
     });
-    // A spent invite leaves `created` stale; a seat change means someone joined or left, so ask for a live one.
-    useOnChange([count], () => {
-        setCreated(null);
-        return undefined;
-    });
-    const invite = listed ?? created;
     const link = invite === null ? "" : profileInviteLink(invite.code);
 
     return (

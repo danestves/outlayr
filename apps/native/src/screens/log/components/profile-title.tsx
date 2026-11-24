@@ -111,7 +111,8 @@ function ProfileChip() {
                 ...(sharing && active
                     ? [{ id: SHARE_ACTION, image: "square.and.arrow.up" as const, title: t("sharing.action.share") }]
                     : []),
-                ...(sharing && joinedEntry
+                // Leave stays reachable for an existing membership even if the flag is turned off again.
+                ...(joinedEntry
                     ? [{ id: MEMBERS_ACTION, image: "person.2" as const, title: t("sharing.action.members") }]
                     : []),
                 { id: NEW_ACTION, image: "plus" as const, title: t("profiles.new") },
