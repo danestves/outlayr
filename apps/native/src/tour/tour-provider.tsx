@@ -1,13 +1,14 @@
+import { useAtomSet, useAtomValue } from "@effect/atom-react/Hooks";
 import { TOUR_ANALYTICS_AT_MS } from "@outlayr/backend/confect/legal";
-import * as Effect from "effect/Effect";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useWindowDimensions } from "react-native";
 import type { ViewInstance } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useMirror, useOnMount, useTimers } from "@/lib/lifecycle";
+import { useMirror, useTimers } from "@/lib/lifecycle";
 import { posthog } from "@/lib/posthog";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 import type { TourRect } from "./callout-layout";
 import { measureInWindow, rectVisibleIn } from "./measure";
@@ -17,7 +18,7 @@ import { TourContext } from "./tour-context";
 import type { ActiveTour, TourContextValue, TourStage, TourTargetEntry } from "./tour-context";
 import { slotRect } from "./tour-geometry";
 import { TourOverlay } from "./tour-overlay";
-import { readSeenTours, writeSeenTours } from "./tour-state";
+import { seenToursAtom, sessionToursAtom, writeSeenToursCommand } from "./tour-state";
 import type { TourId } from "./tour-state";
 import { useTourBlocked } from "./use-tour-blocked";
 
@@ -41,7 +42,9 @@ const report = (...[event, properties]: TourEvent) => {
 };
 
 export function TourProvider({ children }: { children: ReactNode }) {
-    const [seen, setSeen] = useState<ReadonlySet<TourId> | null>(null);
+    const seen = useAtomValue(seenToursAtom);
+    const setSeen = useAtomSet(sessionToursAtom);
+    const writeSeen = useAtomCommand(writeSeenToursCommand);
     const [active, setActive] = useState<ActiveTour | null>(null);
     const [stage, setStage] = useState<TourStage | null>(null);
     const [replayPending, setReplayPending] = useState(false);
@@ -52,25 +55,13 @@ export function TourProvider({ children }: { children: ReactNode }) {
     const window = useWindowDimensions();
     const insets = useSafeAreaInsets();
 
-    useOnMount(() => {
-        let alive = true;
-        Effect.runPromise(readSeenTours()).then((ids) => {
-            if (alive) {
-                setSeen(ids);
-            }
-        });
-        return () => {
-            alive = false;
-        };
-    });
-
     const markSeen = (tour: TourId) => {
         if (seen?.has(tour)) {
             return;
         }
         const next = new Set<TourId>(seen).add(tour);
         setSeen(next);
-        Effect.runPromise(writeSeenTours(next));
+        writeSeen(next);
     };
 
     const finish = (current: ActiveTour, outcome: "completed" | "skipped") => {
@@ -196,7 +187,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
             setReplayPending(false);
             setSeen(cleared);
             report("tour_replayed");
-            Effect.runPromise(writeSeenTours(cleared));
+            writeSeen(cleared);
         }
         setActive((current) => current ?? { index: 0, tour });
     };

@@ -1,7 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
 import * as Schema from "effect/Schema";
+
+import { createCommand } from "@/state/atom-command";
 
 const STORAGE_KEY = "outlayr.tour";
 
@@ -54,3 +58,23 @@ export const writeSeenTours = Effect.fn("Tour.write")(function* writeSeenTours(s
         Effect.catchTags({ TourStateError: () => Effect.void })
     );
 });
+
+const storedToursAtom = Atom.make(readSeenTours()).pipe(Atom.keepAlive, Atom.withLabel("tour:stored"));
+
+/** This session's set once it changes, so a finish or replay never waits on the storage write. */
+export const sessionToursAtom = Atom.make<ReadonlySet<TourId> | null>(null).pipe(
+    Atom.keepAlive,
+    Atom.withLabel("tour:session")
+);
+
+/** `null` until storage has been read. */
+export const seenToursAtom = Atom.make((get): ReadonlySet<TourId> | null => {
+    const session = get(sessionToursAtom);
+    if (session) {
+        return session;
+    }
+    const stored = get(storedToursAtom);
+    return AsyncResult.isSuccess(stored) ? stored.value : null;
+}).pipe(Atom.withLabel("tour:seen"));
+
+export const writeSeenToursCommand = createCommand({ execute: writeSeenTours, label: "tour:write" });

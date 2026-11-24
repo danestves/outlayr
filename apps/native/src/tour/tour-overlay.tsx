@@ -138,6 +138,8 @@ export function TourOverlay() {
                     // Hidden until placed: a tap or screen reader on the unplaced bubble lands on the scrim.
                     <View
                         accessibilityElementsHidden={!layout}
+                        // A new view per stage: a reused one whose frame did not change fires no onLayout.
+                        key={stageKey}
                         accessibilityViewIsModal
                         importantForAccessibility={layout ? "auto" : "no-hide-descendants"}
                         onLayout={measureBubble}
