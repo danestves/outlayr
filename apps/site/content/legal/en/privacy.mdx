@@ -190,7 +190,7 @@ You can also paste a link to an image in the icon picker. Our logo server downlo
 
 ### Voice entry
 
-When you speak an entry, the app streams the audio through our server to ElevenLabs while you talk. ElevenLabs writes it down as you speak, receiving only the audio and your language. The app then sends the text to our server with your account names, category names, your ledger’s currency, your language, and today’s date, and Anthropic’s Claude model turns it into a draft entry for you to review.
+When you speak an entry, the app streams the audio through our server to ElevenLabs while you talk. ElevenLabs writes it down as you speak, receiving the audio, your language, and your account and category names, so it spells them the way your ledger does. The app then sends the text to our server with your account names, category names, your ledger’s currency, your language, and today’s date, and Anthropic’s Claude model turns it into a draft entry for you to review.
 
 We never save the audio. The transcript and the draft are kept on our server as a short conversation so you can correct the entry by speaking again. It’s deleted when you close the voice screen, or one hour after your last message if the app closes first.
 
@@ -300,7 +300,7 @@ These companies help run Outlayr. Each receives only what its job needs.
 - **[Hetzner](https://www.hetzner.com/legal/privacy-policy)** hosts the servers in Helsinki, Finland, that run our database and server functions. They hold your account and synced data, and handle every request to our server.
 - **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** stores the photos you attach to entries and accounts (Cloudflare R2), when photo backup is on, and sends our emails (sign-in codes, the welcome and Pro notes, and notice of changes), for which it receives your email address and the email’s contents. It also carries voice entries from the app to ElevenLabs as you speak, without keeping them.
 - **[Anthropic](https://www.anthropic.com/legal/privacy)** provides the Claude AI models behind suggestions, notification reading, voice entry, receipt scans, installment plan imports, CSV import, bank statement PDF import, and web lookups. It receives the content described in [Suggestions, voice, and receipts](#suggestions-voice-and-receipts).
-- **[ElevenLabs](https://elevenlabs.io/privacy-policy)** turns voice recordings into text. It receives the recording and your language.
+- **[ElevenLabs](https://elevenlabs.io/privacy-policy)** turns voice recordings into text. It receives the recording, your language, and your account and category names.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** tracks subscription status. It receives an anonymous ID, or your account ID, name, and email once you sign in, and your purchase records.
 - **[Apple](https://www.apple.com/legal/privacy/)** provides Sign in with Apple, App Store payments, and iOS features such as Siri and Shortcuts, under its own policy. Its push service delivers the Apple Pay suggestions above and receives your iPhone’s push address and an encrypted message it can’t read.
 - **[Google](https://policies.google.com/privacy)** provides Sign in with Google and Google Play payments, under its own policy.
@@ -431,7 +431,7 @@ If you live in California or another US state with a privacy law, this is what w
 | **Commercial information:** subscription and purchase records | Apple, Google, Stripe, RevenueCat, Hetzner |
 | **Audio and visual information:** voice clips, receipt scans, installment plan screenshots, attached photos | ElevenLabs (clips), Anthropic (scans), Cloudflare (photos, clips in transit) |
 | **Internet or network activity:** IP address, user agent, request logs, app and website usage, crash reports | Hetzner, Expo, PostHog, our website host |
-| **Records you create:** synced entries, amounts, merchants, notes, budgets | Hetzner; merchant, category, and account names to Anthropic |
+| **Records you create:** synced entries, amounts, merchants, notes, budgets | Hetzner; merchant, category, and account names to Anthropic; category and account names to ElevenLabs |
 
 It comes from you, your device, Apple, and Google, and we use it for the purposes described in this policy. We keep it for the periods in [Data at a glance](#data-at-a-glance).
 

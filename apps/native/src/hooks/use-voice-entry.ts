@@ -27,6 +27,7 @@ import type {
 } from "@/lib/cloud-ai";
 import type { CloudError } from "@/lib/cloud-error";
 import { useLatest, useOnMount } from "@/lib/lifecycle";
+import { voiceKeyterms } from "@/lib/realtime-scribe";
 import { TranscriptStreamError } from "@/lib/transcript-stream";
 import type { TranscriptFailureReason } from "@/lib/transcript-stream";
 import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-commands";
@@ -422,24 +423,62 @@ const startTake = Effect.fn("VoiceEntry.startTake")(function* startTake<Context>
     supersedeTake(ports);
     const take = takeRef.current;
     setPhase({ kind: "starting" });
-    const session = yield* openTakeStream(ports, take);
-    if (session === null || take !== takeRef.current) {
-        return;
-    }
-    const began = yield* duringHandoff(
-        Effect.promise(() => transcriptRef.current.start(session).catch((): RealtimeStart => "failed"))
+    // The mic may open after the stream call failed, and a take the stream lost must not report listening.
+    let abandoned = false;
+    const listening = duringHandoff(
+        Effect.promise(() => transcriptRef.current.open().catch((): RealtimeStart => "failed"))
+    ).pipe(
+        Effect.flatMap((began) =>
+            Effect.gen(function* startListening() {
+                const at = yield* Clock.currentTimeMillis;
+                // A newer take already cancelled this one's microphone; cancelling again would stop the newer take.
+                if (take !== takeRef.current) {
+                    return;
+                }
+                if (abandoned) {
+                    transcriptRef.current.cancel();
+                    return;
+                }
+                if (began !== "started") {
+                    abandoned = true;
+                    fail(ports, take, began === "denied" ? "denied" : "provider");
+                    return;
+                }
+                watchRef.current = startSilenceWatch(at);
+                setSpoke(false);
+                setPhase({ kind: "listening" });
+            })
+        )
+    );
+    const opened = yield* Effect.all(
+        {
+            listening,
+            session: openTakeStream(ports, take).pipe(
+                Effect.map((session) => {
+                    if (session === null) {
+                        abandoned = true;
+                    }
+                    return session;
+                })
+            ),
+        },
+        { concurrency: "unbounded" }
     );
     if (take !== takeRef.current) {
-        transcriptRef.current.cancel();
         return;
     }
-    if (began !== "started") {
-        fail(ports, take, began === "denied" ? "denied" : "provider");
+    if (abandoned || opened.session === null) {
+        // Bumps the take, so a `finish` that raced the stream call cannot land with its own generic failure.
+        supersedeTake(ports);
         return;
     }
-    watchRef.current = startSilenceWatch(yield* Clock.currentTimeMillis);
-    setSpoke(false);
-    setPhase({ kind: "listening" });
+    try {
+        transcriptRef.current.attach(opened.session);
+    } catch {
+        // A throw here would leave the microphone recording.
+        fail(ports, take, "provider");
+        supersedeTake(ports);
+    }
 });
 
 // Must render inside the Convex provider.
@@ -467,6 +506,7 @@ export function useVoiceEntry<Context>({
     const [api] = useState(() => transport ?? voiceThreadTransport());
 
     const transcript = useRealtimeTranscript({
+        keyterms: voiceKeyterms(request),
         language,
         onError: (error) => streamFailed(portsRef.current, error),
         onLevel: (sample, at) => hearLevel(portsRef.current, sample, at),

@@ -693,6 +693,10 @@ interface NameEntry {
     /** Another name continues this one ("Banesco" and "Banesco USD"), so a match at the tail may still grow. */
     extended: boolean;
     id: string;
+    /** Letters and digits only, with runs of one letter collapsed, one entry per squashed letter. */
+    key: readonly string[];
+    /** Accounts match across spacing and doubled letters; categories only as written. */
+    loose: boolean;
     name: string;
 }
 
@@ -702,7 +706,46 @@ interface Mention {
     start: number;
 }
 
+interface Occurrence {
+    end: number;
+    start: number;
+}
+
+interface Squashed {
+    /** One entry per squashed letter, kept as a list so an astral letter cannot shift the offsets used in `runs`. */
+    letters: readonly string[];
+    /** One entry per squashed letter, listing where each occurrence of it sits in the folded text. */
+    runs: Occurrence[][];
+}
+
 const foldName = (name: string) => fold(name).trim().split(WHITESPACE).join(" ");
+
+const LETTER = /\p{L}/u;
+
+/** Spaces and doubled letters drop out, so "Banca Amiga" and "BancaAmiga" become one key. */
+function squash(text: string): Squashed {
+    const letters: string[] = [];
+    const runs: Occurrence[][] = [];
+    for (let at = 0; at < text.length;) {
+        const char = String.fromCodePoint(text.codePointAt(at) ?? 0);
+        const end = at + char.length;
+        for (const letter of char.normalize("NFD").replaceAll(COMBINING_MARKS, "").toLowerCase()) {
+            if (!WORD_CHAR.test(letter)) {
+                continue;
+            }
+            const run = runs.at(-1);
+            // Digits stay apart ("Card 1" is not "Card 11"); only a doubled letter counts as one.
+            if (LETTER.test(letter) && letters.at(-1) === letter && run !== undefined) {
+                run.push({ end, start: at });
+            } else {
+                letters.push(letter);
+                runs.push([{ end, start: at }]);
+            }
+        }
+        at = end;
+    }
+    return { letters, runs };
+}
 
 // Spanish says b and v alike, so the transcriber writes "Vanesco" for an account named Banesco.
 const betacism = (folded: string) => folded.replaceAll("v", "b");
@@ -710,19 +753,37 @@ const asSpoken = (folded: string) => folded;
 
 const MIN_NAME_LENGTH = 2;
 
+const sameKey = (a: readonly string[], b: readonly string[]) =>
+    a.length === b.length && a.every((letter, at) => letter === b[at]);
+
+const startsWithKey = (key: readonly string[], prefix: readonly string[]) =>
+    prefix.length < key.length && prefix.every((letter, at) => letter === key[at]);
+
+const matchesAt = (letters: readonly string[], key: readonly string[], at: number) =>
+    key.every((letter, index) => letters[at + index] === letter);
+
 // Duplicate names are no match, like `uniqueMatch`: a draft that could land on either is not filled unasked.
 function prepareNames(
     rows: readonly { id: string; name: string | null }[],
-    spoken: (folded: string) => string
+    spoken: (folded: string) => string,
+    loose: boolean
 ): NameEntry[] {
     const named = rows.flatMap((row) => {
         const name = row.name === null ? "" : spoken(foldName(row.name));
-        return name.length >= MIN_NAME_LENGTH ? [{ id: row.id, name }] : [];
+        const key = squash(name).letters;
+        return (loose ? key.length : name.length) >= MIN_NAME_LENGTH ? [{ id: row.id, key, loose, name }] : [];
     });
+    const same = (a: (typeof named)[number], b: (typeof named)[number]) =>
+        loose ? sameKey(a.key, b.key) : a.name === b.name;
+    const continues = (longer: (typeof named)[number], shorter: (typeof named)[number]) =>
+        loose ? startsWithKey(longer.key, shorter.key) : longer.name.startsWith(`${shorter.name} `);
     return named
-        .filter((row) => named.filter((other) => other.name === row.name).length === 1)
-        .map((row) => ({ ...row, extended: named.some((other) => other.name.startsWith(`${row.name} `)) }))
-        .sort((a, b) => b.name.length - a.name.length);
+        .filter((row) => named.filter((other) => same(other, row)).length === 1)
+        .map((row) => ({
+            ...row,
+            extended: named.some((other) => !same(other, row) && continues(other, row)),
+        }))
+        .sort((a, b) => (loose ? b.key.length - a.key.length : b.name.length - a.name.length));
 }
 
 const overlaps = (a: { end: number; start: number }, b: { end: number; start: number }) =>
@@ -734,17 +795,39 @@ function findMentions(
     final: boolean,
     blocked: readonly { end: number; start: number }[] = []
 ): Mention[] {
+    const haystack = squash(folded);
     const kept: Mention[] = [];
+    const keep = (entry: NameEntry, mention: Mention) => {
+        const wholeWord = !isWordChar(folded[mention.start - 1]) && !isWordChar(folded[mention.end]);
+        const waiting = !final && entry.extended && mention.end === folded.length;
+        const taken = [...kept, ...blocked].some((other) => overlaps(mention, other));
+        if (wholeWord && !waiting && !taken) {
+            kept.push(mention);
+        }
+    };
     for (const entry of entries) {
-        for (let at = folded.indexOf(entry.name); at !== -1; at = folded.indexOf(entry.name, at + 1)) {
-            const end = at + entry.name.length;
-            const mention = { end, id: entry.id, start: at };
-            const wholeWord = !isWordChar(folded[at - 1]) && !isWordChar(folded[end]);
-            const waiting = !final && entry.extended && end === folded.length;
-            const taken = [...kept, ...blocked].some((other) => overlaps(mention, other));
-            if (wholeWord && !waiting && !taken) {
-                kept.push(mention);
+        if (!entry.loose) {
+            for (let at = folded.indexOf(entry.name); at !== -1; at = folded.indexOf(entry.name, at + 1)) {
+                keep(entry, { end: at + entry.name.length, id: entry.id, start: at });
             }
+            continue;
+        }
+        for (let at = 0; at <= haystack.letters.length - entry.key.length; at += 1) {
+            if (!matchesAt(haystack.letters, entry.key, at)) {
+                continue;
+            }
+            const starts = haystack.runs[at];
+            const ends = haystack.runs[at + entry.key.length - 1];
+            if (starts === undefined || ends === undefined) {
+                continue;
+            }
+            // A run that spans a space must start after it and end before the next word.
+            const first = starts.toReversed().find((run) => !isWordChar(folded[run.start - 1])) ?? starts.at(-1);
+            const last = ends.find((run) => !isWordChar(folded[run.end])) ?? ends.at(-1);
+            if (first === undefined || last === undefined) {
+                continue;
+            }
+            keep(entry, { end: last.end, id: entry.id, start: first.start });
         }
     }
     return [...kept].sort((a, b) => a.start - b.start);
@@ -924,14 +1007,16 @@ function spokenLexicon(preferred: Lexicon, folded: string): Lexicon {
 
 function prepareReading(context: LiveContext, spoken: (folded: string) => string) {
     return {
-        accounts: prepareNames(context.accounts, spoken),
+        accounts: prepareNames(context.accounts, spoken, true),
         expenseCategories: prepareNames(
             context.categories.filter((category) => !category.income),
-            spoken
+            spoken,
+            false
         ),
         incomeCategories: prepareNames(
             context.categories.filter((category) => category.income),
-            spoken
+            spoken,
+            false
         ),
         spoken,
     };

@@ -190,7 +190,7 @@ Vous pouvez aussi coller un lien vers une image dans le sélecteur d’icône. N
 
 ### Saisie vocale
 
-Lorsque vous dictez une opération, l’app transmet l’audio à ElevenLabs via notre serveur pendant que vous parlez. ElevenLabs le transcrit au fil de vos paroles, en ne recevant que l’audio et votre langue. L’app envoie ensuite le texte à notre serveur avec les noms de vos comptes, les noms de vos catégories, la devise de votre journal, votre langue et la date du jour, et le modèle Claude d’Anthropic le transforme en un brouillon d’opération que vous vérifiez.
+Lorsque vous dictez une opération, l’app transmet l’audio à ElevenLabs via notre serveur pendant que vous parlez. ElevenLabs le transcrit au fil de vos paroles et reçoit l’audio, votre langue et les noms de vos comptes et catégories, pour les écrire comme dans votre journal. L’app envoie ensuite le texte à notre serveur avec les noms de vos comptes, les noms de vos catégories, la devise de votre journal, votre langue et la date du jour, et le modèle Claude d’Anthropic le transforme en un brouillon d’opération que vous vérifiez.
 
 Nous n’enregistrons jamais l’audio. La transcription et le brouillon sont conservés sur notre serveur sous la forme d’une courte conversation afin que vous puissiez corriger l’opération en parlant de nouveau. Elle est supprimée lorsque vous fermez l’écran vocal, ou une heure après votre dernier message si l’app se ferme avant.
 
@@ -300,7 +300,7 @@ Ces sociétés aident à faire fonctionner Outlayr. Chacune ne reçoit que ce do
 - **[Hetzner](https://www.hetzner.com/legal/privacy-policy)** héberge les serveurs situés à Helsinki, en Finlande, qui exécutent notre base de données et nos fonctions serveur. Ils contiennent votre compte et vos données synchronisées, et traitent chaque requête adressée à notre serveur.
 - **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** stocke les photos que vous joignez aux opérations et aux comptes (Cloudflare R2), lorsque la sauvegarde des photos est activée, et envoie nos e-mails (codes de connexion, messages de bienvenue et de Pro, et préavis de modification), pour lesquels il reçoit votre adresse e-mail et le contenu de l’e-mail. Il achemine aussi les saisies vocales de l’app vers ElevenLabs pendant que vous parlez, sans les conserver.
 - **[Anthropic](https://www.anthropic.com/legal/privacy)** fournit les modèles d’IA Claude derrière les suggestions, la lecture des notifications, la saisie vocale, le scan de tickets, l’import d’échéanciers, l’import CSV, l’import de relevé bancaire PDF et les recherches web. Il reçoit le contenu décrit dans [Suggestions, voix et tickets](#suggestions-voix-et-tickets).
-- **[ElevenLabs](https://elevenlabs.io/privacy-policy)** transforme les enregistrements vocaux en texte. Il reçoit l’enregistrement et votre langue.
+- **[ElevenLabs](https://elevenlabs.io/privacy-policy)** transforme les enregistrements vocaux en texte. Il reçoit l’enregistrement, votre langue et les noms de vos comptes et catégories.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** suit le statut des abonnements. Il reçoit un identifiant anonyme, ou votre identifiant de compte, votre nom et votre adresse e-mail une fois que vous êtes connecté, ainsi que l’historique de vos achats.
 - **[Apple](https://www.apple.com/legal/privacy/)** fournit Se connecter avec Apple, les paiements de l’App Store et des fonctionnalités d’iOS comme Siri et Raccourcis, selon sa propre politique. Son service push délivre les suggestions Apple Pay décrites plus haut et reçoit l’adresse push de votre iPhone et un message chiffré qu’il ne peut pas lire.
 - **[Google](https://policies.google.com/privacy)** fournit la connexion avec Google et les paiements Google Play, selon sa propre politique.
@@ -431,7 +431,7 @@ Si vous vivez en Californie ou dans un autre État américain doté d’une loi 
 | **Informations commerciales :** historique des abonnements et des achats | Apple, Google, Stripe, RevenueCat, Hetzner |
 | **Informations audio et visuelles :** extraits vocaux, scans de tickets, captures d’écran d’échéanciers, photos jointes | ElevenLabs (extraits), Anthropic (scans), Cloudflare (photos, extraits en transit) |
 | **Activité sur Internet ou le réseau :** adresse IP, agent utilisateur, journaux de requêtes, utilisation de l’app et du site web, rapports de plantage | Hetzner, Expo, PostHog, notre hébergeur du site web |
-| **Données que vous créez :** opérations synchronisées, montants, commerçants, notes, budgets | Hetzner ; noms de commerçants, de catégories et de comptes à Anthropic |
+| **Données que vous créez :** opérations synchronisées, montants, commerçants, notes, budgets | Hetzner ; noms de commerçants, de catégories et de comptes à Anthropic ; noms de catégories et de comptes à ElevenLabs |
 
 Ces informations proviennent de vous, de votre appareil, d’Apple et de Google, et nous les utilisons aux fins décrites dans cette politique. Nous les conservons pendant les durées indiquées dans l’[Aperçu des données](#aperçu-des-données).
 

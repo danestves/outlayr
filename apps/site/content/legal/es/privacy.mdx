@@ -190,7 +190,7 @@ También puedes pegar un enlace a una imagen en el selector de ícono. Nuestro s
 
 ### Entrada por voz
 
-Cuando dictas una entrada, la app envía el audio a ElevenLabs a través de nuestro servidor mientras hablas. ElevenLabs lo transcribe a medida que hablas (solo recibe el audio y tu idioma). Luego la app envía el texto a nuestro servidor junto con los nombres de tus cuentas, los nombres de tus categorías, la moneda de tu registro, tu idioma y la fecha de hoy, y el modelo Claude de Anthropic lo convierte en un borrador de entrada para que lo revises.
+Cuando dictas una entrada, la app envía el audio a ElevenLabs a través de nuestro servidor mientras hablas. ElevenLabs lo transcribe a medida que hablas y recibe el audio, tu idioma y los nombres de tus cuentas y categorías, para escribirlos como están en tu registro. Luego la app envía el texto a nuestro servidor junto con los nombres de tus cuentas, los nombres de tus categorías, la moneda de tu registro, tu idioma y la fecha de hoy, y el modelo Claude de Anthropic lo convierte en un borrador de entrada para que lo revises.
 
 Nunca guardamos el audio. La transcripción y el borrador se conservan en nuestro servidor como una conversación breve para que puedas corregir la entrada hablando de nuevo. Se elimina cuando cierras la pantalla de voz, o una hora después de tu último mensaje si la app se cierra antes.
 
@@ -300,7 +300,7 @@ Estas empresas nos ayudan a operar Outlayr. Cada una recibe solo lo que su funci
 - **[Hetzner](https://www.hetzner.com/legal/privacy-policy)** aloja en Helsinki, Finlandia, los servidores que ejecutan nuestra base de datos y las funciones de nuestro servidor. Esos servidores guardan tu cuenta y tus datos sincronizados, y atienden cada solicitud a nuestro servidor.
 - **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** almacena las fotos que adjuntas a entradas y cuentas (Cloudflare R2), cuando el respaldo de fotos está activado, y envía nuestros correos (los códigos de inicio de sesión, las notas de bienvenida y de Pro, y los avisos de cambios), para lo cual recibe tu correo electrónico y el contenido del mensaje. También lleva las entradas por voz de la app a ElevenLabs mientras hablas, sin conservarlas.
 - **[Anthropic](https://www.anthropic.com/legal/privacy)** proporciona los modelos de IA Claude detrás de las sugerencias, la lectura de notificaciones, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, la importación de estados de cuenta en PDF y las búsquedas web. Recibe el contenido descrito en [Sugerencias, voz y recibos](#sugerencias-voz-y-recibos).
-- **[ElevenLabs](https://elevenlabs.io/privacy-policy)** convierte las grabaciones de voz en texto. Recibe la grabación y tu idioma.
+- **[ElevenLabs](https://elevenlabs.io/privacy-policy)** convierte las grabaciones de voz en texto. Recibe la grabación, tu idioma y los nombres de tus cuentas y categorías.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** lleva el control del estado de las suscripciones. Recibe un ID anónimo, o tu ID de cuenta, nombre y correo electrónico una vez que inicias sesión, y tus registros de compra.
 - **[Apple](https://www.apple.com/legal/privacy/)** proporciona Iniciar sesión con Apple, los pagos del App Store y funciones de iOS como Siri y Atajos, según su propia política. Su servicio push entrega las sugerencias de Apple Pay descritas arriba y recibe la dirección push de tu iPhone y un mensaje cifrado que no puede leer.
 - **[Google](https://policies.google.com/privacy)** proporciona Acceder con Google y los pagos de Google Play, según su propia política.
@@ -431,7 +431,7 @@ Si vives en California o en otro estado de EE. UU. con una ley de privacidad, es
 | **Información comercial:** registros de suscripciones y compras | Apple, Google, Stripe, RevenueCat, Hetzner |
 | **Información de audio y visual:** clips de voz, escaneos de recibos, capturas de planes de cuotas, fotos adjuntas | ElevenLabs (clips), Anthropic (escaneos), Cloudflare (fotos, clips en tránsito) |
 | **Actividad en internet u otras redes:** dirección IP, agente de usuario, registros de solicitudes, uso de la app y del sitio web, reportes de fallas | Hetzner, Expo, PostHog, el proveedor que aloja nuestro sitio web |
-| **Registros que creas:** entradas sincronizadas, montos, comercios, notas, presupuestos | Hetzner; nombres de comercios, categorías y cuentas a Anthropic |
+| **Registros que creas:** entradas sincronizadas, montos, comercios, notas, presupuestos | Hetzner; nombres de comercios, categorías y cuentas a Anthropic; nombres de categorías y cuentas a ElevenLabs |
 
 Obtenemos esta información de ti, de tu dispositivo, de Apple y de Google, y la usamos para los fines descritos en esta política. La conservamos durante los plazos indicados en [Datos de un vistazo](#datos-de-un-vistazo).
 

@@ -10,16 +10,18 @@ import { useLatest, useOnUnmount, useTimers } from "@/lib/lifecycle";
 import type { Cleanup } from "@/lib/lifecycle";
 import { openAiProtocol } from "@/lib/realtime-openai";
 import { scribeProtocol } from "@/lib/realtime-scribe";
+import type { VoiceKeyterms } from "@/lib/realtime-scribe";
 import { openTranscriptStream, TranscriptStreamError } from "@/lib/transcript-stream";
 import type { TranscriptProtocol, TranscriptStream } from "@/lib/transcript-stream";
 
 const CHUNK_MS = 100;
 const PCM16_MAX = 32_767;
-const CLIP_METER_RATE = 16_000;
+const MIC_RATE = 16_000;
 
 export type RealtimeStart = "started" | "denied" | "failed";
 
 interface RealtimeTranscriptOptions {
+    keyterms: VoiceKeyterms;
     language: string;
     /** Every chunk, about ten a second, with the same 0..1 scale as `level`: feed `judgeSilence` from here. */
     onLevel?: (level: number, at: number) => void;
@@ -35,19 +37,78 @@ export interface RealtimeTranscript {
     /** The words heard so far, repainted at most once per animation frame. */
     partial: string;
     level: SharedValue<number>;
-    start: (session: StreamSession) => Promise<RealtimeStart>;
+    /** Permission, audio session and recorder, with file output on because the session kind is unknown yet. */
+    open: () => Promise<RealtimeStart>;
+    /** Tells an open recorder which protocol to speak, flushing everything it heard before this point. */
+    attach: (session: StreamSession) => void;
     finish: () => Promise<Take>;
     cancel: () => void;
+}
+
+interface Signal {
+    readonly promise: Promise<void>;
+    readonly resolve: () => void;
+}
+
+interface Gate {
+    resolve: (() => void) | null;
+}
+
+function signal(): Signal {
+    const gate: Gate = { resolve: null };
+    const promise = new Promise<void>((resolve) => {
+        gate.resolve = resolve;
+    });
+    return { promise, resolve: () => gate.resolve?.() };
 }
 
 interface Session {
     recorder: AudioRecorder;
     stream: TranscriptStream | null;
+    /** The protocol's rate once attached, the microphone's until then. */
+    sampleRate: number;
+    /** Chunks heard before `attach`; null once the session kind is known. */
+    pending: Float32Array[] | null;
+    /** Resolved by `attach` or `cancel`; `finish` waits so it can tell clip from stream. */
+    attached: Signal;
+    /** Resolved by `cancel` only, so a `finish` already talking to the stream can reject. */
+    cancellation: Signal;
+    cancelled: boolean;
 }
 
-function protocolFor(session: Exclude<StreamSession, { kind: "clip" }>, language: string): TranscriptProtocol {
+/** Every take alive right now, so the shared audio session is only turned off once the last one lets go. */
+const liveSessions = new Set<Session>();
+
+let audioSessionQueue: Promise<unknown> = Promise.resolve();
+
+// iOS can run a deactivation after a later activation unless the calls go out one at a time.
+function queueAudioSession<A>(task: () => Promise<A>): Promise<A> {
+    const next = audioSessionQueue.then(task);
+    audioSessionQueue = next.catch(() => undefined);
+    return next;
+}
+
+function createSession(recorder: AudioRecorder): Session {
+    const session: Session = {
+        attached: signal(),
+        cancelled: false,
+        cancellation: signal(),
+        pending: [],
+        recorder,
+        sampleRate: MIC_RATE,
+        stream: null,
+    };
+    liveSessions.add(session);
+    return session;
+}
+
+function protocolFor(
+    session: Exclude<StreamSession, { kind: "clip" }>,
+    language: string,
+    keyterms: VoiceKeyterms
+): TranscriptProtocol {
     return session.kind === "elevenlabs"
-        ? scribeProtocol({ language, model: session.model, token: session.token })
+        ? scribeProtocol({ keyterms, language, model: session.model, token: session.token })
         : openAiProtocol(session);
 }
 
@@ -79,7 +140,7 @@ function toPcm16(samples: Float32Array) {
 
 async function openMicrophone(recorder: AudioRecorder, overtaken: () => boolean): Promise<boolean> {
     try {
-        await AudioManager.setAudioSessionActivity(true);
+        await queueAudioSession(() => AudioManager.setAudioSessionActivity(true));
         if (overtaken()) {
             return false;
         }
@@ -115,30 +176,73 @@ async function readClip(paths: readonly string[]): Promise<ArrayBuffer> {
     }
 }
 
-async function drain(session: Session, release: (session: Session) => Promise<readonly string[]>, done: () => void) {
+const cancelled = () => new TranscriptStreamError({ message: "The recording was cancelled.", reason: "provider" });
+
+async function release(session: Session): Promise<readonly string[]> {
     try {
-        const paths = await release(session);
-        if (session.stream === null) {
-            return { audio: await readClip(paths), kind: "clip" as const };
+        // The recorder hands over its last partial buffer while stopping, so the listener stays until then.
+        const stopped = session.recorder.isRecording() ? await session.recorder.stop() : null;
+        return stopped?.status === "success" ? stopped.paths : [];
+    } finally {
+        session.recorder.clearOnAudioReady();
+        session.recorder.clearOnError();
+        liveSessions.delete(session);
+        try {
+            // Checked when the call runs, since a newer take may have started recording meanwhile.
+            await queueAudioSession(async () => {
+                if (liveSessions.size === 0) {
+                    await AudioManager.setAudioSessionActivity(false);
+                }
+            });
+        } catch {
+            // Deactivation failing must not swallow the file paths or the finished transcript.
         }
-        return { kind: "transcript" as const, text: await session.stream.finish() };
+    }
+}
+
+async function settle(session: Session, done: () => void): Promise<Take> {
+    try {
+        // Stop the microphone before waiting on the stream, so it never records while the session is fetched.
+        const paths = await release(session);
+        await session.attached.promise;
+        if (session.cancelled) {
+            discard(paths);
+            throw cancelled();
+        }
+        if (session.stream === null) {
+            return { audio: await readClip(paths), kind: "clip" };
+        }
+        discard(paths);
+        const text = await Promise.race([session.stream.finish(), session.cancellation.promise.then((): null => null)]);
+        if (text === null) {
+            throw cancelled();
+        }
+        return { kind: "transcript", text };
     } finally {
         session.stream?.close();
         done();
     }
 }
 
-export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTranscriptOptions): RealtimeTranscript {
+export function useRealtimeTranscript({
+    keyterms,
+    language,
+    onError,
+    onLevel,
+}: RealtimeTranscriptOptions): RealtimeTranscript {
     const [partial, setPartial] = useState("");
     const level = useSharedValue(0);
     const timers = useTimers();
     const sessionRef = useRef<Session | null>(null);
-    /** Bumped by every start and cancel, so a start that a cancel overtook never opens the microphone. */
+    /** A take already finishing but still waiting for `attach`, so `cancel` can reach it. */
+    const finishingRef = useRef<Session | null>(null);
+    /** Bumped by every open and cancel, so a start that a cancel overtook never opens the microphone. */
     const startsRef = useRef(0);
     const frameRef = useRef<Cleanup | null>(null);
     const latestPartial = useRef("");
     const onLevelRef = useLatest(onLevel);
     const onErrorRef = useLatest(onError);
+    const keytermsRef = useLatest(keyterms);
 
     const paintPartial = (text: string) => {
         latestPartial.current = text;
@@ -151,17 +255,6 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
         });
     };
 
-    const release = async (session: Session): Promise<readonly string[]> => {
-        session.recorder.clearOnAudioReady();
-        session.recorder.clearOnError();
-        const stopped = session.recorder.isRecording() ? await session.recorder.stop() : null;
-        // A newer take may have claimed the audio session while the recorder stopped.
-        if (sessionRef.current === null) {
-            await AudioManager.setAudioSessionActivity(false);
-        }
-        return stopped?.status === "success" ? stopped.paths : [];
-    };
-
     const reset = () => {
         if (frameRef.current !== null) {
             frameRef.current();
@@ -172,18 +265,31 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
         level.set(0);
     };
 
+    const standDown = (session: Session) => {
+        if (session.cancelled) {
+            return;
+        }
+        session.cancelled = true;
+        session.cancellation.resolve();
+        session.attached.resolve();
+        session.stream?.close();
+    };
+
     const cancel = () => {
         startsRef.current += 1;
         const session = sessionRef.current;
         sessionRef.current = null;
         reset();
         if (session) {
-            session.stream?.close();
+            standDown(session);
             void release(session).then(discard);
+        }
+        if (finishingRef.current) {
+            standDown(finishingRef.current);
         }
     };
 
-    const start = async (take: StreamSession): Promise<RealtimeStart> => {
+    const open = async (): Promise<RealtimeStart> => {
         if (sessionRef.current) {
             return "failed";
         }
@@ -197,55 +303,52 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
             return "failed";
         }
         const recorder = new AudioRecorder();
-        let starting = true;
-        let failedEarly = false;
-        const protocol = take.kind === "clip" ? null : protocolFor(take, language);
-        const stream =
-            protocol &&
-            openTranscriptStream(protocol, {
-                onError: (error) => {
-                    if (starting) {
-                        failedEarly = true;
-                    } else {
-                        onErrorRef.current?.(error);
-                    }
-                },
-                onPartial: paintPartial,
-            });
-        const sampleRate = protocol?.sampleRate ?? CLIP_METER_RATE;
-        if (take.kind === "clip") {
-            try {
-                recorder.enableFileOutput({ channelCount: 1, format: FileFormat.M4A, preset: FilePreset.Low });
-            } catch {
-                return "failed";
-            }
+        try {
+            recorder.enableFileOutput({ channelCount: 1, format: FileFormat.M4A, preset: FilePreset.Low });
+        } catch {
+            return "failed";
         }
-        const session: Session = { recorder, stream };
+        const session = createSession(recorder);
         sessionRef.current = session;
         reset();
+        let starting = true;
+        let failedEarly = false;
 
         recorder.onAudioReady(
             {
-                bufferLength: (sampleRate * CHUNK_MS) / 1000,
+                bufferLength: (MIC_RATE * CHUNK_MS) / 1000,
                 channelCount: 1,
-                sampleRate,
+                sampleRate: MIC_RATE,
             },
             ({ buffer }) => {
-                const { pcm, rms } = toPcm16(resample(buffer.getChannelData(0), buffer.sampleRate, sampleRate));
-                const sample = meterToLevel(20 * Math.log10(rms));
-                level.set(sample);
-                stream?.send(pcm);
-                onLevelRef.current?.(sample, Date.now());
+                const samples = resample(buffer.getChannelData(0), buffer.sampleRate, MIC_RATE);
+                const { pcm, rms } = toPcm16(samples);
+                if (sessionRef.current === session) {
+                    const sample = meterToLevel(20 * Math.log10(rms));
+                    level.set(sample);
+                    onLevelRef.current?.(sample, Date.now());
+                }
+                if (session.pending !== null) {
+                    session.pending.push(samples);
+                    return;
+                }
+                if (session.stream === null) {
+                    return;
+                }
+                session.stream.send(
+                    session.sampleRate === MIC_RATE ? pcm : toPcm16(resample(samples, MIC_RATE, session.sampleRate)).pcm
+                );
             }
         );
         recorder.onError(() => {
             if (starting) {
                 failedEarly = true;
-            } else {
-                onErrorRef.current?.(
-                    new TranscriptStreamError({ message: "The microphone failed.", reason: "provider" })
-                );
+                return;
             }
+            if (sessionRef.current !== session) {
+                return;
+            }
+            onErrorRef.current?.(new TranscriptStreamError({ message: "The microphone failed.", reason: "provider" }));
         });
 
         AudioManager.setSystemOptions({
@@ -266,16 +369,47 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
         return "failed";
     };
 
+    const attach = (next: StreamSession) => {
+        const session = sessionRef.current ?? finishingRef.current;
+        if (session === null || session.pending === null || session.cancelled) {
+            return;
+        }
+        if (next.kind === "clip") {
+            session.pending = null;
+            session.attached.resolve();
+            return;
+        }
+        const protocol = protocolFor(next, language, keytermsRef.current);
+        const stream = openTranscriptStream(protocol, {
+            onError: (error) => onErrorRef.current?.(error),
+            onPartial: paintPartial,
+        });
+        const { pending } = session;
+        session.pending = null;
+        session.stream = stream;
+        session.sampleRate = protocol.sampleRate;
+        for (const samples of pending) {
+            stream.send(toPcm16(resample(samples, MIC_RATE, protocol.sampleRate)).pcm);
+        }
+        session.attached.resolve();
+    };
+
     const finish = async (): Promise<Take> => {
         const session = sessionRef.current;
-        if (!session) {
+        if (session === null) {
             throw new TranscriptStreamError({ message: "Nothing is being recorded.", reason: "provider" });
         }
         sessionRef.current = null;
-        return drain(session, release, reset);
+        finishingRef.current = session;
+        return settle(session, () => {
+            if (finishingRef.current === session) {
+                finishingRef.current = null;
+            }
+            reset();
+        });
     };
 
     useOnUnmount(cancel);
 
-    return { cancel, finish, level, partial, start };
+    return { attach, cancel, finish, level, open, partial };
 }
