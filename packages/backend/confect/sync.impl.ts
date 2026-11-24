@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Document } from "@confect/server";
+import { ERASED_DATE } from "@outlayr/money/erase";
 import { utcDayStart } from "@outlayr/money/ledger-zone";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { ConvexError } from "convex/values";
@@ -62,8 +63,15 @@ const writeRow = Effect.fn("Sync.writeRow")(function* writeRow<T extends SyncedT
 const moneyTables = new Set<string>(MONEY_TABLES);
 
 // Authorship is the server's: a client's value is dropped, and an editor never becomes the creator,
-// not even on a row logged before the field existed.
-function createdByFor(existing: SyncedDoc | null, accountId: string): string | null {
+// not even on a row logged before the field existed. An erase keeps only what replication needs.
+function createdByFor(
+    written: { deletedAt: number | null; date: number },
+    existing: SyncedDoc | null,
+    accountId: string
+): string | null {
+    if (written.deletedAt !== null && written.date === ERASED_DATE.getTime()) {
+        return null;
+    }
     if (existing === null) {
         return accountId;
     }
@@ -118,7 +126,7 @@ const upsert = Effect.fn("Sync.upsert")(function* upsert(
             return yield* writeRow("transactions", existing, {
                 ...envelope,
                 ...fields,
-                createdBy: createdByFor(existing, stamp.accountId),
+                createdBy: createdByFor({ date: fields.date, deletedAt: row.deletedAt }, existing, stamp.accountId),
             });
         }
         case "budgets": {
@@ -152,7 +160,7 @@ const upsert = Effect.fn("Sync.upsert")(function* upsert(
             return yield* writeRow("transfers", existing, {
                 ...envelope,
                 ...fields,
-                createdBy: createdByFor(existing, stamp.accountId),
+                createdBy: createdByFor({ date: fields.date, deletedAt: row.deletedAt }, existing, stamp.accountId),
             });
         }
         case "installmentPlans": {

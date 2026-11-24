@@ -157,6 +157,29 @@ describe("a joined profile", () => {
         expect(editedRow?.fields.createdBy).toBe(member.userId);
     });
 
+    it("drops the author when the entry is erased", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const member = await seedAuthUser(t);
+        await share(t, owner, member);
+
+        await push(t, member, DEVICE_MEMBER, [entry("erased-entry", 100)]);
+        const erased = entry("erased-entry", 200);
+        await push(t, owner, DEVICE_OWNER, [
+            {
+                ...erased,
+                deletedAt: 200,
+                fields: { ...erased.fields, amount: 0, createdBy: owner.userId, date: 0, day: 0, month: 0, note: "" },
+            },
+        ]);
+
+        const stored = await t.run(async (ctx) =>
+            (await ctx.db.query("transactions").collect()).find((row) => row.localId === "erased-entry")
+        );
+        expect(stored?.deletedAt).toBe(200);
+        expect(stored?.createdBy).toBeNull();
+    });
+
     it("rides on the owner's Pro, so a lapsed owner stops the member too", async () => {
         const t = harness();
         const owner = await seedProUser(t);
