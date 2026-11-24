@@ -8,6 +8,7 @@ import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
+import { useIsDark } from "@/theme/use-is-dark";
 
 import { calloutLayout, holeRect, POINTER_HEIGHT, POINTER_WIDTH, SCREEN_MARGIN } from "./callout-layout";
 import { stepsFor } from "./steps";
@@ -20,6 +21,8 @@ interface BubbleMeasurement {
 }
 
 const MASK_ID = "tour-hole";
+// A dark screen under a light-mode dim barely changes, so dark mode dims harder.
+const SCRIM_OPACITY = { dark: 0.6, light: 0.35 } as const;
 const POINTER_DOWN = `M0 0 L${POINTER_WIDTH} 0 L${POINTER_WIDTH / 2} ${POINTER_HEIGHT} Z`;
 const POINTER_UP = `M0 ${POINTER_HEIGHT} L${POINTER_WIDTH} ${POINTER_HEIGHT} L${POINTER_WIDTH / 2} 0 Z`;
 
@@ -52,6 +55,7 @@ export function TourOverlay() {
     const { height, width } = useWindowDimensions();
     const insets = useSafeAreaInsets();
     const colors = useColors();
+    const isDark = useIsDark();
     const t = useTranslation();
     const [measured, setMeasured] = useState<BubbleMeasurement | null>(null);
 
@@ -109,7 +113,7 @@ export function TourOverlay() {
                         </Defs>
                         <Rect
                             fill="#000000"
-                            fillOpacity={0.35}
+                            fillOpacity={isDark ? SCRIM_OPACITY.dark : SCRIM_OPACITY.light}
                             height={height}
                             mask={`url(#${MASK_ID})`}
                             width={width}
@@ -120,7 +124,7 @@ export function TourOverlay() {
                             fill="none"
                             height={hole.height}
                             rx={hole.radius}
-                            stroke={colors.background}
+                            stroke={isDark ? colors.foreground : colors.background}
                             strokeOpacity={0.9}
                             strokeWidth={3}
                             width={hole.width}
