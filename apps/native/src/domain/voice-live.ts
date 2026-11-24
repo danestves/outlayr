@@ -695,6 +695,9 @@ interface NameEntry {
     id: string;
     /** Letters and digits only, with runs of one letter collapsed, one entry per squashed letter. */
     key: readonly string[];
+    /** Accounts match across spacing and doubled letters; categories only as written. */
+    loose: boolean;
+    name: string;
 }
 
 interface Mention {
@@ -762,18 +765,23 @@ const matchesAt = (letters: readonly string[], key: readonly string[], at: numbe
 // Duplicate names are no match, like `uniqueMatch`: a draft that could land on either is not filled unasked.
 function prepareNames(
     rows: readonly { id: string; name: string | null }[],
-    spoken: (folded: string) => string
+    spoken: (folded: string) => string,
+    loose: boolean
 ): NameEntry[] {
     const named = rows.flatMap((row) => {
         const name = row.name === null ? "" : spoken(foldName(row.name));
         const key = squash(name).letters;
-        return key.length >= MIN_NAME_LENGTH ? [{ id: row.id, key }] : [];
+        return key.length >= MIN_NAME_LENGTH ? [{ id: row.id, key, loose, name }] : [];
     });
+    const same = (a: (typeof named)[number], b: (typeof named)[number]) =>
+        loose ? sameKey(a.key, b.key) : a.name === b.name;
+    const continues = (longer: (typeof named)[number], shorter: (typeof named)[number]) =>
+        loose ? startsWithKey(longer.key, shorter.key) : longer.name.startsWith(shorter.name);
     return named
-        .filter((row) => named.filter((other) => sameKey(other.key, row.key)).length === 1)
+        .filter((row) => named.filter((other) => same(other, row)).length === 1)
         .map((row) => ({
             ...row,
-            extended: named.some((other) => !sameKey(other.key, row.key) && startsWithKey(other.key, row.key)),
+            extended: named.some((other) => !same(other, row) && continues(other, row)),
         }))
         .sort((a, b) => b.key.length - a.key.length);
 }
@@ -789,7 +797,21 @@ function findMentions(
 ): Mention[] {
     const haystack = squash(folded);
     const kept: Mention[] = [];
+    const keep = (entry: NameEntry, mention: Mention) => {
+        const wholeWord = !isWordChar(folded[mention.start - 1]) && !isWordChar(folded[mention.end]);
+        const waiting = !final && entry.extended && mention.end === folded.length;
+        const taken = [...kept, ...blocked].some((other) => overlaps(mention, other));
+        if (wholeWord && !waiting && !taken) {
+            kept.push(mention);
+        }
+    };
     for (const entry of entries) {
+        if (!entry.loose) {
+            for (let at = folded.indexOf(entry.name); at !== -1; at = folded.indexOf(entry.name, at + 1)) {
+                keep(entry, { end: at + entry.name.length, id: entry.id, start: at });
+            }
+            continue;
+        }
         for (let at = 0; at <= haystack.letters.length - entry.key.length; at += 1) {
             if (!matchesAt(haystack.letters, entry.key, at)) {
                 continue;
@@ -805,13 +827,7 @@ function findMentions(
             if (first === undefined || last === undefined) {
                 continue;
             }
-            const mention = { end: last.end, id: entry.id, start: first.start };
-            const wholeWord = !isWordChar(folded[mention.start - 1]) && !isWordChar(folded[mention.end]);
-            const waiting = !final && entry.extended && mention.end === folded.length;
-            const taken = [...kept, ...blocked].some((other) => overlaps(mention, other));
-            if (wholeWord && !waiting && !taken) {
-                kept.push(mention);
-            }
+            keep(entry, { end: last.end, id: entry.id, start: first.start });
         }
     }
     return [...kept].sort((a, b) => a.start - b.start);
@@ -991,14 +1007,16 @@ function spokenLexicon(preferred: Lexicon, folded: string): Lexicon {
 
 function prepareReading(context: LiveContext, spoken: (folded: string) => string) {
     return {
-        accounts: prepareNames(context.accounts, spoken),
+        accounts: prepareNames(context.accounts, spoken, true),
         expenseCategories: prepareNames(
             context.categories.filter((category) => !category.income),
-            spoken
+            spoken,
+            false
         ),
         incomeCategories: prepareNames(
             context.categories.filter((category) => category.income),
-            spoken
+            spoken,
+            false
         ),
         spoken,
     };

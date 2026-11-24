@@ -79,6 +79,15 @@ interface Session {
 /** Every take alive right now, so the shared audio session is only turned off once the last one lets go. */
 const liveSessions = new Set<Session>();
 
+let audioSessionQueue: Promise<unknown> = Promise.resolve();
+
+// iOS can run a deactivation after a later activation unless the calls go out one at a time.
+function queueAudioSession<A>(task: () => Promise<A>): Promise<A> {
+    const next = audioSessionQueue.then(task);
+    audioSessionQueue = next.catch(() => undefined);
+    return next;
+}
+
 function createSession(recorder: AudioRecorder): Session {
     const session: Session = {
         attached: signal(),
@@ -131,7 +140,7 @@ function toPcm16(samples: Float32Array) {
 
 async function openMicrophone(recorder: AudioRecorder, overtaken: () => boolean): Promise<boolean> {
     try {
-        await AudioManager.setAudioSessionActivity(true);
+        await queueAudioSession(() => AudioManager.setAudioSessionActivity(true));
         if (overtaken()) {
             return false;
         }
@@ -201,20 +210,23 @@ export function useRealtimeTranscript({
     };
 
     const release = async (session: Session): Promise<readonly string[]> => {
-        session.recorder.clearOnAudioReady();
-        session.recorder.clearOnError();
         try {
+            // The recorder hands over its last partial buffer while stopping, so the listener stays until then.
             const stopped = session.recorder.isRecording() ? await session.recorder.stop() : null;
             return stopped?.status === "success" ? stopped.paths : [];
         } finally {
+            session.recorder.clearOnAudioReady();
+            session.recorder.clearOnError();
             liveSessions.delete(session);
-            // A newer take may already be recording, so the shared audio session stays on until the last one ends.
-            if (liveSessions.size === 0) {
-                try {
-                    await AudioManager.setAudioSessionActivity(false);
-                } catch {
-                    // Deactivation failing must not swallow the file paths or the finished transcript.
-                }
+            try {
+                // Checked when the call runs, since a newer take may have started recording meanwhile.
+                await queueAudioSession(async () => {
+                    if (liveSessions.size === 0) {
+                        await AudioManager.setAudioSessionActivity(false);
+                    }
+                });
+            } catch {
+                // Deactivation failing must not swallow the file paths or the finished transcript.
             }
         }
     };
@@ -287,9 +299,11 @@ export function useRealtimeTranscript({
             ({ buffer }) => {
                 const samples = resample(buffer.getChannelData(0), buffer.sampleRate, MIC_RATE);
                 const { pcm, rms } = toPcm16(samples);
-                const sample = meterToLevel(20 * Math.log10(rms));
-                level.set(sample);
-                onLevelRef.current?.(sample, Date.now());
+                if (sessionRef.current === session) {
+                    const sample = meterToLevel(20 * Math.log10(rms));
+                    level.set(sample);
+                    onLevelRef.current?.(sample, Date.now());
+                }
                 if (session.pending !== null) {
                     session.pending.push(samples);
                     return;
@@ -305,6 +319,9 @@ export function useRealtimeTranscript({
         recorder.onError(() => {
             if (starting) {
                 failedEarly = true;
+                return;
+            }
+            if (sessionRef.current !== session) {
                 return;
             }
             onErrorRef.current?.(new TranscriptStreamError({ message: "The microphone failed.", reason: "provider" }));

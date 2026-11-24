@@ -69,6 +69,11 @@ describe("readScribeMessage", () => {
             expect(sent.reduce((chars, term) => chars + term.length, 0)).toBeLessThanOrEqual(1000);
             expect(sent).toContain("bolívares");
             expect(sent).toContain("Bancamiga");
+
+            const long = Array.from({ length: 40 }, (_, at) => `${"Mantenimiento ".repeat(2)}${at}`);
+            const capped = keytermsSent(voiceKeyterms({ accounts, categoryTree: [{ children: long, name: "Casa" }] }));
+            expect(capped.length).toBeLessThan(50);
+            expect(capped.reduce((chars, term) => chars + term.length, 0)).toBeLessThanOrEqual(1000);
         } finally {
             vi.useRealTimers();
         }

@@ -1130,7 +1130,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Profiles",
                 },
                 {
-                    detail: "ElevenLabs now also receives your account and category names while you speak an entry, so it spells them the way your ledger does.",
+                    detail: "ElevenLabs also receives your account and category names while you speak an entry, so it spells them the way your ledger does.",
                     label: "Voice entry spelling",
                 },
             ],
@@ -1148,7 +1148,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Profile",
                 },
                 {
-                    detail: "ElevenLabs erhält bei der Spracheingabe jetzt auch deine Konto- und Kategorienamen, damit es sie so schreibt wie dein Haushaltsbuch.",
+                    detail: "ElevenLabs erhält bei der Spracheingabe auch deine Konto- und Kategorienamen, damit es sie so schreibt wie dein Haushaltsbuch.",
                     label: "Schreibweise bei der Spracheingabe",
                 },
             ],
@@ -1166,7 +1166,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Perfiles",
                 },
                 {
-                    detail: "ElevenLabs ahora también recibe los nombres de tus cuentas y categorías mientras dictas una entrada, para escribirlos como están en tu registro.",
+                    detail: "ElevenLabs también recibe los nombres de tus cuentas y categorías mientras dictas una entrada, para escribirlos como están en tu registro.",
                     label: "Ortografía en la entrada por voz",
                 },
             ],
@@ -1184,7 +1184,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Profils",
                 },
                 {
-                    detail: "ElevenLabs reçoit désormais aussi les noms de vos comptes et catégories pendant que vous dictez une opération, pour les écrire comme dans votre journal.",
+                    detail: "ElevenLabs reçoit aussi les noms de vos comptes et catégories pendant que vous dictez une opération, pour les écrire comme dans votre journal.",
                     label: "Orthographe de la saisie vocale",
                 },
             ],
@@ -1202,7 +1202,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Perfis",
                 },
                 {
-                    detail: "A ElevenLabs agora também recebe os nomes das suas contas e categorias enquanto você dita um lançamento, para escrevê-los como estão nos seus lançamentos.",
+                    detail: "A ElevenLabs também recebe os nomes das suas contas e categorias enquanto você dita um lançamento, para escrevê-los como estão nos seus lançamentos.",
                     label: "Grafia no lançamento por voz",
                 },
             ],

@@ -211,6 +211,18 @@ describe("accounts and categories", () => {
         expect(spanOf(text, draft.categoryId)).toBe("𠮷野家");
     });
 
+    it("matches a category only as written, keeping loose spelling for accounts", () => {
+        const context = {
+            accounts: [],
+            categories: [{ id: "cafe", income: false, name: "Cafe" }],
+            currency: "USD",
+            language: "es" as const,
+            now: NOW,
+        };
+        expect(parseLiveDraft("Gasté 5 dólares en Caffe", context, { final: true }).categoryId).toBeNull();
+        expect(parseLiveDraft("Gasté 5 dólares en Cafe", context, { final: true }).categoryId?.value).toBe("cafe");
+    });
+
     it("matches an income category only for income", () => {
         expect(parse("got paid 500 dollars salary", "en").categoryId?.value).toBe("salary");
         expect(parse("I spent 5 dollars on freelance", "en").categoryId).toBeNull();
