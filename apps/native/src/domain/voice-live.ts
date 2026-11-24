@@ -771,19 +771,19 @@ function prepareNames(
     const named = rows.flatMap((row) => {
         const name = row.name === null ? "" : spoken(foldName(row.name));
         const key = squash(name).letters;
-        return key.length >= MIN_NAME_LENGTH ? [{ id: row.id, key, loose, name }] : [];
+        return (loose ? key.length : name.length) >= MIN_NAME_LENGTH ? [{ id: row.id, key, loose, name }] : [];
     });
     const same = (a: (typeof named)[number], b: (typeof named)[number]) =>
         loose ? sameKey(a.key, b.key) : a.name === b.name;
     const continues = (longer: (typeof named)[number], shorter: (typeof named)[number]) =>
-        loose ? startsWithKey(longer.key, shorter.key) : longer.name.startsWith(shorter.name);
+        loose ? startsWithKey(longer.key, shorter.key) : longer.name.startsWith(`${shorter.name} `);
     return named
         .filter((row) => named.filter((other) => same(other, row)).length === 1)
         .map((row) => ({
             ...row,
             extended: named.some((other) => !same(other, row) && continues(other, row)),
         }))
-        .sort((a, b) => b.key.length - a.key.length);
+        .sort((a, b) => (loose ? b.key.length - a.key.length : b.name.length - a.name.length));
 }
 
 const overlaps = (a: { end: number; start: number }, b: { end: number; start: number }) =>
