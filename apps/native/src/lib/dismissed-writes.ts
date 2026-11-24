@@ -2,6 +2,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { File } from "expo-file-system";
 
+import { recoverDurably, writeDurably } from "./durable-file";
 import { queueDirectory } from "./queue-directory";
 
 const DISMISSED_FILE = "dismissed.jsonl";
@@ -36,6 +37,7 @@ export function persistDismissal(id: string, purchase?: { date: number; key: str
         const at = Date.now();
         const record = purchase === undefined ? { at, id } : { at, date: purchase.date, id, key: purchase.key };
         const file = new File(directory, DISMISSED_FILE);
+        recoverDurably(file);
         file.writeSync(`${JSON.stringify(record)}\n`, { append: true });
     } catch (error) {
         console.warn("[outlayr] dismissal not persisted", error);
@@ -51,6 +53,7 @@ export function readDismissals(now: number, retain: ReadonlySet<string> | null):
             return [];
         }
         const file = new File(directory, DISMISSED_FILE);
+        recoverDurably(file);
         if (!file.exists) {
             return [];
         }
@@ -73,7 +76,7 @@ export function readDismissals(now: number, retain: ReadonlySet<string> | null):
             }
         }
         if (retain !== null && kept.length !== lines.length) {
-            file.writeSync(kept.map((dismissal) => `${JSON.stringify(dismissal)}\n`).join(""));
+            writeDurably(file, kept.map((dismissal) => `${JSON.stringify(dismissal)}\n`).join(""));
         }
         return kept;
     } catch (error) {

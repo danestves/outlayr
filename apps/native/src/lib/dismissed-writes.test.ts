@@ -5,9 +5,19 @@ const files = vi.hoisted(() => new Map<string, string>());
 vi.mock("./queue-directory", () => ({ queueDirectory: () => ({}) }));
 vi.mock("expo-file-system", () => {
     class File {
-        private readonly name: string;
+        readonly name: string;
         constructor(_directory: unknown, name: string) {
             this.name = name;
+        }
+        get parentDirectory() {
+            return {};
+        }
+        delete() {
+            files.delete(this.name);
+        }
+        moveSync(destination: File) {
+            files.set(destination.name, this.textSync());
+            files.delete(this.name);
         }
         get exists() {
             return files.has(this.name);

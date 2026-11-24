@@ -36,7 +36,7 @@ vi.mock("expo-file-system", () => {
 
 import { File, Paths } from "expo-file-system";
 
-import { readDurably } from "./durable-file";
+import { readDurably, writeDurably } from "./durable-file";
 
 const durableFile = () => new File(Paths.document, "routing");
 
@@ -55,4 +55,17 @@ test("reads the main file when both copies exist", () => {
     files.set("routing.tmp", "stale");
 
     expect(readDurably(durableFile())).toBe("main");
+});
+
+test("a crash during the next write keeps the copy a previous crash left in the sibling", () => {
+    files.set("routing.tmp", "recovered");
+    const write = vi.spyOn(File.prototype, "writeSync").mockImplementation(function writeSync(this: File) {
+        files.set(this.name, "");
+        throw new Error("killed mid-write");
+    });
+
+    expect(() => writeDurably(durableFile(), "next")).toThrow("killed mid-write");
+    write.mockRestore();
+
+    expect(readDurably(durableFile())).toBe("recovered");
 });
