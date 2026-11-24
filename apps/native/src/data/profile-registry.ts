@@ -9,6 +9,7 @@ import { ensureOutboxTriggers } from "@/db/outbox-triggers";
 import { profiles } from "@/db/schema";
 import { parseProfileId, PERSONAL_DATABASE } from "@/domain/profiles";
 import { activeProfileId } from "@/lib/active-profile";
+import { joinedProfiles } from "@/lib/joined-profiles";
 import { hasPendingQueueWork, retireLedger } from "@/lib/widget-bridge";
 
 import migrationsBundle from "../../drizzle/migrations";
@@ -36,7 +37,12 @@ export const deletedProfilesOwed = Effect.fn("ProfileRegistry.deletedOwed")(func
 });
 
 export const retireProfiles = Effect.fn("ProfileRegistry.retire")(function* retireProfiles(ids: readonly string[]) {
+    const active = activeProfileId();
     for (const id of ids) {
+        // Never delete the ledger this runtime has open: a later launch retires it once it is not active.
+        if (id === active) {
+            continue;
+        }
         yield* Effect.sync(() => retireLedger(id));
         yield* deleteProfileLedger(id);
     }
@@ -83,6 +89,8 @@ export const closeProfileRegistry = Effect.fn("ProfileRegistry.close")(function*
 export function deviceHasProfiles(): boolean {
     return (
         activeProfileId() !== undefined ||
+        // An inactive joined ledger still owns photos this device must not purge.
+        joinedProfiles().length > 0 ||
         profileRegistry().select({ id: profiles.id }).from(profiles).where(isNull(profiles.deletedAt)).limit(1).all()
             .length > 0
     );

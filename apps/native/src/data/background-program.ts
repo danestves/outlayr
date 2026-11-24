@@ -11,6 +11,7 @@ import { DailyReminderSync } from "@/lib/daily-reminder-sync";
 import type { DailyReminderSteps } from "@/lib/daily-reminder-sync";
 import { DueReminderSync } from "@/lib/due-reminder-sync";
 import type { DueReminderPasses } from "@/lib/due-reminder-sync";
+import { activeLedgerIsJoined } from "@/lib/joined-profiles";
 import { SystemSync } from "@/lib/system-sync";
 import type { SystemSurfaces } from "@/lib/system-sync";
 import { warnAndContinue } from "@/lib/warn-and-continue";
@@ -48,9 +49,12 @@ export const make = Effect.gen(function* make() {
                 system.run(db, Stream.fromQueue(swept)),
                 launchAndForegrounds(watchAppState).pipe(
                     Stream.runForEach(() =>
-                        localizePresetCategories(db, deviceLanguage()).pipe(
-                            warnAndContinue("Failed to localize the preset categories")
-                        )
+                        // Rewriting labels in a joined ledger would push the member's language into the owner's rows.
+                        activeLedgerIsJoined()
+                            ? Effect.void
+                            : localizePresetCategories(db, deviceLanguage()).pipe(
+                                  warnAndContinue("Failed to localize the preset categories")
+                              )
                     )
                 ),
             ],

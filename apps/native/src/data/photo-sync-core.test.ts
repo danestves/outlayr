@@ -12,6 +12,7 @@ import type { PhotoFiles } from "./photo-store-core";
 import {
     downloadEveryPhoto,
     downloadPhotos,
+    pendingPhotoUploads,
     PHOTO_SYNC_BATCH,
     photoNameFromKey,
     runPhotoSync,
@@ -468,6 +469,28 @@ describe("uploadPhotos", () => {
             ...(await db.select({ imageKey: accounts.imageKey }).from(accounts)),
         ];
         expect(keys.filter((row) => row.imageKey === null)).toHaveLength(1);
+    });
+
+    it("counts only the rows still owed bytes, since an uploaded row keeps its path", async () => {
+        const db = makeDb();
+        const files = new FakeFiles(DIRECTORY, [
+            ["a.jpg", "PHOTO"],
+            ["b.jpg", "BYTES"],
+        ]);
+        const { transport } = fakeTransport();
+        await insert(db, "done", {
+            imageKey: `transaction-photos/${USER}/done.jpg`,
+            imageUri: `${DIRECTORY}/done.jpg`,
+        });
+        await insert(db, "owed", { imageUri: `${DIRECTORY}/a.jpg` });
+
+        await Effect.runPromise(uploadPhotos(db, files, transport, NOW));
+
+        await expect(Effect.runPromise(pendingPhotoUploads(db))).resolves.toBe(0);
+
+        await insert(db, "late", { imageUri: `${DIRECTORY}/b.jpg` });
+
+        await expect(Effect.runPromise(pendingPhotoUploads(db))).resolves.toBe(1);
     });
 });
 

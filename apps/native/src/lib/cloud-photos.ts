@@ -76,6 +76,6 @@ export const photoTransport = Effect.fn("Cloud.photoTransport")(function* photoT
                 key,
                 ...profileArgs(activeProfileId()),
             }).pipe(Effect.asVoid),
-        requestUpload: (name) => cloudMutation("photos:requestUpload", { name }),
+        requestUpload: (name) => cloudMutation("photos:requestUpload", { name, ...profileArgs(activeProfileId()) }),
     } satisfies PhotoTransport;
 });

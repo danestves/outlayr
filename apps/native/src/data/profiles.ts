@@ -9,6 +9,8 @@ import { databaseNameFor, parseProfileId } from "@/domain/profiles";
 
 import migrationsBundle from "../../drizzle/migrations";
 import { bootstrapLocalData } from "./bootstrap";
+import type { BootstrapOptions } from "./bootstrap";
+import { markAdopted } from "./ledger-adoption";
 import { useLiveQuery } from "./live-query";
 import {
     clearProfileLedgerReady,
@@ -20,6 +22,7 @@ import {
 import { profileRegistry } from "./profile-registry";
 import { createOrUpdateProfile, ProfilesError, seedProfileLedger, tombstoneProfile } from "./profiles-core";
 import type { Profile, ProfileIdentity } from "./profiles-core";
+import { enableSyncForAccount, getSyncAccountSubject } from "./sync-outbox-core";
 
 export function useProfiles(): Profile[] {
     const registry = profileRegistry();
@@ -31,10 +34,17 @@ export function useProfiles(): Profile[] {
 
 const failed = (operation: "create") => (cause: unknown) => new ProfilesError({ cause, operation });
 
+// A replica syncs as the account it copies and never asks to adopt it.
+const enableReplica = Effect.fn("Profiles.enableReplica")(function* enableReplica(ledger: Database, accountId: string) {
+    yield* enableSyncForAccount(ledger, accountId);
+    yield* markAdopted(ledger, accountId);
+});
+
 export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function* prepareProfileLedger(
     id: string,
     from: Database,
-    currency: string | undefined
+    currency: string | undefined,
+    options: BootstrapOptions = {}
 ) {
     // An existing file may hold entries from before ready markers, so only a fresh one is safe to delete.
     const existed = profileLedgerFileExists(id);
@@ -43,15 +53,40 @@ export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function
         yield* Effect.try({ catch: failed("create"), try: () => clearProfileLedgerReady(id) });
     }
     const ledger = yield* Effect.try({ catch: failed("create"), try: () => openDatabase(databaseNameFor(id)) });
+    const { replicaFor } = options;
     yield* Effect.gen(function* seed() {
         yield* Effect.tryPromise({ catch: failed("create"), try: () => migrate(ledger, migrationsBundle) });
-        yield* bootstrapLocalData(ledger);
+        yield* bootstrapLocalData(ledger, options);
         yield* seedProfileLedger(from, ledger, currency);
+        if (replicaFor !== undefined) {
+            yield* enableReplica(ledger, replicaFor);
+        }
     }).pipe(
         Effect.ensuring(closeDatabase(ledger).pipe(Effect.ignore)),
         Effect.onError(() => (existed ? Effect.void : deleteProfileLedger(id)))
     );
     yield* Effect.try({ catch: failed("create"), try: () => markProfileLedgerReady(id) });
+});
+
+/**
+ * Sign-out turns sync off on the open ledger and keeps its file and ready marker, so reopening a joined one skips
+ * preparation and stays a dead replica. The subject must still name the signed-in account.
+ */
+export const ensureReplica = Effect.fn("Profiles.ensureReplica")(function* ensureReplica(
+    id: string,
+    accountId: string
+) {
+    const ledger = yield* Effect.try({ catch: failed("create"), try: () => openDatabase(databaseNameFor(id)) });
+    yield* Effect.gen(function* ensure() {
+        const subject = yield* getSyncAccountSubject(ledger);
+        if (subject !== null && subject !== accountId) {
+            return yield* new ProfilesError({
+                cause: new Error("joined ledger syncs as another account"),
+                operation: "switch",
+            });
+        }
+        yield* enableReplica(ledger, accountId);
+    }).pipe(Effect.ensuring(closeDatabase(ledger).pipe(Effect.ignore)));
 });
 
 export const createProfile = Effect.fn("Profiles.create")(function* createProfile(input: {

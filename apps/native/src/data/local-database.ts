@@ -13,6 +13,7 @@ import type { Database } from "@/db/client";
 import { adoptLegacyMigrationLog } from "@/db/legacy-migration-log";
 import { ensureOutboxTriggers } from "@/db/outbox-triggers";
 import { deviceLanguage } from "@/i18n/device-language";
+import { activeLedgerIsJoined } from "@/lib/joined-profiles";
 import { warnAndContinue } from "@/lib/warn-and-continue";
 
 import migrationsBundle from "../../drizzle/migrations";
@@ -51,9 +52,12 @@ export const make = Effect.gen(function* make() {
         yield* Effect.try({ catch: failedAt("migrate"), try: () => ensureOutboxTriggers(db, SYNCED_SPECS) });
         yield* openProfileRegistry(db).pipe(Effect.mapError(failedAt("migrate")));
         yield* bootstrapLocalData(db).pipe(Effect.mapError((error) => failedAt("bootstrap")(error.cause ?? error)));
-        yield* localizePresetCategories(db, deviceLanguage()).pipe(
-            warnAndContinue("Failed to localize the preset categories")
-        );
+        // A joined ledger takes the owner's labels, so this device's language must not rewrite them.
+        if (!activeLedgerIsJoined()) {
+            yield* localizePresetCategories(db, deviceLanguage()).pipe(
+                warnAndContinue("Failed to localize the preset categories")
+            );
+        }
         // Ahead of `ready`, so the onboarding guard's first read already sees post-backfill appMeta.
         yield* settleLegacyOnboarding(db).pipe(Effect.mapError((error) => failedAt("settle")(error.cause ?? error)));
         return db;

@@ -23,6 +23,9 @@ import * as RecurrenceSweep from "./recurrence-sweep";
 
 const flush = () => vi.advanceTimersByTimeAsync(0);
 
+// The preset-label pass reads the active ledger, which cannot touch the filesystem under the node runner.
+vi.mock("@/lib/active-profile", () => ({ activeProfileId: () => undefined }));
+
 describe("background program", () => {
     let db: Database;
     let registry: AtomRegistry.AtomRegistry;

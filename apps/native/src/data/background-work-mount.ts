@@ -3,14 +3,17 @@ import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as Layer from "effect/Layer";
 import * as Atom from "effect/reactivity/Atom";
+import * as Stream from "effect/Stream";
 
 import type { Database } from "@/db/client";
+import { signals } from "@/lib/app-events";
 import { armChosenReminder } from "@/lib/chosen-reminder";
 import { photoTransport } from "@/lib/cloud-photos";
 import { DailyReminderSteps } from "@/lib/daily-reminder-sync";
 import { DueReminderPasses } from "@/lib/due-reminder-sync";
 import { EnrichmentSync } from "@/lib/enrichment-sync";
 import { syncInstallmentReminders } from "@/lib/installment-reminder-sync";
+import { subscribeJoinedReconcile } from "@/lib/joined-profiles";
 import { replateLogos } from "@/lib/logo-replate";
 import { photoFiles } from "@/lib/photo-storage";
 import { reconcileDailyReminder } from "@/lib/reminder-sync";
@@ -18,6 +21,7 @@ import { appRuntime } from "@/lib/runtime";
 import { indexSpotlight } from "@/lib/spotlight";
 import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 import { SystemSurfaces } from "@/lib/system-sync";
+import { reconcileJoinedProfiles } from "@/state/joined-profiles-commands";
 import { publishWidgets } from "@/widgets/publish";
 
 import { BackgroundProgram } from "./background-program";
@@ -91,6 +95,22 @@ export const photoSyncAtom = Atom.family((db: Database) =>
         .pipe(Atom.withLabel("background-work:photo-sync"))
 );
 
+const reconcileJoinedAtom = appRuntime
+    .atom(
+        Effect.gen(function* joinedProfiles() {
+            const reconcile = reconcileJoinedProfiles().pipe(
+                Effect.catchCause((cause) => Effect.logWarning("[outlayr] joined profiles not reconciled", cause))
+            );
+            // Subscribed before the first pass, and it runs on every launch: a second device only learns of a
+            // membership from the server, and a claim that died before writing the cache is still recorded.
+            yield* Stream.merge(Stream.succeed(undefined), signals(subscribeJoinedReconcile)).pipe(
+                Stream.buffer({ capacity: 1, strategy: "sliding" }),
+                Stream.runForEach(() => reconcile)
+            );
+        })
+    )
+    .pipe(Atom.withLabel("background-work:joined-profiles"));
+
 export function BackgroundProgramMount({ db }: { db: Database }) {
     useAtomMount(backgroundProgramAtom(db));
     useAtomMount(photoReconcileAtom(db));
@@ -105,5 +125,10 @@ export function EnrichmentSyncMount({ db }: { db: Database }) {
 
 export function PhotoSyncMount({ db }: { db: Database }) {
     useAtomMount(photoSyncAtom(db));
+    return null;
+}
+
+export function JoinedProfilesMount() {
+    useAtomMount(reconcileJoinedAtom);
     return null;
 }
