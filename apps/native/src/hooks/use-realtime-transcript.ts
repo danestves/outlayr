@@ -178,6 +178,52 @@ async function readClip(paths: readonly string[]): Promise<ArrayBuffer> {
 
 const cancelled = () => new TranscriptStreamError({ message: "The recording was cancelled.", reason: "provider" });
 
+async function release(session: Session): Promise<readonly string[]> {
+    try {
+        // The recorder hands over its last partial buffer while stopping, so the listener stays until then.
+        const stopped = session.recorder.isRecording() ? await session.recorder.stop() : null;
+        return stopped?.status === "success" ? stopped.paths : [];
+    } finally {
+        session.recorder.clearOnAudioReady();
+        session.recorder.clearOnError();
+        liveSessions.delete(session);
+        try {
+            // Checked when the call runs, since a newer take may have started recording meanwhile.
+            await queueAudioSession(async () => {
+                if (liveSessions.size === 0) {
+                    await AudioManager.setAudioSessionActivity(false);
+                }
+            });
+        } catch {
+            // Deactivation failing must not swallow the file paths or the finished transcript.
+        }
+    }
+}
+
+async function settle(session: Session, done: () => void): Promise<Take> {
+    try {
+        // Stop the microphone before waiting on the stream, so it never records while the session is fetched.
+        const paths = await release(session);
+        await session.attached.promise;
+        if (session.cancelled) {
+            discard(paths);
+            throw cancelled();
+        }
+        if (session.stream === null) {
+            return { audio: await readClip(paths), kind: "clip" };
+        }
+        discard(paths);
+        const text = await Promise.race([session.stream.finish(), session.cancellation.promise.then((): null => null)]);
+        if (text === null) {
+            throw cancelled();
+        }
+        return { kind: "transcript", text };
+    } finally {
+        session.stream?.close();
+        done();
+    }
+}
+
 export function useRealtimeTranscript({
     keyterms,
     language,
@@ -207,28 +253,6 @@ export function useRealtimeTranscript({
             frameRef.current = null;
             setPartial(latestPartial.current);
         });
-    };
-
-    const release = async (session: Session): Promise<readonly string[]> => {
-        try {
-            // The recorder hands over its last partial buffer while stopping, so the listener stays until then.
-            const stopped = session.recorder.isRecording() ? await session.recorder.stop() : null;
-            return stopped?.status === "success" ? stopped.paths : [];
-        } finally {
-            session.recorder.clearOnAudioReady();
-            session.recorder.clearOnError();
-            liveSessions.delete(session);
-            try {
-                // Checked when the call runs, since a newer take may have started recording meanwhile.
-                await queueAudioSession(async () => {
-                    if (liveSessions.size === 0) {
-                        await AudioManager.setAudioSessionActivity(false);
-                    }
-                });
-            } catch {
-                // Deactivation failing must not swallow the file paths or the finished transcript.
-            }
-        }
     };
 
     const reset = () => {
@@ -377,33 +401,12 @@ export function useRealtimeTranscript({
         }
         sessionRef.current = null;
         finishingRef.current = session;
-        try {
-            // Stop the microphone before waiting on the stream, so it never records while the session is fetched.
-            const paths = await release(session);
-            await session.attached.promise;
-            if (session.cancelled) {
-                discard(paths);
-                throw cancelled();
-            }
-            if (session.stream === null) {
-                return { audio: await readClip(paths), kind: "clip" };
-            }
-            discard(paths);
-            const text = await Promise.race([
-                session.stream.finish(),
-                session.cancellation.promise.then((): null => null),
-            ]);
-            if (text === null) {
-                throw cancelled();
-            }
-            return { kind: "transcript", text };
-        } finally {
-            session.stream?.close();
+        return settle(session, () => {
             if (finishingRef.current === session) {
                 finishingRef.current = null;
             }
             reset();
-        }
+        });
     };
 
     useOnUnmount(cancel);
