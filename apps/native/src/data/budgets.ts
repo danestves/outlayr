@@ -26,6 +26,7 @@ import { useCategoryMeta } from "./categories";
 import { useLiveQuery } from "./live-query";
 import { useDecoratedRows } from "./transactions";
 import type { TransactionWithCategory } from "./transactions";
+import { unsentInOutbox } from "./transactions-core";
 import { usePendingDeletes } from "./use-deferred-delete";
 import { useValuation } from "./use-valuation";
 
@@ -469,7 +470,7 @@ export function useBudgetContributions(
         transactions,
         () =>
             db
-                .select(getTableColumns(transactions))
+                .select({ ...getTableColumns(transactions), unsent: unsentInOutbox("transactions", transactions.id) })
                 .from(transactions)
                 .where(
                     and(

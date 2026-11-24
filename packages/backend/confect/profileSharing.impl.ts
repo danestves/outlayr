@@ -124,6 +124,10 @@ const invite = FunctionImpl.make(
     spec,
     "invite",
     Effect.fn("ProfileSharing.invite")(function* invite(args) {
+        const ctx = yield* QueryCtx;
+        if (!(yield* profileSharingEnabled)) {
+            return null;
+        }
         const code = normalizeReferralCode(args.code);
         if (code === null) {
             return null;
@@ -132,7 +136,6 @@ const invite = FunctionImpl.make(
         if (row === null) {
             return null;
         }
-        const ctx = yield* QueryCtx;
         const viewerId = yield* optionalUserId(ctx);
         const [look, members, viewer, ownerName, now] = yield* Effect.all([
             currentLook(row.ownerId, row.profileId, row.look),

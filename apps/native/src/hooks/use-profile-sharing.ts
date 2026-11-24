@@ -21,12 +21,12 @@ export function useProfileSharingEnabled(): boolean {
     return useProfileSharingFlag() === true;
 }
 
-/** Null skips the read. Undefined while it loads or fails, null when the caller is not in the profile. */
+/** Null skips the read. Undefined while it loads, null when it failed or the caller is not in the profile. */
 export function useProfileMembers(profileId: string | null): ProfileMembersView | null | undefined {
     const authenticated = useCloudAuthenticated();
-    const result = useAtomValue(profileMembersAtom({ authenticated, profileId: profileId ?? "" }));
+    const members = useAtomValue(profileMembersAtom({ authenticated, profileId: profileId ?? "" }));
     if (profileId === null) {
         return null;
     }
-    return AsyncResult.isSuccess(result) ? result.value : undefined;
+    return members;
 }

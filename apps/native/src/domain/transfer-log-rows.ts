@@ -20,6 +20,7 @@ export interface TransferLogSource {
     toAmount: number;
     toAmountUsd: number | null;
     toCurrency: string;
+    unsent?: boolean;
 }
 
 export interface TransferLogFee {
@@ -72,6 +73,7 @@ export interface TransferLogRow {
     sign?: "+" | "-";
     transferId: string;
     unreviewed: false;
+    unsent: boolean;
 }
 
 const UNKNOWN_ACCOUNT = "–";
@@ -143,6 +145,7 @@ export function toTransferLogRow(
         recurringType: 0,
         transferId: transfer.id,
         unreviewed: false,
+        unsent: transfer.unsent ?? false,
     };
 }
 

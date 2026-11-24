@@ -221,6 +221,7 @@ export function useOutsideMoveRows(
             sign: into ? "+" : "-",
             transferId: row.id,
             unreviewed: false,
+            unsent: false,
         };
     });
 }

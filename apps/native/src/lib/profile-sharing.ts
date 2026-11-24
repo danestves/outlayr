@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
 import { useSyncExternalStore } from "react";
 
+import { cloudRuntime } from "./cloud-runtime";
 import { cloudQuery } from "./convex";
 
 export type ProfileMembersView = NonNullable<FunctionReturnType<typeof api.profileSharing.members>>;
@@ -35,16 +36,23 @@ export interface ProfileMembersKey {
     profileId: string;
 }
 
-/** One read per profile, shared by the Log and the members sheet, which refreshes it after a change. */
+/** Live per profile, shared by the Log and the members sheet, so a join or removal reaches both without a re-read. */
 export const profileMembersAtom = Atom.family((key: ProfileMembersKey) =>
-    Atom.make(
-        Effect.gen(function* readMembers() {
-            if (!key.authenticated || key.profileId === NO_PROFILE) {
+    Atom.make((get): ProfileMembersView | null | undefined => {
+        if (!key.authenticated || key.profileId === NO_PROFILE || cloudRuntime === null) {
+            return null;
+        }
+        const watch = cloudRuntime.convex.watchQuery(api.profileSharing.members, { profileId: key.profileId });
+        const read = () => {
+            try {
+                return watch.localQueryResult();
+            } catch {
                 return null;
             }
-            return yield* cloudQuery(api.profileSharing.members, { profileId: key.profileId });
-        }).pipe(Effect.catchTags({ CloudError: () => Effect.succeed(null) }))
-    ).pipe(Atom.withLabel("profileSharing:members"))
+        };
+        get.addFinalizer(watch.onUpdate(() => get.setSelf(read())));
+        return read();
+    }).pipe(Atom.withLabel("profileSharing:members"))
 );
 
 // Signing in remounts the navigator, so the code waits here until an account is there to claim it.

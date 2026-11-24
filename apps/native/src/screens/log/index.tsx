@@ -487,7 +487,7 @@ export function Log() {
                 }}
                 renderItem={({ item }) => (
                     <SwipeableTransactionRow
-                        author={authorOf(item.createdBy)}
+                        author={authorOf(item.createdBy, item.unsent)}
                         transaction={item}
                         currency={currency}
                         dated={monthly}

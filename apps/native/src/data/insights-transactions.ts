@@ -7,6 +7,7 @@ import { useCategoryMeta } from "./categories";
 import { useLiveQuery } from "./live-query";
 import { useDecoratedRows } from "./transactions";
 import type { TransactionWithCategory } from "./transactions";
+import { unsentInOutbox } from "./transactions-core";
 
 export interface WindowTransactionsQuery {
     /** A top-level category and its children; `null` keeps all. */
@@ -47,13 +48,16 @@ export function useWindowTransactions(db: Database, query: WindowTransactionsQue
         () => {
             if (!enabled) {
                 return db
-                    .select(getTableColumns(transactions))
+                    .select({
+                        ...getTableColumns(transactions),
+                        unsent: unsentInOutbox("transactions", transactions.id),
+                    })
                     .from(transactions)
                     .where(eq(transactions.id, ""))
                     .limit(0);
             }
             return db
-                .select(getTableColumns(transactions))
+                .select({ ...getTableColumns(transactions), unsent: unsentInOutbox("transactions", transactions.id) })
                 .from(transactions)
                 .where(
                     and(

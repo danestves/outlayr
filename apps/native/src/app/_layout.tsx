@@ -322,7 +322,7 @@ function RootStack() {
         <>
             <AccountOffer db={db} ready={tapsReady} />
             <YearSheetOpener db={db} ready={tapsReady} />
-            <PendingProfileJoin />
+            <PendingProfileJoin ready={tapsReady} />
             <Stack>
                 {ROOT_STACK.map(({ group: name, screens }) => (
                     <Stack.Protected guard={group === name} key={name} redirectTo={GROUP_ENTRY[group]}>

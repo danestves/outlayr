@@ -54,6 +54,12 @@ function makeDb() {
 			updatedAt integer NOT NULL,
 			deletedAt integer
 		);
+		CREATE TABLE outbox (
+			enqueuedAt integer NOT NULL,
+			localId text NOT NULL,
+			seq integer PRIMARY KEY AUTOINCREMENT,
+			tableName text NOT NULL
+		);
 	`);
     return drizzle({ client: sqlite });
 }

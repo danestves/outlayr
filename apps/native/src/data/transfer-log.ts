@@ -1,4 +1,4 @@
-import { and, desc, gte, isNotNull, isNull, lt, lte } from "drizzle-orm";
+import { and, desc, getTableColumns, gte, isNotNull, isNull, lt, lte } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
 import { transactions, transfers } from "@/db/schema";
@@ -10,6 +10,7 @@ import type { TransferLogRow } from "@/domain/transfer-log-rows";
 
 import { useAccounts } from "./accounts";
 import { NO_READ, useLiveQuery } from "./live-query";
+import { unsentInOutbox } from "./transactions-core";
 
 export interface TransferBounds {
     /**
@@ -92,7 +93,7 @@ export function useLogTransfers(db: Database, nowMs: number, bounds: TransferBou
             bounds === null
                 ? NO_READ
                 : db
-                      .select()
+                      .select({ ...getTableColumns(transfers), unsent: unsentInOutbox("transfers", transfers.id) })
                       .from(transfers)
                       .where(
                           and(

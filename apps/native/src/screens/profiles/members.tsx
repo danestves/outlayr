@@ -1,4 +1,3 @@
-import { useAtomRefresh } from "@effect/atom-react/Hooks";
 import DoorOpenIcon from "@hugeicons-pro/core-stroke-rounded/DoorOpenIcon";
 import Link01Icon from "@hugeicons-pro/core-stroke-rounded/Link01Icon";
 import UserMultipleIcon from "@hugeicons-pro/core-stroke-rounded/UserMultipleIcon";
@@ -20,11 +19,9 @@ import { useProfileMembers } from "@/hooks/use-profile-sharing";
 import { useTranslation } from "@/i18n/context";
 import { activeProfileId } from "@/lib/active-profile";
 import { useAuthSession } from "@/lib/auth-session";
-import { useCloudAuthenticated } from "@/lib/convex";
 import { useJoinedProfiles } from "@/lib/joined-profiles";
-import { useOnMount, useTimers, useWhen } from "@/lib/lifecycle";
+import { useOnChange, useTimers, useWhen } from "@/lib/lifecycle";
 import type { ProfileMember, ProfileMembersView } from "@/lib/profile-sharing";
-import { profileMembersAtom } from "@/lib/profile-sharing";
 import { SILENT } from "@/state/atom-command";
 import {
     createProfileInviteCommand,
@@ -59,13 +56,6 @@ function MembersOfProfile({ id }: { id: string }) {
     const owned = useProfiles().find((profile) => profile.id === id);
     const look = joined.find((profile) => profile.profileId === id)?.look ?? null;
     const members = useProfileMembers(id);
-    const authenticated = useCloudAuthenticated();
-    const refresh = useAtomRefresh(profileMembersAtom({ authenticated, profileId: id }));
-    // The Log caches this list for the session; joins and claimed invites since then only show after a re-read.
-    useOnMount(() => {
-        refresh();
-        return undefined;
-    });
     const role = members?.role ?? (look === null ? "owner" : "member");
     const name = look?.name ?? owned?.name ?? "";
     const title = role === "owner" ? t("sharing.share.title", { name }) : t("sharing.profile.title");
@@ -130,7 +120,12 @@ function OwnerView({
     useWhen(needsInvite, () => {
         createInvite({ profileId: id });
     });
-    const invite = created ?? listed;
+    // A spent invite leaves `created` stale; a seat change means someone joined or left, so ask for a live one.
+    useOnChange([count], () => {
+        setCreated(null);
+        return undefined;
+    });
+    const invite = listed ?? created;
     const link = invite === null ? "" : profileInviteLink(invite.code);
 
     return (
@@ -218,11 +213,8 @@ function Names({ label, note }: { label: string; note?: string }) {
 
 function MemberRow({ id, member }: { id: string; member: ProfileMember }) {
     const t = useTranslation();
-    const authenticated = useCloudAuthenticated();
-    const refresh = useAtomRefresh(profileMembersAtom({ authenticated, profileId: id }));
     const remove = useAtomAction(removeProfileMemberCommand, {
         onFailure: () => Alert.alert(t("sharing.remove.failed.title"), t("sharing.remove.failed.body")),
-        onSuccess: () => refresh(),
     });
     const name = member.name ?? t("sharing.member.unknown");
     const confirm = () =>

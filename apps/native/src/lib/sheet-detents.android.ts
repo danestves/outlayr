@@ -8,6 +8,7 @@ export const CATEGORY_DETENT = 0.65;
 export const SUBCATEGORY_DETENT = 0.55;
 export const ACCOUNT_DETENT = 0.72;
 export const INSTALLMENT_PAY_DETENT = 0.62;
+export const JOIN_DETENT = 0.62;
 
 /** Taller than iOS's 430: header, segmented buttons, search and swatch rail take ~270dp before four glyph rows. */
 const PICKER_HEIGHT = 560;

@@ -337,6 +337,18 @@ describe("claiming an invite", () => {
         ).rejects.toThrow("PROFILE_SHARING_OFF");
     });
 
+    it("hides invite details while sharing is switched off", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const { code } = await authenticatedAs(t, owner).mutation(api.profileSharing.createInvite, {
+            look: LOOK,
+            profileId: HOME,
+        });
+
+        vi.stubEnv("PROFILE_SHARING", "false");
+        await expect(authenticatedAs(t, owner).query(api.profileSharing.invite, { code })).resolves.toBeNull();
+    });
+
     it("refuses the owner, a second claimant, and a stale code", async () => {
         const t = harness();
         const owner = await seedProUser(t);

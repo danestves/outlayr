@@ -154,6 +154,7 @@ export function useOutsidePaymentRows(
               sign: "+",
               transferId: row.id,
               unreviewed: false,
+              unsent: false,
           }));
 }
 
