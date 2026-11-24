@@ -73,6 +73,20 @@ const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 /** Case-insensitive, like `transfer-core.ts:categoryKey`. */
 export const foldName = (value: string) => value.trim().toLowerCase();
 
+const COMBINING_MARKS = /\p{M}/gu;
+const NOT_NAME_CHAR = /[^\p{L}\p{N}]/gu;
+const REPEATED_CHAR = /(.)\1+/gu;
+
+// Matches the server's pickKnown fallback, so "BancaAmiga" from the model still lands on Bancamiga.
+const nameKey = (value: string) =>
+    value
+        .normalize("NFD")
+        .replaceAll(COMBINING_MARKS, "")
+        .toLowerCase()
+        .replaceAll(NOT_NAME_CHAR, "")
+        .replaceAll("v", "b")
+        .replaceAll(REPEATED_CHAR, "$1");
+
 // Today keeps the clock so the entry sorts among today's rows; other days land at noon, clear of DST edges.
 export function spokenDateToLocal(date: string, now: Date): Date {
     const match = ISO_DATE.exec(date);
@@ -110,11 +124,15 @@ export function uniqueMatch<T>(
     if (name == null) {
         return null;
     }
-    const wanted = foldName(name);
-    const matches = candidates.filter((candidate) => {
-        const candidateName = nameOf(candidate);
-        return candidateName != null && foldName(candidateName) === wanted;
-    });
+    const matchesBy = (key: (value: string) => string) => {
+        const wanted = key(name);
+        return candidates.filter((candidate) => {
+            const candidateName = nameOf(candidate);
+            return candidateName != null && key(candidateName) === wanted;
+        });
+    };
+    const exact = matchesBy(foldName);
+    const matches = exact.length > 0 ? exact : matchesBy(nameKey);
     return matches.length === 1 ? (matches[0] ?? null) : null;
 }
 

@@ -86,6 +86,21 @@ export function trimTo(value: string | null | undefined, max: number): string | 
     return trimmed.length === 0 ? null : trimmed.slice(0, max);
 }
 
+const COMBINING_MARKS = /\p{M}/gu;
+const NOT_NAME_CHAR = /[^\p{L}\p{N}]/gu;
+const REPEATED_CHAR = /(.)\1+/gu;
+
+// Spoken variants of one name share a key: "BancaAmiga", "Banca Amiga" and "Bancamiga" all fold together.
+function squashName(name: string): string {
+    return name
+        .normalize("NFD")
+        .replaceAll(COMBINING_MARKS, "")
+        .toLowerCase()
+        .replaceAll(NOT_NAME_CHAR, "")
+        .replaceAll("v", "b")
+        .replaceAll(REPEATED_CHAR, "$1");
+}
+
 export function pickKnown(candidate: string | null, known: readonly string[]): string | null {
     const trimmed = candidate?.trim();
     if (!trimmed) {
@@ -96,7 +111,16 @@ export function pickKnown(candidate: string | null, known: readonly string[]): s
         return exact;
     }
     const folded = trimmed.toLowerCase();
-    return known.find((name) => name.toLowerCase() === folded) ?? null;
+    const insensitive = known.find((name) => name.toLowerCase() === folded);
+    if (insensitive) {
+        return insensitive;
+    }
+    const key = squashName(trimmed);
+    if (key.length === 0) {
+        return null;
+    }
+    const squashed = known.filter((name) => squashName(name) === key);
+    return squashed.length === 1 ? (squashed[0] ?? null) : null;
 }
 
 export function normalizeDomain(candidate: string | null): string | null {

@@ -12,6 +12,7 @@ const NOW = new Date(2026, 10, 11, 9, 30);
 const ACCOUNTS = [
     { currency: "VES", id: "banesco", name: "Banesco" },
     { currency: "USD", id: "banesco-usd", name: "Banesco USD" },
+    { currency: "VES", id: "bancamiga", name: "Bancamiga" },
     { currency: "USD", id: "zelle", name: "Zelle" },
     { currency: "VES", id: "debito", name: "Débito Móvil" },
 ];
@@ -113,6 +114,47 @@ describe("accounts and categories", () => {
         expect(draft.accountId?.value).toBe("banesco-usd");
         expect(spanOf(text, draft.accountId)).toBe("Banesco USD");
         expect(parse("I paid with Banesco for lunch").accountId?.value).toBe("banesco");
+    });
+
+    it("hears Bancamiga however the transcriber split or doubled the letters", () => {
+        const doubled = "Gasté 125.623,04 bolívares en el Automercados Plaza con el BancaAmiga.";
+        expect(parse(doubled, "es", { final: true }).accountId?.value).toBe("bancamiga");
+        const spaced = "Gasté 20 dólares con Banca Amiga";
+        const draft = parse(spaced, "es", { final: true });
+        expect(draft.accountId?.value).toBe("bancamiga");
+        expect(spanOf(spaced, draft.accountId)).toBe("Banca Amiga");
+    });
+
+    it("matches a name the account itself spells with a space", () => {
+        const text = "Gasté 20 dólares con Bancamiga";
+        const draft = parseLiveDraft(
+            text,
+            {
+                accounts: [{ currency: "VES", id: "banca-amiga", name: "Banca Amiga" }],
+                categories: [],
+                currency: "USD",
+                language: "es",
+                now: NOW,
+            },
+            { final: true }
+        );
+        expect(draft.accountId?.value).toBe("banca-amiga");
+        expect(spanOf(text, draft.accountId)).toBe("Bancamiga");
+    });
+
+    it("does not find a short name inside a longer word", () => {
+        const draft = parseLiveDraft(
+            "Gasté 20 dólares en la bodega",
+            {
+                accounts: [{ currency: "VES", id: "bod", name: "BOD" }],
+                categories: [],
+                currency: "USD",
+                language: "es",
+                now: NOW,
+            },
+            { final: true }
+        );
+        expect(draft.accountId).toBeNull();
     });
 
     it("hears Banesco in a Spanish transcript that spelled it with a v", () => {

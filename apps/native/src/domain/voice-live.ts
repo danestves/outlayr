@@ -693,7 +693,8 @@ interface NameEntry {
     /** Another name continues this one ("Banesco" and "Banesco USD"), so a match at the tail may still grow. */
     extended: boolean;
     id: string;
-    name: string;
+    /** Letters and digits only, with runs of one letter collapsed. */
+    key: string;
 }
 
 interface Mention {
@@ -702,7 +703,42 @@ interface Mention {
     start: number;
 }
 
+interface Occurrence {
+    end: number;
+    start: number;
+}
+
+interface Squashed {
+    /** One entry per squashed letter, listing where each occurrence of it sits in the folded text. */
+    runs: Occurrence[][];
+    text: string;
+}
+
 const foldName = (name: string) => fold(name).trim().split(WHITESPACE).join(" ");
+
+/** Spaces and doubled letters drop out, so "Banca Amiga" and "BancaAmiga" become one key. */
+function squash(text: string): Squashed {
+    const letters: string[] = [];
+    const runs: Occurrence[][] = [];
+    for (let at = 0; at < text.length;) {
+        const char = String.fromCodePoint(text.codePointAt(at) ?? 0);
+        const end = at + char.length;
+        for (const letter of char.normalize("NFD").replaceAll(COMBINING_MARKS, "").toLowerCase()) {
+            if (!WORD_CHAR.test(letter)) {
+                continue;
+            }
+            const run = runs.at(-1);
+            if (letters.at(-1) === letter && run !== undefined) {
+                run.push({ end, start: at });
+            } else {
+                letters.push(letter);
+                runs.push([{ end, start: at }]);
+            }
+        }
+        at = end;
+    }
+    return { runs, text: letters.join("") };
+}
 
 // Spanish says b and v alike, so the transcriber writes "Vanesco" for an account named Banesco.
 const betacism = (folded: string) => folded.replaceAll("v", "b");
@@ -717,12 +753,16 @@ function prepareNames(
 ): NameEntry[] {
     const named = rows.flatMap((row) => {
         const name = row.name === null ? "" : spoken(foldName(row.name));
-        return name.length >= MIN_NAME_LENGTH ? [{ id: row.id, name }] : [];
+        const key = squash(name).text;
+        return key.length >= MIN_NAME_LENGTH ? [{ id: row.id, key }] : [];
     });
     return named
-        .filter((row) => named.filter((other) => other.name === row.name).length === 1)
-        .map((row) => ({ ...row, extended: named.some((other) => other.name.startsWith(`${row.name} `)) }))
-        .sort((a, b) => b.name.length - a.name.length);
+        .filter((row) => named.filter((other) => other.key === row.key).length === 1)
+        .map((row) => ({
+            ...row,
+            extended: named.some((other) => other.key !== row.key && other.key.startsWith(row.key)),
+        }))
+        .sort((a, b) => b.key.length - a.key.length);
 }
 
 const overlaps = (a: { end: number; start: number }, b: { end: number; start: number }) =>
@@ -734,13 +774,24 @@ function findMentions(
     final: boolean,
     blocked: readonly { end: number; start: number }[] = []
 ): Mention[] {
+    const haystack = squash(folded);
     const kept: Mention[] = [];
     for (const entry of entries) {
-        for (let at = folded.indexOf(entry.name); at !== -1; at = folded.indexOf(entry.name, at + 1)) {
-            const end = at + entry.name.length;
-            const mention = { end, id: entry.id, start: at };
-            const wholeWord = !isWordChar(folded[at - 1]) && !isWordChar(folded[end]);
-            const waiting = !final && entry.extended && end === folded.length;
+        for (let at = haystack.text.indexOf(entry.key); at !== -1; at = haystack.text.indexOf(entry.key, at + 1)) {
+            const starts = haystack.runs[at];
+            const ends = haystack.runs[at + entry.key.length - 1];
+            if (starts === undefined || ends === undefined) {
+                continue;
+            }
+            // A run that spans a space must start after it and end before the next word.
+            const first = starts.toReversed().find((run) => !isWordChar(folded[run.start - 1])) ?? starts.at(-1);
+            const last = ends.find((run) => !isWordChar(folded[run.end])) ?? ends.at(-1);
+            if (first === undefined || last === undefined) {
+                continue;
+            }
+            const mention = { end: last.end, id: entry.id, start: first.start };
+            const wholeWord = !isWordChar(folded[mention.start - 1]) && !isWordChar(folded[mention.end]);
+            const waiting = !final && entry.extended && mention.end === folded.length;
             const taken = [...kept, ...blocked].some((other) => overlaps(mention, other));
             if (wholeWord && !waiting && !taken) {
                 kept.push(mention);

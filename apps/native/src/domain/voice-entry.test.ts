@@ -111,6 +111,27 @@ describe("resolveVoiceDraft", () => {
         expect(resolved).toMatchObject({ accountId: null, categoryId: null, currency: "EUR" });
     });
 
+    it("an account spelled the way the transcriber heard it still lands, unless the spelling fits two", () => {
+        const bancamiga = { currency: "VES", id: "acc-bancamiga", name: "Bancamiga" };
+        const heard = resolveVoiceDraft({
+            accounts: [...ACCOUNTS, bancamiga],
+            categories: CATEGORIES,
+            currency: "USD",
+            draft: { ...DRAFT, accountName: "BancaAmiga" },
+            now: NOW,
+        });
+        expect(heard).toMatchObject({ accountId: "acc-bancamiga", accountUnresolved: false });
+
+        const twoSpellings = resolveVoiceDraft({
+            accounts: [...ACCOUNTS, bancamiga, { currency: "USD", id: "acc-banca-amiga", name: "Banca Amiga" }],
+            categories: CATEGORIES,
+            currency: "USD",
+            draft: { ...DRAFT, accountName: "BancaAmiga" },
+            now: NOW,
+        });
+        expect(twoSpellings).toMatchObject({ accountId: null, accountUnresolved: true });
+    });
+
     it("a name two accounts or two categories share matches neither", () => {
         const doubled = resolveVoiceDraft({
             accounts: [...ACCOUNTS, { currency: "USD", id: "acc-amex-2", name: "AMEX" }],
