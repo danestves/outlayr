@@ -86,6 +86,17 @@ const tour = {
             pt: "Pular",
             "pt-PT": "Saltar",
         }),
+        "tour.subscriptions": t({
+            en: "Your subscriptions and other repeating charges live here. Tap to see them all, change one or stop it.",
+            de: "Hier findest du deine Abos und andere wiederkehrende Zahlungen. Tippe, um alle zu sehen, eine zu ändern oder zu beenden.",
+            es: "Aquí están tus suscripciones y otros cobros que se repiten. Toca para verlos todos, cambiar uno o detenerlo.",
+            "es-ES":
+                "Aquí están tus suscripciones y otros cargos que se repiten. Toca para verlos todos, cambiar uno o pararlo.",
+            fr: "Vos abonnements et autres paiements récurrents sont ici. Touchez pour tous les voir, en modifier un ou l'arrêter.",
+            pt: "Aqui ficam suas assinaturas e outras cobranças recorrentes. Toque para ver todas, alterar uma ou encerrá-la.",
+            "pt-PT":
+                "Aqui ficam as suas subscrições e outras cobranças recorrentes. Toque para ver todas, alterar uma ou terminá-la.",
+        }),
         "tour.step": t({
             en: "{current} of {total}",
             de: "{current} von {total}",

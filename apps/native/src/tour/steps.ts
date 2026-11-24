@@ -21,6 +21,11 @@ export const SPOTLIGHT_STEPS: Record<Exclude<TourId, "log">, TourStep> = {
     balances: { copy: "tour.balances", id: "balances", target: { kind: "slot", slot: "balances.add" } },
     insights: { copy: "tour.insights", id: "insights", target: { id: "insights.everything", kind: "registered" } },
     settings: { copy: "tour.settings", id: "settings", target: { id: "settings.integrations", kind: "registered" } },
+    subscriptions: {
+        copy: "tour.subscriptions",
+        id: "subscriptions",
+        target: { id: "log.subscriptions", kind: "registered" },
+    },
 };
 
 export function stepsFor(tour: TourId): readonly TourStep[] {

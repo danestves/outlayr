@@ -277,6 +277,7 @@ export function Log() {
     const noRows = noRowsToShow(listFilter, listRows.length, tailRows.length);
     // Counted directly, since a day filter with no rows is not the empty state but still has nothing to point at.
     useTourAutoStart("log", listRows.length + tailRows.length > 0);
+    useTourAutoStart("subscriptions", upcomingRows.length > 0);
     const visibleRows = listRows.filter(
         (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
     );

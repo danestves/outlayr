@@ -9,7 +9,7 @@ import { createCommand } from "@/state/atom-command";
 
 const STORAGE_KEY = "outlayr.tour";
 
-const TourIdSchema = Schema.Literals(["log", "balances", "insights", "settings"]);
+const TourIdSchema = Schema.Literals(["log", "balances", "insights", "settings", "subscriptions"]);
 
 export type TourId = typeof TourIdSchema.Type;
 

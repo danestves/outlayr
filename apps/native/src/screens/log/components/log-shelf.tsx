@@ -8,6 +8,7 @@ import type { RateTable } from "@outlayr/money/valuation";
 import { use } from "react";
 import type { ReactNode } from "react";
 import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import type { ViewInstance } from "react-native";
 
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { CategoryIconTile } from "@/components/category-icon-tile";
@@ -29,6 +30,7 @@ import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useNewDebtItems } from "@/screens/debts/use-new-debt-items";
 import { useColors } from "@/theme/use-colors";
+import { useTourTarget } from "@/tour/use-tour-target";
 
 import type { DebtsSummary } from "./accounts-block";
 
@@ -60,6 +62,7 @@ interface ShelfCardProps {
     figureClass?: string;
     more?: number;
     onPress?: () => void;
+    ref?: (node: ViewInstance | null) => void;
     title: string;
     unit: string;
     width: number;
@@ -74,6 +77,7 @@ function ShelfCard({
     figureClass = "text-foreground",
     more = 0,
     onPress,
+    ref,
     title,
     unit,
     width,
@@ -86,6 +90,7 @@ function ShelfCard({
             accessibilityRole="button"
             className="bg-card rounded-[20px] px-3 py-2.5 active:opacity-70"
             onPress={onPress}
+            ref={ref}
             style={[CARD_SHADOW, { width }]}
         >
             <View className="flex-row items-center justify-between gap-1">
@@ -155,6 +160,7 @@ function UpcomingCard({ rows, currency, rates, nowMs, showCents, onOpen, width }
     const { language } = useLanguage();
     const colors = useColors();
     const hidden = use(AmountsHiddenContext);
+    const tourTarget = useTourTarget("log.subscriptions", 20);
     const now = new Date(nowMs);
     const due = currencyTotals(chargesInWeekAhead(rows, now), currency, rates);
     let figure = formatAmount(0, currency, showCents, language);
@@ -190,6 +196,7 @@ function UpcomingCard({ rows, currency, rates, nowMs, showCents, onOpen, width }
             figure={figure}
             figureClass="text-muted"
             onPress={onOpen}
+            ref={tourTarget}
             title={title}
             unit={unit}
             width={width}
