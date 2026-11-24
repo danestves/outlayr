@@ -91,6 +91,8 @@ export const PendingWrite = Schema.Struct({
     id: Schema.String,
     income: Schema.Boolean,
     note: Schema.String,
+    /** The native append counter, absent on Watch and older captures. */
+    sequence: Schema.optional(Schema.Finite),
     text: Schema.optional(Schema.NullOr(Schema.String)),
 });
 

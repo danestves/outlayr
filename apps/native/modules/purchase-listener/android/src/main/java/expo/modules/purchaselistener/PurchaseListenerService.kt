@@ -22,6 +22,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.security.MessageDigest
 import java.text.Normalizer
 import java.util.UUID
@@ -50,12 +51,15 @@ internal object PurchaseListenerStore {
   private const val PUSH_WINDOW_MS = 10 * 60 * 1000L
   private const val QUEUE_DIRECTORY = "pending-writes"
   private const val QUEUE_FILE = "queue.jsonl"
+  private const val QUEUE_SEQUENCE = "sequence"
+  private const val QUEUE_SEQUENCE_TMP = "sequence.tmp"
   private const val SENDER_LIMIT = 20
   private const val SENDER_TEXT_CAP = 200
   private const val WALLET = "com.google.android.apps.walletnfcrel"
   private val WHITESPACE = Regex("\\s+")
   private val SPACES = Regex("[\\s\\u00a0\\u202f]+")
   private val SHORT_CODE = Regex("\\d{3,6}")
+  private val CLAIM_NAME = Regex("claimed-\\d+\\.jsonl")
   private val DEFAULT_APPS = setOf(WALLET)
 
   private val lock = Any()
@@ -189,9 +193,49 @@ internal object PurchaseListenerStore {
         ?: label
       val id = UUID.randomUUID().toString()
       val key = dedupeKey(text)
-      append(context, line(id, card, text, key, sbn.postTime))
+      val directory = queueDirectory(context)
+      // Stamped under the same lock the app claims with, so the counter and the file order agree.
+      val sequence = directory?.let { stamp(it) }
+      append(directory, line(id, card, text, key, sbn.postTime, sequence))
       if (current != null) {
         confirm(context, preferences, current, id, card, text, key)
+      }
+    }
+  }
+
+  fun claimQueue(context: Context, name: String): Boolean {
+    if (!CLAIM_NAME.matches(name)) return false
+    synchronized(lock) {
+      val directory = queueDirectory(context) ?: return false
+      val live = File(directory, QUEUE_FILE)
+      if (!live.isFile || live.length() <= 0) return false
+      // A failed rename throws, so the app never reads it as a drained queue.
+      if (!live.renameTo(File(directory, name))) {
+        throw IOException("Pending writes could not be claimed")
+      }
+      return true
+    }
+  }
+
+  fun queueSequence(context: Context): Long {
+    synchronized(lock) {
+      val directory = queueDirectory(context)
+        ?: throw IOException("The pending writes directory is unavailable")
+      return sequence(directory)
+        ?: throw IOException("The pending writes counter is unreadable")
+    }
+  }
+
+  // Keeps `sequence`: resetting it would date a new capture before a cutoff that survives the erase.
+  fun eraseQueue(context: Context) {
+    synchronized(lock) {
+      val directory = queueDirectory(context)
+        ?: throw IOException("The pending writes directory is unavailable")
+      val entries = directory.listFiles()
+        ?: throw IOException("The pending writes could not be listed")
+      for (entry in entries) {
+        if (entry.name == QUEUE_SEQUENCE) continue
+        if (!entry.delete()) throw IOException("The pending writes could not be erased")
       }
     }
   }
@@ -463,8 +507,15 @@ internal object PurchaseListenerStore {
     return "notification:expense:$collapsed"
   }
 
-  private fun line(id: String, card: String, text: String, key: String, postedAt: Long): String {
-    return JSONObject()
+  private fun line(
+    id: String,
+    card: String,
+    text: String,
+    key: String,
+    postedAt: Long,
+    sequence: Long?,
+  ): String {
+    val json = JSONObject()
       .put("id", id)
       .put("amount", 0)
       .put("income", false)
@@ -477,12 +528,38 @@ internal object PurchaseListenerStore {
       .put("currency", JSONObject.NULL)
       .put("dedupeKey", key)
       .put("text", text)
-      .toString() + "\n"
+    if (sequence != null) {
+      json.put("sequence", sequence)
+    }
+    return json.toString() + "\n"
   }
 
-  private fun append(context: Context, line: String) {
+  private fun queueDirectory(context: Context): File? {
     val directory = File(context.applicationContext.filesDir, QUEUE_DIRECTORY)
-    if (!directory.isDirectory && !directory.mkdirs() && !directory.isDirectory) return
+    if (!directory.isDirectory && !directory.mkdirs() && !directory.isDirectory) return null
+    return directory
+  }
+
+  // Missing is a fresh install at zero; unreadable is null, so a capture is appended unstamped rather than
+  // restarting the counter under captures that already carry one.
+  private fun sequence(directory: File): Long? {
+    val file = File(directory, QUEUE_SEQUENCE)
+    if (!file.exists()) return 0
+    return runCatching { file.readText().trim().toLongOrNull() }.getOrNull()
+  }
+
+  private fun stamp(directory: File): Long? {
+    val current = sequence(directory) ?: return null
+    val next = current + 1
+    val temp = File(directory, QUEUE_SEQUENCE_TMP)
+    return runCatching {
+      temp.writeText(next.toString())
+      if (temp.renameTo(File(directory, QUEUE_SEQUENCE))) next else null
+    }.getOrNull()
+  }
+
+  private fun append(directory: File?, line: String) {
+    if (directory == null) return
     FileOutputStream(File(directory, QUEUE_FILE), true).use { output ->
       output.write(line.toByteArray(Charsets.UTF_8))
     }

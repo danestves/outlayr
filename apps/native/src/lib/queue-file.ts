@@ -4,7 +4,7 @@ import * as Schema from "effect/Schema";
 
 import { PendingWrite } from "@/domain/meta-values";
 
-/** Written by `app-intents/LogTransactionIntent.swift`: the field names are the wire format. */
+/** Written by `SharedStore.enqueue` in `app-intents/SharedStore.swift`: the field names are the wire format. */
 export type PendingWrite = typeof PendingWrite.Type;
 
 export type AutologSource = "notification" | "shortcut" | "wallet" | "watch";
@@ -44,10 +44,11 @@ export interface QueueFiles {
     write: (name: string, text: string) => void;
 }
 
-/** A switch marker cutoff: at `at`, the launch left the ledger `from`. */
+/** A switch marker cutoff: at `at`, the launch left the ledger `from`. `sequence` is the native counter it recorded. */
 export interface SwitchCutoff {
     at: number;
     from: string;
+    sequence?: number;
 }
 
 /** Where a keyed capture went: a later capture with the same key follows it there, even across a later switch. */
@@ -66,7 +67,7 @@ export interface CaptureAssignment {
 export interface ClaimLedger {
     /** Captures an earlier claim routed, so a replay does not route them again under a later anchor. */
     assignments?: readonly CaptureAssignment[];
-    /** Switch cutoffs, oldest first: a capture older than one belongs to the ledger it names. */
+    /** Switch cutoffs in switch order: a capture before one belongs to the ledger it names. */
     cutoffs?: readonly SwitchCutoff[];
     /** `ledgerKey` of the profile this launch opened. */
     key: string;
@@ -81,8 +82,7 @@ export interface ClaimLedger {
 export interface ClaimRoute {
     cutoffs: readonly SwitchCutoff[];
     key: string;
-    purchases?: readonly PurchaseRoute[];
-    siblingWindowMs?: number;
+    now: number;
 }
 
 export interface ClaimedWrites {
@@ -96,12 +96,8 @@ export interface ClaimedWrites {
     held?: { jobs: PendingWrite[]; key: string }[];
     jobs: PendingWrite[];
     names: string[];
-    /** The routes inside their horizon plus the ones this claim made, for the bridge to persist with the release. */
+    /** The routes inside their horizon plus the ones this claim made, for the bridge to persist before the drain. */
     purchases?: PurchaseRoute[];
-    /** How a late append routes: the same cutoffs, ledger and anchors the claim used. */
-    route?: ClaimRoute;
-    /** Every job id read during the claim, so a release can tell a late append from what it already took. */
-    seen: ReadonlySet<string>;
 }
 
 function claimOrder(name: string): number {
@@ -153,12 +149,56 @@ function uniqueById(jobs: readonly PendingWrite[]): PendingWrite[] {
     });
 }
 
+interface OrderedJob {
+    index: number;
+    job: PendingWrite;
+}
+
+interface StampedJob extends OrderedJob {
+    job: PendingWrite & { sequence: number };
+}
+
+const isStamped = (entry: OrderedJob): entry is StampedJob => entry.job.sequence !== undefined;
+
+function beforeStamp(unstamped: OrderedJob, stamped: OrderedJob): boolean {
+    return (
+        unstamped.job.date < stamped.job.date ||
+        (unstamped.job.date === stamped.job.date && unstamped.index < stamped.index)
+    );
+}
+
+// Merged, not compared: one comparator over sequence and date is not transitive, and stamped captures must
+// keep their counter order.
+function mergeCaptureOrder(stamped: StampedJob[], unstamped: OrderedJob[]): OrderedJob[] {
+    const merged: OrderedJob[] = [];
+    let index = 0;
+    for (const head of unstamped) {
+        while (index < stamped.length) {
+            const next = stamped[index];
+            if (next === undefined || beforeStamp(head, next)) {
+                break;
+            }
+            merged.push(next);
+            index += 1;
+        }
+        merged.push(head);
+    }
+    merged.push(...stamped.slice(index));
+    return merged;
+}
+
+function captureOrder(jobs: readonly OrderedJob[]): OrderedJob[] {
+    return mergeCaptureOrder(
+        jobs.filter(isStamped).sort((a, b) => a.job.sequence - b.job.sequence || a.index - b.index),
+        jobs
+            .filter((entry) => entry.job.sequence === undefined)
+            .sort((a, b) => a.job.date - b.job.date || a.index - b.index)
+    );
+}
+
 /** A held authorization must drain before a live settlement captured after it. */
-function byCaptureDate(jobs: PendingWrite[]): PendingWrite[] {
-    return jobs
-        .map((job, index) => ({ index, job }))
-        .sort((a, b) => a.job.date - b.job.date || a.index - b.index)
-        .map((entry) => entry.job);
+function byCaptureOrder(jobs: PendingWrite[]): PendingWrite[] {
+    return captureOrder(jobs.map((job, index) => ({ index, job }))).map((entry) => entry.job);
 }
 
 function addJob(buckets: Map<string, PendingWrite[]>, key: string, job: PendingWrite): void {
@@ -171,14 +211,23 @@ function addJob(buckets: Map<string, PendingWrite[]>, key: string, job: PendingW
 }
 
 function pruneCutoffs(cutoffs: readonly SwitchCutoff[], now: number): SwitchCutoff[] {
-    return cutoffs
-        .filter((entry) => entry.at <= now && now - entry.at < CUTOFF_RETENTION_MS)
-        .sort((a, b) => a.at - b.at);
+    return cutoffs.filter((entry) => now - entry.at < CUTOFF_RETENTION_MS);
+}
+
+/**
+ * A cutoff without a counter predates stamping, so every stamped capture came after it. Otherwise the counter wins,
+ * since a clock that moved back would misdate the capture.
+ */
+function before(cutoff: SwitchCutoff, job: PendingWrite, now: number): boolean {
+    if (job.sequence === undefined) {
+        return cutoff.at <= now && job.date < cutoff.at;
+    }
+    return cutoff.sequence !== undefined && job.sequence <= cutoff.sequence;
 }
 
 function destinationOf(job: PendingWrite, route: ClaimRoute): string {
     // The earliest cutoff after the capture: the first ledger it could not have reached.
-    const cutoff = route.cutoffs.find((entry) => entry.at > job.date);
+    const cutoff = route.cutoffs.find((entry) => before(entry, job, route.now));
     return cutoff === undefined || cutoff.from === route.key ? route.key : cutoff.from;
 }
 
@@ -229,18 +278,8 @@ function assignmentMap(assignments: readonly CaptureAssignment[] | undefined): R
     return new Map((assignments ?? []).map((entry) => [entry.id, entry.ledger]));
 }
 
-function mergeAssignments(...lists: readonly CaptureAssignment[][]): CaptureAssignment[] {
-    const byId = new Map<string, string>();
-    for (const list of lists) {
-        for (const entry of list) {
-            byId.set(entry.id, entry.ledger);
-        }
-    }
-    return [...byId].map(([id, ledger]) => ({ id, ledger }));
-}
-
 /**
- * Capture-date order, so an authorization anchors before the settlement that follows it. An assigned capture keeps
+ * Capture order, so an authorization anchors before the settlement that follows it. An assigned capture keeps
  * the ledger an earlier pass chose even when an earlier anchor would now win.
  */
 function routePlacements(
@@ -254,13 +293,11 @@ function routePlacements(
         ...placement,
         ledger: placement.own ? route.key : (assigned.get(placement.job.id) ?? ""),
     }));
-    const byDate = placements
-        .map((placement, index) => ({ date: placement.job.date, index }))
-        .sort((a, b) => a.date - b.date || a.index - b.index);
+    const ordered = captureOrder(placements.map((placement, index) => ({ index, job: placement.job })));
     const routes: PurchaseRoute[] = [];
     const matched: PurchaseRoute[] = [];
     const seen: PurchaseRoute[] = [...known];
-    for (const { index } of byDate) {
+    for (const { index } of ordered) {
         const placement = routed[index];
         if (placement === undefined) {
             continue;
@@ -399,9 +436,9 @@ export function hasHeldWrites(files: QueueFiles, key: string): boolean {
 }
 
 /**
- * Renamed rather than read-and-cleared, so a concurrent append lands in the claim or the fresh file, never in
- * between. Earlier claims never released replay too, so a force-quit mid-drain does not drop writes, and a replay can
- * park one capture twice, so both buckets keep its first copy.
+ * Renamed under the native queue lock rather than read-and-cleared, so an appender either lands before the claim or
+ * in the fresh file, never in a claimed file after it was read. Earlier claims never released replay too, so a
+ * force-quit mid-drain does not drop writes, and a replay can park one capture twice, so both buckets keep its copy.
  */
 export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): ClaimedWrites {
     const names = claimNames(files);
@@ -412,31 +449,19 @@ export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): Cla
     const parked = ledger === undefined ? [] : heldNames(files, ledger.key);
     names.push(...parked);
     const ownHeld = new Set(parked);
-    // Routing reads every cutoff up to now: a capture dated before one belongs to its ledger even after the retention,
-    // which only decides what the bridge persists. A cutoff after now means the clock moved back, so it routes nothing.
+    // Routing reads every cutoff, in switch order: a capture before one belongs to its ledger even after the
+    // retention, which only decides what the bridge persists. A future cutoff without a counter would claim
+    // captures made after the clock moved back, so it routes nothing.
     const full =
         ledger === undefined
             ? []
-            : [...(ledger.cutoffs ?? [])].filter((entry) => entry.at <= ledger.now).sort((a, b) => a.at - b.at);
+            : (ledger.cutoffs ?? []).filter((entry) => entry.sequence !== undefined || entry.at <= ledger.now);
     const cutoffs = ledger === undefined ? [] : pruneCutoffs(full, ledger.now);
-    const route =
-        ledger === undefined
-            ? undefined
-            : {
-                  cutoffs: full,
-                  key: ledger.key,
-                  purchases: ledger.purchases,
-                  siblingWindowMs: ledger.siblingWindowMs,
-              };
-    const seen = new Set<string>();
+    const route = ledger === undefined ? undefined : { cutoffs: full, key: ledger.key, now: ledger.now };
     const placements: Placement[] = [];
     for (const name of names) {
-        const parsed = parseQueue(files.read(name));
-        for (const job of parsed) {
-            seen.add(job.id);
-        }
         const own = route === undefined || ownHeld.has(name);
-        for (const job of parsed) {
+        for (const job of parseQueue(files.read(name))) {
             placements.push({ job, own });
         }
     }
@@ -467,11 +492,10 @@ export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): Cla
             }
         }
     }
-    const claimed: ClaimedWrites = { jobs: byCaptureDate(uniqueById(jobs)), names, seen };
+    const claimed: ClaimedWrites = { jobs: byCaptureOrder(uniqueById(jobs)), names };
     if (ledger !== undefined && route !== undefined) {
         claimed.assignments = assignments;
         claimed.cutoffs = cutoffs;
-        claimed.route = route;
         claimed.purchases = prunePurchases(ledger.purchases ?? [], made, ledger.now);
     }
     if (leaving.size > 0) {
@@ -483,11 +507,6 @@ export function claimPendingWrites(files: QueueFiles, ledger?: ClaimLedger): Cla
     return claimed;
 }
 
-export interface ReleasedRoutes {
-    assignments: CaptureAssignment[];
-    purchases: PurchaseRoute[];
-}
-
 /** Names the bucket as it writes it: a hold between claim and release may already own the name the claim saw. */
 function writeHeld(files: QueueFiles, key: string, jobs: readonly PendingWrite[]): void {
     const name = heldName(files, key);
@@ -497,61 +516,10 @@ function writeHeld(files: QueueFiles, key: string, jobs: readonly PendingWrite[]
     }
 }
 
-/** Routes late appends first, then writes and discards: a crash in between replays the claims into another file. */
-export function releasePendingWrites(
-    files: QueueFiles,
-    claimed: ClaimedWrites,
-    onRouted?: (routes: ReleasedRoutes) => void
-): void {
-    const { route } = claimed;
-    const placements: Placement[] = [];
-    for (const name of claimed.names) {
-        // An intent that opened the live queue before the rename appends to the claimed file after the claim read it.
-        const late = parseQueue(files.read(name)).filter((job) => !claimed.seen.has(job.id));
-        // A held file for this ledger already names it, so a late append there is the current ledger's.
-        const own = route === undefined || heldOrder(name, route.key) !== null;
-        for (const job of late) {
-            placements.push({ job, own });
-        }
-    }
-    const own: PendingWrite[] = [];
-    const leaving = new Map<string, PendingWrite[]>();
-    if (route === undefined) {
-        own.push(...placements.map((placement) => placement.job));
-    } else {
-        const known = [...(route.purchases ?? []), ...(claimed.purchases ?? [])];
-        const routed = routePlacements(
-            placements,
-            route,
-            known,
-            route.siblingWindowMs,
-            assignmentMap(claimed.assignments)
-        );
-        for (const { job, ledger: destination } of routed.placements) {
-            if (destination === route.key) {
-                own.push(job);
-            } else {
-                addJob(leaving, destination, job);
-            }
-        }
-        // Before any file lands: a replay must find the anchors and ledgers this pass used.
-        onRouted?.({
-            assignments: mergeAssignments(claimed.assignments ?? [], assignmentsOf(routed.placements)),
-            purchases: mergePurchases([claimed.purchases ?? [], routed.routes, routed.matched]),
-        });
-    }
+/** Writes the held buckets, then discards: a crash in between replays the claims into another file. */
+export function releasePendingWrites(files: QueueFiles, claimed: ClaimedWrites): void {
     for (const { jobs, key } of claimed.held ?? []) {
         writeHeld(files, key, jobs);
-    }
-    for (const [key, bucket] of leaving) {
-        writeHeld(files, key, bucket);
-    }
-    // With a route, a held file for the current ledger makes the next claim pass its jobs through instead of routing
-    // them again, which a later cutoff would do.
-    const parked =
-        route === undefined ? adoptQueue(files, uniqueById(own)) : holdQueue(files, route.key, uniqueById(own));
-    if (!parked) {
-        throw new Error("Late pending writes could not be parked, so their claim files stay for a replay");
     }
     for (const name of claimed.names) {
         files.discard(name);

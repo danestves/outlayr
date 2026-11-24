@@ -19,11 +19,11 @@ import {
     heldRefs,
     holdQueue,
     parseLegacyQueue,
-    QUEUE_FILE,
     releasePendingWrites as releaseQueue,
     WALLET_DEDUPE_WINDOW_MS,
 } from "./queue-file";
 import type { CaptureAssignment, ClaimedWrites, PendingWrite, PurchaseRoute, QueueFiles } from "./queue-file";
+import { queueLock } from "./queue-lock";
 import { sharedStore } from "./shared-store";
 
 /** Retired: one JSON string let two intents overwrite each other. `adoptLegacyQueue` migrates what remains. */
@@ -108,16 +108,8 @@ export function publishIntentSnapshot(snapshot: IntentSnapshot): void {
 
 const queueFiles: QueueFiles = {
     claim(name) {
-        const directory = queueDirectory();
-        if (!directory) {
-            return false;
-        }
-        const live = new File(directory, QUEUE_FILE);
-        if (!live.exists || live.size === 0) {
-            return false;
-        }
-        live.moveSync(new File(directory, name));
-        return true;
+        // No native appender means no live queue to claim.
+        return queueLock?.claimQueue(name) ?? false;
     },
 
     discard(name) {
@@ -231,7 +223,12 @@ function persistCutoffs(cutoffs: readonly ProfileSwitch[]): void {
     const current = readProfileSwitch();
     const same =
         current.length === cutoffs.length &&
-        current.every((entry, index) => entry.at === cutoffs[index]?.at && entry.from === cutoffs[index]?.from);
+        current.every(
+            (entry, index) =>
+                entry.at === cutoffs[index]?.at &&
+                entry.from === cutoffs[index]?.from &&
+                entry.sequence === cutoffs[index]?.sequence
+        );
     if (!same) {
         writeProfileSwitch(cutoffs);
     }
@@ -299,15 +296,12 @@ export function claimPendingWrites(): ClaimedWrites {
         return claimPendingWritesOrThrow();
     } catch (error) {
         console.warn("[outlayr] pending writes unreadable", error);
-        return { jobs: [], names: [], seen: new Set() };
+        return { jobs: [], names: [] };
     }
 }
 
 export function releasePendingWritesOrThrow(claimed: ClaimedWrites): void {
-    releaseQueue(queueFiles, claimed, ({ assignments, purchases }) => {
-        persistPurchases(purchases);
-        persistAssignments(assignments);
-    });
+    releaseQueue(queueFiles, claimed);
     if (claimed.cutoffs !== undefined) {
         persistCutoffs(claimed.cutoffs);
     }

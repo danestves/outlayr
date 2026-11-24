@@ -71,7 +71,7 @@ function walletWrite(id: string, overrides: Partial<PendingWrite> = {}): Pending
 }
 
 function claiming(jobs: PendingWrite[], names: string[] = []): ClaimedWrites {
-    return { jobs, names, seen: new Set(jobs.map((job) => job.id)) };
+    return { jobs, names };
 }
 
 const HOUR = 60 * 60 * 1000;

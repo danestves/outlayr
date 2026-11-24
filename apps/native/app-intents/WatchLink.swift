@@ -51,8 +51,7 @@ final class WatchLink: NSObject, WCSessionDelegate {
 
     func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
         Task {
-            let accepted = await self.enqueue(message)
-            replyHandler(["ok": accepted])
+            replyHandler(await self.enqueue(message))
         }
     }
 
@@ -60,20 +59,31 @@ final class WatchLink: NSObject, WCSessionDelegate {
         Task { _ = await self.enqueue(message) }
     }
 
+    // A background transfer has no reply, so a failed save goes back the same way for the watch to resend.
     func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
-        Task { _ = await self.enqueue(userInfo) }
+        Task {
+            let reply = await self.enqueue(userInfo)
+            if reply["retry"] as? Bool == true, let id = reply["id"] as? String {
+                session.transferUserInfo(["type": "retry", "id": id])
+            }
+        }
     }
 
-    private func enqueue(_ message: [String: Any]) async -> Bool {
+    /// A failed save asks for a retry rather than a drop: the watch holds the only durable copy.
+    private func enqueue(_ message: [String: Any]) async -> [String: Any] {
         guard message["type"] as? String == "log",
               let raw = message["write"] as? [String: Any],
               let data = try? JSONSerialization.data(withJSONObject: raw),
               let write = try? JSONDecoder().decode(PendingWrite.self, from: data),
               write.amount > 0 else {
-            return false
+            return ["ok": false]
         }
-        await SharedStore.enqueue(write)
+        // The watch captured this before it reached the phone, possibly hours earlier, so it routes by date, not
+        // this device's counter.
+        guard await SharedStore.enqueue(write, sequenced: false) else {
+            return ["id": write.id, "ok": false, "retry": true]
+        }
         NotificationCenter.default.post(name: Self.pendingWriteNotification, object: nil)
-        return true
+        return ["ok": true]
     }
 }

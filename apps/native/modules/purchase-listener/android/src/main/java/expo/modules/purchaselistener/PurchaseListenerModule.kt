@@ -61,5 +61,22 @@ class PurchaseListenerModule : Module() {
         PurchaseListenerStore.allowMessages(context)
       }
     }
+
+    Function("claimQueue") { name: String ->
+      val context = appContext.reactContext
+      context != null && PurchaseListenerStore.claimQueue(context, name)
+    }
+
+    Function("queueSequence") {
+      val context = appContext.reactContext
+        ?: throw IllegalStateException("Purchase listener has no context")
+      PurchaseListenerStore.queueSequence(context).toDouble()
+    }
+
+    Function("eraseQueue") {
+      val context = appContext.reactContext
+        ?: throw IllegalStateException("Purchase listener has no context")
+      PurchaseListenerStore.eraseQueue(context)
+    }
   }
 }

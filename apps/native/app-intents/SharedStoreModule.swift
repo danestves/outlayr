@@ -23,5 +23,17 @@ final class SharedStoreModule: Module {
     Function("setCaptureKey") { (key: String?) -> Bool in
       CaptureLookup.setKey(key)
     }
+
+    Function("claimQueue") { (name: String) throws -> Bool in
+      try SharedStore.claimQueue(as: name)
+    }
+
+    Function("queueSequence") { () throws -> Double in
+      Double(try SharedStore.queueSequence())
+    }
+
+    Function("eraseQueue") { () throws -> Void in
+      try SharedStore.eraseQueue()
+    }
   }
 }
