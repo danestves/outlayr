@@ -59,6 +59,7 @@ function makeDb(options?: { withRealTransactions?: boolean }): Database {
 			updatedAt integer NOT NULL, deletedAt integer
 		);
 		CREATE TABLE transactions (
+			createdBy text,
 			id text PRIMARY KEY NOT NULL, amount real NOT NULL, income integer NOT NULL,
 			currency text, note text NOT NULL DEFAULT '', details text,
 			date integer NOT NULL, day integer NOT NULL, month integer NOT NULL,

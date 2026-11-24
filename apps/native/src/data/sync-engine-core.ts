@@ -130,7 +130,7 @@ function toWireValue(value: LocalValue | undefined): WireValue {
 
 function toWireFields(spec: SyncedTableSpec, row: Row): WireFields {
     return Object.fromEntries(
-        spec.fields.map((name) => {
+        spec.pushed.map((name) => {
             const value = row[name];
             return [name, spec.dates.includes(name) ? toEpoch(value) : toWireValue(value)];
         })

@@ -39,6 +39,7 @@ function makeDb(): Database {
 			deletedAt integer
 		);
 		CREATE TABLE transactions (
+			createdBy text,
 			id text PRIMARY KEY NOT NULL,
 			amount real NOT NULL,
 			income integer NOT NULL,
@@ -63,6 +64,7 @@ function makeDb(): Database {
 			deletedAt integer
 		);
 		CREATE TABLE transfers (
+			createdBy text,
 			id text PRIMARY KEY NOT NULL,
 			fromAccountId text NOT NULL, toAccountId text NOT NULL,
 			fromAmount real NOT NULL, fromCurrency text NOT NULL, fromAmountUsd real,

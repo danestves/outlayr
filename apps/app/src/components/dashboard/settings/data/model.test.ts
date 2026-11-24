@@ -176,6 +176,15 @@ describe("archivePushes", () => {
         expect(archivePushes(fileOf(rows), rows, NOW)).toEqual([]);
     });
 
+    it("writes nothing for a file exported before the server stamped who logged each entry", () => {
+        const file = fileOf([entry("e1"), entry("gone", {}, { deletedAt: DELETED_AT })]);
+        const server = [
+            entry("e1", { createdBy: "member" }),
+            entry("gone", { createdBy: "member" }, { deletedAt: DELETED_AT }),
+        ];
+        expect(archivePushes(file, server, NOW)).toEqual([]);
+    });
+
     it("brings back an erased ledger, past the erase's era", () => {
         const file = fileOf([entry("e1")]);
         const erased = entry("e1", { amount: 0, date: 0, note: "" }, { deletedAt: NOW - 1, updatedAt: NOW - 1 });

@@ -63,6 +63,8 @@ export const accounts = sqliteTable(
 export const transfers = sqliteTable(
     "transfers",
     {
+        /** The account that logged the row, stamped by the server on insert; null on rows logged before it existed. */
+        createdBy: text("createdBy"),
         date: integer("date", { mode: "timestamp_ms" }).notNull(),
         dateCreated: integer("dateCreated", { mode: "timestamp_ms" }).notNull(),
         day: integer("day", { mode: "timestamp_ms" }).notNull(),
@@ -119,6 +121,8 @@ export const transactions = sqliteTable(
         categoryId: text("categoryId").references(() => categories.id, {
             onDelete: "cascade",
         }),
+        /** The account that logged the row, stamped by the server on insert; null on rows logged before it existed. */
+        createdBy: text("createdBy"),
         currency: text("currency"),
         customColor: text("customColor"),
         date: integer("date", { mode: "timestamp_ms" }).notNull(),

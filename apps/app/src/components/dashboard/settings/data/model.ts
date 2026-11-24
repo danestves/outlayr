@@ -237,10 +237,15 @@ const WIRE_DEFAULTS: Partial<Record<SyncedTable, Change>> = {
     transactions: { unreviewed: false },
 };
 
+// The server stamps authorship, so an archive from before it existed must not read as a change to every row.
+const SERVER_STAMPED = new Set(["createdBy"]);
+
 function archivedFields(table: SyncedTable, row: ArchiveRow) {
     const defaults = WIRE_DEFAULTS[table] ?? {};
     return Object.fromEntries(
-        Object.keys(FIELDS_BY_TABLE[table]).map((key) => [key, row[key] ?? defaults[key] ?? null])
+        Object.keys(FIELDS_BY_TABLE[table])
+            .filter((key) => !SERVER_STAMPED.has(key))
+            .map((key) => [key, row[key] ?? defaults[key] ?? null])
     );
 }
 

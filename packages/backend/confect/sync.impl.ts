@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Document } from "@confect/server";
+import { ERASED_DATE } from "@outlayr/money/erase";
 import { utcDayStart } from "@outlayr/money/ledger-zone";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { ConvexError } from "convex/values";
@@ -61,6 +62,22 @@ const writeRow = Effect.fn("Sync.writeRow")(function* writeRow<T extends SyncedT
 
 const moneyTables = new Set<string>(MONEY_TABLES);
 
+// Authorship is the server's: a client's value is dropped, and an editor never becomes the creator,
+// not even on a row logged before the field existed. An erase keeps only what replication needs.
+function createdByFor(
+    written: { deletedAt: number | null; date: number },
+    existing: SyncedDoc | null,
+    accountId: string
+): string | null {
+    if (written.deletedAt !== null && written.date === ERASED_DATE.getTime()) {
+        return null;
+    }
+    if (existing === null) {
+        return accountId;
+    }
+    return "createdBy" in existing ? (existing.createdBy ?? null) : null;
+}
+
 const isMoneyRow = (row: PushRow): row is Extract<PushRow, { table: MoneyTable }> => moneyTables.has(row.table);
 
 const cellInstants = (row: PushRow, existing: SyncedDoc | null) =>
@@ -70,7 +87,7 @@ const cellInstants = (row: PushRow, existing: SyncedDoc | null) =>
 const upsert = Effect.fn("Sync.upsert")(function* upsert(
     row: PushRow,
     existing: SyncedDoc | null,
-    stamp: { userId: string; deviceId: string; seq: number }
+    stamp: { accountId: string; userId: string; deviceId: string; seq: number }
 ) {
     if (row.table === "appMeta") {
         const writer = yield* DatabaseWriter;
@@ -106,7 +123,11 @@ const upsert = Effect.fn("Sync.upsert")(function* upsert(
             return yield* writeRow("categories", existing, { ...envelope, ...fields });
         }
         case "transactions": {
-            return yield* writeRow("transactions", existing, { ...envelope, ...fields });
+            return yield* writeRow("transactions", existing, {
+                ...envelope,
+                ...fields,
+                createdBy: createdByFor({ date: fields.date, deletedAt: row.deletedAt }, existing, stamp.accountId),
+            });
         }
         case "budgets": {
             return yield* writeRow("budgets", existing, { ...envelope, ...fields });
@@ -136,7 +157,11 @@ const upsert = Effect.fn("Sync.upsert")(function* upsert(
             return yield* writeRow("accounts", existing, { ...envelope, ...fields });
         }
         case "transfers": {
-            return yield* writeRow("transfers", existing, { ...envelope, ...fields });
+            return yield* writeRow("transfers", existing, {
+                ...envelope,
+                ...fields,
+                createdBy: createdByFor({ date: fields.date, deletedAt: row.deletedAt }, existing, stamp.accountId),
+            });
         }
         case "installmentPlans": {
             return yield* writeRow("installmentPlans", existing, { ...envelope, ...fields });
@@ -258,6 +283,7 @@ const push = FunctionImpl.make(
                 }
 
                 yield* upsert(row, existing, {
+                    accountId,
                     deviceId: args.deviceId,
                     seq: nextSeq,
                     userId,

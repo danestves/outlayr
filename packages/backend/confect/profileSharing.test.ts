@@ -19,6 +19,7 @@ const modules = import.meta.glob("../convex/**/*.ts");
 
 type TestClient = TestConvex<typeof schema>;
 type PushRows = FunctionArgs<typeof api.sync.push>["rows"];
+type TransactionRow = Extract<PushRows[number], { table: "transactions" }>;
 
 const HOME = "0b8f3c3e-6a51-4c4e-9f3b-2a7d5e1c9a10";
 const DEVICE_OWNER = "device-owner";
@@ -43,7 +44,7 @@ afterEach(() => {
     vi.unstubAllEnvs();
 });
 
-function entry(localId: string, updatedAt: number, imageKey: string | null = null): PushRows[number] {
+function entry(localId: string, updatedAt: number, imageKey: string | null = null): TransactionRow {
     return {
         deletedAt: null,
         fields: {
@@ -121,6 +122,62 @@ describe("a joined profile", () => {
         await expect(pulled(t, member)).resolves.toStrictEqual(["owner-entry", "member-entry"]);
         await expect(pulled(t, stranger)).resolves.toStrictEqual(["stranger-entry"]);
         await expect(pulled(t, member, null)).rejects.toThrow("Pro");
+    });
+
+    it("keeps the member who logged an entry as its author when someone else edits it", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const member = await seedAuthUser(t);
+        await share(t, owner, member);
+
+        const created = entry("shared-entry", 100);
+        await push(t, member, DEVICE_MEMBER, [{ ...created, fields: { ...created.fields, createdBy: owner.userId } }]);
+
+        const storedAuthor = (localId: string) =>
+            t.run(async (ctx) => {
+                const rows = await ctx.db.query("transactions").collect();
+                return rows.find((row) => row.localId === localId)?.createdBy;
+            });
+
+        await expect(storedAuthor("shared-entry")).resolves.toBe(member.userId);
+        const pulledByOwner = await authenticatedAs(t, owner).query(api.sync.pullSince, {
+            cursor: 0,
+            profileId: HOME,
+        });
+        expect(pulledByOwner.rows.find((row) => row.localId === "shared-entry")?.fields.createdBy).toBe(member.userId);
+
+        const edited = entry("shared-entry", 200);
+        await push(t, owner, DEVICE_OWNER, [
+            { ...edited, fields: { ...edited.fields, createdBy: owner.userId, note: "edited by the owner" } },
+        ]);
+
+        const afterEdit = await authenticatedAs(t, owner).query(api.sync.pullSince, { cursor: 0, profileId: HOME });
+        const editedRow = afterEdit.rows.find((row) => row.localId === "shared-entry");
+        expect(editedRow?.fields.note).toBe("edited by the owner");
+        expect(editedRow?.fields.createdBy).toBe(member.userId);
+    });
+
+    it("drops the author when the entry is erased", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const member = await seedAuthUser(t);
+        await share(t, owner, member);
+
+        await push(t, member, DEVICE_MEMBER, [entry("erased-entry", 100)]);
+        const erased = entry("erased-entry", 200);
+        await push(t, owner, DEVICE_OWNER, [
+            {
+                ...erased,
+                deletedAt: 200,
+                fields: { ...erased.fields, amount: 0, createdBy: owner.userId, date: 0, day: 0, month: 0, note: "" },
+            },
+        ]);
+
+        const stored = await t.run(async (ctx) =>
+            (await ctx.db.query("transactions").collect()).find((row) => row.localId === "erased-entry")
+        );
+        expect(stored?.deletedAt).toBe(200);
+        expect(stored?.createdBy).toBeNull();
     });
 
     it("rides on the owner's Pro, so a lapsed owner stops the member too", async () => {
