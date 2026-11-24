@@ -24,6 +24,9 @@ export const siteUrl = Config.String("SITE_URL").pipe(
     Config.withDefault(DEFAULT_SITE_URL)
 );
 
+// Off until Privacy and Terms describe sharing; a deploy must not open invites before the policy does.
+export const profileSharingEnabled = Config.Boolean("PROFILE_SHARING").pipe(Config.withDefault(false));
+
 export const nativeAppUrl = Config.String("NATIVE_APP_URL").pipe(Config.withDefault(DEFAULT_NATIVE_APP_URL));
 
 export const mcpConsentUrl = Config.String("MCP_CONSENT_URL").pipe(Config.withDefault(DEFAULT_MCP_CONSENT_URL));

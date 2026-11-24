@@ -30,6 +30,7 @@ import openStats from "../openStats.spec";
 import openexchangerates from "../openexchangerates.spec";
 import pdfImport from "../pdfImport.spec";
 import photos from "../photos.spec";
+import profileSharing from "../profileSharing.spec";
 import receiptScan from "../receiptScan.spec";
 import referrals from "../referrals.spec";
 import revenuecat from "../revenuecat.spec";
@@ -71,6 +72,7 @@ const spec: Spec.Spec<{
   readonly openexchangerates: GroupSpec.NamedAt<typeof openexchangerates, "openexchangerates">;
   readonly pdfImport: GroupSpec.NamedAt<typeof pdfImport, "pdfImport">;
   readonly photos: GroupSpec.NamedAt<typeof photos, "photos">;
+  readonly profileSharing: GroupSpec.NamedAt<typeof profileSharing, "profileSharing">;
   readonly receiptScan: GroupSpec.NamedAt<typeof receiptScan, "receiptScan">;
   readonly referrals: GroupSpec.NamedAt<typeof referrals, "referrals">;
   readonly revenuecat: GroupSpec.NamedAt<typeof revenuecat, "revenuecat">;
@@ -111,6 +113,7 @@ const spec: Spec.Spec<{
   ["openexchangerates"]: openexchangerates,
   ["pdfImport"]: pdfImport,
   ["photos"]: photos,
+  ["profileSharing"]: profileSharing,
   ["receiptScan"]: receiptScan,
   ["referrals"]: referrals,
   ["revenuecat"]: revenuecat,

@@ -1,3 +1,4 @@
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 
 import { components } from "../../convex/_generated/api";
@@ -10,6 +11,8 @@ import { SYNCED_TABLES } from "./syncTables";
 export const PURGE_BATCH = 200;
 
 const CELLS_PURGE_BATCH = 8;
+
+const FORGOTTEN_LOOK = { customColor: null, emoji: null, icon: null, imageColor: null, imageKey: null, name: "" };
 
 /** Webhooks first, so nothing is sent while the rest goes; then photos, which live outside Convex. */
 export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purgeUserBatch(
@@ -42,6 +45,44 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
             rows.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
             { concurrency: "unbounded", discard: true }
         );
+    }
+
+    // Before the ledger rows. An owner's memberships stay as anonymous markers so a member's device is refused
+    // rather than reading an empty ledger under the same id; the person's own memberships and invites go.
+    const [ownedShares, joinedShares, sentInvites] = yield* Effect.promise(() =>
+        Promise.all([
+            ctx.db
+                .query("profileMembers")
+                .withIndex("by_ownerId_and_leftAt", (q) => q.eq("ownerId", userId))
+                .take(PURGE_BATCH),
+            ctx.db
+                .query("profileMembers")
+                .withIndex("by_memberId_and_leftAt", (q) => q.eq("memberId", userId))
+                .take(PURGE_BATCH),
+            ctx.db
+                .query("profileInvites")
+                .withIndex("by_ownerId", (q) => q.eq("ownerId", userId))
+                .take(PURGE_BATCH),
+        ])
+    );
+    if (ownedShares.length + joinedShares.length + sentInvites.length > 0) {
+        const now = yield* Clock.currentTimeMillis;
+        yield* Effect.all(
+            [
+                ...ownedShares.map((row) =>
+                    Effect.promise(() =>
+                        ctx.db.patch(row._id, {
+                            leftAt: row.leftAt ?? now,
+                            look: FORGOTTEN_LOOK,
+                            ownerId: `deleted:${row._id}`,
+                        })
+                    )
+                ),
+                ...[...joinedShares, ...sentInvites].map((row) => Effect.promise(() => ctx.db.delete(row._id))),
+            ],
+            { concurrency: "unbounded", discard: true }
+        );
+        return { done: false, removed: ownedShares.length + joinedShares.length + sentInvites.length };
     }
 
     const photos = yield* Effect.promise(() =>

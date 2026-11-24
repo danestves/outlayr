@@ -15,6 +15,8 @@ import { optionalUserId, requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
 import { liveRows, MONEY_TABLES, openingBefore, scheduleCellRefresh } from "./lib/ledgerCells";
 import type { MoneyTable } from "./lib/ledgerCells";
+import { ownsPhotoKey, photoNameFromKey } from "./lib/photoKeys";
+import { dieNotProfileMember, endSharing, isReferenced, resolveLedger } from "./lib/profileLedger";
 import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
 import { incomingWins, SYNCED_TABLES } from "./lib/syncTables";
 import type { SyncedTable } from "./lib/syncTables";
@@ -27,7 +29,6 @@ import {
     PULL_PAGE_MAX,
     PUSH_BATCH_LIMIT,
     PushTooLarge,
-    syncOwner,
     toWire,
     transactionPolicyTieDecision,
     versioned,
@@ -174,6 +175,24 @@ const upsert = Effect.fn("Sync.upsert")(function* upsert(
     }
 });
 
+// A row names another person's photo only where its ledger already does, so only the uploader brings a photo into a
+// ledger and a shared ledger's references are safe to read by.
+const withoutForeignPhoto = Effect.fn("Sync.withoutForeignPhoto")(function* withoutForeignPhoto<Row extends PushRow>(
+    accountId: string,
+    ledgerKey: string,
+    row: Row
+) {
+    const key = "imageKey" in row.fields ? row.fields.imageKey : null;
+    if (key === null || photoNameFromKey(key) === null || ownsPhotoKey(accountId, key)) {
+        return row;
+    }
+    if (yield* isReferenced(ledgerKey, key)) {
+        return row;
+    }
+    // SAFETY: only `imageKey` changes, to null, which every table that has the field accepts.
+    return { ...row, fields: { ...row.fields, imageKey: null } } as Row;
+});
+
 const push = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -183,14 +202,20 @@ const push = FunctionImpl.make(
             const ctx = yield* MutationCtx;
             const writer = yield* DatabaseWriter;
             const accountId = yield* requireUserId(ctx);
-            yield* requirePro(ctx, accountId);
+            const ledger = yield* resolveLedger(accountId, args.profileId);
+            // A joined profile rides on its owner's Pro, and goes with the owner's account.
+            yield* requirePro(ctx, ledger.ownerId);
             yield* refuseWhileDeleting(accountId);
+            if (ledger.joined) {
+                yield* refuseWhileDeleting(ledger.ownerId);
+            }
 
             if (args.rows.length > PUSH_BATCH_LIMIT) {
                 return yield* new PushTooLarge({ limit: PUSH_BATCH_LIMIT, rows: args.rows.length });
             }
 
-            const userId = syncOwner(accountId, args.profileId);
+            const userId = ledger.key;
+            const now = yield* Clock.currentTimeMillis;
             const counter = yield* seqCounter(userId);
             let { nextSeq } = counter;
             let accepted = 0;
@@ -202,7 +227,8 @@ const push = FunctionImpl.make(
 
             // Rows are applied in order: `seq` is handed out one per accepted row, and two rows for the same localId
             // in one batch require the second lookup to observe the first row's upsert.
-            for (const row of args.rows) {
+            for (const pushed of args.rows) {
+                const row = yield* withoutForeignPhoto(accountId, userId, pushed);
                 const existing = yield* findExisting(userId, row);
                 const candidate = {
                     deletedAt: row.deletedAt,
@@ -239,6 +265,9 @@ const push = FunctionImpl.make(
                 movedCells.push(...cellInstants(row, existing));
                 nextSeq += 1;
                 accepted += 1;
+                if (row.table === "profiles" && row.deletedAt !== null && args.profileId === undefined) {
+                    yield* endSharing(accountId, row.localId, now);
+                }
                 if (row.table === "transactions" && row.deletedAt === null) {
                     // A later row for an entry filed earlier in this batch replaces it, so the event shows what
                     // was kept.
@@ -258,12 +287,13 @@ const push = FunctionImpl.make(
             if (loggedEntry) {
                 yield* noteLoggedDay(accountId);
             }
-            yield* emitEntriesFiled(userId, [...filed.values()], yield* Clock.currentTimeMillis);
+            yield* emitEntriesFiled(userId, [...filed.values()], now);
 
             return { accepted, nextSeq, skipped };
         },
         Effect.catchTags({
             AccountDeleting: dieAsConvexError,
+            NotProfileMember: dieNotProfileMember,
             ProRequired: dieAsConvexError,
             PushTooLarge: dieAsConvexError,
             Unauthenticated: dieAsConvexError,
@@ -283,8 +313,9 @@ const pullSince = FunctionImpl.make(
             const ctx = yield* QueryCtx;
             const reader = yield* DatabaseReader;
             const accountId = yield* requireUserId(ctx);
-            yield* requirePro(ctx, accountId);
-            const userId = syncOwner(accountId, args.profileId);
+            const ledger = yield* resolveLedger(accountId, args.profileId);
+            yield* requirePro(ctx, ledger.ownerId);
+            const userId = ledger.key;
             const limit = Math.min(Math.max(Math.trunc(args.limit ?? PULL_PAGE_LIMIT), 1), PULL_PAGE_MAX);
 
             const tables: readonly SyncedTable[] = args.tables ?? SYNCED_TABLES;
@@ -310,7 +341,11 @@ const pullSince = FunctionImpl.make(
                 rows,
             };
         },
-        Effect.catchTags({ ProRequired: dieAsConvexError, Unauthenticated: dieAsConvexError }),
+        Effect.catchTags({
+            NotProfileMember: dieNotProfileMember,
+            ProRequired: dieAsConvexError,
+            Unauthenticated: dieAsConvexError,
+        }),
         Effect.orDie
     )
 );
@@ -383,13 +418,19 @@ const currentSeq = FunctionImpl.make(
     Effect.fn("Sync.currentSeq")(function* currentSeq(args) {
         const ctx = yield* QueryCtx;
         const reader = yield* DatabaseReader;
-        const userId = yield* optionalUserId(ctx);
-        if (userId === null) {
+        const accountId = yield* optionalUserId(ctx);
+        if (accountId === null) {
+            return 0;
+        }
+        const ledger = yield* resolveLedger(accountId, args.profileId).pipe(
+            Effect.catchTags({ NotProfileMember: () => Effect.succeed(null) })
+        );
+        if (ledger === null) {
             return 0;
         }
         const state = yield* reader
             .table("syncState")
-            .get("by_user", syncOwner(userId, args.profileId))
+            .get("by_user", ledger.key)
             .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
         return state?.nextSeq ?? 0;
     }, Effect.orDie)
