@@ -5,7 +5,7 @@ import { DevSettings } from "react-native";
 import { acquireDrains, closeDrains, drainDevicePendingWritesOrFail, reopenDrains } from "@/data/pending-writes";
 import { profileLedgerExists } from "@/data/profile-ledger-files";
 import { profileRegistry } from "@/data/profile-registry";
-import { createProfile, deleteProfile, prepareProfileLedger } from "@/data/profiles";
+import { createProfile, deleteProfile, ensureReplica, prepareProfileLedger } from "@/data/profiles";
 import { profileIsLive, ProfilesError, updateProfile } from "@/data/profiles-core";
 import type { ProfileIdentity } from "@/data/profiles-core";
 import { flushDeferredDeletes } from "@/data/use-deferred-delete";
@@ -125,14 +125,19 @@ export const switchProfileCommand = createRuntimeCommand(appRuntime, {
         if (joined && input.accountId === null) {
             return yield* switchFailed(new Error("no account is signed in"));
         }
-        if (input.profileId !== undefined && !profileLedgerExists(input.profileId)) {
-            // Migrate, bootstrap and seed are idempotent, so finishing in place keeps what the ledger holds.
-            yield* prepareProfileLedger(
-                input.profileId,
-                input.from,
-                undefined,
-                joined && input.accountId !== null ? { replicaFor: input.accountId } : undefined
-            );
+        if (input.profileId !== undefined) {
+            if (!profileLedgerExists(input.profileId)) {
+                // Migrate, bootstrap and seed are idempotent, so finishing in place keeps what the ledger holds.
+                yield* prepareProfileLedger(
+                    input.profileId,
+                    input.from,
+                    undefined,
+                    joined && input.accountId !== null ? { replicaFor: input.accountId } : undefined
+                );
+            } else if (joined && input.accountId !== null) {
+                // A sign-out quiesced this ledger, so an existing file has to become a live replica again.
+                yield* ensureReplica(input.profileId, input.accountId);
+            }
         }
         yield* settleLedger(input.from);
         // Settling can let sync tombstone the profile this switch set out to open, or reconcile drop a joined one.

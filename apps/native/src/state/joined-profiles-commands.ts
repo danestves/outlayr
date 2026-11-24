@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import { reopenDrains } from "@/data/pending-writes";
+import { pendingPhotoUploads, uploadPhotos } from "@/data/photo-sync-core";
 import { deleteProfileLedger, profileLedgerDeletionPending, profileLedgerExists } from "@/data/profile-ledger-files";
 import { profileRegistry } from "@/data/profile-registry";
 import { prepareProfileLedger } from "@/data/profiles";
@@ -11,9 +12,11 @@ import { SyncStore } from "@/data/sync-store";
 import type { Database } from "@/db/client";
 import { profiles } from "@/db/schema";
 import { activeProfileId, retargetProfileSwitch } from "@/lib/active-profile";
+import { photoTransport } from "@/lib/cloud-photos";
 import { cloudMutation, cloudQuery, isCloudAccount } from "@/lib/convex";
-import { joinedProfilesCache, planJoinedReconcile, writeJoinedProfiles } from "@/lib/joined-profiles";
+import { isJoinedProfile, joinedProfilesCache, planJoinedReconcile, writeJoinedProfiles } from "@/lib/joined-profiles";
 import type { JoinedProfilesCache, SharedProfileLook } from "@/lib/joined-profiles";
+import { photoFiles } from "@/lib/photo-storage";
 import { appRuntime } from "@/lib/runtime";
 import { retireLedger } from "@/lib/widget-bridge";
 
@@ -142,7 +145,7 @@ export const joinProfileCommand = createRuntimeCommand(appRuntime, {
 
 export const leaveProfileCommand = createRuntimeCommand(appRuntime, {
     execute: Effect.fn("JoinedProfiles.leave")(function* leaveProfile(input: { from: Database; id: string }) {
-        if (activeProfileId() !== input.id) {
+        if (activeProfileId() !== input.id || !isJoinedProfile(input.id)) {
             return yield* new ProfileSharingError({
                 cause: new Error("only the active joined profile can leave"),
                 operation: "leave",
@@ -152,11 +155,15 @@ export const leaveProfileCommand = createRuntimeCommand(appRuntime, {
         const store = yield* SyncStore;
         yield* settleLedger(input.from);
         yield* Effect.gen(function* flush() {
+            // Rows sync but photos do not, and leaving revokes the membership the upload needs.
+            const transport = yield* photoTransport();
+            yield* uploadPhotos(input.from, photoFiles, transport, new Date()).pipe(Effect.mapError(failed("leave")));
             yield* store.sync(input.from).pipe(Effect.mapError(failed("leave")));
             const pending = yield* store.pending(input.from).pipe(Effect.mapError(failed("leave")));
-            if (pending > 0) {
+            const photos = yield* pendingPhotoUploads(input.from).pipe(Effect.mapError(failed("leave")));
+            if (pending > 0 || photos > 0) {
                 return yield* new ProfileSharingError({
-                    cause: new Error(`${pending} writes still pending`),
+                    cause: new Error(`${pending} writes and ${photos} photos still pending`),
                     operation: "leave",
                     reason: "unsynced",
                 });

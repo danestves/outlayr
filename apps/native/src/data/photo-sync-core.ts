@@ -68,6 +68,15 @@ function keyMatchesPhoto(imageKey: string | null, imageUri: string): boolean {
     return imageKey !== null && photoNameFromKey(imageKey) === photoFileName(imageUri);
 }
 
+// A key that already names these bytes, or a merchant logo whose key is set, has nothing left to send.
+function needsUpload(imageUri: string, imageKey: string | null): boolean {
+    if (keyMatchesPhoto(imageKey, imageUri)) {
+        return false;
+    }
+    const merchantKey = merchantKeyOfFile(photoFileName(imageUri));
+    return merchantKey === null || imageKey !== merchantKey;
+}
+
 interface PhotoRow {
     id: string;
     imageKey: string | null;
@@ -122,7 +131,7 @@ export const uploadPhotos = Effect.fn("PhotoSync.uploadPhotos")(function* upload
                 return { released, uploaded };
             }
             const uri = row.imageUri;
-            if (uri === null || keyMatchesPhoto(row.imageKey, uri)) {
+            if (uri === null || !needsUpload(uri, row.imageKey)) {
                 continue;
             }
 
@@ -172,6 +181,20 @@ export const uploadPhotos = Effect.fn("PhotoSync.uploadPhotos")(function* upload
     }
 
     return { released, uploaded };
+});
+
+export const pendingPhotoUploads = Effect.fn("PhotoSync.pendingPhotoUploads")(function* pendingPhotoUploads(
+    db: SpendDb
+) {
+    let pending = 0;
+    for (const photoTable of PHOTO_TABLES) {
+        for (const row of yield* photoRows(db, photoTable, "uploadable")) {
+            if (row.imageUri !== null && needsUpload(row.imageUri, row.imageKey)) {
+                pending += 1;
+            }
+        }
+    }
+    return pending;
 });
 
 // A url that answers nothing is the delete race: the key stays and the next pass retries. Clearing it would turn a
