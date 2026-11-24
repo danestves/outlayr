@@ -17,6 +17,7 @@ import { budgets, mainBudget, transactions } from "@/db/schema";
 import { buildBurndown } from "@/domain/budget-burndown";
 import type { Burndown } from "@/domain/budget-burndown";
 import { translateNow } from "@/i18n/runtime";
+import { overBudgetMomentKey, useSeenOverBudgetMoments } from "@/lib/over-budget-moment";
 import { appRuntime } from "@/lib/runtime";
 
 import { expenseContributionQuery } from "./budget-spent";
@@ -314,13 +315,19 @@ export function useCurrentMainBudget(db: Database, nowMs: number, enabled = true
 }
 
 export function useOverBudgetCount(db: Database, nowMs: number): number {
+    const seen = useSeenOverBudgetMoments();
     const rows = useLiveQuery(budgets, () =>
         db.select(getTableColumns(budgets)).from(budgets).where(isNull(budgets.deletedAt))
     );
     const sinceMs = overBudgetReadStart(rows, new Date(nowMs)) ?? nowMs + 1;
     const contributions = useExpenseContributions(db, nowMs, sinceMs);
     const perCategory = usePerCategoryBudgets(db, nowMs, contributions);
-    return perCategory.reduce((count, budget) => (budget.overBudget ? count + 1 : count), 0);
+    if (seen === null) {
+        return 0;
+    }
+    return perCategory.filter(
+        (budget) => budget.overBudget && !seen.includes(overBudgetMomentKey(budget.id, budget.window.start))
+    ).length;
 }
 
 export interface CategoryBudgetDetail {
