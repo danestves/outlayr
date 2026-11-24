@@ -132,6 +132,24 @@ describe("resolveVoiceDraft", () => {
         expect(twoSpellings).toMatchObject({ accountId: null, accountUnresolved: true });
     });
 
+    it("keeps digits apart when an account is heard loosely", () => {
+        const resolved = resolveVoiceDraft({
+            accounts: [
+                { currency: "USD", id: "card-1", name: "Card 1" },
+                { currency: "USD", id: "card-11", name: "Card 11" },
+            ],
+            categories: CATEGORIES,
+            currency: "USD",
+            draft: { ...DRAFT, accountName: "Card11" },
+            now: NOW,
+        });
+        expect(resolved).toMatchObject({ accountId: "card-11", accountUnresolved: false });
+    });
+
+    it("matches a category only by its exact folded name, never by the loose account key", () => {
+        expect(resolve({ ...DRAFT, categoryName: "Cofee" })).toMatchObject({ categoryId: null });
+    });
+
     it("a name two accounts or two categories share matches neither", () => {
         const doubled = resolveVoiceDraft({
             accounts: [...ACCOUNTS, { currency: "USD", id: "acc-amex-2", name: "AMEX" }],

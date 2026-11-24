@@ -143,10 +143,12 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): VoiceD
         return {
             ...base,
             fromAccountName:
-                pickKnown(output.accountName, args.accounts) ?? trimTo(output.accountName, MAX_NAME_LENGTH),
+                pickKnown(output.accountName, args.accounts, { loose: true }) ??
+                trimTo(output.accountName, MAX_NAME_LENGTH),
             kind: "transfer",
             toAccountName:
-                pickKnown(output.toAccountName, args.accounts) ?? trimTo(output.toAccountName, MAX_NAME_LENGTH),
+                pickKnown(output.toAccountName, args.accounts, { loose: true }) ??
+                trimTo(output.toAccountName, MAX_NAME_LENGTH),
         };
     }
     const placed = placeCategory(args.categoryTree, {
@@ -156,7 +158,9 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): VoiceD
     return {
         ...base,
         // An unknown account comes back as spoken, so the client can tell "none named" from "named but unplaced".
-        accountName: pickKnown(output.accountName, args.accounts) ?? trimTo(output.accountName, MAX_NAME_LENGTH),
+        accountName:
+            pickKnown(output.accountName, args.accounts, { loose: true }) ??
+            trimTo(output.accountName, MAX_NAME_LENGTH),
         categoryName: placed.categoryName,
         domain: normalizeDomain(output.domain),
         income: output.kind === "income",

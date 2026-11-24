@@ -75,9 +75,9 @@ export const foldName = (value: string) => value.trim().toLowerCase();
 
 const COMBINING_MARKS = /\p{M}/gu;
 const NOT_NAME_CHAR = /[^\p{L}\p{N}]/gu;
-const REPEATED_CHAR = /(.)\1+/gu;
+const REPEATED_LETTER = /(\p{L})\1+/gu;
 
-// Matches the server's pickKnown fallback, so "BancaAmiga" from the model still lands on Bancamiga.
+// Matches the server's loose account fallback, so "BancaAmiga" from the model still lands on Bancamiga.
 const nameKey = (value: string) =>
     value
         .normalize("NFD")
@@ -85,7 +85,7 @@ const nameKey = (value: string) =>
         .toLowerCase()
         .replaceAll(NOT_NAME_CHAR, "")
         .replaceAll("v", "b")
-        .replaceAll(REPEATED_CHAR, "$1");
+        .replaceAll(REPEATED_LETTER, "$1");
 
 // Today keeps the clock so the entry sorts among today's rows; other days land at noon, clear of DST edges.
 export function spokenDateToLocal(date: string, now: Date): Date {
@@ -119,7 +119,8 @@ export function resolveRecurrence(recurrence: VoiceRecurrence | null): ResolvedR
 export function uniqueMatch<T>(
     candidates: readonly T[],
     name: string | null,
-    nameOf: (candidate: T) => string | null
+    nameOf: (candidate: T) => string | null,
+    { loose = false }: { loose?: boolean } = {}
 ): T | null {
     if (name == null) {
         return null;
@@ -132,7 +133,7 @@ export function uniqueMatch<T>(
         });
     };
     const exact = matchesBy(foldName);
-    const matches = exact.length > 0 ? exact : matchesBy(nameKey);
+    const matches = exact.length > 0 || !loose ? exact : matchesBy(nameKey);
     return matches.length === 1 ? (matches[0] ?? null) : null;
 }
 
@@ -145,7 +146,8 @@ export function resolveVoiceDraft({
     draft,
     now,
 }: ResolveArgs): ResolvedVoiceDraft {
-    const findAccount = (name: string | null) => uniqueMatch(accounts, name, (candidate) => candidate.name);
+    const findAccount = (name: string | null) =>
+        uniqueMatch(accounts, name, (candidate) => candidate.name, { loose: true });
 
     if (draft.kind === "transfer") {
         const fromAccount = findAccount(draft.fromAccountName);

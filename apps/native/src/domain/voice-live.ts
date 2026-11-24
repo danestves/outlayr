@@ -693,8 +693,8 @@ interface NameEntry {
     /** Another name continues this one ("Banesco" and "Banesco USD"), so a match at the tail may still grow. */
     extended: boolean;
     id: string;
-    /** Letters and digits only, with runs of one letter collapsed. */
-    key: string;
+    /** Letters and digits only, with runs of one letter collapsed, one entry per squashed letter. */
+    key: readonly string[];
 }
 
 interface Mention {
@@ -709,12 +709,15 @@ interface Occurrence {
 }
 
 interface Squashed {
+    /** One entry per squashed letter, kept as a list so an astral letter cannot shift the offsets used in `runs`. */
+    letters: readonly string[];
     /** One entry per squashed letter, listing where each occurrence of it sits in the folded text. */
     runs: Occurrence[][];
-    text: string;
 }
 
 const foldName = (name: string) => fold(name).trim().split(WHITESPACE).join(" ");
+
+const LETTER = /\p{L}/u;
 
 /** Spaces and doubled letters drop out, so "Banca Amiga" and "BancaAmiga" become one key. */
 function squash(text: string): Squashed {
@@ -728,7 +731,8 @@ function squash(text: string): Squashed {
                 continue;
             }
             const run = runs.at(-1);
-            if (letters.at(-1) === letter && run !== undefined) {
+            // Digits stay apart ("Card 1" is not "Card 11"); only a doubled letter counts as one.
+            if (LETTER.test(letter) && letters.at(-1) === letter && run !== undefined) {
                 run.push({ end, start: at });
             } else {
                 letters.push(letter);
@@ -737,7 +741,7 @@ function squash(text: string): Squashed {
         }
         at = end;
     }
-    return { runs, text: letters.join("") };
+    return { letters, runs };
 }
 
 // Spanish says b and v alike, so the transcriber writes "Vanesco" for an account named Banesco.
@@ -746,6 +750,15 @@ const asSpoken = (folded: string) => folded;
 
 const MIN_NAME_LENGTH = 2;
 
+const sameKey = (a: readonly string[], b: readonly string[]) =>
+    a.length === b.length && a.every((letter, at) => letter === b[at]);
+
+const startsWithKey = (key: readonly string[], prefix: readonly string[]) =>
+    prefix.length < key.length && prefix.every((letter, at) => letter === key[at]);
+
+const matchesAt = (letters: readonly string[], key: readonly string[], at: number) =>
+    key.every((letter, index) => letters[at + index] === letter);
+
 // Duplicate names are no match, like `uniqueMatch`: a draft that could land on either is not filled unasked.
 function prepareNames(
     rows: readonly { id: string; name: string | null }[],
@@ -753,14 +766,14 @@ function prepareNames(
 ): NameEntry[] {
     const named = rows.flatMap((row) => {
         const name = row.name === null ? "" : spoken(foldName(row.name));
-        const key = squash(name).text;
+        const key = squash(name).letters;
         return key.length >= MIN_NAME_LENGTH ? [{ id: row.id, key }] : [];
     });
     return named
-        .filter((row) => named.filter((other) => other.key === row.key).length === 1)
+        .filter((row) => named.filter((other) => sameKey(other.key, row.key)).length === 1)
         .map((row) => ({
             ...row,
-            extended: named.some((other) => other.key !== row.key && other.key.startsWith(row.key)),
+            extended: named.some((other) => !sameKey(other.key, row.key) && startsWithKey(other.key, row.key)),
         }))
         .sort((a, b) => b.key.length - a.key.length);
 }
@@ -777,7 +790,10 @@ function findMentions(
     const haystack = squash(folded);
     const kept: Mention[] = [];
     for (const entry of entries) {
-        for (let at = haystack.text.indexOf(entry.key); at !== -1; at = haystack.text.indexOf(entry.key, at + 1)) {
+        for (let at = 0; at <= haystack.letters.length - entry.key.length; at += 1) {
+            if (!matchesAt(haystack.letters, entry.key, at)) {
+                continue;
+            }
             const starts = haystack.runs[at];
             const ends = haystack.runs[at + entry.key.length - 1];
             if (starts === undefined || ends === undefined) {

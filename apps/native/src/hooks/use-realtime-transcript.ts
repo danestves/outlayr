@@ -10,6 +10,7 @@ import { useLatest, useOnUnmount, useTimers } from "@/lib/lifecycle";
 import type { Cleanup } from "@/lib/lifecycle";
 import { openAiProtocol } from "@/lib/realtime-openai";
 import { scribeProtocol } from "@/lib/realtime-scribe";
+import type { VoiceKeyterms } from "@/lib/realtime-scribe";
 import { openTranscriptStream, TranscriptStreamError } from "@/lib/transcript-stream";
 import type { TranscriptProtocol, TranscriptStream } from "@/lib/transcript-stream";
 
@@ -20,7 +21,7 @@ const MIC_RATE = 16_000;
 export type RealtimeStart = "started" | "denied" | "failed";
 
 interface RealtimeTranscriptOptions {
-    keyterms: readonly string[];
+    keyterms: VoiceKeyterms;
     language: string;
     /** Every chunk, about ten a second, with the same 0..1 scale as `level`: feed `judgeSilence` from here. */
     onLevel?: (level: number, at: number) => void;
@@ -75,8 +76,11 @@ interface Session {
     cancelled: boolean;
 }
 
+/** Every take alive right now, so the shared audio session is only turned off once the last one lets go. */
+const liveSessions = new Set<Session>();
+
 function createSession(recorder: AudioRecorder): Session {
-    return {
+    const session: Session = {
         attached: signal(),
         cancelled: false,
         cancellation: signal(),
@@ -85,12 +89,14 @@ function createSession(recorder: AudioRecorder): Session {
         sampleRate: MIC_RATE,
         stream: null,
     };
+    liveSessions.add(session);
+    return session;
 }
 
 function protocolFor(
     session: Exclude<StreamSession, { kind: "clip" }>,
     language: string,
-    keyterms: readonly string[]
+    keyterms: VoiceKeyterms
 ): TranscriptProtocol {
     return session.kind === "elevenlabs"
         ? scribeProtocol({ keyterms, language, model: session.model, token: session.token })
@@ -197,12 +203,20 @@ export function useRealtimeTranscript({
     const release = async (session: Session): Promise<readonly string[]> => {
         session.recorder.clearOnAudioReady();
         session.recorder.clearOnError();
-        const stopped = session.recorder.isRecording() ? await session.recorder.stop() : null;
-        // A newer take may have claimed the audio session while the recorder stopped.
-        if (sessionRef.current === null) {
-            await AudioManager.setAudioSessionActivity(false);
+        try {
+            const stopped = session.recorder.isRecording() ? await session.recorder.stop() : null;
+            return stopped?.status === "success" ? stopped.paths : [];
+        } finally {
+            liveSessions.delete(session);
+            // A newer take may already be recording, so the shared audio session stays on until the last one ends.
+            if (liveSessions.size === 0) {
+                try {
+                    await AudioManager.setAudioSessionActivity(false);
+                } catch {
+                    // Deactivation failing must not swallow the file paths or the finished transcript.
+                }
+            }
         }
-        return stopped?.status === "success" ? stopped.paths : [];
     };
 
     const reset = () => {
@@ -347,8 +361,9 @@ export function useRealtimeTranscript({
         sessionRef.current = null;
         finishingRef.current = session;
         try {
-            await session.attached.promise;
+            // Stop the microphone before waiting on the stream, so it never records while the session is fetched.
             const paths = await release(session);
+            await session.attached.promise;
             if (session.cancelled) {
                 discard(paths);
                 throw cancelled();

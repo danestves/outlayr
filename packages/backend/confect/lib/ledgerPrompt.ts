@@ -88,7 +88,7 @@ export function trimTo(value: string | null | undefined, max: number): string | 
 
 const COMBINING_MARKS = /\p{M}/gu;
 const NOT_NAME_CHAR = /[^\p{L}\p{N}]/gu;
-const REPEATED_CHAR = /(.)\1+/gu;
+const REPEATED_LETTER = /(\p{L})\1+/gu;
 
 // Spoken variants of one name share a key: "BancaAmiga", "Banca Amiga" and "Bancamiga" all fold together.
 function squashName(name: string): string {
@@ -98,10 +98,15 @@ function squashName(name: string): string {
         .toLowerCase()
         .replaceAll(NOT_NAME_CHAR, "")
         .replaceAll("v", "b")
-        .replaceAll(REPEATED_CHAR, "$1");
+        .replaceAll(REPEATED_LETTER, "$1");
 }
 
-export function pickKnown(candidate: string | null, known: readonly string[]): string | null {
+// The squashed step is for account names the model heard loosely, never for categories.
+export function pickKnown(
+    candidate: string | null,
+    known: readonly string[],
+    { loose = false }: { loose?: boolean } = {}
+): string | null {
     const trimmed = candidate?.trim();
     if (!trimmed) {
         return null;
@@ -114,6 +119,9 @@ export function pickKnown(candidate: string | null, known: readonly string[]): s
     const insensitive = known.find((name) => name.toLowerCase() === folded);
     if (insensitive) {
         return insensitive;
+    }
+    if (!loose) {
+        return null;
     }
     const key = squashName(trimmed);
     if (key.length === 0) {

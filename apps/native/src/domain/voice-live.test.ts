@@ -187,6 +187,30 @@ describe("accounts and categories", () => {
         expect(spanOf(text, draft.date)).toBe("hoy");
     });
 
+    it("maps a mention back to its own span when an emoji comes before it", () => {
+        const text = "Gasté 20 dólares en 🍔 Groceries";
+        const draft = parse(text, "es", { final: true });
+        expect(draft.categoryId?.value).toBe("groceries");
+        expect(spanOf(text, draft.categoryId)).toBe("Groceries");
+    });
+
+    it("finds a name written with an astral letter", () => {
+        const text = "Gasté 20 dólares en 𠮷野家";
+        const draft = parseLiveDraft(
+            text,
+            {
+                accounts: [],
+                categories: [{ id: "yoshinoya", income: false, name: "𠮷野家" }],
+                currency: "USD",
+                language: "es",
+                now: NOW,
+            },
+            { final: true }
+        );
+        expect(draft.categoryId?.value).toBe("yoshinoya");
+        expect(spanOf(text, draft.categoryId)).toBe("𠮷野家");
+    });
+
     it("matches an income category only for income", () => {
         expect(parse("got paid 500 dollars salary", "en").categoryId?.value).toBe("salary");
         expect(parse("I spent 5 dollars on freelance", "en").categoryId).toBeNull();

@@ -1,3 +1,4 @@
+import { VOICE_KEYTERMS_AT_MS } from "@outlayr/backend/confect/legal";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
@@ -24,8 +25,9 @@ const CURRENCY_KEYTERMS = [
     "bolivars",
     "pesos",
 ];
-// ElevenLabs documents no cap for realtime keyterms; the batch API takes 100 of up to 50 characters.
-const MAX_KEYTERMS = 100;
+// ElevenLabs documents at most 50 keyterms and 1,000 characters in all for realtime Scribe.
+const MAX_KEYTERMS = 50;
+const MAX_KEYTERM_CHARS = 1000;
 const MAX_KEYTERM_LENGTH = 50;
 
 const ServerErrorType = Schema.Literals([
@@ -74,9 +76,14 @@ const REASON_BY_ERROR: Record<typeof ServerErrorType.Type, TranscriptFailureReas
     unaccepted_terms: "unauthenticated",
 };
 
+export interface VoiceKeyterms {
+    readonly accounts: readonly string[];
+    readonly categories: readonly string[];
+}
+
 export interface ScribeSession {
     /** Names from the ledger, so a spoken "Bancamiga" is spelled like the account. */
-    readonly keyterms: readonly string[];
+    readonly keyterms: VoiceKeyterms;
     readonly language: string;
     readonly model: string;
     readonly token: string;
@@ -88,9 +95,35 @@ export function voiceKeyterms({
 }: {
     readonly accounts: readonly string[];
     readonly categoryTree: readonly { readonly children: readonly string[]; readonly name: string }[];
-}): string[] {
-    const names = [...accounts, ...categoryTree.flatMap(({ children, name }) => [name, ...children])];
-    return names.map((name) => name.trim()).filter((name) => name.length > 0 && name.length <= MAX_KEYTERM_LENGTH);
+}): VoiceKeyterms {
+    // The notice that announces ledger names takes effect in January; until then only currency words go out.
+    if (Date.now() < VOICE_KEYTERMS_AT_MS) {
+        return { accounts: [], categories: [] };
+    }
+    return {
+        accounts,
+        categories: categoryTree.flatMap(({ children, name }) => [name, ...children]),
+    };
+}
+
+// Order is priority: a huge ledger must not crowd out the accounts or the currency words.
+function withinBudget(terms: readonly string[]): string[] {
+    const seen = new Set<string>();
+    const kept: string[] = [];
+    let chars = 0;
+    for (const term of terms) {
+        const trimmed = term.trim();
+        if (trimmed.length === 0 || trimmed.length > MAX_KEYTERM_LENGTH || seen.has(trimmed)) {
+            continue;
+        }
+        seen.add(trimmed);
+        if (kept.length >= MAX_KEYTERMS || chars + trimmed.length > MAX_KEYTERM_CHARS) {
+            continue;
+        }
+        kept.push(trimmed);
+        chars += trimmed.length;
+    }
+    return kept;
 }
 
 export function scribeUrl({ keyterms, language, model, token }: ScribeSession): string {
@@ -106,8 +139,8 @@ export function scribeUrl({ keyterms, language, model, token }: ScribeSession): 
             query.append("secondary_languages", other);
         }
     }
-    const terms = new Set([...CURRENCY_KEYTERMS, ...keyterms]);
-    for (const keyterm of [...terms].slice(0, MAX_KEYTERMS)) {
+    const terms = withinBudget([...keyterms.accounts, ...CURRENCY_KEYTERMS, ...keyterms.categories]);
+    for (const keyterm of terms) {
         query.append("keyterms", keyterm);
     }
     return `${SCRIBE_RELAY}/v1/speech-to-text/realtime?${query.toString()}`;
