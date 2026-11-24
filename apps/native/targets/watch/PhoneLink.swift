@@ -20,6 +20,8 @@ final class PhoneLink: NSObject, WCSessionDelegate {
     // Only writes the phone failed to save: one it accepted is never resent, so a missed snapshot cannot file it
     // twice or bring it back after an erase.
     @ObservationIgnored private var retrying: Set<String> = []
+    @ObservationIgnored private var attempting: Set<String> = []
+    @ObservationIgnored private var retryScheduled = false
 
     private override init() {
         super.init()
@@ -50,6 +52,7 @@ final class PhoneLink: NSObject, WCSessionDelegate {
         }
         session.sendMessage(message) { reply in
             Task { @MainActor in
+                self.attempting.remove(write.id)
                 if reply["ok"] as? Bool == true {
                     self.settle(write.id)
                 } else if reply["retry"] as? Bool == true {
@@ -67,7 +70,10 @@ final class PhoneLink: NSObject, WCSessionDelegate {
     // failed save back as a retry, so the write can leave the retry set here.
     private func handOff(_ id: String, _ message: [String: Any]) {
         WCSession.default.transferUserInfo(message)
-        Task { @MainActor in self.settle(id) }
+        Task { @MainActor in
+            self.attempting.remove(id)
+            self.settle(id)
+        }
     }
 
     @MainActor
@@ -89,17 +95,26 @@ final class PhoneLink: NSObject, WCSessionDelegate {
         guard unsynced.contains(where: { $0.id == id }) else { return }
         retrying.insert(id)
         persistUnsynced()
+        guard !retryScheduled else { return }
+        retryScheduled = true
         Task { @MainActor in
             try? await Task.sleep(for: Self.retryDelay)
+            self.retryScheduled = false
             self.resend()
         }
     }
 
     // A write stays in the set until the phone accepts it or it is queued as a transfer, so neither a relaunch
-    // nor a snapshot mid-send can drop it.
+    // nor a snapshot mid-send can drop it. One attempt at a time, so a timer and a reachability change never both
+    // send it.
     @MainActor
     private func resend() {
-        unsynced.filter { retrying.contains($0.id) }.forEach(send)
+        let inFlight = Set(WCSession.default.outstandingUserInfoTransfers.compactMap { Self.writeId($0.userInfo) })
+        let ready = unsynced.filter { retrying.contains($0.id) && !attempting.contains($0.id) && !inFlight.contains($0.id) }
+        for write in ready {
+            attempting.insert(write.id)
+            send(write)
+        }
     }
 
     func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
