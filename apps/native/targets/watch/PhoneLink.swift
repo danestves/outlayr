@@ -45,21 +45,35 @@ final class PhoneLink: NSObject, WCSessionDelegate {
         let session = WCSession.default
         let message = write.message
         guard session.isReachable else {
-            session.transferUserInfo(message)
+            handOff(write.id, message)
             return
         }
         session.sendMessage(message) { reply in
-            guard reply["ok"] as? Bool == false else { return }
             Task { @MainActor in
-                if reply["retry"] as? Bool == true {
+                if reply["ok"] as? Bool == true {
+                    self.settle(write.id)
+                } else if reply["retry"] as? Bool == true {
                     self.retry(write.id)
                 } else {
                     self.reject(write.id)
                 }
             }
         } errorHandler: { _ in
-            session.transferUserInfo(message)
+            self.handOff(write.id, message)
         }
+    }
+
+    // A queued transfer is durable and protected from snapshot pruning while outstanding, and the phone sends a
+    // failed save back as a retry, so the write can leave the retry set here.
+    private func handOff(_ id: String, _ message: [String: Any]) {
+        WCSession.default.transferUserInfo(message)
+        Task { @MainActor in self.settle(id) }
+    }
+
+    @MainActor
+    private func settle(_ id: String) {
+        guard retrying.remove(id) != nil else { return }
+        persistUnsynced()
     }
 
     @MainActor
@@ -81,13 +95,11 @@ final class PhoneLink: NSObject, WCSessionDelegate {
         }
     }
 
-    // Handed over again, a write leaves the set until the phone reports another failed save.
+    // A write stays in the set until the phone accepts it or it is queued as a transfer, so neither a relaunch
+    // nor a snapshot mid-send can drop it.
     @MainActor
     private func resend() {
-        let pending = unsynced.filter { retrying.contains($0.id) }
-        retrying.subtract(pending.map(\.id))
-        persistUnsynced()
-        pending.forEach(send)
+        unsynced.filter { retrying.contains($0.id) }.forEach(send)
     }
 
     func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
@@ -111,7 +123,7 @@ final class PhoneLink: NSObject, WCSessionDelegate {
 
     func session(_ session: WCSession, didFinish userInfoTransfer: WCSessionUserInfoTransfer, error: Error?) {
         guard error != nil, let id = Self.writeId(userInfoTransfer.userInfo) else { return }
-        Task { @MainActor in self.reject(id) }
+        Task { @MainActor in self.retry(id) }
     }
 
     private func receive(_ payload: [String: Any], latest: Bool) {
