@@ -1,30 +1,53 @@
 import { useState } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import Animated, {
+    createAnimatedComponent,
+    Easing,
+    FadeOut,
+    useAnimatedProps,
+    useAnimatedStyle,
+    useReducedMotion,
+    useSharedValue,
+    withDelay,
+    withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Defs, Mask, Path, Rect } from "react-native-svg";
+import Svg, { Path, Rect } from "react-native-svg";
+import { scheduleOnRN } from "react-native-worklets";
 
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
+import { useMirror, useWhen } from "@/lib/lifecycle";
 import { useColors } from "@/theme/use-colors";
 import { useIsDark } from "@/theme/use-is-dark";
 
 import { calloutLayout, holeRect, POINTER_HEIGHT, POINTER_WIDTH, SCREEN_MARGIN } from "./callout-layout";
 import { stepsFor } from "./steps";
 import { useTour } from "./tour-context";
+import type { TourStage } from "./tour-context";
 
-interface BubbleMeasurement {
-    height: number;
-    key: string;
-    width: number;
-}
-
-const MASK_ID = "tour-hole";
-// A dark screen under a light-mode dim barely changes, so dark mode dims harder.
-const SCRIM_OPACITY = { dark: 0.6, light: 0.35 } as const;
 const POINTER_DOWN = `M0 0 L${POINTER_WIDTH} 0 L${POINTER_WIDTH / 2} ${POINTER_HEIGHT} Z`;
 const POINTER_UP = `M0 ${POINTER_HEIGHT} L${POINTER_WIDTH} ${POINTER_HEIGHT} L${POINTER_WIDTH / 2} 0 Z`;
+// A dark screen under a light-mode dim barely changes, so dark mode dims harder.
+const SCRIM_OPACITY = { dark: 0.6, light: 0.35 } as const;
+
+const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
+const EASE_IN_OUT = Easing.bezier(0.77, 0, 0.175, 1);
+const OPEN = { duration: 220, easing: EASE_OUT } as const;
+// Short, since the Modal keeps taking taps until it is gone.
+const CLOSE = { duration: 140, easing: EASE_OUT } as const;
+const GLIDE = { duration: 360, easing: EASE_IN_OUT } as const;
+const BUBBLE_IN = { duration: 240, easing: EASE_OUT } as const;
+// The bubble lands as the cutout settles, so the eye follows the cutout first.
+const BUBBLE_DELAY_MS = 160;
+const BUBBLE_EXIT_MS = 120;
+const BUBBLE_DRIFT = 8;
+const BUBBLE_START_SCALE = 0.96;
+
+const AnimatedPath = createAnimatedComponent(Path);
+const AnimatedRect = createAnimatedComponent(Rect);
 
 const styles = StyleSheet.create({
     bubble:
@@ -51,153 +74,227 @@ const styles = StyleSheet.create({
 });
 
 export function TourOverlay() {
-    const { complete, next, skip, stage } = useTour();
+    const { complete, skip, stage } = useTour();
+    const { height, width } = useWindowDimensions();
+    const colors = useColors();
+    const isDark = useIsDark();
+    const reduced = useReducedMotion();
+    // The last stage stays drawn while the overlay fades out after Done, Skip or Got it.
+    const [leaving, setLeaving] = useState<TourStage | null>(null);
+    const shown = stage ?? leaving;
+    const hole = shown ? holeRect(shown.rect, shown.radius) : null;
+
+    const presence = useSharedValue(0);
+    const hx = useSharedValue(0);
+    const hy = useSharedValue(0);
+    const hw = useSharedValue(0);
+    const hh = useSharedValue(0);
+    const hr = useSharedValue(0);
+
+    useMirror([stage], () => {
+        if (stage) {
+            setLeaving(stage);
+            presence.set(withTiming(1, OPEN));
+            return;
+        }
+        presence.set(
+            withTiming(0, CLOSE, (finished) => {
+                if (finished) {
+                    scheduleOnRN(setLeaving, null);
+                }
+            })
+        );
+    });
+
+    useMirror([hole?.x, hole?.y, hole?.width, hole?.height, hole?.radius], () => {
+        if (!hole) {
+            return;
+        }
+        // Opening places the cutout; only a step change glides it from the last target.
+        const glide = !reduced && presence.get() > 0;
+        const to = (value: number) => (glide ? withTiming(value, GLIDE) : value);
+        hx.set(to(hole.x));
+        hy.set(to(hole.y));
+        hw.set(to(hole.width));
+        hh.set(to(hole.height));
+        hr.set(to(hole.radius));
+    });
+
+    // One even-odd path rather than an SVG mask, which does not repaint when a shape inside it animates.
+    const scrimProps = useAnimatedProps(() => {
+        const x = hx.get();
+        const y = hy.get();
+        const w = hw.get();
+        const h = hh.get();
+        const r = Math.min(hr.get(), w / 2, h / 2);
+        return {
+            d:
+                `M0 0 H${width} V${height} H0 Z ` +
+                `M${x + r} ${y} H${x + w - r} A${r} ${r} 0 0 1 ${x + w} ${y + r} V${y + h - r} ` +
+                `A${r} ${r} 0 0 1 ${x + w - r} ${y + h} H${x + r} A${r} ${r} 0 0 1 ${x} ${y + h - r} ` +
+                `V${y + r} A${r} ${r} 0 0 1 ${x + r} ${y} Z`,
+        };
+    });
+    const ringProps = useAnimatedProps(() => ({
+        height: hh.get(),
+        rx: hr.get(),
+        width: hw.get(),
+        x: hx.get(),
+        y: hy.get(),
+    }));
+    const fadeStyle = useAnimatedStyle(() => ({ opacity: presence.get() }));
+
+    return (
+        <Modal
+            // Our own fade instead of the Modal's: a fading Modal kept taking taps until it finished.
+            animationType="none"
+            navigationBarTranslucent
+            onRequestClose={shown?.tour === "log" ? skip : complete}
+            statusBarTranslucent
+            transparent
+            visible={shown !== null}
+        >
+            <Animated.View pointerEvents={stage ? "auto" : "none"} style={[{ flex: 1 }, fadeStyle]}>
+                {shown && hole ? (
+                    <Svg height={height} style={StyleSheet.absoluteFill} width={width}>
+                        <AnimatedPath
+                            animatedProps={scrimProps}
+                            fill="#000000"
+                            fillOpacity={isDark ? SCRIM_OPACITY.dark : SCRIM_OPACITY.light}
+                            fillRule="evenodd"
+                        />
+                        <AnimatedRect
+                            animatedProps={ringProps}
+                            fill="none"
+                            stroke={isDark ? colors.foreground : colors.background}
+                            strokeOpacity={0.9}
+                            strokeWidth={3}
+                        />
+                    </Svg>
+                ) : null}
+
+                {shown ? <TourBubble key={shown.key} reduced={reduced} stage={shown} /> : null}
+            </Animated.View>
+        </Modal>
+    );
+}
+
+interface TourBubbleProps {
+    reduced: boolean;
+    stage: TourStage;
+}
+
+// Keyed per step: a fresh view always fires onLayout, and the old one fades out while the new one lands.
+function TourBubble({ reduced, stage }: TourBubbleProps) {
+    const { complete, next, skip } = useTour();
     const { height, width } = useWindowDimensions();
     const insets = useSafeAreaInsets();
     const colors = useColors();
-    const isDark = useIsDark();
     const t = useTranslation();
-    const [measured, setMeasured] = useState<BubbleMeasurement | null>(null);
+    const [size, setSize] = useState<{ height: number; width: number } | null>(null);
+    const layout = size
+        ? calloutLayout({ bubble: size, insets, radius: stage.radius, target: stage.rect, window: { height, width } })
+        : null;
 
-    const stageKey = stage ? `${stage.tour}:${stage.index}` : "";
-    const bubble = measured?.key === stageKey ? measured : null;
-    const layout =
-        stage && bubble
-            ? calloutLayout({ bubble, insets, radius: stage.radius, target: stage.rect, window: { height, width } })
-            : null;
-    const hole = stage ? holeRect(stage.rect, stage.radius) : null;
+    const entered = useSharedValue(0);
+    useWhen(layout !== null, () => {
+        entered.set(withDelay(BUBBLE_DELAY_MS, withTiming(1, BUBBLE_IN)));
+    });
+    // Drifts toward its target while it lands.
+    const drift = layout?.above ? -BUBBLE_DRIFT : BUBBLE_DRIFT;
+    const enterStyle = useAnimatedStyle(() => {
+        const progress = entered.get();
+        if (reduced) {
+            return { opacity: progress };
+        }
+        return {
+            opacity: progress,
+            transform: [
+                { translateY: (1 - progress) * drift },
+                { scale: BUBBLE_START_SCALE + (1 - BUBBLE_START_SCALE) * progress },
+            ],
+        };
+    });
 
-    const steps = stage ? stepsFor(stage.tour) : [];
-    const isLog = stage?.tour === "log";
-    const last = stage !== null && stage.index + 1 >= steps.length;
+    const steps = stepsFor(stage.tour);
+    const isLog = stage.tour === "log";
+    const last = stage.index + 1 >= steps.length;
     let primaryLabel = t("tour.gotIt");
     if (isLog) {
         primaryLabel = last ? t("tour.done") : t("tour.next");
     }
     const primaryPress = isLog && !last ? next : complete;
 
-    const measureBubble = (event: LayoutChangeEvent) => {
+    const measure = (event: LayoutChangeEvent) => {
         const { height: bubbleHeight, width: bubbleWidth } = event.nativeEvent.layout;
-        setMeasured((current) =>
-            current?.key === stageKey && current.height === bubbleHeight && current.width === bubbleWidth
+        setSize((current) =>
+            current?.height === bubbleHeight && current.width === bubbleWidth
                 ? current
-                : { height: bubbleHeight, key: stageKey, width: bubbleWidth }
+                : { height: bubbleHeight, width: bubbleWidth }
         );
     };
 
     return (
-        <Modal
-            // A fading Modal keeps taking taps until it finishes, so a quick tap after Done or Next was lost.
-            animationType="none"
-            navigationBarTranslucent
-            onRequestClose={isLog ? skip : complete}
-            statusBarTranslucent
-            transparent
-            visible={stage !== null}
+        <Animated.View
+            exiting={reduced ? undefined : FadeOut.duration(BUBBLE_EXIT_MS)}
+            pointerEvents="box-none"
+            style={StyleSheet.absoluteFill}
         >
-            <View style={{ flex: 1 }}>
-                {stage && hole ? (
-                    <Svg height={height} style={StyleSheet.absoluteFill} width={width}>
-                        <Defs>
-                            <Mask height={height} id={MASK_ID} maskUnits="userSpaceOnUse" width={width} x={0} y={0}>
-                                <Rect fill="#ffffff" height={height} width={width} x={0} y={0} />
-                                <Rect
-                                    fill="#000000"
-                                    height={hole.height}
-                                    rx={hole.radius}
-                                    width={hole.width}
-                                    x={hole.x}
-                                    y={hole.y}
-                                />
-                            </Mask>
-                        </Defs>
-                        <Rect
-                            fill="#000000"
-                            fillOpacity={isDark ? SCRIM_OPACITY.dark : SCRIM_OPACITY.light}
-                            height={height}
-                            mask={`url(#${MASK_ID})`}
-                            width={width}
-                            x={0}
-                            y={0}
-                        />
-                        <Rect
-                            fill="none"
-                            height={hole.height}
-                            rx={hole.radius}
-                            stroke={isDark ? colors.foreground : colors.background}
-                            strokeOpacity={0.9}
-                            strokeWidth={3}
-                            width={hole.width}
-                            x={hole.x}
-                            y={hole.y}
-                        />
+            {/* Hidden until placed: a tap or screen reader on the unplaced bubble lands on the scrim. */}
+            <Animated.View
+                accessibilityElementsHidden={!layout}
+                accessibilityViewIsModal
+                importantForAccessibility={layout ? "auto" : "no-hide-descendants"}
+                onLayout={measure}
+                pointerEvents={layout ? "auto" : "none"}
+                style={[
+                    styles.bubble,
+                    {
+                        backgroundColor: colors.card,
+                        left: layout?.bubble.x ?? SCREEN_MARGIN,
+                        maxHeight: height - insets.top - insets.bottom,
+                        maxWidth: width - SCREEN_MARGIN * 2,
+                        top: layout?.bubble.y ?? insets.top,
+                    },
+                    enterStyle,
+                ]}
+            >
+                <ScrollView bounces={false} style={{ flexShrink: 1 }}>
+                    <Text className="font-sans-semibold text-foreground text-[16px]">{t(stage.step.copy)}</Text>
+                </ScrollView>
+                <View
+                    className={
+                        isLog ? "flex-row items-center justify-between pt-3" : "flex-row items-center justify-end pt-3"
+                    }
+                >
+                    {isLog ? (
+                        <MonoLabel>{t("tour.step", { current: stage.index + 1, total: steps.length })}</MonoLabel>
+                    ) : null}
+                    <View className="flex-row items-center gap-4">
+                        {isLog && !last ? (
+                            <Pressable accessibilityRole="button" hitSlop={10} onPress={skip}>
+                                <Text className="text-muted text-[15px]">{t("tour.skip")}</Text>
+                            </Pressable>
+                        ) : null}
+                        <Pressable accessibilityRole="button" hitSlop={10} onPress={primaryPress}>
+                            <Text className="text-tint font-sans-semibold text-[15px]">{primaryLabel}</Text>
+                        </Pressable>
+                    </View>
+                </View>
+
+                {layout ? (
+                    <Svg
+                        height={POINTER_HEIGHT}
+                        style={[
+                            { left: layout.pointerX - POINTER_WIDTH / 2, position: "absolute" },
+                            layout.above ? { bottom: -POINTER_HEIGHT } : { top: -POINTER_HEIGHT },
+                        ]}
+                        width={POINTER_WIDTH}
+                    >
+                        <Path d={layout.above ? POINTER_DOWN : POINTER_UP} fill={colors.card} />
                     </Svg>
                 ) : null}
-
-                {stage ? (
-                    // Hidden until placed: a tap or screen reader on the unplaced bubble lands on the scrim.
-                    <View
-                        accessibilityElementsHidden={!layout}
-                        // A new view per stage: a reused one whose frame did not change fires no onLayout.
-                        key={stageKey}
-                        accessibilityViewIsModal
-                        importantForAccessibility={layout ? "auto" : "no-hide-descendants"}
-                        onLayout={measureBubble}
-                        pointerEvents={layout ? "auto" : "none"}
-                        style={[
-                            styles.bubble,
-                            {
-                                backgroundColor: colors.card,
-                                left: layout?.bubble.x ?? SCREEN_MARGIN,
-                                maxHeight: height - insets.top - insets.bottom,
-                                maxWidth: width - SCREEN_MARGIN * 2,
-                                opacity: layout ? 1 : 0,
-                                top: layout?.bubble.y ?? insets.top,
-                            },
-                        ]}
-                    >
-                        <ScrollView bounces={false} style={{ flexShrink: 1 }}>
-                            <Text className="font-sans-semibold text-foreground text-[16px]">{t(stage.step.copy)}</Text>
-                        </ScrollView>
-                        <View
-                            className={
-                                isLog
-                                    ? "flex-row items-center justify-between pt-3"
-                                    : "flex-row items-center justify-end pt-3"
-                            }
-                        >
-                            {isLog ? (
-                                <MonoLabel>
-                                    {t("tour.step", { current: stage.index + 1, total: steps.length })}
-                                </MonoLabel>
-                            ) : null}
-                            <View className="flex-row items-center gap-4">
-                                {isLog && !last ? (
-                                    <Pressable accessibilityRole="button" hitSlop={10} onPress={skip}>
-                                        <Text className="text-muted text-[15px]">{t("tour.skip")}</Text>
-                                    </Pressable>
-                                ) : null}
-                                <Pressable accessibilityRole="button" hitSlop={10} onPress={primaryPress}>
-                                    <Text className="text-tint font-sans-semibold text-[15px]">{primaryLabel}</Text>
-                                </Pressable>
-                            </View>
-                        </View>
-
-                        {layout ? (
-                            <Svg
-                                height={POINTER_HEIGHT}
-                                style={[
-                                    { left: layout.pointerX - POINTER_WIDTH / 2, position: "absolute" },
-                                    layout.above ? { bottom: -POINTER_HEIGHT } : { top: -POINTER_HEIGHT },
-                                ]}
-                                width={POINTER_WIDTH}
-                            >
-                                <Path d={layout.above ? POINTER_DOWN : POINTER_UP} fill={colors.card} />
-                            </Svg>
-                        ) : null}
-                    </View>
-                ) : null}
-            </View>
-        </Modal>
+            </Animated.View>
+        </Animated.View>
     );
 }
