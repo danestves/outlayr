@@ -13,7 +13,7 @@ import { SplitTool } from "@/components/tools/split-tool";
 import { SubscriptionTool } from "@/components/tools/subscription-tool";
 import { getRates } from "@/lib/get-rates";
 import { hasKey } from "@/lib/has-key";
-import { RATE_MARKETS } from "@/lib/rates";
+import { RATE_MARKETS, headlineValues } from "@/lib/rates";
 import type { Rate, RateSlug } from "@/lib/rates";
 import { ORGANIZATION_ID, answerTrail, faqPage, ldJson, pageMeta } from "@/lib/seo";
 
@@ -35,9 +35,20 @@ export const Route = createFileRoute("/{-$locale}/tools/$slug")({
             throw notFound({ routeId: rootRouteId });
         }
         const locale = localeFromParam(params.locale);
-        const page = getIntlayer("tools", locale).pages[slug];
+        const dictionary = getIntlayer("tools", locale);
+        const page = dictionary.pages[slug];
+        const rateSlug = hasKey(RATE_MARKETS, slug) ? slug : null;
+        const rates = rateSlug ? await getRates({ data: rateSlug }) : null;
+        const values = rateSlug ? headlineValues(rateSlug, locale, rates) : null;
+        const live =
+            values && "live" in page
+                ? { description: page.live.description(values), title: page.live.title(values) }
+                : null;
         const head = {
-            meta: pageMeta(page.meta.title, "description" in page.meta ? page.meta.description : page.lead),
+            meta: pageMeta(
+                live?.title ?? page.meta.title,
+                live?.description ?? ("description" in page.meta ? page.meta.description : page.lead)
+            ),
             scripts: [
                 ldJson({
                     "@context": "https://schema.org",
@@ -53,11 +64,28 @@ export const Route = createFileRoute("/{-$locale}/tools/$slug")({
                     publisher: { "@id": ORGANIZATION_ID },
                     url: pageUrl(`/tools/${slug}`, locale),
                 }),
+                ...(rateSlug && rates
+                    ? [
+                          ldJson({
+                              "@context": "https://schema.org",
+                              "@graph": rates.map((rate) => ({
+                                  "@type": "ExchangeRateSpecification",
+                                  currency: rate.base,
+                                  currentExchangeRate: {
+                                      "@type": "UnitPriceSpecification",
+                                      price: rate.rate,
+                                      priceCurrency: RATE_MARKETS[rateSlug].currency,
+                                  },
+                                  name: dictionary.labels.rates.kinds[rate.kind],
+                              })),
+                          }),
+                      ]
+                    : []),
                 ldJson(faqPage(page.faq, LANGUAGES[locale].lang)),
                 ldJson(answerTrail(locale, "tools", slug, page.title)),
             ],
         };
-        return { head, rates: hasKey(RATE_MARKETS, slug) ? await getRates({ data: slug }) : null, slug };
+        return { head, live, rates, slug };
     },
     head: ({ loaderData }) => loaderData?.head ?? {},
 });
@@ -71,7 +99,7 @@ function Calculator({ rates, slug }: { rates: readonly Rate[] | null; slug: Tool
 }
 
 function Tool() {
-    const { rates, slug } = Route.useLoaderData();
+    const { live, rates, slug } = Route.useLoaderData();
     const { labels, pages } = useIntlayer("tools");
     const answers = useIntlayer("answers");
     const { locale } = useLocale();
@@ -80,7 +108,7 @@ function Tool() {
         <Article
             badges={false}
             hub="/tools"
-            lead={page.lead}
+            lead={live?.description ?? page.lead}
             related={page.related}
             sections={[
                 {

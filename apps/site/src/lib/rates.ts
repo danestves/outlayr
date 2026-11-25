@@ -1,7 +1,10 @@
+import { LANGUAGES } from "@outlayr/shared/i18n";
+import type { Locale } from "@outlayr/shared/i18n";
 import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const DATE_LENGTH = "2026-11-03".length;
 
 export const RATE_MARKETS = {
     "dolar-bcv-hoy": {
@@ -15,6 +18,7 @@ export const RATE_MARKETS = {
         maxAgeMs: 7 * DAY_MS,
         numberLocale: "es-VE",
         prices: ["promedio"],
+        symbol: "Bs.",
         timeZone: "America/Caracas",
         url: "https://ve.dolarapi.com/v1/cotizaciones",
     },
@@ -52,6 +56,7 @@ export const RATE_MARKETS = {
         maxAgeMs: 2 * DAY_MS,
         numberLocale: "es-AR",
         prices: ["venta", "promedio"],
+        symbol: "$",
         timeZone: "America/Argentina/Buenos_Aires",
         url: "https://dolarapi.com/v1/dolares",
     },
@@ -72,6 +77,7 @@ export const RATE_MARKETS = {
         maxAgeMs: 3 * DAY_MS,
         numberLocale: "es-BO",
         prices: ["venta", "promedio"],
+        symbol: "Bs",
         timeZone: "America/La_Paz",
         url: "https://bo.dolarapi.com/v1/dolares",
     },
@@ -89,6 +95,44 @@ export interface Rate {
     rate: number;
     source: string;
     updatedAt: string;
+}
+
+export function rateLocales(locale: Locale, slug: RateSlug) {
+    const market = RATE_MARKETS[slug];
+    return locale === "es"
+        ? { dateLang: market.numberLocale, lang: market.numberLocale }
+        : { dateLang: LANGUAGES[locale].date, lang: LANGUAGES[locale].lang };
+}
+
+export function formatRatePrice(slug: RateSlug, value: number, lang: string): string {
+    const price = new Intl.NumberFormat(lang, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+    return `${RATE_MARKETS[slug].symbol} ${price.format(value)}`;
+}
+
+export function formatRateWhen(slug: RateSlug, rate: Rate, dateLang: string): string {
+    if (rate.dateOnly) {
+        return new Intl.DateTimeFormat(dateLang, { dateStyle: "medium", timeZone: "UTC" }).format(
+            new Date(rate.updatedAt.slice(0, DATE_LENGTH))
+        );
+    }
+    return new Intl.DateTimeFormat(dateLang, {
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        month: "short",
+        timeZone: RATE_MARKETS[slug].timeZone,
+        timeZoneName: "short",
+        year: "numeric",
+    }).format(new Date(rate.updatedAt));
+}
+
+export function headlineValues(slug: RateSlug, locale: Locale, rates: readonly Rate[] | null) {
+    const headline = rates?.find((rate) => rate.kind === RATE_MARKETS[slug].kinds[0].kind);
+    if (!headline) {
+        return null;
+    }
+    const { dateLang, lang } = rateLocales(locale, slug);
+    return { rate: formatRatePrice(slug, headline.rate, lang), when: formatRateWhen(slug, headline, dateLang) };
 }
 
 const Quote = Schema.Struct({
