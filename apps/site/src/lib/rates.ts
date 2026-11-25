@@ -4,7 +4,7 @@ import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DATE_LENGTH = "2026-11-03".length;
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}/u;
 
 export const RATE_MARKETS = {
     "dolar-bcv-hoy": {
@@ -112,7 +112,7 @@ export function formatRatePrice(slug: RateSlug, value: number, lang: string): st
 export function formatRateWhen(slug: RateSlug, rate: Rate, dateLang: string): string {
     if (rate.dateOnly) {
         return new Intl.DateTimeFormat(dateLang, { dateStyle: "medium", timeZone: "UTC" }).format(
-            new Date(rate.updatedAt.slice(0, DATE_LENGTH))
+            new Date(ISO_DAY.exec(rate.updatedAt)?.[0] ?? rate.updatedAt)
         );
     }
     return new Intl.DateTimeFormat(dateLang, {

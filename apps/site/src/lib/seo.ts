@@ -9,7 +9,7 @@ import type { LEGAL_DAYS } from "./site";
 
 type Json = string | number | boolean | null | readonly Json[] | { readonly [key: string]: Json | undefined };
 
-const TITLE_LIMIT = 60;
+export const TITLE_LIMIT = 60;
 
 export function branded(title: string): string {
     const full = `${title} · Outlayr`;

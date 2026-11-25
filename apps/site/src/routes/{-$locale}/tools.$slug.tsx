@@ -15,7 +15,7 @@ import { getRates } from "@/lib/get-rates";
 import { hasKey } from "@/lib/has-key";
 import { RATE_MARKETS, headlineValues } from "@/lib/rates";
 import type { Rate, RateSlug } from "@/lib/rates";
-import { ORGANIZATION_ID, answerTrail, faqPage, ldJson, pageMeta } from "@/lib/seo";
+import { ORGANIZATION_ID, TITLE_LIMIT, answerTrail, faqPage, ldJson, pageMeta } from "@/lib/seo";
 
 type ToolSlug = keyof ReturnType<typeof getIntlayer<"tools">>["pages"];
 
@@ -26,6 +26,10 @@ const CALCULATORS = {
     "split-expenses-calculator": SplitTool,
     "subscription-cost-calculator": SubscriptionTool,
 } satisfies Record<Exclude<ToolSlug, RateSlug>, ComponentType>;
+
+const CRYPTO_KINDS: ReadonlySet<Rate["kind"]> = new Set(["binance", "cripto"]);
+
+const isFiat = (rate: Rate) => !CRYPTO_KINDS.has(rate.kind);
 
 export const Route = createFileRoute("/{-$locale}/tools/$slug")({
     component: Tool,
@@ -40,10 +44,11 @@ export const Route = createFileRoute("/{-$locale}/tools/$slug")({
         const rateSlug = hasKey(RATE_MARKETS, slug) ? slug : null;
         const rates = rateSlug ? await getRates({ data: rateSlug }) : null;
         const values = rateSlug ? headlineValues(rateSlug, locale, rates) : null;
-        const live =
+        const copy =
             values && "live" in page
                 ? { description: page.live.description(values), title: page.live.title(values) }
                 : null;
+        const live = copy && copy.title.length <= TITLE_LIMIT ? copy : null;
         const head = {
             meta: pageMeta(
                 live?.title ?? page.meta.title,
@@ -64,11 +69,11 @@ export const Route = createFileRoute("/{-$locale}/tools/$slug")({
                     publisher: { "@id": ORGANIZATION_ID },
                     url: pageUrl(`/tools/${slug}`, locale),
                 }),
-                ...(rateSlug && rates
+                ...(rateSlug && rates?.some(isFiat)
                     ? [
                           ldJson({
                               "@context": "https://schema.org",
-                              "@graph": rates.map((rate) => ({
+                              "@graph": rates.filter(isFiat).map((rate) => ({
                                   "@type": "ExchangeRateSpecification",
                                   currency: rate.base,
                                   currentExchangeRate: {

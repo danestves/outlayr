@@ -1262,8 +1262,8 @@ const tools = {
                 live: {
                     description: insert(
                         t({
-                            en: "Argentina's blue dollar sells for {{rate}} today ({{when}}). Also the official, MEP, CCL, card, wholesale and crypto rates, with a calculator.",
-                            es: "El dólar blue está hoy a {{rate}} para la venta ({{when}}). También el oficial, MEP, CCL, tarjeta, mayorista y cripto, con calculadora.",
+                            en: "Argentina's blue dollar is at {{rate}} ({{when}}). Also the official, MEP, CCL, card, wholesale and crypto rates, with a calculator.",
+                            es: "El dólar blue en Argentina está a {{rate}} ({{when}}). También el oficial, MEP, CCL, tarjeta, mayorista y cripto, con calculadora.",
                         })
                     ),
                     title: insert(
@@ -1352,13 +1352,13 @@ const tools = {
                 live: {
                     description: insert(
                         t({
-                            en: "The blue dollar in Bolivia is {{rate}} today on Binance P2P ({{when}}). Also the official BCB rate and a dollar to boliviano calculator.",
-                            es: "El dólar blue en Bolivia está hoy a {{rate}} en Binance P2P ({{when}}). También el oficial del BCB y una calculadora de dólares a bolivianos.",
+                            en: "The blue dollar in Bolivia is at {{rate}} on Binance P2P ({{when}}). Also the official BCB rate and a dollar to boliviano calculator.",
+                            es: "El dólar blue en Bolivia está a {{rate}} en Binance P2P ({{when}}). También el oficial del BCB y una calculadora de dólares a bolivianos.",
                         })
                     ),
                     title: insert(
                         t({
-                            en: "Bolivia Blue Dollar Today: {{rate}} | Parallel and Official",
+                            en: "Bolivia Blue Dollar Today: {{rate}} | Official Rate",
                             es: "Dólar blue Bolivia hoy: {{rate}} | Paralelo y oficial",
                         })
                     ),
