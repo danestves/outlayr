@@ -1,16 +1,14 @@
-import { LANGUAGES } from "@outlayr/shared/i18n";
 import { useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { FactList } from "@/components/answers/article";
 import { convertAtRate, parseAmount } from "@/lib/calculators";
-import { RATE_MARKETS } from "@/lib/rates";
+import { RATE_MARKETS, formatRateWhen, rateLocales } from "@/lib/rates";
 import type { Rate, RateSlug } from "@/lib/rates";
 
 import { AmountInput, Choice, Field, Fields, Figure, ToolPanel } from "./tool-kit";
 
 const MAX_AMOUNT = 100_000_000_000;
-const DATE_LENGTH = "2026-11-03".length;
 const SERVICE_URL = "https://dolarapi.com";
 
 type From = "foreign" | "local";
@@ -21,9 +19,8 @@ export function RateTool({ rates, slug }: { rates: readonly Rate[] | null; slug:
     const [amount, setAmount] = useState("1");
     const [from, setFrom] = useState<From>("foreign");
     const [kind, setKind] = useState<Rate["kind"]>();
-    const { currency, numberLocale, timeZone } = RATE_MARKETS[slug];
-    const lang = locale === "es" ? numberLocale : LANGUAGES[locale].lang;
-    const dateLang = locale === "es" ? numberLocale : LANGUAGES[locale].date;
+    const { currency } = RATE_MARKETS[slug];
+    const { dateLang, lang } = rateLocales(locale, slug);
     const selected = rates?.find((rate) => rate.kind === kind) ?? rates?.[0];
     const title = pages[slug].title.value;
 
@@ -40,19 +37,7 @@ export function RateTool({ rates, slug }: { rates: readonly Rate[] | null; slug:
     const minor = Math.min(MAX_AMOUNT, parseAmount(amount, fromCode));
     const price = new Intl.NumberFormat(lang, { maximumFractionDigits: 4, minimumFractionDigits: 2 });
     const facts = rates.map((rate) => {
-        const when = rate.dateOnly
-            ? new Intl.DateTimeFormat(dateLang, { dateStyle: "medium", timeZone: "UTC" }).format(
-                  new Date(rate.updatedAt.slice(0, DATE_LENGTH))
-              )
-            : new Intl.DateTimeFormat(dateLang, {
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                  month: "short",
-                  timeZone,
-                  timeZoneName: "short",
-                  year: "numeric",
-              }).format(new Date(rate.updatedAt));
+        const when = formatRateWhen(slug, rate, dateLang);
         const buy =
             rate.buy === null
                 ? ""

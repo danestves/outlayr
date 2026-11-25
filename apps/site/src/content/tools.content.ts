@@ -1166,6 +1166,20 @@ const tools = {
                     en: "Today's official BCV rates for the dollar and the euro in Venezuela, with a calculator to turn dollars or euros into bolívares and back.",
                     es: "La tasa oficial del BCV para el dólar y el euro en Venezuela hoy, con una calculadora para convertir bolívares a dólares o euros y al revés.",
                 }),
+                live: {
+                    description: insert(
+                        t({
+                            en: "The official BCV dollar rate is {{rate}} for {{when}}. Also the BCV euro rate and a calculator for bolívares, dollars and euros.",
+                            es: "El dólar oficial del BCV está en {{rate}} para el {{when}}. También el euro BCV y una calculadora de bolívares a dólares o euros.",
+                        })
+                    ),
+                    title: insert(
+                        t({
+                            en: "BCV Dollar Rate Today: {{rate}} | Euro and Calculator",
+                            es: "Dólar BCV hoy: {{rate}} | Calculadora y euro BCV",
+                        })
+                    ),
+                },
                 meta: {
                     description: t({
                         en: "Today's official BCV dollar and euro rates in Venezuela, with a calculator to turn dollars or euros into bolívares and back.",
@@ -1245,6 +1259,20 @@ const tools = {
                     en: "Today's blue, official, MEP, CCL, card, wholesale and crypto dollar in Argentina, with a calculator to turn dollars into pesos and back.",
                     es: "El dólar blue, oficial, MEP, CCL, tarjeta, mayorista y cripto de hoy en Argentina, con una calculadora para pasar de dólares a pesos y de pesos a dólares.",
                 }),
+                live: {
+                    description: insert(
+                        t({
+                            en: "Argentina's blue dollar is at {{rate}} ({{when}}). Also the official, MEP, CCL, card, wholesale and crypto rates, with a calculator.",
+                            es: "El dólar blue en Argentina está a {{rate}} ({{when}}). También el oficial, MEP, CCL, tarjeta, mayorista y cripto, con calculadora.",
+                        })
+                    ),
+                    title: insert(
+                        t({
+                            en: "Argentina Blue Dollar Today: {{rate}} | Official and MEP",
+                            es: "Dólar blue hoy Argentina: {{rate}} | Oficial y MEP",
+                        })
+                    ),
+                },
                 meta: {
                     description: t({
                         en: "Today's blue, official, MEP, CCL, card, wholesale and crypto dollar in Argentina, with a calculator for dollars and pesos.",
@@ -1321,6 +1349,20 @@ const tools = {
                     en: "Today's parallel dollar in Bolivia, also called the blue dollar, from the Binance P2P market, and the official rate from the BCB, with a calculator to turn dollars into bolivianos and back.",
                     es: "El dólar blue o paralelo de hoy en Bolivia, del mercado P2P de Binance, y el oficial del BCB, con una calculadora para pasar de dólares a bolivianos y de bolivianos a dólares.",
                 }),
+                live: {
+                    description: insert(
+                        t({
+                            en: "The blue dollar in Bolivia is at {{rate}} on Binance P2P ({{when}}). Also the official BCB rate and a dollar to boliviano calculator.",
+                            es: "El dólar blue en Bolivia está a {{rate}} en Binance P2P ({{when}}). También el oficial del BCB y una calculadora de dólares a bolivianos.",
+                        })
+                    ),
+                    title: insert(
+                        t({
+                            en: "Bolivia Blue Dollar Today: {{rate}} | Official Rate",
+                            es: "Dólar blue Bolivia hoy: {{rate}} | Paralelo y oficial",
+                        })
+                    ),
+                },
                 meta: {
                     description: t({
                         en: "Today's parallel (blue) dollar in Bolivia from Binance P2P and the official BCB rate, with a dollar to boliviano calculator.",
