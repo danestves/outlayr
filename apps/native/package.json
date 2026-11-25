@@ -33,6 +33,7 @@
         "@outlayr/money": "workspace:*",
         "@react-native-async-storage/async-storage": "2.2.0",
         "@shopify/react-native-skia": "2.14.0",
+        "@stripe/stripe-react-native": "0.81.0",
         "@tanstack/react-form": "1.33.5",
         "@varlock/expo-integration": "1.2.2",
         "better-auth": "catalog:",

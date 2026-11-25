@@ -66,6 +66,7 @@ import { useTourAutoStart } from "@/tour/use-tour-auto-start";
 import { AccountsBlock } from "./components/accounts-block";
 import { AmountsEyeButton } from "./components/amounts-eye-button";
 import { LogAutologPaused } from "./components/log-autolog-paused";
+import { LogBankRelink } from "./components/log-bank-relink";
 import { LogEmptyState } from "./components/log-empty-state";
 import { LogFilterChip } from "./components/log-filter-chip";
 import type { SparklineData } from "./components/log-insights";
@@ -360,6 +361,7 @@ export function Log() {
                     contentContainerStyle={{ flexGrow: 1, paddingBottom: FAB_CLEARANCE, paddingHorizontal: 20 }}
                     contentInsetAdjustmentBehavior="automatic"
                 >
+                    <LogBankRelink />
                     {accountsOverview || debts ? (
                         <AccountsBlock {...accountsProps} trailing={<AmountsEyeButton />} />
                     ) : null}
@@ -396,6 +398,7 @@ export function Log() {
                 }}
                 ListHeaderComponent={
                     <>
+                        <LogBankRelink />
                         {filter === "all" ? (
                             <LogInsights
                                 insights={insights}

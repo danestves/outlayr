@@ -38,6 +38,7 @@ type SettingsControls = typeof import("@/content/settings-controls.content").def
 type SettingsData = typeof import("@/content/settings-data.content").default;
 type SettingsFeatureLab = typeof import("@/content/settings-feature-lab.content").default;
 type SettingsNotifications = typeof import("@/content/settings-notifications.content").default;
+type SettingsBanks = typeof import("@/content/settings-banks.content").default;
 type SettingsWallet = typeof import("@/content/settings-wallet.content").default;
 type SettingsWebhooks = typeof import("@/content/settings-webhooks.content").default;
 type Sharing = typeof import("@/content/sharing.content").default;
@@ -75,6 +76,7 @@ export const DICTIONARY_KEYS = [
     "settings",
     "settings-account",
     "settings-account-panel",
+    "settings-banks",
     "settings-controls",
     "settings-data",
     "settings-feature-lab",
@@ -120,6 +122,7 @@ type Content =
     | SettingsData["content"]
     | SettingsFeatureLab["content"]
     | SettingsNotifications["content"]
+    | SettingsBanks["content"]
     | SettingsWallet["content"]
     | SettingsWebhooks["content"]
     | Sharing["content"]

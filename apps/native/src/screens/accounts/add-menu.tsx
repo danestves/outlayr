@@ -3,7 +3,9 @@ import { Stack, useRouter } from "expo-router";
 import { toolbarIcon } from "@/components/toolbar-icons";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useMeta } from "@/data/app-meta";
-import { useAccountCaps, useCreateAccount } from "@/hooks/use-pro-gate";
+import { BANK_LINK_ROUTE } from "@/domain/linked-banks";
+import { useBankEntry } from "@/hooks/use-bank-overview";
+import { useAccountCaps, useCreateAccount, useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
 import { useNewDebtItems } from "@/screens/debts/use-new-debt-items";
 import { setBoolSettingCommand } from "@/state/settings-commands";
@@ -18,20 +20,50 @@ interface AddMenuActions {
 /** Returns the element, not a component: a toolbar only accepts its own element types as children. */
 export function useAddMenu({ onCategoryLimit, onGoal, onOverallLimit }: AddMenuActions) {
     const t = useTranslation();
+    const router = useRouter();
     const createAccount = useCreateAccount();
     const accountsCapped = useAccountCaps().accounts;
+    const banks = useBankEntry();
+    const openPaywall = useOpenPaywall();
     const debtItems = useNewDebtItems();
+
+    const connectBank = () => {
+        if (banks.access === "plan") {
+            openPaywall("banks");
+            return;
+        }
+        router.push(BANK_LINK_ROUTE);
+    };
 
     return (
         <Stack.Toolbar.Menu accessibilityLabel={t("balances.add.prompt")}>
             <Stack.Toolbar.Icon {...toolbarIcon("add")} />
-            <Stack.Toolbar.MenuAction
-                icon="building.columns"
-                onPress={createAccount}
-                subtitle={accountsCapped ? t("pro.col.pro") : undefined}
-            >
-                {t("accounts.add.account")}
-            </Stack.Toolbar.MenuAction>
+            {banks.shown ? (
+                <Stack.Toolbar.Menu inline title={t("accounts.title")}>
+                    <Stack.Toolbar.MenuAction
+                        icon="building.columns"
+                        onPress={createAccount}
+                        subtitle={accountsCapped ? t("pro.col.pro") : undefined}
+                    >
+                        {t("accounts.add.manual")}
+                    </Stack.Toolbar.MenuAction>
+                    <Stack.Toolbar.MenuAction
+                        icon="link"
+                        onPress={connectBank}
+                        subtitle={banks.access === "plan" ? t("pro.col.pro") : undefined}
+                    >
+                        {t("accounts.add.connectBank")}
+                    </Stack.Toolbar.MenuAction>
+                </Stack.Toolbar.Menu>
+            ) : (
+                <Stack.Toolbar.MenuAction
+                    icon="building.columns"
+                    onPress={createAccount}
+                    subtitle={accountsCapped ? t("pro.col.pro") : undefined}
+                >
+                    {t("accounts.add.account")}
+                </Stack.Toolbar.MenuAction>
+            )}
             <Stack.Toolbar.Menu inline title={t("debts.title")}>
                 {debtItems.map((item) => (
                     <Stack.Toolbar.MenuAction icon={item.icon} key={item.id} onPress={item.onPress}>

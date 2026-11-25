@@ -202,6 +202,16 @@ export const features = {
         says: ["webhooks", "connect Zapier or IFTTT", "send entries to my server"],
         steps: [{ press: 'label="Create token"' }, { see: "Copy it now. You won't see it again." }],
     },
+    "linked-banks": {
+        link: "/settings/integrations/banks",
+        proves: "A signed-in Pro account with sync on lists its linked banks, flags one that needs a sign-in, and opens the link entry with Stripe's consent.",
+        says: ["link my bank", "linked banks", "connect my bank account", "bank sign-in expired"],
+        steps: [
+            { see: "Sign in again" },
+            { press: 'label="Link another bank"' },
+            { see: "Stripe handles the bank sign-in" },
+        ],
+    },
 } as const satisfies Record<string, Feature>;
 
 export type FeatureId = keyof typeof features;
