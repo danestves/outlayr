@@ -20,6 +20,7 @@ import { PROFILE_SEAT_LIMIT } from "@/domain/profile-sharing";
 import { useLongWait } from "@/hooks/use-long-wait";
 import { useTranslation } from "@/i18n/context";
 import { useAuthSession } from "@/lib/auth-session";
+import { useCloudSocketDown } from "@/lib/convex";
 import { useWhen } from "@/lib/lifecycle";
 import { cancelProfileJoin, profileInviteAtom, requestProfileJoin } from "@/lib/profile-sharing";
 import { SILENT } from "@/state/atom-command";
@@ -56,8 +57,11 @@ export function JoinProfile() {
 
 function JoinFlow({ code }: { code: string }) {
     const invite = useAtomValue(profileInviteAtom(code));
-    const known = AsyncResult.isSuccess(invite) ? invite.value : undefined;
-    const slow = useLongWait(known === undefined && !AsyncResult.isFailure(invite));
+    const known = AsyncResult.isSuccess(invite) && !invite.waiting ? invite.value : undefined;
+    const waiting = known === undefined && !AsyncResult.isFailure(invite);
+    // A dropped socket reconnects and refetches the token before the read, always well past the 400 ms delay.
+    const socketDown = useCloudSocketDown();
+    const slow = useLongWait(waiting) || (waiting && socketDown);
     if (AsyncResult.isFailure(invite)) {
         return <JoinErrorScreen kind="generic" look={null} ownerName={null} />;
     }
