@@ -1,8 +1,10 @@
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import type { Locale } from "@outlayr/shared/i18n";
 import type { ReactNode } from "react";
 import { useLocale } from "react-intlayer";
 
 import { formatMoney } from "@/components/demo/money";
+import { formatMoney as wholeMoney, formatPercent, moneyParts } from "@/lib/money";
 
 const LABEL = "text-muted font-mono text-xs tracking-widest uppercase";
 
@@ -10,7 +12,7 @@ function Plate({ children, side, title }: { children: ReactNode; side: string; t
     return (
         <>
             <div className="border-border flex h-11 items-center justify-between gap-4 border-b">
-                <p className="text-muted truncate text-sm">{title}</p>
+                <p className="text-muted w-0 flex-1 truncate text-sm">{title}</p>
                 <span className="text-muted shrink-0 font-mono text-xs">{side}</span>
             </div>
             <div className="pt-5">{children}</div>
@@ -221,6 +223,123 @@ export function CasheaPlate() {
                 <span>{copy.grace}</span>
                 <span className="shrink-0 font-mono">{copy.interest}</span>
             </p>
+        </Plate>
+    );
+}
+
+interface CouplesCopy {
+    earns: string;
+    note: string;
+    pays: string;
+    share: string;
+    shared: string;
+    side: string;
+    title: string;
+}
+
+const COUPLES = {
+    en: {
+        earns: "Earns",
+        note: "Rent, groceries, utilities. The rest stays personal.",
+        pays: "Pays",
+        share: "Share",
+        shared: "Shared this month",
+        side: "by income",
+        title: "Shared bills",
+    },
+    de: {
+        earns: "Verdient",
+        note: "Miete, Einkäufe, Nebenkosten. Der Rest bleibt privat.",
+        pays: "Zahlt",
+        share: "Anteil",
+        shared: "Gemeinsam diesen Monat",
+        side: "nach Einkommen",
+        title: "Gemeinsame Kosten",
+    },
+    es: {
+        earns: "Gana",
+        note: "Alquiler, supermercado, servicios. El resto es personal.",
+        pays: "Paga",
+        share: "Parte",
+        shared: "Compartido este mes",
+        side: "según ingresos",
+        title: "Cuentas en común",
+    },
+    fr: {
+        earns: "Gagne",
+        note: "Loyer, courses, charges. Le reste reste personnel.",
+        pays: "Paie",
+        share: "Part",
+        shared: "En commun ce mois-ci",
+        side: "selon les revenus",
+        title: "Dépenses communes",
+    },
+    pt: {
+        earns: "Ganha",
+        note: "Aluguel, mercado, contas da casa. O resto fica pessoal.",
+        pays: "Paga",
+        share: "Parte",
+        shared: "Compartilhado este mês",
+        side: "pela renda",
+        title: "Contas em comum",
+    },
+} as const satisfies Record<Locale, CouplesCopy>;
+
+const SHARED_BILLS = 2500;
+const PARTNERS = [
+    { earns: 4200, name: "Ana" },
+    { earns: 2800, name: "Luis" },
+] as const;
+const PARTNERS_TOTAL = PARTNERS.reduce((sum, partner) => sum + partner.earns, 0);
+
+export function CouplesPlate() {
+    const { locale } = useLocale();
+    const copy = COUPLES[locale];
+    const tag = LANGUAGES[locale].date;
+    const [first] = PARTNERS;
+    return (
+        <Plate side={copy.side} title={copy.title}>
+            <Hero amount={moneyParts(SHARED_BILLS, "USD", tag, 2)} label={copy.shared} />
+            <div aria-hidden="true" className="mt-4 flex h-2 gap-0.5 overflow-hidden rounded-full">
+                <div className="bg-foreground" style={{ width: `${(first.earns / PARTNERS_TOTAL) * 100}%` }} />
+                <div className="bg-muted/45 flex-1" />
+            </div>
+            <table className="mt-4 w-full tabular-nums">
+                <thead>
+                    <tr className="text-muted font-mono text-xs uppercase">
+                        <th className="pb-2 text-left font-normal" scope="col">
+                            <span className="sr-only">{copy.side}</span>
+                        </th>
+                        <th className="pb-2 text-right font-normal" scope="col">
+                            {copy.earns}
+                        </th>
+                        <th className="pb-2 text-right font-normal" scope="col">
+                            {copy.share}
+                        </th>
+                        <th className="pb-2 text-right font-normal" scope="col">
+                            {copy.pays}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {PARTNERS.map((partner) => {
+                        const share = partner.earns / PARTNERS_TOTAL;
+                        return (
+                            <tr className="border-border border-t" key={partner.name}>
+                                <th className="py-2.5 text-left font-normal" scope="row">
+                                    {partner.name}
+                                </th>
+                                <td className="py-2.5 text-right">{wholeMoney(partner.earns, "USD", tag, 0)}</td>
+                                <td className="py-2.5 text-right">{formatPercent(share * 100, tag)}</td>
+                                <td className="py-2.5 text-right">
+                                    {formatMoney(SHARED_BILLS * share, "USD", locale)}
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+            <p className="border-border text-muted border-t pt-3 text-xs">{copy.note}</p>
         </Plate>
     );
 }
