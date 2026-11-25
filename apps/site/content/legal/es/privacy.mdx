@@ -16,6 +16,7 @@ intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo
 - Con Outlayr Pro puedes conectar Notion para importar gastos de tus bases de datos de Notion. Guardamos cifrada en nuestros servidores la clave de acceso de Notion para que puedas volver a importar, hasta que desconectes Notion o elimines tu cuenta. Lo que leemos de Notion pasa por nuestro servidor hacia tu dispositivo y no se guarda.
 - Puedes conectar a tu cuenta un asistente de IA como Claude. Una vez que lo apruebas, puede leer lo que tus dispositivos sincronizaron y, con Outlayr Pro, agregar entradas. Lo que lee se rige por la política de privacidad de ese asistente. Nuestro servidor le dice a PostHog qué herramienta usó y cuánto tardó, nunca lo que leyó.
 - Si invitas amigos, cada uno ve tu nombre de pila en tu invitación, y tú ves su nombre de pila, si compraron Pro y cuándo. Nunca lo que registraron ni cuánto pagaron.
+- Con Outlayr Pro puedes compartir un perfil con hasta 5 personas. Todos en él ven y pueden cambiar el registro y las fotos de ese perfil, y ven el nombre de pila de todos y quién registró cada entrada.
 - Sin anuncios y sin rastreo en apps de otras empresas. No vendemos tu información personal ni la compartimos para publicidad.
 - Puedes eliminar tu cuenta y todo lo que está sincronizado con ella desde la app en cualquier momento: **Configuración › Cuenta › Eliminar cuenta**.
 
@@ -55,6 +56,8 @@ Todos los tipos de datos que maneja Outlayr, en un solo lugar. Las secciones sig
 | Enlace de imagen, la imagen | Selector de ícono | Nuestros servidores (Cloudflare), compartido con todos | Se guarda con la imagen hasta que la eliminemos; la dirección IP no se conserva. No se vincula contigo |
 | Registros de compra, ID de usuario, nombre, correo electrónico | Al abrir la app, Pro | RevenueCat, Apple, Google o Stripe, nuestros servidores | Hasta la eliminación de la cuenta |
 | Código de invitación, quién invitó a quién, nombres de pila, si el amigo compró Pro y cuándo, meses ganados | Invitaciones | Nuestros servidores, RevenueCat | Hasta la eliminación de la cuenta |
+| El registro y las fotos de un perfil compartido, quién está en él y cuándo se unió o se fue, nombres de pila, quién registró cada entrada | Perfiles compartidos (Pro) | Nuestros servidores, todos en el perfil | Hasta que el propietario elimina su cuenta. El registro de un miembro y sus fotos: hasta que ese miembro elimina su cuenta |
+| Nombre, ícono y color del perfil, nombre de pila del propietario | Enlaces de invitación a perfiles (Pro) | Nuestros servidores, cualquiera con el enlace | El enlace funciona una vez, durante 7 días. Se elimina con la cuenta del propietario |
 | ID de instalación, versión de la app, errores | Búsqueda de actualizaciones | Expo | Según la política de Expo |
 | Pantallas, funciones usadas, errores, ID de instalación, modelo del dispositivo | Uso de la app | PostHog | Hasta la eliminación de la cuenta, o según la política de PostHog si nunca inicias sesión |
 | Función, modelo, tokens, costo, velocidad y errores de cada solicitud de IA | Sugerencias, lectura de notificaciones, voz, escaneos, importaciones | PostHog | Con Compartir analíticas activado, hasta la eliminación de la cuenta. Si no, según la política de PostHog |
@@ -131,6 +134,8 @@ La sincronización es parte de Outlayr Pro. Si iniciaste sesión y tienes Pro, O
 
 La configuración ligada a un celular se queda en él: notificaciones, bloqueo de la app, compartir analíticas, escritura de montos y modo claro u oscuro.
 
+Un perfil que compartes se sincroniza con todos los que están en él. Consulta [Perfiles compartidos](#perfiles-compartidos).
+
 ### Entradas eliminadas
 
 Cuando eliminas una entrada en un dispositivo sincronizado, nuestros servidores guardan un registro de eliminación para que tus otros dispositivos también puedan quitarla. Ese registro conserva el último contenido de la entrada, y cualquier foto que tuviera, hasta que elimines tu cuenta.
@@ -138,6 +143,21 @@ Cuando eliminas una entrada en un dispositivo sincronizado, nuestros servidores 
 ### Desactivar la sincronización
 
 Desactivar la sincronización hace que ese dispositivo deje de enviar cambios. No quita lo que ya está en nuestros servidores. Para quitarlo, [elimina tu cuenta](#eliminar-y-exportar).
+
+## Perfiles compartidos
+
+Con Outlayr Pro, el propietario de un perfil que no sea Personal puede invitar a hasta 5 personas a compartirlo. Cada invitación es un enlace que funciona una vez, durante 7 días. Quien lo abre ve el nombre, el ícono y el color del perfil y el nombre de pila del propietario. Para unirse hace falta una cuenta.
+
+Todos los que están en un perfil compartido, en sus propios dispositivos:
+
+- Ven todo su registro y pueden cambiarlo: entradas, transferencias, cuentas, presupuestos, metas de ahorro, categorías, etiquetas y las fotos de ellas, incluido lo que agregaron otros.
+- Ven el nombre de pila de todos los que están en él y, en cada entrada que registró otra persona, el nombre de pila de esa persona.
+
+Tus otros perfiles siguen siendo privados y los miembros nunca los ven. El Pro del propietario cubre a todos los del perfil. Si termina, el perfil deja de sincronizarse para todos hasta que vuelva a estar activo. Solo el propietario puede cambiar el nombre del perfil o eliminarlo, invitar personas o quitarlas. Cualquier otro puede salirse cuando quiera.
+
+Cuando alguien se sale o lo quitan, el perfil se quita de sus dispositivos la próxima vez que se abre la app, y las entradas que agregó se quedan en él. Guardamos un registro de quién estuvo en el perfil y cuándo, hasta que el propietario o esa persona elimina su cuenta.
+
+Cuando el propietario elimina su cuenta, el perfil compartido y su registro se eliminan para todos los que están en él. Cuando otra persona del perfil elimina su cuenta, las entradas que agregó se quedan, pero las fotos que agregó se eliminan y su nombre ya no aparece en sus entradas.
 
 ## Conectar Notion
 
@@ -341,7 +361,7 @@ Si estás en el Espacio Económico Europeo o en el Reino Unido, estas son las ba
 
 | Finalidad | Base legal |
 | --- | --- |
-| Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, la importación de estados de cuenta en PDF, la conexión con Notion, el recordatorio diario en la web, Pro, las invitaciones, las conexiones con asistentes de IA y los webhooks | Contrato: necesitamos estos datos para darte lo que pides. |
+| Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, la importación de estados de cuenta en PDF, la conexión con Notion, el recordatorio diario en la web, Pro, las invitaciones, los perfiles compartidos, las conexiones con asistentes de IA y los webhooks | Contrato: necesitamos estos datos para darte lo que pides. |
 | Las notas de bienvenida y de Pro, y los avisos de cambios en esta política o nuestros Términos | Contrato: son parte de la cuenta y la suscripción que pediste. |
 | El envío a Anthropic y ElevenLabs de entradas por voz, fotos de recibos, capturas de planes de cuotas, descripciones de CSV, estados de cuenta en PDF, texto de notificaciones y nombres de comercios | Tu consentimiento, dado con Permitir cuando la app lo pregunta y retirado en **Configuración › Enviar datos a proveedores de IA**. |
 | Las sugerencias de comercios, la lectura de notificaciones, las búsquedas web, la lista compartida de comercios y los logos | Intereses legítimos: agilizar el registro de entradas y hacerlo más preciso. Las sugerencias, la lectura de notificaciones y las búsquedas web solo llegan a Anthropic una vez que lo permites, y desactivar Autocompletado es la forma de oponerte. |
@@ -367,6 +387,7 @@ La [tabla de arriba](#datos-de-un-vistazo) indica cuánto tiempo se conserva cad
 - El idioma de tu app y el registro de qué correos de bienvenida, de Pro y de cambios recibiste se eliminan con tu cuenta.
 - Los contadores de uso que aplican los límites de escaneos, entradas por voz, sugerencias y lectura de notificaciones guardan solo cantidades, asociadas a tu ID de cuenta, y se eliminan con tu cuenta.
 - Los registros de invitaciones (tu código, quién invitó a quién, los nombres de pila, si el amigo compró Pro y los meses ganados o en espera) se eliminan con la cuenta a la que pertenecen. Una invitación que ya dio un mes pierde el nombre del amigo cuando se elimina su cuenta, y se queda hasta que se elimina la de quien invitó.
+- El registro de un perfil compartido se conserva hasta que su propietario elimina su cuenta. El registro de cuándo un miembro se unió y se fue, y las fotos que agregó, se conservan hasta que se elimina la cuenta de ese miembro, y un enlace de invitación deja de funcionar al usarse o a los 7 días.
 - Una cuenta anónima creada al comprar o restaurar Pro sin sesión se elimina, con todo lo vinculado a ella, cuando inicias sesión. Si nunca inicias sesión, se conserva para que la compra siga funcionando, hasta que nos pidas eliminarla.
 - Los elementos de la lista compartida de comercios no están vinculados a nadie. Se actualizan después de 30 o 90 días.
 - Los eventos de analíticas vinculados a tu cuenta se eliminan con ella. PostHog los borra en un lote posterior, así que pueden seguir ahí un tiempo después de que la app indique que la eliminación terminó. Los eventos de una instalación que nunca inició sesión llevan solo un ID de instalación aleatorio y se conservan según la política de conservación de PostHog. Los registros de solicitudes de IA enviados con Compartir analíticas desactivado llevan un ID aleatorio en lugar de tu ID de cuenta, más el ID de la conversación en la entrada por voz, y se conservan de la misma forma, igual que las llamadas de asistentes de IA a herramientas, que llevan un ID de conexión en su lugar.
@@ -383,7 +404,7 @@ Abre **Configuración › Cuenta › Eliminar cuenta**. Es posible que se te pid
 - Se revoca el acceso de Outlayr a tu inicio de sesión con Apple o Google. En el caso de Apple, nuestro servidor le pide a Apple que lo revoque. En el caso de Google, lo hace la app.
 - Si conectaste Notion, nuestro servidor le pide a Notion que revoque la clave de acceso de Outlayr.
 - Tu token de webhook, tus direcciones y las entradas pendientes de recibir o enviar se eliminan, para que no se envíe nada nuevo. Una entrega ya en curso todavía puede completarse.
-- Tu registro sincronizado, los registros de eliminación, las fotos respaldadas y las solicitudes de sugerencia pendientes se eliminan de nuestros servidores.
+- Tu registro sincronizado, los registros de eliminación, las fotos respaldadas y las solicitudes de sugerencia pendientes se eliminan de nuestros servidores. Eso incluye los perfiles que compartes, que se eliminan para todos los que están en ellos, y las fotos que agregaste a perfiles que comparten otros. Las entradas que agregaste al perfil de otra persona se quedan ahí sin tu nombre.
 - Se eliminan tus registros de cliente en RevenueCat y Stripe y nuestra copia del estado de tu suscripción.
 - Se eliminan tu perfil en PostHog y todos los eventos de analíticas vinculados a él. PostHog borra los eventos en un lote posterior, así que pueden seguir ahí un tiempo después de que la app indique que la eliminación terminó.
 - Se eliminan tus contadores de uso, tus conversaciones de voz abiertas, tus sesiones, el acceso de los asistentes de IA, tus enlaces de inicio de sesión, la clave de acceso de Notion, tu código de invitación y tus invitaciones, y tu cuenta. Si la invitación que reclamaste ya le dio un mes a tu amigo, queda en su lista sin tu nombre.

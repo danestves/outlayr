@@ -16,6 +16,7 @@ intro: "This policy explains what Outlayr collects, where it goes, how long it s
 - With Outlayr Pro you can connect Notion to import expenses from your Notion databases. We keep Notion’s access key encrypted on our servers so you can import again, until you disconnect Notion or delete your account. What we read from Notion passes through our server to your device and isn’t stored.
 - You can connect an AI assistant such as Claude to your account. Once you approve it, it can read what your devices synced, and with Outlayr Pro add entries. What it reads is handled under that assistant’s privacy policy. Our server tells PostHog which tool it used and how long it took, never what it read.
 - If you invite friends, each one sees your first name on your invite, and you see their first name, whether they bought Pro, and when. Never what they logged or what they paid.
+- With Outlayr Pro you can share a profile with up to 5 people. Everyone in it sees and can change that profile’s ledger and photos, and sees everyone’s first name and who logged each entry.
 - No ads and no tracking across other companies’ apps. We don’t sell your personal information or share it for advertising.
 - You can delete your account and everything synced to it from the app at any time: **Settings › Account › Delete account**.
 
@@ -55,6 +56,8 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Image link, the image | Icon picker | Our servers (Cloudflare), shared with everyone | Kept with the image until removed; IP address not kept. Not linked to you |
 | Purchase records, user ID, name, email | App opens, Pro | RevenueCat, Apple, Google, or Stripe, our servers | Until account deletion |
 | Invite code, who invited whom, first names, whether the friend bought Pro and when, months earned | Invites | Our servers, RevenueCat | Until account deletion |
+| A shared profile’s ledger and photos, who is in it and when they joined or left, first names, who logged each entry | Shared profiles (Pro) | Our servers, everyone in the profile | Until the owner deletes their account. A member’s record and photos: until that member deletes their account |
+| Profile name, icon, and color, the owner’s first name | Profile invite links (Pro) | Our servers, anyone with the link | Link works once, for 7 days. Deleted with the owner’s account |
 | Install ID, app version, errors | Update checks | Expo | Expo’s policy |
 | Screens, features used, errors, install ID, device model | App use | PostHog | Until account deletion, or PostHog’s policy if you never sign in |
 | Feature, model, tokens, cost, speed, and errors of each AI request | Suggestions, notification reading, voice, scans, imports | PostHog | With Share analytics on, until account deletion. Otherwise PostHog’s policy |
@@ -131,6 +134,8 @@ Sync is part of Outlayr Pro. When you’re signed in with Pro, Outlayr copies yo
 
 Settings tied to one phone stay on it: notifications, app lock, Share analytics, number entry, and light or dark mode.
 
+A profile you share syncs to everyone in it. See [Shared profiles](#shared-profiles).
+
 ### Deleted entries
 
 When you delete an entry on a synced device, our servers keep a deletion record so your other devices can remove it too. That record keeps the entry’s last contents, and any photo it had, until you delete your account.
@@ -138,6 +143,21 @@ When you delete an entry on a synced device, our servers keep a deletion record 
 ### Turning sync off
 
 Turning sync off stops that device from sending changes. It doesn’t remove what’s already on our servers. To remove it, [delete your account](#deleting-and-exporting).
+
+## Shared profiles
+
+With Outlayr Pro, the owner of a profile other than Personal can invite up to 5 people to share it. Each invite is a link that works once, for 7 days. Anyone who opens it sees the profile’s name, icon, and color and the owner’s first name. Joining needs an account.
+
+Everyone in a shared profile, on their own devices:
+
+- Sees and can change its whole ledger: entries, transfers, accounts, budgets, savings goals, categories, tags, and the photos on them, including what others added.
+- Sees the first name of everyone in it, and on each entry someone else logged, that person’s first name.
+
+Your other profiles stay private, and members never see them. The owner’s Pro covers everyone in the profile. If it ends, the profile stops syncing for everyone until it’s back. Only the owner can rename or delete the profile, invite people, or remove them. Anyone else can leave at any time.
+
+When someone leaves or is removed, the profile is removed from their devices the next time the app opens, and the entries they added stay in it. We keep a record of who was in the profile and when, until the owner or that person deletes their account.
+
+When the owner deletes their account, the shared profile and its ledger are deleted for everyone in it. When someone else in it deletes their account, the entries they added stay, but the photos they added are deleted and their name no longer shows on their entries.
 
 ## Connecting Notion
 
@@ -341,7 +361,7 @@ If you’re in the European Economic Area or the United Kingdom, we rely on thes
 
 | Purpose | Legal basis |
 | --- | --- |
-| Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, bank statement PDF import, the Notion connection, the daily web reminder, Pro, invites, AI assistant connections, and webhooks | Contract: we need this data to provide what you ask for. |
+| Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, bank statement PDF import, the Notion connection, the daily web reminder, Pro, invites, shared profiles, AI assistant connections, and webhooks | Contract: we need this data to provide what you ask for. |
 | The welcome and Pro notes, and notice of changes to this policy or our Terms | Contract: they’re part of the account and subscription you asked for. |
 | Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, PDF statements, notification text, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
 | Merchant suggestions, notification reading, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster and more accurate to file. Suggestions, notification reading, and web lookups reach Anthropic only once you allow it, and turning off Smart fill is how you object. |
@@ -367,6 +387,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Your app language and the record of which welcome, Pro, and change notices you got are deleted with your account.
 - Usage counters that enforce limits on scans, voice entries, suggestions, and notification reading hold counts only, keyed to your account ID, and are deleted with your account.
 - Invite records (your code, who invited whom, first names, whether the friend bought Pro, and months earned or waiting) are deleted with the account they belong to. An invite that earned a month loses the friend’s name when the friend’s account is deleted, and stays until the inviter’s account is deleted.
+- A shared profile’s ledger is kept until its owner deletes their account. A member’s record of joining and leaving, and the photos they added, are kept until that member’s account is deleted, and an invite link stops working once used or after 7 days.
 - An anonymous account created when you buy or restore Pro signed out is deleted when you sign in, with everything linked to it. If you never sign in, it stays so the purchase keeps working, until you ask us to delete it.
 - Items in the shared merchant list aren’t linked to anyone. They’re refreshed after 30 or 90 days.
 - Analytics events linked to your account are deleted with it. PostHog erases them in a later batch, so they can remain for a while after the app reports the deletion finished. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry a random ID instead of your account ID, plus the conversation ID for voice entry, and are kept the same way, as are AI assistant tool calls, which carry a connection ID instead.
@@ -383,7 +404,7 @@ Open **Settings › Account › Delete account**. You may be asked to sign in ag
 - Outlayr’s access to your Apple or Google sign-in is revoked. For Apple, our server asks Apple to revoke it. For Google, the app does.
 - If you connected Notion, our server asks Notion to revoke Outlayr’s access key.
 - Your webhook token, addresses, and entries waiting to be received or sent are deleted, so nothing new is sent. A delivery already under way can still finish.
-- Your synced ledger, deletion records, backed-up photos, and pending suggestion requests are deleted from our servers.
+- Your synced ledger, deletion records, backed-up photos, and pending suggestion requests are deleted from our servers. That includes profiles you share, which are deleted for everyone in them, and photos you added to profiles others share. Entries you added to someone else’s profile stay there without your name.
 - Your customer records at RevenueCat and Stripe and our copy of your subscription status are deleted.
 - Your profile at PostHog and every analytics event linked to it are deleted. PostHog erases the events in a later batch, so they can remain for a while after the app reports the deletion finished.
 - Your usage counters, open voice conversations, sessions, AI assistant access, sign-in links, Notion access key, invite code and invites, and account are deleted. If the invite you claimed already earned your friend a month, it stays on their list without your name.

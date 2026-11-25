@@ -16,6 +16,7 @@ intro: "Cette politique explique ce qu’Outlayr collecte, où cela va, combien 
 - Avec Outlayr Pro, vous pouvez connecter Notion pour importer des dépenses depuis vos bases de données Notion. Nous conservons la clé d’accès de Notion chiffrée sur nos serveurs afin que vous puissiez importer à nouveau, jusqu’à ce que vous déconnectiez Notion ou supprimiez votre compte. Ce que nous lisons dans Notion transite par notre serveur jusqu’à votre appareil et n’est pas conservé.
 - Vous pouvez connecter à votre compte un assistant IA comme Claude. Une fois que vous l’avez approuvé, il peut lire ce que vos appareils ont synchronisé et, avec Outlayr Pro, ajouter des opérations. Ce qu’il lit est traité selon la politique de confidentialité de cet assistant. Notre serveur indique à PostHog quel outil il a utilisé et combien de temps cela a pris, jamais ce qu’il a lu.
 - Si vous invitez des amis, chacun voit votre prénom sur votre invitation, et vous voyez son prénom, s’il a acheté Pro et quand. Jamais ce qu’il a saisi ni ce qu’il a payé.
+- Avec Outlayr Pro, vous pouvez partager un profil avec jusqu’à 5 personnes. Tous ceux qui s’y trouvent voient et peuvent modifier le journal et les photos de ce profil, et voient le prénom de chacun et qui a saisi chaque opération.
 - Pas de publicité et pas de pistage à travers les apps d’autres sociétés. Nous ne vendons pas vos informations personnelles et ne les partageons pas à des fins publicitaires.
 - Vous pouvez supprimer votre compte et tout ce qui y est synchronisé depuis l’app à tout moment : **Réglages › Compte › Supprimer le compte**.
 
@@ -55,6 +56,8 @@ Chaque type de données traité par Outlayr, au même endroit. Les sections ci-d
 | Lien d’image, l’image | Sélecteur d’icône | Nos serveurs (Cloudflare), partagé avec tout le monde | Conservé avec l’image jusqu’à sa suppression ; adresse IP non conservée. Non lié à vous |
 | Historique des achats, identifiant utilisateur, nom, adresse e-mail | Ouverture de l’app, Pro | RevenueCat, Apple, Google ou Stripe, nos serveurs | Jusqu’à la suppression du compte |
 | Code d’invitation, qui a invité qui, prénoms, si l’ami a acheté Pro et quand, mois obtenus | Invitations | Nos serveurs, RevenueCat | Jusqu’à la suppression du compte |
+| Le journal et les photos d’un profil partagé, qui s’y trouve et quand la personne l’a rejoint ou quitté, prénoms, qui a saisi chaque opération | Profils partagés (Pro) | Nos serveurs, toutes les personnes du profil | Jusqu’à ce que le propriétaire supprime son compte. Données et photos d’un membre : jusqu’à ce que ce membre supprime son compte |
+| Nom, icône et couleur du profil, prénom du propriétaire | Liens d’invitation à un profil (Pro) | Nos serveurs, toute personne ayant le lien | Le lien fonctionne une fois, pendant 7 jours. Supprimé avec le compte du propriétaire |
 | Identifiant d’installation, version de l’app, erreurs | Vérification des mises à jour | Expo | Politique d’Expo |
 | Écrans, fonctionnalités utilisées, erreurs, identifiant d’installation, modèle d’appareil | Utilisation de l’app | PostHog | Jusqu’à la suppression du compte, ou politique de PostHog si vous ne vous connectez jamais |
 | Fonctionnalité, modèle, jetons, coût, vitesse et erreurs de chaque requête d’IA | Suggestions, lecture des notifications, voix, scans, imports | PostHog | Avec Partager les données d’analyse activé, jusqu’à la suppression du compte. Sinon, politique de PostHog |
@@ -131,6 +134,8 @@ La synchronisation fait partie d’Outlayr Pro. Lorsque vous êtes connecté ave
 
 Les réglages propres à un téléphone y restent : notifications, verrouillage de l’app, Partager les données d’analyse, saisie des nombres, et mode clair ou sombre.
 
+Un profil que vous partagez se synchronise avec toutes les personnes qui s’y trouvent. Voir [Profils partagés](#profils-partagés).
+
 ### Opérations supprimées
 
 Lorsque vous supprimez une opération sur un appareil synchronisé, nos serveurs conservent une trace de suppression afin que vos autres appareils puissent la supprimer aussi. Cette trace conserve le dernier contenu de l’opération, et toute photo qui y était jointe, jusqu’à ce que vous supprimiez votre compte.
@@ -138,6 +143,21 @@ Lorsque vous supprimez une opération sur un appareil synchronisé, nos serveurs
 ### Désactiver la synchronisation
 
 Désactiver la synchronisation empêche cet appareil d’envoyer des modifications. Cela ne supprime pas ce qui se trouve déjà sur nos serveurs. Pour le supprimer, [supprimez votre compte](#suppression-et-exportation).
+
+## Profils partagés
+
+Avec Outlayr Pro, le propriétaire d’un profil autre que Personnel peut inviter jusqu’à 5 personnes à le partager. Chaque invitation est un lien qui fonctionne une fois, pendant 7 jours. Quiconque l’ouvre voit le nom, l’icône et la couleur du profil et le prénom du propriétaire. Il faut un compte pour rejoindre un profil.
+
+Toutes les personnes d’un profil partagé, sur leurs propres appareils :
+
+- Voient tout son journal et peuvent le modifier : opérations, virements, comptes, budgets, objectifs d’épargne, catégories, étiquettes et les photos qui s’y rattachent, y compris ce que d’autres ont ajouté.
+- Voient le prénom de chaque personne du profil et, sur chaque opération saisie par quelqu’un d’autre, le prénom de cette personne.
+
+Vos autres profils restent privés, et les membres ne les voient jamais. Le Pro du propriétaire couvre tout le monde dans le profil. S’il prend fin, le profil cesse de se synchroniser pour tout le monde jusqu’à sa réactivation. Seul le propriétaire peut renommer ou supprimer le profil, inviter des personnes ou les retirer. Toute autre personne peut le quitter à tout moment.
+
+Lorsqu’une personne quitte le profil ou en est retirée, il est retiré de ses appareils à la prochaine ouverture de l’app, et les opérations qu’elle a ajoutées y restent. Nous conservons une trace de qui était dans le profil et quand, jusqu’à la suppression du compte du propriétaire ou de celui de cette personne.
+
+Lorsque le propriétaire supprime son compte, le profil partagé et son journal sont supprimés pour tout le monde. Lorsqu’une autre personne du profil supprime son compte, les opérations qu’elle a ajoutées restent, mais les photos qu’elle a ajoutées sont supprimées et son nom n’apparaît plus sur ses opérations.
 
 ## Connecter Notion
 
@@ -341,7 +361,7 @@ Si vous êtes dans l’Espace économique européen ou au Royaume-Uni, nous nous
 
 | Finalité | Base juridique |
 | --- | --- |
-| Votre compte, la synchronisation, le stockage des photos, la saisie vocale, le scan de tickets, l’import d’échéanciers, l’import CSV, l’import de relevé bancaire PDF, la connexion Notion, le rappel quotidien sur le web, Pro, les invitations, les connexions d’assistants IA et les webhooks | Contrat : nous avons besoin de ces données pour fournir ce que vous demandez. |
+| Votre compte, la synchronisation, le stockage des photos, la saisie vocale, le scan de tickets, l’import d’échéanciers, l’import CSV, l’import de relevé bancaire PDF, la connexion Notion, le rappel quotidien sur le web, Pro, les invitations, les profils partagés, les connexions d’assistants IA et les webhooks | Contrat : nous avons besoin de ces données pour fournir ce que vous demandez. |
 | Les messages de bienvenue et de Pro, et le préavis de modification de cette politique ou de nos Conditions | Contrat : ils font partie du compte et de l’abonnement que vous avez demandés. |
 | L’envoi des saisies vocales, des photos de tickets, des captures d’écran d’échéanciers, des libellés CSV, des relevés PDF, du texte des notifications et des noms de commerçants à Anthropic et ElevenLabs | Votre consentement, donné avec Autoriser lorsque l’app le demande et retiré dans **Réglages › Envoyer les données aux fournisseurs d’IA**. |
 | Les suggestions de commerçants, la lecture des notifications, les recherches web, la liste partagée des commerçants et les logos | Intérêts légitimes : rendre les opérations plus rapides à saisir et mieux classées. Les suggestions, la lecture des notifications et les recherches web ne parviennent à Anthropic qu’une fois que vous l’avez autorisé, et désactiver le Remplissage intelligent est la façon de vous y opposer. |
@@ -367,6 +387,7 @@ Le [tableau ci-dessus](#aperçu-des-données) indique combien de temps chaque ty
 - La langue de votre app et la trace des messages de bienvenue, de Pro et de préavis de modification que vous avez reçus sont supprimées avec votre compte.
 - Les compteurs d’utilisation qui appliquent les limites sur les scans, les saisies vocales, les suggestions et la lecture des notifications ne contiennent que des nombres, associés à votre identifiant de compte, et sont supprimés avec votre compte.
 - Les données d’invitation (votre code, qui a invité qui, les prénoms, si l’ami a acheté Pro et les mois obtenus ou en attente) sont supprimées avec le compte auquel elles appartiennent. Une invitation qui a valu un mois perd le nom de l’ami lorsque le compte de celui-ci est supprimé, et reste jusqu’à la suppression du compte de la personne qui l’a invité.
+- Le journal d’un profil partagé est conservé jusqu’à ce que son propriétaire supprime son compte. La trace de l’arrivée et du départ d’un membre, ainsi que les photos qu’il a ajoutées, sont conservées jusqu’à la suppression du compte de ce membre, et un lien d’invitation cesse de fonctionner une fois utilisé ou après 7 jours.
 - Un compte anonyme créé quand vous achetez ou restaurez Pro sans être connecté est supprimé, avec tout ce qui y est lié, quand vous vous connectez. Si vous ne vous connectez jamais, il reste pour que l’achat continue de fonctionner, jusqu’à ce que vous nous demandiez de le supprimer.
 - Les éléments de la liste partagée des commerçants ne sont liés à personne. Ils sont actualisés après 30 ou 90 jours.
 - Les événements d’analyse liés à votre compte sont supprimés avec celui-ci. PostHog les efface lors d’un traitement ultérieur, ils peuvent donc subsister un moment après que l’app a indiqué la fin de la suppression. Les événements d’une installation qui ne s’est jamais connectée ne contiennent qu’un identifiant d’installation aléatoire et sont conservés selon la politique de conservation de PostHog. Les enregistrements des requêtes d’IA envoyés alors que Partager les données d’analyse était désactivé contiennent un identifiant aléatoire au lieu de votre identifiant de compte, plus l’identifiant de conversation pour la saisie vocale, et sont conservés de la même façon, tout comme les appels d’outils des assistants IA, qui contiennent un identifiant de connexion à la place.
@@ -383,7 +404,7 @@ Ouvrez **Réglages › Compte › Supprimer le compte**. Il peut vous être dema
 - L’accès d’Outlayr à votre connexion Apple ou Google est révoqué. Pour Apple, notre serveur demande à Apple de le révoquer. Pour Google, c’est l’app qui le fait.
 - Si vous avez connecté Notion, notre serveur demande à Notion de révoquer la clé d’accès d’Outlayr.
 - Votre jeton de webhook, vos adresses et les opérations en attente de réception ou d’envoi sont supprimés, afin que rien de nouveau ne soit envoyé. Une livraison déjà en cours peut encore aboutir.
-- Votre journal synchronisé, les traces de suppression, les photos sauvegardées et les demandes de suggestion en attente sont supprimés de nos serveurs.
+- Votre journal synchronisé, les traces de suppression, les photos sauvegardées et les demandes de suggestion en attente sont supprimés de nos serveurs. Cela comprend les profils que vous partagez, supprimés pour tout le monde, et les photos que vous avez ajoutées aux profils partagés par d’autres. Les opérations que vous avez ajoutées au profil de quelqu’un d’autre y restent, sans votre nom.
 - Vos fiches client chez RevenueCat et Stripe et notre copie du statut de votre abonnement sont supprimées.
 - Votre profil chez PostHog et chaque événement d’analyse qui y est lié sont supprimés. PostHog efface les événements lors d’un traitement ultérieur, ils peuvent donc subsister un moment après que l’app a indiqué la fin de la suppression.
 - Vos compteurs d’utilisation, conversations vocales ouvertes, sessions, accès d’assistants IA, liens de connexion, clé d’accès Notion, code d’invitation et invitations, ainsi que votre compte, sont supprimés. Si l’invitation que vous avez utilisée a déjà valu un mois à votre ami, elle reste sur sa liste sans votre nom.
