@@ -145,6 +145,45 @@ const storedEntry = (t: TestClient, userId: string, localId: string) =>
             .unique()
     );
 
+type TxRow = WithoutSystemFields<Doc<"transactions">>;
+
+const transactionRow = (userId: string, localId: string, fields: Partial<TxRow> = {}): TxRow => ({
+    ...envelope(localId, userId),
+    accountId: "checking",
+    amount: 12.34,
+    amountUsd: 12.34,
+    categoryId: "groceries",
+    currency: "USD",
+    customColor: null,
+    date: at("2027-01-03T15:00:00Z"),
+    day: at("2027-01-03T00:00:00Z"),
+    details: null,
+    emoji: null,
+    exchangeRate: 1,
+    exchangeRateType: null,
+    icon: null,
+    imageColor: null,
+    imageKey: null,
+    income: false,
+    month: at("2027-01-01T00:00:00Z"),
+    note: "Coffee",
+    onceRecurring: false,
+    recurringCoefficient: 1,
+    recurringEndDate: null,
+    recurringType: 0,
+    ...fields,
+});
+
+const insertEntry = (t: TestClient, row: TxRow) => t.run((ctx) => ctx.db.insert("transactions", row));
+
+const bankRecord = (t: TestClient, userId: string, key: string) =>
+    t.run((ctx) =>
+        ctx.db
+            .query("bankEntries")
+            .withIndex("by_userId", (q) => q.eq("userId", userId).eq("key", key))
+            .unique()
+    );
+
 const nextSeqOf = (t: TestClient, userId: string) =>
     t.run((ctx) =>
         ctx.db
@@ -564,6 +603,318 @@ describe("bank filing", () => {
     });
 });
 
+describe("bank transaction linking", () => {
+    beforeEach(() => {
+        vi.useFakeTimers({ now: NOW });
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it("links the Apple Pay row the user already logged instead of filing a second one", async () => {
+        const t = setup();
+        await seedLedger(t, "user-1");
+        await insertEntry(
+            t,
+            transactionRow("user-1", "apple-pay", {
+                date: at("2027-01-02T15:00:00Z"),
+                day: at("2027-01-02T00:00:00Z"),
+            })
+        );
+        const id = await insertBank(t, "user-1");
+        const lease = await claimLease(t, id);
+
+        await file(t, id, lease, [bank()]);
+
+        const rows = await t.run((ctx) => ctx.db.query("transactions").collect());
+        expect(rows).toHaveLength(1);
+        expect(rows[0]).toMatchObject({
+            amount: 12.34,
+            categoryId: "groceries",
+            date: at("2027-01-02T15:00:00Z"),
+            deviceId: "phone",
+            localId: "apple-pay",
+            note: "Coffee",
+            updatedAt: 1,
+        });
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
+            localId: "apple-pay",
+            origin: "linked",
+        });
+        expect((await nextSeqOf(t, "user-1"))?.nextSeq).toBe(1000);
+    });
+
+    it("files a new row when the user's row is outside the match window", async () => {
+        const t = setup();
+        await seedLedger(t, "user-1");
+        await insertEntry(
+            t,
+            transactionRow("user-1", "old-coffee", {
+                date: at("2026-12-29T15:00:00Z"),
+                day: at("2026-12-29T00:00:00Z"),
+            })
+        );
+        const id = await insertBank(t, "user-1");
+        const lease = await claimLease(t, id);
+
+        await file(t, id, lease, [bank()]);
+
+        await expect(t.run((ctx) => ctx.db.query("transactions").collect())).resolves.toHaveLength(2);
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
+            localId: await localIdOf("user-1", "bank:stripe:tx_1"),
+            origin: "filed",
+        });
+        expect((await nextSeqOf(t, "user-1"))?.nextSeq).toBe(1001);
+    });
+
+    it("files a new row when the currency or the direction differs", async () => {
+        const t = setup();
+        await seedLedger(t, "user-1");
+        await insertEntry(
+            t,
+            transactionRow("user-1", "apple-pay", {
+                date: at("2027-01-02T15:00:00Z"),
+                day: at("2027-01-02T00:00:00Z"),
+            })
+        );
+        const id = await insertBank(t, "user-1");
+        const lease = await claimLease(t, id);
+
+        await file(t, id, lease, [bank({ currency: "EUR", id: "tx_1" }), bank({ amountMinor: 1234, id: "tx_2" })]);
+
+        await expect(t.run((ctx) => ctx.db.query("transactions").collect())).resolves.toHaveLength(3);
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({ origin: "filed" });
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_2")).resolves.toMatchObject({ origin: "filed" });
+    });
+
+    it("leaves a row already linked to one bank transaction alone", async () => {
+        const t = setup();
+        await seedLedger(t, "user-1");
+        await insertEntry(
+            t,
+            transactionRow("user-1", "apple-pay", {
+                date: at("2027-01-02T15:00:00Z"),
+                day: at("2027-01-02T00:00:00Z"),
+            })
+        );
+        const id = await insertBank(t, "user-1");
+        const lease = await claimLease(t, id);
+
+        await file(t, id, lease, [bank({ id: "tx_1" })]);
+        await file(t, id, lease, [bank({ id: "tx_2" })]);
+
+        await expect(t.run((ctx) => ctx.db.query("transactions").collect())).resolves.toHaveLength(2);
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
+            localId: "apple-pay",
+            origin: "linked",
+        });
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_2")).resolves.toMatchObject({
+            localId: await localIdOf("user-1", "bank:stripe:tx_2"),
+            origin: "filed",
+        });
+    });
+
+    it("prefers the merchant match over a closer date", async () => {
+        const t = setup();
+        await seedLedger(t, "user-1");
+        await insertEntry(
+            t,
+            transactionRow("user-1", "bookstore", {
+                date: at("2027-01-03T15:00:00Z"),
+                day: at("2027-01-03T00:00:00Z"),
+                note: "Bookstore",
+            })
+        );
+        await insertEntry(
+            t,
+            transactionRow("user-1", "coffee", {
+                date: at("2027-01-01T15:00:00Z"),
+                day: at("2027-01-01T00:00:00Z"),
+                note: "Blue Coffee",
+            })
+        );
+        const id = await insertBank(t, "user-1");
+        const lease = await claimLease(t, id);
+
+        await file(t, id, lease, [bank()]);
+
+        await expect(t.run((ctx) => ctx.db.query("transactions").collect())).resolves.toHaveLength(2);
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
+            localId: "coffee",
+            origin: "linked",
+        });
+        await expect(storedEntry(t, "user-1", "bookstore")).resolves.toMatchObject({
+            date: at("2027-01-03T15:00:00Z"),
+            note: "Bookstore",
+        });
+    });
+
+    it("files a linked row into the bank's account and gives it a fresh seq", async () => {
+        const t = setup();
+        await seedLedger(t, "user-1");
+        await insertEntry(
+            t,
+            transactionRow("user-1", "apple-pay", {
+                accountId: null,
+                date: at("2027-01-02T15:00:00Z"),
+                day: at("2027-01-02T00:00:00Z"),
+                updatedAt: 5,
+            })
+        );
+        const id = await insertBank(t, "user-1");
+        const lease = await claimLease(t, id);
+
+        await file(t, id, lease, [bank()]);
+
+        await expect(storedEntry(t, "user-1", "apple-pay")).resolves.toMatchObject({
+            accountId: "checking",
+            amount: 12.34,
+            date: at("2027-01-02T15:00:00Z"),
+            seq: 1000,
+            updatedAt: 6,
+        });
+        expect((await nextSeqOf(t, "user-1"))?.nextSeq).toBe(1001);
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
+            localId: "apple-pay",
+            origin: "linked",
+        });
+    });
+
+    it("settles a repriced subscription occurrence instead of filing a second charge", async () => {
+        const t = setup();
+        await seedLedger(t, "user-1");
+        await insertEntry(
+            t,
+            transactionRow("user-1", "streaming", {
+                amount: 9.99,
+                amountUsd: 9.99,
+                date: at("2027-01-01T15:00:00Z"),
+                day: at("2027-01-01T00:00:00Z"),
+                note: "Streaming",
+                onceRecurring: true,
+                recurringType: 3,
+                updatedAt: 7,
+            })
+        );
+        const id = await insertBank(t, "user-1");
+        const lease = await claimLease(t, id);
+
+        await file(t, id, lease, [bank({ amountMinor: -1299, description: "Streaming" })]);
+
+        await expect(t.run((ctx) => ctx.db.query("transactions").collect())).resolves.toHaveLength(1);
+        await expect(storedEntry(t, "user-1", "streaming")).resolves.toMatchObject({
+            amount: 12.99,
+            amountUsd: 12.99,
+            date: at("2027-01-03T15:00:00Z"),
+            day: at("2027-01-03T00:00:00Z"),
+            month: at("2027-01-01T00:00:00Z"),
+            note: "Streaming",
+            seq: 1000,
+            updatedAt: 8,
+        });
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
+            amount: 12.99,
+            date: at("2027-01-03T15:00:00Z"),
+            localId: "streaming",
+            origin: "linked",
+        });
+        expect((await nextSeqOf(t, "user-1"))?.nextSeq).toBe(1001);
+    });
+
+    it("files a new row when a price change is not the same merchant", async () => {
+        const t = setup();
+        await seedLedger(t, "user-1");
+        await insertEntry(
+            t,
+            transactionRow("user-1", "streaming", {
+                amount: 9.99,
+                amountUsd: 9.99,
+                date: at("2027-01-01T15:00:00Z"),
+                day: at("2027-01-01T00:00:00Z"),
+                note: "Streaming",
+                onceRecurring: true,
+                recurringType: 3,
+            })
+        );
+        const id = await insertBank(t, "user-1");
+        const lease = await claimLease(t, id);
+
+        await file(t, id, lease, [bank({ amountMinor: -1299, description: "Coffee" })]);
+
+        await expect(t.run((ctx) => ctx.db.query("transactions").collect())).resolves.toHaveLength(2);
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
+            localId: await localIdOf("user-1", "bank:stripe:tx_1"),
+            origin: "filed",
+        });
+    });
+
+    it("never deletes a linked row on void but still deletes a filed one", async () => {
+        const t = setup();
+        await seedLedger(t, "user-1");
+        await insertEntry(
+            t,
+            transactionRow("user-1", "apple-pay", {
+                date: at("2027-01-02T15:00:00Z"),
+                day: at("2027-01-02T00:00:00Z"),
+            })
+        );
+        const id = await insertBank(t, "user-1");
+        const lease = await claimLease(t, id);
+        await file(t, id, lease, [bank({ id: "tx_1" })]);
+        await file(t, id, lease, [bank({ amountMinor: -500, description: "Lunch", id: "tx_2" })]);
+
+        await file(t, id, lease, [bank({ amountMinor: 0, id: "tx_1", status: "void" })]);
+        await file(t, id, lease, [bank({ amountMinor: 0, id: "tx_2", status: "void" })]);
+
+        const linkedRow = await storedEntry(t, "user-1", "apple-pay");
+        expect(linkedRow?.deletedAt).toBeNull();
+        const filedRow = await storedEntry(t, "user-1", await localIdOf("user-1", "bank:stripe:tx_2"));
+        expect(filedRow?.deletedAt).toBeGreaterThanOrEqual(NOW);
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
+            localId: "apple-pay",
+            origin: "linked",
+            status: "void",
+        });
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_2")).resolves.toMatchObject({
+            origin: "filed",
+            status: "void",
+        });
+    });
+
+    it("moves a linked row's amount with the bank but keeps the date the user logged", async () => {
+        const t = setup();
+        await seedLedger(t, "user-1");
+        await insertEntry(
+            t,
+            transactionRow("user-1", "apple-pay", {
+                date: at("2027-01-02T15:00:00Z"),
+                day: at("2027-01-02T00:00:00Z"),
+            })
+        );
+        const id = await insertBank(t, "user-1");
+        const lease = await claimLease(t, id);
+        await file(t, id, lease, [bank({ amountMinor: -1234, status: "pending" })]);
+
+        await file(t, id, lease, [bank({ amountMinor: -1500, status: "posted" })]);
+
+        await expect(storedEntry(t, "user-1", "apple-pay")).resolves.toMatchObject({
+            amount: 15,
+            amountUsd: 15,
+            date: at("2027-01-02T15:00:00Z"),
+            day: at("2027-01-02T00:00:00Z"),
+            seq: 1000,
+            updatedAt: 2,
+        });
+        await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
+            amount: 15,
+            date: at("2027-01-03T15:00:00Z"),
+            origin: "linked",
+        });
+        expect((await nextSeqOf(t, "user-1"))?.nextSeq).toBe(1001);
+    });
+});
+
 const fail = (message: string): never => {
     throw new Error(message);
 };
@@ -806,6 +1157,7 @@ describe("bank unlink", () => {
                     key: `bank:stripe:extra_${n}`,
                     localId: `extra-${n}`,
                     note: "Extra",
+                    origin: "filed",
                     status: "posted",
                     userId: "user-1",
                 });

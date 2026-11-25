@@ -14,9 +14,12 @@ export default Table.make(() =>
         key: Schema.String,
         localId: Schema.String,
         note: Schema.String,
+        // A linked record names a row the user logged before the bank reported it, so a void must not delete it.
+        origin: Schema.Literals(["filed", "linked"]),
         status: BankTransactionStatus,
         userId: Schema.String,
     })
 )
     .index("by_userId", ["userId", "key"])
+    .index("by_userId_and_localId", ["userId", "localId"])
     .index("by_bankAccountId", ["bankAccountId"]);

@@ -4,9 +4,10 @@ import type { BankAccount, BankingProviderName } from "@outlayr/banking/provider
 import { bankingProviders } from "@outlayr/banking/registry";
 import { isPerson } from "@outlayr/money/account-kind";
 import { entryRow } from "@outlayr/money/entry-row";
-import { fixedOffset, utcOffsetOf, zoneCalendar } from "@outlayr/money/ledger-zone";
+import { DAY_MS, fixedOffset, utcOffsetOf, zoneCalendar } from "@outlayr/money/ledger-zone";
 import type { OffsetAt } from "@outlayr/money/ledger-zone";
 import { matchCardAccount } from "@outlayr/money/match-card-account";
+import { merchantKey } from "@outlayr/money/merchant-key";
 import type { RateLookup } from "@outlayr/money/rates";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
@@ -53,6 +54,10 @@ const WRITE_CHUNK = 100;
 const LAPSED_SCAN = 25;
 // Matches the action time limit, so a crashed pull blocks its account for one run at most.
 const PULL_LEASE_MS = 10 * 60 * 1000;
+const LINK_SPAN_MS = 4 * DAY_MS;
+const EXACT_SPAN_MS = 3 * DAY_MS;
+const LINK_AMOUNT_EPSILON = 0.005;
+const SUBSCRIPTION_PRICE_BAND = { max: 2, min: 0.5 } as const;
 
 type Configured = Effect.Success<ReturnType<typeof configuredClients>>[number];
 
@@ -634,11 +639,25 @@ const recordMatches = (record: BankEntriesDoc, entry: BankEntry) =>
     record.note === entry.note &&
     record.status === entry.status;
 
+// A custom rate is the user's, so it survives while an official one follows the date the bank moved.
+const keptRateType = (row: TransactionsDoc) =>
+    row.exchangeRateType === "custom" || row.exchangeRateType === "official" || row.exchangeRateType === "eur_reference"
+        ? row.exchangeRateType
+        : null;
+
+// `merchantKey` folds the descriptor enough that "ACME*Coffee" still names the row "Coffee" the user logged.
+const sameMerchant = (left: string, right: string) => {
+    const a = merchantKey(left);
+    const b = merchantKey(right);
+    return a !== "" && b !== "" && (a.includes(b) || b.includes(a));
+};
+
 const writeBankRecord = Effect.fn("Banking.writeBankRecord")(function* writeBankRecord(
     filing: Filing,
     entry: BankEntry,
     localId: string,
-    record: BankEntriesDoc | null
+    record: BankEntriesDoc | null,
+    origin: "filed" | "linked" = "filed"
 ) {
     if (record !== null) {
         yield* (yield* DatabaseWriter).table("bankEntries").patch(record._id, {
@@ -656,9 +675,143 @@ const writeBankRecord = Effect.fn("Banking.writeBankRecord")(function* writeBank
         key: entry.key,
         localId,
         note: entry.note,
+        origin,
         status: entry.status,
         userId: filing.userId,
     });
+});
+
+const rewriteRow = Effect.fn("Banking.rewriteRow")(function* rewriteRow(
+    filing: Filing,
+    existing: TransactionsDoc,
+    next: { amount: number; date: number; note: string }
+) {
+    const category = filing.categories.find((candidate) => candidate.localId === existing.categoryId);
+    const rateType = keptRateType(existing);
+    const written = yield* entryRow(
+        filing.lookup,
+        existing.localId,
+        {
+            accountId: existing.accountId ?? null,
+            amount: next.amount,
+            categoryId: existing.categoryId,
+            currency: existing.currency,
+            date: DateTime.toDate(DateTime.makeUnsafe(next.date)),
+            details: existing.details,
+            exchangeRate: rateType === "custom" ? existing.exchangeRate : undefined,
+            exchangeRateType: rateType,
+            income: existing.income,
+            note: next.note,
+        },
+        {
+            calendar: zoneCalendar(filing.offsetAt),
+            categoryName: category?.name ?? null,
+            currency: filing.ledgerCurrency,
+            now: DateTime.toDate(DateTime.makeUnsafe(filing.now)),
+        }
+    );
+    yield* (yield* DatabaseWriter).table("transactions").patch(existing._id, {
+        amount: written.amount,
+        amountUsd: written.amountUsd,
+        date: next.date,
+        day: written.day.getTime(),
+        exchangeRate: written.exchangeRate,
+        exchangeRateType: written.exchangeRateType,
+        month: written.month.getTime(),
+        note: written.note,
+        seq: filing.seq + filing.filed.written,
+        // Ahead of the row the user edited, behind their next edit, so a whole-row sync edit still wins.
+        updatedAt: existing.updatedAt + 1,
+    });
+    filing.filed.written += 1;
+    if (next.amount !== existing.amount || next.date !== existing.date) {
+        filing.filed.instants.push(next.date);
+        if (next.date !== existing.date) {
+            filing.filed.instants.push(existing.date);
+        }
+    }
+});
+
+interface LinkTarget {
+    kind: "exact" | "repriced";
+    row: TransactionsDoc;
+}
+
+const linkTarget = Effect.fn("Banking.linkTarget")(function* linkTarget(filing: Filing, entry: BankEntry) {
+    const reader = yield* DatabaseReader;
+    const rows = yield* reader
+        .table("transactions")
+        .index("by_user_and_deletedAt_and_date", (q) =>
+            q
+                .eq("userId", filing.userId)
+                .eq("deletedAt", null)
+                .gte("date", entry.date - LINK_SPAN_MS)
+                .lte("date", entry.date + LINK_SPAN_MS)
+        )
+        .collect();
+    const candidates: TransactionsDoc[] = [];
+    for (const row of rows) {
+        if (row.income !== entry.income || row.currency !== entry.currency) {
+            continue;
+        }
+        if (row.deviceId === BANK_DEVICE_ID || (row.feeForId ?? null) !== null) {
+            continue;
+        }
+        if (row.accountId != null && filing.filesInto !== null && row.accountId !== filing.filesInto) {
+            continue;
+        }
+        const linked = yield* getByIndex(
+            reader.table("bankEntries").get("by_userId_and_localId", filing.userId, row.localId)
+        );
+        if (linked === null) {
+            candidates.push(row);
+        }
+    }
+    const [exact] = candidates
+        .filter((row) => {
+            const span = row.onceRecurring ? LINK_SPAN_MS : EXACT_SPAN_MS;
+            return (
+                Math.abs(row.amount - entry.amount) <= LINK_AMOUNT_EPSILON && Math.abs(row.date - entry.date) <= span
+            );
+        })
+        .sort(
+            (a, b) =>
+                Number(sameMerchant(b.note, entry.note)) - Number(sameMerchant(a.note, entry.note)) ||
+                Math.abs(a.date - entry.date) - Math.abs(b.date - entry.date)
+        );
+    if (exact !== undefined) {
+        return { kind: "exact" as const, row: exact };
+    }
+    const [repriced] = candidates
+        .filter((row) => {
+            if (!row.onceRecurring || !sameMerchant(row.note, entry.note)) {
+                return false;
+            }
+            const ratio = entry.amount / row.amount;
+            return ratio >= SUBSCRIPTION_PRICE_BAND.min && ratio <= SUBSCRIPTION_PRICE_BAND.max;
+        })
+        .sort((a, b) => Math.abs(a.date - entry.date) - Math.abs(b.date - entry.date));
+    return repriced === undefined ? null : { kind: "repriced" as const, row: repriced };
+});
+
+const linkEntry = Effect.fn("Banking.linkEntry")(function* linkEntry(
+    filing: Filing,
+    entry: BankEntry,
+    target: LinkTarget
+) {
+    const { row } = target;
+    if (target.kind === "repriced") {
+        yield* rewriteRow(filing, row, { amount: entry.amount, date: entry.date, note: row.note });
+    } else if ((row.accountId ?? null) === null && filing.filesInto !== null) {
+        yield* (yield* DatabaseWriter).table("transactions").patch(row._id, {
+            accountId: filing.filesInto,
+            seq: filing.seq + filing.filed.written,
+            updatedAt: row.updatedAt + 1,
+        });
+        filing.filed.written += 1;
+        filing.filed.instants.push(row.date);
+    }
+    yield* writeBankRecord(filing, entry, row.localId, null, "linked");
 });
 
 const fileNewEntry = Effect.fn("Banking.fileNewEntry")(function* fileNewEntry(
@@ -667,6 +820,14 @@ const fileNewEntry = Effect.fn("Banking.fileNewEntry")(function* fileNewEntry(
     localId: string,
     record: BankEntriesDoc | null
 ) {
+    // Only a transaction the bank reports for the first time can claim a row the user already logged.
+    if (record === null) {
+        const target = yield* linkTarget(filing, entry);
+        if (target !== null) {
+            yield* linkEntry(filing, entry, target);
+            return;
+        }
+    }
     const rememberedId = filing.remembered.get(`${entry.income ? "in" : "out"}:${fold(entry.note)}`)?.categoryId;
     const categoryId =
         rememberedId ??
@@ -767,53 +928,7 @@ const rewriteEntry = Effect.fn("Banking.rewriteEntry")(function* rewriteEntry(
     const date = existing.date === record.date ? entry.date : existing.date;
     const note = existing.note === record.note ? entry.note : existing.note;
     if (amount !== existing.amount || date !== existing.date || note !== existing.note) {
-        const category = filing.categories.find((candidate) => candidate.localId === existing.categoryId);
-        // A custom rate is the user's, so it survives while an official one follows the date the bank moved.
-        const storedType = existing.exchangeRateType;
-        const rateType =
-            storedType === "custom" || storedType === "official" || storedType === "eur_reference" ? storedType : null;
-        const written = yield* entryRow(
-            filing.lookup,
-            existing.localId,
-            {
-                accountId: existing.accountId ?? null,
-                amount,
-                categoryId: existing.categoryId,
-                currency: existing.currency,
-                date: DateTime.toDate(DateTime.makeUnsafe(date)),
-                details: existing.details,
-                exchangeRate: rateType === "custom" ? existing.exchangeRate : undefined,
-                exchangeRateType: rateType,
-                income: existing.income,
-                note,
-            },
-            {
-                calendar: zoneCalendar(filing.offsetAt),
-                categoryName: category?.name ?? null,
-                currency: filing.ledgerCurrency,
-                now: DateTime.toDate(DateTime.makeUnsafe(filing.now)),
-            }
-        );
-        yield* (yield* DatabaseWriter).table("transactions").patch(existing._id, {
-            amount: written.amount,
-            amountUsd: written.amountUsd,
-            date,
-            day: written.day.getTime(),
-            exchangeRate: written.exchangeRate,
-            exchangeRateType: written.exchangeRateType,
-            month: written.month.getTime(),
-            note: written.note,
-            seq: filing.seq + filing.filed.written,
-            // Ahead of the row the user edited, behind their next edit, so a whole-row sync edit still wins.
-            updatedAt: existing.updatedAt + 1,
-        });
-        filing.filed.written += 1;
-        if (amount !== existing.amount || date !== existing.date) {
-            filing.filed.instants.push(date);
-            if (date !== existing.date) {
-                filing.filed.instants.push(existing.date);
-            }
-        }
+        yield* rewriteRow(filing, existing, { amount, date, note });
     }
     yield* writeBankRecord(filing, entry, existing.localId, record);
 });
@@ -895,16 +1010,18 @@ const fileTransactions = FunctionImpl.make(
             if (entry === null) {
                 continue;
             }
-            const localId = yield* keyedLocalId(row.userId, entry.key);
             const record = yield* getByIndex(reader.table("bankEntries").get("by_userId", row.userId, entry.key));
             if (record !== null && recordMatches(record, entry)) {
                 continue;
             }
+            // A linked record names the user's own row; only a row the server filed lives under the key's id.
+            const localId = record === null ? yield* keyedLocalId(row.userId, entry.key) : record.localId;
             const existing = yield* getByIndex(
                 reader.table("transactions").get("by_user_and_localId", row.userId, localId)
             );
             if (entry.status === "void") {
-                if (existing !== null && existing.deletedAt === null) {
+                const tombstone = record === null || record.origin !== "linked";
+                if (tombstone && existing !== null && existing.deletedAt === null) {
                     yield* (yield* DatabaseWriter).table("transactions").patch(existing._id, {
                         deletedAt: filing.now,
                         seq: filing.seq + filing.filed.written,
