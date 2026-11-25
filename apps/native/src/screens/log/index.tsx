@@ -289,7 +289,13 @@ export function Log() {
         (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
     );
     const visibleTail = keptTail.length === tailRows.length ? tailRows : keptTail;
-    const { authorKey, authorOf } = useEntryAuthors([...head, ...tail, ...filteredRows, ...transferRows]);
+    const { authorKey, authorOf } = useEntryAuthors([
+        ...head,
+        ...tail,
+        ...filteredRows,
+        ...transferRows,
+        ...upcomingRows,
+    ]);
     const view = { ...cardOptions, authorKey, language, monthly };
     const headSections = groupByDay(visibleRows, currency, rates);
     const tailSections = groupTail(visibleTail);
@@ -460,6 +466,7 @@ export function Log() {
                         ) : null}
                         {filter === "upcoming" ? (
                             <UpcomingList
+                                authorOf={authorOf}
                                 transactions={upcomingRows}
                                 currency={currency}
                                 rates={rates}

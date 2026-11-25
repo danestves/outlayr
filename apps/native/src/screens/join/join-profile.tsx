@@ -12,11 +12,12 @@ import { useState } from "react";
 import type { ComponentProps } from "react";
 import { ScrollView, View } from "react-native";
 
+import { BusyText } from "@/components/busy-text";
 import { MemberAvatar } from "@/components/member-avatar";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { PROFILE_SEAT_LIMIT } from "@/domain/profile-sharing";
-import { useProfileSharingFlag } from "@/hooks/use-profile-sharing";
+import { useLongWait } from "@/hooks/use-long-wait";
 import { useTranslation } from "@/i18n/context";
 import { useAuthSession } from "@/lib/auth-session";
 import { useWhen } from "@/lib/lifecycle";
@@ -55,21 +56,16 @@ export function JoinProfile() {
 
 function JoinFlow({ code }: { code: string }) {
     const invite = useAtomValue(profileInviteAtom(code));
-    const { accountId } = useAuthSession();
-    const sharing = useProfileSharingFlag();
+    const known = AsyncResult.isSuccess(invite) ? invite.value : undefined;
+    const slow = useLongWait(known === undefined && !AsyncResult.isFailure(invite));
     if (AsyncResult.isFailure(invite)) {
         return <JoinErrorScreen kind="generic" look={null} ownerName={null} />;
     }
-    const known = AsyncResult.isSuccess(invite) ? invite.value : undefined;
     if (known === undefined) {
-        return null;
+        return <JoinLoading slow={slow} />;
     }
     if (known === null) {
         return <JoinErrorScreen kind="invalid" look={null} ownerName={null} />;
-    }
-    // The server flag is off, so nothing can be claimed and the sheet only says the link is dead.
-    if (accountId !== null && sharing === false) {
-        return <JoinErrorScreen kind="invalid" look={known.look} ownerName={known.ownerName} />;
     }
     switch (known.state) {
         case "open": {
@@ -137,6 +133,21 @@ function useJoin(code: string, onRefusal: (kind: JoinErrorKind) => void) {
     );
 }
 
+function JoinLoading({ slow }: { slow: boolean }) {
+    const t = useTranslation();
+    const colors = useColors();
+    if (!slow) {
+        return null;
+    }
+    return (
+        <View className="bg-background flex-1 items-center justify-center px-5">
+            <BusyText className="text-muted text-subtitle" color={colors.muted}>
+                {t("sharing.join.loading")}
+            </BusyText>
+        </View>
+    );
+}
+
 function InvitedLine({ name }: { name: string | null }) {
     const t = useTranslation();
     if (name === null) {
@@ -156,10 +167,12 @@ function JoinSheet({ code, look, ownerName }: { code: string; look: InviteLook |
     const t = useTranslation();
     const router = useRouter();
     const db = useDatabase();
+    const colors = useColors();
     const { accountId } = useAuthSession();
     const leave = useLeaveSheet();
     const [joining, setJoining] = useState(false);
     const [refusal, setRefusal] = useState<JoinErrorKind | null>(null);
+    const slow = useLongWait(joining);
     const join = useJoin(code, (kind) => {
         setJoining(false);
         setRefusal(kind);
@@ -205,7 +218,7 @@ function JoinSheet({ code, look, ownerName }: { code: string; look: InviteLook |
                     </Button>
                     <Button
                         className="flex-1 rounded-full"
-                        loading={joining}
+                        disabled={joining}
                         onPress={() => {
                             if (accountId === null) {
                                 requestProfileJoin(code);
@@ -217,7 +230,13 @@ function JoinSheet({ code, look, ownerName }: { code: string; look: InviteLook |
                         }}
                         variant="primary"
                     >
-                        {t("sharing.join.action")}
+                        {joining && slow ? (
+                            <BusyText className="text-body" color={colors.primaryForeground}>
+                                {t("sharing.join.joining")}
+                            </BusyText>
+                        ) : (
+                            t("sharing.join.action")
+                        )}
                     </Button>
                 </View>
             </ScrollView>

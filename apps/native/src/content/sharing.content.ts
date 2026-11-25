@@ -207,11 +207,11 @@ const sharing = {
             "pt-PT": "Foi convidado para",
         }),
         "sharing.join.joining": t({
-            en: "Joining",
-            de: "Beitritt läuft",
-            es: "Uniéndote",
-            fr: "Connexion",
-            pt: "Entrando",
+            en: "Joining…",
+            de: "Beitritt läuft…",
+            es: "Uniéndote…",
+            fr: "Connexion…",
+            pt: "Entrando…",
         }),
         "sharing.join.leave": t({
             en: "Leave any time",
@@ -219,6 +219,13 @@ const sharing = {
             es: "Sal cuando quieras",
             fr: "Partez quand vous voulez",
             pt: "Saia quando quiser",
+        }),
+        "sharing.join.loading": t({
+            en: "Loading invite…",
+            de: "Einladung wird geladen…",
+            es: "Cargando invitación…",
+            fr: "Chargement de l'invitation…",
+            pt: "Carregando convite…",
         }),
         "sharing.join.notNow": t({
             en: "Not now",
@@ -278,6 +285,13 @@ const sharing = {
             es: "No se pudo salir del perfil",
             fr: "Impossible de quitter le profil",
             pt: "Não foi possível sair do perfil",
+        }),
+        "sharing.leave.leaving": t({
+            en: "Leaving…",
+            de: "Verlassen…",
+            es: "Saliendo…",
+            fr: "Vous quittez…",
+            pt: "Saindo…",
         }),
         "sharing.leave.title": t({
             en: "Leave {name}?",

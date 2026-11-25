@@ -91,8 +91,9 @@ const createInvite = FunctionImpl.make(
             );
             const reusable = open.find((row) => row.ownerId === ownerId && row.expiresAt > now);
             if (reusable) {
-                yield* writer.table("profileInvites").patch(reusable._id, { look: args.look });
-                return { code: reusable.code, expiresAt: reusable.expiresAt };
+                // A fresh window on every issue, so a sheet never hands out a code minutes from lapsing.
+                yield* writer.table("profileInvites").patch(reusable._id, { expiresAt, look: args.look });
+                return { code: reusable.code, expiresAt };
             }
             let code = newCode();
             while ((yield* inviteByCode(code)) !== null) {

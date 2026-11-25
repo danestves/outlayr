@@ -15,6 +15,8 @@ import { groupByMonth } from "@/domain/upcoming";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
 interface UpcomingRowsProps {
+    /** First name of whoever logged someone else's entry. */
+    authorOf: (createdBy: string | null | undefined, unsent: boolean) => string | null;
     currency: string;
     menuItems: (transaction: TransactionWithCategory) => readonly ActionMenuItem[];
     /** Frozen "now", so a row's landing date does not drift mid-session. */
@@ -42,7 +44,7 @@ interface UpcomingRowProps extends Omit<UpcomingRowsProps, "transactions"> {
     transaction: TransactionWithCategory;
 }
 
-function UpcomingRow({ transaction, currency, rates, nowMs, onPress, menuItems }: UpcomingRowProps) {
+function UpcomingRow({ transaction, currency, rates, nowMs, onPress, menuItems, authorOf }: UpcomingRowProps) {
     const t = useTranslation();
     const { language } = useLanguage();
     const now = new Date(nowMs);
@@ -55,6 +57,7 @@ function UpcomingRow({ transaction, currency, rates, nowMs, onPress, menuItems }
 
     return (
         <TransactionRow
+            author={authorOf(transaction.createdBy, transaction.unsent)}
             currency={currency}
             future
             menuItems={menuItems(transaction)}

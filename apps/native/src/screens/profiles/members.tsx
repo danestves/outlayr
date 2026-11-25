@@ -9,12 +9,14 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Alert, Clipboard, Pressable, ScrollView, Share, View } from "react-native";
 
+import { BusyText } from "@/components/busy-text";
 import { CloseToolbar } from "@/components/close-toolbar";
 import { MemberAvatar } from "@/components/member-avatar";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useProfiles } from "@/data/profiles";
 import { PROFILE_SEAT_LIMIT, profileInviteLink } from "@/domain/profile-sharing";
+import { useLongWait } from "@/hooks/use-long-wait";
 import { useProfileMembers } from "@/hooks/use-profile-sharing";
 import { useTranslation } from "@/i18n/context";
 import { activeProfileId } from "@/lib/active-profile";
@@ -269,10 +271,13 @@ function MemberView({
     const owner = people.find((member) => member.owner);
     const me = people.find((member) => member.id === accountId);
     const rest = people.filter((member) => !member.owner && member.id !== accountId);
+    const [leaving, setLeaving] = useState(false);
+    const slow = useLongWait(leaving);
     const leave = useAtomAction(
         leaveProfileCommand,
         {
             onFailure: (cause) => {
+                setLeaving(false);
                 const error = Cause.squash(cause);
                 if (error instanceof ProfileSharingError && error.reason === "unsynced") {
                     Alert.alert(t("sharing.leave.unsynced.title"), t("sharing.leave.unsynced.body"));
@@ -283,15 +288,22 @@ function MemberView({
         },
         SILENT
     );
-    const confirm = () =>
+    const confirm = () => {
+        if (leaving) {
+            return;
+        }
         Alert.alert(t("sharing.leave.title", { name }), t("sharing.leave.body"), [
             { style: "cancel", text: t("common.cancel") },
             {
-                onPress: () => leave({ from: db, id }),
+                onPress: () => {
+                    setLeaving(true);
+                    leave({ from: db, id });
+                },
                 style: "destructive",
                 text: t("sharing.leave.action"),
             },
         ]);
+    };
 
     return (
         <ScrollView contentContainerClassName="px-5 pb-8" contentInsetAdjustmentBehavior="automatic">
@@ -315,11 +327,28 @@ function MemberView({
             <Pressable
                 accessibilityRole="button"
                 className="border-border mt-8 flex-row items-center gap-3 border-b pl-1"
+                disabled={leaving}
                 onPress={confirm}
                 style={{ minHeight: ROW_HEIGHT }}
             >
-                <HugeiconsIcon color={colors.danger} icon={DoorOpenIcon} size={22} strokeWidth={1.8} />
-                <Text className="text-danger text-body font-sans-semibold">{t("sharing.leave")}</Text>
+                <HugeiconsIcon
+                    color={leaving ? withAlpha(colors.danger, 0.4) : colors.danger}
+                    icon={DoorOpenIcon}
+                    size={22}
+                    strokeWidth={1.8}
+                />
+                {leaving && slow ? (
+                    <BusyText className="text-danger text-body font-sans-semibold" color={colors.danger}>
+                        {t("sharing.leave.leaving")}
+                    </BusyText>
+                ) : (
+                    <Text
+                        className="text-danger text-body font-sans-semibold"
+                        style={leaving ? { opacity: 0.4 } : undefined}
+                    >
+                        {t("sharing.leave")}
+                    </Text>
+                )}
             </Pressable>
         </ScrollView>
     );
