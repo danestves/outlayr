@@ -18,9 +18,9 @@ describe("stripeMinorUnits", () => {
 
 describe("proPrice", () => {
     it("charges a USD-billed region its own amount and an unknown country the US one", () => {
-        expect(proPriceKey(proPrice("VE", "monthly"))).toBe("pro_monthly_usd_390");
-        expect(proPriceKey(proPrice("XX", "annual"))).toBe("pro_annual_usd_4999");
-        expect(proPriceKey(proPrice(null, "lifetime"))).toBe("pro_lifetime_usd_12999");
+        expect(proPriceKey(proPrice("VE", "monthly"))).toBe("pro_monthly_usd_499");
+        expect(proPriceKey(proPrice("XX", "annual"))).toBe("pro_annual_usd_5999");
+        expect(proPriceKey(proPrice(null, "lifetime"))).toBe("pro_lifetime_usd_19999");
     });
 });
 

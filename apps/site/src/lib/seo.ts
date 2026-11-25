@@ -92,9 +92,9 @@ function billed(price: string, billingDuration: string) {
 const IN_STOCK = "https://schema.org/InStock";
 
 const PRO_OFFERS = [
-    { name: "Outlayr Pro, monthly", price: "7.99", priceSpecification: billed("7.99", "P1M") },
-    { name: "Outlayr Pro, yearly", price: "49.99", priceSpecification: billed("49.99", "P1Y") },
-    { name: "Outlayr Pro, once", price: "129.99" },
+    { name: "Outlayr Pro, monthly", price: "9.99", priceSpecification: billed("9.99", "P1M") },
+    { name: "Outlayr Pro, yearly", price: "59.99", priceSpecification: billed("59.99", "P1Y") },
+    { name: "Outlayr Pro, once", price: "199.99" },
 ];
 
 function proOffers(locale: Locale) {

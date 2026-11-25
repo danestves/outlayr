@@ -135,7 +135,7 @@ TrialEndingEmail.PreviewProps = {
     email: "ana@example.com",
     language: "en",
     manageUrl: "https://app.tryoutlayr.com/settings/plan",
-    price: { amount: 49.99, currency: "USD" },
+    price: { amount: 59.99, currency: "USD" },
 } satisfies TrialEndingEmailProps;
 
 export const trialEndingEmail = (props: TrialEndingEmailProps) =>

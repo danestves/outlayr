@@ -151,11 +151,11 @@ const OUTLAYR = {
         fr: "iPhone et Android, plus le Web avec Pro",
     }),
     price: t({
-        en: "Free. Pro is $7.99 a month, $49.99 a year with 3 days free, or $129.99 once in the US. Prices vary by country",
-        de: "Gratis. Pro kostet in den USA 7,99 $ im Monat, 49,99 $ im Jahr mit 3 Tagen gratis oder einmalig 129,99 $. Die Preise unterscheiden sich je nach Land",
-        es: "Gratis. Pro cuesta US$7.99 al mes, US$49.99 al año con 3 días gratis o US$129.99 en un solo pago en Estados Unidos. Los precios cambian según el país",
-        pt: "Grátis. O Pro custa US$ 7,99 por mês, US$ 49,99 por ano com 3 dias grátis ou US$ 129,99 em pagamento único nos EUA. Os preços variam por país",
-        fr: "Gratuit. Pro coûte 7,99 $ US par mois, 49,99 $ US par an avec 3 jours gratuits ou 129,99 $ US en un seul paiement aux États-Unis. Les prix varient selon le pays",
+        en: "Free. Pro is $9.99 a month, $59.99 a year with 3 days free, or $199.99 once in the US. Prices vary by country",
+        de: "Gratis. Pro kostet in den USA 9,99 $ im Monat, 59,99 $ im Jahr mit 3 Tagen gratis oder einmalig 199,99 $. Die Preise unterscheiden sich je nach Land",
+        es: "Gratis. Pro cuesta US$9.99 al mes, US$59.99 al año con 3 días gratis o US$199.99 en un solo pago en Estados Unidos. Los precios cambian según el país",
+        pt: "Grátis. O Pro custa US$ 9,99 por mês, US$ 59,99 por ano com 3 dias grátis ou US$ 199,99 em pagamento único nos EUA. Os preços variam por país",
+        fr: "Gratuit. Pro coûte 9,99 $ US par mois, 59,99 $ US par an avec 3 jours gratuits ou 199,99 $ US en un seul paiement aux États-Unis. Les prix varient selon le pays",
     }),
 };
 
@@ -233,11 +233,11 @@ const LICENSE_ROW = {
 
 const COST_FAQ = {
     answer: t({
-        en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 30 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 3 days free, or $129.99 once. Your app store shows the price for your country.",
-        de: "Der Tracker ist kostenlos, mit Budgets, Zielen, Abos und Widgets. Der Gratis-Plan enthält alle 30 Tage 30 Erfassungen per Sprache oder Beleg, 3 Konten, 2 Kategorie-Budgets und Konten in 2 Währungen. Outlayr Pro hebt diese Grenzen an und bringt die Synchronisierung dazu. In den USA kostet es 7,99 $ im Monat, 49,99 $ im Jahr mit 3 Tagen gratis oder einmalig 129,99 $. Dein App Store zeigt den Preis für dein Land.",
-        es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 30 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 3 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
-        pt: "O controle de gastos é grátis, com orçamentos, metas, assinaturas e widgets. O Plano grátis inclui 30 capturas por voz ou recibo a cada 30 dias, 3 contas, 2 orçamentos por categoria e contas em 2 moedas. O Outlayr Pro amplia esses limites e adiciona sincronização. Nos Estados Unidos, custa US$ 7,99 por mês, US$ 49,99 por ano com 3 dias grátis ou US$ 129,99 em pagamento único. Sua loja de apps mostra o preço do seu país.",
-        fr: "Le suivi des dépenses est gratuit, avec les budgets, les objectifs, les abonnements et les widgets. L'offre gratuite comprend 30 captures vocales ou de reçus tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans 2 devises. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte 7,99 $ US par mois, 49,99 $ US par an avec 3 jours gratuits ou 129,99 $ US en un seul paiement. Votre boutique d'applications affiche le prix de votre pays.",
+        en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 30 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $9.99 a month, $59.99 a year with 3 days free, or $199.99 once. Your app store shows the price for your country.",
+        de: "Der Tracker ist kostenlos, mit Budgets, Zielen, Abos und Widgets. Der Gratis-Plan enthält alle 30 Tage 30 Erfassungen per Sprache oder Beleg, 3 Konten, 2 Kategorie-Budgets und Konten in 2 Währungen. Outlayr Pro hebt diese Grenzen an und bringt die Synchronisierung dazu. In den USA kostet es 9,99 $ im Monat, 59,99 $ im Jahr mit 3 Tagen gratis oder einmalig 199,99 $. Dein App Store zeigt den Preis für dein Land.",
+        es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 30 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$9.99 al mes, US$59.99 al año con 3 días gratis o US$199.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+        pt: "O controle de gastos é grátis, com orçamentos, metas, assinaturas e widgets. O Plano grátis inclui 30 capturas por voz ou recibo a cada 30 dias, 3 contas, 2 orçamentos por categoria e contas em 2 moedas. O Outlayr Pro amplia esses limites e adiciona sincronização. Nos Estados Unidos, custa US$ 9,99 por mês, US$ 59,99 por ano com 3 dias grátis ou US$ 199,99 em pagamento único. Sua loja de apps mostra o preço do seu país.",
+        fr: "Le suivi des dépenses est gratuit, avec les budgets, les objectifs, les abonnements et les widgets. L'offre gratuite comprend 30 captures vocales ou de reçus tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans 2 devises. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte 9,99 $ US par mois, 59,99 $ US par an avec 3 jours gratuits ou 199,99 $ US en un seul paiement. Votre boutique d'applications affiche le prix de votre pays.",
     }),
     question: t({
         en: "How much does Outlayr cost?",
@@ -6100,10 +6100,10 @@ const answers = {
                             {
                                 label: LABELS.price,
                                 text: t({
-                                    en: "Free. Pro is $7.99 a month, $49.99 a year with 3 days free, or $129.99 once in the US. Prices vary by country",
-                                    de: "Gratis. Pro kostet in den USA 7,99 $ im Monat, 49,99 $ im Jahr mit 3 Tagen gratis oder einmalig 129,99 $. Die Preise unterscheiden sich je nach Land",
-                                    es: "Gratis. Pro cuesta US$7.99 al mes, US$49.99 al año con 3 días gratis o US$129.99 en un solo pago en Estados Unidos. Los precios cambian según el país",
-                                    pt: "Grátis. O Pro custa US$ 7,99 por mês, US$ 49,99 por ano com 3 dias grátis ou US$ 129,99 em pagamento único nos Estados Unidos. Os preços mudam conforme o país",
+                                    en: "Free. Pro is $9.99 a month, $59.99 a year with 3 days free, or $199.99 once in the US. Prices vary by country",
+                                    de: "Gratis. Pro kostet in den USA 9,99 $ im Monat, 59,99 $ im Jahr mit 3 Tagen gratis oder einmalig 199,99 $. Die Preise unterscheiden sich je nach Land",
+                                    es: "Gratis. Pro cuesta US$9.99 al mes, US$59.99 al año con 3 días gratis o US$199.99 en un solo pago en Estados Unidos. Los precios cambian según el país",
+                                    pt: "Grátis. O Pro custa US$ 9,99 por mês, US$ 59,99 por ano com 3 dias grátis ou US$ 199,99 em pagamento único nos Estados Unidos. Os preços mudam conforme o país",
                                 }),
                             },
                             {
@@ -6362,10 +6362,10 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 30 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 3 days free, or $129.99 once. Your app store shows the price for your country.",
-                            de: "Der Tracker ist kostenlos, mit Budgets, Zielen, Abos und Widgets. Der Gratis-Plan enthält alle 30 Tage 30 Erfassungen per Sprache oder Beleg, 3 Konten, 2 Kategorie-Budgets und Konten in 2 Währungen. Outlayr Pro hebt diese Grenzen an und bringt die Synchronisierung dazu. In den USA kostet es 7,99 $ im Monat, 49,99 $ im Jahr mit 3 Tagen gratis oder einmalig 129,99 $. Dein App Store zeigt den Preis für dein Land.",
-                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 30 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 3 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
-                            pt: "Registrar gastos é grátis, assim como orçamentos, metas, assinaturas e widgets. O plano grátis inclui 30 capturas por voz ou de recibos a cada 30 dias, 3 contas, 2 orçamentos por categoria e contas em 2 moedas. O Outlayr Pro aumenta esses limites e adiciona a sincronização. Nos Estados Unidos, custa US$ 7,99 por mês, US$ 49,99 por ano com 3 dias grátis ou US$ 129,99 em pagamento único. Sua loja de apps mostra o preço do seu país.",
+                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 30 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $9.99 a month, $59.99 a year with 3 days free, or $199.99 once. Your app store shows the price for your country.",
+                            de: "Der Tracker ist kostenlos, mit Budgets, Zielen, Abos und Widgets. Der Gratis-Plan enthält alle 30 Tage 30 Erfassungen per Sprache oder Beleg, 3 Konten, 2 Kategorie-Budgets und Konten in 2 Währungen. Outlayr Pro hebt diese Grenzen an und bringt die Synchronisierung dazu. In den USA kostet es 9,99 $ im Monat, 59,99 $ im Jahr mit 3 Tagen gratis oder einmalig 199,99 $. Dein App Store zeigt den Preis für dein Land.",
+                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 30 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$9.99 al mes, US$59.99 al año con 3 días gratis o US$199.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+                            pt: "Registrar gastos é grátis, assim como orçamentos, metas, assinaturas e widgets. O plano grátis inclui 30 capturas por voz ou de recibos a cada 30 dias, 3 contas, 2 orçamentos por categoria e contas em 2 moedas. O Outlayr Pro aumenta esses limites e adiciona a sincronização. Nos Estados Unidos, custa US$ 9,99 por mês, US$ 59,99 por ano com 3 dias grátis ou US$ 199,99 em pagamento único. Sua loja de apps mostra o preço do seu país.",
                         }),
                         question: t({
                             en: "How much does Outlayr cost?",
@@ -6719,11 +6719,11 @@ const answers = {
                             {
                                 label: LABELS.price,
                                 text: t({
-                                    en: "Free. Pro is $7.99 a month, $49.99 a year with 3 days free, or $129.99 once in the US. Prices vary by country",
-                                    de: "Gratis. Pro kostet in den USA 7,99 $ im Monat, 49,99 $ im Jahr mit 3 Tagen gratis oder einmalig 129,99 $. Die Preise unterscheiden sich je nach Land",
-                                    es: "Gratis. Pro cuesta US$7.99 al mes, US$49.99 al año con 3 días gratis o US$129.99 en un solo pago en Estados Unidos. Los precios cambian según el país",
-                                    pt: "Grátis. O Pro custa US$ 7,99 por mês, US$ 49,99 por ano com 3 dias grátis ou US$ 129,99 em pagamento único nos EUA. Os preços variam por país",
-                                    fr: "Gratuit. Pro coûte 7,99 $US par mois, 49,99 $US par an avec 3 jours gratuits ou 129,99 $US en un seul paiement aux États-Unis. Les prix varient selon le pays",
+                                    en: "Free. Pro is $9.99 a month, $59.99 a year with 3 days free, or $199.99 once in the US. Prices vary by country",
+                                    de: "Gratis. Pro kostet in den USA 9,99 $ im Monat, 59,99 $ im Jahr mit 3 Tagen gratis oder einmalig 199,99 $. Die Preise unterscheiden sich je nach Land",
+                                    es: "Gratis. Pro cuesta US$9.99 al mes, US$59.99 al año con 3 días gratis o US$199.99 en un solo pago en Estados Unidos. Los precios cambian según el país",
+                                    pt: "Grátis. O Pro custa US$ 9,99 por mês, US$ 59,99 por ano com 3 dias grátis ou US$ 199,99 em pagamento único nos EUA. Os preços variam por país",
+                                    fr: "Gratuit. Pro coûte 9,99 $US par mois, 59,99 $US par an avec 3 jours gratuits ou 199,99 $US en un seul paiement aux États-Unis. Les prix varient selon le pays",
                                 }),
                             },
                             {
@@ -7060,11 +7060,11 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 30 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 3 days free, or $129.99 once. Your app store shows the price for your country.",
-                            de: "Der Tracker ist kostenlos, mit Budgets, Zielen, Abos und Widgets. Der Gratis-Plan enthält alle 30 Tage 30 Erfassungen per Sprache oder Beleg, 3 Konten, 2 Kategorie-Budgets und Konten in 2 Währungen. Outlayr Pro hebt diese Grenzen an und bringt die Synchronisierung dazu. In den USA kostet es 7,99 $ im Monat, 49,99 $ im Jahr mit 3 Tagen gratis oder einmalig 129,99 $. Dein App Store zeigt den Preis für dein Land.",
-                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 30 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 3 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
-                            pt: "O controle de gastos é grátis, com orçamentos, metas, assinaturas e widgets. O Plano grátis inclui 30 capturas por voz ou recibo a cada 30 dias, 3 contas, 2 orçamentos por categoria e contas em 2 moedas. O Outlayr Pro amplia esses limites e adiciona sincronização. Nos Estados Unidos, custa US$ 7,99 por mês, US$ 49,99 por ano com 3 dias grátis ou US$ 129,99 em pagamento único. Sua loja de apps mostra o preço do seu país.",
-                            fr: "La saisie, les budgets, les objectifs, les abonnements et les widgets sont gratuits. La formule gratuite comprend 30 captures vocales ou de tickets tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans 2 devises. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte 7,99 $US par mois, 49,99 $US par an avec 3 jours gratuits ou 129,99 $US en un seul paiement. Votre boutique d'apps affiche le prix de votre pays.",
+                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 30 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $9.99 a month, $59.99 a year with 3 days free, or $199.99 once. Your app store shows the price for your country.",
+                            de: "Der Tracker ist kostenlos, mit Budgets, Zielen, Abos und Widgets. Der Gratis-Plan enthält alle 30 Tage 30 Erfassungen per Sprache oder Beleg, 3 Konten, 2 Kategorie-Budgets und Konten in 2 Währungen. Outlayr Pro hebt diese Grenzen an und bringt die Synchronisierung dazu. In den USA kostet es 9,99 $ im Monat, 59,99 $ im Jahr mit 3 Tagen gratis oder einmalig 199,99 $. Dein App Store zeigt den Preis für dein Land.",
+                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 30 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$9.99 al mes, US$59.99 al año con 3 días gratis o US$199.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+                            pt: "O controle de gastos é grátis, com orçamentos, metas, assinaturas e widgets. O Plano grátis inclui 30 capturas por voz ou recibo a cada 30 dias, 3 contas, 2 orçamentos por categoria e contas em 2 moedas. O Outlayr Pro amplia esses limites e adiciona sincronização. Nos Estados Unidos, custa US$ 9,99 por mês, US$ 59,99 por ano com 3 dias grátis ou US$ 199,99 em pagamento único. Sua loja de apps mostra o preço do seu país.",
+                            fr: "La saisie, les budgets, les objectifs, les abonnements et les widgets sont gratuits. La formule gratuite comprend 30 captures vocales ou de tickets tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans 2 devises. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte 9,99 $US par mois, 59,99 $US par an avec 3 jours gratuits ou 199,99 $US en un seul paiement. Votre boutique d'apps affiche le prix de votre pays.",
                         }),
                         question: t({
                             en: "How much does Outlayr cost?",
@@ -8798,12 +8798,12 @@ const answers = {
                                     es: "Sí, sin anuncios. 30 capturas de voz o de recibos cada 30 días",
                                 }),
                             },
-                            { label: BEST_OF.monthly, text: t({ en: "$7.99", es: "US$7.99" }) },
+                            { label: BEST_OF.monthly, text: t({ en: "$9.99", es: "US$9.99" }) },
                             {
                                 label: BEST_OF.yearly,
                                 text: t({
-                                    en: "$49.99 with 3 days free, or $129.99 once",
-                                    es: "US$49.99 con 3 días gratis, o US$129.99 en un solo pago",
+                                    en: "$59.99 with 3 days free, or $199.99 once",
+                                    es: "US$59.99 con 3 días gratis, o US$199.99 en un solo pago",
                                 }),
                             },
                             { label: BEST_OF.bank, text: BEST_OF.outlayrBank },
@@ -9299,8 +9299,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes, at every app here that lists both, though Lunch Money lets you choose to pay more. YNAB is $14.99 a month or $109 a year, EveryDollar $17.99 or $79.99, Goodbudget $10 or $80, and Outlayr $7.99 or $49.99. Pay monthly only if you aren't sure you'll keep the app.",
-                            es: "Sí, en todas las apps de esta lista que muestran ambos, aunque Lunch Money te deja elegir pagar más. YNAB cuesta US$14.99 al mes o US$109 al año, EveryDollar US$17.99 o US$79.99, Goodbudget US$10 o US$80, y Outlayr US$7.99 o US$49.99. Paga mes a mes solo si no estás seguro de quedarte con la app.",
+                            en: "Yes, at every app here that lists both, though Lunch Money lets you choose to pay more. YNAB is $14.99 a month or $109 a year, EveryDollar $17.99 or $79.99, Goodbudget $10 or $80, and Outlayr $9.99 or $59.99. Pay monthly only if you aren't sure you'll keep the app.",
+                            es: "Sí, en todas las apps de esta lista que muestran ambos, aunque Lunch Money te deja elegir pagar más. YNAB cuesta US$14.99 al mes o US$109 al año, EveryDollar US$17.99 o US$79.99, Goodbudget US$10 o US$80, y Outlayr US$9.99 o US$59.99. Paga mes a mes solo si no estás seguro de quedarte con la app.",
                         }),
                         question: t({
                             en: "Is a yearly plan cheaper than paying monthly?",
@@ -9320,8 +9320,8 @@ const answers = {
                     COST_FAQ,
                 ],
                 lead: t({
-                    en: "In the US, the cheapest yearly plan of each budget app here costs $27.99 to $109, and 5 of the 10 also have a free plan. Outlayr is ours: free, or $49.99 a year for Pro, and it never links your bank.",
-                    es: "En EE. UU., el plan anual más barato de cada app de presupuesto de esta lista cuesta de US$27.99 a US$109, y 5 de las 10 también tienen un plan gratis. Outlayr es nuestra: gratis, o US$49.99 al año por Pro, y nunca se conecta a tu banco.",
+                    en: "In the US, the cheapest yearly plan of each budget app here costs $27.99 to $109, and 5 of the 10 also have a free plan. Outlayr is ours: free, or $59.99 a year for Pro, and it never links your bank.",
+                    es: "En EE. UU., el plan anual más barato de cada app de presupuesto de esta lista cuesta de US$27.99 a US$109, y 5 de las 10 también tienen un plan gratis. Outlayr es nuestra: gratis, o US$59.99 al año por Pro, y nunca se conecta a tu banco.",
                 }),
                 meta: {
                     description: t({
@@ -11826,8 +11826,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Logging, budgets, goals, and subscriptions are free, and so is importing the rows whose Mint category matches one of yours by name. Matching the other Mint category names to yours with AI, and creating a category for any still unmatched, needs Outlayr Pro, which is $7.99 a month, $49.99 a year, or $129.99 once in the United States.",
-                            es: "Registrar, los presupuestos, las metas y las suscripciones son gratis, igual que importar las filas cuya categoría de Mint coincide por nombre con una de las tuyas. Asignar los demás nombres de categoría de Mint a los tuyos con IA, y crear una categoría para los que sigan sin coincidir, requiere Outlayr Pro, que en Estados Unidos cuesta US$7.99 al mes, US$49.99 al año o US$129.99 en un solo pago.",
+                            en: "Logging, budgets, goals, and subscriptions are free, and so is importing the rows whose Mint category matches one of yours by name. Matching the other Mint category names to yours with AI, and creating a category for any still unmatched, needs Outlayr Pro, which is $9.99 a month, $59.99 a year, or $199.99 once in the United States.",
+                            es: "Registrar, los presupuestos, las metas y las suscripciones son gratis, igual que importar las filas cuya categoría de Mint coincide por nombre con una de las tuyas. Asignar los demás nombres de categoría de Mint a los tuyos con IA, y crear una categoría para los que sigan sin coincidir, requiere Outlayr Pro, que en Estados Unidos cuesta US$9.99 al mes, US$59.99 al año o US$199.99 en un solo pago.",
                         }),
                         question: t({
                             en: "Is Outlayr free like Mint was?",

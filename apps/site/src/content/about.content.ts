@@ -136,11 +136,11 @@ const about = {
             {
                 label: t({ en: "Price", de: "Preis", es: "Precio", pt: "Preço", fr: "Prix" }),
                 text: t({
-                    en: "Free to start. In the United States, Pro is $7.99 a month, $49.99 a year with 3 days free, or $129.99 once. Your app store shows the price for your country. There are no ads on any plan.",
-                    de: "Gratis zum Start. In den USA kostet Pro 7,99 $ im Monat, 49,99 $ im Jahr mit 3 Tagen gratis oder einmalig 129,99 $. Dein App Store zeigt den Preis für dein Land. In keinem Plan gibt es Werbung.",
-                    es: "Gratis para empezar. En Estados Unidos, Pro cuesta US$7.99 al mes, US$49.99 al año con 3 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país. No hay anuncios en ningún plan.",
-                    pt: "Grátis para começar. Nos Estados Unidos, o Pro custa US$ 7,99 por mês, US$ 49,99 por ano com 3 dias grátis ou US$ 129,99 em pagamento único. Sua loja de apps mostra o preço do seu país. Não há anúncios em nenhum plano.",
-                    fr: "Gratuit pour commencer. Aux États-Unis, Pro coûte 7,99 $US par mois, 49,99 $US par an avec 3 jours gratuits ou 129,99 $US en un seul paiement. Votre boutique d'apps affiche le prix de votre pays. Aucune formule n'affiche de publicité.",
+                    en: "Free to start. In the United States, Pro is $9.99 a month, $59.99 a year with 3 days free, or $199.99 once. Your app store shows the price for your country. There are no ads on any plan.",
+                    de: "Gratis zum Start. In den USA kostet Pro 9,99 $ im Monat, 59,99 $ im Jahr mit 3 Tagen gratis oder einmalig 199,99 $. Dein App Store zeigt den Preis für dein Land. In keinem Plan gibt es Werbung.",
+                    es: "Gratis para empezar. En Estados Unidos, Pro cuesta US$9.99 al mes, US$59.99 al año con 3 días gratis o US$199.99 en un solo pago. Tu tienda de apps muestra el precio de tu país. No hay anuncios en ningún plan.",
+                    pt: "Grátis para começar. Nos Estados Unidos, o Pro custa US$ 9,99 por mês, US$ 59,99 por ano com 3 dias grátis ou US$ 199,99 em pagamento único. Sua loja de apps mostra o preço do seu país. Não há anúncios em nenhum plano.",
+                    fr: "Gratuit pour commencer. Aux États-Unis, Pro coûte 9,99 $US par mois, 59,99 $US par an avec 3 jours gratuits ou 199,99 $US en un seul paiement. Votre boutique d'apps affiche le prix de votre pays. Aucune formule n'affiche de publicité.",
                 }),
             },
             {
