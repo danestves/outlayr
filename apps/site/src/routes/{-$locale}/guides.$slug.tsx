@@ -17,7 +17,7 @@ import {
     Takeaways,
 } from "@/components/answers/article";
 import type { ArticleSection } from "@/components/answers/article";
-import { CanadaPlate, CasheaPlate } from "@/components/answers/guide-plates";
+import { CanadaPlate, CasheaPlate, CouplesPlate } from "@/components/answers/guide-plates";
 import { SayPanel, ScanPanel } from "@/components/demo/capture-panels";
 import { screenSources } from "@/components/home/media";
 import { Icon } from "@/components/icon";
@@ -41,6 +41,7 @@ const PLATES = {
     "best-multi-currency-budget-apps": null,
     "how-much-do-budget-apps-cost": null,
     "budget-app-without-bank-account": null,
+    "budget-app-for-couples": "couples",
     "budget-planner": "04",
     "budget-categories": "04",
     "50-30-20-rule": "04",
@@ -65,6 +66,7 @@ const PLATES = {
 const PANELS = {
     canada: () => <CanadaPlate />,
     cashea: () => <CasheaPlate />,
+    couples: () => <CouplesPlate />,
     say: () => <SayPanel frame={5} />,
     scan: () => <ScanPanel frame={5} />,
 } as const;

@@ -9390,6 +9390,165 @@ const answers = {
                     es: "¿Cuánto cuestan las apps de presupuesto en 2026?",
                 }),
             },
+            "budget-app-for-couples": {
+                facts: [
+                    {
+                        label: t({ en: "All joint", es: "Todo en común" }),
+                        text: t({
+                            en: "Both paychecks go into one pot and every bill comes out of it",
+                            es: "Los dos sueldos van a un solo fondo y todas las cuentas salen de ahí",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Split by income", es: "Según ingresos" }),
+                        text: t({
+                            en: "Each pays shared bills in proportion to what they earn",
+                            es: "Cada uno paga las cuentas compartidas en proporción a lo que gana",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Yours, mine, ours", es: "Lo tuyo, lo mío, lo nuestro" }),
+                        text: t({
+                            en: "A shared budget for joint bills, and a personal one each",
+                            es: "Un presupuesto compartido para las cuentas en común, y uno personal para cada uno",
+                        }),
+                    },
+                    {
+                        label: t({ en: "In Outlayr", es: "En Outlayr" }),
+                        text: t({
+                            en: "One profile you share by link, with its own ledger and budgets. The owner's Pro covers you both",
+                            es: "Un perfil que compartes con un enlace, con su propio registro y presupuestos. El Pro de quien lo creó cubre a los dos",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "Add up what you both earn, divide each person's income by the total, and apply that share to the shared bills. If Ana earns $4,200 and Luis $2,800, Ana earns 60% of the $7,000, so of $2,500 in shared bills she pays $1,500 and Luis pays $1,000.",
+                            es: "Suma lo que ganan los dos, divide el ingreso de cada uno entre el total y aplica esa parte a las cuentas compartidas. Si Ana gana $4,200 y Luis $2,800, Ana gana el 60% de los $7,000, así que de $2,500 en cuentas compartidas ella paga $1,500 y Luis $1,000.",
+                        }),
+                        question: t({
+                            en: "How do couples split bills by income?",
+                            es: "¿Cómo divide una pareja las cuentas según sus ingresos?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Create a profile for your shared money, tap Share in the profile menu, and send your partner the link. Once they join, you both add and edit its entries, see the same budgets, and see who logged each entry. Each of your Personal profiles stays private.",
+                            es: "Sí. Crea un perfil para el dinero compartido, toca Compartir en el menú de perfiles y envíale el enlace a tu pareja. Cuando se una, los dos agregan y editan sus movimientos, ven los mismos presupuestos y ven quién registró cada movimiento. El perfil Personal de cada uno sigue siendo privado.",
+                        }),
+                        question: t({
+                            en: "Can my partner and I share one Outlayr budget?",
+                            es: "¿Mi pareja y yo podemos compartir un presupuesto en Outlayr?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "No. Profiles are part of Outlayr Pro, and the owner's Pro covers everyone in a shared profile. If it ends, the profile stops syncing for both of you until it's back. The free plan keeps one ledger with 2 category budgets plus one for the month.",
+                            es: "No. Los perfiles son parte de Outlayr Pro, y el Pro de quien creó el perfil cubre a todos los que están en él. Si se acaba, el perfil deja de sincronizarse para los dos hasta que vuelva. El plan gratis tiene un solo registro con 2 presupuestos por categoría más uno para el mes.",
+                        }),
+                        question: t({
+                            en: "Do we both need Outlayr Pro?",
+                            es: "¿Los dos necesitamos Outlayr Pro?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Your partner can leave from the app once their changes have synced, and the entries they logged stay in the profile. Only the owner can rename or delete it, invite people, or remove someone.",
+                            es: "Tu pareja puede salir desde la app cuando sus cambios se hayan sincronizado, y los movimientos que registró se quedan en el perfil. Solo quien lo creó puede cambiarle el nombre, borrarlo, invitar o sacar a alguien.",
+                        }),
+                        question: t({
+                            en: "What happens if my partner leaves?",
+                            es: "¿Qué pasa si mi pareja sale del perfil?",
+                        }),
+                    },
+                    COST_FAQ,
+                ],
+                lead: t({
+                    en: "Couples usually split money one of three ways: everything joint, split by income, or yours, mine, and ours. Pick one, agree which bills are shared, and track those in their own budget. In Outlayr, one of you shares a profile with the other, and it keeps those bills and budgets in a ledger of their own, apart from each of your Personal ones.",
+                    es: "Las parejas suelen dividir el dinero de una de tres formas: todo en común, según ingresos, o lo tuyo, lo mío y lo nuestro. Elijan una, acuerden qué cuentas son compartidas y llévenlas en su propio presupuesto. En Outlayr, uno de los dos comparte un perfil con el otro, y ese perfil lleva esas cuentas y presupuestos en un registro aparte, separado del Personal de cada uno.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Three ways couples budget, how to split bills by income with a worked example, and how one shared profile in Outlayr keeps shared money apart.",
+                        es: "Tres formas de presupuestar en pareja, cómo dividir las cuentas según ingresos con un ejemplo, y cómo un perfil compartido en Outlayr separa el dinero en común.",
+                    }),
+                    title: t({
+                        en: "Budget App for Couples: How to Split Money Fairly · Outlayr",
+                        es: "App de presupuesto para parejas: cómo dividir el dinero · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "All joint suits couples with similar habits who want one number to watch. Split by income suits couples who earn different amounts, because each pays the same share of their pay. Yours, mine, and ours keeps shared bills shared and leaves the rest private, which helps when one of you spends on things the other would rather not see itemized.",
+                                es: "Todo en común le sirve a parejas con hábitos parecidos que quieren mirar un solo número. Según ingresos le sirve a parejas que ganan distinto, porque cada uno paga la misma parte de su sueldo. Lo tuyo, lo mío y lo nuestro mantiene compartidas las cuentas compartidas y deja privado el resto, lo que ayuda cuando uno gasta en cosas que el otro prefiere no ver detalladas.",
+                            }),
+                            t({
+                                en: "Whichever you pick, write down which bills are shared: rent, groceries, utilities, and anything for a child or a pet are the usual ones. Check the shared budget together once a month.",
+                                es: "Elijan la que elijan, anoten qué cuentas son compartidas: el alquiler, el supermercado, los servicios y lo de un hijo o una mascota son las de siempre. Revisen juntos el presupuesto compartido una vez al mes.",
+                            }),
+                        ],
+                        id: "pick",
+                        title: t({ en: "Which way fits you", es: "Qué forma les conviene" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "With Outlayr Pro, create a profile for your shared money, such as Household, from the profile menu in the Log title. It is a separate ledger, with its own accounts, categories, budgets, and main currency.",
+                                es: "Con Outlayr Pro, crea un perfil para el dinero compartido, como Hogar, desde el menú de perfiles en el título del Registro. Es un registro aparte, con sus propias cuentas, categorías, presupuestos y moneda principal.",
+                            }),
+                            t({
+                                en: "Then tap Share in the same menu and send your partner the link. Each link lets one person join and expires after 7 days. Joining needs an Outlayr account, and the owner's Pro covers you both.",
+                                es: "Luego toca Compartir en el mismo menú y envíale el enlace a tu pareja. Cada enlace sirve para que se una una persona y vence a los 7 días. Para unirse hace falta una cuenta de Outlayr, y el Pro de quien creó el perfil cubre a los dos.",
+                            }),
+                            t({
+                                en: "Once your partner joins, you both add and edit entries and see what is left in each budget, whoever paid. An entry your partner logged shows their name next to the time. Your Personal profiles stay private, so the rest of your spending stays yours.",
+                                es: "Cuando tu pareja se una, los dos agregan y editan movimientos y ven cuánto queda en cada presupuesto, sin importar quién pagó. Un movimiento que registró tu pareja muestra su nombre junto a la hora. Sus perfiles Personales siguen siendo privados, así que el resto de lo que gasta cada uno sigue siendo suyo.",
+                            }),
+                        ],
+                        id: "outlayr",
+                        title: t({ en: "One shared profile in Outlayr", es: "Un perfil compartido en Outlayr" }),
+                    },
+                ],
+                plateAlt: t({
+                    en: "Shared bills split by income: $2,500 this month, Ana earns $4,200 and pays 60%, $1,500, Luis earns $2,800 and pays 40%, $1,000.",
+                    es: "Cuentas compartidas divididas según ingresos: $2,500 este mes, Ana gana $4,200 y paga el 60%, $1,500, Luis gana $2,800 y paga el 40%, $1,000.",
+                }),
+                related: [
+                    "/guides/budget-planner",
+                    "/guides/best-budget-apps",
+                    "/guides/how-to-track-expenses",
+                ] satisfies PageRef[],
+                steps: [
+                    {
+                        text: t({
+                            en: "All joint, split by income, or yours, mine, and ours.",
+                            es: "Todo en común, según ingresos, o lo tuyo, lo mío y lo nuestro.",
+                        }),
+                        title: t({ en: "Pick a way to split", es: "Elijan cómo dividir" }),
+                    },
+                    {
+                        text: t({
+                            en: "Rent, groceries, utilities, and whatever else you both agree on.",
+                            es: "Alquiler, supermercado, servicios y lo demás que acuerden.",
+                        }),
+                        title: t({ en: "List the shared bills", es: "Anoten las cuentas compartidas" }),
+                    },
+                    {
+                        text: t({
+                            en: "Create a profile in Outlayr, tap Share, and send your partner the link.",
+                            es: "Creen un perfil en Outlayr, toquen Compartir y envíenle el enlace a la pareja.",
+                        }),
+                        title: t({ en: "Share one profile", es: "Compartan un perfil" }),
+                    },
+                ],
+                title: t({
+                    en: "How to budget as a couple, and keep shared money apart",
+                    es: "Cómo presupuestar en pareja y separar el dinero compartido",
+                }),
+            },
             "budget-planner": {
                 facts: [
                     {

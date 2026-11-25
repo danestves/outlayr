@@ -112,6 +112,13 @@ const site = {
                     pt: "Orçamento sem conectar o banco",
                     fr: "Budget sans lien bancaire",
                 }),
+                "budget-app-for-couples": t({
+                    en: "Budgeting as a couple",
+                    de: "Budget als Paar",
+                    es: "Presupuesto en pareja",
+                    pt: "Orçamento a dois",
+                    fr: "Budget à deux",
+                }),
                 "budget-planner": t({
                     en: "Budgets",
                     de: "Budgets",

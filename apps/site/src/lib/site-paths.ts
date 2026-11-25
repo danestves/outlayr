@@ -27,6 +27,7 @@ const SITE_PATHS = [
     "/guides/best-subscription-tracker-apps",
     "/guides/best-multi-currency-budget-apps",
     "/guides/how-much-do-budget-apps-cost",
+    "/guides/budget-app-for-couples",
     "/guides/budget-planner",
     "/guides/budget-categories",
     "/guides/50-30-20-rule",
