@@ -63,6 +63,16 @@ export function useCloudAuthenticated(): boolean {
     return useSyncExternalStore(subscribeCloudAuthenticated, isCloudAuthenticated, isCloudAuthenticated);
 }
 
+function subscribeCloudSocket(listener: () => void): () => void {
+    return cloudRuntime?.convex.subscribeToConnectionState(listener) ?? (() => undefined);
+}
+
+const isCloudSocketDown = () => cloudRuntime?.convex.connectionState().isWebSocketConnected === false;
+
+export function useCloudSocketDown(): boolean {
+    return useSyncExternalStore(subscribeCloudSocket, isCloudSocketDown, isCloudSocketDown);
+}
+
 export function useCloudAccount(): boolean {
     return useSyncExternalStore(subscribeCloudAuthenticated, isCloudAccount, isCloudAccount);
 }

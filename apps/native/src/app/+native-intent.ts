@@ -6,6 +6,7 @@ import { deepLinkTarget, inviteLink, redirectLaunchPath } from "@/lib/deep-links
 import { moneyManagerSession } from "@/lib/money-manager-session";
 import { holdInviteLink } from "@/lib/pending-invite-link";
 import { posthog } from "@/lib/posthog";
+import { prefetchProfileInvite } from "@/lib/profile-sharing";
 
 // Every link from outside the bundle (widgets, App Intents, Siri, quick actions, opened files) passes through here.
 export function redirectSystemPath(event: { path: string | null; initial: boolean }) {
@@ -28,6 +29,9 @@ export function redirectSystemPath(event: { path: string | null; initial: boolea
     if (invite !== null) {
         // Onboarding and sign-in guard the invite routes away, so the link waits until the ledger can open it.
         holdInviteLink(invite);
+        if (invite.kind === "join") {
+            prefetchProfileInvite(invite.code);
+        }
         return null;
     }
     return path;

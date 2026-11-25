@@ -1,20 +1,37 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
+import { normalizeReferralCode } from "@outlayr/money/contract";
 import type { FunctionReturnType } from "convex/server";
 import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
 import { useSyncExternalStore } from "react";
 
+import { appAtomRegistry } from "@/state/atom-registry";
+
 import { cloudRuntime } from "./cloud-runtime";
-import { cloudQuery } from "./convex";
+import { cloudQuery, subscribeCloudAuthenticated } from "./convex";
 import { joinedProfilesCache, joinedSetDiffers } from "./joined-profiles";
 
 export type ProfileMembersView = NonNullable<FunctionReturnType<typeof api.profileSharing.members>>;
 
 export type ProfileMember = ProfileMembersView["members"][number];
 
+const INVITE_PREFETCH_TTL = "1 minute";
+
 export const profileInviteAtom = Atom.family((code: string) =>
-    Atom.make(cloudQuery(api.profileSharing.invite, { code })).pipe(Atom.withLabel("profileSharing:invite"))
+    Atom.make((get) => {
+        // "own" and "member" depend on who asks, so an answer read before the token settles is asked again.
+        get.addFinalizer(subscribeCloudAuthenticated(() => get.refreshSelf()));
+        return cloudQuery(api.profileSharing.invite, { code });
+    }).pipe(Atom.setIdleTTL(INVITE_PREFETCH_TTL), Atom.withLabel("profileSharing:invite"))
 );
+
+/** The Join sheet opens only once the ledger is up, so its read starts when the link arrives. */
+export function prefetchProfileInvite(rawCode: string): void {
+    const code = normalizeReferralCode(rawCode);
+    if (code !== null) {
+        appAtomRegistry.mount(profileInviteAtom(code))();
+    }
+}
 
 /** Public, so it answers before the Convex client holds a token; the signed-out key never asks. */
 const NO_ACCOUNT = "";
