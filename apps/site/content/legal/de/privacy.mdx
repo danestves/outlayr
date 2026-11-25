@@ -16,6 +16,7 @@ intro: "Diese Erklärung beschreibt, was Outlayr erhebt, wohin es gelangt, wie l
 - Mit Outlayr Pro kannst du Notion verbinden, um Ausgaben aus deinen Notion-Datenbanken zu importieren. Wir speichern den Zugriffsschlüssel von Notion verschlüsselt auf unseren Servern, damit du erneut importieren kannst, bis du Notion trennst oder dein Konto löschst. Was wir aus Notion lesen, läuft über unseren Server auf dein Gerät und wird nicht gespeichert.
 - Du kannst einen KI-Assistenten wie Claude mit deinem Konto verbinden. Sobald du ihn freigibst, kann er lesen, was deine Geräte synchronisiert haben, und mit Outlayr Pro Einträge hinzufügen. Was er liest, unterliegt der Datenschutzerklärung dieses Assistenten. Unser Server teilt PostHog mit, welches Werkzeug er genutzt hat und wie lange es dauerte, nie was er gelesen hat.
 - Wenn du Freunde einlädst, sieht jeder deinen Vornamen in deiner Einladung, und du siehst ihren Vornamen, ob sie Pro gekauft haben und wann. Nie, was sie erfasst oder bezahlt haben.
+- Mit Outlayr Pro kannst du ein Profil mit bis zu 5 Personen teilen. Alle darin sehen und ändern das Haushaltsbuch und die Fotos dieses Profils und sehen die Vornamen der Personen darin, auch bei den Einträgen, die diese erfasst haben.
 - Keine Werbung und kein Tracking über die Apps anderer Unternehmen hinweg. Wir verkaufen deine personenbezogenen Daten nicht und geben sie nicht für Werbung weiter.
 - Du kannst dein Konto und alles, was damit synchronisiert wurde, jederzeit in der App löschen: **Einstellungen › Konto › Konto löschen**.
 
@@ -55,6 +56,10 @@ Jede Art von Daten, die Outlayr verarbeitet, an einer Stelle. Die folgenden Absc
 | Bildlink, das Bild | Symbolauswahl | Unsere Server (Cloudflare), mit allen geteilt | Mit dem Bild gespeichert, bis es entfernt wird; IP-Adresse nicht gespeichert. Nicht mit dir verknüpft |
 | Kaufbelege, Nutzer-ID, Name, E-Mail | App-Start, Pro | RevenueCat, Apple, Google oder Stripe, unsere Server | Bis zur Kontolöschung |
 | Einladungscode, wer wen eingeladen hat, Vornamen, ob der Freund Pro gekauft hat und wann, verdiente Monate | Einladungen | Unsere Server, RevenueCat | Bis zur Kontolöschung |
+| Haushaltsbuch und Fotos eines geteilten Profils, welches Konto jeden Eintrag erfasst hat | Geteilte Profile (Pro) | Unsere Server, alle im Profil | Bis der Eigentümer sein Konto löscht. Fotos, die ein Mitglied hinzugefügt hat: bis dieses Mitglied sein Konto löscht |
+| Konto-IDs, Vornamen und Beitrittsdaten der Mitglieder | Geteilte Profile (Pro) | Unsere Server, alle im Profil | Bis das Mitglied austritt, entfernt wird oder sein Konto löscht |
+| Wann jedes Mitglied beigetreten ist und das Profil verlassen hat | Geteilte Profile (Pro) | Unsere Server | Bis dieses Mitglied sein Konto löscht |
+| Name und Aussehen des Profils, Vorname des Eigentümers | Einladungslinks zu Profilen (Pro) | Unsere Server, jeder mit einem unbenutzten Link | Der Link funktioniert nicht mehr, sobald sich jemand damit anschließt, oder 7 Tage nach seiner letzten Ausstellung. Verbleibende Datensätze werden mit dem Konto des Eigentümers gelöscht |
 | Installations-ID, App-Version, Fehler | Update-Prüfungen | Expo | Richtlinie von Expo |
 | Bildschirme, genutzte Funktionen, Fehler, Installations-ID, Gerätemodell | App-Nutzung | PostHog | Bis zur Kontolöschung, oder Richtlinie von PostHog, wenn du dich nie anmeldest |
 | Funktion, Modell, Tokens, Kosten, Geschwindigkeit und Fehler jeder KI-Anfrage | Vorschläge, Lesen von Benachrichtigungen, Sprache, Scans, Importe | PostHog | Bei eingeschaltetem „Analysedaten teilen“ bis zur Kontolöschung. Sonst Richtlinie von PostHog |
@@ -131,6 +136,8 @@ Die Synchronisierung ist Teil von Outlayr Pro. Wenn du mit Pro angemeldet bist, 
 
 Einstellungen, die an ein Handy gebunden sind, bleiben darauf: Benachrichtigungen, App-Sperre, „Analysedaten teilen“, Zahleneingabe und heller oder dunkler Modus.
 
+Ein Profil, das du teilst, wird mit allen darin synchronisiert. Siehe [Geteilte Profile](#geteilte-profile).
+
 ### Gelöschte Einträge
 
 Wenn du auf einem synchronisierten Gerät einen Eintrag löschst, behalten unsere Server einen Löschvermerk, damit deine anderen Geräte ihn ebenfalls entfernen können. Dieser Vermerk behält den letzten Inhalt des Eintrags und ein eventuell vorhandenes Foto, bis du dein Konto löschst.
@@ -138,6 +145,21 @@ Wenn du auf einem synchronisierten Gerät einen Eintrag löschst, behalten unser
 ### Synchronisierung ausschalten
 
 Wenn du die Synchronisierung ausschaltest, sendet dieses Gerät keine Änderungen mehr. Was bereits auf unseren Servern liegt, wird dadurch nicht entfernt. Um es zu entfernen, [lösche dein Konto](#löschen-und-exportieren).
+
+## Geteilte Profile
+
+Mit Outlayr Pro kann der Eigentümer eines Profils, das nicht „Privat“ ist, bis zu 5 Personen einladen, es zu teilen. Jede Einladung ist ein Link, mit dem eine Person beitreten kann. Er funktioniert nicht mehr, sobald sich jemand damit angeschlossen hat, oder 7 Tage nach seiner letzten Ausstellung. Die App stellt ihn erneut aus, solange der Eigentümer den Bildschirm zum Teilen geöffnet hat. Bis er nicht mehr funktioniert, sieht jeder, der ihn öffnet, Name und Aussehen des Profils und den Vornamen des Eigentümers. Zum Beitreten brauchst du ein Konto, und es klappt nur, solange der Eigentümer Pro hat und im Profil noch Platz ist.
+
+Alle in einem geteilten Profil, auf ihren eigenen Geräten:
+
+- Sehen das ganze Haushaltsbuch und können es ändern: Einträge, Umbuchungen, Konten, Budgets, Sparziele, Kategorien, Tags und die Fotos darauf, auch was andere hinzugefügt haben.
+- Sehen die Vornamen aller darin, die App erhält außerdem ihre Konto-IDs und die Beitrittsdaten der Mitglieder, und bei Einträgen, die jemand anderes erfasst hat, den Vornamen dieser Person, sofern sie noch im Profil ist. Einträge, die vor dem Teilen des Profils erfasst wurden, erscheinen als die des Eigentümers.
+
+Deine anderen Profile bleiben privat, und Mitglieder sehen sie nie. Das Pro des Eigentümers gilt für alle im Profil. Läuft es ab, wird das Profil für alle nicht mehr synchronisiert, bis es wieder aktiv ist. Nur der Eigentümer kann das Profil umbenennen oder löschen, Personen einladen oder entfernen. Alle anderen können in der App austreten, sobald ihre Änderungen und Fotos synchronisiert sind.
+
+Wenn jemand austritt oder entfernt wird, entfernen seine Geräte das Profil, sobald sie die Änderung mit unseren Servern bestätigt haben, und die Einträge, die die Person hinzugefügt hat, bleiben darin. Wir bewahren einen Datensatz auf, wann jede Person beigetreten ist und das Profil verlassen hat, bis diese Person ihr Konto löscht. Löscht der Eigentümer zuerst sein Konto, behält der Datensatz nur das Mitglied, eine Profil-ID und die Daten.
+
+Wenn der Eigentümer sein Konto löscht, löschen wir das Haushaltsbuch des geteilten Profils und die Fotos des Eigentümers von unseren Servern. Wenn jemand anderes darin sein Konto löscht, bleiben die Einträge, die die Person hinzugefügt hat, aber wir löschen ihre Fotos von unseren Servern, und ihr Name erscheint nicht mehr bei ihren Einträgen. Kopien, die schon auf den Geräten der Mitglieder sind, und Exporte, die sie erstellt haben, können bestehen bleiben.
 
 ## Notion verbinden
 
@@ -341,7 +363,7 @@ Wenn du dich im Europäischen Wirtschaftsraum oder im Vereinigten Königreich be
 
 | Zweck | Rechtsgrundlage |
 | --- | --- |
-| Dein Konto, die Synchronisierung, die Fotospeicherung, die Spracheingabe, Belegscans, der Import von Ratenplänen, der CSV-Import, der Import von PDF-Kontoauszügen, die Notion-Verbindung, die tägliche Web-Erinnerung, Pro, Einladungen, Verbindungen von KI-Assistenten und Webhooks | Vertrag: Wir brauchen diese Daten, um bereitzustellen, worum du bittest. |
+| Dein Konto, die Synchronisierung, die Fotospeicherung, die Spracheingabe, Belegscans, der Import von Ratenplänen, der CSV-Import, der Import von PDF-Kontoauszügen, die Notion-Verbindung, die tägliche Web-Erinnerung, Pro, Einladungen, geteilte Profile, Verbindungen von KI-Assistenten und Webhooks | Vertrag: Wir brauchen diese Daten, um bereitzustellen, worum du bittest. |
 | Die Willkommens- und Pro-Nachrichten und Mitteilungen über Änderungen dieser Erklärung oder unserer Nutzungsbedingungen | Vertrag: Sie gehören zu dem Konto und dem Abo, um die du gebeten hast. |
 | Das Senden von Spracheingaben, Belegfotos, Screenshots von Ratenplänen, CSV-Beschreibungen, PDF-Kontoauszügen, Benachrichtigungstext und Händlernamen an Anthropic und ElevenLabs | Deine Einwilligung, erteilt mit „Erlauben“, wenn die App fragt, und widerrufen unter **Einstellungen › Daten an KI-Anbieter senden**. |
 | Händlervorschläge, das Lesen von Benachrichtigungen, Websuchen, die gemeinsame Händlerliste und Logos | Berechtigte Interessen: Einträge schneller und genauer zuordnen. Vorschläge, das Lesen von Benachrichtigungen und Websuchen erreichen Anthropic erst, wenn du es erlaubst, und das Ausschalten von „Intelligentes Ausfüllen“ ist die Art, wie du widersprichst. |
@@ -367,6 +389,7 @@ Die [Tabelle oben](#daten-auf-einen-blick) nennt, wie lange jede Art von Daten a
 - Deine App-Sprache und der Nachweis, welche Willkommens-, Pro- und Änderungsmitteilungen du erhalten hast, werden mit deinem Konto gelöscht.
 - Nutzungszähler, die Limits für Scans, Spracheingaben, Vorschläge und das Lesen von Benachrichtigungen durchsetzen, enthalten nur Zählwerte, sind deiner Konto-ID zugeordnet und werden mit deinem Konto gelöscht.
 - Einladungsdatensätze (dein Code, wer wen eingeladen hat, Vornamen, ob der Freund Pro gekauft hat, und verdiente oder wartende Monate) werden mit dem Konto gelöscht, zu dem sie gehören. Eine Einladung, die einen Monat eingebracht hat, verliert den Namen des Freundes, wenn das Konto des Freundes gelöscht wird, und bleibt, bis das Konto des Einladenden gelöscht wird.
+- Das Haushaltsbuch eines geteilten Profils, einschließlich welches Konto jeden Eintrag erfasst hat, wird aufbewahrt, bis sein Eigentümer sein Konto löscht. Wird das Konto eines Mitglieds gelöscht, erscheint sein Name nicht mehr, aber die Einträge behalten die ID dieses Kontos. Der Datensatz über Beitritt und Austritt eines Mitglieds und die Fotos, die es hinzugefügt hat, werden aufbewahrt, bis das Konto dieses Mitglieds gelöscht wird. Verbleibende Einladungsdatensätze werden mit dem Konto des Eigentümers gelöscht.
 - Ein anonymes Konto, das beim abgemeldeten Kauf oder bei der Wiederherstellung von Pro entsteht, wird mit allem, was damit verknüpft ist, gelöscht, wenn du dich anmeldest. Wenn du dich nie anmeldest, bleibt es, damit der Kauf weiter funktioniert, bis du uns um Löschung bittest.
 - Einträge der gemeinsamen Händlerliste sind mit niemandem verknüpft. Sie werden nach 30 oder 90 Tagen aktualisiert.
 - Mit deinem Konto verknüpfte Analyseereignisse werden mit ihm gelöscht. PostHog löscht sie in einem späteren Durchlauf, sodass sie noch eine Weile bestehen können, nachdem die App die abgeschlossene Löschung meldet. Ereignisse einer Installation, die sich nie angemeldet hat, enthalten nur eine zufällige Installations-ID und werden nach der Aufbewahrungsrichtlinie von PostHog aufbewahrt. Protokolle von KI-Anfragen, die gesendet wurden, als „Analysedaten teilen“ ausgeschaltet war, enthalten statt deiner Konto-ID eine zufällige ID, für die Spracheingabe zusätzlich die Gesprächs-ID, und werden auf dieselbe Weise aufbewahrt, ebenso Werkzeugaufrufe von KI-Assistenten, die stattdessen eine Verbindungs-ID enthalten.
@@ -383,7 +406,7 @@ Die [Tabelle oben](#daten-auf-einen-blick) nennt, wie lange jede Art von Daten a
 - Der Zugriff von Outlayr auf deine Anmeldung mit Apple oder Google wird widerrufen. Bei Apple bittet unser Server Apple, ihn zu widerrufen. Bei Google tut es die App.
 - Wenn du Notion verbunden hast, bittet unser Server Notion, den Zugriffsschlüssel von Outlayr zu widerrufen.
 - Dein Webhook-Token, deine Adressen und Einträge, die auf Empfang oder Versand warten, werden gelöscht, damit nichts Neues gesendet wird. Eine bereits laufende Zustellung kann noch abgeschlossen werden.
-- Dein synchronisiertes Haushaltsbuch, Löschvermerke, gesicherte Fotos und ausstehende Vorschlagsanfragen werden von unseren Servern gelöscht.
+- Dein synchronisiertes Haushaltsbuch, Löschvermerke, gesicherte Fotos und ausstehende Vorschlagsanfragen werden von unseren Servern gelöscht. Dazu gehören das Haushaltsbuch von Profilen, die du teilst, und Fotos, die du zu Profilen anderer hinzugefügt hast. Einträge, die du zum Profil eines anderen hinzugefügt hast, bleiben dort ohne deinen Namen. Kopien auf den Geräten anderer Mitglieder und Exporte, die sie erstellt haben, können bestehen bleiben.
 - Deine Kundendatensätze bei RevenueCat und Stripe und unsere Kopie deines Abostatus werden gelöscht.
 - Dein Profil bei PostHog und jedes damit verknüpfte Analyseereignis werden gelöscht. PostHog löscht die Ereignisse in einem späteren Durchlauf, sodass sie noch eine Weile bestehen können, nachdem die App die abgeschlossene Löschung meldet.
 - Deine Nutzungszähler, offenen Sprachgespräche, Sitzungen, der Zugriff von KI-Assistenten, Anmeldelinks, der Notion-Zugriffsschlüssel, Einladungscode und Einladungen sowie das Konto werden gelöscht. Wenn die Einladung, die du eingelöst hast, deinem Freund bereits einen Monat eingebracht hat, bleibt sie ohne deinen Namen auf seiner Liste.

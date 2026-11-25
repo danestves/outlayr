@@ -16,6 +16,7 @@ intro: "Esta política explica o que o Outlayr coleta, para onde vai, por quanto
 - Com o Outlayr Pro, você pode conectar o Notion para importar despesas dos seus bancos de dados do Notion. Guardamos a chave de acesso do Notion criptografada nos nossos servidores para que você possa importar de novo, até você desconectar o Notion ou apagar sua conta. O que lemos do Notion passa pelo nosso servidor até o seu dispositivo e não é guardado.
 - Você pode conectar um assistente de IA, como o Claude, à sua conta. Depois que você o aprova, ele pode ler o que seus dispositivos sincronizaram e, com o Outlayr Pro, adicionar lançamentos. O que ele lê é tratado conforme a política de privacidade desse assistente. Nosso servidor informa ao PostHog qual ferramenta ele usou e quanto tempo levou, nunca o que ele leu.
 - Se você convidar amigos, cada um vê seu primeiro nome no seu convite, e você vê o primeiro nome deles, se compraram o Pro e quando. Nunca o que eles registraram nem quanto pagaram.
+- Com o Outlayr Pro, você pode compartilhar um perfil com até 5 pessoas. Todos nele veem e podem alterar o registro e as fotos desse perfil, e veem os primeiros nomes das pessoas nele, inclusive nos lançamentos que elas fizeram.
 - Sem anúncios e sem rastreamento entre apps de outras empresas. Não vendemos suas informações pessoais nem as compartilhamos para publicidade.
 - Você pode apagar sua conta e tudo o que foi sincronizado com ela pelo app a qualquer momento: **Ajustes › Conta › Apagar conta**.
 
@@ -55,6 +56,10 @@ Todo tipo de dado que o Outlayr trata, em um só lugar. As seções abaixo expli
 | Link de imagem, a imagem | Seletor de ícone | Nossos servidores (Cloudflare), compartilhado com todos | Guardado com a imagem até ser removido; endereço IP não guardado. Não vinculado a você |
 | Registros de compra, ID de usuário, nome, e-mail | Abertura do app, Pro | RevenueCat, Apple, Google ou Stripe, nossos servidores | Até a exclusão da conta |
 | Código de convite, quem convidou quem, primeiros nomes, se o amigo comprou o Pro e quando, meses ganhos | Convites | Nossos servidores, RevenueCat | Até a exclusão da conta |
+| O registro e as fotos de um perfil compartilhado, qual conta fez cada lançamento | Perfis compartilhados (Pro) | Nossos servidores, todos no perfil | Até a exclusão da conta do proprietário. Fotos que um membro adicionou: até a exclusão da conta desse membro |
+| IDs de conta, primeiros nomes e datas de entrada dos membros | Perfis compartilhados (Pro) | Nossos servidores, todos no perfil | Até esse membro sair, ser removido ou apagar a conta |
+| Quando cada membro entrou e saiu | Perfis compartilhados (Pro) | Nossos servidores | Até a exclusão da conta desse membro |
+| Nome e aparência do perfil, primeiro nome do proprietário | Links de convite para perfis (Pro) | Nossos servidores, qualquer pessoa com um link não usado | O link deixa de funcionar quando alguém entra com ele, ou 7 dias depois de emitido pela última vez. Qualquer registro restante é apagado junto com a conta do proprietário |
 | ID de instalação, versão do app, erros | Verificação de atualizações | Expo | Política da Expo |
 | Telas, recursos usados, erros, ID de instalação, modelo do dispositivo | Uso do app | PostHog | Até a exclusão da conta, ou política do PostHog se você nunca iniciar sessão |
 | Recurso, modelo, tokens, custo, velocidade e erros de cada solicitação de IA | Sugestões, leitura de notificações, voz, escaneamentos, importações | PostHog | Com Compartilhar análises ativado, até a exclusão da conta. Caso contrário, política do PostHog |
@@ -131,6 +136,8 @@ A sincronização faz parte do Outlayr Pro. Quando você está conectado com o P
 
 Os ajustes ligados a um celular ficam nele: notificações, bloqueio do app, Compartilhar análises, digitação de valores e modo claro ou escuro.
 
+Um perfil que você compartilha sincroniza com todos nele. Veja [Perfis compartilhados](#perfis-compartilhados).
+
 ### Lançamentos apagados
 
 Quando você apaga um lançamento em um dispositivo sincronizado, nossos servidores guardam um registro da exclusão para que seus outros dispositivos também possam removê-lo. Esse registro guarda o último conteúdo do lançamento, e qualquer foto que ele tinha, até você apagar sua conta.
@@ -138,6 +145,21 @@ Quando você apaga um lançamento em um dispositivo sincronizado, nossos servido
 ### Desativar a sincronização
 
 Desativar a sincronização impede que aquele dispositivo envie alterações. Isso não remove o que já está nos nossos servidores. Para remover, [apague sua conta](#apagar-e-exportar).
+
+## Perfis compartilhados
+
+Com o Outlayr Pro, o proprietário de um perfil que não seja o Pessoal pode convidar até 5 pessoas para compartilhá-lo. Cada convite é um link que permite a uma pessoa entrar. Ele deixa de funcionar quando alguém entra com ele, ou 7 dias depois de emitido pela última vez. O app o emite de novo enquanto o proprietário está com a tela de compartilhamento aberta. Até deixar de funcionar, quem o abre vê o nome e a aparência do perfil e o primeiro nome do proprietário. Para entrar, é preciso ter uma conta, e só funciona enquanto o proprietário tiver o Pro e o perfil tiver vaga.
+
+Todos em um perfil compartilhado, nos próprios dispositivos:
+
+- Veem todo o registro dele e podem alterá-lo: lançamentos, transferências, contas, orçamentos, metas de economia, categorias, tags e as fotos deles, inclusive o que outros adicionaram.
+- Veem o primeiro nome de todos nele, e o app também recebe os IDs de conta deles e as datas de entrada dos membros, e, nos lançamentos que outra pessoa fez, o primeiro nome dela se ainda estiver no perfil. Os lançamentos feitos antes de o perfil ser compartilhado aparecem como do proprietário.
+
+Seus outros perfis continuam privados, e os membros nunca os veem. O Pro do proprietário cobre todos no perfil. Se ele terminar, o perfil para de sincronizar para todos até voltar a ficar ativo. Só o proprietário pode renomear ou apagar o perfil, convidar pessoas ou removê-las. Qualquer outra pessoa pode sair pelo app depois que suas alterações e fotos forem sincronizadas.
+
+Quando alguém sai ou é removido, os dispositivos dela removem o perfil assim que confirmam a mudança com nossos servidores, e os lançamentos que ela adicionou continuam nele. Guardamos um registro de quando cada pessoa entrou e saiu até essa pessoa apagar a conta. Se o proprietário apagar a dele primeiro, o registro guarda só o membro, um ID de perfil e as datas.
+
+Quando o proprietário apaga a conta, apagamos dos nossos servidores o registro do perfil compartilhado e as fotos que o proprietário adicionou. Quando outra pessoa do perfil apaga a conta, os lançamentos que ela adicionou continuam, mas apagamos dos nossos servidores as fotos que ela adicionou, e o nome dela deixa de aparecer nos lançamentos. As cópias que já estão nos dispositivos dos membros, e as exportações que eles fizeram, podem permanecer.
 
 ## Conectar o Notion
 
@@ -341,7 +363,7 @@ Se você estiver no Espaço Econômico Europeu ou no Reino Unido, usamos estas b
 
 | Finalidade | Base legal |
 | --- | --- |
-| Sua conta, sincronização, armazenamento de fotos, lançamento por voz, escaneamentos de recibos, importações de parcelamentos, importação de CSV, importação de extratos bancários em PDF, a conexão com o Notion, o lembrete diário na web, o Pro, os convites, as conexões com assistentes de IA e os webhooks | Contrato: precisamos desses dados para fornecer o que você pede. |
+| Sua conta, sincronização, armazenamento de fotos, lançamento por voz, escaneamentos de recibos, importações de parcelamentos, importação de CSV, importação de extratos bancários em PDF, a conexão com o Notion, o lembrete diário na web, o Pro, os convites, os perfis compartilhados, as conexões com assistentes de IA e os webhooks | Contrato: precisamos desses dados para fornecer o que você pede. |
 | As mensagens de boas-vindas e do Pro, e os avisos de mudanças nesta política ou nos nossos Termos | Contrato: elas fazem parte da conta e da assinatura que você pediu. |
 | Envio de lançamentos por voz, fotos de recibos, capturas de tela de parcelamentos, descrições de CSV, extratos em PDF, texto de notificações e nomes de estabelecimentos à Anthropic e à ElevenLabs | Seu consentimento, dado com Permitir quando o app pergunta e retirado em **Ajustes › Enviar dados a provedores de IA**. |
 | Sugestões de estabelecimentos, leitura de notificações, buscas na web, a lista compartilhada de estabelecimentos e os logos | Interesses legítimos: tornar os lançamentos mais rápidos e mais precisos de classificar. Sugestões, leitura de notificações e buscas na web só chegam à Anthropic depois que você permite, e desativar o Preenchimento inteligente é a forma de se opor. |
@@ -367,6 +389,7 @@ A [tabela acima](#dados-em-resumo) lista por quanto tempo cada tipo de dado é g
 - O idioma do seu app e o registro de quais avisos de boas-vindas, do Pro e de mudanças você recebeu são apagados junto com sua conta.
 - Os contadores de uso que aplicam os limites de escaneamentos, lançamentos por voz, sugestões e leitura de notificações guardam apenas contagens, associadas ao seu ID de conta, e são apagados junto com sua conta.
 - Os registros de convites (seu código, quem convidou quem, primeiros nomes, se o amigo comprou o Pro e meses ganhos ou em espera) são apagados junto com a conta à qual pertencem. Um convite que rendeu um mês perde o nome do amigo quando a conta do amigo é apagada, e fica até a conta de quem convidou ser apagada.
+- O registro de um perfil compartilhado, incluindo qual conta fez cada lançamento, é mantido até o proprietário apagar a conta. Quando a conta de um membro é apagada, o nome dele deixa de aparecer, mas os lançamentos mantêm o ID dessa conta. O registro de entrada e saída de um membro e as fotos que ele adicionou são mantidos até a conta desse membro ser apagada. Os registros de convite restantes são apagados junto com a conta do proprietário.
 - Uma conta anônima criada ao comprar ou restaurar o Pro sem sessão é excluída, com tudo o que está vinculado a ela, quando você inicia sessão. Se você nunca iniciar sessão, ela fica para que a compra continue funcionando, até você nos pedir para excluí-la.
 - Os itens da lista compartilhada de estabelecimentos não estão vinculados a ninguém. Eles são atualizados após 30 ou 90 dias.
 - Os eventos de análise vinculados à sua conta são apagados junto com ela. O PostHog os apaga em um lote posterior, então eles podem continuar lá por um tempo depois que o app informar que a exclusão terminou. Os eventos de uma instalação que nunca iniciou sessão levam apenas um ID de instalação aleatório e são guardados conforme a política de retenção do PostHog. Os registros de solicitações de IA enviados enquanto Compartilhar análises estava desativado levam um ID aleatório em vez do seu ID de conta, além do ID da conversa no lançamento por voz, e são guardados da mesma forma, assim como as chamadas de ferramentas de assistentes de IA, que levam um ID da conexão no lugar.
@@ -383,7 +406,7 @@ Abra **Ajustes › Conta › Apagar conta**. Talvez você precise iniciar sessã
 - O acesso do Outlayr ao seu início de sessão com a Apple ou o Google é revogado. No caso da Apple, nosso servidor pede à Apple que o revogue. No caso do Google, o app faz isso.
 - Se você conectou o Notion, nosso servidor pede ao Notion que revogue a chave de acesso do Outlayr.
 - Seu token de webhook, seus endereços e os lançamentos aguardando recebimento ou envio são apagados, para que nada novo seja enviado. Uma entrega já em andamento ainda pode ser concluída.
-- Seus lançamentos sincronizados, os registros de exclusão, as fotos com backup e as solicitações de sugestão pendentes são apagados dos nossos servidores.
+- Seus lançamentos sincronizados, os registros de exclusão, as fotos com backup e as solicitações de sugestão pendentes são apagados dos nossos servidores. Isso inclui o registro dos perfis que você compartilha e as fotos que você adicionou a perfis compartilhados por outras pessoas. Os lançamentos que você adicionou ao perfil de outra pessoa continuam lá, sem o seu nome. As cópias nos dispositivos de outros membros, e as exportações que eles fizeram, podem permanecer.
 - Seus registros de cliente na RevenueCat e na Stripe e nossa cópia do status da sua assinatura são apagados.
 - Seu perfil no PostHog e todos os eventos de análise vinculados a ele são apagados. O PostHog apaga os eventos em um lote posterior, então eles podem continuar lá por um tempo depois que o app informar que a exclusão terminou.
 - Seus contadores de uso, conversas de voz abertas, sessões, acessos de assistentes de IA, links de início de sessão, chave de acesso do Notion, código de convite e convites, e sua conta são apagados. Se o convite que você resgatou já rendeu um mês ao seu amigo, ele continua na lista dele sem o seu nome.

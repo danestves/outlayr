@@ -1139,6 +1139,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "ElevenLabs also receives your account and category names while you speak an entry, so it spells them the way your ledger does.",
                     label: "Voice entry spelling",
                 },
+                {
+                    detail: "With Pro, a profile's owner can invite up to 5 people to share it. Everyone in it sees and can change its ledger and photos, and sees the first names of the people in it, including on the entries they logged.",
+                    label: "Shared profiles",
+                },
             ],
             de: [
                 {
@@ -1160,6 +1164,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "ElevenLabs erhält bei der Spracheingabe auch deine Konto- und Kategorienamen, damit es sie so schreibt wie dein Haushaltsbuch.",
                     label: "Schreibweise bei der Spracheingabe",
+                },
+                {
+                    detail: "Mit Pro kann der Eigentümer eines Profils bis zu 5 Personen einladen, es zu teilen. Alle darin sehen sein Haushaltsbuch und seine Fotos und können sie ändern, und sie sehen die Vornamen der Mitglieder, auch bei den Einträgen, die sie erfasst haben.",
+                    label: "Geteilte Profile",
                 },
             ],
             es: [
@@ -1183,6 +1191,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "ElevenLabs también recibe los nombres de tus cuentas y categorías mientras dictas una entrada, para escribirlos como están en tu registro.",
                     label: "Ortografía en la entrada por voz",
                 },
+                {
+                    detail: "Con Pro, el propietario de un perfil puede invitar hasta 5 personas a compartirlo. Todos en él ven y pueden cambiar su registro y sus fotos, y ven el nombre de pila de quienes están en él, también en las entradas que registraron.",
+                    label: "Perfiles compartidos",
+                },
             ],
             fr: [
                 {
@@ -1204,6 +1216,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "ElevenLabs reçoit aussi les noms de vos comptes et catégories pendant que vous dictez une opération, pour les écrire comme dans votre journal.",
                     label: "Orthographe de la saisie vocale",
+                },
+                {
+                    detail: "Avec Pro, le propriétaire d'un profil peut inviter jusqu'à 5 personnes à le partager. Tous ses membres voient et peuvent modifier son registre et ses photos, et voient le prénom des membres, y compris sur les opérations qu'ils ont saisies.",
+                    label: "Profils partagés",
                 },
             ],
             pt: [
@@ -1227,23 +1243,52 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "A ElevenLabs também recebe os nomes das suas contas e categorias enquanto você dita um lançamento, para escrevê-los como estão nos seus lançamentos.",
                     label: "Grafia no lançamento por voz",
                 },
+                {
+                    detail: "Com o Pro, o proprietário de um perfil pode convidar até 5 pessoas para compartilhá-lo. Todos nele veem e podem alterar o registro e as fotos, e veem o primeiro nome de quem participa, inclusive nos lançamentos que registrou.",
+                    label: "Perfis compartilhados",
+                },
             ],
         },
         document: "privacy",
         effectiveAtMs: JANUARY_NOTICE_AT_MS,
-        postedAtMs: Date.UTC(2026, 10, 25),
+        postedAtMs: Date.UTC(2026, 10, 26),
     },
     {
         changes: {
-            en: [{ label: "Profiles are part of Pro. The free plan keeps one ledger." }],
-            de: [{ label: "Profile gehören zu Pro. Der kostenlose Plan behält ein Haushaltsbuch." }],
-            es: [{ label: "Los perfiles son parte de Pro. El plan gratis mantiene un registro." }],
-            fr: [{ label: "Les profils font partie de Pro. L'offre gratuite garde un registre." }],
-            pt: [{ label: "Os perfis fazem parte do Pro. O plano grátis mantém um registro." }],
+            en: [
+                { label: "Profiles are part of Pro. The free plan keeps one ledger." },
+                {
+                    label: "Shared profiles: everyone in one can change its ledger, only the owner invites or removes people, members can leave once their changes sync, and it is deleted from our servers if the owner deletes their account.",
+                },
+            ],
+            de: [
+                { label: "Profile gehören zu Pro. Der kostenlose Plan behält ein Haushaltsbuch." },
+                {
+                    label: "Geteilte Profile: Alle darin können das Haushaltsbuch ändern, nur der Eigentümer lädt ein oder entfernt Personen, Mitglieder können austreten, sobald ihre Änderungen synchronisiert sind, und es wird von unseren Servern gelöscht, wenn der Eigentümer sein Konto löscht.",
+                },
+            ],
+            es: [
+                { label: "Los perfiles son parte de Pro. El plan gratis mantiene un registro." },
+                {
+                    label: "Perfiles compartidos: todos en uno pueden cambiar su registro, solo el propietario invita o quita personas, los miembros pueden salirse cuando sus cambios se sincronicen, y se elimina de nuestros servidores si el propietario elimina su cuenta.",
+                },
+            ],
+            fr: [
+                { label: "Les profils font partie de Pro. L'offre gratuite garde un registre." },
+                {
+                    label: "Profils partagés : tous les membres peuvent modifier le registre, seul le propriétaire invite ou retire des personnes, les membres peuvent partir une fois leurs modifications synchronisées, et il est supprimé de nos serveurs si le propriétaire supprime son compte.",
+                },
+            ],
+            pt: [
+                { label: "Os perfis fazem parte do Pro. O plano grátis mantém um registro." },
+                {
+                    label: "Perfis compartilhados: todos nele podem alterar o registro, só o proprietário convida ou remove pessoas, os membros podem sair quando as alterações sincronizarem, e ele é excluído dos nossos servidores se o proprietário excluir a conta.",
+                },
+            ],
         },
         document: "terms",
         effectiveAtMs: PROFILES_AT_MS,
-        postedAtMs: Date.UTC(2026, 10, 24),
+        postedAtMs: Date.UTC(2026, 10, 26),
     },
 ];
 
