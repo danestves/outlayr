@@ -6,7 +6,7 @@ import { isPerson } from "@outlayr/money/account-kind";
 import { entryRow } from "@outlayr/money/entry-row";
 import { DAY_MS, fixedOffset, utcOffsetOf, zoneCalendar } from "@outlayr/money/ledger-zone";
 import type { OffsetAt } from "@outlayr/money/ledger-zone";
-import { containsTokens, matchCardAccount } from "@outlayr/money/match-card-account";
+import { containsTokens } from "@outlayr/money/match-card-account";
 import { merchantKey } from "@outlayr/money/merchant-key";
 import type { RateLookup } from "@outlayr/money/rates";
 import * as Clock from "effect/Clock";
@@ -57,6 +57,8 @@ const PULL_LEASE_MS = 10 * 60 * 1000;
 const LINK_SPAN_MS = 4 * DAY_MS;
 const EXACT_SPAN_MS = 3 * DAY_MS;
 const LINK_AMOUNT_EPSILON = 0.005;
+// A page files 100 entries, so each may read only a few rows' link status before the index-read budget runs out.
+const LINK_READS_PER_ENTRY = 8;
 const SUBSCRIPTION_PRICE_BAND = { max: 2, min: 0.5 } as const;
 
 type Configured = Effect.Success<ReturnType<typeof configuredClients>>[number];
@@ -370,6 +372,30 @@ const displayNameOf = (account: { institution: string; last4: string | null; nam
     return `${prefix}${name}${suffix}`.trim();
 };
 
+// A bank account names the account, never the card network, so only its own name files into a ledger account:
+// sharing an issuer is not sharing an account, and an ambiguous match is worse than a new one.
+const matchLedgerAccount = (account: BankAccount, ledger: readonly AccountsDoc[]): string | null => {
+    const display = displayNameOf(account);
+    const suffix = account.last4 === null ? "" : ` ••${account.last4}`;
+    const withoutSuffix = suffix === "" ? display : display.slice(0, -suffix.length);
+    const keys = new Set([merchantKey(account.name), merchantKey(withoutSuffix), merchantKey(display)]);
+    keys.delete("");
+    const last4 = account.last4 === null ? "" : merchantKey(account.last4);
+    const matches = new Set<string>();
+    for (const row of ledger) {
+        // Archived accounts are not part of the wallet the phone matches against either.
+        if (isPerson(row) || (row.archivedAt ?? null) !== null) {
+            continue;
+        }
+        const key = merchantKey(row.name);
+        if (keys.has(key) || (last4 !== "" && containsTokens(key, last4))) {
+            matches.add(row.localId);
+        }
+    }
+    const [only] = matches;
+    return matches.size === 1 && only !== undefined ? only : null;
+};
+
 const filesIntoFor = Effect.fn("Banking.filesIntoFor")(function* filesIntoFor(
     userId: string,
     provider: BankingProviderName,
@@ -381,15 +407,7 @@ const filesIntoFor = Effect.fn("Banking.filesIntoFor")(function* filesIntoFor(
     now: number
 ) {
     const display = displayNameOf(account);
-    const matched = matchCardAccount(
-        display,
-        // Archived accounts are not part of the wallet the phone matches against either.
-        ledger
-            .filter((row) => !isPerson(row) && (row.archivedAt ?? null) === null)
-            .map((row) => ({ id: row.localId, name: row.name })),
-        // Sharing the bank is not sharing the card: a new card there gets its own account.
-        { institutionFallback: false }
-    );
+    const matched = matchLedgerAccount(account, ledger);
     if (matched !== null) {
         return { created: false, filesInto: matched };
     }
@@ -635,6 +653,7 @@ interface Filing {
     filed: FilingCount;
     filesInto: string | null;
     ledgerCurrency: string;
+    linkedIds: Map<string, boolean>;
     lookup: RateLookup;
     now: number;
     offsetAt: OffsetAt;
@@ -649,10 +668,12 @@ interface WrittenRow {
     note: string;
 }
 
-const writtenOf = (row: TransactionsDoc): WrittenRow => ({
-    amount: row.amount,
-    date: row.date,
-    note: row.note,
+// A relinked row has no record of what the bank wrote, so the current report is the baseline: a field the user
+// changed from it stays theirs, and one that matches follows later reports.
+const reportBaseline = (entry: BankEntry, row: TransactionsDoc): WrittenRow => ({
+    amount: entry.amount,
+    date: entry.date,
+    note: entry.note.trim() === "" ? row.note : entry.note.trim(),
 });
 
 const recordMatches = (record: BankEntriesDoc, entry: BankEntry) =>
@@ -796,10 +817,24 @@ const linkTarget = Effect.fn("Banking.linkTarget")(function* linkTarget(filing: 
         return row.accountId == null || filing.filesInto === null || row.accountId === filing.filesInto;
     });
     // Rank first, then read each row's link status only until one is free: a linked row must not cost a query per row.
-    const unlinked = (row: TransactionsDoc) =>
-        getByIndex(reader.table("bankEntries").get("by_userId_and_localId", filing.userId, row.localId)).pipe(
-            Effect.map((linked) => linked === null)
+    // The cache spans the whole filing and the budget bounds one entry, so a page cannot exhaust its index reads.
+    let reads = 0;
+    const unlinked = (row: TransactionsDoc) => {
+        const known = filing.linkedIds.get(row.localId);
+        if (known !== undefined) {
+            return Effect.succeed(!known);
+        }
+        if (reads >= LINK_READS_PER_ENTRY) {
+            return Effect.succeed(false);
+        }
+        reads += 1;
+        return getByIndex(reader.table("bankEntries").get("by_userId_and_localId", filing.userId, row.localId)).pipe(
+            Effect.map((linked) => {
+                filing.linkedIds.set(row.localId, linked !== null);
+                return linked === null;
+            })
         );
+    };
     const exact = candidates
         .filter((row) => {
             const span = row.onceRecurring ? LINK_SPAN_MS : EXACT_SPAN_MS;
@@ -840,6 +875,8 @@ const linkEntry = Effect.fn("Banking.linkEntry")(function* linkEntry(
     target: LinkTarget
 ) {
     const { row } = target;
+    // A later entry on the same page must not read or link this row again.
+    filing.linkedIds.set(row.localId, true);
     const attach = (row.accountId ?? null) === null && filing.filesInto !== null ? filing.filesInto : undefined;
     // The report is the baseline, so a field it already disagreed with stays the user's and one it
     // matched follows later reports; a repriced row was just written to these same amount and date.
@@ -901,9 +938,11 @@ const createCategory = Effect.fn("Banking.createCategory")(function* createCateg
         ? writer.table("categories").insert(row)
         : writer.table("categories").patch(known._id, {
               deletedAt: null,
+              deviceId: BANK_DEVICE_ID,
               income,
               name,
               parentId: null,
+              restoredAt: filing.now,
               seq: row.seq,
               sortOrder,
               updatedAt: filing.now,
@@ -1025,7 +1064,7 @@ const rewriteEntry = Effect.fn("Banking.rewriteEntry")(function* rewriteEntry(
 ) {
     // The record is missing after an unlink; the row is already the one this key names, so its edits stay.
     if (record === null) {
-        yield* writeBankRecord(filing, entry, existing.localId, record, writtenOf(existing));
+        yield* writeBankRecord(filing, entry, existing.localId, record, reportBaseline(entry, existing));
         return;
     }
     const amountOwned = existing.amount !== record.written.amount;
@@ -1098,6 +1137,7 @@ const fileTransactions = FunctionImpl.make(
             filed: { entries: [], instants: [], written: 0 },
             filesInto: into?.localId ?? null,
             ledgerCurrency: (yield* setting(row.userId, "currency")) ?? "USD",
+            linkedIds: new Map<string, boolean>(),
             lookup: (quote, rateType, day) =>
                 Effect.promise(() =>
                     ctx.db
@@ -1142,13 +1182,19 @@ const fileTransactions = FunctionImpl.make(
                 if (record !== null) {
                     yield* writeBankRecord(filing, entry, localId, record, record.written);
                 } else if (existing !== null) {
-                    yield* writeBankRecord(filing, entry, localId, record, writtenOf(existing));
+                    yield* writeBankRecord(filing, entry, localId, record, reportBaseline(entry, existing));
                 }
                 continue;
             }
             // A row the user deleted stays deleted; only the record moves so a later bank edit is judged against it.
             if (existing !== null && existing.deletedAt !== null) {
-                yield* writeBankRecord(filing, entry, localId, record, record?.written ?? writtenOf(existing));
+                yield* writeBankRecord(
+                    filing,
+                    entry,
+                    localId,
+                    record,
+                    record?.written ?? reportBaseline(entry, existing)
+                );
                 continue;
             }
             yield* existing === null
