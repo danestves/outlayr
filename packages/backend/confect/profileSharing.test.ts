@@ -210,6 +210,17 @@ describe("a joined profile", () => {
         await expect(pulled(t, owner)).resolves.toStrictEqual(["kept"]);
     });
 
+    it("refuses a revoked session instead of listing no memberships", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const member = await seedAuthUser(t);
+        await share(t, owner, member);
+
+        await expect(
+            authenticatedAs(t, { ...member, sessionId: "revoked" }).query(api.profileSharing.joined, {})
+        ).rejects.toThrow();
+    });
+
     it("ends every membership when the owner deletes the profile", async () => {
         const t = harness();
         const owner = await seedProUser(t);

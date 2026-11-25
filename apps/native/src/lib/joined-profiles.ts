@@ -128,6 +128,15 @@ export function subscribeJoinedReconcile(listener: () => void): () => void {
     };
 }
 
+/** Only the set of ids counts: a look or order change needs no reconcile, a removal or a new join does. */
+export function joinedSetDiffers(
+    current: JoinedProfilesCache,
+    serverJoined: readonly Pick<JoinedProfile, "profileId">[]
+): boolean {
+    const serverIds = new Set(serverJoined.map((entry) => entry.profileId));
+    return serverIds.size !== current.joined.length || current.joined.some((entry) => !serverIds.has(entry.profileId));
+}
+
 export function planJoinedReconcile(
     current: JoinedProfilesCache,
     serverJoined: readonly JoinedProfile[],

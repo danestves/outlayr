@@ -16,6 +16,7 @@ import { syncInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { subscribeJoinedReconcile } from "@/lib/joined-profiles";
 import { replateLogos } from "@/lib/logo-replate";
 import { photoFiles } from "@/lib/photo-storage";
+import { watchJoinedProfiles } from "@/lib/profile-sharing";
 import { reconcileDailyReminder } from "@/lib/reminder-sync";
 import { appRuntime } from "@/lib/runtime";
 import { indexSpotlight } from "@/lib/spotlight";
@@ -103,7 +104,11 @@ const reconcileJoinedAtom = appRuntime
             );
             // Subscribed before the first pass, and it runs on every launch: a second device only learns of a
             // membership from the server, and a claim that died before writing the cache is still recorded.
-            yield* Stream.merge(Stream.succeed(undefined), signals(subscribeJoinedReconcile)).pipe(
+            // The live list catches an owner's removal while the app stays open, before any sync is refused.
+            yield* Stream.mergeAll(
+                [Stream.succeed(undefined), signals(subscribeJoinedReconcile), signals(watchJoinedProfiles)],
+                { concurrency: "unbounded" }
+            ).pipe(
                 Stream.buffer({ capacity: 1, strategy: "sliding" }),
                 Stream.runForEach(() => reconcile)
             );

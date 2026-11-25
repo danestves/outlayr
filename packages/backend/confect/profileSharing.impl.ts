@@ -248,25 +248,27 @@ const joined = FunctionImpl.make(
     databaseSchema,
     spec,
     "joined",
-    Effect.fn("ProfileSharing.joined")(function* joined() {
-        const ctx = yield* QueryCtx;
-        const memberId = yield* optionalUserId(ctx);
-        if (memberId === null) {
-            return [];
-        }
-        const rows = yield* joinedProfiles(memberId);
-        const profiles = yield* Effect.all(
-            rows.map((row) =>
-                Effect.all([currentLook(row.ownerId, row.profileId, row.look), nameOf(ctx, row.ownerId)]).pipe(
-                    Effect.map(([look, ownerName]) =>
-                        look === null ? [] : [{ joinedAt: row.joinedAt, look, ownerName, profileId: row.profileId }]
+    Effect.fn("ProfileSharing.joined")(
+        function* joined() {
+            const ctx = yield* QueryCtx;
+            // An empty list tells a device to delete its shared ledgers, so a dead session must not answer with one.
+            const memberId = yield* requireUserId(ctx);
+            const rows = yield* joinedProfiles(memberId);
+            const profiles = yield* Effect.all(
+                rows.map((row) =>
+                    Effect.all([currentLook(row.ownerId, row.profileId, row.look), nameOf(ctx, row.ownerId)]).pipe(
+                        Effect.map(([look, ownerName]) =>
+                            look === null ? [] : [{ joinedAt: row.joinedAt, look, ownerName, profileId: row.profileId }]
+                        )
                     )
-                )
-            ),
-            { concurrency: "unbounded" }
-        );
-        return profiles.flat();
-    }, Effect.orDie)
+                ),
+                { concurrency: "unbounded" }
+            );
+            return profiles.flat();
+        },
+        Effect.catchTags({ Unauthenticated: dieAsConvexError }),
+        Effect.orDie
+    )
 );
 
 const members = FunctionImpl.make(
