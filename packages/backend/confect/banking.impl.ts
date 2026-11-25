@@ -6,7 +6,7 @@ import { isPerson } from "@outlayr/money/account-kind";
 import { entryRow } from "@outlayr/money/entry-row";
 import { DAY_MS, fixedOffset, utcOffsetOf, zoneCalendar } from "@outlayr/money/ledger-zone";
 import type { OffsetAt } from "@outlayr/money/ledger-zone";
-import { matchCardAccount } from "@outlayr/money/match-card-account";
+import { containsTokens, matchCardAccount } from "@outlayr/money/match-card-account";
 import { merchantKey } from "@outlayr/money/merchant-key";
 import type { RateLookup } from "@outlayr/money/rates";
 import * as Clock from "effect/Clock";
@@ -17,7 +17,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 
-import type { AccountsDoc, BankEntriesDoc, CategoriesDoc, TransactionsDoc } from "./_generated/docs";
+import type { AccountsDoc, BankEntriesDoc, TransactionsDoc } from "./_generated/docs";
 import type { Id } from "./_generated/id";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -386,7 +386,9 @@ const filesIntoFor = Effect.fn("Banking.filesIntoFor")(function* filesIntoFor(
         // Archived accounts are not part of the wallet the phone matches against either.
         ledger
             .filter((row) => !isPerson(row) && (row.archivedAt ?? null) === null)
-            .map((row) => ({ id: row.localId, name: row.name }))
+            .map((row) => ({ id: row.localId, name: row.name })),
+        // Sharing the bank is not sharing the card: a new card there gets its own account.
+        { institutionFallback: false }
     );
     if (matched !== null) {
         return { created: false, filesInto: matched };
@@ -619,9 +621,17 @@ interface FilingCount {
     written: number;
 }
 
+interface FilingCategory {
+    income: boolean;
+    localId: string;
+    name: string | null;
+    parentId: string | null;
+    sortOrder: number;
+}
+
 interface Filing {
     bankAccountId: Id<"bankAccounts">;
-    categories: readonly CategoriesDoc[];
+    categories: FilingCategory[];
     filed: FilingCount;
     filesInto: string | null;
     ledgerCurrency: string;
@@ -632,6 +642,18 @@ interface Filing {
     seq: number;
     userId: string;
 }
+
+interface WrittenRow {
+    amount: number;
+    date: number;
+    note: string;
+}
+
+const writtenOf = (row: TransactionsDoc): WrittenRow => ({
+    amount: row.amount,
+    date: row.date,
+    note: row.note,
+});
 
 const recordMatches = (record: BankEntriesDoc, entry: BankEntry) =>
     record.amount === entry.amount &&
@@ -646,10 +668,11 @@ const keptRateType = (row: TransactionsDoc) =>
         : null;
 
 // `merchantKey` folds the descriptor enough that "ACME*Coffee" still names the row "Coffee" the user logged.
+// Whole tokens only: a shared word is not the same merchant ("Pineapple" is not "Apple").
 const sameMerchant = (left: string, right: string) => {
     const a = merchantKey(left);
     const b = merchantKey(right);
-    return a !== "" && b !== "" && (a.includes(b) || b.includes(a));
+    return a !== "" && b !== "" && (containsTokens(a, b) || containsTokens(b, a));
 };
 
 const writeBankRecord = Effect.fn("Banking.writeBankRecord")(function* writeBankRecord(
@@ -657,6 +680,7 @@ const writeBankRecord = Effect.fn("Banking.writeBankRecord")(function* writeBank
     entry: BankEntry,
     localId: string,
     record: BankEntriesDoc | null,
+    written: WrittenRow,
     origin: "filed" | "linked" = "filed"
 ) {
     if (record !== null) {
@@ -665,6 +689,7 @@ const writeBankRecord = Effect.fn("Banking.writeBankRecord")(function* writeBank
             date: entry.date,
             note: entry.note,
             status: entry.status,
+            written,
         });
         return;
     }
@@ -678,13 +703,15 @@ const writeBankRecord = Effect.fn("Banking.writeBankRecord")(function* writeBank
         origin,
         status: entry.status,
         userId: filing.userId,
+        written,
     });
 });
 
 const rewriteRow = Effect.fn("Banking.rewriteRow")(function* rewriteRow(
     filing: Filing,
     existing: TransactionsDoc,
-    next: { amount: number; date: number; note: string }
+    next: { amount: number; date: number; note: string },
+    attachAccountId?: string
 ) {
     const category = filing.categories.find((candidate) => candidate.localId === existing.categoryId);
     const rateType = keptRateType(existing);
@@ -710,19 +737,28 @@ const rewriteRow = Effect.fn("Banking.rewriteRow")(function* rewriteRow(
             now: DateTime.toDate(DateTime.makeUnsafe(filing.now)),
         }
     );
-    yield* (yield* DatabaseWriter).table("transactions").patch(existing._id, {
-        amount: written.amount,
-        amountUsd: written.amountUsd,
-        date: next.date,
-        day: written.day.getTime(),
-        exchangeRate: written.exchangeRate,
-        exchangeRateType: written.exchangeRateType,
-        month: written.month.getTime(),
-        note: written.note,
-        seq: filing.seq + filing.filed.written,
-        // Ahead of the row the user edited, behind their next edit, so a whole-row sync edit still wins.
-        updatedAt: existing.updatedAt + 1,
-    });
+    const seq = filing.seq + filing.filed.written;
+    // Ahead of the row the user edited, behind their next edit, so a whole-row sync edit still wins.
+    const updatedAt = existing.updatedAt + 1;
+    // A note-only change keeps the frozen rate and the calendar fields, which have not moved.
+    const fields =
+        next.amount === existing.amount && next.date === existing.date
+            ? { note: written.note, seq, updatedAt }
+            : {
+                  amount: written.amount,
+                  amountUsd: written.amountUsd,
+                  date: next.date,
+                  day: written.day.getTime(),
+                  exchangeRate: written.exchangeRate,
+                  exchangeRateType: written.exchangeRateType,
+                  month: written.month.getTime(),
+                  note: written.note,
+                  seq,
+                  updatedAt,
+              };
+    yield* (yield* DatabaseWriter)
+        .table("transactions")
+        .patch(existing._id, attachAccountId === undefined ? fields : { ...fields, accountId: attachAccountId });
     filing.filed.written += 1;
     if (next.amount !== existing.amount || next.date !== existing.date) {
         filing.filed.instants.push(next.date);
@@ -730,6 +766,7 @@ const rewriteRow = Effect.fn("Banking.rewriteRow")(function* rewriteRow(
             filing.filed.instants.push(existing.date);
         }
     }
+    return written.note;
 });
 
 interface LinkTarget {
@@ -749,25 +786,21 @@ const linkTarget = Effect.fn("Banking.linkTarget")(function* linkTarget(filing: 
                 .lte("date", entry.date + LINK_SPAN_MS)
         )
         .collect();
-    const candidates: TransactionsDoc[] = [];
-    for (const row of rows) {
+    const candidates = rows.filter((row) => {
         if (row.income !== entry.income || row.currency !== entry.currency) {
-            continue;
+            return false;
         }
         if (row.deviceId === BANK_DEVICE_ID || (row.feeForId ?? null) !== null) {
-            continue;
+            return false;
         }
-        if (row.accountId != null && filing.filesInto !== null && row.accountId !== filing.filesInto) {
-            continue;
-        }
-        const linked = yield* getByIndex(
-            reader.table("bankEntries").get("by_userId_and_localId", filing.userId, row.localId)
+        return row.accountId == null || filing.filesInto === null || row.accountId === filing.filesInto;
+    });
+    // Rank first, then read each row's link status only until one is free: a linked row must not cost a query per row.
+    const unlinked = (row: TransactionsDoc) =>
+        getByIndex(reader.table("bankEntries").get("by_userId_and_localId", filing.userId, row.localId)).pipe(
+            Effect.map((linked) => linked === null)
         );
-        if (linked === null) {
-            candidates.push(row);
-        }
-    }
-    const [exact] = candidates
+    const exact = candidates
         .filter((row) => {
             const span = row.onceRecurring ? LINK_SPAN_MS : EXACT_SPAN_MS;
             return (
@@ -779,10 +812,12 @@ const linkTarget = Effect.fn("Banking.linkTarget")(function* linkTarget(filing: 
                 Number(sameMerchant(b.note, entry.note)) - Number(sameMerchant(a.note, entry.note)) ||
                 Math.abs(a.date - entry.date) - Math.abs(b.date - entry.date)
         );
-    if (exact !== undefined) {
-        return { kind: "exact" as const, row: exact };
+    for (const row of exact) {
+        if (yield* unlinked(row)) {
+            return { kind: "exact" as const, row };
+        }
     }
-    const [repriced] = candidates
+    const repriced = candidates
         .filter((row) => {
             if (!row.onceRecurring || !sameMerchant(row.note, entry.note)) {
                 return false;
@@ -791,7 +826,12 @@ const linkTarget = Effect.fn("Banking.linkTarget")(function* linkTarget(filing: 
             return ratio >= SUBSCRIPTION_PRICE_BAND.min && ratio <= SUBSCRIPTION_PRICE_BAND.max;
         })
         .sort((a, b) => Math.abs(a.date - entry.date) - Math.abs(b.date - entry.date));
-    return repriced === undefined ? null : { kind: "repriced" as const, row: repriced };
+    for (const row of repriced) {
+        if (yield* unlinked(row)) {
+            return { kind: "repriced" as const, row };
+        }
+    }
+    return null;
 });
 
 const linkEntry = Effect.fn("Banking.linkEntry")(function* linkEntry(
@@ -800,18 +840,78 @@ const linkEntry = Effect.fn("Banking.linkEntry")(function* linkEntry(
     target: LinkTarget
 ) {
     const { row } = target;
+    const attach = (row.accountId ?? null) === null && filing.filesInto !== null ? filing.filesInto : undefined;
+    // The report is the baseline, so a field it already disagreed with stays the user's and one it
+    // matched follows later reports; a repriced row was just written to these same amount and date.
+    const baseline: WrittenRow = { amount: entry.amount, date: entry.date, note: entry.note };
     if (target.kind === "repriced") {
-        yield* rewriteRow(filing, row, { amount: entry.amount, date: entry.date, note: row.note });
-    } else if ((row.accountId ?? null) === null && filing.filesInto !== null) {
+        yield* rewriteRow(filing, row, { amount: entry.amount, date: entry.date, note: row.note }, attach);
+        yield* writeBankRecord(filing, entry, row.localId, null, baseline, "linked");
+        return;
+    }
+    if (attach !== undefined) {
         yield* (yield* DatabaseWriter).table("transactions").patch(row._id, {
-            accountId: filing.filesInto,
+            accountId: attach,
             seq: filing.seq + filing.filed.written,
             updatedAt: row.updatedAt + 1,
         });
         filing.filed.written += 1;
         filing.filed.instants.push(row.date);
     }
-    yield* writeBankRecord(filing, entry, row.localId, null, "linked");
+    yield* writeBankRecord(filing, entry, row.localId, null, baseline, "linked");
+});
+
+const createCategory = Effect.fn("Banking.createCategory")(function* createCategory(filing: Filing, income: boolean) {
+    const localId = yield* keyedLocalId(filing.userId, `bank-category:${income ? "income" : "expense"}`);
+    const name = income ? "Income" : "Expenses";
+    const known = yield* getByIndex(
+        (yield* DatabaseReader).table("categories").get("by_user_and_localId", filing.userId, localId)
+    );
+    // The id is the row's sync key, so a second row with it would collide; a live one is reused as the user left it.
+    if (known !== null && known.deletedAt === null) {
+        const category = {
+            income: known.income,
+            localId,
+            name: known.name,
+            parentId: known.parentId,
+            sortOrder: known.sortOrder,
+        };
+        filing.categories.push(category);
+        return category;
+    }
+    const sortOrder = filing.categories.reduce((highest, candidate) => Math.max(highest, candidate.sortOrder), -1) + 1;
+    const row = {
+        color: null,
+        dateCreated: null,
+        deletedAt: null,
+        deviceId: BANK_DEVICE_ID,
+        emoji: null,
+        icon: null,
+        income,
+        localId,
+        name,
+        parentId: null,
+        seq: filing.seq + filing.filed.written,
+        sortOrder,
+        updatedAt: filing.now,
+        userId: filing.userId,
+    };
+    const writer = yield* DatabaseWriter;
+    yield* known === null
+        ? writer.table("categories").insert(row)
+        : writer.table("categories").patch(known._id, {
+              deletedAt: null,
+              income,
+              name,
+              parentId: null,
+              seq: row.seq,
+              sortOrder,
+              updatedAt: filing.now,
+          });
+    filing.filed.written += 1;
+    const category = { income, localId, name, parentId: null, sortOrder };
+    filing.categories.push(category);
+    return category;
 });
 
 const fileNewEntry = Effect.fn("Banking.fileNewEntry")(function* fileNewEntry(
@@ -834,10 +934,10 @@ const fileNewEntry = Effect.fn("Banking.fileNewEntry")(function* fileNewEntry(
         filing.categories.find((candidate) => candidate.income === entry.income && candidate.parentId === null)
             ?.localId ??
         null;
-    const category = filing.categories.find((candidate) => candidate.localId === categoryId);
-    if (category === undefined) {
-        return;
-    }
+    // A direction with no category at all gets one, so the entry is filed instead of skipped past for good.
+    const category =
+        filing.categories.find((candidate) => candidate.localId === categoryId) ??
+        (yield* createCategory(filing, entry.income));
     const written = yield* entryRow(
         filing.lookup,
         localId,
@@ -910,7 +1010,11 @@ const fileNewEntry = Effect.fn("Banking.fileNewEntry")(function* fileNewEntry(
         note: written.note,
         updatedAt: filing.now,
     });
-    yield* writeBankRecord(filing, entry, localId, record);
+    yield* writeBankRecord(filing, entry, localId, record, {
+        amount: written.amount,
+        date: entry.date,
+        note: written.note,
+    });
 });
 
 const rewriteEntry = Effect.fn("Banking.rewriteEntry")(function* rewriteEntry(
@@ -921,16 +1025,22 @@ const rewriteEntry = Effect.fn("Banking.rewriteEntry")(function* rewriteEntry(
 ) {
     // The record is missing after an unlink; the row is already the one this key names, so its edits stay.
     if (record === null) {
-        yield* writeBankRecord(filing, entry, existing.localId, record);
+        yield* writeBankRecord(filing, entry, existing.localId, record, writtenOf(existing));
         return;
     }
-    const amount = existing.amount === record.amount ? entry.amount : existing.amount;
-    const date = existing.date === record.date ? entry.date : existing.date;
-    const note = existing.note === record.note ? entry.note : existing.note;
-    if (amount !== existing.amount || date !== existing.date || note !== existing.note) {
-        yield* rewriteRow(filing, existing, { amount, date, note });
-    }
-    yield* writeBankRecord(filing, entry, existing.localId, record);
+    const amountOwned = existing.amount !== record.written.amount;
+    const dateOwned = existing.date !== record.written.date;
+    const noteOwned = existing.note !== record.written.note;
+    const amount = amountOwned ? existing.amount : entry.amount;
+    const date = dateOwned ? existing.date : entry.date;
+    const note = noteOwned ? existing.note : entry.note;
+    const rewrote = amount !== existing.amount || date !== existing.date || note !== existing.note;
+    const rowNote = rewrote ? yield* rewriteRow(filing, existing, { amount, date, note }) : existing.note;
+    yield* writeBankRecord(filing, entry, existing.localId, record, {
+        amount: amountOwned ? record.written.amount : amount,
+        date: dateOwned ? record.written.date : date,
+        note: noteOwned ? record.written.note : rowNote,
+    });
 });
 
 const fileTransactions = FunctionImpl.make(
@@ -1029,14 +1139,16 @@ const fileTransactions = FunctionImpl.make(
                     filing.filed.written += 1;
                     filing.filed.instants.push(existing.date);
                 }
-                if (record !== null || existing !== null) {
-                    yield* writeBankRecord(filing, entry, localId, record);
+                if (record !== null) {
+                    yield* writeBankRecord(filing, entry, localId, record, record.written);
+                } else if (existing !== null) {
+                    yield* writeBankRecord(filing, entry, localId, record, writtenOf(existing));
                 }
                 continue;
             }
             // A row the user deleted stays deleted; only the record moves so a later bank edit is judged against it.
             if (existing !== null && existing.deletedAt !== null) {
-                yield* writeBankRecord(filing, entry, localId, record);
+                yield* writeBankRecord(filing, entry, localId, record, record?.written ?? writtenOf(existing));
                 continue;
             }
             yield* existing === null

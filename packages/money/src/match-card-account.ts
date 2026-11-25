@@ -6,7 +6,8 @@ export interface CardAccountCandidate {
     readonly name: string;
 }
 
-function containsTokens(haystack: string, needle: string): boolean {
+/** Whole-token containment, so "Apple" never matches "Pineapple". */
+export function containsTokens(haystack: string, needle: string): boolean {
     return ` ${haystack} `.includes(` ${needle} `);
 }
 
@@ -38,15 +39,28 @@ function withoutNetwork(key: string): string {
         .join(" ");
 }
 
+export interface MatchCardAccountOptions {
+    /**
+     * An institution-only match names the bank, not the card: off when a new card
+     * at that bank must not file into another account there.
+     */
+    institutionFallback?: boolean;
+}
+
 /**
  * Every tier must be unambiguous: a purchase filed under the wrong account is worse
  * than one left unattached, which the user sees and can fix.
  */
-export function matchCardAccount(card: string, accounts: readonly CardAccountCandidate[]): string | null {
+export function matchCardAccount(
+    card: string,
+    accounts: readonly CardAccountCandidate[],
+    options: MatchCardAccountOptions = {}
+): string | null {
     const cardKey = merchantKey(card);
     if (cardKey.length === 0 || accounts.length === 0) {
         return null;
     }
+    const matchInstitution = options.institutionFallback ?? true;
     const keyed = accounts
         .map((account) => ({ id: account.id, key: merchantKey(account.name) }))
         .filter((account) => account.key.length > 0);
@@ -63,12 +77,12 @@ export function matchCardAccount(card: string, accounts: readonly CardAccountCan
     // on the ledger, "Chase Visa" stays unattached rather than falling through to "Visa".
     const issuerKey = withoutNetwork(cardKey);
     if (issuerKey.length > 0 && issuerKey !== cardKey) {
-        const byIssuer = matchKey(issuerKey, keyed);
+        const byIssuer = matchKey(issuerKey, keyed, matchInstitution);
         if (byIssuer !== undefined) {
             return byIssuer;
         }
     }
-    return matchKey(cardKey, keyed) ?? null;
+    return matchKey(cardKey, keyed, matchInstitution) ?? null;
 }
 
 /** The one account with this exact key; null when several share it; undefined when none does. */
@@ -85,7 +99,11 @@ function uniqueExact(key: string, keyed: readonly { id: string; key: string }[])
  * Null when several accounts could claim it, undefined when none does, so a caller can
  * stop on ambiguity instead of trying a looser key.
  */
-function matchKey(cardKey: string, keyed: readonly { id: string; key: string }[]): string | null | undefined {
+function matchKey(
+    cardKey: string,
+    keyed: readonly { id: string; key: string }[],
+    matchInstitution: boolean
+): string | null | undefined {
     const exact = uniqueExact(cardKey, keyed);
     if (exact !== undefined) {
         return exact;
@@ -99,6 +117,9 @@ function matchKey(cardKey: string, keyed: readonly { id: string; key: string }[]
         return contained.length === 1 && only !== undefined ? only.id : null;
     }
 
+    if (!matchInstitution) {
+        return undefined;
+    }
     const institution = resolveInstitutionDomain(cardKey);
     if (institution == null) {
         return undefined;

@@ -18,6 +18,12 @@ export default Table.make(() =>
         origin: Schema.Literals(["filed", "linked"]),
         status: BankTransactionStatus,
         userId: Schema.String,
+        // The values the bank last wrote to the row, or reported when it linked it, compared field by field.
+        written: Schema.Struct({
+            amount: Schema.Number,
+            date: Schema.Number,
+            note: Schema.String,
+        }),
     })
 )
     .index("by_userId", ["userId", "key"])
