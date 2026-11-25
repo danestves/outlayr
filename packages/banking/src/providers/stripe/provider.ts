@@ -7,11 +7,12 @@ import * as Schema from "effect/Schema";
 
 import { BankingError, secret } from "../../provider";
 import type { BankingClient, BankingEvent, BankingProvider, LinkRequest } from "../../provider";
-import { StripeAccount, StripeEvent, StripeSession, StripeTransaction, listAll, stripeCall } from "./api";
+import { List, StripeAccount, StripeEvent, StripeSession, StripeTransaction, listAll, stripeCall } from "./api";
 import { verifySignature } from "./signature";
 import { toBankAccount, toBankTransaction } from "./transform";
 
 const COUNTRIES = ["US", "CA"];
+const HOLDER_KEY = "outlayr_user_id";
 
 const ACCOUNT_EVENTS = new Set([
     "financial_connections.account.deactivated",
@@ -49,7 +50,7 @@ const makeClient = (key: Redacted.Redacted, webhookSecret: string): BankingClien
         stripeCall(key, Schema.Struct({ id: Schema.String }), "createHolder", "/customers", {
             form: [
                 ["email", email],
-                ["metadata[outlayr_user_id]", id],
+                [`metadata[${HOLDER_KEY}]`, id],
             ],
             idempotencyKey: `outlayr-bank-holder-${id}`,
         }).pipe(Effect.map((customer) => customer.id)),
@@ -94,14 +95,31 @@ const makeClient = (key: Redacted.Redacted, webhookSecret: string): BankingClien
         );
         return eventFor(event.type, account.id, account.transaction_refresh?.status);
     }),
-    removeHolder: (holder) =>
-        stripeCall(key, Schema.Unknown, "removeHolder", `/customers/${encode(holder)}`, { method: "DELETE" }).pipe(
-            Effect.asVoid,
-            Effect.catchIf(
-                (error: BankingError) => error.status === 404,
-                () => Effect.void
-            )
-        ),
+    forgetUser: Effect.fn("StripeBanking.forgetUser")(function* forgetUser(userId: string) {
+        const query = `metadata['${HOLDER_KEY}']:'${userId.replaceAll("\\", "\\\\").replaceAll("'", "\\'")}'`;
+        const holders = yield* stripeCall(
+            key,
+            List(Schema.Struct({ id: Schema.String })),
+            "forgetUser",
+            `/customers/search?query=${encode(query)}`
+        );
+        for (const { id } of holders.data) {
+            const accounts = yield* listAll(key, StripeAccount, "forgetUser", "/financial_connections/accounts", [
+                ["account_holder[customer]", id],
+            ]);
+            for (const account of accounts.filter(({ status }) => status !== "disconnected")) {
+                yield* stripeCall(key, Schema.Unknown, "forgetUser", `${accountPath(account.id)}/disconnect`, {
+                    form: [],
+                });
+            }
+            yield* stripeCall(key, Schema.Unknown, "forgetUser", `/customers/${encode(id)}`, { method: "DELETE" }).pipe(
+                Effect.catchIf(
+                    (error: BankingError) => error.status === 404,
+                    () => Effect.void
+                )
+            );
+        }
+    }),
     startLink: Effect.fn("StripeBanking.startLink")(function* startLink({ country, holder }: LinkRequest) {
         if (!COUNTRIES.includes(country)) {
             return yield* failure("startLink", "rejected");
