@@ -1023,6 +1023,25 @@ importers:
         specifier: 'catalog:'
         version: '@voidzero-dev/vite-plus-core@8.3.8000(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)'
 
+  packages/banking:
+    dependencies:
+      effect:
+        specifier: 'catalog:'
+        version: 4.1.4
+    devDependencies:
+      '@outlayr/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^26.6.5
+        version: 26.6.5
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: '@voidzero-dev/vite-plus-core@8.3.8000(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)'
+
   packages/config: {}
 
   packages/email:
