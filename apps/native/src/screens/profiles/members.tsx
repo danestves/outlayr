@@ -61,14 +61,18 @@ function MembersOfProfile({ id }: { id: string }) {
     const title = role === "owner" ? t("sharing.share.title", { name }) : t("sharing.profile.title");
 
     return (
-        <View className="bg-background flex-1">
+        <View className="bg-background flex-1" collapsable={false}>
             <Stack.Screen options={{ title }} />
             <CloseToolbar placement="right" />
-            {role === "owner" ? (
-                <OwnerView id={id} members={members} name={name} />
-            ) : (
-                <MemberView id={id} look={look} members={members} name={name} />
-            )}
+            {/* react-native-screens resizes a ScrollView on a formSheet's first-child chain to the whole sheet. */}
+            <View collapsable={false} />
+            <View className="flex-1">
+                {role === "owner" ? (
+                    <OwnerView id={id} members={members} name={name} />
+                ) : (
+                    <MemberView id={id} look={look} members={members} name={name} />
+                )}
+            </View>
         </View>
     );
 }
