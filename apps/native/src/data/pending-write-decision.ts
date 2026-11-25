@@ -25,6 +25,7 @@ import { autologSourceOf, WALLET_DEDUPE_WINDOW_MS } from "@/lib/queue-file";
 import type { AutologSource, PendingWrite } from "@/lib/queue-file";
 
 import { MIN_KEY_LENGTH } from "./enrichment-queue-core";
+import { BANK_KEY_PREFIX, bankEntryId } from "./inbound-entry-id";
 import { cardStatus } from "./wallet-state-core";
 
 export { WALLET_DEDUPE_WINDOW_MS } from "@/lib/queue-file";
@@ -52,6 +53,13 @@ export interface FiledRow {
     note: string;
 }
 
+/** The one row a bank key names, deleted or not, so a later write updates it without the ledger. */
+export interface BankRow {
+    amount: number;
+    date: Date;
+    deleted: boolean;
+}
+
 export interface SubscriptionRow {
     accountId: string | null;
     amount: number;
@@ -76,6 +84,7 @@ export interface SettledOccurrence {
 
 export interface PendingWriteFacts {
     access: AutologAccess;
+    bank: BankRow | null;
     banks: readonly { currency: string; id: string; name: string }[];
     cards: readonly WalletCard[];
     /** Capture ids the server already answered or queued, so the row waits for that answer instead of asking. */
@@ -100,6 +109,8 @@ export interface Filing {
 export type PendingWriteDecision =
     | { kind: "duplicate"; relink: boolean; txId: string }
     | { kind: "drop" }
+    | { kind: "remove"; txId: string }
+    | { amount: number; date: number; kind: "revise"; txId: string }
     | { attach: string | null; filing: Filing; kind: "merge"; txId: string }
     | { filing: Filing; kind: "settle"; occurrence: SettledOccurrence }
     | { currency: string; filing: Filing; kind: "land"; landing: Date; otherwise: Fresh; parentId: string }
@@ -260,6 +271,29 @@ function filedBefore(write: PendingWrite, facts: PendingWriteFacts): LedgerEntry
     return seen.txId === seen.id || facts.filed.some((row) => row.id === seen.txId) ? seen : null;
 }
 
+// A bank transaction is delivered again whenever it changes, keyed the same way for the life of the purchase.
+function decideBankWrite(write: PendingWrite, facts: PendingWriteFacts): PendingWriteDecision | null {
+    const key = write.dedupeKey?.trim();
+    if (!key?.startsWith(BANK_KEY_PREFIX)) {
+        return null;
+    }
+    const row = facts.bank;
+    if (!row) {
+        return write.status === "void" ? { kind: "drop" } : null;
+    }
+    if (row.deleted) {
+        return { kind: "drop" };
+    }
+    const txId = bankEntryId(key);
+    if (write.status === "void") {
+        return { kind: "remove", txId };
+    }
+    const changed = Math.abs(row.amount - write.amount) > AMOUNT_EPSILON || row.date.getTime() !== write.date;
+    return changed
+        ? { amount: write.amount, date: write.date, kind: "revise", txId }
+        : { kind: "duplicate", relink: false, txId };
+}
+
 function cardAccount(write: PendingWrite, facts: PendingWriteFacts) {
     const card = write.card?.trim();
     if (!card) {
@@ -372,6 +406,10 @@ function openOccurrence(write: PendingWrite, facts: PendingWriteFacts, account: 
 }
 
 export function decidePendingWrite(write: PendingWrite, facts: PendingWriteFacts): PendingWriteDecision {
+    const bank = decideBankWrite(write, facts);
+    if (bank) {
+        return bank;
+    }
     const duplicate = filedBefore(write, facts);
     if (duplicate) {
         return { kind: "duplicate", relink: duplicate.id !== write.id, txId: duplicate.txId };

@@ -68,6 +68,10 @@ export const AutologUsage = Schema.Record(Schema.String, Schema.Struct({ held: S
 
 export type AutologUsage = typeof AutologUsage.Type;
 
+export const BankTransactionStatus = Schema.Literals(["pending", "posted", "void"]);
+
+export type BankTransactionStatus = typeof BankTransactionStatus.Type;
+
 /** Only five fields are required: an extension build older than the app is normal. */
 export const PendingWrite = Schema.Struct({
     amount: Schema.Finite,
@@ -93,6 +97,8 @@ export const PendingWrite = Schema.Struct({
     note: Schema.String,
     /** The native append counter, absent on Watch and older captures. */
     sequence: Schema.optional(Schema.Finite),
+    /** Set only on bank writes: a later write with the same key replaces the entry, and `void` removes it. */
+    status: Schema.optional(Schema.NullOr(BankTransactionStatus)),
     text: Schema.optional(Schema.NullOr(Schema.String)),
 });
 

@@ -16,7 +16,7 @@ import type { ClaimedWrites, PendingWrite } from "@/lib/queue-file";
 import { Meta } from "./app-meta-core";
 import { readAutologWaiting, writeAutologAccess } from "./autolog-cap-core";
 import { cardFeeFor } from "./card-fees-core";
-import { inboundEntryId } from "./inbound-entry-id";
+import { bankEntryId, inboundEntryId } from "./inbound-entry-id";
 import { WALLET_DEDUPE_WINDOW_MS } from "./pending-write-decision";
 import {
     appliedWriteIds,
@@ -166,6 +166,68 @@ describe("applyPendingWrites", () => {
 
         await expect(liveRows(db)).resolves.toHaveLength(1);
         await expect(undeleted(db)).resolves.toStrictEqual([]);
+    });
+
+    it("files a bank charge under its key's id, not its inbox row's", async () => {
+        const pending = walletWrite("inbound:bank-id", {
+            dedupeKey: "bank:stripe:tx-3",
+            note: "Bakery",
+            status: "pending",
+        });
+
+        await Effect.runPromise(applyPendingWrites(db, [pending], NOW));
+
+        await expect(undeleted(db)).resolves.toStrictEqual([{ id: bankEntryId("bank:stripe:tx-3") }]);
+    });
+
+    it("revises a filed bank charge when its posted write arrives days later", async () => {
+        const pending = walletWrite("inbound:bank-1", {
+            amount: 12,
+            amountText: "$12.00",
+            dedupeKey: "bank:stripe:tx-1",
+            note: "Bakery",
+            status: "pending",
+        });
+        await Effect.runPromise(applyPendingWrites(db, [pending], NOW));
+        await Effect.runPromise(Meta.set(db, "pendingWriteLedger", []));
+        const date = new Date(NOW.getTime() + 72 * HOUR);
+        const posted = walletWrite("inbound:bank-2", {
+            amount: 14.5,
+            amountText: "$14.50",
+            date: date.getTime(),
+            dedupeKey: "bank:stripe:tx-1",
+            note: "Bakery",
+            status: "posted",
+        });
+
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [posted], date));
+
+        expect(applied).toBe(1);
+        await expect(
+            db.select({ amount: transactions.amount, date: transactions.date, id: transactions.id }).from(transactions)
+        ).resolves.toStrictEqual([{ amount: 14.5, date, id: bankEntryId("bank:stripe:tx-1") }]);
+    });
+
+    it("removes a filed bank charge when its write is voided", async () => {
+        const pending = walletWrite("inbound:bank-1", {
+            dedupeKey: "bank:stripe:tx-2",
+            note: "Bakery",
+            status: "pending",
+        });
+        await Effect.runPromise(applyPendingWrites(db, [pending], NOW));
+        await Effect.runPromise(Meta.set(db, "pendingWriteLedger", []));
+        const voided = walletWrite("inbound:bank-2", {
+            dedupeKey: "bank:stripe:tx-2",
+            note: "Bakery",
+            status: "void",
+        });
+
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [voided], NOW));
+
+        expect(applied).toBe(1);
+        await expect(undeleted(db)).resolves.toStrictEqual([]);
+        const [row] = await db.select({ deletedAt: transactions.deletedAt }).from(transactions);
+        expect(row?.deletedAt).not.toBeNull();
     });
 
     it("reads a notification job's amount and merchant, and files it by account", async () => {

@@ -32,6 +32,7 @@ export function inboundPendingWrite(row: InboxRow): PendingWrite {
         id: `inbound:${row.id}`,
         income: write.income,
         note: write.note,
+        status: write.status ?? null,
         text: write.text ?? null,
     };
 }

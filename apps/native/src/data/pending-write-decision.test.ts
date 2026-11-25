@@ -6,17 +6,28 @@ import type { AutologUsage, PendingWriteLedgerEntry } from "@/domain/meta-values
 import { FREE_AUTOLOG_PER_MONTH } from "@/domain/pro-limits";
 import type { PendingWrite } from "@/lib/queue-file";
 
+import { bankEntryId } from "./inbound-entry-id";
 import {
     decidePendingWrite,
     matchInstallmentPlan,
     readNotification,
     WALLET_DEDUPE_WINDOW_MS,
 } from "./pending-write-decision";
-import type { OpenPlan, FiledRow, PendingWriteFacts, SubscriptionRow } from "./pending-write-decision";
+import type { BankRow, OpenPlan, FiledRow, PendingWriteFacts, SubscriptionRow } from "./pending-write-decision";
 
 const NOW = new Date("2026-03-04T09:00:00Z").getTime();
 const HOUR = 60 * 60 * 1000;
 const PURCHASE = "wallet:expense:blue bottle:640";
+const BANK = "bank:stripe:tx-1";
+
+function bankWrite(id: string, overrides: Partial<PendingWrite> = {}): PendingWrite {
+    return walletWrite(id, {
+        card: "Chase ••4321",
+        dedupeKey: BANK,
+        status: "pending",
+        ...overrides,
+    });
+}
 
 function walletWrite(id: string, overrides: Partial<PendingWrite> = {}): PendingWrite {
     return {
@@ -61,6 +72,7 @@ function busFare(id: string, hoursLater: number, card = "Payoneer"): PendingWrit
 function facts(overrides: Partial<PendingWriteFacts> = {}): PendingWriteFacts {
     return {
         access: "open",
+        bank: null,
         banks: [],
         cards: [],
         category: { fallback: "cat-expense", known: null, lookups: true },
@@ -196,6 +208,49 @@ describe("a bank that pushes again when a charge settles", () => {
         const ledger = [ride("first", 0, "tx-1")];
 
         expect(decidePendingWrite(busFare("again", 20, "Revolut"), facts({ filed: rows, ledger })).kind).toBe("file");
+    });
+});
+
+describe("a bank write keyed to one transaction", () => {
+    const TX = bankEntryId(BANK);
+    const filed = (overrides: Partial<BankRow> = {}) =>
+        facts({ bank: { amount: 6.4, date: new Date(NOW), deleted: false, ...overrides } });
+
+    it("files the first write", () => {
+        expect(decidePendingWrite(bankWrite("first"), facts()).kind).toBe("file");
+    });
+
+    it("drops a void seen before anything was filed", () => {
+        expect(decidePendingWrite(bankWrite("void", { status: "void" }), facts())).toStrictEqual({ kind: "drop" });
+    });
+
+    it("revises the filed row when a posted write changes the amount days later, with no ledger entry", () => {
+        const date = NOW + 72 * HOUR;
+
+        expect(decidePendingWrite(bankWrite("posted", { amount: 8.1, date, status: "posted" }), filed())).toStrictEqual(
+            { amount: 8.1, date, kind: "revise", txId: TX }
+        );
+    });
+
+    it("calls an unchanged write a duplicate", () => {
+        expect(decidePendingWrite(bankWrite("again", { status: "posted" }), filed())).toStrictEqual({
+            kind: "duplicate",
+            relink: false,
+            txId: TX,
+        });
+    });
+
+    it("removes the filed row when a later write voids it", () => {
+        expect(decidePendingWrite(bankWrite("void", { status: "void" }), filed())).toStrictEqual({
+            kind: "remove",
+            txId: TX,
+        });
+    });
+
+    it("drops a later write for a row the user deleted", () => {
+        expect(decidePendingWrite(bankWrite("posted", { status: "posted" }), filed({ deleted: true }))).toStrictEqual({
+            kind: "drop",
+        });
     });
 });
 

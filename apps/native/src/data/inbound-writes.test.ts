@@ -27,7 +27,7 @@ vi.mock("./pending-writes", () => ({
 vi.mock("./sync-outbox-core", () => ({ isSyncEnabled: () => Effect.succeed(state.sync) }));
 
 import type { InboxRow } from "./inbound-writes";
-import { pullInboundWrites } from "./inbound-writes";
+import { inboundPendingWrite, pullInboundWrites } from "./inbound-writes";
 
 const db = {} as Database;
 
@@ -59,6 +59,17 @@ beforeEach(() => {
     state.drained = 0;
     state.profile = undefined;
     state.sync = true;
+});
+
+describe("inboundPendingWrite", () => {
+    it("carries a bank write's status and key into the queue", () => {
+        const queued = inboundPendingWrite({
+            ...row("a"),
+            write: { ...row("a").write, dedupeKey: "bank:stripe:tx-1", status: "posted" },
+        });
+
+        expect(queued).toMatchObject({ dedupeKey: "bank:stripe:tx-1", status: "posted" });
+    });
 });
 
 describe("pullInboundWrites", () => {

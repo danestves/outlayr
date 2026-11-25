@@ -29,7 +29,7 @@ import {
 import type { SpendDb } from "./budget-spent";
 import { queueEnrichment } from "./enrichment-queue-core";
 import { captureEntrySaved, usualCardFee } from "./entry-filed-core";
-import { inboundEntryId } from "./inbound-entry-id";
+import { BANK_KEY_PREFIX, bankEntryId, inboundEntryId } from "./inbound-entry-id";
 import { readPlans } from "./installments-core";
 import {
     alreadyApplied,
@@ -132,11 +132,20 @@ const stillOnLedger = Effect.fn("PendingWrites.stillOnLedger")(function* stillOn
     return rows[0] != null;
 });
 
+function writeEntryId(write: PendingWrite): string | null {
+    const key = write.dedupeKey?.trim();
+    return key?.startsWith(BANK_KEY_PREFIX) ? bankEntryId(key) : inboundEntryId(write.id);
+}
+
 // Another device filed this inbox row under the same id and sync brought it here, deleted or not.
 const filedElsewhere = Effect.fn("PendingWrites.filedElsewhere")(function* filedElsewhere(
     db: Database,
     write: PendingWrite
 ) {
+    // A bank write names the row it revises or removes, so it must reach the decision even when that row exists.
+    if (write.dedupeKey?.trim().startsWith(BANK_KEY_PREFIX)) {
+        return false;
+    }
     const txId = inboundEntryId(write.id);
     if (txId === null) {
         return false;
@@ -255,6 +264,21 @@ const openSubscriptions = (db: Database, write: PendingWrite) => {
     );
 };
 
+const bankRow = Effect.fn("PendingWrites.bankRow")(function* bankRow(db: Database, write: PendingWrite) {
+    const key = write.dedupeKey?.trim();
+    if (!key?.startsWith(BANK_KEY_PREFIX)) {
+        return null;
+    }
+    const [row] = yield* attempt("read", () =>
+        db
+            .select({ amount: transactions.amount, date: transactions.date, deletedAt: transactions.deletedAt })
+            .from(transactions)
+            .where(eq(transactions.id, bankEntryId(key)))
+            .limit(1)
+    );
+    return row ? { amount: row.amount, date: row.date, deleted: row.deletedAt !== null } : null;
+});
+
 const gatherFacts = Effect.fn("PendingWrites.gatherFacts")(function* gatherFacts(
     db: Database,
     write: PendingWrite,
@@ -262,6 +286,7 @@ const gatherFacts = Effect.fn("PendingWrites.gatherFacts")(function* gatherFacts
 ) {
     return {
         ...batch,
+        bank: yield* bankRow(db, write),
         banks: yield* listBanks(db),
         cards: yield* Meta.get(db, "walletCards"),
         category: {
@@ -360,6 +385,29 @@ const settleOccurrence = Effect.fn("PendingWrites.settleOccurrence")(function* s
     return settled.id;
 });
 
+type Revision = Extract<PendingWriteDecision, { kind: "revise" }>;
+
+const reviseEntry = Effect.fn("PendingWrites.reviseEntry")(function* reviseEntry(
+    db: Database,
+    { amount, date, txId }: Revision,
+    now: Date
+) {
+    const written = DateTime.toDate(DateTime.makeUnsafe(date));
+    yield* attempt("write", () =>
+        db
+            .update(transactions)
+            .set({
+                amount,
+                amountUsd: null,
+                date: written,
+                day: startOfDay(written),
+                month: firstOfMonth(written),
+                updatedAt: now,
+            })
+            .where(and(eq(transactions.id, txId), isNull(transactions.deletedAt)))
+    );
+});
+
 type Filed = Extract<PendingWriteDecision, { kind: "file" | "merge" | "settle" }>;
 
 const createEntry = Effect.fn("PendingWrites.createEntry")(function* createEntry(
@@ -383,7 +431,7 @@ const createEntry = Effect.fn("PendingWrites.createEntry")(function* createEntry
             income: write.income,
             note,
         },
-        { id: write.captureId ?? inboundEntryId(write.id) ?? undefined, logoCandidate }
+        { id: write.captureId ?? writeEntryId(write) ?? undefined, logoCandidate }
     );
     if (lookup) {
         yield* queueEnrichment(db, id);
@@ -563,6 +611,18 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
         if (decision.kind === "drop") {
             // Dropping beats inventing a category the user never made.
             yield* Effect.logWarning("[outlayr] dropped a queued entry with no category");
+            continue;
+        }
+        if (decision.kind === "revise") {
+            yield* reviseEntry(db, decision, now);
+            applied += 1;
+            continue;
+        }
+        if (decision.kind === "remove") {
+            yield* transactionsRepo
+                .remove(db, decision.txId, now)
+                .pipe(Effect.mapError((cause) => new PendingWritesError({ cause, operation: "write" })));
+            applied += 1;
             continue;
         }
         if (decision.kind === "hold") {
