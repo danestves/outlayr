@@ -4,6 +4,7 @@ import {
     budgetLink,
     DEEP_LINKS,
     deepLinkTarget,
+    inviteLink,
     redirectLaunchPath,
     resolveDeepLink,
     transactionLink,
@@ -108,5 +109,15 @@ describe("deepLinkTarget", () => {
         expect(deepLinkTarget("outlayr://NewExpense")).toBe("newexpense");
         expect(deepLinkTarget("/transactions/scan")).toBeNull();
         expect(deepLinkTarget("exp://192.168.1.4:8081")).toBeNull();
+    });
+});
+
+describe("inviteLink", () => {
+    it("picks the invite out of a referral or profile link, in either form the router hands over", () => {
+        expect(inviteLink("/join/ab12cd")).toStrictEqual({ code: "ab12cd", kind: "join" });
+        expect(inviteLink("outlayr://i/AB12CD?utm=x")).toStrictEqual({ code: "AB12CD", kind: "i" });
+        expect(inviteLink("/join")).toBeNull();
+        expect(inviteLink("/join/ab12cd/extra")).toBeNull();
+        expect(inviteLink("/transactions/abc")).toBeNull();
     });
 });

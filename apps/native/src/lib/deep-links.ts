@@ -115,6 +115,16 @@ export function deepLinkTarget(raw: string): string | null {
     return HOSTS.has(key) || (rest.length === 0 && LEGACY_HOSTS.has(key)) ? key : null;
 }
 
+export interface InviteLink {
+    code: string;
+    kind: "i" | "join";
+}
+
+export function inviteLink(path: string): InviteLink | null {
+    const [kind, code, ...rest] = parts(path).segments;
+    return (kind === "i" || kind === "join") && code && rest.length === 0 ? { code, kind } : null;
+}
+
 /**
  * expo-router never empties expo-linking's launch-URL registry (`expo-router/build/global-state/useStore.js:47`),
  * so without the drain a dev reload lands back on the launch destination.
