@@ -87,7 +87,7 @@ Store notes cover the same changes in every app language, as plain text with a l
 - Lead with what the person gets, or the question they'd ask: "Owe the plumber for today's job? Log it and pick when you'll pay".
 - No emoji, semicolons, or em dashes.
 - Play: a production Android build, at most 500 characters each. `play.ts notes` replaces them while the release is in review.
-- App Store: the version's What's New, for every locale the listing has, set before that version goes to review. Apple refuses it on a first version. The App Store version has to carry the build's version: create it with `asc versions create` when a build starts a new one.
+- App Store: the version's What's New, for every locale the listing has, set before that version goes to review. Apple refuses it on a first version. The App Store version has to carry the build's version: create it with `asc versions create` when a build starts a new one, then push its listing text (see [Store listings](#store-listings)) before setting What's New.
 
   ```sh
   for pair in en-US:en en-GB:en en-AU:en de-DE:de es-MX:es es-ES:es-ES fr-FR:fr pt-BR:pt pt-PT:pt-PT; do
@@ -180,3 +180,17 @@ Before a `FIRST BUILD`, confirm each of these exists and name any that don't:
 ## Store listings
 
 The listing text lives in `apps/native/store`: `app-info/` and `version/<version>/` for the App Store (`asc metadata`'s layout), `play/<language>.json` for Play. `play.ts listing <images dir>` pushes every Play language in one edit, and replaces the screenshots and feature graphic of each language that has a folder under `<images dir>`.
+
+The App Store description and keywords only change with a new version, so push them every time `asc versions create` makes one. Without that step the live listing stays on whatever the last manual push sent. What's New is left out here because the notes set it:
+
+```sh
+dir=$(mktemp -d) && mkdir -p "$dir/version/<version>"
+cp -r apps/native/store/app-info "$dir/"
+for file in apps/native/store/version/1.0.0/*.json; do
+  jq 'del(.whatsNew)' "$file" > "$dir/version/<version>/$(basename "$file")"
+done
+asc metadata push --app 6801652978 --version <version> --platform IOS --dir "$dir" --dry-run --output table
+asc metadata push --app 6801652978 --version <version> --platform IOS --dir "$dir"
+```
+
+Promotional text can change on a live version at any time with `asc apps info edit --promotional-text`.
