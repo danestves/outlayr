@@ -7612,12 +7612,12 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Actual Budget, Firefly III, Flow, and Outlayr on license, latest release, and platforms, and what changed at Cashew. Outlayr is ours.",
-                        es: "Actual Budget, Firefly III, Flow y Outlayr por licencia, última versión y plataformas, y qué pasó con Cashew. Outlayr es nuestra.",
+                        en: "Actual Budget, Firefly III, Flow, and Outlayr compared on license, latest release, and platforms, and why Cashew is no longer open source. Outlayr is ours.",
+                        es: "Actual Budget, Firefly III, Flow y Outlayr comparadas por licencia, última versión y plataformas, y por qué Cashew ya no es de código abierto. Outlayr es nuestra.",
                     }),
                     title: t({
                         en: "Best Open Source Expense Tracker Apps (2026) · Outlayr",
-                        es: "Mejores apps de gastos de código abierto (2026) · Outlayr",
+                        es: "Apps de control de gastos de código abierto y gratis (2026)",
                     }),
                 },
                 picked: [
