@@ -9434,8 +9434,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Create a profile for your shared money, tap Share in the profile menu, and send your partner the link. Once they join, you both add and edit its entries, see the same budgets, and see who logged each entry. Each of your Personal profiles stays private.",
-                            es: "Sí. Crea un perfil para el dinero compartido, toca Compartir en el menú de perfiles y envíale el enlace a tu pareja. Cuando se una, los dos agregan y editan sus movimientos, ven los mismos presupuestos y ven quién registró cada movimiento. El perfil Personal de cada uno sigue siendo privado.",
+                            en: "Yes. Sign in, create a profile for your shared money, tap Share in the profile menu, and send your partner the link. Once they join, you both add and edit its entries and see the same budgets, and the Log shows your partner's name on the entries they logged. Each of your Personal profiles stays private.",
+                            es: "Sí. Inicia sesión, crea un perfil para el dinero compartido, toca Compartir en el menú de perfiles y envíale el enlace a tu pareja. Cuando se una, los dos agregan y editan sus movimientos y ven los mismos presupuestos, y el Registro muestra el nombre de tu pareja en los movimientos que registró. El perfil Personal de cada uno sigue siendo privado.",
                         }),
                         question: t({
                             en: "Can my partner and I share one Outlayr budget?",
@@ -9445,7 +9445,7 @@ const answers = {
                     {
                         answer: t({
                             en: "No. Profiles are part of Outlayr Pro, and the owner's Pro covers everyone in a shared profile. If it ends, the profile stops syncing for both of you until it's back. The free plan keeps one ledger with 2 category budgets plus one for the month.",
-                            es: "No. Los perfiles son parte de Outlayr Pro, y el Pro de quien creó el perfil cubre a todos los que están en él. Si se acaba, el perfil deja de sincronizarse para los dos hasta que vuelva. El plan gratis tiene un solo registro con 2 presupuestos por categoría más uno para el mes.",
+                            es: "No. Los perfiles son parte de Outlayr Pro, y el Pro de quien creó el perfil cubre a todos los que están en él. Si se acaba, el perfil deja de sincronizarse para los dos hasta que vuelva. El plan gratis tiene un solo registro, con presupuesto para 2 categorías más uno para el mes.",
                         }),
                         question: t({
                             en: "Do we both need Outlayr Pro?",
@@ -9454,8 +9454,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Your partner can leave from the app once their changes have synced, and the entries they logged stay in the profile. Only the owner can rename or delete it, invite people, or remove someone.",
-                            es: "Tu pareja puede salir desde la app cuando sus cambios se hayan sincronizado, y los movimientos que registró se quedan en el perfil. Solo quien lo creó puede cambiarle el nombre, borrarlo, invitar o sacar a alguien.",
+                            en: "Your partner can leave from the app once their changes and photos have synced, and the entries they logged stay in the profile. Only the owner can rename or delete it, invite people, or remove someone.",
+                            es: "Tu pareja puede salir desde la app cuando sus cambios y fotos se hayan sincronizado, y los movimientos que registró se quedan en el perfil. Solo quien lo creó puede cambiarle el nombre, borrarlo, invitar o sacar a alguien.",
                         }),
                         question: t({
                             en: "What happens if my partner leaves?",
@@ -9500,12 +9500,12 @@ const answers = {
                                 es: "Con Outlayr Pro, crea un perfil para el dinero compartido, como Hogar, desde el menú de perfiles en el título del Registro. Es un registro aparte, con sus propias cuentas, categorías, presupuestos y moneda principal.",
                             }),
                             t({
-                                en: "Then tap Share in the same menu and send your partner the link. Each link lets one person join and expires after 7 days. Joining needs an Outlayr account, and the owner's Pro covers you both.",
-                                es: "Luego toca Compartir en el mismo menú y envíale el enlace a tu pareja. Cada enlace sirve para que se una una persona y vence a los 7 días. Para unirse hace falta una cuenta de Outlayr, y el Pro de quien creó el perfil cubre a los dos.",
+                                en: "Then tap Share in the same menu, then Share link, and send it to your partner. Each link lets one person join. You both need an Outlayr account, and the owner's Pro covers you both.",
+                                es: "Luego toca Compartir en el mismo menú, después Compartir enlace, y envíaselo a tu pareja. Cada enlace sirve para que se una una persona. Los dos necesitan una cuenta de Outlayr, y el Pro de quien creó el perfil cubre a los dos.",
                             }),
                             t({
-                                en: "Once your partner joins, you both add and edit entries and see what is left in each budget, whoever paid. An entry your partner logged shows their name next to the time. Your Personal profiles stay private, so the rest of your spending stays yours.",
-                                es: "Cuando tu pareja se una, los dos agregan y editan movimientos y ven cuánto queda en cada presupuesto, sin importar quién pagó. Un movimiento que registró tu pareja muestra su nombre junto a la hora. Sus perfiles Personales siguen siendo privados, así que el resto de lo que gasta cada uno sigue siendo suyo.",
+                                en: "Once your partner joins, you both add and edit entries and see what is left in each budget, whoever paid. The Log shows your partner's name on the entries they logged. Your Personal profiles stay private, so the rest of your spending stays yours.",
+                                es: "Cuando tu pareja se una, los dos agregan y editan movimientos y ven cuánto queda en cada presupuesto, sin importar quién pagó. El Registro muestra el nombre de tu pareja en los movimientos que registró. Sus perfiles Personales siguen siendo privados, así que el resto de lo que gasta cada uno sigue siendo suyo.",
                             }),
                         ],
                         id: "outlayr",
