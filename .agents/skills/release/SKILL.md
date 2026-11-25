@@ -181,15 +181,23 @@ Before a `FIRST BUILD`, confirm each of these exists and name any that don't:
 
 The listing text lives in `apps/native/store`: `app-info/` and `version/<version>/` for the App Store (`asc metadata`'s layout), `play/<language>.json` for Play. `play.ts listing <images dir>` pushes every Play language in one edit, and replaces the screenshots and feature graphic of each language that has a folder under `<images dir>`.
 
-The App Store description and keywords only change with a new version, so push them every time `asc versions create` makes one. Without that step the live listing stays on whatever the last manual push sent. What's New is left out here because the notes set it:
+The App Store description and keywords only change with a new version, so push them to every new version before it goes to review, and push again if a push fails partway. Without that step the live listing stays on whatever the last manual push sent. What's New and promotional text are left out: the notes set What's New, and promotional text is edited on the live version, so a repo snapshot would overwrite it. Stage the files and read the dry run first:
 
 ```sh
-dir=$(mktemp -d) && mkdir -p "$dir/version/<version>"
-cp -r apps/native/store/app-info "$dir/"
-for file in apps/native/store/version/1.0.0/*.json; do
-  jq 'del(.whatsNew)' "$file" > "$dir/version/<version>/$(basename "$file")"
-done
-asc metadata push --app 6801652978 --version <version> --platform IOS --dir "$dir" --dry-run --output table
+dir=$(mktemp -d) && (
+  set -e
+  mkdir -p "$dir/version/<version>"
+  cp -r apps/native/store/app-info "$dir/"
+  for file in apps/native/store/version/1.0.0/*.json; do
+    jq 'del(.whatsNew, .promotionalText)' "$file" > "$dir/version/<version>/$(basename "$file")"
+  done
+  asc metadata push --app 6801652978 --version <version> --platform IOS --dir "$dir" --dry-run --output table
+)
+```
+
+Push only after that command succeeded and its plan lists just descriptions and keywords:
+
+```sh
 asc metadata push --app 6801652978 --version <version> --platform IOS --dir "$dir"
 ```
 
