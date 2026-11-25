@@ -9538,8 +9538,8 @@ const answers = {
                     },
                     {
                         text: t({
-                            en: "Create a profile in Outlayr, tap Share, and send your partner the link.",
-                            es: "Creen un perfil en Outlayr, toquen Compartir y envíenle el enlace a la pareja.",
+                            en: "With Outlayr Pro, sign in, create a profile, tap Share, then Share link, and send it to your partner.",
+                            es: "Con Outlayr Pro, inicien sesión, creen un perfil, toquen Compartir, luego Compartir enlace, y envíenselo a la pareja.",
                         }),
                         title: t({ en: "Share one profile", es: "Compartan un perfil" }),
                     },
