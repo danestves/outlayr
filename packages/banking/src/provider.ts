@@ -87,9 +87,9 @@ export interface BankingClient {
     // Fails with `rejected` when the session was not started for `holder`.
     readonly finishLink: (holder: string, sessionId: string) => Call<readonly BankAccount[]>;
     readonly readWebhook: (body: string, headers: Headers) => Effect.Effect<Option.Option<BankingEvent>, BankingError>;
-    // Disconnects every account and deletes every holder made for this user. Needs nothing we stored, so account
-    // deletion can run it after our rows are gone. Safe to repeat.
-    readonly forgetUser: (userId: string) => Call<void>;
+    // Disconnects every account of the given holders plus any holder found by search for this user, then deletes
+    // those holders. Safe to repeat.
+    readonly forgetUser: (userId: string, holders: readonly string[]) => Call<void>;
     readonly startLink: (request: LinkRequest) => Call<LinkSession>;
     // An account with no finished refresh yet returns no transactions and keeps the cursor.
     readonly transactions: (accountId: string, cursor: Option.Option<string>) => Call<TransactionPage>;

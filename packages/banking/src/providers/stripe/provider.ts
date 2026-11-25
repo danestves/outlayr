@@ -71,11 +71,27 @@ const makeClient = (key: Redacted.Redacted, webhookSecret: string): BankingClien
         const accounts = yield* listAll(key, StripeAccount, "finishLink", "/financial_connections/accounts", [
             ["session", session.id],
         ]);
-        for (const account of accounts.filter(({ status }) => status === "active")) {
-            yield* stripeCall(key, Schema.Unknown, "finishLink", `${accountPath(account.id)}/subscribe`, {
-                form: [["features[]", "transactions"]],
-            });
-        }
+        yield* Effect.gen(function* subscribe() {
+            for (const account of accounts) {
+                if (account.status !== "active") {
+                    continue;
+                }
+                yield* stripeCall(key, Schema.Unknown, "finishLink", `${accountPath(account.id)}/subscribe`, {
+                    form: [["features[]", "transactions"]],
+                });
+            }
+        }).pipe(
+            Effect.catchCause((cause) =>
+                Effect.gen(function* disconnectAll() {
+                    for (const account of accounts) {
+                        yield* stripeCall(key, Schema.Unknown, "finishLink", `${accountPath(account.id)}/disconnect`, {
+                            form: [],
+                        }).pipe(Effect.catchCause(() => Effect.void));
+                    }
+                    yield* Effect.failCause(cause);
+                })
+            )
+        );
         return accounts.map(toBankAccount);
     }),
     readWebhook: Effect.fn("StripeBanking.readWebhook")(function* readWebhook(body: string, headers: Headers) {
@@ -95,18 +111,25 @@ const makeClient = (key: Redacted.Redacted, webhookSecret: string): BankingClien
         );
         return eventFor(event.type, account.id, account.transaction_refresh?.status);
     }),
-    forgetUser: Effect.fn("StripeBanking.forgetUser")(function* forgetUser(userId: string) {
+    forgetUser: Effect.fn("StripeBanking.forgetUser")(function* forgetUser(userId: string, stored: readonly string[]) {
         const query = `metadata['${HOLDER_KEY}']:'${userId.replaceAll("\\", "\\\\").replaceAll("'", "\\'")}'`;
-        const holders = yield* stripeCall(
+        const found = yield* stripeCall(
             key,
             List(Schema.Struct({ id: Schema.String })),
             "forgetUser",
             `/customers/search?query=${encode(query)}`
         );
-        for (const { id } of holders.data) {
+        const holders = [...new Set([...stored, ...found.data.map(({ id }) => id)])];
+        for (const id of holders) {
+            // A retried deletion can reach a holder Stripe already deleted.
             const accounts = yield* listAll(key, StripeAccount, "forgetUser", "/financial_connections/accounts", [
                 ["account_holder[customer]", id],
-            ]);
+            ]).pipe(
+                Effect.catchIf(
+                    (error: BankingError) => error.status === 404,
+                    () => Effect.succeed([])
+                )
+            );
             for (const account of accounts.filter(({ status }) => status !== "disconnected")) {
                 yield* stripeCall(key, Schema.Unknown, "forgetUser", `${accountPath(account.id)}/disconnect`, {
                     form: [],
