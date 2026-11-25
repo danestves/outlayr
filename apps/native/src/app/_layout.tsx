@@ -24,6 +24,7 @@ import { AppLockGate, useAppLockOpen } from "@/components/app-lock-gate";
 import { AuthCover, useAuthCovered } from "@/components/auth-cover";
 import { CelebrationConfetti } from "@/components/confetti";
 import { LocalDataError } from "@/components/local-data-error";
+import { PendingInviteLink } from "@/components/pending-invite-link";
 import { PendingProfileJoin } from "@/components/pending-profile-join";
 import { PolicyNoticeSheet } from "@/components/policy-notice-sheet";
 import { Text } from "@/components/text";
@@ -323,6 +324,7 @@ function RootStack() {
             <AccountOffer db={db} ready={tapsReady} />
             <YearSheetOpener db={db} ready={tapsReady} />
             <PendingProfileJoin ready={tapsReady} />
+            <PendingInviteLink ready={tapsReady} />
             <Stack>
                 {ROOT_STACK.map(({ group: name, screens }) => (
                     <Stack.Protected guard={group === name} key={name} redirectTo={GROUP_ENTRY[group]}>

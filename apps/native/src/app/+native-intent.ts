@@ -2,8 +2,9 @@ import { clearInitialURL } from "expo-linking";
 
 import { IMPORT_PATHS } from "@/domain/import-paths";
 import { backupHandover } from "@/lib/backup-handover";
-import { deepLinkTarget, redirectLaunchPath } from "@/lib/deep-links";
+import { deepLinkTarget, inviteLink, redirectLaunchPath } from "@/lib/deep-links";
 import { moneyManagerSession } from "@/lib/money-manager-session";
+import { holdInviteLink } from "@/lib/pending-invite-link";
 import { posthog } from "@/lib/posthog";
 
 // Every link from outside the bundle (widgets, App Intents, Siri, quick actions, opened files) passes through here.
@@ -22,7 +23,14 @@ export function redirectSystemPath(event: { path: string | null; initial: boolea
     if (target !== null) {
         posthog?.capture("app_link_opened", { cold_start: event.initial, target });
     }
-    return redirectLaunchPath(event, drainLaunchURL);
+    const path = redirectLaunchPath(event, drainLaunchURL);
+    const invite = path === null ? null : inviteLink(path);
+    if (invite !== null) {
+        // Onboarding and sign-in guard the invite routes away, so the link waits until the ledger can open it.
+        holdInviteLink(invite);
+        return null;
+    }
+    return path;
 }
 
 // Dev only: the replay it prevents needs a dev reload to re-mount `ExpoRoot`, and a drained registry cannot be
