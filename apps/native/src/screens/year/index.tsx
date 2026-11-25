@@ -23,7 +23,7 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { openWebLink } from "@/lib/web-link";
 import { SavingsBar, SavingsRow, SavingsSection } from "@/screens/recap/savings-rows";
 
-const PREVIEW_PRICE = 49.99;
+const PREVIEW_PRICE = 59.99;
 
 export function Year({ preview }: { preview: boolean }) {
     const db = useDatabase();

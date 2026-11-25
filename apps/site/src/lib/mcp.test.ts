@@ -54,7 +54,7 @@ describe("public MCP server", () => {
         expect(resource.result.contents[0].text).toBe(about.result.content[0].text);
 
         const plans = await callTool("about_outlayr", { section: "Plans" });
-        expect(plans.result.content[0].text).toMatch(/^## Plans\n[^#]*\$7\.99/u);
+        expect(plans.result.content[0].text).toMatch(/^## Plans\n[^#]*\$9\.99/u);
     });
 
     it("serves a 2026-07-28 request that carries its own version and no initialize", async () => {
