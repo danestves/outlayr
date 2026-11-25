@@ -6,6 +6,7 @@ import { useSyncExternalStore } from "react";
 
 import { cloudRuntime } from "./cloud-runtime";
 import { cloudQuery } from "./convex";
+import { joinedProfilesCache, joinedSetDiffers } from "./joined-profiles";
 
 export type ProfileMembersView = NonNullable<FunctionReturnType<typeof api.profileSharing.members>>;
 
@@ -54,6 +55,25 @@ export const profileMembersAtom = Atom.family((key: ProfileMembersKey) =>
         return read();
     }).pipe(Atom.withLabel("profileSharing:members"))
 );
+
+/** Wakes the reconcile when the server's live list stops matching the cache. */
+export function watchJoinedProfiles(onChange: () => void): () => void {
+    if (cloudRuntime === null) {
+        return () => undefined;
+    }
+    const watch = cloudRuntime.convex.watchQuery(api.profileSharing.joined, {});
+    return watch.onUpdate(() => {
+        let server: FunctionReturnType<typeof api.profileSharing.joined> | undefined;
+        try {
+            server = watch.localQueryResult();
+        } catch {
+            return;
+        }
+        if (server !== undefined && joinedSetDiffers(joinedProfilesCache(), server)) {
+            onChange();
+        }
+    });
+}
 
 // Signing in remounts the navigator, so the code waits here until an account is there to claim it.
 let pending: string | null = null;

@@ -3,6 +3,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 
 import { reopenDrains } from "@/data/pending-writes";
 import { pendingPhotoUploads, uploadPhotos } from "@/data/photo-sync-core";
@@ -50,6 +51,9 @@ const failed = (operation: typeof ProfileSharingOperation.Type) => (cause: unkno
 const writeCache = (operation: typeof ProfileSharingOperation.Type, cache: JoinedProfilesCache) =>
     Effect.try({ catch: failed(operation), try: () => writeJoinedProfiles(cache) });
 
+// The live list moves mid-command on a join or leave, and a reconcile then could delete the ledger being entered.
+const ledgerMoves = Semaphore.makeUnsafe(1);
+
 const cacheAfterLeaving = (current: JoinedProfilesCache, id: string): JoinedProfilesCache => ({
     departed: current.departed.includes(id) ? current.departed : [...current.departed, id],
     joined: current.joined.filter((entry) => entry.profileId !== id),
@@ -79,7 +83,7 @@ const retireDeparted = Effect.fn("JoinedProfiles.retireDeparted")(function* reti
 });
 
 export const reconcileJoinedProfiles = Effect.fn("JoinedProfiles.reconcile")(function* reconcile() {
-    // A signed-out query answers with no memberships, which would read as every shared ledger being revoked.
+    // Older backends answer a signed-out read with no memberships, which would read as every shared ledger revoked.
     if (!isCloudAccount()) {
         return;
     }
@@ -110,7 +114,7 @@ export const reconcileJoinedProfiles = Effect.fn("JoinedProfiles.reconcile")(fun
             yield* retireDeparted("reconcile", id);
         }
     }
-});
+}, ledgerMoves.withPermits(1));
 
 export const joinProfileCommand = createRuntimeCommand(appRuntime, {
     execute: Effect.fn("JoinedProfiles.join")(function* joinProfile(input: {
@@ -151,7 +155,7 @@ export const joinProfileCommand = createRuntimeCommand(appRuntime, {
         yield* settleLedger(input.from);
         yield* withRollback(enter(profileId));
         return claim.status;
-    }),
+    }, ledgerMoves.withPermits(1)),
     label: "profiles:join",
 });
 
@@ -196,7 +200,7 @@ export const leaveProfileCommand = createRuntimeCommand(appRuntime, {
         yield* writeCache("leave", cacheAfterLeaving(joinedProfilesCache(), input.id));
         // Past the marker a failed reload must not restore the ledger the server already dropped.
         yield* reload;
-    }),
+    }, ledgerMoves.withPermits(1)),
     label: "profiles:leave",
 });
 
