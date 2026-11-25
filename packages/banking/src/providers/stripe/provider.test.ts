@@ -1,6 +1,10 @@
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -48,6 +52,34 @@ const read = async (body: string) =>
 const refreshed = (status: string) =>
     event("financial_connections.account.refreshed_transactions", { id: "fca_1", transaction_refresh: { status } });
 
+interface Recorded {
+    readonly method: string;
+    readonly url: string;
+}
+
+const stubHttp = (respond: (request: Recorded) => Response) => {
+    const requests: Recorded[] = [];
+    const http = HttpClient.make((request) =>
+        Effect.gen(function* recordRequest() {
+            const web = yield* HttpClientRequest.toWeb(request).pipe(Effect.orDie);
+            const recorded = { method: web.method, url: web.url };
+            requests.push(recorded);
+            return HttpClientResponse.fromWeb(request, respond(recorded));
+        })
+    );
+    return { layer: Layer.succeed(HttpClient.HttpClient, http), requests };
+};
+
+const stripeAccount = (id: string) => ({
+    category: "cash" as const,
+    display_name: null,
+    id,
+    institution_name: "Bank",
+    last4: "4242",
+    status: "active" as const,
+    transaction_refresh: null,
+});
+
 describe("readWebhook", () => {
     it("reports the account whose transactions refreshed", async () => {
         await expect(read(refreshed("succeeded"))).resolves.toStrictEqual(
@@ -71,5 +103,55 @@ describe("readWebhook", () => {
 
     it("ignores an event type the provider does not map", async () => {
         await expect(read(event("customer.created", { id: "cus_1" }))).resolves.toStrictEqual(Option.none());
+    });
+});
+
+describe("finishLink", () => {
+    it("disconnects every account in the session when subscribing one fails", async () => {
+        const http = stubHttp(({ method, url }) => {
+            if (url.includes("/financial_connections/sessions/")) {
+                return Response.json({
+                    account_holder: { customer: "cus_1" },
+                    client_secret: "secret",
+                    id: "fcs_1",
+                });
+            }
+            if (url.includes("/financial_connections/accounts?")) {
+                return Response.json({ data: [stripeAccount("fca_1"), stripeAccount("fca_2")], has_more: false });
+            }
+            if (method === "POST" && url.endsWith("/subscribe")) {
+                return Response.json({ error: "nope" }, { status: 500 });
+            }
+            return Response.json({});
+        });
+
+        await expect(
+            failureReason(client(ENV).finishLink("cus_1", "fcs_1").pipe(Effect.provide(http.layer)))
+        ).resolves.toBe("transport");
+        expect(http.requests.filter(({ url }) => url.endsWith("/disconnect"))).toHaveLength(2);
+    });
+});
+
+describe("forgetUser", () => {
+    it("deletes holders stored in our rows even when the search does not find them", async () => {
+        const http = stubHttp(({ url }) => {
+            if (url.includes("/customers/search")) {
+                return Response.json({ data: [{ id: "cus_old" }], has_more: false });
+            }
+            if (url.includes("/financial_connections/accounts?")) {
+                const customer = new URL(url).searchParams.get("account_holder[customer]");
+                return Response.json({ data: [stripeAccount(`fca_${customer}`)], has_more: false });
+            }
+            return Response.json({});
+        });
+
+        await Effect.runPromise(client(ENV).forgetUser("user-1", ["cus_new"]).pipe(Effect.provide(http.layer)));
+
+        expect(
+            http.requests
+                .filter(({ method, url }) => method === "DELETE" && url.includes("/customers/"))
+                .map(({ url }) => url)
+        ).toStrictEqual(["https://api.stripe.com/v1/customers/cus_new", "https://api.stripe.com/v1/customers/cus_old"]);
+        expect(http.requests.filter(({ url }) => url.endsWith("/disconnect"))).toHaveLength(2);
     });
 });
