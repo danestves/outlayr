@@ -20,6 +20,7 @@
         "@convex-dev/workpool": "^0.4.16",
         "@opencoredev/email-sdk": "3.0.1",
         "@outlayr/ai": "workspace:*",
+        "@outlayr/banking": "workspace:*",
         "@outlayr/email": "workspace:*",
         "@outlayr/model-router": "workspace:*",
         "@outlayr/money": "workspace:*",

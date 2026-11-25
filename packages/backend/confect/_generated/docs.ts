@@ -4,6 +4,8 @@ import type schemaDefinition from "./schema";
 export type AccountDeletionJobsDoc = Document.Document<typeof schemaDefinition, "accountDeletionJobs">;
 export type AccountsDoc = Document.Document<typeof schemaDefinition, "accounts">;
 export type AppMetaDoc = Document.Document<typeof schemaDefinition, "appMeta">;
+export type BankAccountsDoc = Document.Document<typeof schemaDefinition, "bankAccounts">;
+export type BankHoldersDoc = Document.Document<typeof schemaDefinition, "bankHolders">;
 export type BudgetPlansDoc = Document.Document<typeof schemaDefinition, "budgetPlans">;
 export type BudgetsDoc = Document.Document<typeof schemaDefinition, "budgets">;
 export type CaptureKeysDoc = Document.Document<typeof schemaDefinition, "captureKeys">;
@@ -53,6 +55,8 @@ export interface Docs {
   accountDeletionJobs: AccountDeletionJobsDoc;
   accounts: AccountsDoc;
   appMeta: AppMetaDoc;
+  bankAccounts: BankAccountsDoc;
+  bankHolders: BankHoldersDoc;
   budgetPlans: BudgetPlansDoc;
   budgets: BudgetsDoc;
   captureKeys: CaptureKeysDoc;

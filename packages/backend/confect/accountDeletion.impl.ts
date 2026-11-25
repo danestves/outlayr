@@ -38,6 +38,7 @@ import {
 } from "./accountDeletion";
 import type { DeletionJob } from "./accountDeletion";
 import spec from "./accountDeletion.spec";
+import { forgetBankUser } from "./banking";
 import { purgeUserBatch } from "./lib/account";
 import { requireUserId } from "./lib/auth";
 import { appleRevokeClients, decryptStoredToken } from "./lib/betterAuth";
@@ -491,9 +492,12 @@ const eraseBilling = FunctionImpl.make(
         const { runMutation } = yield* MutationRunner;
         const appUserId = yield* runQuery(refs.internal.accountDeletion.billingTarget, args);
         if (appUserId !== null) {
+            const holders = yield* runQuery(refs.internal.banking.holdersOf, { userId: appUserId });
             yield* eraseStripeCustomer(appUserId).pipe(Effect.provide(outboundHttp));
             yield* eraseUpstreamCustomer(appUserId).pipe(Effect.provide(outboundHttp));
             yield* erasePostHogPerson(appUserId).pipe(Effect.provide(outboundHttp));
+            yield* forgetBankUser(appUserId, holders).pipe(Effect.provide(outboundHttp));
+            yield* runMutation(refs.internal.banking.dropHolders, { userId: appUserId });
         }
         return yield* runMutation(refs.internal.accountDeletion.recordBillingErased, args);
     }, Effect.orDie)
