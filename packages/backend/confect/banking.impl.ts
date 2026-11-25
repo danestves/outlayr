@@ -1,12 +1,23 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { Document, QueryInitializer } from "@confect/server";
+import type { BankAccount, BankingProviderName } from "@outlayr/banking/provider";
 import { bankingProviders } from "@outlayr/banking/registry";
+import { isPerson } from "@outlayr/money/account-kind";
+import { entryRow } from "@outlayr/money/entry-row";
+import { fixedOffset, utcOffsetOf, zoneCalendar } from "@outlayr/money/ledger-zone";
+import type { OffsetAt } from "@outlayr/money/ledger-zone";
+import { matchCardAccount } from "@outlayr/money/match-card-account";
+import type { RateLookup } from "@outlayr/money/rates";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 
+import type { AccountsDoc, BankEntriesDoc, CategoriesDoc, TransactionsDoc } from "./_generated/docs";
+import type { Id } from "./_generated/id";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import {
@@ -19,16 +30,22 @@ import {
     QueryRunner,
     Scheduler,
 } from "./_generated/services";
-import { configuredClients, toInboundWrite } from "./banking";
+import { BANK_DEVICE_ID, configuredClients, toBankEntry } from "./banking";
+import type { BankEntry } from "./banking";
 import spec from "./banking.spec";
 import { BANKING_EFFECTIVE_AT_MS } from "./legal";
+import { PURGE_BATCH } from "./lib/account";
 import { requireUserId } from "./lib/auth";
 import { authComponent } from "./lib/betterAuth";
 import { dieAsConvexError } from "./lib/convexError";
 import { outboundHttp } from "./lib/http";
-import { refuseWhileDeleting } from "./lib/syncGuards";
+import { scheduleCellRefresh } from "./lib/ledgerCells";
+import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
+import { emitEntriesFiled } from "./lib/webhookEvents";
+import type { FiledEntry } from "./lib/webhookEvents";
+import { fold, keyedLocalId, MEMORY_WINDOW } from "./mcpEntries";
+import { setting, storedZone } from "./mcpLedger.impl";
 import { isPro } from "./revenuecat";
-import { MAX_INBOX } from "./webhooks.spec";
 
 type Entitled = Parameters<typeof isPro>[0];
 
@@ -38,6 +55,12 @@ const LAPSED_SCAN = 25;
 const PULL_LEASE_MS = 10 * 60 * 1000;
 
 type Configured = Effect.Success<ReturnType<typeof configuredClients>>[number];
+
+const getById = <A>(effect: Effect.Effect<A, Document.DocumentDecodeError | QueryInitializer.GetByIdFailure>) =>
+    effect.pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
+
+const getByIndex = <A>(effect: Effect.Effect<A, Document.DocumentDecodeError | QueryInitializer.GetByIndexFailure>) =>
+    effect.pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
 
 const countriesOf = (configured: readonly Configured[]) => [
     ...new Set(configured.flatMap(({ name }) => bankingProviders[name].countries)),
@@ -85,6 +108,7 @@ const overview = FunctionImpl.make(
             return {
                 access: yield* accessForUser(ctx, userId, configured),
                 accounts: rows.map((row) => ({
+                    filesInto: row.filesInto ?? null,
                     id: row._id,
                     institution: row.institution,
                     kind: row.kind,
@@ -271,10 +295,9 @@ const holderFor = FunctionImpl.make(
         if (yield* deletingAccount(userId)) {
             return { kind: "deleting" as const };
         }
-        const row = yield* (yield* DatabaseReader)
-            .table("bankHolders")
-            .get("by_userId_and_provider", userId, provider)
-            .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
+        const row = yield* getByIndex(
+            (yield* DatabaseReader).table("bankHolders").get("by_userId_and_provider", userId, provider)
+        );
         return row === null ? { kind: "none" as const } : { holder: row.holder, kind: "holder" as const };
     }, Effect.orDie)
 );
@@ -307,10 +330,7 @@ const saveHolder = FunctionImpl.make(
             return { kind: "deleting" as const };
         }
         const reader = yield* DatabaseReader;
-        const existing = yield* reader
-            .table("bankHolders")
-            .get("by_userId_and_provider", userId, provider)
-            .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
+        const existing = yield* getByIndex(reader.table("bankHolders").get("by_userId_and_provider", userId, provider));
         if (existing !== null) {
             return { holder: existing.holder, kind: "saved" as const };
         }
@@ -337,6 +357,66 @@ const dropHolders = FunctionImpl.make(
     }, Effect.orDie)
 );
 
+const displayNameOf = (account: { institution: string; last4: string | null; name: string }) => {
+    const name = account.name.trim();
+    const institution = account.institution.trim();
+    const prefix = institution === "" || fold(name).includes(fold(institution)) ? "" : `${institution} `;
+    const suffix = account.last4 === null ? "" : ` ••${account.last4}`;
+    return `${prefix}${name}${suffix}`.trim();
+};
+
+const filesIntoFor = Effect.fn("Banking.filesIntoFor")(function* filesIntoFor(
+    userId: string,
+    provider: BankingProviderName,
+    account: BankAccount,
+    ledger: readonly AccountsDoc[],
+    currency: string,
+    seq: number,
+    sortOrder: number,
+    now: number
+) {
+    const display = displayNameOf(account);
+    const matched = matchCardAccount(
+        display,
+        // Archived accounts are not part of the wallet the phone matches against either.
+        ledger
+            .filter((row) => !isPerson(row) && (row.archivedAt ?? null) === null)
+            .map((row) => ({ id: row.localId, name: row.name }))
+    );
+    if (matched !== null) {
+        return { created: false, filesInto: matched };
+    }
+    const localId = yield* keyedLocalId(userId, `bank-account:${provider}:${account.id}`);
+    const known = yield* getByIndex(
+        (yield* DatabaseReader).table("accounts").get("by_user_and_localId", userId, localId)
+    );
+    if (known !== null) {
+        return { created: false, filesInto: known.deletedAt === null ? localId : null };
+    }
+    yield* (yield* DatabaseWriter).table("accounts").insert({
+        currency,
+        customColor: null,
+        dateCreated: now,
+        deletedAt: null,
+        deviceId: BANK_DEVICE_ID,
+        emoji: null,
+        icon: null,
+        imageColor: null,
+        imageKey: null,
+        initialBalance: 0,
+        initialBalanceDate: now,
+        initialBalanceUsd: 0,
+        kind: account.kind === "credit" ? "liability" : "asset",
+        localId,
+        name: display,
+        seq,
+        sortOrder,
+        updatedAt: now,
+        userId,
+    });
+    return { created: true, filesInto: localId };
+});
+
 const saveAccounts = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -349,19 +429,44 @@ const saveAccounts = FunctionImpl.make(
         const writer = yield* DatabaseWriter;
         const scheduler = yield* Scheduler;
         const now = yield* Clock.currentTimeMillis;
+        const counter = yield* seqCounter(userId);
+        const ledgerAccounts = (yield* reader
+            .table("accounts")
+            .index("by_user_and_seq", (q) => q.eq("userId", userId))
+            .collect()).filter((row) => row.deletedAt === null);
+        // No bank account carries a currency, so a created account takes the ledger's, which its entries convert from.
+        const currency = (yield* setting(userId, "currency")) ?? "USD";
+        const nextSortOrder = ledgerAccounts.reduce((highest, row) => Math.max(highest, row.sortOrder), -1) + 1;
+        let created = 0;
         let saved = 0;
         for (const account of accounts) {
-            const existing = yield* reader
-                .table("bankAccounts")
-                .get("by_provider_and_accountId", provider, account.id)
-                .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
+            const existing = yield* getByIndex(
+                reader.table("bankAccounts").get("by_provider_and_accountId", provider, account.id)
+            );
             if (existing !== null && existing.userId !== userId) {
                 continue;
             }
             let id = existing?._id;
+            let filesInto = existing?.filesInto ?? null;
             if (existing === null) {
+                const linked = yield* filesIntoFor(
+                    userId,
+                    provider,
+                    account,
+                    ledgerAccounts,
+                    currency,
+                    counter.nextSeq + created,
+                    nextSortOrder + created,
+                    now
+                );
+                const { created: madeAccount, filesInto: linkedInto } = linked;
+                if (madeAccount) {
+                    created += 1;
+                }
+                filesInto = linkedInto;
                 id = yield* writer.table("bankAccounts").insert({
                     accountId: account.id,
+                    filesInto,
                     institution: account.institution,
                     kind: account.kind,
                     last4: account.last4,
@@ -385,8 +490,39 @@ const saveAccounts = FunctionImpl.make(
             }
             saved += 1;
         }
+        if (created > 0) {
+            yield* counter.advanceTo(counter.nextSeq + created);
+        }
         return saved;
     }, Effect.orDie)
+);
+
+const setFilesInto = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "setFilesInto",
+    Effect.fn("Banking.setFilesInto")(
+        function* setFilesInto({ accountId, id }) {
+            const userId = yield* requireUserId(yield* MutationCtx);
+            const reader = yield* DatabaseReader;
+            const row = yield* getById(reader.table("bankAccounts").get(id));
+            if (row === null || row.userId !== userId) {
+                return false;
+            }
+            if (accountId !== null) {
+                const account = yield* getByIndex(
+                    reader.table("accounts").get("by_user_and_localId", userId, accountId)
+                );
+                if (account === null || account.deletedAt !== null) {
+                    return false;
+                }
+            }
+            yield* (yield* DatabaseWriter).table("bankAccounts").patch(id, { filesInto: accountId });
+            return true;
+        },
+        Effect.catchTags({ Unauthenticated: dieAsConvexError }),
+        Effect.orDie
+    )
 );
 
 const pullTarget = FunctionImpl.make(
@@ -394,10 +530,7 @@ const pullTarget = FunctionImpl.make(
     spec,
     "pullTarget",
     Effect.fn("Banking.pullTarget")(function* pullTarget({ id }) {
-        const row = yield* (yield* DatabaseReader)
-            .table("bankAccounts")
-            .get(id)
-            .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
+        const row = yield* getById((yield* DatabaseReader).table("bankAccounts").get(id));
         if (row === null) {
             return null;
         }
@@ -413,29 +546,13 @@ const pullTarget = FunctionImpl.make(
     }, Effect.orDie)
 );
 
-const inboxFull = FunctionImpl.make(
-    databaseSchema,
-    spec,
-    "inboxFull",
-    Effect.fn("Banking.inboxFull")(function* inboxFull({ userId }) {
-        const queued = yield* (yield* DatabaseReader)
-            .table("inboundWrites")
-            .index("by_userId", (q) => q.eq("userId", userId))
-            .take(MAX_INBOX);
-        return queued.length >= MAX_INBOX;
-    }, Effect.orDie)
-);
-
 const claimPull = FunctionImpl.make(
     databaseSchema,
     spec,
     "claimPull",
     Effect.fn("Banking.claimPull")(function* claimPull({ id }) {
         const reader = yield* DatabaseReader;
-        const row = yield* reader
-            .table("bankAccounts")
-            .get(id)
-            .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
+        const row = yield* getById(reader.table("bankAccounts").get(id));
         if (row === null || (yield* deletingAccount(row.userId))) {
             return null;
         }
@@ -454,23 +571,366 @@ const claimPull = FunctionImpl.make(
     }, Effect.orDie)
 );
 
-const queueWrites = FunctionImpl.make(
+const newestRowOffset = Effect.fn("Banking.newestRowOffset")(function* newestRowOffset(userId: string) {
+    const latest = yield* (yield* DatabaseReader)
+        .table("transactions")
+        .index("by_user_and_seq", (q) => q.eq("userId", userId), "desc")
+        .first();
+    return fixedOffset(Option.match(latest, { onNone: () => 0, onSome: (row) => utcOffsetOf(row.day) }));
+});
+
+interface Remembered {
+    categoryId: string;
+    date: number;
+}
+
+const categoryMemory = (
+    rows: readonly {
+        date: number;
+        deletedAt: number | null;
+        categoryId: string | null;
+        income: boolean;
+        note: string;
+    }[]
+) => {
+    const remembered = new Map<string, Remembered>();
+    for (const row of rows) {
+        if (row.deletedAt !== null || row.categoryId === null) {
+            continue;
+        }
+        const key = `${row.income ? "in" : "out"}:${fold(row.note)}`;
+        const best = remembered.get(key);
+        if (best === undefined || row.date > best.date) {
+            remembered.set(key, { categoryId: row.categoryId, date: row.date });
+        }
+    }
+    return remembered;
+};
+
+interface FilingCount {
+    entries: FiledEntry[];
+    instants: number[];
+    // Rows the server wrote, not just new ones: a patch or a tombstone needs a fresh seq to reach the other devices.
+    written: number;
+}
+
+interface Filing {
+    bankAccountId: Id<"bankAccounts">;
+    categories: readonly CategoriesDoc[];
+    filed: FilingCount;
+    filesInto: string | null;
+    ledgerCurrency: string;
+    lookup: RateLookup;
+    now: number;
+    offsetAt: OffsetAt;
+    remembered: ReadonlyMap<string, Remembered>;
+    seq: number;
+    userId: string;
+}
+
+const recordMatches = (record: BankEntriesDoc, entry: BankEntry) =>
+    record.amount === entry.amount &&
+    record.date === entry.date &&
+    record.note === entry.note &&
+    record.status === entry.status;
+
+const writeBankRecord = Effect.fn("Banking.writeBankRecord")(function* writeBankRecord(
+    filing: Filing,
+    entry: BankEntry,
+    localId: string,
+    record: BankEntriesDoc | null
+) {
+    if (record !== null) {
+        yield* (yield* DatabaseWriter).table("bankEntries").patch(record._id, {
+            amount: entry.amount,
+            date: entry.date,
+            note: entry.note,
+            status: entry.status,
+        });
+        return;
+    }
+    yield* (yield* DatabaseWriter).table("bankEntries").insert({
+        amount: entry.amount,
+        bankAccountId: filing.bankAccountId,
+        date: entry.date,
+        key: entry.key,
+        localId,
+        note: entry.note,
+        status: entry.status,
+        userId: filing.userId,
+    });
+});
+
+const fileNewEntry = Effect.fn("Banking.fileNewEntry")(function* fileNewEntry(
+    filing: Filing,
+    entry: BankEntry,
+    localId: string,
+    record: BankEntriesDoc | null
+) {
+    const rememberedId = filing.remembered.get(`${entry.income ? "in" : "out"}:${fold(entry.note)}`)?.categoryId;
+    const categoryId =
+        rememberedId ??
+        filing.categories.find((candidate) => candidate.income === entry.income && candidate.parentId === null)
+            ?.localId ??
+        null;
+    const category = filing.categories.find((candidate) => candidate.localId === categoryId);
+    if (category === undefined) {
+        return;
+    }
+    const written = yield* entryRow(
+        filing.lookup,
+        localId,
+        {
+            accountId: filing.filesInto,
+            amount: entry.amount,
+            categoryId: category.localId,
+            currency: entry.currency,
+            date: DateTime.toDate(DateTime.makeUnsafe(entry.date)),
+            details: null,
+            income: entry.income,
+            note: entry.note,
+        },
+        {
+            calendar: zoneCalendar(filing.offsetAt),
+            categoryName: category.name,
+            currency: entry.currency,
+            now: DateTime.toDate(DateTime.makeUnsafe(filing.now)),
+        }
+    );
+    yield* (yield* DatabaseWriter).table("transactions").insert({
+        accountId: written.accountId,
+        amount: written.amount,
+        amountUsd: written.amountUsd,
+        categoryId: written.categoryId,
+        createdBy: null,
+        currency: written.currency,
+        customColor: written.customColor,
+        date: entry.date,
+        day: written.day.getTime(),
+        deletedAt: null,
+        details: written.details,
+        deviceId: BANK_DEVICE_ID,
+        emoji: written.emoji,
+        exchangeRate: written.exchangeRate,
+        exchangeRateType: written.exchangeRateType,
+        feeForId: null,
+        feeRate: null,
+        icon: written.icon,
+        imageColor: written.imageColor,
+        imageKey: null,
+        income: written.income,
+        installmentId: null,
+        localId,
+        month: written.month.getTime(),
+        note: written.note,
+        onceRecurring: written.onceRecurring,
+        paidVia: null,
+        receipt: null,
+        recurringAnchorDay: written.recurringAnchorDay,
+        recurringCoefficient: written.recurringCoefficient,
+        recurringEndDate: null,
+        recurringType: written.recurringType,
+        seq: filing.seq + filing.filed.written,
+        transferId: null,
+        unreviewed: false,
+        updatedAt: filing.now,
+        userId: filing.userId,
+    });
+    filing.filed.written += 1;
+    filing.filed.instants.push(entry.date);
+    filing.filed.entries.push({
+        accountId: written.accountId,
+        amount: written.amount,
+        categoryId: written.categoryId,
+        currency: written.currency,
+        date: entry.date,
+        income: written.income,
+        localId,
+        note: written.note,
+        updatedAt: filing.now,
+    });
+    yield* writeBankRecord(filing, entry, localId, record);
+});
+
+const rewriteEntry = Effect.fn("Banking.rewriteEntry")(function* rewriteEntry(
+    filing: Filing,
+    entry: BankEntry,
+    existing: TransactionsDoc,
+    record: BankEntriesDoc | null
+) {
+    // The record is missing after an unlink; the row is already the one this key names, so its edits stay.
+    if (record === null) {
+        yield* writeBankRecord(filing, entry, existing.localId, record);
+        return;
+    }
+    const amount = existing.amount === record.amount ? entry.amount : existing.amount;
+    const date = existing.date === record.date ? entry.date : existing.date;
+    const note = existing.note === record.note ? entry.note : existing.note;
+    if (amount !== existing.amount || date !== existing.date || note !== existing.note) {
+        const category = filing.categories.find((candidate) => candidate.localId === existing.categoryId);
+        // A custom rate is the user's, so it survives while an official one follows the date the bank moved.
+        const storedType = existing.exchangeRateType;
+        const rateType =
+            storedType === "custom" || storedType === "official" || storedType === "eur_reference" ? storedType : null;
+        const written = yield* entryRow(
+            filing.lookup,
+            existing.localId,
+            {
+                accountId: existing.accountId ?? null,
+                amount,
+                categoryId: existing.categoryId,
+                currency: existing.currency,
+                date: DateTime.toDate(DateTime.makeUnsafe(date)),
+                details: existing.details,
+                exchangeRate: rateType === "custom" ? existing.exchangeRate : undefined,
+                exchangeRateType: rateType,
+                income: existing.income,
+                note,
+            },
+            {
+                calendar: zoneCalendar(filing.offsetAt),
+                categoryName: category?.name ?? null,
+                currency: filing.ledgerCurrency,
+                now: DateTime.toDate(DateTime.makeUnsafe(filing.now)),
+            }
+        );
+        yield* (yield* DatabaseWriter).table("transactions").patch(existing._id, {
+            amount: written.amount,
+            amountUsd: written.amountUsd,
+            date,
+            day: written.day.getTime(),
+            exchangeRate: written.exchangeRate,
+            exchangeRateType: written.exchangeRateType,
+            month: written.month.getTime(),
+            note: written.note,
+            seq: filing.seq + filing.filed.written,
+            // Ahead of the row the user edited, behind their next edit, so a whole-row sync edit still wins.
+            updatedAt: existing.updatedAt + 1,
+        });
+        filing.filed.written += 1;
+        if (amount !== existing.amount || date !== existing.date) {
+            filing.filed.instants.push(date);
+            if (date !== existing.date) {
+                filing.filed.instants.push(existing.date);
+            }
+        }
+    }
+    yield* writeBankRecord(filing, entry, existing.localId, record);
+});
+
+const fileTransactions = FunctionImpl.make(
     databaseSchema,
     spec,
-    "queueWrites",
-    Effect.fn("Banking.queueWrites")(function* queueWrites({ id, lease, writes }) {
+    "fileTransactions",
+    Effect.fn("Banking.fileTransactions")(function* fileTransactions({ id, lease, txs }) {
+        const ctx = yield* MutationCtx;
         const reader = yield* DatabaseReader;
-        const row = yield* reader
-            .table("bankAccounts")
-            .get(id)
-            .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
+        const row = yield* getById(reader.table("bankAccounts").get(id));
         if (row === null || row.pullLease?.token !== lease || (yield* deletingAccount(row.userId))) {
             return false;
         }
-        const writer = yield* DatabaseWriter;
-        const now = yield* Clock.currentTimeMillis;
-        for (const write of writes) {
-            yield* writer.table("inboundWrites").insert({ receivedAt: now, userId: row.userId, write });
+        // No synced ledger means no categories or accounts to file into; the cursor stays so a link finishes later.
+        const state = yield* getByIndex(reader.table("syncState").get("by_user", row.userId));
+        if (state === null) {
+            return false;
+        }
+        const [categoryRows, accountRows] = yield* Effect.all(
+            [
+                reader
+                    .table("categories")
+                    .index("by_user_and_seq", (q) => q.eq("userId", row.userId))
+                    .collect(),
+                reader
+                    .table("accounts")
+                    .index("by_user_and_seq", (q) => q.eq("userId", row.userId))
+                    .collect(),
+            ],
+            { concurrency: "unbounded" }
+        );
+        const categories = categoryRows.filter((category) => category.deletedAt === null);
+        // Filing now would drop every entry and the cursor would move past them for good.
+        if (categories.length === 0) {
+            return false;
+        }
+        const remembered = categoryMemory(
+            (yield* reader
+                .table("transactions")
+                .index("by_user_and_seq", (q) => q.eq("userId", row.userId), "desc")
+                .take(MEMORY_WINDOW)).filter(
+                (entry) =>
+                    entry.categoryId !== null && categories.some((category) => category.localId === entry.categoryId)
+            )
+        );
+        const filesInto = row.filesInto ?? null;
+        const into =
+            filesInto === null
+                ? null
+                : (accountRows.find((account) => account.localId === filesInto && account.deletedAt === null) ?? null);
+        const counter = yield* seqCounter(row.userId);
+        const filing: Filing = {
+            bankAccountId: id,
+            categories,
+            filed: { entries: [], instants: [], written: 0 },
+            filesInto: into?.localId ?? null,
+            ledgerCurrency: (yield* setting(row.userId, "currency")) ?? "USD",
+            lookup: (quote, rateType, day) =>
+                Effect.promise(() =>
+                    ctx.db
+                        .query("exchangeRates")
+                        .withIndex("by_quote_and_rateType_and_date", (q) =>
+                            q.eq("quote", quote).eq("rateType", rateType).lte("date", day)
+                        )
+                        .order("desc")
+                        .first()
+                ),
+            now: yield* Clock.currentTimeMillis,
+            offsetAt: (yield* storedZone(row.userId)) ?? (yield* newestRowOffset(row.userId)),
+            remembered,
+            seq: counter.nextSeq,
+            userId: row.userId,
+        };
+
+        for (const tx of txs) {
+            const entry = toBankEntry(row.provider, tx);
+            if (entry === null) {
+                continue;
+            }
+            const localId = yield* keyedLocalId(row.userId, entry.key);
+            const record = yield* getByIndex(reader.table("bankEntries").get("by_userId", row.userId, entry.key));
+            if (record !== null && recordMatches(record, entry)) {
+                continue;
+            }
+            const existing = yield* getByIndex(
+                reader.table("transactions").get("by_user_and_localId", row.userId, localId)
+            );
+            if (entry.status === "void") {
+                if (existing !== null && existing.deletedAt === null) {
+                    yield* (yield* DatabaseWriter).table("transactions").patch(existing._id, {
+                        deletedAt: filing.now,
+                        seq: filing.seq + filing.filed.written,
+                    });
+                    filing.filed.written += 1;
+                    filing.filed.instants.push(existing.date);
+                }
+                if (record !== null || existing !== null) {
+                    yield* writeBankRecord(filing, entry, localId, record);
+                }
+                continue;
+            }
+            // A row the user deleted stays deleted; only the record moves so a later bank edit is judged against it.
+            if (existing !== null && existing.deletedAt !== null) {
+                yield* writeBankRecord(filing, entry, localId, record);
+                continue;
+            }
+            yield* existing === null
+                ? fileNewEntry(filing, entry, localId, record)
+                : rewriteEntry(filing, entry, existing, record);
+        }
+
+        if (filing.filed.written > 0) {
+            yield* counter.advanceTo(counter.nextSeq + filing.filed.written);
+            yield* scheduleCellRefresh(row.userId, counter.cells, filing.filed.instants);
+            yield* emitEntriesFiled(row.userId, filing.filed.entries, filing.now);
         }
         return true;
     }, Effect.orDie)
@@ -482,10 +942,7 @@ const releasePull = FunctionImpl.make(
     "releasePull",
     Effect.fn("Banking.releasePull")(function* releasePull({ id, lease }) {
         const reader = yield* DatabaseReader;
-        const row = yield* reader
-            .table("bankAccounts")
-            .get(id)
-            .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
+        const row = yield* getById(reader.table("bankAccounts").get(id));
         if (row === null || row.pullLease?.token !== lease) {
             return null;
         }
@@ -507,10 +964,7 @@ const advanceCursor = FunctionImpl.make(
     "advanceCursor",
     Effect.fn("Banking.advanceCursor")(function* advanceCursor({ from, id, lease, to }) {
         const reader = yield* DatabaseReader;
-        const row = yield* reader
-            .table("bankAccounts")
-            .get(id)
-            .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
+        const row = yield* getById(reader.table("bankAccounts").get(id));
         if (row === null || row.pullLease?.token !== lease || (row.cursor ?? null) !== from) {
             return false;
         }
@@ -533,14 +987,39 @@ const setStatus = FunctionImpl.make(
     spec,
     "setStatus",
     Effect.fn("Banking.setStatus")(function* setStatus({ id, status }) {
-        const reader = yield* DatabaseReader;
-        const row = yield* reader
-            .table("bankAccounts")
-            .get(id)
-            .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
+        const row = yield* getById((yield* DatabaseReader).table("bankAccounts").get(id));
         if (row !== null) {
             yield* (yield* DatabaseWriter).table("bankAccounts").patch(id, { status });
         }
+        return null;
+    }, Effect.orDie)
+);
+
+const dropBankEntriesBatch = Effect.fn("Banking.dropBankEntriesBatch")(function* dropBankEntriesBatch(
+    bankAccountId: Id<"bankAccounts">
+) {
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const queued = yield* reader
+        .table("bankEntries")
+        .index("by_bankAccountId", (q) => q.eq("bankAccountId", bankAccountId))
+        .take(PURGE_BATCH);
+    for (const entry of queued) {
+        yield* writer.table("bankEntries").delete(entry._id);
+    }
+    if (queued.length >= PURGE_BATCH) {
+        yield* (yield* Scheduler).runAfter(Duration.zero, refs.internal.banking.dropBankEntries, {
+            bankAccountId,
+        });
+    }
+});
+
+const dropBankEntries = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "dropBankEntries",
+    Effect.fn("Banking.dropBankEntries")(function* dropBankEntries({ bankAccountId }) {
+        yield* dropBankEntriesBatch(bankAccountId);
         return null;
     }, Effect.orDie)
 );
@@ -550,14 +1029,11 @@ const removeAccount = FunctionImpl.make(
     spec,
     "removeAccount",
     Effect.fn("Banking.removeAccount")(function* removeAccount({ id }) {
-        const reader = yield* DatabaseReader;
-        const row = yield* reader
-            .table("bankAccounts")
-            .get(id)
-            .pipe(Effect.catchTags({ GetByIdFailure: () => Effect.succeed(null) }));
+        const row = yield* getById((yield* DatabaseReader).table("bankAccounts").get(id));
         if (row !== null) {
             yield* (yield* DatabaseWriter).table("bankAccounts").delete(id);
         }
+        yield* dropBankEntriesBatch(id);
         return null;
     }, Effect.orDie)
 );
@@ -567,10 +1043,9 @@ const onEvent = FunctionImpl.make(
     spec,
     "onEvent",
     Effect.fn("Banking.onEvent")(function* onEvent({ accountId, kind, provider }) {
-        const row = yield* (yield* DatabaseReader)
-            .table("bankAccounts")
-            .get("by_provider_and_accountId", provider, accountId)
-            .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
+        const row = yield* getByIndex(
+            (yield* DatabaseReader).table("bankAccounts").get("by_provider_and_accountId", provider, accountId)
+        );
         if (row === null) {
             return null;
         }
@@ -596,10 +1071,6 @@ const pull = FunctionImpl.make(
             }
             const access = yield* runQuery(refs.internal.banking.accessFor, { userId: target.userId });
             if (access !== "allowed") {
-                return null;
-            }
-            // The provider keeps the page until the phone drains the inbox; the next webhook pulls again.
-            if (yield* runQuery(refs.internal.banking.inboxFull, { userId: target.userId })) {
                 return null;
             }
             const configured = yield* configuredClients();
@@ -634,25 +1105,14 @@ const pull = FunctionImpl.make(
                 if (outcome.kind !== "page") {
                     return null;
                 }
-                const writes = outcome.page.transactions.flatMap((tx) => {
-                    const write = toInboundWrite(
-                        {
-                            institution: target.institution,
-                            last4: target.last4,
-                            provider: target.provider,
-                        },
-                        tx
-                    );
-                    return write === null ? [] : [write];
-                });
-                // Queue before moving the cursor: a crash between the two replays the page instead of losing it.
-                for (let start = 0; start < writes.length; start += WRITE_CHUNK) {
-                    const queued = yield* runMutation(refs.internal.banking.queueWrites, {
+                // File before moving the cursor: a crash between the two replays the page instead of losing it.
+                for (let start = 0; start < outcome.page.transactions.length; start += WRITE_CHUNK) {
+                    const filed = yield* runMutation(refs.internal.banking.fileTransactions, {
                         id,
                         lease,
-                        writes: writes.slice(start, start + WRITE_CHUNK),
+                        txs: outcome.page.transactions.slice(start, start + WRITE_CHUNK),
                     });
-                    if (!queued) {
+                    if (!filed) {
                         return null;
                     }
                 }
@@ -805,17 +1265,17 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(startLink),
     Layer.provide(finishLink),
     Layer.provide(unlink),
+    Layer.provide(setFilesInto),
     Layer.provide(accessFor),
     Layer.provide(holderFor),
     Layer.provide(saveHolder),
     Layer.provide(saveAccounts),
     Layer.provide(pullTarget),
-    Layer.provide(Layer.mergeAll(holdersOf, dropHolders, inboxFull)),
-    Layer.provide(Layer.mergeAll(claimPull, queueWrites, releasePull)),
+    Layer.provide(Layer.mergeAll(holdersOf, dropHolders)),
+    Layer.provide(Layer.mergeAll(claimPull, fileTransactions, releasePull)),
     Layer.provide(advanceCursor),
-    Layer.provide(setStatus),
-    Layer.provide(onEvent),
-    Layer.provide(removeAccount),
+    Layer.provide(Layer.mergeAll(removeAccount, dropBankEntries)),
+    Layer.provide(Layer.mergeAll(setStatus, onEvent)),
     Layer.provide(pull),
     Layer.provide(refreshAccount),
     Layer.provide(lapsed),

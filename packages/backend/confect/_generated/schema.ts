@@ -4,6 +4,7 @@ import accountDeletionJobs from "./tables/accountDeletionJobs";
 import accounts from "./tables/accounts";
 import appMeta from "./tables/appMeta";
 import bankAccounts from "./tables/bankAccounts";
+import bankEntries from "./tables/bankEntries";
 import bankHolders from "./tables/bankHolders";
 import budgetPlans from "./tables/budgetPlans";
 import budgets from "./tables/budgets";
@@ -55,6 +56,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly accounts: typeof accounts;
   readonly appMeta: typeof appMeta;
   readonly bankAccounts: typeof bankAccounts;
+  readonly bankEntries: typeof bankEntries;
   readonly bankHolders: typeof bankHolders;
   readonly budgetPlans: typeof budgetPlans;
   readonly budgets: typeof budgets;
@@ -105,6 +107,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   accounts,
   appMeta,
   bankAccounts,
+  bankEntries,
   bankHolders,
   budgetPlans,
   budgets,

@@ -5,6 +5,7 @@ export type AccountDeletionJobsDoc = Document.Document<typeof schemaDefinition, 
 export type AccountsDoc = Document.Document<typeof schemaDefinition, "accounts">;
 export type AppMetaDoc = Document.Document<typeof schemaDefinition, "appMeta">;
 export type BankAccountsDoc = Document.Document<typeof schemaDefinition, "bankAccounts">;
+export type BankEntriesDoc = Document.Document<typeof schemaDefinition, "bankEntries">;
 export type BankHoldersDoc = Document.Document<typeof schemaDefinition, "bankHolders">;
 export type BudgetPlansDoc = Document.Document<typeof schemaDefinition, "budgetPlans">;
 export type BudgetsDoc = Document.Document<typeof schemaDefinition, "budgets">;
@@ -56,6 +57,7 @@ export interface Docs {
   accounts: AccountsDoc;
   appMeta: AppMetaDoc;
   bankAccounts: BankAccountsDoc;
+  bankEntries: BankEntriesDoc;
   bankHolders: BankHoldersDoc;
   budgetPlans: BudgetPlansDoc;
   budgets: BudgetsDoc;

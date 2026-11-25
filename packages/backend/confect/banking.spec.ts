@@ -1,13 +1,19 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { BankAccount, BankAccountKind, BankAccountStatus, BankingProviderName } from "@outlayr/banking/provider";
+import {
+    BankAccount,
+    BankAccountKind,
+    BankAccountStatus,
+    BankingProviderName,
+    BankTransaction,
+} from "@outlayr/banking/provider";
 import * as Schema from "effect/Schema";
 
 import { Id } from "./_generated/id";
-import { InboundWrite } from "./tables/inboundWrites";
 
 export const BankAccess = Schema.Literals(["allowed", "plan", "unavailable"]);
 
 export const BankAccountView = Schema.Struct({
+    filesInto: Schema.NullOr(Schema.String),
     id: Id("bankAccounts"),
     institution: Schema.String,
     kind: BankAccountKind,
@@ -85,6 +91,13 @@ export default GroupSpec.make()
     )
     .addFunction(FunctionSpec.publicAction({ args: () => AccountRef, name: "unlink", returns: () => Schema.Boolean }))
     .addFunction(
+        FunctionSpec.publicMutation({
+            args: () => ({ ...AccountRef, accountId: Schema.NullOr(Schema.String) }),
+            name: "setFilesInto",
+            returns: () => Schema.Boolean,
+        })
+    )
+    .addFunction(
         FunctionSpec.internalQuery({
             args: () => ({ userId: Schema.String }),
             name: "accessFor",
@@ -134,13 +147,6 @@ export default GroupSpec.make()
         })
     )
     .addFunction(
-        FunctionSpec.internalQuery({
-            args: () => ({ userId: Schema.String }),
-            name: "inboxFull",
-            returns: () => Schema.Boolean,
-        })
-    )
-    .addFunction(
         FunctionSpec.internalMutation({
             args: () => AccountRef,
             name: "claimPull",
@@ -149,8 +155,8 @@ export default GroupSpec.make()
     )
     .addFunction(
         FunctionSpec.internalMutation({
-            args: () => ({ id: Id("bankAccounts"), lease: Schema.String, writes: Schema.Array(InboundWrite) }),
-            name: "queueWrites",
+            args: () => ({ ...AccountRef, lease: Schema.String, txs: Schema.Array(BankTransaction) }),
+            name: "fileTransactions",
             returns: () => Schema.Boolean,
         })
     )
@@ -193,6 +199,13 @@ export default GroupSpec.make()
     )
     .addFunction(
         FunctionSpec.internalMutation({ args: () => AccountRef, name: "removeAccount", returns: () => Schema.Null })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            args: () => ({ bankAccountId: Id("bankAccounts") }),
+            name: "dropBankEntries",
+            returns: () => Schema.Null,
+        })
     )
     .addFunction(FunctionSpec.internalAction({ args: () => AccountRef, name: "pull", returns: () => Schema.Null }))
     .addFunction(

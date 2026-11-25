@@ -34,6 +34,7 @@ export const BankTransaction = Schema.Struct({
     amountMinor: Schema.Int,
     currency: Schema.String.check(Schema.isPattern(/^[A-Z]{3}$/)),
     description: Schema.String,
+    // Stable from pending to posted to void, so a re-pull updates one entry instead of adding another.
     id: Schema.String,
     status: BankTransactionStatus,
     transactedAt: Schema.Int,

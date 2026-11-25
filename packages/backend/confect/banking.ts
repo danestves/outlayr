@@ -1,36 +1,40 @@
-import { BankingProviderName } from "@outlayr/banking/provider";
+import { BankingProviderName, BankTransactionStatus } from "@outlayr/banking/provider";
 import type { BankingClient, BankTransaction } from "@outlayr/banking/provider";
 import { bankingProviders } from "@outlayr/banking/registry";
 import { decimalsFor } from "@outlayr/money/currency";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 import { internal } from "../convex/_generated/api";
 import type { ActionCtx } from "../convex/_generated/server";
-import type { InboundWrite } from "./tables/inboundWrites";
 
-export interface LinkedAccount {
-    readonly institution: string;
-    readonly last4: string | null;
-    readonly provider: BankingProviderName;
-}
+export const BANK_DEVICE_ID = "bank";
 
-export const toInboundWrite = (
-    { institution, last4, provider }: LinkedAccount,
-    tx: BankTransaction
-): typeof InboundWrite.Type | null => {
-    // A void must reach the phone even at zero so it can remove the entry.
+export const BankEntry = Schema.Struct({
+    amount: Schema.Number,
+    currency: Schema.String,
+    date: Schema.Number,
+    income: Schema.Boolean,
+    // Stable for the life of the transaction, so a later pull updates the same ledger row.
+    key: Schema.String,
+    note: Schema.String,
+    status: BankTransactionStatus,
+});
+export type BankEntry = typeof BankEntry.Type;
+
+export const toBankEntry = (provider: BankingProviderName, tx: BankTransaction): BankEntry | null => {
+    // A void must reach the ledger even at zero so it can delete the entry.
     if (tx.amountMinor === 0 && tx.status !== "void") {
         return null;
     }
     return {
         amount: Math.abs(tx.amountMinor) / 10 ** decimalsFor(tx.currency),
-        card: last4 === null ? institution : `${institution} ••${last4}`,
         currency: tx.currency,
         date: tx.transactedAt,
-        dedupeKey: `bank:${provider}:${tx.id}`,
         income: tx.amountMinor > 0,
+        key: `bank:${provider}:${tx.id}`,
         note: tx.description,
         status: tx.status,
     };

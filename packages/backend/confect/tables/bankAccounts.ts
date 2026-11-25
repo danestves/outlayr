@@ -2,11 +2,12 @@ import { Table } from "@confect/core";
 import { BankAccountKind, BankAccountStatus, BankingProviderName } from "@outlayr/banking/provider";
 import * as Schema from "effect/Schema";
 
-// Link metadata only: transactions pass through `inboundWrites` to the phone and are never kept here.
+// The account localId in Personal that new bank entries attach to; null until a link matches or creates one.
 export default Table.make(() =>
     Schema.Struct({
         accountId: Schema.String,
         cursor: Schema.optional(Schema.String),
+        filesInto: Schema.optional(Schema.NullOr(Schema.String)),
         institution: Schema.String,
         kind: BankAccountKind,
         last4: Schema.NullOr(Schema.String),
