@@ -170,7 +170,9 @@ function JoinSheet({ code, look, ownerName }: { code: string; look: InviteLook |
     }
 
     return (
-        <View className="bg-background flex-1">
+        <View className="bg-background flex-1" collapsable={false}>
+            {/* react-native-screens resizes a ScrollView on a formSheet's first-child chain to the whole sheet. */}
+            <View collapsable={false} />
             <ScrollView contentContainerClassName="px-5 pt-3 pb-4" contentInsetAdjustmentBehavior="automatic">
                 <View className="flex-row items-center gap-3">
                     <MemberAvatar id={ownerName ?? "inviter"} name={ownerName ?? "?"} size={40} />
@@ -318,7 +320,8 @@ function JoinErrorScreen({
     const copy = errorCopy(t, kind, look?.name ?? null, ownerName);
 
     return (
-        <View className="bg-background flex-1">
+        <View className="bg-background flex-1" collapsable={false}>
+            <View collapsable={false} />
             <ScrollView contentContainerClassName="px-5 pt-3 pb-4" contentInsetAdjustmentBehavior="automatic">
                 <View style={{ opacity: 0.55 }}>
                     <ProfileTile look={look} size={ERROR_TILE_SIZE} />
