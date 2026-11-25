@@ -71,11 +71,11 @@ const makeClient = (key: Redacted.Redacted, webhookSecret: string): BankingClien
         const accounts = yield* listAll(key, StripeAccount, "finishLink", "/financial_connections/accounts", [
             ["session", session.id],
         ]);
+        const unsubscribed = accounts.filter(
+            (account) => account.status === "active" && !account.subscriptions?.includes("transactions")
+        );
         yield* Effect.gen(function* subscribe() {
-            for (const account of accounts) {
-                if (account.status !== "active") {
-                    continue;
-                }
+            for (const account of unsubscribed) {
                 yield* stripeCall(key, Schema.Unknown, "finishLink", `${accountPath(account.id)}/subscribe`, {
                     form: [["features[]", "transactions"]],
                 });
@@ -83,7 +83,8 @@ const makeClient = (key: Redacted.Redacted, webhookSecret: string): BankingClien
         }).pipe(
             Effect.catchCause((cause) =>
                 Effect.gen(function* disconnectAll() {
-                    for (const account of accounts) {
+                    // Only this call's accounts: disconnecting one a replay already subscribed would undo a good link.
+                    for (const account of unsubscribed) {
                         yield* stripeCall(key, Schema.Unknown, "finishLink", `${accountPath(account.id)}/disconnect`, {
                             form: [],
                         }).pipe(Effect.catchCause(() => Effect.void));

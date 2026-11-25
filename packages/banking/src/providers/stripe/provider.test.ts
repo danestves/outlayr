@@ -70,13 +70,14 @@ const stubHttp = (respond: (request: Recorded) => Response) => {
     return { layer: Layer.succeed(HttpClient.HttpClient, http), requests };
 };
 
-const stripeAccount = (id: string) => ({
+const stripeAccount = (id: string, subscriptions: string[] | null = null) => ({
     category: "cash" as const,
     display_name: null,
     id,
     institution_name: "Bank",
     last4: "4242",
     status: "active" as const,
+    subscriptions,
     transaction_refresh: null,
 });
 
@@ -129,6 +130,40 @@ describe("finishLink", () => {
             failureReason(client(ENV).finishLink("cus_1", "fcs_1").pipe(Effect.provide(http.layer)))
         ).resolves.toBe("transport");
         expect(http.requests.filter(({ url }) => url.endsWith("/disconnect"))).toHaveLength(2);
+    });
+
+    it("leaves an account an earlier call subscribed connected when a later subscribe fails", async () => {
+        const http = stubHttp(({ method, url }) => {
+            if (url.includes("/financial_connections/sessions/")) {
+                return Response.json({
+                    account_holder: { customer: "cus_1" },
+                    client_secret: "secret",
+                    id: "fcs_1",
+                });
+            }
+            if (url.includes("/financial_connections/accounts?")) {
+                return Response.json({
+                    data: [stripeAccount("fca_1", ["transactions"]), stripeAccount("fca_2")],
+                    has_more: false,
+                });
+            }
+            if (method === "POST" && url.endsWith("/subscribe")) {
+                return Response.json({ error: "nope" }, { status: 500 });
+            }
+            return Response.json({});
+        });
+
+        await expect(
+            failureReason(client(ENV).finishLink("cus_1", "fcs_1").pipe(Effect.provide(http.layer)))
+        ).resolves.toBe("transport");
+        expect(
+            http.requests
+                .filter(({ url }) => url.endsWith("/subscribe") || url.endsWith("/disconnect"))
+                .map(({ url }) => url)
+        ).toStrictEqual([
+            "https://api.stripe.com/v1/financial_connections/accounts/fca_2/subscribe",
+            "https://api.stripe.com/v1/financial_connections/accounts/fca_2/disconnect",
+        ]);
     });
 });
 
