@@ -1140,7 +1140,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Voice entry spelling",
                 },
                 {
-                    detail: "With Pro, a profile's owner can invite up to 5 people to share it. Everyone in it sees and can change its ledger and photos, and sees everyone's first name and who logged each entry.",
+                    detail: "With Pro, a profile's owner can invite up to 5 people to share it. Everyone in it sees and can change its ledger and photos, and sees the first names of the people in it, including on the entries they logged.",
                     label: "Shared profiles",
                 },
             ],
@@ -1166,7 +1166,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Schreibweise bei der Spracheingabe",
                 },
                 {
-                    detail: "Mit Pro kann der Eigentümer eines Profils bis zu 5 Personen einladen, es zu teilen. Alle darin sehen sein Haushaltsbuch und seine Fotos und können sie ändern, und sie sehen die Vornamen aller und wer welchen Eintrag erfasst hat.",
+                    detail: "Mit Pro kann der Eigentümer eines Profils bis zu 5 Personen einladen, es zu teilen. Alle darin sehen sein Haushaltsbuch und seine Fotos und können sie ändern, und sie sehen die Vornamen der Mitglieder, auch bei den Einträgen, die sie erfasst haben.",
                     label: "Geteilte Profile",
                 },
             ],
@@ -1192,7 +1192,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Ortografía en la entrada por voz",
                 },
                 {
-                    detail: "Con Pro, el propietario de un perfil puede invitar hasta 5 personas a compartirlo. Todos en él ven y pueden cambiar su registro y sus fotos, y ven el nombre de pila de cada uno y quién anotó cada entrada.",
+                    detail: "Con Pro, el propietario de un perfil puede invitar hasta 5 personas a compartirlo. Todos en él ven y pueden cambiar su registro y sus fotos, y ven el nombre de pila de quienes están en él, también en las entradas que registraron.",
                     label: "Perfiles compartidos",
                 },
             ],
@@ -1218,7 +1218,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Orthographe de la saisie vocale",
                 },
                 {
-                    detail: "Avec Pro, le propriétaire d'un profil peut inviter jusqu'à 5 personnes à le partager. Tous ses membres voient et peuvent modifier son registre et ses photos, et voient le prénom de chacun et qui a saisi chaque opération.",
+                    detail: "Avec Pro, le propriétaire d'un profil peut inviter jusqu'à 5 personnes à le partager. Tous ses membres voient et peuvent modifier son registre et ses photos, et voient le prénom des membres, y compris sur les opérations qu'ils ont saisies.",
                     label: "Profils partagés",
                 },
             ],
@@ -1244,7 +1244,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Grafia no lançamento por voz",
                 },
                 {
-                    detail: "Com o Pro, o proprietário de um perfil pode convidar até 5 pessoas para compartilhá-lo. Todos nele veem e podem alterar o registro e as fotos, e veem o primeiro nome de cada um e quem registrou cada lançamento.",
+                    detail: "Com o Pro, o proprietário de um perfil pode convidar até 5 pessoas para compartilhá-lo. Todos nele veem e podem alterar o registro e as fotos, e veem o primeiro nome de quem participa, inclusive nos lançamentos que registrou.",
                     label: "Perfis compartilhados",
                 },
             ],
@@ -1258,31 +1258,31 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
             en: [
                 { label: "Profiles are part of Pro. The free plan keeps one ledger." },
                 {
-                    label: "Shared profiles: everyone in one can change its ledger, only the owner manages who is in it, and it is deleted for everyone if the owner deletes their account.",
+                    label: "Shared profiles: everyone in one can change its ledger, only the owner invites or removes people, members can leave once their changes sync, and it is deleted from our servers if the owner deletes their account.",
                 },
             ],
             de: [
                 { label: "Profile gehören zu Pro. Der kostenlose Plan behält ein Haushaltsbuch." },
                 {
-                    label: "Geteilte Profile: Alle darin können das Haushaltsbuch ändern, nur der Eigentümer verwaltet, wer dabei ist, und es wird für alle gelöscht, wenn der Eigentümer sein Konto löscht.",
+                    label: "Geteilte Profile: Alle darin können das Haushaltsbuch ändern, nur der Eigentümer lädt ein oder entfernt Personen, Mitglieder können austreten, sobald ihre Änderungen synchronisiert sind, und es wird von unseren Servern gelöscht, wenn der Eigentümer sein Konto löscht.",
                 },
             ],
             es: [
                 { label: "Los perfiles son parte de Pro. El plan gratis mantiene un registro." },
                 {
-                    label: "Perfiles compartidos: todos en uno pueden cambiar su registro, solo el propietario decide quién está, y se elimina para todos si el propietario elimina su cuenta.",
+                    label: "Perfiles compartidos: todos en uno pueden cambiar su registro, solo el propietario invita o quita personas, los miembros pueden salirse cuando sus cambios se sincronicen, y se elimina de nuestros servidores si el propietario elimina su cuenta.",
                 },
             ],
             fr: [
                 { label: "Les profils font partie de Pro. L'offre gratuite garde un registre." },
                 {
-                    label: "Profils partagés : tous les membres peuvent modifier le registre, seul le propriétaire gère qui en fait partie, et il est supprimé pour tous si le propriétaire supprime son compte.",
+                    label: "Profils partagés : tous les membres peuvent modifier le registre, seul le propriétaire invite ou retire des personnes, les membres peuvent partir une fois leurs modifications synchronisées, et il est supprimé de nos serveurs si le propriétaire supprime son compte.",
                 },
             ],
             pt: [
                 { label: "Os perfis fazem parte do Pro. O plano grátis mantém um registro." },
                 {
-                    label: "Perfis compartilhados: todos nele podem alterar o registro, só o proprietário gerencia quem participa, e ele é excluído para todos se o proprietário excluir a conta.",
+                    label: "Perfis compartilhados: todos nele podem alterar o registro, só o proprietário convida ou remove pessoas, os membros podem sair quando as alterações sincronizarem, e ele é excluído dos nossos servidores se o proprietário excluir a conta.",
                 },
             ],
         },
