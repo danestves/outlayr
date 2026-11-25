@@ -25,6 +25,7 @@ export const StripeAccount = Schema.Struct({
     institution_name: Schema.String,
     last4: Schema.NullOr(Schema.String),
     status: Schema.Literals(["active", "inactive", "disconnected"]),
+    subscriptions: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
     transaction_refresh: Schema.NullOr(AccountRefresh),
 });
 export type StripeAccount = typeof StripeAccount.Type;
