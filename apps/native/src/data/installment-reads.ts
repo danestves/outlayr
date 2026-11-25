@@ -121,6 +121,7 @@ export function useOutsidePaymentRows(
               categoryIcon: null,
               categoryId: null,
               categoryName: null,
+              createdBy: null,
               currency: account.currency,
               customColor: null,
               date: row.date,
@@ -153,6 +154,7 @@ export function useOutsidePaymentRows(
               sign: "+",
               transferId: row.id,
               unreviewed: false,
+              unsent: false,
           }));
 }
 

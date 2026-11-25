@@ -42,6 +42,7 @@ import { Route as Char123LocaleChar125GuidesSlugRouteImport } from './routes/{-$
 import { Route as Char123LocaleChar125HelpIndexRouteImport } from './routes/{-$locale}/help.index'
 import { Route as Char123LocaleChar125HelpSlugRouteImport } from './routes/{-$locale}/help.$slug'
 import { Route as Char123LocaleChar125ICodeRouteImport } from './routes/{-$locale}/i.$code'
+import { Route as Char123LocaleChar125JoinCodeRouteImport } from './routes/{-$locale}/join.$code'
 import { Route as Char123LocaleChar125RSlugRouteImport } from './routes/{-$locale}/r.$slug'
 import { Route as Char123LocaleChar125ToolsIndexRouteImport } from './routes/{-$locale}/tools.index'
 import { Route as Char123LocaleChar125ToolsSlugRouteImport } from './routes/{-$locale}/tools.$slug'
@@ -238,6 +239,12 @@ const Char123LocaleChar125ICodeRoute =
     path: '/i/$code',
     getParentRoute: () => Char123LocaleChar125RouteRoute,
   } as any)
+const Char123LocaleChar125JoinCodeRoute =
+  Char123LocaleChar125JoinCodeRouteImport.update({
+    id: '/join/$code',
+    path: '/join/$code',
+    getParentRoute: () => Char123LocaleChar125RouteRoute,
+  } as any)
 const Char123LocaleChar125RSlugRoute =
   Char123LocaleChar125RSlugRouteImport.update({
     id: '/r/$slug',
@@ -287,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/guides/$slug': typeof Char123LocaleChar125GuidesSlugRoute
   '/{-$locale}/help/$slug': typeof Char123LocaleChar125HelpSlugRoute
   '/{-$locale}/i/$code': typeof Char123LocaleChar125ICodeRoute
+  '/{-$locale}/join/$code': typeof Char123LocaleChar125JoinCodeRoute
   '/{-$locale}/r/$slug': typeof Char123LocaleChar125RSlugRoute
   '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
   '/{-$locale}/blog/': typeof Char123LocaleChar125BlogIndexRoute
@@ -324,6 +332,7 @@ export interface FileRoutesByTo {
   '/{-$locale}/guides/$slug': typeof Char123LocaleChar125GuidesSlugRoute
   '/{-$locale}/help/$slug': typeof Char123LocaleChar125HelpSlugRoute
   '/{-$locale}/i/$code': typeof Char123LocaleChar125ICodeRoute
+  '/{-$locale}/join/$code': typeof Char123LocaleChar125JoinCodeRoute
   '/{-$locale}/r/$slug': typeof Char123LocaleChar125RSlugRoute
   '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
   '/{-$locale}/blog': typeof Char123LocaleChar125BlogIndexRoute
@@ -363,6 +372,7 @@ export interface FileRoutesById {
   '/{-$locale}/guides/$slug': typeof Char123LocaleChar125GuidesSlugRoute
   '/{-$locale}/help/$slug': typeof Char123LocaleChar125HelpSlugRoute
   '/{-$locale}/i/$code': typeof Char123LocaleChar125ICodeRoute
+  '/{-$locale}/join/$code': typeof Char123LocaleChar125JoinCodeRoute
   '/{-$locale}/r/$slug': typeof Char123LocaleChar125RSlugRoute
   '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
   '/{-$locale}/blog/': typeof Char123LocaleChar125BlogIndexRoute
@@ -403,6 +413,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/guides/$slug'
     | '/{-$locale}/help/$slug'
     | '/{-$locale}/i/$code'
+    | '/{-$locale}/join/$code'
     | '/{-$locale}/r/$slug'
     | '/{-$locale}/tools/$slug'
     | '/{-$locale}/blog/'
@@ -440,6 +451,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/guides/$slug'
     | '/{-$locale}/help/$slug'
     | '/{-$locale}/i/$code'
+    | '/{-$locale}/join/$code'
     | '/{-$locale}/r/$slug'
     | '/{-$locale}/tools/$slug'
     | '/{-$locale}/blog'
@@ -478,6 +490,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/guides/$slug'
     | '/{-$locale}/help/$slug'
     | '/{-$locale}/i/$code'
+    | '/{-$locale}/join/$code'
     | '/{-$locale}/r/$slug'
     | '/{-$locale}/tools/$slug'
     | '/{-$locale}/blog/'
@@ -735,6 +748,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char123LocaleChar125ICodeRouteImport
       parentRoute: typeof Char123LocaleChar125RouteRoute
     }
+    '/{-$locale}/join/$code': {
+      id: '/{-$locale}/join/$code'
+      path: '/join/$code'
+      fullPath: '/{-$locale}/join/$code'
+      preLoaderRoute: typeof Char123LocaleChar125JoinCodeRouteImport
+      parentRoute: typeof Char123LocaleChar125RouteRoute
+    }
     '/{-$locale}/r/$slug': {
       id: '/{-$locale}/r/$slug'
       path: '/r/$slug'
@@ -777,6 +797,7 @@ interface Char123LocaleChar125RouteRouteChildren {
   Char123LocaleChar125GuidesSlugRoute: typeof Char123LocaleChar125GuidesSlugRoute
   Char123LocaleChar125HelpSlugRoute: typeof Char123LocaleChar125HelpSlugRoute
   Char123LocaleChar125ICodeRoute: typeof Char123LocaleChar125ICodeRoute
+  Char123LocaleChar125JoinCodeRoute: typeof Char123LocaleChar125JoinCodeRoute
   Char123LocaleChar125RSlugRoute: typeof Char123LocaleChar125RSlugRoute
   Char123LocaleChar125ToolsSlugRoute: typeof Char123LocaleChar125ToolsSlugRoute
   Char123LocaleChar125BlogIndexRoute: typeof Char123LocaleChar125BlogIndexRoute
@@ -807,6 +828,7 @@ const Char123LocaleChar125RouteRouteChildren: Char123LocaleChar125RouteRouteChil
     Char123LocaleChar125GuidesSlugRoute: Char123LocaleChar125GuidesSlugRoute,
     Char123LocaleChar125HelpSlugRoute: Char123LocaleChar125HelpSlugRoute,
     Char123LocaleChar125ICodeRoute: Char123LocaleChar125ICodeRoute,
+    Char123LocaleChar125JoinCodeRoute: Char123LocaleChar125JoinCodeRoute,
     Char123LocaleChar125RSlugRoute: Char123LocaleChar125RSlugRoute,
     Char123LocaleChar125ToolsSlugRoute: Char123LocaleChar125ToolsSlugRoute,
     Char123LocaleChar125BlogIndexRoute: Char123LocaleChar125BlogIndexRoute,

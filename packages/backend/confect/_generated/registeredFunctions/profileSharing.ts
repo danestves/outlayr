@@ -7,6 +7,7 @@ const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<
 const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../profileSharing.spec")["default"]>(databaseSchema, groupLayer);
 
 export default {
+["enabled"]: RegisteredConvexFunction.register({ ...definitions["enabled"], handler: forward(definitions["enabled"].handler) }),
 ["createInvite"]: RegisteredConvexFunction.register({ ...definitions["createInvite"], handler: forward(definitions["createInvite"].handler) }),
 ["invite"]: RegisteredConvexFunction.register({ ...definitions["invite"], handler: forward(definitions["invite"].handler) }),
 ["claim"]: RegisteredConvexFunction.register({ ...definitions["claim"], handler: forward(definitions["claim"].handler) }),

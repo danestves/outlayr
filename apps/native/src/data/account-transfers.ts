@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, or } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, isNull, or } from "drizzle-orm";
 
 import type { SpendDb } from "@/data/budget-spent";
 import type { Database } from "@/db/client";
@@ -8,11 +8,12 @@ import type { TransferLogRow } from "@/domain/transfer-log-rows";
 
 import { useAccounts } from "./accounts";
 import { useLiveQuery } from "./live-query";
+import { unsentInOutbox } from "./transactions-core";
 import { useTransferFees } from "./transfer-log";
 
 function accountTransfersQuery(db: SpendDb, accountId: string) {
     return db
-        .select()
+        .select({ ...getTableColumns(transfers), unsent: unsentInOutbox("transfers", transfers.id) })
         .from(transfers)
         .where(
             and(

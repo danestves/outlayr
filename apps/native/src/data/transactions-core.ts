@@ -6,12 +6,13 @@ import type { EntryInput } from "@outlayr/money/entry-row";
 import { merchantKey } from "@outlayr/money/merchant-key";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, asc, count, desc, eq, gt, gte, inArray, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
-import { accounts, categories, installments, transactions } from "@/db/schema";
+import { accounts, categories, installments, outbox, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 import type { PaidVia } from "@/domain/paid-via";
@@ -37,11 +38,19 @@ import { restoreStamp } from "./sync-engine-core";
 
 export const LOG_PAGE_DAYS = 30;
 
+/** A row still queued in the outbox has not received its server stamp yet. */
+export function unsentInOutbox(tableName: "transactions" | "transfers", id: SQLiteColumn) {
+    return sql<boolean>`EXISTS (SELECT 1 FROM ${outbox} WHERE ${outbox.tableName} = ${tableName} AND ${outbox.localId} = ${id})`.mapWith(
+        Boolean
+    );
+}
+
 /** Narrow on purpose: `details` is unbounded free text and the list never paints it. */
 export const LOG_COLUMNS = {
     amount: transactions.amount,
     amountUsd: transactions.amountUsd,
     categoryId: transactions.categoryId,
+    createdBy: transactions.createdBy,
     currency: transactions.currency,
     customColor: transactions.customColor,
     date: transactions.date,
@@ -63,6 +72,7 @@ export const LOG_COLUMNS = {
     recurringType: transactions.recurringType,
     transferId: transactions.transferId,
     unreviewed: transactions.unreviewed,
+    unsent: unsentInOutbox("transactions", transactions.id),
 } as const;
 
 function visibleAt(nowMs: number) {

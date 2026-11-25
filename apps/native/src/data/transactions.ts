@@ -33,7 +33,7 @@ export interface CategoryDisplay {
 }
 
 type LogRow = {
-    [K in keyof typeof LOG_COLUMNS]: Transaction[K];
+    [K in keyof typeof LOG_COLUMNS]: K extends keyof Transaction ? Transaction[K] : boolean;
 };
 
 export type TransactionWithCategory = LogRow & CategoryDisplay;

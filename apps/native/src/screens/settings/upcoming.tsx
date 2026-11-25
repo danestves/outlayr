@@ -20,6 +20,7 @@ import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useTranslation } from "@/i18n/context";
 import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
 import { UpcomingList } from "@/screens/log/components/log-upcoming";
+import { useEntryAuthors } from "@/screens/log/use-entry-authors";
 import { setBoolSettingCommand } from "@/state/settings-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 import { MARK_CEILING } from "@/theme/empty-state-ink";
@@ -68,6 +69,7 @@ export function Upcoming() {
     // A row waiting on the undo toast is already gone as far as the figures go,
     // or the monthly cost keeps charging for a subscription the user just deleted.
     const upcoming = scheduled.rows.filter((row) => !goesWithPendingDelete(row, pendingId));
+    const { authorOf } = useEntryAuthors(upcoming);
     const perMonth = monthlySubscriptionCost(upcoming, currency, rates, new Date(nowMs));
 
     return (
@@ -90,6 +92,7 @@ export function Upcoming() {
                         </View>
                     ) : null}
                     <UpcomingList
+                        authorOf={authorOf}
                         currency={currency}
                         menuItems={(transaction) => openRowActions(transaction, true)}
                         nowMs={nowMs}

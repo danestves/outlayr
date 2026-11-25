@@ -195,6 +195,7 @@ export function useOutsideMoveRows(
             categoryIcon: null,
             categoryId: null,
             categoryName: null,
+            createdBy: null,
             currency: account.currency,
             customColor: null,
             date: row.date,
@@ -220,6 +221,7 @@ export function useOutsideMoveRows(
             sign: into ? "+" : "-",
             transferId: row.id,
             unreviewed: false,
+            unsent: false,
         };
     });
 }

@@ -28,6 +28,13 @@ const Member = Schema.Struct({
 
 export default GroupSpec.make()
     .addFunction(
+        FunctionSpec.publicQuery({
+            name: "enabled",
+            args: () => ({}),
+            returns: () => Schema.Boolean,
+        })
+    )
+    .addFunction(
         FunctionSpec.publicMutation({
             name: "createInvite",
             args: () => ({ look: SharedProfileLook, profileId: ProfileId }),

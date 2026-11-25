@@ -46,6 +46,15 @@ const refuseWhileSharingOff = Effect.gen(function* refuseWhileSharingOff() {
 const nameOf = (ctx: ConvexQueryCtx | ConvexMutationCtx, userId: string) =>
     Effect.promise(() => authComponent.getAnyUserById(ctx, userId)).pipe(Effect.map((user) => firstName(user?.name)));
 
+const enabled = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "enabled",
+    Effect.fn("ProfileSharing.enabled")(function* enabled() {
+        return yield* profileSharingEnabled;
+    }, Effect.orDie)
+);
+
 const createInvite = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -82,8 +91,9 @@ const createInvite = FunctionImpl.make(
             );
             const reusable = open.find((row) => row.ownerId === ownerId && row.expiresAt > now);
             if (reusable) {
-                yield* writer.table("profileInvites").patch(reusable._id, { look: args.look });
-                return { code: reusable.code, expiresAt: reusable.expiresAt };
+                // A fresh window on every issue, so a sheet never hands out a code minutes from lapsing.
+                yield* writer.table("profileInvites").patch(reusable._id, { expiresAt, look: args.look });
+                return { code: reusable.code, expiresAt };
             }
             let code = newCode();
             while ((yield* inviteByCode(code)) !== null) {
@@ -115,6 +125,10 @@ const invite = FunctionImpl.make(
     spec,
     "invite",
     Effect.fn("ProfileSharing.invite")(function* invite(args) {
+        const ctx = yield* QueryCtx;
+        if (!(yield* profileSharingEnabled)) {
+            return null;
+        }
         const code = normalizeReferralCode(args.code);
         if (code === null) {
             return null;
@@ -123,7 +137,6 @@ const invite = FunctionImpl.make(
         if (row === null) {
             return null;
         }
-        const ctx = yield* QueryCtx;
         const viewerId = yield* optionalUserId(ctx);
         const [look, members, viewer, ownerName, now] = yield* Effect.all([
             currentLook(row.ownerId, row.profileId, row.look),
@@ -350,6 +363,7 @@ const leave = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
+    Layer.provide(enabled),
     Layer.provide(createInvite),
     Layer.provide(invite),
     Layer.provide(claim),

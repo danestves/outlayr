@@ -4,7 +4,13 @@ import type { RootStackGroup } from "@/domain/auth-gate";
 import type { TranslationKey } from "@/i18n/catalog";
 import type { StackChrome } from "@/navigation/stack-chrome";
 
-import { ACCOUNT_DETENT, CATEGORY_DETENT, INSTALLMENT_PAY_DETENT, SUBCATEGORY_DETENT } from "./sheet-detents";
+import {
+    ACCOUNT_DETENT,
+    CATEGORY_DETENT,
+    INSTALLMENT_PAY_DETENT,
+    JOIN_DETENT,
+    SUBCATEGORY_DETENT,
+} from "./sheet-detents";
 
 type Row<Kind extends keyof StackChrome, Fields = unknown> = Fields & {
     chrome: Kind;
@@ -135,6 +141,13 @@ export const ROOT_STACK: readonly { group: RootStackGroup; screens: readonly Roo
                 name: "profiles/edit",
                 titleKey: "profiles.edit",
             },
+            {
+                chrome: "sheet",
+                detent: ACCOUNT_DETENT,
+                name: "profiles/members",
+                titleKey: "sharing.members.title",
+            },
+            { chrome: "sheet", detent: JOIN_DETENT, name: "join/[code]", titleKey: "sharing.join.title" },
             {
                 chrome: "sheet",
                 detent: INSTALLMENT_PAY_DETENT,

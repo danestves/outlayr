@@ -2,6 +2,7 @@ import registeredFunctions from "../confect/_generated/registeredFunctions/profi
 
 export const claim = registeredFunctions.claim;
 export const createInvite = registeredFunctions.createInvite;
+export const enabled = registeredFunctions.enabled;
 export const invite = registeredFunctions.invite;
 export const joined = registeredFunctions.joined;
 export const leave = registeredFunctions.leave;

@@ -27,7 +27,7 @@ import { photoFiles } from "@/lib/photo-storage";
 import { appRuntime } from "@/lib/runtime";
 import { retireLedger } from "@/lib/widget-bridge";
 
-import { createRuntimeCommand } from "./atom-command";
+import { createCommand, createRuntimeCommand } from "./atom-command";
 import { enter, reload, settleLedger, switchFailed, withRollback, writeActive } from "./profiles-commands";
 
 const ProfileSharingOperation = Schema.Literals(["invite", "join", "leave", "reconcile"]);
@@ -240,4 +240,15 @@ export const removeProfileMember = Effect.fn("JoinedProfiles.removeMember")(func
     memberId: string
 ) {
     yield* cloudMutation(api.profileSharing.removeMember, { memberId, profileId });
+});
+
+export const createProfileInviteCommand = createCommand({
+    execute: ({ profileId }: { profileId: string }) => createProfileInvite(profileId),
+    label: "profiles:create-invite",
+});
+
+export const removeProfileMemberCommand = createCommand({
+    execute: ({ memberId, profileId }: { memberId: string; profileId: string }) =>
+        removeProfileMember(profileId, memberId),
+    label: "profiles:remove-member",
 });

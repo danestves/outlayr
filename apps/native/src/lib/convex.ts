@@ -63,6 +63,10 @@ export function useCloudAuthenticated(): boolean {
     return useSyncExternalStore(subscribeCloudAuthenticated, isCloudAuthenticated, isCloudAuthenticated);
 }
 
+export function useCloudAccount(): boolean {
+    return useSyncExternalStore(subscribeCloudAuthenticated, isCloudAccount, isCloudAccount);
+}
+
 function cloudClient(): CloudRuntime["convex"] {
     if (cloudRuntime === null) {
         throw new Error("Cloud runtime is not configured");
