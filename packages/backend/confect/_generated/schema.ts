@@ -3,6 +3,8 @@ import { DatabaseSchema as $DatabaseSchema } from "@confect/server";
 import accountDeletionJobs from "./tables/accountDeletionJobs";
 import accounts from "./tables/accounts";
 import appMeta from "./tables/appMeta";
+import bankAccounts from "./tables/bankAccounts";
+import bankHolders from "./tables/bankHolders";
 import budgetPlans from "./tables/budgetPlans";
 import budgets from "./tables/budgets";
 import captureKeys from "./tables/captureKeys";
@@ -52,6 +54,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly accountDeletionJobs: typeof accountDeletionJobs;
   readonly accounts: typeof accounts;
   readonly appMeta: typeof appMeta;
+  readonly bankAccounts: typeof bankAccounts;
+  readonly bankHolders: typeof bankHolders;
   readonly budgetPlans: typeof budgetPlans;
   readonly budgets: typeof budgets;
   readonly captureKeys: typeof captureKeys;
@@ -100,6 +104,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   accountDeletionJobs,
   accounts,
   appMeta,
+  bankAccounts,
+  bankHolders,
   budgetPlans,
   budgets,
   captureKeys,

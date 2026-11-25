@@ -1,3 +1,5 @@
+import type { BankingProviderName } from "@outlayr/banking/provider";
+import { bankingProviders } from "@outlayr/banking/registry";
 import { PRO_PLANS } from "@outlayr/money/pro-prices";
 import { RevenueCat } from "convex-revenuecat";
 import { httpRouter } from "convex/server";
@@ -5,6 +7,7 @@ import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
+import { receiveBankEvent } from "../confect/banking";
 import { captureEnrich } from "../confect/captureLookup";
 import { authComponent, createAuth } from "../confect/lib/betterAuth";
 import { revenueCatWebhookAuth, siteUrl } from "../confect/lib/config";
@@ -25,6 +28,15 @@ new RevenueCat(components.revenuecat, {
 }).registerRoutes(http);
 
 mcp.registerRoutes(http);
+
+// SAFETY: `Object.keys` widens to string[]; the registry is keyed by provider name.
+for (const name of Object.keys(bankingProviders) as BankingProviderName[]) {
+    http.route({
+        handler: httpAction((ctx, request) => runEdge(receiveBankEvent(ctx, request, name))),
+        method: "POST",
+        path: `/banking/${name}`,
+    });
+}
 
 const decodeCheckoutBody = Schema.decodeUnknownOption(Schema.Struct({ plan: Schema.Literals(PRO_PLANS) }));
 

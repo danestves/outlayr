@@ -9,6 +9,7 @@
  */
 
 import type * as accountDeletion from "../accountDeletion.js";
+import type * as banking from "../banking.js";
 import type * as billing from "../billing.js";
 import type * as binance from "../binance.js";
 import type * as captureLookup from "../captureLookup.js";
@@ -59,6 +60,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   accountDeletion: typeof accountDeletion;
+  banking: typeof banking;
   billing: typeof billing;
   binance: typeof binance;
   captureLookup: typeof captureLookup;

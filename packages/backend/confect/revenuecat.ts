@@ -54,7 +54,7 @@ const decodeVerifiedUser = Schema.decodeUnknownOption(
     Schema.Struct({ email: Schema.String, emailVerified: Schema.Literal(true) })
 );
 
-const grantedPro = Effect.fn("RevenueCat.grantedPro")(function* grantedPro(
+export const grantedPro = Effect.fn("RevenueCat.grantedPro")(function* grantedPro(
     ctx: Parameters<typeof revenuecat.hasEntitlement>[0],
     userId: string
 ) {

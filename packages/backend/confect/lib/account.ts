@@ -19,7 +19,7 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
     ctx: MutationCtx,
     userId: string
 ) {
-    for (const table of ["webhookDeliveries", "webhookEvents", "inboundWrites"] as const) {
+    for (const table of ["webhookDeliveries", "webhookEvents", "inboundWrites", "bankAccounts"] as const) {
         const queued = yield* Effect.promise(() =>
             ctx.db
                 .query(table)

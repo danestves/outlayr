@@ -22,6 +22,9 @@ export const JANUARY_NOTICE_AT_MS = Date.UTC(2027, 0, 1);
 // Nothing is received or sent for a user webhook before the privacy notice that announces them takes effect.
 export const WEBHOOKS_EFFECTIVE_AT_MS = JANUARY_NOTICE_AT_MS;
 
+// No bank can be linked before the privacy and terms notices that announce bank linking take effect.
+export const BANKING_EFFECTIVE_AT_MS = JANUARY_NOTICE_AT_MS;
+
 export const REMINDER_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
 
 export const VOICE_KEYTERMS_AT_MS = JANUARY_NOTICE_AT_MS;

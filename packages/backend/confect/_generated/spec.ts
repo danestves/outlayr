@@ -1,5 +1,6 @@
 import { GroupSpec, Spec } from "@confect/core";
 import accountDeletion from "../accountDeletion.spec";
+import banking from "../banking.spec";
 import billing from "../billing.spec";
 import binance from "../binance.spec";
 import captureLookup from "../captureLookup.spec";
@@ -42,6 +43,7 @@ import webhooks from "../webhooks.spec";
 
 const spec: Spec.Spec<{
   readonly accountDeletion: GroupSpec.NamedAt<typeof accountDeletion, "accountDeletion">;
+  readonly banking: GroupSpec.NamedAt<typeof banking, "banking">;
   readonly billing: GroupSpec.NamedAt<typeof billing, "billing">;
   readonly binance: GroupSpec.NamedAt<typeof binance, "binance">;
   readonly captureLookup: GroupSpec.NamedAt<typeof captureLookup, "captureLookup">;
@@ -83,6 +85,7 @@ const spec: Spec.Spec<{
   readonly webhooks: GroupSpec.NamedAt<typeof webhooks, "webhooks">;
 }> = Spec.fromGroups({
   ["accountDeletion"]: accountDeletion,
+  ["banking"]: banking,
   ["billing"]: billing,
   ["binance"]: binance,
   ["captureLookup"]: captureLookup,
