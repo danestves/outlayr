@@ -1,0 +1,28 @@
+{
+    "name": "Outlayr",
+    "short_name": "Outlayr",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#f1f0ea",
+    "theme_color": "#f1f0ea",
+    "icons": [
+        {
+            "src": "/favicon-light.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/favicon-dark.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/apple-touch-icon.png",
+            "sizes": "180x180",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ]
+}

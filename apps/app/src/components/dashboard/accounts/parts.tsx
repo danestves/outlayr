@@ -195,25 +195,6 @@ export function AccountCell({ note, row }: { note?: ReactNode; row: AccountRow }
     );
 }
 
-export function PhoneAction({
-    children,
-    className,
-    size,
-    variant = "outline",
-}: {
-    children: ReactNode;
-    className?: string;
-    size?: "sm";
-    variant?: "default" | "outline" | "secondary";
-}) {
-    const { phoneHint } = useIntlayer("dashboard-home").setup;
-    return (
-        <Button aria-disabled className={className} size={size} title={phoneHint.value} variant={variant}>
-            {children}
-        </Button>
-    );
-}
-
 export function PhoneItem({ children, className = "" }: { children: ReactNode; className?: string }) {
     const { phoneHint } = useIntlayer("dashboard-home").setup;
     return (

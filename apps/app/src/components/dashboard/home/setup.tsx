@@ -2,7 +2,7 @@ import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "panelui-web/button";
-import type { ComponentProps, CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
@@ -76,12 +76,6 @@ export function SetupHero({ setup }: { setup: SetupState }) {
             </Button>
         </section>
     );
-}
-
-// Creating things on web isn't built yet, so setup's calls to action say where to go instead of opening a form.
-export function PhoneButton(button: ComponentProps<typeof Button>) {
-    const { phoneHint } = useIntlayer("dashboard-home").setup;
-    return <Button aria-disabled title={phoneHint.value} {...button} />;
 }
 
 const GHOST: CSSProperties = { fill: "none", stroke: "var(--color-app-ghost)" };

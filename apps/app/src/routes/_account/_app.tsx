@@ -150,6 +150,7 @@ function App() {
 }
 
 const onOnboarding = (pathname: string) => pathname.startsWith("/onboarding");
+const onMoneyManagerImport = (pathname: string) => pathname.startsWith("/import/money-manager");
 const noProgress = () => null;
 
 function Ledgered() {
@@ -157,8 +158,9 @@ function Ledgered() {
     const books = useLedgerBooks();
     const progress = useSyncExternalStore(subscribeProgress, () => readProgress(userId), noProgress);
     const onboarding = useLocation({ select: (location) => onOnboarding(location.pathname) });
+    const importing = useLocation({ select: (location) => onMoneyManagerImport(location.pathname) });
     const due = profileId === null && onboardingDue(progress, books);
-    if (due && !onboarding) {
+    if (due && !onboarding && !importing) {
         return <Navigate replace search to="/onboarding" />;
     }
     if (onboarding && !due) {

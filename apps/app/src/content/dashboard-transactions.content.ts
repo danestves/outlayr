@@ -575,14 +575,6 @@ const dashboardTransactions = {
                 pt: "Um lançamento aceita até 10 arquivos.",
                 "pt-PT": "Um registo aceita até 10 ficheiros.",
             }),
-            history: t({ en: "History", de: "Verlauf", es: "Historial", fr: "Historique", pt: "Histórico" }),
-            historyComing: t({
-                en: "History is coming",
-                de: "Der Verlauf kommt bald",
-                es: "El historial viene pronto",
-                fr: "L'historique arrive bientôt",
-                pt: "O histórico vem em breve",
-            }),
             items: t({ en: "Items", de: "Artikel", es: "Artículos", fr: "Articles", pt: "Itens" }),
             left: insert(
                 t({

@@ -67,7 +67,6 @@ import {
     KpiBand,
     KpiCell,
     Meter,
-    PhoneAction,
     RowMenu,
     Segments,
     SortMenu,
@@ -1119,24 +1118,27 @@ export function AccountsScreen() {
     const { ledger } = useDashboard();
     const { actions, list } = useIntlayer("dashboard-accounts");
     const model = useListModel();
-    const { sort: saveSort } = useAccountFlows();
+    const { open, sort: saveSort } = useAccountFlows();
     const sort = storedSort(ledger);
     const empty = model.rows.length === 0;
     return (
         <main className="@container flex min-h-full min-w-0 flex-col px-4 pb-5 sm:px-6">
             <AccountsBar title={list.title}>
                 {empty ? (
-                    <PhoneAction>
+                    <Button
+                        nativeButton={false}
+                        render={<Link to="/import" viewTransition={viewTransition("push-left")} />}
+                    >
                         <Glyph icon={Upload04Icon} className="text-muted-foreground" size={16} />
                         {actions.import}
-                    </PhoneAction>
+                    </Button>
                 ) : (
                     <>
                         <SortMenu onSort={saveSort} sort={sort} />
-                        <PhoneAction className="max-sm:hidden">
+                        <Button className="max-sm:hidden" onClick={() => open({ kind: "transfer" })} variant="outline">
                             <Glyph icon={ArrowDataTransferHorizontalIcon} className="text-muted-foreground" size={16} />
                             {actions.transfer}
-                        </PhoneAction>
+                        </Button>
                     </>
                 )}
                 {empty ? null : <AddAccountMenu />}

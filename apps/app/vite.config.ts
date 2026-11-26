@@ -33,6 +33,7 @@ const PUBLIC_FILE_RULES = {
     "/favicon-light.png": A_DAY,
     "/favicon.ico": A_DAY,
     "/favicon.svg": A_DAY,
+    "/manifest.webmanifest": A_DAY,
     "/onboarding-dark.webp": A_DAY,
     "/onboarding-light.webp": A_DAY,
     "/paywall-locked-light.svg": A_DAY,
@@ -40,6 +41,7 @@ const PUBLIC_FILE_RULES = {
     "/paywall-terrain-light.svg": A_DAY,
     "/paywall-terrain.svg": A_DAY,
     "/robots.txt": A_DAY,
+    "/sitemap.xml": A_DAY,
 };
 
 export default defineConfig({
