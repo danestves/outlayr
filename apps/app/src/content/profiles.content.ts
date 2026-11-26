@@ -1,0 +1,113 @@
+import { t } from "intlayer";
+import type { Dictionary } from "intlayer";
+
+const profiles = {
+    content: {
+        a11ySwitch: t({
+            en: "Switch profile",
+            de: "Profil wechseln",
+            es: "Cambiar de perfil",
+            fr: "Changer de profil",
+            pt: "Trocar de perfil",
+        }),
+        cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
+        color: t({ en: "Color", de: "Farbe", es: "Color", fr: "Couleur", pt: "Cor" }),
+        create: t({
+            en: "Create profile",
+            de: "Profil erstellen",
+            es: "Crear perfil",
+            fr: "Créer le profil",
+            pt: "Criar perfil",
+        }),
+        delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+        deleteBody: t({
+            en: "Its entries, accounts and budgets leave your devices. The synced copy stays until you delete your account.",
+            de: "Seine Einträge, Konten und Budgets verschwinden von deinen Geräten. Die synchronisierte Kopie bleibt, bis du dein Konto löschst.",
+            es: "Sus movimientos, cuentas y presupuestos salen de tus dispositivos. La copia sincronizada se queda hasta que elimines tu cuenta.",
+            fr: "Ses opérations, comptes et budgets quittent vos appareils. La copie synchronisée reste jusqu'à la suppression de votre compte.",
+            pt: "Os lançamentos, contas e orçamentos saem dos seus aparelhos. A cópia sincronizada fica até você excluir sua conta.",
+        }),
+        deleteFailed: t({
+            en: "Couldn't delete the profile. Try again.",
+            de: "Das Profil konnte nicht gelöscht werden. Versuch es noch mal.",
+            es: "No se pudo eliminar el perfil. Inténtalo de nuevo.",
+            fr: "Impossible de supprimer le profil. Réessayez.",
+            pt: "Não foi possível excluir o perfil. Tente de novo.",
+        }),
+        deleteProfile: t({
+            en: "Delete profile",
+            de: "Profil löschen",
+            es: "Eliminar perfil",
+            fr: "Supprimer le profil",
+            pt: "Excluir perfil",
+        }),
+        deleteTitle: t({
+            en: "Delete this profile?",
+            de: "Dieses Profil löschen?",
+            es: "¿Eliminar este perfil?",
+            fr: "Supprimer ce profil ?",
+            pt: "Apagar este perfil?",
+        }),
+        details: t({ en: "Details", de: "Details", es: "Detalles", fr: "Détails", pt: "Detalhes" }),
+        edit: t({ en: "Edit", de: "Bearbeiten", es: "Editar", fr: "Modifier", pt: "Editar" }),
+        emoji: t({ en: "Emoji", de: "Emoji", es: "Emoji", fr: "Émoji", pt: "Emoji" }),
+        entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+        icon: t({ en: "Icon", de: "Symbol", es: "Ícono", fr: "Icône", pt: "Ícone" }),
+        name: t({ en: "Name", de: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
+        namePlaceholder: t({
+            en: "Work",
+            de: "Arbeit",
+            es: "Trabajo",
+            fr: "Travail",
+            pt: "Trabalho",
+        }),
+        newProfile: t({
+            en: "New profile",
+            de: "Neues Profil",
+            es: "Nuevo perfil",
+            fr: "Nouveau profil",
+            pt: "Novo perfil",
+        }),
+        personal: t({ en: "Personal", de: "Privat", es: "Personal", fr: "Personnel", pt: "Pessoal" }),
+        personalLocked: t({
+            en: "Personal can't be renamed or deleted.",
+            de: "Privat kann nicht umbenannt oder gelöscht werden.",
+            es: "Personal no se puede renombrar ni eliminar.",
+            fr: "Personnel ne peut pas être renommé ni supprimé.",
+            pt: "O Pessoal não pode ser renomeado nem excluído.",
+        }),
+        profileSettings: t({
+            en: "Profile settings",
+            de: "Profil-Einstellungen",
+            es: "Ajustes del perfil",
+            fr: "Réglages du profil",
+            pt: "Ajustes do perfil",
+        }),
+        proReason: t({
+            en: "Profiles are part of Pro.",
+            de: "Profile gehören zu Pro.",
+            es: "Los perfiles son parte de Pro.",
+            fr: "Les profils font partie de Pro.",
+            pt: "Os perfis fazem parte do Pro.",
+        }),
+        save: t({ en: "Save", de: "Speichern", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+        saveFailed: t({
+            en: "Couldn't save the profile. Try again.",
+            de: "Das Profil konnte nicht gespeichert werden. Versuch es noch mal.",
+            es: "No se pudo guardar el perfil. Inténtalo de nuevo.",
+            fr: "Impossible d'enregistrer le profil. Réessayez.",
+            pt: "Não foi possível salvar o perfil. Tente de novo.",
+        }),
+        switchFailed: t({
+            en: "Couldn't switch profiles. Try again.",
+            de: "Das Profil konnte nicht gewechselt werden. Versuch es noch mal.",
+            es: "No se pudo cambiar de perfil. Inténtalo de nuevo.",
+            fr: "Impossible de changer de profil. Réessayez.",
+            pt: "Não foi possível trocar de perfil. Tente de novo.",
+        }),
+        title: t({ en: "Profiles", de: "Profile", es: "Perfiles", fr: "Profils", pt: "Perfis" }),
+    },
+    key: "profiles" as const,
+} satisfies Dictionary;
+
+export default profiles;

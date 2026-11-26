@@ -1150,7 +1150,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Web app analytics",
                 },
                 {
-                    detail: "With Pro you can keep separate profiles, such as Work or Family. Each profile's name, icon, and color sync with its own ledger. The web app and a connected AI assistant see only your Personal profile, and Notion imports go there too.",
+                    detail: "With Pro you can keep separate profiles, such as Work or Family. Each profile's name, icon, and color sync with its own ledger. The web app can open every profile. A connected AI assistant and Notion imports use only your Personal profile.",
                     label: "Profiles",
                 },
                 {
@@ -1188,7 +1188,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Analysen in der Web-App",
                 },
                 {
-                    detail: "Mit Pro kannst du getrennte Profile führen, etwa Arbeit oder Familie. Name, Symbol und Farbe jedes Profils werden mit seinem eigenen Haushaltsbuch synchronisiert. Die Web-App und ein verbundener KI-Assistent sehen nur dein Profil „Privat“, und Notion-Importe landen ebenfalls dort.",
+                    detail: "Mit Pro kannst du getrennte Profile führen, etwa Arbeit oder Familie. Name, Symbol und Farbe jedes Profils werden mit seinem eigenen Haushaltsbuch synchronisiert. Die Web-App kann jedes Profil öffnen. Ein verbundener KI-Assistent und Notion-Importe nutzen nur dein Profil „Privat“.",
                     label: "Profile",
                 },
                 {
@@ -1226,7 +1226,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Analíticas en la app web",
                 },
                 {
-                    detail: "Con Pro puedes tener perfiles separados, como Trabajo o Familia. El nombre, el ícono y el color de cada perfil se sincronizan con su propio registro. La app web y un asistente de IA conectado solo ven tu perfil Personal, y las importaciones de Notion también van ahí.",
+                    detail: "Con Pro puedes tener perfiles separados, como Trabajo o Familia. El nombre, el ícono y el color de cada perfil se sincronizan con su propio registro. La app web puede abrir todos los perfiles. Un asistente de IA conectado y las importaciones de Notion usan solo tu perfil Personal.",
                     label: "Perfiles",
                 },
                 {
@@ -1264,7 +1264,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Les statistiques de l'app web",
                 },
                 {
-                    detail: "Avec Pro, vous pouvez tenir des profils séparés, comme Travail ou Famille. Le nom, l'icône et la couleur de chaque profil se synchronisent avec son propre registre. L'app web et un assistant IA connecté ne voient que votre profil Personnel, et les imports Notion y arrivent aussi.",
+                    detail: "Avec Pro, vous pouvez tenir des profils séparés, comme Travail ou Famille. Le nom, l'icône et la couleur de chaque profil se synchronisent avec son propre registre. L'app web peut ouvrir chaque profil. Un assistant IA connecté et les imports Notion n'utilisent que votre profil Personnel.",
                     label: "Profils",
                 },
                 {
@@ -1302,7 +1302,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Análises no app web",
                 },
                 {
-                    detail: "Com o Pro você pode manter perfis separados, como Trabalho ou Família. O nome, o ícone e a cor de cada perfil sincronizam com o registro próprio dele. O app web e um assistente de IA conectado veem só o seu perfil Pessoal, e as importações do Notion também vão para ele.",
+                    detail: "Com o Pro você pode manter perfis separados, como Trabalho ou Família. O nome, o ícone e a cor de cada perfil sincronizam com o registro próprio dele. O app web pode abrir todos os perfis. Um assistente de IA conectado e as importações do Notion usam só o seu perfil Pessoal.",
                     label: "Perfis",
                 },
                 {

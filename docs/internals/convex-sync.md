@@ -346,7 +346,8 @@ in `src/domain/profiles.ts`) and its own owner on the server.
   active ledger, so it purges nothing once a device has a second profile.
 - **Not scoped yet:** server features that read the ledger (MCP, recap) still read Personal
   only, and an enrichment answer that lands while another profile is open is acked unapplied. A
-  deleted profile's server rows stay until the account is deleted.
+  deleted profile's server rows stay until the account is deleted. The web app opens any profile
+  through the same cookie-scoped load; it has no sharing or join flow yet.
 
 ---
 

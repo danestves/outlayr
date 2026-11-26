@@ -2,6 +2,8 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { useSyncExternalStore } from "react";
 
+import { scopedStorageKey } from "@/lib/profile";
+
 import { Definition } from "./model";
 
 const KEY = "outlayr.reports.v1";
@@ -31,7 +33,7 @@ function readStored(key: string): readonly SavedReport[] {
 }
 
 function storeFor(userId: string) {
-    const key = `${KEY}:${userId}`;
+    const key = scopedStorageKey(`${KEY}:${userId}`);
     const listeners = new Set<() => void>();
     let current: readonly SavedReport[] | null = null;
     const snapshot = () => (current ??= readStored(key));

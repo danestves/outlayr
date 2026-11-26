@@ -28,6 +28,7 @@ import { SheetContent } from "@/components/ui/sheet-content";
 import { useProfile } from "@/lib/account-state";
 import { authClient } from "@/lib/auth-client";
 import { followSession } from "@/lib/launch-analytics";
+import { switchProfileCookie } from "@/lib/profile-cookie";
 import { announceSessionChange } from "@/lib/session";
 import { forgetLedger } from "@/lib/unsent";
 
@@ -41,6 +42,7 @@ export async function signOut() {
     followSession(undefined);
     announceSessionChange();
     await forgetLedger();
+    await switchProfileCookie({ data: { profileId: null } }).catch(() => undefined);
     window.location.assign("/login");
 }
 

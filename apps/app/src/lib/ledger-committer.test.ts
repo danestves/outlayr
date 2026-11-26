@@ -11,6 +11,7 @@ import { fakeConvex } from "./test-convex";
 
 const HOLD_MS = 60_000;
 const answered = { accepted: 1, nextSeq: 1, skipped: 0 };
+const PROFILE_WORK = "0b8f3c3e-6a51-4c4e-9f3b-2a7d5e1c9a10";
 
 // SAFETY: a fixture. The committer only reads the envelope, and the fake server takes any fields.
 const entry = (localId: string) =>
@@ -29,8 +30,8 @@ type Push = LedgerPusher["mutation"];
 
 const unanswered: Push = () => Promise.race([]);
 
-const openTab = async (push: Push) => {
-    const db = new DbClient(ledgerDependencies(fakeConvex({ push })));
+const openTab = async (push: Push, profileId: string | null = null) => {
+    const db = new DbClient(ledgerDependencies(fakeConvex({ push }), profileId));
     await preloadLedger(db);
     return db;
 };
@@ -91,6 +92,22 @@ describe("ledger committer", () => {
 
         expect(storedRows()).toHaveLength(0);
         expect(push).not.toHaveBeenCalled();
+    });
+
+    it("keeps one profile's unsent rows out of another profile", async () => {
+        const closed = await openTab(unanswered, PROFILE_WORK);
+        ledgerCommitter(closed, "owner").commit([entry("work")]);
+
+        const push = vi.fn<Push>(() => Promise.resolve(answered));
+        ledgerCommitter(await openTab(push), "owner").resume();
+
+        expect(push).not.toHaveBeenCalled();
+        expect(storedRows()).toHaveLength(1);
+
+        ledgerCommitter(await openTab(push, PROFILE_WORK), "owner").resume();
+        await vi.waitFor(() => expect(storedRows()).toHaveLength(0));
+
+        expect(sentIds(push)).toStrictEqual([["work"]]);
     });
 
     it("stores nothing for a signed-out page", async () => {

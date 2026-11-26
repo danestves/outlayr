@@ -15,7 +15,7 @@ import { viewTransition } from "@/lib/motion";
 
 import { handOff, kindOf, routeOf } from "./hand-off";
 import { HistoryKpis, HistoryTable, ImportTable, LastImportCard } from "./history";
-import { NotionDialog, useExportUpload, useNotion } from "./notion";
+import { NotionDialog, useExportUpload, useNotion, useNotionAllowed } from "./notion";
 import { Card, Columns, DROPZONE, FilePicker, ImportBar, ImportPage, NOTE, SourceTile, useFileDrop } from "./parts";
 import { useImportHistory } from "./store";
 import type { ImportSource } from "./store";
@@ -27,15 +27,21 @@ type Tab = "history" | "new";
 const RECENT = 6;
 const READABLE = /\.(?:csv|tsv|txt|pdf|mmbackup)$/i;
 const ZIP = /\.zip$/i;
-const ACCEPT = ".csv,.tsv,.txt,.pdf,.mmbackup,.zip,text/csv,application/pdf,application/zip";
+const ACCEPT = ".csv,.tsv,.txt,.pdf,.mmbackup,text/csv,application/pdf";
+const NOTION_ACCEPT = `${ACCEPT},.zip,application/zip`;
 
 function useOpenFile() {
     const navigate = useNavigate();
     const { home } = useIntlayer("dashboard-import");
+    const notionAllowed = useNotionAllowed();
     const upload = useExportUpload((message) => importToasts.add({ title: message, type: "destructive" }));
     return (file: File) => {
         if (ZIP.test(file.name)) {
-            void upload(file);
+            if (notionAllowed) {
+                void upload(file);
+            } else {
+                importToasts.add({ title: home.unknownFile.value, type: "destructive" });
+            }
             return;
         }
         if (!READABLE.test(file.name) && file.type !== "text/csv" && file.type !== "application/pdf") {
@@ -102,6 +108,7 @@ export function SourceRow({
 function Sources({ onNotion }: { onNotion: () => void }) {
     const { sources } = useIntlayer("dashboard-import");
     const navigate = useNavigate();
+    const notionAllowed = useNotionAllowed();
     const notion = useNotion();
     const workspace = notion.sources.data?.workspaceName ?? null;
     let notionHint: ReactNode = sources.notionHint;
@@ -123,7 +130,9 @@ function Sources({ onNotion }: { onNotion: () => void }) {
                     source="moneyManager"
                     title={sources.moneyManager}
                 />
-                <SourceRow hint={notionHint} onClick={onNotion} source="notion" title={sources.notion} />
+                {notionAllowed ? (
+                    <SourceRow hint={notionHint} onClick={onNotion} source="notion" title={sources.notion} />
+                ) : null}
             </div>
             <div className={`${column} @max-3xl:border-t`}>
                 <h3 className="text-muted-foreground text-app-label flex h-11 items-center border-b px-4 font-medium">
@@ -160,12 +169,13 @@ function Sources({ onNotion }: { onNotion: () => void }) {
 
 export function DropAnywhere({ over, onFile }: { over: boolean; onFile: (file: File) => void }) {
     const { home } = useIntlayer("dashboard-import");
+    const notionAllowed = useNotionAllowed();
     return (
         <div className="p-5">
             <div className={`${DROPZONE} h-32.75 ${over ? "border-primary bg-primary/6" : ""}`}>
                 <b className="text-app-title leading-5 font-semibold">{over ? home.dropHere : home.dropAnywhere}</b>
                 <p className="text-muted-foreground text-app-label mt-1 leading-5">{home.dropAnywhereHint}</p>
-                <FilePicker accept={ACCEPT} onFile={onFile}>
+                <FilePicker accept={notionAllowed ? NOTION_ACCEPT : ACCEPT} onFile={onFile}>
                     {(open) => (
                         <Button className="mt-3" onClick={open} size="sm" variant="outline">
                             {home.chooseFile}
@@ -221,7 +231,8 @@ export function ImportHome({
     const { history, home } = useIntlayer("dashboard-import");
     const store = useImportStore();
     const records = useImportHistory(store);
-    const [notionOpen, setNotionOpen] = useState(notionReturn);
+    const notionAllowed = useNotionAllowed();
+    const [notionOpen, setNotionOpen] = useState(notionReturn && notionAllowed);
     const openFile = useOpenFile();
     const drop = useFileDrop(openFile);
     const [latest] = records;
@@ -284,7 +295,7 @@ export function ImportHome({
                     ) : null}
                 </Columns>
             </ImportPage>
-            <NotionDialog onClose={() => setNotionOpen(false)} open={notionOpen} />
+            {notionAllowed ? <NotionDialog onClose={() => setNotionOpen(false)} open={notionOpen} /> : null}
         </div>
     );
 }

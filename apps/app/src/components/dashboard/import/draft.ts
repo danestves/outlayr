@@ -4,6 +4,7 @@ import * as Schema from "effect/Schema";
 import { useCallback, useSyncExternalStore } from "react";
 
 import { FIELDS } from "@/lib/import-file";
+import { scopedStorageKey } from "@/lib/profile";
 
 export const DraftSource = Schema.Literals(["csv", "pdf", "notion"]);
 export type DraftSource = typeof DraftSource.Type;
@@ -69,7 +70,7 @@ interface Held {
 const EMPTY: Held = { draft: null, restored: false };
 
 function storeFor(userId: string) {
-    const key = `${KEY}:${userId}`;
+    const key = scopedStorageKey(`${KEY}:${userId}`);
     const listeners = new Set<() => void>();
     let held: Held | null = null;
     const snapshot = (): Held => {

@@ -20,6 +20,7 @@ import { SettingsNav } from "./nav";
 import { Notifications } from "./notifications";
 import { Plan } from "./plan";
 import { Preferences } from "./preferences";
+import { ProfileSettings } from "./profile";
 import { Sync } from "./sync";
 import { Time } from "./time";
 import { Usage } from "./usage";
@@ -55,6 +56,7 @@ const SECTIONS = {
     email: Email,
     notifications: Notifications,
     plan: Plan,
+    profile: ProfileSettings,
     sync: Sync,
     usage: Usage,
 } as const;
@@ -85,8 +87,10 @@ export function SettingsPending() {
 
 export function SettingsFirstVisit() {
     return (
-        <DashboardShell>
-            <SettingsPending />
-        </DashboardShell>
+        <Toast.Provider position="bottom-right">
+            <DashboardShell>
+                <SettingsPending />
+            </DashboardShell>
+        </Toast.Provider>
     );
 }

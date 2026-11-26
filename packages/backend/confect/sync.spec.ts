@@ -31,7 +31,11 @@ export default GroupSpec.make()
     .addFunction(
         FunctionSpec.publicQuery({
             name: "pullRecent",
-            args: () => ({ since: Schema.Number, tables: Schema.Array(SyncedTableName) }),
+            args: () => ({
+                profileId: Schema.optional(ProfileId),
+                since: Schema.Number,
+                tables: Schema.Array(SyncedTableName),
+            }),
             returns: () =>
                 Schema.NullOr(
                     Schema.Struct({

@@ -3,8 +3,8 @@ import { createTransaction } from "@tanstack/react-db";
 import type { DbClient } from "@tanstack/react-db";
 
 import { ledgerCollections, ledgerSync } from "./ledger-db";
-import { pushRows } from "./ledger-write";
-import { UNSENT_PREFIX, keepUnsent } from "./unsent";
+import { profileOf, pushRows } from "./ledger-write";
+import { unsentKeys, unsentPrefix, keepUnsent } from "./unsent";
 
 interface ShownRow {
     deletedAt: number | null;
@@ -68,6 +68,7 @@ export interface LedgerCommitter {
 }
 
 interface Unsent {
+    profileId: string | null;
     rows: PushRow[];
     userId: string;
 }
@@ -99,14 +100,6 @@ function showRow(db: DbClient, row: CommitRow) {
     };
     rows.insert(inserted);
 }
-
-const unsentKeys = () => {
-    try {
-        return Object.keys(localStorage).filter((name) => name.startsWith(UNSENT_PREFIX));
-    } catch {
-        return [];
-    }
-};
 
 const readUnsent = (key: string) => {
     try {
@@ -160,7 +153,7 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
     const start = (
         initial: readonly PushRow[],
         holdMs: number | undefined,
-        key = `${UNSENT_PREFIX}${crypto.randomUUID()}`,
+        key = `${unsentPrefix(profileOf(db))}${crypto.randomUUID()}`,
         allowed?: Promise<void>
     ): LedgerCommit => {
         const rows = [...initial];
@@ -211,7 +204,7 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
             }
             if (userId !== undefined) {
                 sendingKeys.add(key);
-                keepUnsent(key, JSON.stringify({ rows, userId } satisfies Unsent));
+                keepUnsent(key, JSON.stringify({ profileId: profileOf(db), rows, userId } satisfies Unsent));
             }
             sent = send();
             try {
@@ -307,10 +300,16 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
         commit: (rows, policy) => start(rows, policy?.holdMs),
         getSnapshot: () => pending,
         resume: () => {
-            for (const key of userId === undefined ? [] : unsentKeys()) {
+            const profileId = profileOf(db);
+            for (const key of userId === undefined ? [] : unsentKeys(profileId)) {
                 if (!sendingKeys.has(key)) {
                     const unsent = readUnsent(key);
-                    if (unsent && unsent.userId === userId && Array.isArray(unsent.rows)) {
+                    if (
+                        unsent &&
+                        unsent.userId === userId &&
+                        (unsent.profileId ?? null) === profileId &&
+                        Array.isArray(unsent.rows)
+                    ) {
                         start(unsent.rows, undefined, key, ledgerSync(db).synced());
                     } else {
                         dropUnsent(key);

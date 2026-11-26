@@ -25,6 +25,7 @@ import { peekHandOff, takeHandOff } from "./hand-off";
 import type { HandOff } from "./hand-off";
 import { useFileModel } from "./model";
 import type { FileModel } from "./model";
+import { useNotionAllowed } from "./notion";
 import { useDraftStore } from "./undo";
 
 type Kind = "csv" | "pdf";
@@ -114,6 +115,7 @@ function Wizard({
     const model = useFileModel(draft, NO_ASKED);
     const ai = useSuggestions(draft, model, store);
     const runImport = useRunImport();
+    const notionAllowed = useNotionAllowed();
     const [run, setRun] = useState<Run>({ kind: "idle" });
 
     if (draft.step === "match") {
@@ -136,6 +138,10 @@ function Wizard({
         return <ImportingStep draft={draft} model={run.model} />;
     }
     const start = () => {
+        if (draft.source === "notion" && !notionAllowed) {
+            onCancel();
+            return;
+        }
         // The same rows go again unless review changed since, so batches that landed before the failure aren't doubled.
         if (run.kind === "failed" && run.draft === draft) {
             setRun({ kind: "importing", model: run.model });

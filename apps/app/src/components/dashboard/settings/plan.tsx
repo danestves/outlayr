@@ -9,7 +9,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { FREE_CAPTURES } from "@outlayr/money/capture-allowance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useSearch } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
@@ -587,7 +587,9 @@ function Aside({ plan }: { plan: Held }) {
 
 export function Plan() {
     const copy = useIntlayer("plan");
+    const profiles = useIntlayer("profiles");
     const { title: settings } = useIntlayer("dashboard-settings");
+    const { reason } = useSearch({ from: "/_account/_app/settings/plan" });
     const plan = useQuery({ ...planQuery, refetchOnMount: "always" });
     const held = plan.data ?? (plan.isPending ? SAMPLE_PLAN : null);
     return (
@@ -602,6 +604,9 @@ export function Plan() {
                 />
                 <h1 className="text-app-heading font-semibold">{copy.title}</h1>
             </div>
+            {reason === "profiles" ? (
+                <p className="bg-app-fill text-app-body rounded-app-md mb-4 px-3 py-2">{profiles.proReason}</p>
+            ) : null}
             {held === null ? (
                 <SettingsCard title={copy.pro}>
                     <Fact label={copy.couldNotLoad}>

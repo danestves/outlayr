@@ -29,6 +29,8 @@ import type { ExchangeRate } from "./ledger-db";
 import type { PulledPage, PulledRow } from "./ledger-sync";
 import { lightSince, opensLight } from "./light-views";
 import type { LightPath } from "./light-views";
+import { profileArgs } from "./profile";
+import { profilesOf } from "./profile-registry";
 import { timed } from "./server-timing";
 import { tokenProfile } from "./session";
 
@@ -36,6 +38,8 @@ export interface ServerLedger {
     collections: DehydratedDbState["collections"];
     opening: LedgerOpening | null;
     profile: Profile | undefined;
+    profileId: string | null;
+    profiles: PulledPage;
 }
 
 const SessionAnswer = Schema.Struct({
@@ -49,8 +53,9 @@ const SessionAnswer = Schema.Struct({
     }),
 });
 
-async function pullLedger(client: ConvexHttpClient) {
+async function pullLedger(client: ConvexHttpClient, profileId: string | null) {
     const tables = [...syncedTableNames()];
+    const scope = profileArgs(profileId);
     const rows: PulledRow[] = [];
     let cursor = 0;
     let limit: number | undefined = PULL_PAGE_MAX;
@@ -58,7 +63,7 @@ async function pullLedger(client: ConvexHttpClient) {
         let page: PulledPage;
         try {
             // oxlint-disable-next-line no-await-in-loop -- each page starts at the cursor the last one reached.
-            page = await client.query(api.sync.pullSince, { cursor, limit, tables });
+            page = await client.query(api.sync.pullSince, { cursor, limit, tables, ...scope });
         } catch (error) {
             if (limit === undefined) {
                 throw error;
@@ -80,22 +85,44 @@ interface LightLoad {
     path: LightPath;
 }
 
-async function pullLight(client: ConvexHttpClient, rates: Promise<readonly ExchangeRate[]>, { asOf, path }: LightLoad) {
+async function pullLight(
+    client: ConvexHttpClient,
+    rates: Promise<readonly ExchangeRate[]>,
+    profileId: string | null,
+    { asOf, path }: LightLoad
+) {
     const tables = syncedTableNames().filter((table) => table !== "transactionTags");
     const page = await client
-        .query(api.sync.pullRecent, { since: lightSince(path, asOf), tables })
+        .query(api.sync.pullRecent, { since: lightSince(path, asOf), tables, ...profileArgs(profileId) })
         .catch(() => undefined);
     if (page === undefined) {
         return null;
     }
     if (page === null) {
-        client.mutation(api.ledgerCells.build, {}).catch(() => undefined);
+        client.mutation(api.ledgerCells.build, profileArgs(profileId)).catch(() => undefined);
         return null;
     }
     const opening = { cells: page.opening, cutoff: page.since };
     return opensLight(path, pulledBooks(page.rows, await rates), asOf, opening)
         ? { cursor: 0, opening, rows: page.rows }
         : null;
+}
+
+const EMPTY_PAGE: PulledPage = { cursor: 0, hasMore: false, rows: [] };
+
+async function pullProfiles(client: ConvexHttpClient, required: boolean) {
+    try {
+        return await client.query(api.sync.pullSince, {
+            cursor: 0,
+            limit: PULL_PAGE_MAX,
+            tables: ["profiles"],
+        });
+    } catch (error) {
+        if (required) {
+            throw error;
+        }
+        return EMPTY_PAGE;
+    }
 }
 
 // The same request better-auth's own getToken makes: the visitor's cookies, addressed to the Convex site.
@@ -129,27 +156,47 @@ async function readProfile(convexSiteUrl: string): Promise<Profile | undefined> 
 
 // Everything the first frame of a signed-in page shows, read with the visitor's token before the server renders.
 export const serverLedger = createIsomorphicFn()
-    .server(async (token: string, light: LightLoad | null): Promise<ServerLedger> => {
-        const { convexSiteUrl } = convexUrls();
-        const client = new ConvexHttpClient(serverConvexUrl(), { auth: token });
-        const profile = tokenProfile(token) ?? timed("profile", () => readProfile(convexSiteUrl));
-        const rates = timed("rates", () => client.query(api.ledger.exchangeRates, {}));
-        const pull = async () =>
-            (light
-                ? await timed(
-                      "recent",
-                      () => pullLight(client, rates, light),
-                      (pulled) => (pulled ? `${pulled.rows.length} rows, ${pulled.opening.cells.length} cells` : "none")
-                  )
-                : null) ??
-            (await timed(
-                "pull",
-                () => pullLedger(client),
-                (pulled) => `${pulled.rows.length} rows`
-            ));
-        const [{ cursor, opening, rows }, rateRows] = await Promise.all([pull(), rates]);
-        return { collections: ledgerSeed(rows, cursor, rateRows), opening, profile: await profile };
-    })
+    .server(
+        async (token: string, light: LightLoad | null, requestedProfileId: string | null): Promise<ServerLedger> => {
+            const { convexSiteUrl } = convexUrls();
+            const client = new ConvexHttpClient(serverConvexUrl(), { auth: token });
+            const profile = tokenProfile(token) ?? timed("profile", () => readProfile(convexSiteUrl));
+            const rates = timed("rates", () => client.query(api.ledger.exchangeRates, {}));
+            const [profilesPage, rateRows] = await Promise.all([
+                timed(
+                    "profiles",
+                    () => pullProfiles(client, requestedProfileId !== null),
+                    (page) => `${page.rows.length} rows`
+                ),
+                rates,
+            ]);
+            const profileId = profilesOf(profilesPage).some((row) => row.id === requestedProfileId)
+                ? requestedProfileId
+                : null;
+            const pull = async () =>
+                (light
+                    ? await timed(
+                          "recent",
+                          () => pullLight(client, Promise.resolve(rateRows), profileId, light),
+                          (pulled) =>
+                              pulled ? `${pulled.rows.length} rows, ${pulled.opening.cells.length} cells` : "none"
+                      )
+                    : null) ??
+                (await timed(
+                    "pull",
+                    () => pullLedger(client, profileId),
+                    (pulled) => `${pulled.rows.length} rows`
+                ));
+            const { cursor, opening, rows } = await pull();
+            return {
+                collections: ledgerSeed(rows, cursor, rateRows),
+                opening,
+                profile: await profile,
+                profileId,
+                profiles: profilesPage,
+            };
+        }
+    )
     .client((): Promise<ServerLedger> => Promise.reject(new Error("The ledger is read on the server only")));
 
 const Sessions = Schema.Array(

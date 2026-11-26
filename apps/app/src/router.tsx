@@ -9,6 +9,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { CrashPage } from "@/components/error-page";
 import { convexClient, convexConfigured, serverConvexUrl } from "@/lib/convex";
 import { ledgerDependencies, serverDependencies } from "@/lib/db";
+import { currentProfileId } from "@/lib/profile";
 import type { Session } from "@/lib/session";
 
 import { routeTree } from "./routeTree.gen";
@@ -32,7 +33,9 @@ function queryClients() {
 
 export function getRouter() {
     const { convexQueryClient, queryClient } = queryClients();
-    const ledger = convexQueryClient ? ledgerDependencies(convexQueryClient.convexClient) : {};
+    const ledger = convexQueryClient
+        ? ledgerDependencies(convexQueryClient.convexClient, import.meta.env.SSR ? null : currentProfileId())
+        : {};
     const dbClient = new DbClient(import.meta.env.SSR ? serverDependencies() : ledger);
     const session: Session = { token: null };
     const router = createRouter({

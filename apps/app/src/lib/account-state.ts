@@ -6,6 +6,7 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { authClient } from "./auth-client";
 import { convexClient } from "./convex";
+import { profilesQuery } from "./profile-registry";
 import { currentPush } from "./web-push";
 import { webhooksOpen } from "./webhooks";
 
@@ -149,6 +150,7 @@ export function warmAccountState(client: QueryClient) {
         void client.prefetchQuery({ ...webhooksQuery, ...unlessKnown });
     }
     void client.prefetchQuery({ ...planQuery, ...unlessKnown });
+    void client.prefetchQuery({ ...profilesQuery, ...unlessKnown });
     void client.prefetchQuery({ ...sessionsQuery, ...unlessKnown });
     void client.prefetchQuery({ ...accountsQuery, ...unlessKnown });
     void client

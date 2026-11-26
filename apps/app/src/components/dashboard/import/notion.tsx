@@ -5,7 +5,7 @@ import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
 import type { IconSvgElement } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useMatch, useNavigate } from "@tanstack/react-router";
 import { ConvexError } from "convex/values";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -35,6 +35,15 @@ type NotionTrouble = "rateLimited" | "revoked" | "unavailable";
 
 const decodeRefusal = Schema.decodeUnknownOption(Schema.Struct({ code: Schema.String }));
 
+export function useNotionAllowed() {
+    const profileId = useMatch({
+        from: "/_account/_app",
+        select: (match) => match.loaderData?.profileId ?? null,
+        shouldThrow: false,
+    });
+    return profileId === null;
+}
+
 function troubleOf(error: Error): NotionTrouble {
     const refusal = error instanceof ConvexError ? Option.getOrNull(decodeRefusal(error.data)) : null;
     const code = refusal?.code ?? null;
@@ -45,9 +54,10 @@ function troubleOf(error: Error): NotionTrouble {
 }
 
 export function useNotion() {
+    const allowed = useNotionAllowed();
     const { data: connected } = useQuery(convexQuery(api.notion.connected, {}));
     const sources = useQuery({
-        enabled: connected === true,
+        enabled: allowed && connected === true,
         queryFn: () => convexClient().action(api.notion.sources, {}),
         queryKey: SOURCES_KEY,
         retry: false,
@@ -70,7 +80,12 @@ function useStartFile() {
 export function useExportUpload(onError: (message: string) => void) {
     const { notion } = useIntlayer("dashboard-import");
     const start = useStartFile();
+    const allowed = useNotionAllowed();
     return async (file: File) => {
+        if (!allowed) {
+            onError(notion.error.zip.value);
+            return;
+        }
         const bytes = new Uint8Array(await file.arrayBuffer());
         let csv: string | null = null;
         try {
@@ -317,7 +332,11 @@ function DatabasesBody({ notion: state, onClose }: { notion: ReturnType<typeof u
 }
 
 export function NotionDialog({ onClose, open }: { onClose: () => void; open: boolean }) {
+    const allowed = useNotionAllowed();
     const notion = useNotion();
+    if (!allowed) {
+        return null;
+    }
     return (
         <Dialog onOpenChange={(next) => next || onClose()} open={open}>
             <DialogContent size={notion.connected ? "lg" : "md"}>
