@@ -11,6 +11,7 @@ import { merchantKey } from "@outlayr/money/merchant-key";
 import type { RateLookup } from "@outlayr/money/rates";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -587,7 +588,7 @@ const claimPull = FunctionImpl.make(
             yield* writer.table("bankAccounts").patch(id, { pullAgain: true });
             return null;
         }
-        const token = crypto.randomUUID();
+        const token = SecureRandom.uuidV4Unsafe();
         yield* writer.table("bankAccounts").patch(id, {
             pullAgain: false,
             pullLease: { token, until: now + PULL_LEASE_MS },
