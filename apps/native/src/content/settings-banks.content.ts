@@ -226,6 +226,14 @@ const settingsBanks = {
             fr: "L'ajouter manuellement",
             pt: "Adicionar manualmente",
         }),
+        "settings.banks.search.failed": t({
+            en: "Couldn't load banks. Check your connection.",
+            de: "Banken konnten nicht geladen werden. Prüf deine Verbindung.",
+            es: "No se pudieron cargar los bancos. Revisa tu conexión.",
+            fr: "Impossible de charger les banques. Vérifiez votre connexion.",
+            pt: "Não foi possível carregar os bancos. Confira sua conexão.",
+            "pt-PT": "Não foi possível carregar os bancos. Verifique a sua ligação.",
+        }),
         "settings.banks.search.other.US": t({
             en: "US banks",
             de: "US-Banken",
@@ -262,13 +270,13 @@ const settingsBanks = {
             pt: "Vinculando…",
         }),
         "settings.banks.consent": t({
-            en: "Stripe handles the bank sign-in, so Outlayr never sees your login. We keep each account's bank, name and last 4 digits until you unlink it, and its transactions only until this phone collects them.",
-            de: "Stripe übernimmt die Bank-Anmeldung, Outlayr sieht deine Zugangsdaten nie. Wir speichern Bank, Name und die letzten 4 Ziffern jedes Kontos, bis du es trennst, und seine Umsätze nur, bis dieses Telefon sie abholt.",
-            es: "Stripe se encarga del inicio de sesión del banco, así que Outlayr nunca ve tus datos de acceso. Guardamos el banco, el nombre y los últimos 4 dígitos de cada cuenta hasta que la desvincules, y sus movimientos solo hasta que este teléfono los recoja.",
-            fr: "Stripe gère la connexion à la banque, Outlayr ne voit donc jamais vos identifiants. Nous gardons la banque, le nom et les 4 derniers chiffres de chaque compte jusqu'à ce que vous le déliiez, et ses opérations seulement jusqu'à ce que ce téléphone les récupère.",
-            pt: "O Stripe cuida do login no banco, então o Outlayr nunca vê seus dados de acesso. Guardamos o banco, o nome e os 4 últimos dígitos de cada conta até você desvinculá-la, e as transações só até este telefone buscá-las.",
+            en: "Stripe handles the bank sign-in, so Outlayr never sees your login. We keep each account's bank, name and last 4 digits until you unlink it, and add its transactions to your ledger.",
+            de: "Stripe übernimmt die Bank-Anmeldung, Outlayr sieht deine Zugangsdaten nie. Wir speichern Bank, Name und die letzten 4 Ziffern jedes Kontos, bis du es trennst, und tragen seine Umsätze in dein Haushaltsbuch ein.",
+            es: "Stripe se encarga del inicio de sesión del banco, así que Outlayr nunca ve tus datos de acceso. Guardamos el banco, el nombre y los últimos 4 dígitos de cada cuenta hasta que la desvincules, y agregamos sus movimientos a tu registro.",
+            fr: "Stripe gère la connexion à la banque, Outlayr ne voit donc jamais vos identifiants. Nous gardons la banque, le nom et les 4 derniers chiffres de chaque compte jusqu'à ce que vous le déliiez, et ajoutons ses opérations à votre journal.",
+            pt: "O Stripe cuida do login no banco, então o Outlayr nunca vê seus dados de acesso. Guardamos o banco, o nome e os 4 últimos dígitos de cada conta até você desvinculá-la, e adicionamos as transações aos seus lançamentos.",
             "pt-PT":
-                "O Stripe trata do início de sessão no banco, por isso o Outlayr nunca vê os seus dados de acesso. Guardamos o banco, o nome e os 4 últimos dígitos de cada conta até a desvincular, e as transações só até este telemóvel as recolher.",
+                "O Stripe trata do início de sessão no banco, por isso o Outlayr nunca vê os seus dados de acesso. Guardamos o banco, o nome e os 4 últimos dígitos de cada conta até a desvincular, e adicionamos as transações aos seus registos.",
         }),
         "settings.banks.consent.privacy": t({
             en: "Privacy policy",

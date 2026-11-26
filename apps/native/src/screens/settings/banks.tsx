@@ -338,10 +338,12 @@ function BankEntry({
             query: api.banking.searchInstitutions,
         },
     }).institutions;
-    const loaded = found instanceof Error ? null : found;
+    const failed = found instanceof Error;
+    const loaded = failed ? null : found;
     const rows = loaded ?? previous;
     const settled = loaded !== undefined && loaded !== null;
     const noMatch = settled && query.trim() !== "" && !rows.some((row) => !row.catchAll);
+    const offerManual = noMatch || (failed && rows.length === 0);
     const slow = useLongWait(bankLink.busy);
     const busyId = slow ? tapped : null;
     const consent = {
@@ -388,6 +390,11 @@ function BankEntry({
                 </View>
             </View>
             <SettingsSection {...consent}>
+                {failed && rows.length === 0 ? (
+                    <View className="border-border border-b py-3.5">
+                        <InlineFailure message={t("settings.banks.search.failed")} />
+                    </View>
+                ) : null}
                 {noMatch ? (
                     <View className="border-border border-b py-3.5">
                         <Text className="text-foreground text-body font-sans-semibold">
@@ -416,7 +423,7 @@ function BankEntry({
                         />
                     );
                 })}
-                {noMatch ? (
+                {offerManual ? (
                     <InstitutionRow
                         busy={false}
                         disabled={bankLink.busy}
@@ -656,7 +663,14 @@ function BankAccountSheet({
                 });
             },
             onSettled: () => setUnlinking(false),
-            onSuccess: () => {
+            onSuccess: (unlinked) => {
+                if (!unlinked) {
+                    haptics("error");
+                    notifyFailure({
+                        title: t("settings.banks.unlink.failed", { account: account ? accountTitle(account) : "" }),
+                    });
+                    return;
+                }
                 haptics("success");
                 ref.current?.dismiss();
             },
