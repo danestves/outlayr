@@ -8,7 +8,7 @@ import { ledgerCommitter } from "./ledger-committer";
 import { ledgerBooks, preloadLedger } from "./ledger-db";
 import type { LedgerPusher } from "./ledger-write";
 import { fakeConvex } from "./test-convex";
-import { stopUnsentWrites } from "./unsent";
+import { forgetLedger, stopUnsentWrites } from "./unsent";
 
 const HOLD_MS = 60_000;
 const answered = { accepted: 1, nextSeq: 1, skipped: 0 };
@@ -297,6 +297,16 @@ describe("ledger committer", () => {
         expect(push).not.toHaveBeenCalled();
         expect(storedRows()).toHaveLength(1);
         expect(committer.getSnapshot()).toStrictEqual({ failed: 0, held: 0, sending: 0 });
+    });
+
+    it("still sends a commit after sign-out forgets the ledger", async () => {
+        const push = vi.fn<Push>(() => Promise.resolve(answered));
+        const committer = ledgerCommitter(await openTab(push), "owner");
+        await forgetLedger();
+
+        expect(await committer.commit([entry("a")]).settled).toStrictEqual({ status: "saved" });
+
+        expect(sentIds(push)).toStrictEqual([["a"]]);
     });
 
     it("stops sending for a profile whose removal has started", async () => {
