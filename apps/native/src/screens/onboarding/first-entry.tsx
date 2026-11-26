@@ -25,6 +25,7 @@ import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 import type { FirstEntrySeed } from "./first-entry-seed";
+import { STEP_PROGRESS } from "./progress";
 
 export function OnboardingFirstEntry() {
     const db = useDatabase();
@@ -65,7 +66,7 @@ export function OnboardingFirstEntry() {
                 haptics(written ? "success" : "error");
                 setFailed(!written);
                 if (written) {
-                    router.replace("/onboarding/smart-features");
+                    router.replace("/onboarding/rhythm");
                 }
             },
         },
@@ -100,7 +101,7 @@ export function OnboardingFirstEntry() {
         }
         setFailed(false);
         posthog?.capture("onboarding_first_entry", { outcome: "skipped" });
-        router.push("/onboarding/smart-features");
+        router.push("/onboarding/rhythm");
     };
 
     return (
@@ -112,6 +113,7 @@ export function OnboardingFirstEntry() {
             }}
             error={failed ? t("transaction.save.failedBody") : null}
             eyebrow={t("onboarding.firstEntry.eyebrow")}
+            progress={STEP_PROGRESS["first-entry"]}
             skip={{ label: t("onboarding.firstEntry.later"), onPress: later }}
             title={t("onboarding.firstEntry.title")}
         >

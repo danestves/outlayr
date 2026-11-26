@@ -91,6 +91,14 @@ const pro = {
             pt: "Entre em um celular novo e está tudo lá",
             "pt-PT": "Inicie sessão num telemóvel novo e está tudo lá",
         }),
+        "pro.band.dailyBudget": t({
+            en: "Keep your {daily} a day honest",
+            de: "Halte deine {daily} pro Tag ein",
+            es: "Mantén tus {daily} al día",
+            fr: "Tenez vos {daily} par jour",
+            pt: "Mantenha seus {daily} por dia",
+            "pt-PT": "Mantenha os seus {daily} por dia",
+        }),
         "pro.band.everyPhone": t({
             en: "Your ledger, on every phone.",
             de: "Dein Haushaltsbuch auf jedem Handy.",
@@ -966,6 +974,14 @@ const pro = {
             es: "Lleva todas tus monedas juntas",
             fr: "Suivez toutes vos devises ensemble",
             pt: "Acompanhe todas as moedas juntas",
+        }),
+        "pro.top.dailyBudget": t({
+            en: "Pro logs every card tap and receipt for you.",
+            de: "Pro erfasst jeden Kartenkauf und Beleg für dich.",
+            es: "Pro registra cada pago con tarjeta y cada recibo por ti.",
+            fr: "Pro enregistre chaque paiement par carte et chaque reçu pour vous.",
+            pt: "O Pro registra cada compra no cartão e cada recibo para você.",
+            "pt-PT": "O Pro regista cada compra com cartão e cada recibo por si.",
         }),
         "pro.top.firstEntry": t({
             en: "You typed this one. Pro logs the rest.",

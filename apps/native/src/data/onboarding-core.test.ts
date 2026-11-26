@@ -16,7 +16,7 @@ describe("finishOnboarding", () => {
     });
 
     it("settles the gate it writes", async () => {
-        await Effect.runPromise(finishOnboarding(db));
+        await Effect.runPromise(finishOnboarding(db, "flow"));
         await expect(Effect.runPromise(Meta.get(db, "onboardingComplete"))).resolves.toBe(true);
     });
 });

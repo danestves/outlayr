@@ -56,6 +56,7 @@ export const ROOT_STACK: readonly { group: RootStackGroup; screens: readonly Roo
         screens: [
             { chrome: "headless", name: "onboarding/index" },
             // Transparent: the stock theme card differs from `--fr-ground`, so an opaque bar bands the top.
+            { chrome: "firstRunStep", name: "onboarding/goal" },
             { chrome: "firstRunStep", name: "onboarding/currency" },
             { chrome: "firstRunStep", name: "onboarding/accounts" },
             { chrome: "firstRunStep", name: "onboarding/first-line" },
@@ -65,6 +66,9 @@ export const ROOT_STACK: readonly { group: RootStackGroup; screens: readonly Roo
             { chrome: "firstRunStep", name: "onboarding/first-entry" },
             { chrome: "firstRunStep", name: "onboarding/scan" },
             { chrome: "firstRunStep", name: "onboarding/heard-from" },
+            { chrome: "firstRunStep", name: "onboarding/spend" },
+            { chrome: "firstRunStep", name: "onboarding/build" },
+            { chrome: "firstRunStep", name: "onboarding/reveal" },
             { chrome: "firstRunStep", locked: true, name: "onboarding/pro" },
             ...IMPORT_SCREENS.map((screen) => ({ ...screen, name: `onboarding/${screen.name}` })),
         ],

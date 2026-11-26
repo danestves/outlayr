@@ -30,6 +30,8 @@ export const TOUR_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
 
 export const AUTOLOG_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
 
+export const ONBOARDING_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
+
 const GUEST_PURCHASE_AT_MS = Date.UTC(2026, 10, 21);
 const PROFILES_AT_MS = JANUARY_NOTICE_AT_MS;
 
@@ -1138,6 +1140,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Auto-log setup in analytics",
                 },
                 {
+                    detail: "With Share analytics on: during setup, which of the four goals you pick, whether you keep the suggested monthly budget or skip it, and when you finish. Never amounts, names or notes.",
+                    label: "Setup in analytics",
+                },
+                {
                     detail: "With Pro you can keep separate profiles, such as Work or Family. Each profile's name, icon, and color sync with its own ledger. The web app and a connected AI assistant see only your Personal profile, and Notion imports go there too.",
                     label: "Profiles",
                 },
@@ -1166,6 +1172,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Mit eingeschaltetem „Analysedaten teilen“: wann du mit dem Einrichten der Auto-Erfassung beginnst, ob die Auto-Erfassung deine Benachrichtigungen oder SMS lesen kann, wenn du aus den Einstellungen deines Telefons zurückkommst, oder ob du den Schritt überspringst, und wann ihr Kurzbefehl in jedem Profil zum ersten Mal läuft. Nie Beträge, Händler oder Benachrichtigungstexte.",
                     label: "Einrichten der Auto-Erfassung in Analysen",
+                },
+                {
+                    detail: "Mit eingeschaltetem „Analysedaten teilen“: welches der vier Ziele du bei der Einrichtung wählst, ob du das vorgeschlagene Monatsbudget übernimmst oder überspringst und wann du fertig bist. Nie Beträge, Namen oder Notizen.",
+                    label: "Die Einrichtung in Analysen",
                 },
                 {
                     detail: "Mit Pro kannst du getrennte Profile führen, etwa Arbeit oder Familie. Name, Symbol und Farbe jedes Profils werden mit seinem eigenen Haushaltsbuch synchronisiert. Die Web-App und ein verbundener KI-Assistent sehen nur dein Profil „Privat“, und Notion-Importe landen ebenfalls dort.",
@@ -1198,6 +1208,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Configuración del registro automático en analíticas",
                 },
                 {
+                    detail: "Con Compartir analíticas activado: durante la configuración inicial, cuál de las cuatro metas eliges, si te quedas con el presupuesto mensual sugerido o lo saltas, y cuándo terminas. Nunca montos, nombres ni notas.",
+                    label: "La configuración inicial en analíticas",
+                },
+                {
                     detail: "Con Pro puedes tener perfiles separados, como Trabajo o Familia. El nombre, el ícono y el color de cada perfil se sincronizan con su propio registro. La app web y un asistente de IA conectado solo ven tu perfil Personal, y las importaciones de Notion también van ahí.",
                     label: "Perfiles",
                 },
@@ -1228,6 +1242,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Configuration de la saisie automatique dans les statistiques",
                 },
                 {
+                    detail: "Avec Partager les données d'analyse activé : pendant la configuration, lequel des quatre objectifs vous choisissez, si vous gardez le budget mensuel proposé ou le passez, et quand vous terminez. Jamais de montants, de noms ni de notes.",
+                    label: "La configuration dans les statistiques",
+                },
+                {
                     detail: "Avec Pro, vous pouvez tenir des profils séparés, comme Travail ou Famille. Le nom, l'icône et la couleur de chaque profil se synchronisent avec son propre registre. L'app web et un assistant IA connecté ne voient que votre profil Personnel, et les imports Notion y arrivent aussi.",
                     label: "Profils",
                 },
@@ -1256,6 +1274,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Com Compartilhar análises ativado: quando você começa a configurar o registro automático, se o registro automático consegue ler suas notificações ou SMS quando você volta dos ajustes do celular ou se você pula a etapa, e quando o atalho dele roda pela primeira vez em cada perfil. Nunca valores, estabelecimentos nem o texto das notificações.",
                     label: "Configuração do registro automático nas análises",
+                },
+                {
+                    detail: "Com Compartilhar análises ativado: durante a configuração inicial, qual das quatro metas você escolhe, se você mantém o orçamento mensal sugerido ou pula essa etapa, e quando você termina. Nunca valores, nomes ou notas.",
+                    label: "A configuração inicial nas análises",
                 },
                 {
                     detail: "Com o Pro você pode manter perfis separados, como Trabalho ou Família. O nome, o ícone e a cor de cada perfil sincronizam com o registro próprio dele. O app web e um assistente de IA conectado veem só o seu perfil Pessoal, e as importações do Notion também vão para ele.",

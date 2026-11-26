@@ -23,6 +23,7 @@ import {
     WalletCard,
 } from "@/domain/meta-values";
 import { DEFAULT_CURRENCY } from "@/domain/money";
+import { MoneyGoal } from "@/domain/money-goal";
 import { AccountPick } from "@/domain/onboarding-accounts";
 import { firstLocale } from "@/i18n/device-language";
 import { DEFAULT_ACCENT_VALUE } from "@/lib/accent-options";
@@ -80,6 +81,8 @@ const SETTINGS = defineMeta({
     logInsightsTimeFrame: { default: 2, schema: NumberText, scope: "synced" },
     logInsightsType: { default: 1, schema: NumberText, scope: "synced" },
     logViewLineGraph: { default: true, schema: BoolText, scope: "synced" },
+    // Null until the onboarding goal step, so a returning ledger can tell it was never answered.
+    moneyGoal: { default: null, schema: MoneyGoal, scope: "synced" },
     notificationHour: { default: 8, schema: NumberText, scope: "device" },
     notificationMinute: { default: 0, schema: NumberText, scope: "device" },
     notificationOption: { default: 1, schema: NumberText, scope: "device" },

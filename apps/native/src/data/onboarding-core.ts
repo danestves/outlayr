@@ -3,6 +3,7 @@ import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { transaction } from "@/db/transaction";
+import { trackOnboarding } from "@/lib/onboarding-events";
 
 import { Meta } from "./app-meta-core";
 
@@ -17,14 +18,22 @@ export class OnboardingError extends Schema.TaggedError<OnboardingError>()("Onbo
 
 // The sole writer of `onboardingComplete`: the first-entry step, or the currency step's "I already have an account".
 // The gate reads this marker, not the ledger: erasing every transaction must not re-open the flow.
-export const finishOnboarding = Effect.fn("Onboarding.finishOnboarding")(function* finishOnboarding(db: Database) {
+export const finishOnboarding = Effect.fn("Onboarding.finishOnboarding")(function* finishOnboarding(
+    db: Database,
+    via: "flow" | "existingAccount"
+) {
+    const already = yield* Meta.get(db, "onboardingComplete");
     yield* Meta.set(db, "onboardingComplete", true);
+    if (!already) {
+        // `(tabs)` mounts under the onboarding stack, so its $screen can't mark the end of the funnel.
+        yield* Effect.sync(() => trackOnboarding("onboarding_completed", { via }));
+    }
 });
 
 export const finishFirstRun = Effect.fn("Onboarding.finishFirstRun")(function* finishFirstRun(db: Database) {
     yield* Meta.set(db, "accountOfferHeld", true);
     yield* Meta.set(db, "onboardingWaitingAccounts", []);
-    yield* finishOnboarding(db);
+    yield* finishOnboarding(db, "flow");
 });
 
 export const releaseAccountOffer = Effect.fn("Onboarding.releaseAccountOffer")(function* releaseAccountOffer(

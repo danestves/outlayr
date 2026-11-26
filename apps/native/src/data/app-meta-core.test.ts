@@ -120,6 +120,7 @@ const STORED_TODAY = {
             },
         }),
     ],
+    moneyGoal: ["track", "payDebt"],
     moneyManagerImport: [
         JSON.stringify({
             accountIds: ["a1"],

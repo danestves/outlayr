@@ -283,6 +283,14 @@ const settings = {
             fr: "Utiliser {code}",
             pt: "Usar {code}",
         }),
+        "settings.goal.notSet": t({
+            en: "Not set",
+            de: "Nicht festgelegt",
+            es: "Sin definir",
+            fr: "Non défini",
+            pt: "Não definido",
+            "pt-PT": "Não definido",
+        }),
         "settings.haptics.excessive": t({
             en: "Excessive",
             de: "Maximal",
@@ -477,6 +485,14 @@ const settings = {
             es: "Sigue a Outlayr en X",
             fr: "Suivre Outlayr sur X",
             pt: "Siga o Outlayr no X",
+        }),
+        "settings.row.goal": t({
+            en: "Goal",
+            de: "Ziel",
+            es: "Objetivo",
+            fr: "Objectif",
+            pt: "Objetivo",
+            "pt-PT": "Objetivo",
         }),
         "settings.row.haptics": t({
             en: "Haptics",

@@ -24,7 +24,7 @@ export function OnboardingWelcome() {
         <FirstRun
             action={{
                 label: t("common.continue"),
-                onPress: () => router.push("/onboarding/currency"),
+                onPress: () => router.push("/onboarding/goal"),
             }}
             body={t("onboarding.cover.line")}
             cover

@@ -13,7 +13,6 @@ import { useTranslation } from "@/i18n/context";
 import { authClient } from "@/lib/auth-client";
 import { useLedgerAdoption } from "@/lib/ledger-adoption";
 import { useWhen } from "@/lib/lifecycle";
-import { useProviderSignIn } from "@/lib/use-provider-sign-in";
 import { ScanFlowScreen } from "@/screens/transaction/scan";
 import { SILENT } from "@/state/atom-command";
 import { saveScanFirstEntryCommand } from "@/state/onboarding-commands";
@@ -21,13 +20,14 @@ import { useAtomAction } from "@/state/use-atom-action";
 
 import { useFinishOnboarding } from "./finish";
 import { firstEntryHref } from "./first-entry-seed";
-
-type AuthClient = NonNullable<typeof authClient>;
+import { STEP_PROGRESS } from "./progress";
+import { useScanSignIn } from "./scan-sign-in";
+import type { AuthClient } from "./scan-sign-in";
 
 export function OnboardingScan() {
     const gate = useAiGate();
     if (gate !== "signed-in") {
-        return <ScanSignIn restoring={gate === "restoring"} />;
+        return <ScanSignIn />;
     }
     return <ScanAdoptionGate />;
 }
@@ -52,12 +52,13 @@ function ScanAdoptionGate() {
                 }}
                 error={failed}
                 eyebrow={t("onboarding.firstLine.scan.title")}
+                progress={STEP_PROGRESS.scan}
                 title={t("onboarding.scan.signInTitle")}
             />
         );
     }
     if (status !== "settled") {
-        return <ScanSignIn restoring />;
+        return <ScanSignIn />;
     }
     return (
         <>
@@ -104,11 +105,11 @@ function ScanEntry() {
     );
 }
 
-function ScanSignIn({ restoring }: { restoring: boolean }) {
+function ScanSignIn() {
     if (authClient === null) {
         return <ScanSignInUnavailable />;
     }
-    return <ScanSignInButtons client={authClient} restoring={restoring} />;
+    return <ScanSignInButtons client={authClient} />;
 }
 
 function ScanSignInUnavailable() {
@@ -118,25 +119,27 @@ function ScanSignInUnavailable() {
         <FirstRun
             body={t("onboarding.scan.signInBody")}
             eyebrow={t("onboarding.firstLine.scan.title")}
+            progress={STEP_PROGRESS.scan}
             skip={{ label: t("onboarding.firstLine.type"), onPress: () => router.replace("/onboarding/first-entry") }}
             title={t("onboarding.scan.signInTitle")}
         />
     );
 }
 
-function ScanSignInButtons({ client, restoring }: { client: AuthClient; restoring: boolean }) {
+function ScanSignInButtons({ client }: { client: AuthClient }) {
     const router = useRouter();
     const t = useTranslation();
-    const { busy, error, start } = useProviderSignIn(client);
+    const { restoring, signIn } = useScanSignIn(client);
     return (
         <FirstRun
             body={t("onboarding.scan.signInBody")}
-            error={error}
+            error={signIn.error}
             eyebrow={t("onboarding.firstLine.scan.title")}
+            progress={STEP_PROGRESS.scan}
             skip={{ label: t("onboarding.firstLine.type"), onPress: () => router.replace("/onboarding/first-entry") }}
             title={t("onboarding.scan.signInTitle")}
         >
-            <ProviderSignInButtons busy={busy} disabled={restoring} start={start} />
+            <ProviderSignInButtons busy={signIn.busy} disabled={restoring} start={signIn.start} />
         </FirstRun>
     );
 }

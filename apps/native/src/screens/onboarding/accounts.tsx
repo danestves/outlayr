@@ -30,6 +30,7 @@ import { createOnboardingAccountsCommand } from "@/state/onboarding-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 
 import { useFirstLineDoors } from "./first-line";
+import { STEP_PROGRESS } from "./progress";
 
 const TILE = 28;
 
@@ -162,6 +163,7 @@ export function OnboardingAccounts() {
                       })
                     : undefined
             }
+            progress={STEP_PROGRESS.accounts}
             skip={{ label: t("onboarding.accounts.skip"), onPress: () => save(true) }}
             title={t("onboarding.accounts.title")}
         >

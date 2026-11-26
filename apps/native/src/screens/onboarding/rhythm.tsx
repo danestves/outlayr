@@ -16,6 +16,7 @@ import { chooseFirstRunReminderCommand } from "@/state/settings-flow-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 
 import { useFinishOnboarding } from "./finish";
+import { STEP_PROGRESS } from "./progress";
 
 const EVENING = reminderTime(REMINDER_EVENING, { hour: 20, minute: 0 });
 
@@ -42,12 +43,12 @@ export function OnboardingRhythm() {
     const t = useTranslation();
     const router = useRouter();
     const shareAnalytics = useMeta(db, "shareAnalytics");
-    const { clearFailed, failed, finish } = useFinishOnboarding();
+    const { clearFailed, failed } = useFinishOnboarding();
     const next = () => {
         if (shareAnalytics) {
             router.push("/onboarding/heard-from");
         } else {
-            finish();
+            router.push("/onboarding/spend");
         }
     };
     const choosing = useRef(false);
@@ -91,6 +92,7 @@ export function OnboardingRhythm() {
                     <MockNotification body={t("onboarding.rhythm.notifToday")} />
                 </View>
             }
+            progress={STEP_PROGRESS.rhythm}
             skip={{ label: t("onboarding.rhythm.none"), onPress: skip }}
             title={t("onboarding.rhythm.title")}
         />

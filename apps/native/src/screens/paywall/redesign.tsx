@@ -1,6 +1,7 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
 import Tick02Icon from "@hugeicons-pro/core-solid-rounded/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Button } from "panelui-native/components/button";
 import { Pressable, ScrollView, View } from "react-native";
@@ -8,11 +9,15 @@ import { Pressable, ScrollView, View } from "react-native";
 import { MonoLabel } from "@/components/mono-label";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
-import { useMeta } from "@/data/app-meta";
+import { useGlobalCurrency, useMeta } from "@/data/app-meta";
+import { useCurrentMainBudget } from "@/data/budgets";
+import type { MainBudgetView } from "@/data/budgets";
 import { useLedgerStats } from "@/data/ledger-stats";
 import type { LedgerStats } from "@/data/ledger-stats";
 import { useNow } from "@/data/use-now";
+import { leftPerDay } from "@/domain/budget-math";
 import { formatChargeDate } from "@/domain/dates";
+import { formatAmount } from "@/domain/money";
 import type { PaywallTrigger } from "@/domain/paywall-trigger";
 import type { Plan } from "@/domain/pro-plans";
 import type { ProStatus } from "@/domain/pro-status";
@@ -59,6 +64,19 @@ function statsLine(stats: LedgerStats, autologged: number, t: TranslateFn): stri
         .join(" · ");
 }
 
+function dailyBudgetLabel(
+    budget: MainBudgetView | null,
+    currency: string,
+    now: Date,
+    language: Language
+): string | null {
+    if (budget === null || budget.type !== BUDGET_TYPE.month || budget.leftover < 0) {
+        return null;
+    }
+    const perDay = leftPerDay(budget.leftover, budget.window, now);
+    return formatAmount(perDay, currency, perDay < 10, language);
+}
+
 interface BandCopy {
     stats: string | null;
     title: string;
@@ -71,12 +89,14 @@ function AccountBand({ trigger, ...band }: BandCopy & { trigger: AccountTrigger 
 function PitchBand({
     autolog,
     block,
+    daily,
     daysLeft,
     stats,
     waitingAccounts,
 }: {
     autolog: { cap: number; total: number; used: number };
     block: TopBlock;
+    daily: string | null;
     daysLeft: number;
     stats: LedgerStats;
     waitingAccounts: number;
@@ -99,6 +119,15 @@ function PitchBand({
             return <ProBand {...band} subtitle={t("pro.top.firstEntry")} />;
         }
         case "onboarding": {
+            if (daily !== null) {
+                return (
+                    <ProBand
+                        {...band}
+                        subtitle={t("pro.top.dailyBudget")}
+                        title={t("pro.band.dailyBudget", { daily })}
+                    />
+                );
+            }
             return (
                 <ProBand
                     {...band}
@@ -168,6 +197,7 @@ export function PaywallRedesign({
     trigger?: typeof PaywallTrigger.Type;
 }) {
     const t = useTranslation();
+    const { language } = useLanguage();
     const db = useDatabase();
     const largeText = useAccessibilityTextSize();
     const flow = usePaywallFlow("redesign", { onLeave, trigger });
@@ -175,6 +205,9 @@ export function PaywallRedesign({
     const now = useNow();
     const stats = useLedgerStats(db, now);
     const waitingAccounts = useMeta(db, "onboardingWaitingAccounts").length;
+    const homeCurrency = useGlobalCurrency(db);
+    const mainBudget = useCurrentMainBudget(db, now);
+    const daily = dailyBudgetLabel(mainBudget, homeCurrency, new Date(now), language);
     const { manageUrl, status } = useProTerm();
     const then = thenLabel(flow.plan, t);
     const daysLeft = daysLeftInMonth(new Date(now));
@@ -307,6 +340,7 @@ export function PaywallRedesign({
                         <PitchBand
                             autolog={flow.autolog}
                             block={flow.block}
+                            daily={daily}
                             daysLeft={daysLeft}
                             stats={stats}
                             waitingAccounts={waitingAccounts}

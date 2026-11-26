@@ -11,7 +11,7 @@ import TiktokIcon from "@hugeicons-pro/core-stroke-rounded/TiktokIcon";
 import UserGroupIcon from "@hugeicons-pro/core-stroke-rounded/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import type { IconSvgElement } from "@hugeicons/react-native";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { Input } from "panelui-native/components/input";
 import { RadioGroup } from "panelui-native/components/radio-group";
 import { useRef, useState } from "react";
@@ -29,7 +29,7 @@ import { useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { useHardwareBack } from "@/screens/import/use-hardware-back";
 
-import { useFinishOnboarding } from "./finish";
+import { STEP_PROGRESS } from "./progress";
 
 const ICONS: Record<HeardFromSource, IconSvgElement> = {
     ai_assistant: AiChat02Icon,
@@ -58,15 +58,14 @@ const LABELS = {
 } as const satisfies Record<HeardFromSource, TranslationKey>;
 
 export function OnboardingHeardFrom() {
+    const router = useRouter();
     const t = useTranslation();
-    const { clearFailed, failed, finish } = useFinishOnboarding();
     return (
         <HeardFrom
-            error={failed}
+            error={null}
             eyebrow={t("onboarding.heardFrom.lastStep")}
             onDone={() => {
-                clearFailed();
-                finish();
+                router.replace("/onboarding/spend");
             }}
         />
     );
@@ -122,6 +121,7 @@ export function HeardFrom({ error, eyebrow, onDone }: HeardFromProps) {
                 centered
                 error={error}
                 eyebrow={eyebrow}
+                progress={STEP_PROGRESS["heard-from"]}
                 skip={{ label: t("onboarding.heardFrom.skip"), onPress: onDone }}
                 title={t("onboarding.heardFrom.title")}
             >
