@@ -7,16 +7,24 @@ import { Text } from "@/components/text";
 interface SettingsScreenProps {
     children: ReactNode;
     footer?: string;
+    keyboardShouldPersistTaps?: "always" | "handled" | "never";
     onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     scrollRef?: Ref<ScrollViewInstance>;
 }
 
-export function SettingsScreen({ children, footer, onScroll, scrollRef }: SettingsScreenProps) {
+export function SettingsScreen({
+    children,
+    footer,
+    keyboardShouldPersistTaps,
+    onScroll,
+    scrollRef,
+}: SettingsScreenProps) {
     return (
         <ScrollView
             className="bg-background flex-1"
             contentContainerClassName="px-5 pb-safe-offset-10"
             contentInsetAdjustmentBehavior="automatic"
+            keyboardShouldPersistTaps={keyboardShouldPersistTaps}
             onScroll={onScroll}
             ref={scrollRef}
             scrollEventThrottle={16}

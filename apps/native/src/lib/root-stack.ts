@@ -105,7 +105,7 @@ export const ROOT_STACK: readonly { group: RootStackGroup; screens: readonly Roo
             { chrome: "titled", name: "settings/feature-lab", titleKey: "nav.settings.featureLab" },
             { chrome: "titled", name: "settings/integrations/bank", titleKey: "settings.wallet.bankSection" },
             { chrome: "titled", name: "settings/integrations/banks/index", titleKey: "nav.settings.banks" },
-            { chrome: "titled", name: "settings/integrations/banks/link", titleKey: "settings.banks.linkTitle" },
+            { chrome: "fitSheet", name: "settings/integrations/banks/link", titleKey: "settings.banks.linkTitle" },
             { chrome: "titled", name: "settings/integrations/index", titleKey: "nav.settings.integrations" },
             { chrome: "titled", name: "settings/integrations/messages", titleKey: "settings.wallet.messages" },
             { chrome: "titled", name: "settings/integrations/wallet", titleKey: "nav.settings.wallet" },

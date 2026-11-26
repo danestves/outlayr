@@ -1,6 +1,7 @@
-import type { BankAccountView, BankOverview } from "@outlayr/backend/confect/banking.spec";
+import type { BankAccountView, BankOverview, InstitutionView } from "@outlayr/backend/confect/banking.spec";
 
 export type BankOverviewView = typeof BankOverview.Type;
+export type BankInstitution = typeof InstitutionView.Type;
 export type LinkedBankAccount = typeof BankAccountView.Type;
 
 /** The link flow: the banks list and the Accounts add menu both push it. */
@@ -14,7 +15,7 @@ export type BankOverviewResult =
 export type BankGate = "free" | "personal" | "sync";
 
 export type BanksScreen =
-    | { kind: "entry"; countries: readonly string[] }
+    | { kind: "entry" }
     | { kind: "failed" }
     | { kind: "gate"; gate: BankGate }
     | { kind: "hidden" }
@@ -46,7 +47,7 @@ export function banksScreen({
     if (overview.kind !== "ready") {
         return overview.kind === "error" ? { kind: "failed" } : { kind: "loading" };
     }
-    const { access, accounts, countries } = overview.overview;
+    const { access, accounts } = overview.overview;
     if (access === "unavailable") {
         return { kind: "hidden" };
     }
@@ -63,7 +64,7 @@ export function banksScreen({
     if (!personal) {
         return { gate: "personal", kind: "gate" };
     }
-    return { countries, kind: "entry" };
+    return { kind: "entry" };
 }
 
 export function bankEntryShown(overview: BankOverviewResult, stripeReady: boolean): boolean {
@@ -98,10 +99,4 @@ export function needsSignIn(overview: BankOverviewResult): LinkedBankAccount | n
     return overview.kind === "ready"
         ? (overview.overview.accounts.find((account) => account.status === "relink") ?? null)
         : null;
-}
-
-/** The region's country when a provider covers it, so a Canadian phone opens on Canada. */
-export function defaultCountry(countries: readonly string[], region: string | undefined): string | null {
-    const local = region?.toUpperCase();
-    return countries.find((country) => country === local) ?? countries[0] ?? null;
 }

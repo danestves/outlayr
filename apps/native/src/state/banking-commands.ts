@@ -1,14 +1,17 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import * as Effect from "effect/Effect";
 
-import type { LinkedBankAccount } from "@/domain/linked-banks";
+import type { BankInstitution, LinkedBankAccount } from "@/domain/linked-banks";
 import { cloudAction, cloudMutation } from "@/lib/convex";
 import { collectBankAccounts } from "@/lib/stripe-link";
 
 import { createCommand } from "./atom-command";
 
-const linkBank = Effect.fn("Banking.linkBank")(function* linkBank(country: string) {
-    const started = yield* cloudAction(api.banking.startLink, { country });
+const linkBank = Effect.fn("Banking.linkBank")(function* linkBank(institution: BankInstitution["id"]) {
+    const started = yield* cloudAction(api.banking.startLink, { institution });
+    if (started.kind === "redirect") {
+        return { kind: "failed" as const };
+    }
     if (started.kind !== "sdk") {
         return started;
     }
@@ -16,13 +19,17 @@ const linkBank = Effect.fn("Banking.linkBank")(function* linkBank(country: strin
     if (sheet.kind !== "collected") {
         return sheet;
     }
-    return yield* cloudAction(api.banking.finishLink, { provider: started.provider, sessionId: sheet.sessionId });
+    return yield* cloudAction(api.banking.finishLink, {
+        completion: null,
+        provider: started.provider,
+        sessionId: sheet.sessionId,
+    });
 });
 
 export type BankLinkOutcome = Effect.Success<ReturnType<typeof linkBank>>;
 
 export const linkBankCommand = createCommand({
-    execute: ({ country }: { country: string }) => linkBank(country),
+    execute: ({ institution }: { institution: BankInstitution["id"] }) => linkBank(institution),
     label: "banking:link",
 });
 

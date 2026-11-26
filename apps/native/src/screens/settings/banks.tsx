@@ -1,22 +1,26 @@
 import { BottomSheetModal, BottomSheetView } from "@expo/ui/community/bottom-sheet";
 import Cancel01Icon from "@hugeicons-pro/core-stroke-rounded/Cancel01Icon";
 import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
+import Search01Icon from "@hugeicons-pro/core-stroke-rounded/Search01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import { api } from "@outlayr/backend/convex/_generated/api";
+import { useQueries } from "convex/react";
 import * as Cause from "effect/Cause";
-import { Redirect, useRouter } from "expo-router";
+import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { useRef, useState } from "react";
-import type { RefObject } from "react";
-import { Alert, Platform, Pressable, View } from "react-native";
+import type { ReactNode, RefObject } from "react";
+import { Alert, Platform, Pressable, TextInput, View } from "react-native";
 
 import { BusyText } from "@/components/busy-text";
+import { CategoryIconTile } from "@/components/category-icon-tile";
 import { InlineFailure } from "@/components/form/inline-failure";
 import { SettingsSection } from "@/components/list/list-row";
 import { MaterialListItem } from "@/components/list/material-list-item";
 import { RowShell } from "@/components/list/row-shell";
 import { MaterialFab } from "@/components/material-fab";
 import { MonoLabel } from "@/components/mono-label";
-import { SegmentedRow } from "@/components/settings/segmented-row";
+import { SEARCH_FIELD } from "@/components/search-field-style";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { SheetGestureRoot } from "@/components/sheet-gesture-root";
 import { Text } from "@/components/text";
@@ -25,11 +29,11 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useNow } from "@/data/use-now";
 import { useSyncStatus } from "@/data/use-sync-status";
 import { formatSentenceDate, formatTime } from "@/domain/dates";
-import { accountTitle, BANK_LINK_ROUTE, banksScreen, byInstitution, defaultCountry } from "@/domain/linked-banks";
-import type { BankGate, LinkedBankAccount } from "@/domain/linked-banks";
+import { accountTitle, BANK_LINK_ROUTE, banksScreen, byInstitution } from "@/domain/linked-banks";
+import type { BankGate, BankInstitution, LinkedBankAccount } from "@/domain/linked-banks";
 import { useBankOverview } from "@/hooks/use-bank-overview";
 import { useLongWait } from "@/hooks/use-long-wait";
-import { useOpenPaywall } from "@/hooks/use-pro-gate";
+import { useCreateAccount, useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import type { TranslationKey } from "@/i18n/catalog";
@@ -48,14 +52,13 @@ import { unlinkBankCommand } from "@/state/banking-commands";
 import { switchProfileCommand } from "@/state/profiles-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
-import { useMaterialColors } from "@/theme/use-material-colors";
 
-import { BankFilesIntoRow, BankMark, kindLabel, useBankLink } from "./bank-parts";
+import { BankFilesIntoRow, BankGlyph, BankMark, kindLabel, useBankLink } from "./bank-parts";
 
 const NO_ACCOUNTS: readonly LinkedBankAccount[] = [];
-const NO_COUNTRIES: readonly string[] = [];
 const FIT_CONTENT = { alignSelf: "stretch" } as const;
 const ROW_MARK = 20;
+const ENTRY_MARK = 32;
 
 type BankLink = ReturnType<typeof useBankLink>;
 
@@ -88,10 +91,12 @@ export function LinkedBanks() {
 }
 
 export function LinkBank() {
-    return <BanksRoute mode="link" />;
+    const params = useLocalSearchParams<{ q?: string | string[] }>();
+    const query = Array.isArray(params.q) ? undefined : params.q;
+    return <BanksRoute mode="link" query={query} />;
 }
 
-function BanksRoute({ mode }: { mode: "link" | "list" }) {
+function BanksRoute({ mode, query }: { mode: "link" | "list"; query?: string }) {
     const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
@@ -134,19 +139,19 @@ function BanksRoute({ mode }: { mode: "link" | "list" }) {
                 return (
                     <BankEntry
                         bankLink={bankLink}
-                        countries={screen.countries}
-                        linked={(ready?.accounts.length ?? 0) > 0}
+                        initialQuery={query}
+                        onLeave={
+                            mode === "link"
+                                ? () => {
+                                      router.back();
+                                  }
+                                : undefined
+                        }
                     />
                 );
             }
             default: {
-                return (
-                    <BanksList
-                        accounts={screen.accounts}
-                        bankLink={bankLink}
-                        countries={ready?.countries ?? NO_COUNTRIES}
-                    />
-                );
+                return <BanksList accounts={screen.accounts} />;
             }
         }
     })();
@@ -217,32 +222,128 @@ function BankGateView({ gate }: { gate: BankGate }) {
     );
 }
 
-function countryName(t: TranslateFn, country: string): string {
-    return country === "US" || country === "CA" ? t(`settings.banks.country.${country}`) : country;
+const CATCH_ALL_COPY = {
+    CA: { detail: "settings.banks.search.other.CA.detail", title: "settings.banks.search.other.CA" },
+    US: { detail: "settings.banks.search.other.US.detail", title: "settings.banks.search.other.US" },
+} as const satisfies Record<string, { detail: TranslationKey; title: TranslationKey }>;
+
+const REGION_NAMES = new Map<Language, Intl.DisplayNames | null>();
+
+// Hermes may ship without DisplayNames, so the code itself remains the fallback.
+function regionName(language: Language, country: string): string {
+    let names = REGION_NAMES.get(language);
+    if (names === undefined) {
+        try {
+            names = new Intl.DisplayNames([language], { type: "region" });
+        } catch {
+            names = null;
+        }
+        REGION_NAMES.set(language, names);
+    }
+    return names?.of(country) ?? country;
 }
 
-function linkLabel(t: TranslateFn, country: string | null): string {
-    return country === "US" || country === "CA"
-        ? t(`settings.banks.entry.link.${country}`)
-        : t("settings.banks.linkTitle");
+function institutionCopy(t: TranslateFn, language: Language, institution: BankInstitution) {
+    if (institution.catchAll && (institution.country === "CA" || institution.country === "US")) {
+        const copy = CATCH_ALL_COPY[institution.country];
+        return { detail: t(copy.detail), title: t(copy.title) };
+    }
+    return { detail: regionName(language, institution.country), title: institution.name };
+}
+
+function InstitutionMark({ logo }: { logo: string | null }) {
+    const colors = useColors();
+    if (logo === null) {
+        return <BankGlyph size={ENTRY_MARK} />;
+    }
+    return (
+        <CategoryIconTile
+            color={colors.muted}
+            icon={null}
+            imageUri={logo}
+            radius={Math.round(ENTRY_MARK / 4)}
+            size={ENTRY_MARK}
+            type="solid"
+        />
+    );
+}
+
+function InstitutionRow({
+    busy,
+    detail,
+    disabled,
+    leading,
+    onPress,
+    title,
+}: {
+    busy: boolean;
+    detail?: string;
+    disabled: boolean;
+    leading: ReactNode;
+    onPress: () => void;
+    title: string;
+}) {
+    const t = useTranslation();
+    const colors = useColors();
+    return (
+        <Pressable
+            accessibilityRole="button"
+            className="border-border flex-row items-center gap-3 border-b py-3.5 active:opacity-60"
+            disabled={disabled}
+            onPress={onPress}
+        >
+            <View className="items-center justify-center" style={{ height: ENTRY_MARK, width: ENTRY_MARK }}>
+                {leading}
+            </View>
+            <View className="flex-1 gap-0.5">
+                {busy ? (
+                    <BusyText className="text-body font-sans-semibold" color={colors.foreground}>
+                        {t("settings.banks.entry.busy")}
+                    </BusyText>
+                ) : (
+                    <Text className="text-foreground text-body" numberOfLines={1}>
+                        {title}
+                    </Text>
+                )}
+                {detail ? (
+                    <Text className="text-muted text-subtitle" numberOfLines={1}>
+                        {detail}
+                    </Text>
+                ) : null}
+            </View>
+        </Pressable>
+    );
 }
 
 function BankEntry({
     bankLink,
-    countries,
-    linked,
+    initialQuery,
+    onLeave,
 }: {
     bankLink: BankLink;
-    countries: readonly string[];
-    linked: boolean;
+    initialQuery?: string;
+    onLeave?: () => void;
 }) {
     const t = useTranslation();
     const colors = useColors();
     const { language } = useLanguage();
+    const createAccount = useCreateAccount();
     const region = useRegionCode();
-    const [picked, setPicked] = useState<string | null>(null);
-    const country = picked !== null && countries.includes(picked) ? picked : defaultCountry(countries, region);
+    const [query, setQuery] = useState(initialQuery ?? "");
+    const [previous, setPrevious] = useState<readonly BankInstitution[]>([]);
+    const [tapped, setTapped] = useState<BankInstitution["id"] | null>(null);
+    const found: readonly BankInstitution[] | Error | undefined = useQueries({
+        institutions: {
+            args: { q: query, region: region?.toUpperCase() ?? null },
+            query: api.banking.searchInstitutions,
+        },
+    }).institutions;
+    const loaded = found instanceof Error ? null : found;
+    const rows = loaded ?? previous;
+    const settled = loaded !== undefined && loaded !== null;
+    const noMatch = settled && query.trim() !== "" && !rows.some((row) => !row.catchAll);
     const slow = useLongWait(bankLink.busy);
+    const busyId = slow ? tapped : null;
     const consent = {
         footer: t("settings.banks.consent"),
         footerLink: {
@@ -253,45 +354,79 @@ function BankEntry({
         },
     };
 
+    const changeQuery = (next: string) => {
+        setPrevious(rows);
+        setQuery(next);
+    };
+
     return (
-        <SettingsScreen>
-            <Intro
-                body={t("settings.banks.entry.body")}
-                title={linked ? t("settings.banks.linkAnother") : t("settings.banks.entry.title")}
-            />
+        <SettingsScreen keyboardShouldPersistTaps="handled">
+            <View className="pt-4">
+                <View className="bg-surface flex-row items-center gap-2 rounded-full px-4 py-2.5">
+                    <HugeiconsIcon color={colors.muted} icon={Search01Icon} size={16} strokeWidth={2} />
+                    <TextInput
+                        accessibilityLabel={t("settings.banks.search.placeholder")}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        onChangeText={changeQuery}
+                        placeholder={t("settings.banks.search.placeholder")}
+                        placeholderTextColor={colors.muted}
+                        returnKeyType="search"
+                        style={[SEARCH_FIELD, { color: colors.foreground }]}
+                        value={query}
+                    />
+                    {query === "" ? null : (
+                        <Pressable
+                            accessibilityLabel={t("common.clearSearch")}
+                            accessibilityRole="button"
+                            hitSlop={8}
+                            onPress={() => changeQuery("")}
+                        >
+                            <HugeiconsIcon color={colors.muted} icon={Cancel01Icon} size={16} strokeWidth={2} />
+                        </Pressable>
+                    )}
+                </View>
+            </View>
             <SettingsSection {...consent}>
-                {countries.length > 1 ? (
-                    <SegmentedRow
-                        icon="Landmark"
-                        onChange={(index) => setPicked(countries[index] ?? null)}
-                        options={countries.map((code, index) => ({ label: countryName(t, code), value: index }))}
-                        title={t("settings.banks.entry.country")}
-                        value={Math.max(0, countries.indexOf(country ?? ""))}
+                {noMatch ? (
+                    <View className="border-border border-b py-3.5">
+                        <Text className="text-foreground text-body font-sans-semibold">
+                            {t("settings.banks.search.noMatch", { query })}
+                        </Text>
+                    </View>
+                ) : null}
+                {rows.map((row) => {
+                    const copy = institutionCopy(t, language, row);
+                    return (
+                        <InstitutionRow
+                            busy={busyId === row.id}
+                            detail={copy.detail}
+                            disabled={bankLink.busy}
+                            key={row.id}
+                            leading={
+                                row.catchAll ? <BankGlyph size={ENTRY_MARK} /> : <InstitutionMark logo={row.logo} />
+                            }
+                            onPress={() => {
+                                setTapped(row.id);
+                                bankLink.link(row);
+                            }}
+                            title={copy.title}
+                        />
+                    );
+                })}
+                {noMatch ? (
+                    <InstitutionRow
+                        busy={false}
+                        disabled={bankLink.busy}
+                        leading={<HugeiconsIcon color={colors.tint} icon={PlusSignIcon} size={20} strokeWidth={1.9} />}
+                        onPress={() => {
+                            onLeave?.();
+                            createAccount();
+                        }}
+                        title={t("settings.banks.search.manual")}
                     />
                 ) : null}
             </SettingsSection>
-            <View className="pt-6">
-                <Button
-                    className="rounded-full"
-                    disabled={bankLink.busy || country === null}
-                    fullWidth
-                    onPress={() => {
-                        if (country !== null) {
-                            bankLink.link(country);
-                        }
-                    }}
-                    size="lg"
-                    variant="primary"
-                >
-                    {slow ? (
-                        <BusyText className="text-[18px] font-medium" color={colors.primaryForeground}>
-                            {t("settings.banks.entry.busy")}
-                        </BusyText>
-                    ) : (
-                        linkLabel(t, country)
-                    )}
-                </Button>
-            </View>
         </SettingsScreen>
     );
 }
@@ -317,34 +452,19 @@ function statusLine(t: TranslateFn, account: LinkedBankAccount, language: Langua
           })}`;
 }
 
-function BanksList({
-    accounts,
-    bankLink,
-    countries,
-}: {
-    accounts: readonly LinkedBankAccount[];
-    bankLink: BankLink;
-    countries: readonly string[];
-}) {
+function BanksList({ accounts }: { accounts: readonly LinkedBankAccount[] }) {
     const t = useTranslation();
     const router = useRouter();
     const colors = useColors();
     const { language } = useLanguage();
-    const region = useRegionCode();
     const sheetRef = useRef<BottomSheetModal>(null);
     const [openId, setOpenId] = useState<LinkedBankAccount["id"] | null>(null);
-    const [relinking, setRelinking] = useState<LinkedBankAccount["id"] | null>(null);
     const groups = byInstitution(accounts);
     const open = accounts.find((account) => account.id === openId) ?? null;
-    const country = defaultCountry(countries, region);
     const android = Platform.OS === "android";
 
     const signIn = (account: LinkedBankAccount) => {
-        if (country === null) {
-            return;
-        }
-        setRelinking(account.id);
-        bankLink.link(country);
+        router.push({ pathname: BANK_LINK_ROUTE, params: { q: account.institution } });
     };
 
     return (
@@ -366,7 +486,6 @@ function BanksList({
                         {group.accounts.map((account) => (
                             <BankAccountRow
                                 account={account}
-                                busy={bankLink.busy && relinking === account.id}
                                 key={account.id}
                                 onOpen={() => {
                                     setOpenId(account.id);
@@ -404,7 +523,6 @@ function BanksList({
             ) : null}
             <BankAccountSheet
                 account={open}
-                busy={bankLink.busy}
                 onDismiss={() => setOpenId(null)}
                 onSignIn={(account) => {
                     sheetRef.current?.dismiss();
@@ -434,35 +552,16 @@ function useRowDetail(account: LinkedBankAccount) {
 
 function BankAccountRow({
     account,
-    busy,
     onOpen,
     onSignIn,
 }: {
     account: LinkedBankAccount;
-    busy: boolean;
     onOpen: () => void;
     onSignIn: () => void;
 }) {
     const t = useTranslation();
-    const colors = useColors();
-    const m3 = useMaterialColors();
     const { attention, detail } = useRowDetail(account);
     const relink = account.status === "relink";
-    const signInLabel = busy ? (
-        <BusyText className="text-body" color={Platform.OS === "android" ? m3.onSecondaryContainer : colors.danger}>
-            {t("settings.banks.entry.busy")}
-        </BusyText>
-    ) : (
-        <Text
-            className={
-                Platform.OS === "android"
-                    ? "text-m3-on-secondary-container text-caption font-sans-semibold"
-                    : "text-danger text-body"
-            }
-        >
-            {Platform.OS === "android" ? t("settings.banks.signIn") : t("settings.banks.signInAgain")}
-        </Text>
-    );
     const signIn = relink ? (
         <Pressable
             accessibilityRole="button"
@@ -471,11 +570,18 @@ function BankAccountRow({
                     ? "bg-m3-secondary-container rounded-full px-4 py-2 active:opacity-60"
                     : "active:opacity-60"
             }
-            disabled={busy}
             hitSlop={8}
             onPress={onSignIn}
         >
-            {signInLabel}
+            <Text
+                className={
+                    Platform.OS === "android"
+                        ? "text-m3-on-secondary-container text-caption font-sans-semibold"
+                        : "text-danger text-body"
+                }
+            >
+                {Platform.OS === "android" ? t("settings.banks.signIn") : t("settings.banks.signInAgain")}
+            </Text>
         </Pressable>
     ) : null;
     const off =
@@ -519,13 +625,11 @@ function FactRow({ label, value }: { label: string; value: string }) {
 function BankAccountSheet({
     ref,
     account,
-    busy,
     onDismiss,
     onSignIn,
 }: {
     ref: RefObject<BottomSheetModal | null>;
     account: LinkedBankAccount | null;
-    busy: boolean;
     onDismiss: () => void;
     onSignIn: (account: LinkedBankAccount) => void;
 }) {
@@ -621,7 +725,6 @@ function BankAccountSheet({
                             {account.status === "relink" ? (
                                 <Button
                                     className="rounded-full"
-                                    disabled={busy}
                                     fullWidth
                                     onPress={() => onSignIn(account)}
                                     size="lg"

@@ -16,7 +16,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useBankAccounts } from "@/data/accounts";
 import type { Database } from "@/db/client";
 import { accountTitle } from "@/domain/linked-banks";
-import type { LinkedBankAccount } from "@/domain/linked-banks";
+import type { BankInstitution, LinkedBankAccount } from "@/domain/linked-banks";
 import { useMerchantMark } from "@/hooks/use-merchant-mark";
 import { useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
@@ -33,16 +33,21 @@ import { useColors } from "@/theme/use-colors";
 const FIT_CONTENT = { alignSelf: "stretch" } as const;
 const NO_ACCOUNT = "";
 
-export function BankMark({ institution, size = 28 }: { institution: string; size?: number }) {
+export function BankGlyph({ size = 28 }: { size?: number }) {
     const colors = useColors();
+    return (
+        <View className="items-center justify-center" style={{ height: size, width: size }}>
+            <HugeiconsIcon color={colors.muted} icon={BankIcon} size={Math.round(size * 0.7)} />
+        </View>
+    );
+}
+
+export function BankMark({ institution, size = 28 }: { institution: string; size?: number }) {
     const domain = resolveInstitutionDomain(institution);
+    const colors = useColors();
     const uri = useMerchantMark(null, domain);
     if (uri === null) {
-        return (
-            <View className="items-center justify-center" style={{ height: size, width: size }}>
-                <HugeiconsIcon color={colors.muted} icon={BankIcon} size={Math.round(size * 0.7)} />
-            </View>
-        );
+        return <BankGlyph size={size} />;
     }
     return (
         <CategoryIconTile
@@ -109,16 +114,16 @@ export function BankFilesIntoRow({
     );
 }
 
-type LinkFailure = "canceled" | "country" | "failed";
+type LinkFailure = "canceled" | "retired" | "failed";
 
 interface LinkAttempt {
-    country: string;
+    institution: BankInstitution;
     known: ReadonlySet<string>;
     linked: boolean;
 }
 
 /**
- * Runs Stripe's sheet for one country, then shows the accounts the link added so each can be given a wallet account.
+ * Runs the bank's sign-in sheet, then shows the accounts the link added so each can be given a wallet account.
  * A sign-in again adds none, so it ends without a sheet.
  */
 export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?: () => void) {
@@ -149,6 +154,11 @@ export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?:
             onSuccess: (outcome) => {
                 if (outcome.kind === "linked") {
                     haptics("success");
+                    // A sign-in again adds no accounts, so no result sheet would ever close the link screen.
+                    if (outcome.linked === 0) {
+                        onFinished?.();
+                        return;
+                    }
                     setAttempt((current) => current && { ...current, linked: true });
                 } else if (outcome.kind === "plan") {
                     openPaywall("banks");
@@ -161,13 +171,13 @@ export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?:
         SILENT
     );
 
-    const link = (country: string) => {
+    const link = (institution: BankInstitution) => {
         if (busy) {
             return;
         }
-        setAttempt({ country, known: new Set(accounts.map((account) => account.id)), linked: false });
+        setAttempt({ institution, known: new Set(accounts.map((account) => account.id)), linked: false });
         setBusy(true);
-        run({ country });
+        run({ institution: institution.id });
     };
 
     const sheets = (
@@ -185,7 +195,7 @@ export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?:
                 onRetry={() => {
                     failureRef.current?.dismiss();
                     if (attempt !== null) {
-                        link(attempt.country);
+                        link(attempt.institution);
                     }
                 }}
                 ref={failureRef}
@@ -273,7 +283,7 @@ function BankFailureSheet({
 }) {
     const t = useTranslation();
     const sheetSurface = useSheetSurface();
-    const retryable = failure !== "country";
+    const retryable = failure !== "retired";
 
     return (
         <BottomSheetModal backgroundStyle={{ backgroundColor: sheetSurface }} enableDynamicSizing ref={ref}>

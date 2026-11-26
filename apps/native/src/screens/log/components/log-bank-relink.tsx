@@ -1,45 +1,28 @@
+import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
-import { BusyText } from "@/components/busy-text";
 import { Text } from "@/components/text";
 import { formatSentenceDate } from "@/domain/dates";
-import { accountTitle, defaultCountry, needsSignIn } from "@/domain/linked-banks";
+import { accountTitle, BANK_LINK_ROUTE, needsSignIn } from "@/domain/linked-banks";
 import type { LinkedBankAccount } from "@/domain/linked-banks";
 import { useBankOverview } from "@/hooks/use-bank-overview";
-import { useLongWait } from "@/hooks/use-long-wait";
-import { useRegionCode } from "@/hooks/use-region-code";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { STRIPE_READY } from "@/lib/stripe-link";
-import { BankMark, useBankLink } from "@/screens/settings/bank-parts";
-import { useColors } from "@/theme/use-colors";
+import { BankMark } from "@/screens/settings/bank-parts";
 
 export function LogBankRelink() {
     const overview = useBankOverview();
-    const region = useRegionCode();
     const account = STRIPE_READY ? needsSignIn(overview) : null;
     if (overview.kind !== "ready" || account === null) {
         return null;
     }
-    const country = defaultCountry(overview.overview.countries, region);
-    return country === null ? null : (
-        <RelinkBanner account={account} accounts={overview.overview.accounts} country={country} />
-    );
+    return <RelinkBanner account={account} />;
 }
 
-function RelinkBanner({
-    account,
-    accounts,
-    country,
-}: {
-    account: LinkedBankAccount;
-    accounts: readonly LinkedBankAccount[];
-    country: string;
-}) {
-    const bankLink = useBankLink(accounts);
+function RelinkBanner({ account }: { account: LinkedBankAccount }) {
     const t = useTranslation();
-    const colors = useColors();
+    const router = useRouter();
     const { language } = useLanguage();
-    const slow = useLongWait(bankLink.busy);
 
     const name = accountTitle(account);
     const detail =
@@ -51,35 +34,23 @@ function RelinkBanner({
               });
 
     return (
-        <>
-            <View className="border-border my-2 flex-row items-center gap-3 border-b py-3">
-                <BankMark institution={account.institution} size={28} />
-                <View className="flex-1 gap-0.5">
-                    <Text className="text-foreground text-body font-sans-semibold" numberOfLines={1}>
-                        {t("log.banks.relinkTitle", { bank: account.institution })}
-                    </Text>
-                    <Text className="text-danger text-subtitle" numberOfLines={2}>
-                        {detail}
-                    </Text>
-                </View>
-                <Pressable
-                    accessibilityRole="button"
-                    className="bg-surface rounded-full px-4 py-2 active:opacity-60"
-                    disabled={bankLink.busy}
-                    onPress={() => bankLink.link(country)}
-                >
-                    {slow ? (
-                        <BusyText className="text-body font-sans-semibold" color={colors.foreground}>
-                            {t("settings.banks.entry.busy")}
-                        </BusyText>
-                    ) : (
-                        <Text className="text-foreground text-body font-sans-semibold">
-                            {t("settings.banks.signIn")}
-                        </Text>
-                    )}
-                </Pressable>
+        <View className="border-border my-2 flex-row items-center gap-3 border-b py-3">
+            <BankMark institution={account.institution} size={28} />
+            <View className="flex-1 gap-0.5">
+                <Text className="text-foreground text-body font-sans-semibold" numberOfLines={1}>
+                    {t("log.banks.relinkTitle", { bank: account.institution })}
+                </Text>
+                <Text className="text-danger text-subtitle" numberOfLines={2}>
+                    {detail}
+                </Text>
             </View>
-            {bankLink.sheets}
-        </>
+            <Pressable
+                accessibilityRole="button"
+                className="bg-surface rounded-full px-4 py-2 active:opacity-60"
+                onPress={() => router.push({ pathname: BANK_LINK_ROUTE, params: { q: account.institution } })}
+            >
+                <Text className="text-foreground text-body font-sans-semibold">{t("settings.banks.signIn")}</Text>
+            </Pressable>
+        </View>
     );
 }

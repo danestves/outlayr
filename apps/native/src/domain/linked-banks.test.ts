@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { banksScreen, byInstitution, defaultCountry, needsSignIn } from "./linked-banks";
+import { banksScreen, byInstitution, needsSignIn } from "./linked-banks";
 import type { BankOverviewView, BanksScreenInput, LinkedBankAccount } from "./linked-banks";
 
 function account(overrides: Partial<LinkedBankAccount> = {}): LinkedBankAccount {
@@ -24,7 +24,7 @@ function input(overview: Partial<BankOverviewView>, overrides: Partial<BanksScre
         mode: "list",
         overview: {
             kind: "ready",
-            overview: { access: "allowed", accounts: [], countries: ["US", "CA"], ...overview },
+            overview: { access: "allowed", accounts: [], ...overview },
         },
         personal: true,
         signedIn: true,
@@ -61,10 +61,7 @@ describe("banksScreen", () => {
     });
 
     it("opens the link entry from the list even when accounts exist", () => {
-        expect(banksScreen(input({ accounts: [account()] }, { mode: "link" }))).toStrictEqual({
-            countries: ["US", "CA"],
-            kind: "entry",
-        });
+        expect(banksScreen(input({ accounts: [account()] }, { mode: "link" }))).toStrictEqual({ kind: "entry" });
         expect(banksScreen(input({ access: "plan", accounts: [account()] }, { mode: "link" })).kind).toBe("gate");
     });
 });
@@ -89,13 +86,5 @@ describe("needsSignIn", () => {
         const ready = input({ accounts: [account(), expired] }).overview;
         expect(needsSignIn(ready)).toBe(expired);
         expect(needsSignIn({ kind: "loading" })).toBeNull();
-    });
-});
-
-describe("defaultCountry", () => {
-    it("opens on the phone's country when a provider covers it", () => {
-        expect(defaultCountry(["US", "CA"], "ca")).toBe("CA");
-        expect(defaultCountry(["US", "CA"], "VE")).toBe("US");
-        expect(defaultCountry([], "US")).toBeNull();
     });
 });
