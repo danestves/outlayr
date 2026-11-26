@@ -63,6 +63,7 @@ const SUBSCRIPTION_PRICE_BAND = { max: 2, min: 0.5 } as const;
 const INSTITUTION_PAGE = 200;
 const INSTITUTION_SEARCH_LIMIT = 50;
 const REGION_ROWS = 20;
+const POPULAR_ROWS = 8;
 const SEARCH_MAX_LENGTH = 100;
 const SEARCH_MAX_TERMS = 16;
 const WHITESPACE = /\s+/;
@@ -210,9 +211,9 @@ const searchInstitutions = FunctionImpl.make(
                             "desc"
                         )
                         // Catch-all rows share the country, so leave room for them before the cut.
-                        .take(REGION_ROWS + catchAllRows.length)
+                        .take(POPULAR_ROWS + catchAllRows.length)
                 );
-                rows = regional.filter((row) => !row.catchAll).slice(0, REGION_ROWS);
+                rows = regional.filter((row) => !row.catchAll).slice(0, POPULAR_ROWS);
             }
             return [...rows.map(institutionView), ...rankInstitutions(catchAllRows, country).map(institutionView)];
         },
