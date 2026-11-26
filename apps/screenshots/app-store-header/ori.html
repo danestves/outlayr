@@ -1,0 +1,64 @@
+<title>ori</title>
+<style>
+@font-face{font-family:SFR;src:url(file:///System/Library/Fonts/SFNSRounded.ttf)}
+@font-face{font-family:SFM;src:url(file:///System/Library/Fonts/SFNSMono.ttf)}
+@font-face{font-family:G;src:url(fonts/geist-latin-wght-normal.woff2) format("woff2");font-weight:100 900}
+@font-face{font-family:GM;src:url(fonts/geist-mono-latin-wght-normal.woff2) format("woff2");font-weight:100 900}
+:root{--bg:#f2f0ea;--ink:#17150f;--tint:#c2371b;--surface:#f8f6f1;--muted:#8a857a;--cream:#f2efe8}
+*{box-sizing:border-box;margin:0}
+html,body{overflow:hidden;background:transparent}
+#s{position:relative;overflow:hidden;font-family:SFR,G,system-ui,sans-serif;color:var(--ink)}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(23,21,15,.05) 2px,transparent 2px),linear-gradient(90deg,rgba(23,21,15,.035) 2px,transparent 2px);background-size:100% 64px,320px 100%}
+.ori{position:absolute}
+.h{position:absolute;font-weight:700;letter-spacing:-.03em;line-height:1;white-space:nowrap;color:var(--cream)}
+.h em{font-style:normal;color:var(--tint)}
+.card{position:absolute;width:max-content;background:var(--surface);border-radius:44px;box-shadow:0 30px 70px rgba(23,21,15,.16),0 0 0 2px rgba(23,21,15,.05);padding:44px 48px;transform-origin:0 0;font-family:SFM,GM,monospace}
+.k{font-size:30px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.n{font-size:118px;font-weight:500;letter-spacing:-.04em;margin:14px 0 10px;white-space:nowrap}
+.n span{font-size:70px;color:var(--muted)}
+.guide{position:absolute;border:6px dashed #18c94a}
+</style>
+<div id="s"></div>
+<script>
+const P=new URLSearchParams(location.search),T=P.get("t")??"header",LANG=P.get("lang")??"en",LAYER=P.get("layer")??"all";
+const W=3840,H=T==="header"?1646:2560;
+const COPY={
+ en:{q:["Where did","it all <em>go?</em>"],loc:"en-US",cur:"USD",x:1,month:"This month",left:l=>`left of ${l}`,subs:"Subscriptions",subsSub:"8 a month · next Fri",week:"This week"},
+ es:{q:["¿En qué se me","fue la <em>plata?</em>"],loc:"es-MX",cur:"USD",x:1,month:"Este mes",left:l=>`disponibles de ${l}`,subs:"Suscripciones",subsSub:"8 al mes · próx. vie",week:"Esta semana"},
+ "es-ES":{q:["¿En qué se me","fue el <em>dinero?</em>"],loc:"es-ES",cur:"EUR",x:1,month:"Este mes",left:l=>`disponibles de ${l}`,subs:"Suscripciones",subsSub:"8 al mes · próx. vie",week:"Esta semana"},
+ fr:{q:["Où est passé","tout <em>l’argent ?</em>"],loc:"fr-FR",cur:"EUR",x:1,month:"Ce mois-ci",left:l=>`restants sur ${l}`,subs:"Abonnements",subsSub:"8 par mois · proch. ven.",week:"Cette semaine"},
+ "pt-BR":{q:["Pra onde foi","o <em>dinheiro?</em>"],loc:"pt-BR",cur:"BRL",x:5,month:"Este mês",left:l=>`disponíveis de ${l}`,subs:"Assinaturas",subsSub:"8 por mês · próx. sex.",week:"Esta semana"},
+ "pt-PT":{q:["Para onde foi","o <em>dinheiro?</em>"],loc:"pt-PT",cur:"EUR",x:1,month:"Este mês",left:l=>`disponíveis de ${l}`,subs:"Subscrições",subsSub:"8 por mês · próx. sex.",week:"Esta semana"},
+ de:{q:["Wo ist das","Geld <em>hin?</em>"],loc:"de-DE",cur:"USD",x:1,month:"Diesen Monat",left:l=>`von ${l} übrig`,subs:"Abos",subsSub:"8 im Monat · nächster Fr.",week:"Diese Woche"},
+}[LANG];
+const fmt=(v,dec=true)=>new Intl.NumberFormat(COPY.loc,{style:"currency",currency:COPY.cur,currencyDisplay:"narrowSymbol",minimumFractionDigits:dec?2:0,maximumFractionDigits:dec?2:0}).formatToParts(v*COPY.x);
+const big=v=>fmt(v).map(p=>p.type==="decimal"||p.type==="fraction"?`<span>${p.value}</span>`:p.value).join("");
+const plain=v=>fmt(v,false).map(p=>p.value).join("");
+const S=document.getElementById("s");S.style.width=W+"px";S.style.height=H+"px";
+let G=S;
+const add=(html,layer)=>{if(LAYER!=="all"&&LAYER!==layer)return null;G.insertAdjacentHTML("beforeend",html.trim());return G.lastElementChild};
+const ori=(f,x,y,h)=>add(`<img class="ori" src="ori/${f}.png" style="left:${x}px;top:${y}px;height:${h}px">`,"ori");
+// A negative x anchors the card's right edge at -x, so longer amounts grow away from Ori.
+const card=(x,y,rot,sc,inner,layer)=>add(`<div class="card" style="${x<0?`right:${W+x}px;transform-origin:100% 0`:`left:${x}px`};top:${y}px;transform:rotate(${rot}deg) scale(${sc})">${inner}</div>`,layer);
+const SPARK='<svg viewBox="0 0 300 90" style="display:block;width:100%;height:110px;margin-top:22px"><polyline points="0,80 40,72 80,76 120,58 160,62 200,40 240,30 300,8" fill="none" stroke="#17150f" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="300" cy="8" r="9" fill="#c2371b"/></svg>';
+// Shrinks the headline until its widest line fits maxW, then centres the block on cy.
+const headline=(x,cy,maxW,size)=>{const el=add(`<div class="h" style="left:${x}px;font-size:${size}px">${COPY.q.join("<br>")}</div>`,"bg");
+ let s=size;while(el.scrollWidth>maxW&&s>80){s-=4;el.style.fontSize=s+"px"}el.style.top=cy-el.offsetHeight/2+"px"};
+function header(){
+ if(LAYER==="all"||LAYER==="bg")S.style.background="var(--ink)";
+ headline(1110,760,1080,250);
+ ori("ori-cover-think",2080,330,1420);
+}
+function search(){
+ if(LAYER==="all"||LAYER==="bg"){S.style.background="var(--bg)";add('<div class="grid"></div>',"bg")}
+ S.insertAdjacentHTML("beforeend",'<div style="position:absolute;inset:0;transform:scale(1.2) translateY(30px)"></div>');G=S.lastElementChild;
+ card(-1430,1060,-4,1.35,`<div class="k">${COPY.month}</div><div class="n">${big(1018.59)}</div><div class="k">${COPY.left(plain(3900))}</div>`,"c1");
+ card(2470,780,4,1.35,`<div class="k">${COPY.subs}</div><div class="n">${big(203.65)}</div><div class="k">${COPY.subsSub}</div>`,"c2");
+ card(2500,1440,-2,1.35,`<div class="k" style="min-width:500px">${COPY.week}</div>${SPARK}`,"c3");
+ if(!P.has("noori"))ori("ori-wave",1060,420,1900);
+}
+Promise.all(["700 230px SFR","500 118px SFM","700 230px G","500 118px GM"].map(f=>document.fonts.load(f).catch(()=>null))).then(()=>{
+ (T==="header"?header:search)();
+ if(P.has("guide")){const a=T==="header"?[1097,493,1646,661]:[836,765,2168,1030];S.insertAdjacentHTML("beforeend",`<div class="guide" style="left:${a[0]}px;top:${a[1]}px;width:${a[2]}px;height:${a[3]}px"></div>`)}
+});
+</script>
