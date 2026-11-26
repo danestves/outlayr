@@ -251,7 +251,7 @@ const dashboardDebts = {
                     es: "{{name}} te paga antes del {{date}}",
                     fr: "{{name}} vous rembourse d'ici le {{date}}",
                     pt: "{{name}} te paga até {{date}}",
-                    "pt-PT": "{{name}} paga-te até {{date}}",
+                    "pt-PT": "{{name}} paga-lhe até {{date}}",
                 })
             ),
             times: insert(
@@ -558,7 +558,7 @@ const dashboardDebts = {
                 es: "Te deben",
                 fr: "On vous doit",
                 pt: "Te devem",
-                "pt-PT": "Devem-te",
+                "pt-PT": "Devem-lhe",
             }),
             people: insert(
                 t({
@@ -719,7 +719,7 @@ const dashboardDebts = {
                     es: "{{name}} te pagó",
                     fr: "{{name}} vous a remboursé",
                     pt: "{{name}} te pagou",
-                    "pt-PT": "{{name}} pagou-te",
+                    "pt-PT": "{{name}} pagou-lhe",
                 })
             ),
             owesYouNow: t({
@@ -728,7 +728,7 @@ const dashboardDebts = {
                 es: "Te debe ahora",
                 fr: "Vous doit maintenant",
                 pt: "Te deve agora",
-                "pt-PT": "Deve-te agora",
+                "pt-PT": "Deve-lhe agora",
             }),
             payTitle: insert(
                 t({
@@ -1059,7 +1059,7 @@ const dashboardDebts = {
                 es: "Te deben",
                 fr: "On vous doit",
                 pt: "Te devem",
-                "pt-PT": "Devem-te",
+                "pt-PT": "Devem-lhe",
             }),
             settled: t({ en: "Settled", de: "Beglichen", es: "Saldadas", fr: "Soldées", pt: "Quitadas" }),
             youOwe: t({

@@ -285,7 +285,7 @@ const dashboardInvite = {
                     es: "{{name}} te regaló un mes de Pro",
                     fr: "{{name}} vous offre un mois de Pro",
                     pt: "{{name}} te deu um mês de Pro",
-                    "pt-PT": "{{name}} deu-te um mês de Pro",
+                    "pt-PT": "{{name}} deu-lhe um mês de Pro",
                 })
             ),
             titleFriend: t({
