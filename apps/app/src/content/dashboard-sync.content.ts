@@ -11,8 +11,15 @@ const dashboardSync = {
             pt: "Sincronizar agora",
         }),
         retry: t({ en: "Retry", de: "Erneut versuchen", es: "Reintentar", fr: "Réessayer", pt: "Tentar de novo" }),
-        status: t({ en: "Status", de: "Status", es: "Estado", fr: "État", pt: "Status" }),
-        upToDate: t({ en: "Up to date", de: "Aktuell", es: "Al día", fr: "À jour", pt: "Em dia" }),
+        status: t({ en: "Status", de: "Status", es: "Estado", fr: "État", pt: "Status", "pt-PT": "Estado" }),
+        upToDate: t({
+            en: "Up to date",
+            de: "Aktuell",
+            es: "Al día",
+            fr: "À jour",
+            pt: "Em dia",
+            "pt-PT": "Atualizado",
+        }),
         on: t({ en: "On", de: "An", es: "Activa", fr: "Activée", pt: "Ativa" }),
         syncing: t({
             en: "Syncing",
@@ -20,6 +27,7 @@ const dashboardSync = {
             es: "Sincronizando",
             fr: "Synchronisation",
             pt: "Sincronizando",
+            "pt-PT": "A sincronizar",
         }),
         inProgress: t({ en: "In progress", de: "Läuft", es: "En curso", fr: "En cours", pt: "Em andamento" }),
         notSyncing: t({
@@ -36,6 +44,7 @@ const dashboardSync = {
             es: "Por sincronizar",
             fr: "En attente",
             pt: "Aguardando",
+            "pt-PT": "A aguardar",
         }),
         changes: t({ en: "changes", de: "Änderungen", es: "cambios", fr: "modifications", pt: "alterações" }),
         ofChanges: insert(
@@ -69,13 +78,21 @@ const dashboardSync = {
             fr: "Dans ces comptes",
             pt: "Nestas finanças",
         }),
-        transactions: t({ en: "transactions", de: "Einträge", es: "movimientos", fr: "opérations", pt: "lançamentos" }),
+        transactions: t({
+            en: "transactions",
+            de: "Einträge",
+            es: "movimientos",
+            fr: "opérations",
+            pt: "lançamentos",
+            "pt-PT": "registos",
+        }),
         unreachable: t({
             en: "Couldn't reach Outlayr",
             de: "Outlayr nicht erreichbar",
             es: "No se pudo conectar con Outlayr",
             fr: "Impossible de joindre Outlayr",
             pt: "Não foi possível acessar o Outlayr",
+            "pt-PT": "Não foi possível aceder o Outlayr",
         }),
         completeHere: t({
             en: "Your ledger is complete here",
@@ -111,13 +128,24 @@ const dashboardSync = {
                 pt: "O que sincroniza",
             }),
             entries: {
-                label: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+                label: t({
+                    en: "Entries",
+                    de: "Einträge",
+                    es: "Movimientos",
+                    fr: "Opérations",
+                    pt: "Lançamentos",
+                    "pt-PT": "Registos",
+                }),
                 hint: t({
                     en: "Amount, currency, date, merchant, note, original bank description from imports, category, account, payment method, fees, tags, splits, receipt details, exchange rate, repeat schedule, and whether it's waiting for review",
                     de: "Betrag, Währung, Datum, Händler, Notiz, ursprüngliche Bankbeschreibung aus Importen, Kategorie, Konto, Zahlungsart, Gebühren, Tags, Aufteilungen, Belegdetails, Wechselkurs, Wiederholung und ob er auf Prüfung wartet",
                     es: "Monto, moneda, fecha, comercio, nota, descripción bancaria original de las importaciones, categoría, cuenta, método de pago, comisiones, etiquetas, divisiones, detalles del recibo, tasa de cambio, repetición y si está por revisar",
+                    "es-ES":
+                        "Importe, moneda, fecha, comercio, nota, descripción bancaria original de las importaciones, categoría, cuenta, método de pago, comisiones, etiquetas, divisiones, detalles del recibo, tipo de cambio, repetición y si está por revisar",
                     fr: "Montant, devise, date, commerçant, note, description bancaire d'origine des imports, catégorie, compte, moyen de paiement, frais, tags, répartitions, détails du reçu, taux de change, répétition et si elle attend une vérification",
                     pt: "Valor, moeda, data, estabelecimento, nota, descrição bancária original das importações, categoria, conta, forma de pagamento, tarifas, tags, divisões, detalhes do recibo, câmbio, repetição e se aguarda revisão",
+                    "pt-PT":
+                        "Valor, moeda, data, estabelecimento, nota, descrição bancária original das importações, categoria, conta, forma de pagamento, tarifas, tags, divisões, detalhes do talão, câmbio, repetição e se aguarda revisão",
                 }),
             },
             transfers: {
@@ -132,6 +160,7 @@ const dashboardSync = {
                     en: "Both accounts, amounts, currencies, exchange rate, date and note",
                     de: "Beide Konten, Beträge, Währungen, Wechselkurs, Datum und Notiz",
                     es: "Ambas cuentas, montos, monedas, tasa de cambio, fecha y nota",
+                    "es-ES": "Ambas cuentas, importes, monedas, tipo de cambio, fecha y nota",
                     fr: "Les deux comptes, montants, devises, taux de change, date et note",
                     pt: "As duas contas, valores, moedas, câmbio, data e nota",
                 }),
@@ -144,6 +173,8 @@ const dashboardSync = {
                     es: "Nombre (incluidas las personas con las que llevas deudas), tipo, moneda, saldo inicial y su fecha, límite de crédito, días de corte y de pago, última revisión del saldo y si está archivada",
                     fr: "Nom (y compris les personnes avec qui vous suivez des dettes), type, devise, solde initial et sa date, plafond, jours de relevé et de paiement, dernière vérification du solde et si le compte est archivé",
                     pt: "Nome (incluindo pessoas com quem você acompanha dívidas), tipo, moeda, saldo inicial e sua data, limite de crédito, dias de fechamento e de pagamento, última conferência do saldo e se está arquivada",
+                    "pt-PT":
+                        "Nome (incluindo pessoas com quem acompanha dívidas), tipo, moeda, saldo inicial e sua data, limite de crédito, dias de fechamento e de pagamento, última conferência do saldo e se está arquivada",
                 }),
             },
             adjustments: {
@@ -158,6 +189,8 @@ const dashboardSync = {
                     en: "Balance adjustments and money moved outside your tracked accounts: the account or person, amount, date and note",
                     de: "Saldokorrekturen und Geld, das außerhalb deiner erfassten Konten bewegt wurde: Konto oder Person, Betrag, Datum und Notiz",
                     es: "Ajustes de saldo y dinero movido fuera de tus cuentas: la cuenta o persona, monto, fecha y nota",
+                    "es-ES":
+                        "Ajustes de saldo y dinero movido fuera de tus cuentas: la cuenta o persona, importe, fecha y nota",
                     fr: "Ajustements de solde et argent déplacé hors de vos comptes : le compte ou la personne, montant, date et note",
                     pt: "Ajustes de saldo e dinheiro movido fora das suas contas: a conta ou pessoa, valor, data e nota",
                 }),
@@ -174,6 +207,7 @@ const dashboardSync = {
                     en: "Names, colors, icons and order",
                     de: "Namen, Farben, Symbole und Reihenfolge",
                     es: "Nombres, colores, íconos y orden",
+                    "es-ES": "Nombres, colores, iconos y orden",
                     fr: "Noms, couleurs, icônes et ordre",
                     pt: "Nomes, cores, ícones e ordem",
                 }),
@@ -184,22 +218,34 @@ const dashboardSync = {
                     en: "Overall and category budgets: name, limit, currency, cadence, rollover and start date, plus month-by-month amounts",
                     de: "Gesamt- und Kategoriebudgets: Name, Limit, Währung, Rhythmus, Übertrag und Startdatum, dazu die Beträge pro Monat",
                     es: "Presupuestos generales y por categoría: nombre, límite, moneda, frecuencia, arrastre y fecha de inicio, más los montos mes a mes",
+                    "es-ES":
+                        "Presupuestos generales y por categoría: nombre, límite, moneda, frecuencia, arrastre y fecha de inicio, más los importes mes a mes",
                     fr: "Budgets global et par catégorie : nom, plafond, devise, fréquence, report et date de début, plus les montants mois par mois",
                     pt: "Orçamentos gerais e por categoria: nome, limite, moeda, frequência, acúmulo e data de início, mais os valores mês a mês",
                 }),
             },
             goals: {
-                label: t({ en: "Goals", de: "Ziele", es: "Metas", fr: "Objectifs", pt: "Metas" }),
+                label: t({ en: "Goals", de: "Ziele", es: "Metas", fr: "Objectifs", pt: "Metas", "pt-PT": "Objetivos" }),
                 hint: t({
                     en: "Savings and debt payoff goals: name, linked account, targets, starting amounts and dates",
                     de: "Spar- und Tilgungsziele: Name, verknüpftes Konto, Zielbeträge, Startbeträge und Daten",
                     es: "Metas de ahorro y de pago de deudas: nombre, cuenta vinculada, objetivos, montos iniciales y fechas",
+                    "es-ES":
+                        "Metas de ahorro y de pago de deudas: nombre, cuenta vinculada, objetivos, importes iniciales y fechas",
                     fr: "Objectifs d'épargne et de remboursement : nom, compte lié, cibles, montants de départ et dates",
                     pt: "Metas de poupança e de quitação de dívidas: nome, conta vinculada, alvos, valores iniciais e datas",
                 }),
             },
             installments: {
-                label: t({ en: "Installments", de: "Raten", es: "Cuotas", fr: "Échéances", pt: "Parcelas" }),
+                label: t({
+                    en: "Installments",
+                    de: "Raten",
+                    es: "Cuotas",
+                    "es-ES": "Plazos",
+                    fr: "Échéances",
+                    pt: "Parcelas",
+                    "pt-PT": "Prestações",
+                }),
                 hint: t({
                     en: "Plans, their payments and payments made outside Outlayr",
                     de: "Pläne, ihre Zahlungen und Zahlungen außerhalb von Outlayr",
@@ -214,8 +260,12 @@ const dashboardSync = {
                     en: "Rules you create on the web: name, whether it's on, the merchant, description or amount it looks for, the category and tags it sets, and which rule suggestions you dismiss and which conflicts you resolve",
                     de: "Regeln, die du im Web erstellst: Name, ob sie an ist, Händler, Beschreibung oder Betrag, nach dem sie sucht, Kategorie und Tags, die sie setzt, und welche Regelvorschläge du ablehnst und welche Konflikte du löst",
                     es: "Reglas que creas en la web: nombre, si está activa, el comercio, la descripción o el monto que busca, la categoría y etiquetas que asigna, y qué sugerencias de reglas descartas y qué conflictos resuelves",
+                    "es-ES":
+                        "Reglas que creas en la web: nombre, si está activa, el comercio, la descripción o el importe que busca, la categoría y etiquetas que asigna, y qué sugerencias de reglas descartas y qué conflictos resuelves",
                     fr: "Règles créées sur le web : nom, si elle est activée, le commerçant, la description ou le montant recherchés, la catégorie et les tags appliqués, et les suggestions de règles que vous écartez et les conflits que vous résolvez",
                     pt: "Regras criadas na web: nome, se está ativa, o estabelecimento, a descrição ou o valor que procura, a categoria e tags que aplica, e quais sugestões de regras você descarta e quais conflitos resolve",
+                    "pt-PT":
+                        "Regras criadas na web: nome, se está ativa, o estabelecimento, a descrição ou o valor que procura, a categoria e tags que aplica, e quais sugestões de regras descarta e quais conflitos resolve",
                 }),
             },
             recurring: {
@@ -232,6 +282,8 @@ const dashboardSync = {
                     es: "Ingresos y gastos recurrentes que pausas en la web, con los detalles del movimiento y las fechas de pausa, y qué sugerencias de recurrentes descartas",
                     fr: "Revenus et dépenses récurrents mis en pause sur le web, avec les détails de l'opération et les dates de pause, et les suggestions de récurrents que vous écartez",
                     pt: "Receitas e despesas recorrentes pausadas na web, com os detalhes do lançamento e as datas da pausa, e quais sugestões de recorrentes você descarta",
+                    "pt-PT":
+                        "Receitas e despesas recorrentes pausadas na web, com os detalhes do registo e as datas da pausa, e quais sugestões de recorrentes descarta",
                 }),
             },
             photos: {
@@ -241,6 +293,7 @@ const dashboardSync = {
                     es: "Fotos y archivos",
                     fr: "Photos et fichiers",
                     pt: "Fotos e arquivos",
+                    "pt-PT": "Fotos e ficheiros",
                 }),
                 hint: t({
                     en: "Files you attach to entries and images you set on accounts, uploaded to our file storage under generated names. Original names of attached PDFs also sync. A merchant logo syncs as a link to a shared logo",
@@ -248,16 +301,27 @@ const dashboardSync = {
                     es: "Archivos que adjuntas a movimientos e imágenes de cuentas, subidos a nuestro almacenamiento con nombres generados. Los nombres originales de los PDF adjuntos también se sincronizan. El logo de un comercio se sincroniza como un enlace a un logo compartido",
                     fr: "Fichiers joints aux opérations et images des comptes, envoyés dans notre stockage sous des noms générés. Les noms d'origine des PDF joints sont aussi synchronisés. Le logo d'un commerçant est synchronisé comme un lien vers un logo partagé",
                     pt: "Arquivos anexados a lançamentos e imagens das contas, enviados ao nosso armazenamento com nomes gerados. Os nomes originais dos PDFs anexados também sincronizam. O logo de um estabelecimento sincroniza como um link para um logo compartilhado",
+                    "pt-PT":
+                        "Ficheiros anexados a registos e imagens das contas, enviados ao nosso armazenamento com nomes gerados. Os nomes originais dos PDFs anexados também sincronizam. O logótipo de um estabelecimento sincroniza como um link para um logótipo partilhado",
                 }),
             },
             settings: {
-                label: t({ en: "Settings", de: "Einstellungen", es: "Ajustes", fr: "Réglages", pt: "Ajustes" }),
+                label: t({
+                    en: "Settings",
+                    de: "Einstellungen",
+                    es: "Ajustes",
+                    fr: "Réglages",
+                    pt: "Ajustes",
+                    "pt-PT": "Definições",
+                }),
                 hint: t({
                     en: "Currency, first day of the month and week, time zone, accent color, how numbers, times, charts and upcoming items show, account order, income tracking, haptics, confetti, whether Smart fill, suggestions and web lookups are on, and favorite currencies chosen on the web",
                     de: "Währung, erster Tag des Monats und der Woche, Zeitzone, Akzentfarbe, Anzeige von Zahlen, Uhrzeiten, Diagrammen und anstehenden Posten, Kontoreihenfolge, Einnahmenerfassung, Haptik, Konfetti, ob intelligentes Ausfüllen, Vorschläge und Websuche an sind, und im Web gewählte Lieblingswährungen",
                     es: "Moneda, primer día del mes y de la semana, zona horaria, color de acento, cómo se ven números, horas, gráficos y próximos movimientos, orden de las cuentas, registro de ingresos, vibración, confeti, si el autocompletado inteligente, las sugerencias y las búsquedas web están activos, y las monedas favoritas elegidas en la web",
                     fr: "Devise, premier jour du mois et de la semaine, fuseau horaire, couleur d'accent, affichage des nombres, heures, graphiques et éléments à venir, ordre des comptes, suivi des revenus, vibrations, confettis, si le remplissage intelligent, les suggestions et les recherches web sont activés, et les devises favorites choisies sur le web",
                     pt: "Moeda, primeiro dia do mês e da semana, fuso horário, cor de destaque, como números, horários, gráficos e próximos itens aparecem, ordem das contas, registro de receitas, vibração, confete, se o preenchimento inteligente, as sugestões e as buscas na web estão ativos, e as moedas favoritas escolhidas na web",
+                    "pt-PT":
+                        "Moeda, primeiro dia do mês e da semana, fuso horário, cor de destaque, como números, horários, gráficos e próximos itens aparecem, ordem das contas, registo de receitas, vibração, confetes, se o preenchimento inteligente, as sugestões e as pesquisas na web estão ativos, e as moedas favoritas escolhidas na web",
                 }),
             },
             records: {
@@ -274,6 +338,8 @@ const dashboardSync = {
                     es: "Un ID aleatorio por teléfono y navegador, el ID de cada registro y cuándo se editó, borró o restauró. Un movimiento que borras conserva sus detalles para poder restaurarlo",
                     fr: "Un ID aléatoire par téléphone et navigateur, l'ID de chaque enregistrement et quand il a été modifié, supprimé ou restauré. Une opération supprimée garde ses détails pour pouvoir être restaurée",
                     pt: "Um ID aleatório por celular e navegador, o ID de cada registro e quando foi editado, apagado ou restaurado. Um lançamento apagado mantém seus detalhes para poder ser restaurado",
+                    "pt-PT":
+                        "Um ID aleatório por telemóvel e navegador, o ID de cada registo e quando foi editado, apagado ou restaurado. Um registo apagado mantém seus detalhes para poder ser restaurado",
                 }),
             },
         },
@@ -284,6 +350,7 @@ const dashboardSync = {
                 es: "Se queda en cada teléfono",
                 fr: "Reste sur chaque téléphone",
                 pt: "Fica em cada celular",
+                "pt-PT": "Fica em cada telemóvel",
             }),
             footer: t({
                 en: "Sync never sends these. An entry logged from a notification syncs like any other entry.",
@@ -291,14 +358,18 @@ const dashboardSync = {
                 es: "La sincronización nunca envía esto. Un movimiento registrado desde una notificación se sincroniza como cualquier otro.",
                 fr: "La synchronisation n'envoie jamais ces éléments. Une opération saisie depuis une notification est synchronisée comme les autres.",
                 pt: "A sincronização nunca envia isso. Um lançamento registrado a partir de uma notificação sincroniza como qualquer outro.",
+                "pt-PT":
+                    "A sincronização nunca envia isso. Um registo registado a partir de uma notificação sincroniza como qualquer outro.",
             }),
             lock: {
                 label: t({
                     en: "App lock and the choice to hide amounts",
                     de: "App-Sperre und die Wahl, Beträge auszublenden",
                     es: "Bloqueo de la app y la opción de ocultar montos",
+                    "es-ES": "Bloqueo de la app y la opción de ocultar importes",
                     fr: "Verrouillage et le choix de masquer les montants",
                     pt: "Bloqueio do app e a opção de ocultar valores",
+                    "pt-PT": "Bloqueio da app e a opção de ocultar valores",
                 }),
             },
             notifications: {
@@ -317,6 +388,7 @@ const dashboardSync = {
                     es: "Tus preferencias de compartir analíticas y permiso de IA",
                     fr: "Vos choix de partage des statistiques et d'autorisation IA",
                     pt: "Suas escolhas de compartilhar análises e permissão de IA",
+                    "pt-PT": "Suas escolhas de partilhar análises e permissão de IA",
                 }),
             },
             look: {
@@ -324,6 +396,7 @@ const dashboardSync = {
                     en: "Light or dark mode, number entry and favorite currencies",
                     de: "Hell- oder Dunkelmodus, Zahleneingabe und Lieblingswährungen",
                     es: "Modo claro u oscuro, forma de ingresar montos y monedas favoritas",
+                    "es-ES": "Modo claro u oscuro, forma de ingresar importes y monedas favoritas",
                     fr: "Mode clair ou sombre, saisie des montants et devises favorites",
                     pt: "Modo claro ou escuro, entrada de valores e moedas favoritas",
                 }),

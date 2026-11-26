@@ -52,6 +52,7 @@ const dashboardInsightsFlow = {
                     es: "{{span}} no tiene movimientos de {{category}}.",
                     fr: "{{span}} n'a pas d'opérations en {{category}}.",
                     pt: "{{span}} não tem lançamentos em {{category}}.",
+                    "pt-PT": "{{span}} não tem registos em {{category}}.",
                 })
             ),
             emptyTitle: insert(
@@ -70,9 +71,17 @@ const dashboardInsightsFlow = {
                     es: "{{count}} movimientos",
                     fr: "{{count}} opérations",
                     pt: "{{count}} lançamentos",
+                    "pt-PT": "{{count}} registos",
                 })
             ),
-            entry: t({ en: "1 entry", de: "1 Eintrag", es: "1 movimiento", fr: "1 opération", pt: "1 lançamento" }),
+            entry: t({
+                en: "1 entry",
+                de: "1 Eintrag",
+                es: "1 movimiento",
+                fr: "1 opération",
+                pt: "1 lançamento",
+                "pt-PT": "1 registo",
+            }),
             merchant: t({ en: "Merchant", de: "Händler", es: "Comercio", fr: "Commerçant", pt: "Comerciante" }),
             of: insert(
                 t({
@@ -136,7 +145,7 @@ const dashboardInsightsFlow = {
                     pt: "vs {{period}}",
                 })
             ),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
         },
         empty: {
@@ -144,8 +153,10 @@ const dashboardInsightsFlow = {
                 en: "Add entry",
                 de: "Eintrag hinzufügen",
                 es: "Agregar movimiento",
+                "es-ES": "Añadir movimiento",
                 fr: "Ajouter une opération",
                 pt: "Adicionar lançamento",
+                "pt-PT": "Adicionar registo",
             }),
             line: insert(
                 t({
@@ -154,6 +165,7 @@ const dashboardInsightsFlow = {
                     es: "{{span}} aún no tiene movimientos.",
                     fr: "{{span}} n'a pas encore d'opérations.",
                     pt: "{{span}} ainda não tem lançamentos.",
+                    "pt-PT": "{{span}} ainda não tem registos.",
                 })
             ),
             title: t({
@@ -208,6 +220,7 @@ const dashboardInsightsFlow = {
                     es: "Gastaste {{amount}} más de lo que entró. Salió de tus ahorros.",
                     fr: "Vous avez dépensé {{amount}} de plus que ce qui est entré. C'est sorti de votre épargne.",
                     pt: "Você gastou {{amount}} mais do que entrou. Saiu da sua poupança.",
+                    "pt-PT": "Gastou {{amount}} mais do que entrou. Saiu da sua poupança.",
                 })
             ),
             even: insert(
@@ -226,6 +239,7 @@ const dashboardInsightsFlow = {
                     es: "Ahorraste el {{kept}}% de lo que entró. {{category}} se llevó el {{percent}}% de eso.",
                     fr: "Vous avez épargné {{kept}} % de ce qui est entré. {{category}} en a pris {{percent}} %.",
                     pt: "Você guardou {{kept}}% do que entrou. {{category}} ficou com {{percent}}% disso.",
+                    "pt-PT": "Guardou {{kept}}% do que entrou. {{category}} ficou com {{percent}}% disso.",
                 })
             ),
             keptOnly: insert(
@@ -235,6 +249,7 @@ const dashboardInsightsFlow = {
                     es: "Ahorraste el {{kept}}% de lo que entró.",
                     fr: "Vous avez épargné {{kept}} % de ce qui est entré.",
                     pt: "Você guardou {{kept}}% do que entrou.",
+                    "pt-PT": "Guardou {{kept}}% do que entrou.",
                 })
             ),
         },
@@ -247,7 +262,14 @@ const dashboardInsightsFlow = {
                 fr: "Cliquez pour explorer",
                 pt: "Clique para detalhar",
             }),
-            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
             ofIncome: t({
                 en: "Of income",
                 de: "Von den Einnahmen",

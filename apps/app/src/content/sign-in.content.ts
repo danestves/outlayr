@@ -26,13 +26,21 @@ export default {
         }),
         or: t({ en: "or", de: "oder", es: "o", fr: "ou", pt: "ou" }),
         email: t({ en: "Email", de: "E-Mail", es: "Correo", fr: "E-mail", pt: "E-mail" }),
-        password: t({ en: "Password", de: "Passwort", es: "Contraseña", fr: "Mot de passe", pt: "Senha" }),
+        password: t({
+            en: "Password",
+            de: "Passwort",
+            es: "Contraseña",
+            fr: "Mot de passe",
+            pt: "Senha",
+            "pt-PT": "Palavra-passe",
+        }),
         newPassword: t({
             en: "New password",
             de: "Neues Passwort",
             es: "Contraseña nueva",
             fr: "Nouveau mot de passe",
             pt: "Nova senha",
+            "pt-PT": "Nova palavra-passe",
         }),
         passwordHint: t({
             en: "8 or more characters",
@@ -44,7 +52,14 @@ export default {
         show: t({ en: "Show", de: "Anzeigen", es: "Mostrar", fr: "Afficher", pt: "Mostrar" }),
         hide: t({ en: "Hide", de: "Verbergen", es: "Ocultar", fr: "Masquer", pt: "Ocultar" }),
         code: t({ en: "Code", de: "Code", es: "Código", fr: "Code", pt: "Código" }),
-        signIn: t({ en: "Sign in", de: "Anmelden", es: "Iniciar sesión", fr: "Se connecter", pt: "Entrar" }),
+        signIn: t({
+            en: "Sign in",
+            de: "Anmelden",
+            es: "Iniciar sesión",
+            fr: "Se connecter",
+            pt: "Entrar",
+            "pt-PT": "Iniciar sessão",
+        }),
         createAccount: t({
             en: "Create account",
             de: "Konto erstellen",
@@ -72,6 +87,7 @@ export default {
             es: "¿Olvidaste tu contraseña?",
             fr: "Mot de passe oublié ?",
             pt: "Esqueceu a senha?",
+            "pt-PT": "Esqueceu-se da palavra-passe?",
         }),
         sendingCode: t({
             en: "Sending code…",
@@ -79,6 +95,7 @@ export default {
             es: "Enviando código…",
             fr: "Envoi du code…",
             pt: "Enviando código…",
+            "pt-PT": "A enviar o código…",
         }),
         verifyTitle: t({
             en: "Check your email",
@@ -86,6 +103,7 @@ export default {
             es: "Revisa tu correo",
             fr: "Consultez vos e-mails",
             pt: "Confira seu e-mail",
+            "pt-PT": "Verifique o seu e-mail",
         }),
         codeSent: insert(
             t({
@@ -124,6 +142,7 @@ export default {
             es: "Restablece tu contraseña",
             fr: "Réinitialisez votre mot de passe",
             pt: "Redefina sua senha",
+            "pt-PT": "Redefina sua palavra-passe",
         }),
         resetBody: insert(
             t({
@@ -132,6 +151,7 @@ export default {
                 es: "Escribe el código que enviamos a {{email}} y elige una contraseña nueva.",
                 fr: "Saisissez le code envoyé à {{email}} et choisissez un nouveau mot de passe.",
                 pt: "Digite o código que enviamos para {{email}} e escolha uma nova senha.",
+                "pt-PT": "Digite o código que enviamos para {{email}} e escolha uma nova palavra-passe.",
             })
         ),
         setPassword: t({
@@ -140,6 +160,7 @@ export default {
             es: "Guardar contraseña",
             fr: "Définir le mot de passe",
             pt: "Definir senha",
+            "pt-PT": "Definir palavra-passe",
         }),
         agreement: insert(
             t({
@@ -148,6 +169,7 @@ export default {
                 es: "Al continuar, aceptas los {{terms}} y la {{privacy}}.",
                 fr: "En continuant, vous acceptez les {{terms}} et la {{privacy}}.",
                 pt: "Ao continuar, você aceita os {{terms}} e a {{privacy}}.",
+                "pt-PT": "Ao continuar, aceita os {{terms}} e a {{privacy}}.",
             })
         ),
         terms: t({ en: "Terms", de: "Nutzungsbedingungen", es: "Términos", fr: "Conditions", pt: "Termos" }),
@@ -164,6 +186,7 @@ export default {
             es: "Iniciando sesión…",
             fr: "Connexion…",
             pt: "Entrando…",
+            "pt-PT": "A iniciar sessão…",
         }),
         creating: t({
             en: "Creating account…",
@@ -171,6 +194,7 @@ export default {
             es: "Creando cuenta…",
             fr: "Création du compte…",
             pt: "Criando conta…",
+            "pt-PT": "A criar conta…",
         }),
         verifying: t({
             en: "Verifying…",
@@ -178,6 +202,7 @@ export default {
             es: "Verificando…",
             fr: "Vérification…",
             pt: "Verificando…",
+            "pt-PT": "A verificar…",
         }),
         saving: t({
             en: "Saving…",
@@ -185,6 +210,7 @@ export default {
             es: "Guardando…",
             fr: "Enregistrement…",
             pt: "Salvando…",
+            "pt-PT": "A guardar…",
         }),
         failures: {
             email: t({
@@ -193,6 +219,7 @@ export default {
                 es: "Escribe un correo válido.",
                 fr: "Saisissez un e-mail valide.",
                 pt: "Digite um e-mail válido.",
+                "pt-PT": "Introduza um e-mail válido.",
             }),
             credentials: t({
                 en: "That email and password don't match.",
@@ -200,11 +227,13 @@ export default {
                 es: "El correo y la contraseña no coinciden.",
                 fr: "Cet e-mail et ce mot de passe ne correspondent pas.",
                 pt: "O e-mail e a senha não conferem.",
+                "pt-PT": "O e-mail e a palavra-passe não correspondem.",
             }),
             code: t({
                 en: "That code is wrong or expired.",
                 de: "Dieser Code ist falsch oder abgelaufen.",
                 es: "Ese código no es válido o ya caducó.",
+                "es-ES": "Ese código no es válido o ya ha caducado.",
                 fr: "Ce code est erroné ou a expiré.",
                 pt: "Esse código está errado ou expirou.",
             }),
@@ -214,6 +243,7 @@ export default {
                 es: "Demasiados intentos con ese código. Pide uno nuevo.",
                 fr: "Trop de tentatives avec ce code. Demandez-en un nouveau.",
                 pt: "Muitas tentativas com esse código. Peça um novo.",
+                "pt-PT": "Demasiadas tentativas com esse código. Peça um novo.",
             }),
             rateLimited: t({
                 en: "Too many tries. Wait a bit and try again.",
@@ -221,6 +251,7 @@ export default {
                 es: "Demasiados intentos. Espera un poco y vuelve a intentarlo.",
                 fr: "Trop de tentatives. Patientez un peu, puis réessayez.",
                 pt: "Muitas tentativas. Espere um pouco e tente de novo.",
+                "pt-PT": "Demasiadas tentativas. Aguarde um pouco e tente de novo.",
             }),
             unknown: t({
                 en: "Sign-in didn't complete. Try again.",

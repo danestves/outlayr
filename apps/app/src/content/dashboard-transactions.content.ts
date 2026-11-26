@@ -4,7 +4,7 @@ import type { Dictionary } from "intlayer";
 const dashboardTransactions = {
     content: {
         amount: {
-            chip: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            chip: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             max: t({ en: "At most", de: "Höchstens", es: "Como máximo", fr: "Au plus", pt: "No máximo" }),
             min: t({ en: "At least", de: "Mindestens", es: "Como mínimo", fr: "Au moins", pt: "No mínimo" }),
         },
@@ -23,7 +23,14 @@ const dashboardTransactions = {
                 fr: "Créer une règle",
                 pt: "Criar regra",
             }),
-            delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            delete: t({
+                en: "Delete",
+                de: "Löschen",
+                es: "Eliminar",
+                fr: "Supprimer",
+                pt: "Excluir",
+                "pt-PT": "Eliminar",
+            }),
             selectAll: t({
                 en: "Select all",
                 de: "Alle auswählen",
@@ -77,7 +84,7 @@ const dashboardTransactions = {
         }),
         csv: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             currency: t({ en: "Currency", de: "Währung", es: "Moneda", fr: "Devise", pt: "Moeda" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
@@ -86,13 +93,14 @@ const dashboardTransactions = {
                     en: "Amount in {{currency}}",
                     de: "Betrag in {{currency}}",
                     es: "Monto en {{currency}}",
+                    "es-ES": "Importe en {{currency}}",
                     fr: "Montant en {{currency}}",
                     pt: "Valor em {{currency}}",
                 })
             ),
             merchant: t({ en: "Merchant", de: "Händler", es: "Comercio", fr: "Commerçant", pt: "Estabelecimento" }),
             notes: t({ en: "Notes", de: "Notizen", es: "Notas", fr: "Notes", pt: "Notas" }),
-            tags: t({ en: "Tags", de: "Tags", es: "Etiquetas", fr: "Tags", pt: "Tags" }),
+            tags: t({ en: "Tags", de: "Tags", es: "Etiquetas", fr: "Tags", pt: "Tags", "pt-PT": "Etiquetas" }),
             type: t({ en: "Type", de: "Typ", es: "Tipo", fr: "Type", pt: "Tipo" }),
         },
         deleted: {
@@ -102,6 +110,7 @@ const dashboardTransactions = {
                 es: "No se pudo eliminar. Inténtalo de nuevo.",
                 fr: "Suppression impossible. Réessayez.",
                 pt: "Não foi possível excluir. Tente de novo.",
+                "pt-PT": "Não foi possível eliminar. Tente de novo.",
             }),
             many: insert(
                 t({
@@ -110,6 +119,7 @@ const dashboardTransactions = {
                     es: "{{count}} movimientos eliminados",
                     fr: "{{count}} opérations supprimées",
                     pt: "{{count}} lançamentos excluídos",
+                    "pt-PT": "{{count}} registos eliminados",
                 })
             ),
             one: t({
@@ -118,6 +128,7 @@ const dashboardTransactions = {
                 es: "Movimiento eliminado",
                 fr: "Opération supprimée",
                 pt: "Lançamento excluído",
+                "pt-PT": "Registo eliminado",
             }),
         },
         detail: {
@@ -136,7 +147,7 @@ const dashboardTransactions = {
                 fr: "Copier le lien",
                 pt: "Copiar link",
             }),
-            done: t({ en: "Done", de: "Fertig", es: "Listo", fr: "Terminé", pt: "Concluído" }),
+            done: t({ en: "Done", de: "Fertig", es: "Listo", "es-ES": "Hecho", fr: "Terminé", pt: "Concluído" }),
             edit: t({ en: "Edit", de: "Bearbeiten", es: "Editar", fr: "Modifier", pt: "Editar" }),
             feeOf: insert(
                 t({
@@ -161,8 +172,9 @@ const dashboardTransactions = {
                 es: "Edítalo en tu teléfono.",
                 fr: "Modifiez-la sur votre téléphone.",
                 pt: "Edite no seu celular.",
+                "pt-PT": "Edite no seu telemóvel.",
             }),
-            fee: t({ en: "Fee", de: "Gebühr", es: "Comisión", fr: "Frais", pt: "Tarifa" }),
+            fee: t({ en: "Fee", de: "Gebühr", es: "Comisión", fr: "Frais", pt: "Tarifa", "pt-PT": "Comissão" }),
             from: t({ en: "From", de: "Von", es: "Desde", fr: "De", pt: "De" }),
             fromAccount: insert(
                 t({
@@ -176,10 +188,25 @@ const dashboardTransactions = {
             hints: {
                 category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
                 close: t({ en: "Close", de: "Schließen", es: "Cerrar", fr: "Fermer", pt: "Fechar" }),
-                delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+                delete: t({
+                    en: "Delete",
+                    de: "Löschen",
+                    es: "Eliminar",
+                    fr: "Supprimer",
+                    pt: "Excluir",
+                    "pt-PT": "Eliminar",
+                }),
                 move: t({ en: "Move", de: "Verschieben", es: "Mover", fr: "Parcourir", pt: "Navegar" }),
             },
-            installments: t({ en: "Installments", de: "Ratenpläne", es: "Cuotas", fr: "Échéances", pt: "Parcelas" }),
+            installments: t({
+                en: "Installments",
+                de: "Ratenpläne",
+                es: "Cuotas",
+                "es-ES": "Plazos",
+                fr: "Échéances",
+                pt: "Parcelas",
+                "pt-PT": "Prestações",
+            }),
             more: t({ en: "More", de: "Mehr", es: "Más", fr: "Plus", pt: "Mais" }),
             moves: t({ en: "Moves", de: "Umbuchungen", es: "Movimientos", fr: "Mouvements", pt: "Movimentos" }),
             next: t({
@@ -188,6 +215,7 @@ const dashboardTransactions = {
                 es: "Movimiento siguiente",
                 fr: "Opération suivante",
                 pt: "Próximo lançamento",
+                "pt-PT": "Próximo registo",
             }),
             note: t({ en: "Note", de: "Notiz", es: "Nota", fr: "Note", pt: "Nota" }),
             off: t({ en: "Off", de: "Aus", es: "No", fr: "Non", pt: "Não" }),
@@ -206,8 +234,16 @@ const dashboardTransactions = {
                 es: "Movimiento anterior",
                 fr: "Opération précédente",
                 pt: "Lançamento anterior",
+                "pt-PT": "Registo anterior",
             }),
-            rate: t({ en: "Rate", de: "Kurs", es: "Tasa", fr: "Taux", pt: "Taxa de câmbio" }),
+            rate: t({
+                en: "Rate",
+                de: "Kurs",
+                es: "Tasa",
+                "es-ES": "Tipo de cambio",
+                fr: "Taux",
+                pt: "Taxa de câmbio",
+            }),
             swap: t({ en: "Swap", de: "Tauschen", es: "Intercambiar", fr: "Inverser", pt: "Inverter" }),
             to: t({ en: "To", de: "Nach", es: "Hacia", fr: "Vers", pt: "Para" }),
         },
@@ -218,6 +254,7 @@ const dashboardTransactions = {
                 es: "Añade el primero aquí o en tu teléfono.",
                 fr: "Ajoutez la première ici ou sur votre téléphone.",
                 pt: "Adicione o primeiro aqui ou no celular.",
+                "pt-PT": "Adicione o primeiro aqui ou no telemóvel.",
             }),
             title: t({
                 en: "No entries yet",
@@ -225,6 +262,7 @@ const dashboardTransactions = {
                 es: "Aún no hay movimientos",
                 fr: "Aucune opération pour l'instant",
                 pt: "Nenhum lançamento ainda",
+                "pt-PT": "Nenhum registo ainda",
             }),
         },
         installmentOf: insert(
@@ -264,14 +302,17 @@ const dashboardTransactions = {
                 es: "Movimiento añadido",
                 fr: "Opération ajoutée",
                 pt: "Lançamento adicionado",
+                "pt-PT": "Registo adicionado",
             }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             amountRequired: t({
                 en: "Type an amount first",
                 de: "Gib zuerst einen Betrag ein",
                 es: "Primero escribe un monto",
+                "es-ES": "Primero escribe un importe",
                 fr: "Saisissez d'abord un montant",
                 pt: "Primeiro digite um valor",
+                "pt-PT": "Introduza primeiro um valor",
             }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             categoryRequired: t({
@@ -303,6 +344,7 @@ const dashboardTransactions = {
                 es: "Comisión",
                 fr: "Frais de carte",
                 pt: "Tarifa do cartão",
+                "pt-PT": "Comissão do cartão",
             }),
             feeNote: insert(
                 t({
@@ -326,6 +368,7 @@ const dashboardTransactions = {
                 es: "Registrar de nuevo",
                 fr: "Saisir à nouveau",
                 pt: "Registrar de novo",
+                "pt-PT": "Registar de novo",
             }),
             name: t({ en: "Name", de: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
             noAccountLine: t({
@@ -334,6 +377,7 @@ const dashboardTransactions = {
                 es: "Crea una cuenta para llevar el saldo de este movimiento.",
                 fr: "Créez un compte pour suivre le solde de cette opération.",
                 pt: "Crie uma conta para acompanhar o saldo deste lançamento.",
+                "pt-PT": "Crie uma conta para acompanhar o saldo deste registo.",
             }),
             none: t({ en: "None", de: "Keine", es: "Ninguna", fr: "Aucun", pt: "Nenhuma" }),
             note: t({ en: "Note", de: "Notiz", es: "Nota", fr: "Note", pt: "Nota" }),
@@ -358,12 +402,21 @@ const dashboardTransactions = {
                 fr: "Retirer les frais",
                 pt: "Remover tarifa",
             }),
-            rate: t({ en: "Rate", de: "Kurs", es: "Tasa", fr: "Taux", pt: "Cotação" }),
-            rateCustom: t({ en: "My rate", de: "Mein Kurs", es: "Mi tasa", fr: "Mon taux", pt: "Minha cotação" }),
+            rate: t({ en: "Rate", de: "Kurs", es: "Tasa", "es-ES": "Tipo de cambio", fr: "Taux", pt: "Cotação" }),
+            rateCustom: t({
+                en: "My rate",
+                de: "Mein Kurs",
+                es: "Mi tasa",
+                "es-ES": "Mi tipo de cambio",
+                fr: "Mon taux",
+                pt: "Minha cotação",
+                "pt-PT": "A minha cotação",
+            }),
             rateMissing: t({
                 en: "No rate for this date. Use your own.",
                 de: "Für dieses Datum gibt es keinen Kurs. Nimm deinen eigenen.",
                 es: "No hay tasa para esta fecha. Usa la tuya.",
+                "es-ES": "No hay tipo de cambio para esta fecha. Usa la tuya.",
                 fr: "Aucun taux à cette date. Utilisez le vôtre.",
                 pt: "Sem cotação nesta data. Use a sua.",
             }),
@@ -373,8 +426,10 @@ const dashboardTransactions = {
                 en: "Type a rate first",
                 de: "Gib zuerst einen Kurs ein",
                 es: "Primero escribe una tasa",
+                "es-ES": "Primero escribe un tipo de cambio",
                 fr: "Saisissez d'abord un taux",
                 pt: "Primeiro digite uma cotação",
+                "pt-PT": "Introduza primeiro uma cotação",
             }),
             repeat: t({ en: "Repeat", de: "Wiederholen", es: "Repetir", fr: "Répéter", pt: "Repetir" }),
             repeatDaily: t({ en: "Daily", de: "Täglich", es: "Diario", fr: "Quotidien", pt: "Diário" }),
@@ -394,13 +449,21 @@ const dashboardTransactions = {
                 es: "No se pudo guardar. Inténtalo de nuevo.",
                 fr: "Enregistrement impossible. Réessayez.",
                 pt: "Não foi possível salvar. Tente de novo.",
+                "pt-PT": "Não foi possível guardar. Tente de novo.",
             }),
-            title: t({ en: "Entry", de: "Eintrag", es: "Movimiento", fr: "Opération", pt: "Lançamento" }),
+            title: t({
+                en: "Entry",
+                de: "Eintrag",
+                es: "Movimiento",
+                fr: "Opération",
+                pt: "Lançamento",
+                "pt-PT": "Registo",
+            }),
             total: t({ en: "Total", de: "Gesamt", es: "Total", fr: "Total", pt: "Total" }),
         },
         kind: {
             expense: t({ en: "Expense", de: "Ausgabe", es: "Gasto", fr: "Dépense", pt: "Despesa" }),
-            fee: t({ en: "Fee", de: "Gebühr", es: "Comisión", fr: "Frais", pt: "Tarifa" }),
+            fee: t({ en: "Fee", de: "Gebühr", es: "Comisión", fr: "Frais", pt: "Tarifa", "pt-PT": "Comissão" }),
             income: t({ en: "Income", de: "Einnahme", es: "Ingreso", fr: "Revenu", pt: "Receita" }),
             transfer: t({ en: "Transfer", de: "Umbuchung", es: "Transferencia", fr: "Virement", pt: "Transferência" }),
         },
@@ -411,6 +474,7 @@ const dashboardTransactions = {
                 es: "Ningún movimiento coincide con estos filtros",
                 fr: "Aucune opération ne correspond à ces filtres",
                 pt: "Nenhum lançamento corresponde a estes filtros",
+                "pt-PT": "Nenhum registo corresponde a estes filtros",
             }),
             query: insert(
                 t({
@@ -419,6 +483,7 @@ const dashboardTransactions = {
                     es: "Ningún movimiento para «{{query}}»",
                     fr: "Aucune opération pour « {{query}} »",
                     pt: "Nenhum lançamento para “{{query}}”",
+                    "pt-PT": "Nenhum registo para “{{query}}”",
                 })
             ),
             searchAll: t({
@@ -427,6 +492,7 @@ const dashboardTransactions = {
                 es: "Buscar en todo",
                 fr: "Chercher sur toute la période",
                 pt: "Buscar em todo o período",
+                "pt-PT": "Pesquisar em todo o período",
             }),
         },
         record: {
@@ -434,6 +500,7 @@ const dashboardTransactions = {
                 en: "Add category",
                 de: "Kategorie hinzufügen",
                 es: "Agregar categoría",
+                "es-ES": "Añadir categoría",
                 fr: "Ajouter une catégorie",
                 pt: "Adicionar categoria",
             }),
@@ -441,8 +508,10 @@ const dashboardTransactions = {
                 en: "Add a file",
                 de: "Datei hinzufügen",
                 es: "Agregar un archivo",
+                "es-ES": "Añadir un archivo",
                 fr: "Ajouter un fichier",
                 pt: "Adicionar um arquivo",
+                "pt-PT": "Adicionar um ficheiro",
             }),
             addHint: t({
                 en: "Photo or PDF, up to 10 MB",
@@ -481,8 +550,16 @@ const dashboardTransactions = {
                 es: "Archivo quitado",
                 fr: "Fichier retiré",
                 pt: "Arquivo removido",
+                "pt-PT": "Ficheiro removido",
             }),
-            files: t({ en: "Files", de: "Dateien", es: "Archivos", fr: "Fichiers", pt: "Arquivos" }),
+            files: t({
+                en: "Files",
+                de: "Dateien",
+                es: "Archivos",
+                fr: "Fichiers",
+                pt: "Arquivos",
+                "pt-PT": "Ficheiros",
+            }),
             fillRest: t({
                 en: "Give the rest to the last category",
                 de: "Den Rest der letzten Kategorie zuweisen",
@@ -496,6 +573,7 @@ const dashboardTransactions = {
                 es: "Un movimiento admite hasta 10 archivos.",
                 fr: "Une opération contient jusqu'à 10 fichiers.",
                 pt: "Um lançamento aceita até 10 arquivos.",
+                "pt-PT": "Um registo aceita até 10 ficheiros.",
             }),
             history: t({ en: "History", de: "Verlauf", es: "Historial", fr: "Historique", pt: "Histórico" }),
             historyComing: t({
@@ -533,6 +611,7 @@ const dashboardTransactions = {
                     es: "Recibo de {{merchant}}",
                     fr: "Ticket {{merchant}}",
                     pt: "Recibo de {{merchant}}",
+                    "pt-PT": "Talão de {{merchant}}",
                 })
             ),
             removeFailed: t({
@@ -541,6 +620,7 @@ const dashboardTransactions = {
                 es: "No se pudo quitar el archivo",
                 fr: "Impossible de retirer le fichier",
                 pt: "Não foi possível remover o arquivo",
+                "pt-PT": "Não foi possível remover o ficheiro",
             }),
             removeFile: t({
                 en: "Remove file",
@@ -548,6 +628,7 @@ const dashboardTransactions = {
                 es: "Quitar archivo",
                 fr: "Retirer le fichier",
                 pt: "Remover arquivo",
+                "pt-PT": "Remover ficheiro",
             }),
             removePart: t({
                 en: "Remove category",
@@ -563,7 +644,14 @@ const dashboardTransactions = {
                 fr: "Retirer la répartition",
                 pt: "Remover divisão",
             }),
-            save: t({ en: "Save", de: "Speichern", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+            save: t({
+                en: "Save",
+                de: "Speichern",
+                es: "Guardar",
+                fr: "Enregistrer",
+                pt: "Salvar",
+                "pt-PT": "Guardar",
+            }),
             scanned: insert(
                 t({
                     en: "Scanned, {{count}} items",
@@ -596,6 +684,7 @@ const dashboardTransactions = {
                 es: "No se pudo guardar la división",
                 fr: "Impossible d'enregistrer la répartition",
                 pt: "Não foi possível salvar a divisão",
+                "pt-PT": "Não foi possível guardar a divisão",
             }),
             subtotal: t({ en: "Subtotal", de: "Zwischensumme", es: "Subtotal", fr: "Sous-total", pt: "Subtotal" }),
             tax: t({ en: "Tax", de: "Steuer", es: "Impuesto", fr: "Taxe", pt: "Imposto" }),
@@ -606,6 +695,7 @@ const dashboardTransactions = {
                 es: "No se pueden adjuntar archivos de más de 10 MB.",
                 fr: "Les fichiers de plus de 10 Mo ne peuvent pas être joints.",
                 pt: "Não é possível anexar arquivos com mais de 10 MB.",
+                "pt-PT": "Não é possível anexar ficheiros com mais de 10 MB.",
             }),
             unreadable: t({
                 en: "Attach a photo (JPEG or PNG) or a PDF.",
@@ -620,6 +710,7 @@ const dashboardTransactions = {
                 es: "No se pudo adjuntar el archivo",
                 fr: "Impossible de joindre le fichier",
                 pt: "Não foi possível anexar o arquivo",
+                "pt-PT": "Não foi possível anexar o ficheiro",
             }),
             uploading: t({
                 en: "Uploading",
@@ -627,6 +718,7 @@ const dashboardTransactions = {
                 es: "Subiendo",
                 fr: "Envoi en cours",
                 pt: "Enviando",
+                "pt-PT": "A enviar",
             }),
             waiting: t({
                 en: "Waiting for the phone to upload it",
@@ -634,6 +726,7 @@ const dashboardTransactions = {
                 es: "Esperando que el teléfono lo suba",
                 fr: "En attente de l'envoi depuis le téléphone",
                 pt: "Esperando o celular enviar",
+                "pt-PT": "A esperar o telemóvel enviar",
             }),
         },
         recurring: t({ en: "Recurring", de: "Wiederkehrend", es: "Recurrente", fr: "Récurrente", pt: "Recorrente" }),
@@ -683,6 +776,7 @@ const dashboardTransactions = {
                     es: "A partir de {{count}} movimientos seleccionados.",
                     fr: "À partir de {{count}} opérations sélectionnées.",
                     pt: "A partir de {{count}} lançamentos selecionados.",
+                    "pt-PT": "A partir de {{count}} registos selecionados.",
                 })
             ),
             fromOne: t({
@@ -691,14 +785,19 @@ const dashboardTransactions = {
                 es: "A partir de 1 movimiento seleccionado.",
                 fr: "À partir de 1 opération sélectionnée.",
                 pt: "A partir de 1 lançamento selecionado.",
+                "pt-PT": "A partir de 1 registo selecionado.",
             }),
             fromSome: insert(
                 t({
                     en: "From {{count}} of {{total}} selected entries. Rules skip transfers, fees and installment payments.",
                     de: "Aus {{count}} von {{total}} ausgewählten Einträgen. Regeln überspringen Überweisungen, Gebühren und Ratenzahlungen.",
                     es: "A partir de {{count}} de {{total}} movimientos seleccionados. Las reglas omiten transferencias, comisiones y cuotas.",
+                    "es-ES":
+                        "A partir de {{count}} de {{total}} movimientos seleccionados. Las reglas omiten transferencias, comisiones y plazos.",
                     fr: "À partir de {{count}} des {{total}} opérations sélectionnées. Les règles ignorent les virements, les frais et les échéances.",
                     pt: "A partir de {{count}} de {{total}} lançamentos selecionados. Regras ignoram transferências, tarifas e parcelas.",
+                    "pt-PT":
+                        "A partir de {{count}} de {{total}} registos selecionados. Regras ignoram transferências, tarifas e prestações.",
                 })
             ),
             invalid: t({
@@ -733,6 +832,7 @@ const dashboardTransactions = {
                     es: "Aplicar a {{count}} movimientos pasados",
                     fr: "Appliquer à {{count}} opérations passées",
                     pt: "Aplicar a {{count}} lançamentos passados",
+                    "pt-PT": "Aplicar a {{count}} registos passados",
                 })
             ),
             pastDone: insert(
@@ -742,6 +842,7 @@ const dashboardTransactions = {
                     es: "{{count}} movimientos pasados cambiados",
                     fr: "{{count}} opérations passées modifiées",
                     pt: "{{count}} lançamentos passados alterados",
+                    "pt-PT": "{{count}} registos passados alterados",
                 })
             ),
             pastDoneOne: t({
@@ -750,6 +851,7 @@ const dashboardTransactions = {
                 es: "1 movimiento pasado cambiado",
                 fr: "1 opération passée modifiée",
                 pt: "1 lançamento passado alterado",
+                "pt-PT": "1 registo passado alterado",
             }),
             pastOne: t({
                 en: "Apply to 1 past entry",
@@ -757,6 +859,7 @@ const dashboardTransactions = {
                 es: "Aplicar a 1 movimiento pasado",
                 fr: "Appliquer à 1 opération passée",
                 pt: "Aplicar a 1 lançamento passado",
+                "pt-PT": "Aplicar a 1 registo passado",
             }),
             subjectDescription: t({
                 en: "the description",
@@ -777,8 +880,12 @@ const dashboardTransactions = {
                     en: "From now on, entries you add or import where {{conditions}} get {{actions}}.",
                     de: "Ab jetzt gilt für Einträge, die du hinzufügst oder importierst: wenn {{conditions}}, dann {{actions}}.",
                     es: "De ahora en adelante, los movimientos que agregues o importes donde {{conditions}} reciben {{actions}}.",
+                    "es-ES":
+                        "De ahora en adelante, los movimientos que añadas o importes donde {{conditions}} reciben {{actions}}.",
                     fr: "Désormais, les opérations que vous ajoutez ou importez où {{conditions}} reçoivent {{actions}}.",
                     pt: "A partir de agora, lançamentos que você adicionar ou importar em que {{conditions}} recebem {{actions}}.",
+                    "pt-PT":
+                        "A partir de agora, registos que adicionar ou importar em que {{conditions}} recebem {{actions}}.",
                 })
             ),
             summaryPast: insert(
@@ -788,6 +895,7 @@ const dashboardTransactions = {
                     es: "{{count}} movimientos pasados cambian ahora.",
                     fr: "{{count}} opérations passées changent maintenant.",
                     pt: "{{count}} lançamentos passados mudam agora.",
+                    "pt-PT": "{{count}} registos passados mudam agora.",
                 })
             ),
             summaryPastOne: t({
@@ -796,6 +904,7 @@ const dashboardTransactions = {
                 es: "1 movimiento pasado cambia ahora.",
                 fr: "1 opération passée change maintenant.",
                 pt: "1 lançamento passado muda agora.",
+                "pt-PT": "1 registo passado muda agora.",
             }),
             tag: t({ en: "Tag", de: "Tag", es: "Etiqueta", fr: "Tag", pt: "Tag" }),
             outcome: t({ en: "Then", de: "Dann", es: "Entonces", fr: "Alors", pt: "Então" }),
@@ -805,8 +914,10 @@ const dashboardTransactions = {
             en: "Search merchant, note, amount",
             de: "Händler, Notiz, Betrag suchen",
             es: "Buscar comercio, nota, monto",
+            "es-ES": "Buscar comercio, nota, importe",
             fr: "Chercher commerçant, note, montant",
             pt: "Buscar estabelecimento, nota, valor",
+            "pt-PT": "Pesquisar estabelecimento, nota, valor",
         }),
         span: {
             all: t({ en: "All", de: "Alle", es: "Todo", fr: "Tout", pt: "Tudo" }),

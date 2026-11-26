@@ -7,8 +7,10 @@ const dashboardInstallments = {
             en: "Back to installments",
             de: "Zurück zu den Raten",
             es: "Volver a cuotas",
+            "es-ES": "Volver a plazos",
             fr: "Retour aux paiements échelonnés",
             pt: "Voltar às parcelas",
+            "pt-PT": "Voltar às prestações",
         }),
         cadence: {
             days: insert(
@@ -39,10 +41,18 @@ const dashboardInstallments = {
         cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
         columns: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
             due: t({ en: "Due", de: "Fällig", es: "Vence", fr: "Échéance", pt: "Vencimento" }),
-            installment: t({ en: "Installment", de: "Rate", es: "Cuota", fr: "Échéance", pt: "Parcela" }),
+            installment: t({
+                en: "Installment",
+                de: "Rate",
+                es: "Cuota",
+                "es-ES": "Plazo",
+                fr: "Échéance",
+                pt: "Parcela",
+                "pt-PT": "Prestação",
+            }),
             leftAfter: t({
                 en: "Left after",
                 de: "Übrig danach",
@@ -64,7 +74,7 @@ const dashboardInstallments = {
             plan: t({ en: "Plan", de: "Plan", es: "Plan", fr: "Plan", pt: "Plano" }),
             price: t({ en: "Price", de: "Preis", es: "Precio", fr: "Prix", pt: "Preço" }),
             progress: t({ en: "Progress", de: "Fortschritt", es: "Progreso", fr: "Progression", pt: "Progresso" }),
-            status: t({ en: "Status", de: "Status", es: "Estado", fr: "Statut", pt: "Status" }),
+            status: t({ en: "Status", de: "Status", es: "Estado", fr: "Statut", pt: "Status", "pt-PT": "Estado" }),
         },
         comingUp: t({ en: "Coming up", de: "Demnächst", es: "Próximas", fr: "À venir", pt: "Próximas" }),
         consent: {
@@ -79,8 +89,10 @@ const dashboardInstallments = {
                 en: "Installment plan import",
                 de: "Import von Ratenplänen",
                 es: "Importar un plan de cuotas",
+                "es-ES": "Importar un plan de plazos",
                 fr: "Import d'échéancier",
                 pt: "Importar compra parcelada",
+                "pt-PT": "Importar compra a prestações",
             }),
             planScanSends: t({
                 en: "The screenshot, the account's name, currency, language, region, and today's date",
@@ -88,6 +100,7 @@ const dashboardInstallments = {
                 es: "La captura, el nombre de la cuenta, la moneda, el idioma, la región y la fecha de hoy",
                 fr: "La capture d'écran, le nom du compte, la devise, la langue, la région et la date du jour",
                 pt: "A captura de tela, o nome da conta, a moeda, o idioma, a região e a data de hoje",
+                "pt-PT": "A captura de ecrã, o nome da conta, a moeda, o idioma, a região e a data de hoje",
             }),
         },
         deletePending: {
@@ -96,8 +109,12 @@ const dashboardInstallments = {
                     en: "The {{count}} unpaid installments of {{name}}, {{amount}}, are removed. What's already paid stays.",
                     de: "Die {{count}} offenen Raten von {{name}} über {{amount}} werden entfernt. Bereits Bezahltes bleibt.",
                     es: "Se eliminan las {{count}} cuotas sin pagar de {{name}}, {{amount}}. Lo que ya pagaste se queda.",
+                    "es-ES":
+                        "Se eliminan los {{count}} plazos sin pagar de {{name}}, {{amount}}. Lo que ya pagaste se queda.",
                     fr: "Les {{count}} échéances impayées de {{name}}, {{amount}}, sont supprimées. Ce qui est déjà payé reste.",
                     pt: "As {{count}} parcelas não pagas de {{name}}, {{amount}}, são removidas. O que já foi pago fica.",
+                    "pt-PT":
+                        "As {{count}} prestações não pagas de {{name}}, {{amount}}, são removidas. O que já foi pago fica.",
                 })
             ),
             bodyOne: insert(
@@ -105,8 +122,10 @@ const dashboardInstallments = {
                     en: "The unpaid installment of {{name}}, {{amount}}, is removed. What's already paid stays.",
                     de: "Die offene Rate von {{name}} über {{amount}} wird entfernt. Bereits Bezahltes bleibt.",
                     es: "Se elimina la cuota sin pagar de {{name}}, {{amount}}. Lo que ya pagaste se queda.",
+                    "es-ES": "Se elimina el plazo sin pagar de {{name}}, {{amount}}. Lo que ya pagaste se queda.",
                     fr: "L'échéance impayée de {{name}}, {{amount}}, est supprimée. Ce qui est déjà payé reste.",
                     pt: "A parcela não paga de {{name}}, {{amount}}, é removida. O que já foi pago fica.",
+                    "pt-PT": "A prestação não paga de {{name}}, {{amount}}, é removida. O que já foi pago fica.",
                 })
             ),
             confirm: t({
@@ -115,6 +134,7 @@ const dashboardInstallments = {
                 es: "Eliminar pendientes",
                 fr: "Supprimer le reste",
                 pt: "Excluir pendentes",
+                "pt-PT": "Eliminar pendentes",
             }),
             done: insert(
                 t({
@@ -123,14 +143,17 @@ const dashboardInstallments = {
                     es: "Eliminaste lo pendiente de {{name}}",
                     fr: "Reste de {{name}} supprimé",
                     pt: "O restante de {{name}} foi excluído",
+                    "pt-PT": "O restante de {{name}} foi eliminado",
                 })
             ),
             title: t({
                 en: "Delete pending installments",
                 de: "Offene Raten löschen",
                 es: "Eliminar cuotas pendientes",
+                "es-ES": "Eliminar plazos pendientes",
                 fr: "Supprimer les échéances restantes",
                 pt: "Excluir parcelas pendentes",
+                "pt-PT": "Eliminar prestações pendentes",
             }),
             whole: insert(
                 t({
@@ -157,16 +180,20 @@ const dashboardInstallments = {
                     en: "{{count}} installments",
                     de: "{{count}} Raten",
                     es: "{{count}} cuotas",
+                    "es-ES": "{{count}} plazos",
                     fr: "{{count}} échéances",
                     pt: "{{count}} parcelas",
+                    "pt-PT": "{{count}} prestações",
                 })
             ),
             installmentsLeftOne: t({
                 en: "1 installment",
                 de: "1 Rate",
                 es: "1 cuota",
+                "es-ES": "1 plazo",
                 fr: "1 échéance",
                 pt: "1 parcela",
+                "pt-PT": "1 prestação",
             }),
             next: t({ en: "Next", de: "Nächste", es: "Próxima", fr: "Prochaine", pt: "Próxima" }),
             nextIn: insert(
@@ -228,7 +255,14 @@ const dashboardInstallments = {
                 })
             ),
             plan: t({ en: "Plan", de: "Plan", es: "Plan", fr: "Plan", pt: "Plano" }),
-            schedule: t({ en: "Schedule", de: "Zeitplan", es: "Cronograma", fr: "Échéancier", pt: "Cronograma" }),
+            schedule: t({
+                en: "Schedule",
+                de: "Zeitplan",
+                es: "Cronograma",
+                "es-ES": "Calendario",
+                fr: "Échéancier",
+                pt: "Cronograma",
+            }),
             terms: insert(
                 t({
                     en: "{{count}} × {{cadence}}",
@@ -245,6 +279,7 @@ const dashboardInstallments = {
                     en: "Enter an amount over {{zero}}.",
                     de: "Gib einen Betrag über {{zero}} ein.",
                     es: "Ingresa un monto mayor a {{zero}}.",
+                    "es-ES": "Ingresa un importe mayor a {{zero}}.",
                     fr: "Saisissez un montant supérieur à {{zero}}.",
                     pt: "Informe um valor maior que {{zero}}.",
                 })
@@ -253,8 +288,10 @@ const dashboardInstallments = {
                 en: "Delete installment",
                 de: "Rate löschen",
                 es: "Eliminar cuota",
+                "es-ES": "Eliminar plazo",
                 fr: "Supprimer l'échéance",
                 pt: "Excluir parcela",
+                "pt-PT": "Eliminar prestação",
             }),
             deleted: insert(
                 t({
@@ -263,17 +300,35 @@ const dashboardInstallments = {
                     es: "Eliminaste la {{installment}}",
                     fr: "{{installment}} supprimée",
                     pt: "{{installment}} excluída",
+                    "pt-PT": "{{installment}} eliminada",
                 })
             ),
             due: t({ en: "Due", de: "Fällig", es: "Vence", fr: "Échéance", pt: "Vencimento" }),
-            installment: t({ en: "Installment", de: "Rate", es: "Cuota", fr: "Échéance", pt: "Parcela" }),
-            save: t({ en: "Save", de: "Speichern", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+            installment: t({
+                en: "Installment",
+                de: "Rate",
+                es: "Cuota",
+                "es-ES": "Plazo",
+                fr: "Échéance",
+                pt: "Parcela",
+                "pt-PT": "Prestação",
+            }),
+            save: t({
+                en: "Save",
+                de: "Speichern",
+                es: "Guardar",
+                fr: "Enregistrer",
+                pt: "Salvar",
+                "pt-PT": "Guardar",
+            }),
             saved: t({
                 en: "Installment saved",
                 de: "Rate gespeichert",
                 es: "Cuota guardada",
+                "es-ES": "Plazo guardado",
                 fr: "Échéance enregistrée",
                 pt: "Parcela salva",
+                "pt-PT": "Prestação guardada",
             }),
             totalDue: t({
                 en: "Total due",
@@ -289,21 +344,26 @@ const dashboardInstallments = {
             es: "No se pudo guardar ese cambio",
             fr: "Impossible d'enregistrer ce changement",
             pt: "Não foi possível salvar essa alteração",
+            "pt-PT": "Não foi possível guardar essa alteração",
         }),
         empty: {
             line: t({
                 en: "Add a purchase you pay over time and every due date shows up here.",
                 de: "Erfasse einen Kauf, den du in Raten zahlst, und jeder Fälligkeitstermin erscheint hier.",
                 es: "Agrega una compra que pagas en cuotas y cada fecha de pago aparece aquí.",
+                "es-ES": "Añade una compra que pagas en plazos y cada fecha de pago aparece aquí.",
                 fr: "Ajoutez un achat payé en plusieurs fois et chaque échéance s'affiche ici.",
                 pt: "Adicione uma compra parcelada e cada vencimento aparece aqui.",
+                "pt-PT": "Adicione uma compra a prestações e cada vencimento aparece aqui.",
             }),
             title: t({
                 en: "No orders yet",
                 de: "Noch keine Bestellungen",
                 es: "Aún no hay órdenes",
+                "es-ES": "Aún no hay pedidos",
                 fr: "Aucune commande",
                 pt: "Nenhuma compra ainda",
+                "pt-PT": "Ainda sem compra",
             }),
         },
         fee: {
@@ -311,6 +371,7 @@ const dashboardInstallments = {
                 en: "Add late fee",
                 de: "Verzugsgebühr hinzufügen",
                 es: "Agregar recargo",
+                "es-ES": "Añadir recargo",
                 fr: "Ajouter des frais de retard",
                 pt: "Adicionar multa",
             }),
@@ -338,6 +399,7 @@ const dashboardInstallments = {
             es: "Importar desde una captura",
             fr: "Importer depuis une capture d'écran",
             pt: "Importar de uma captura de tela",
+            "pt-PT": "Importar de uma captura de ecrã",
         }),
         kpi: {
             leftToPay: t({
@@ -375,6 +437,7 @@ const dashboardInstallments = {
                     en: "{{count}} orders",
                     de: "{{count}} Bestellungen",
                     es: "{{count}} órdenes",
+                    "es-ES": "{{count}} pedidos",
                     fr: "{{count}} commandes",
                     pt: "{{count}} compras",
                 })
@@ -422,8 +485,10 @@ const dashboardInstallments = {
                 en: "Delete installment",
                 de: "Rate löschen",
                 es: "Eliminar cuota",
+                "es-ES": "Eliminar plazo",
                 fr: "Supprimer l'échéance",
                 pt: "Excluir parcela",
+                "pt-PT": "Eliminar prestação",
             }),
             deletePending: t({
                 en: "Delete pending",
@@ -431,13 +496,16 @@ const dashboardInstallments = {
                 es: "Eliminar pendientes",
                 fr: "Supprimer le reste",
                 pt: "Excluir pendentes",
+                "pt-PT": "Eliminar pendentes",
             }),
             edit: t({
                 en: "Edit installment",
                 de: "Rate bearbeiten",
                 es: "Editar cuota",
+                "es-ES": "Editar plazo",
                 fr: "Modifier l'échéance",
                 pt: "Editar parcela",
+                "pt-PT": "Editar prestação",
             }),
             more: insert(
                 t({
@@ -503,12 +571,13 @@ const dashboardInstallments = {
                     pt: "Pagar tudo · {{name}}",
                 })
             ),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             amountRequired: insert(
                 t({
                     en: "Enter an amount over {{zero}}.",
                     de: "Gib einen Betrag über {{zero}} ein.",
                     es: "Ingresa un monto mayor a {{zero}}.",
+                    "es-ES": "Ingresa un importe mayor a {{zero}}.",
                     fr: "Saisissez un montant supérieur à {{zero}}.",
                     pt: "Informe um valor maior que {{zero}}.",
                 })
@@ -520,6 +589,7 @@ const dashboardInstallments = {
                 es: "No se pudo guardar el pago",
                 fr: "Impossible d'enregistrer le paiement",
                 pt: "Não foi possível salvar o pagamento",
+                "pt-PT": "Não foi possível guardar o pagamento",
             }),
             from: t({ en: "From", de: "Von", es: "Desde", fr: "Depuis", pt: "De" }),
             leaves: insert(
@@ -542,6 +612,7 @@ const dashboardInstallments = {
                 en: "No exchange rate for that day yet.",
                 de: "Für diesen Tag gibt es noch keinen Wechselkurs.",
                 es: "Aún no hay tasa de cambio para ese día.",
+                "es-ES": "Aún No hay tipo de cambio de cambio para ese día.",
                 fr: "Pas encore de taux de change pour ce jour.",
                 pt: "Ainda não há cotação para esse dia.",
             }),
@@ -553,6 +624,7 @@ const dashboardInstallments = {
                     es: "Pagado fuera de Outlayr. Le debes menos a {{account}} y ningún banco cambia.",
                     fr: "Payé hors d'Outlayr. Vous devez moins à {{account}}, aucune banque ne bouge.",
                     pt: "Pago fora do Outlayr. Você deve menos a {{account}}, sem mudar nenhum banco.",
+                    "pt-PT": "Pago fora do Outlayr. deve menos a {{account}}, sem mudar nenhum banco.",
                 })
             ),
             overLeft: insert(
@@ -635,11 +707,20 @@ const dashboardInstallments = {
                     en: "{{count}} installments",
                     de: "{{count}} Raten",
                     es: "{{count}} cuotas",
+                    "es-ES": "{{count}} plazos",
                     fr: "{{count}} échéances",
                     pt: "{{count}} parcelas",
+                    "pt-PT": "{{count}} prestações",
                 })
             ),
-            upfront: t({ en: "Upfront", de: "Anzahlung", es: "Inicial", fr: "Acompte", pt: "Entrada" }),
+            upfront: t({
+                en: "Upfront",
+                de: "Anzahlung",
+                es: "Inicial",
+                "es-ES": "Entrada",
+                fr: "Acompte",
+                pt: "Entrada",
+            }),
             withUpfront: insert(
                 t({
                     en: "Upfront + {{rest}}",
@@ -665,11 +746,20 @@ const dashboardInstallments = {
                     en: "Installment {{index}} of {{count}}",
                     de: "Rate {{index}} von {{count}}",
                     es: "Cuota {{index}} de {{count}}",
+                    "es-ES": "Plazo {{index}} de {{count}}",
                     fr: "Échéance {{index}} sur {{count}}",
                     pt: "Parcela {{index}} de {{count}}",
+                    "pt-PT": "Prestação {{index}} de {{count}}",
                 })
             ),
-            upfront: t({ en: "Upfront", de: "Anzahlung", es: "Inicial", fr: "Acompte", pt: "Entrada" }),
+            upfront: t({
+                en: "Upfront",
+                de: "Anzahlung",
+                es: "Inicial",
+                "es-ES": "Entrada",
+                fr: "Acompte",
+                pt: "Entrada",
+            }),
         },
         scan: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
@@ -679,6 +769,7 @@ const dashboardInstallments = {
                 es: "Elegir captura",
                 fr: "Choisir une capture",
                 pt: "Escolher captura de tela",
+                "pt-PT": "Escolher captura de ecrã",
             }),
             chooseAccount: t({
                 en: "Choose account",
@@ -710,6 +801,7 @@ const dashboardInstallments = {
                     es: "Para importar una captura se necesita el servicio en la nube.",
                     fr: "L'import d'une capture nécessite le service cloud.",
                     pt: "Importar uma captura de tela requer o serviço na nuvem.",
+                    "pt-PT": "Importar uma captura de ecrã requer o serviço na nuvem.",
                 }),
                 notEntitled: t({
                     en: "Your free captures are used up. They come back within 30 days; Pro lifts the limit.",
@@ -731,6 +823,7 @@ const dashboardInstallments = {
                     es: "Estás sin conexión.",
                     fr: "Vous êtes hors ligne.",
                     pt: "Você está sem conexão.",
+                    "pt-PT": "Está sem ligação.",
                 }),
                 provider: t({
                     en: "Couldn't read the plan.",
@@ -743,8 +836,10 @@ const dashboardInstallments = {
                     en: "The fair-use limit for captures is reached. It resets within 30 days.",
                     de: "Das Fair-Use-Limit für Erfassungen ist erreicht. Es wird innerhalb von 30 Tagen zurückgesetzt.",
                     es: "Llegaste al límite de uso justo de capturas. Se renueva en menos de 30 días.",
+                    "es-ES": "Has llegado al límite de uso justo de capturas. Se renueva en menos de 30 días.",
                     fr: "La limite d'utilisation raisonnable des captures est atteinte. Elle se réinitialise sous 30 jours.",
                     pt: "Você atingiu o limite de uso justo de capturas. Ele se renova em até 30 dias.",
+                    "pt-PT": "Atingiu o limite de utilização justa de capturas. Renova-se no prazo de 30 dias.",
                 }),
                 rateLimited: t({
                     en: "That's a lot of screenshots at once. Give it a moment.",
@@ -759,13 +854,16 @@ const dashboardInstallments = {
                     es: "Inicia sesión para importar una captura.",
                     fr: "Connectez-vous pour importer une capture.",
                     pt: "Entre para importar uma captura de tela.",
+                    "pt-PT": "Inicie sessão para importar uma captura de ecrã.",
                 }),
                 unclear: t({
                     en: "Didn't find a payment plan in that image.",
                     de: "In diesem Bild wurde kein Zahlungsplan gefunden.",
                     es: "No encontré un plan de cuotas en esa imagen.",
+                    "es-ES": "No encontré un plan de plazos en esa imagen.",
                     fr: "Aucun échéancier trouvé dans cette image.",
                     pt: "Não encontrei um plano de parcelas nessa imagem.",
+                    "pt-PT": "Não encontrei um plano de prestações nessa imagem.",
                 }),
             },
             intro: t({
@@ -774,11 +872,13 @@ const dashboardInstallments = {
                 es: "Una captura del plan de pagos de la orden.",
                 fr: "Une capture d'écran de l'échéancier de la commande.",
                 pt: "Uma captura de tela do plano de pagamento da compra.",
+                "pt-PT": "Uma captura de ecrã do plano de pagamento da compra.",
             }),
             noCard: t({
                 en: "Add a card or loan to import its plan.",
                 de: "Füge eine Karte oder einen Kredit hinzu, um den Plan zu importieren.",
                 es: "Agrega una tarjeta o préstamo para importar su plan.",
+                "es-ES": "Añade una tarjeta o préstamo para importar su plan.",
                 fr: "Ajoutez une carte ou un prêt pour importer son échéancier.",
                 pt: "Adicione um cartão ou empréstimo para importar o plano.",
             }),
@@ -788,6 +888,7 @@ const dashboardInstallments = {
                 es: "Leyendo el plan…",
                 fr: "Lecture de l'échéancier…",
                 pt: "Lendo o plano…",
+                "pt-PT": "A ler o plano…",
             }),
             retry: t({
                 en: "Try again",
@@ -802,6 +903,7 @@ const dashboardInstallments = {
                 es: "Importar desde una captura",
                 fr: "Importer depuis une capture d'écran",
                 pt: "Importar de uma captura de tela",
+                "pt-PT": "Importar de uma captura de ecrã",
             }),
         },
         status: {
@@ -835,10 +937,25 @@ const dashboardInstallments = {
                 fr: "Tous les comptes",
                 pt: "Todas as contas",
             }),
-            orders: t({ en: "Orders", de: "Bestellungen", es: "Órdenes", fr: "Commandes", pt: "Compras" }),
+            orders: t({
+                en: "Orders",
+                de: "Bestellungen",
+                es: "Órdenes",
+                "es-ES": "Pedidos",
+                fr: "Commandes",
+                pt: "Compras",
+            }),
             paidOff: t({ en: "Paid off", de: "Abbezahlt", es: "Pagadas", fr: "Soldées", pt: "Quitadas" }),
         },
-        title: t({ en: "Installments", de: "Raten", es: "Cuotas", fr: "Paiements échelonnés", pt: "Parcelas" }),
+        title: t({
+            en: "Installments",
+            de: "Raten",
+            es: "Cuotas",
+            "es-ES": "Plazos",
+            fr: "Paiements échelonnés",
+            pt: "Parcelas",
+            "pt-PT": "Prestações",
+        }),
     },
     key: "dashboard-installments",
 } satisfies Dictionary;

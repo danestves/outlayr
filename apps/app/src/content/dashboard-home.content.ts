@@ -21,13 +21,21 @@ const dashboardHome = {
                 fr: "Le plus élevé ensuite",
                 pt: "Maior depois",
             }),
-            entries: t({ en: "Entries", de: "Einträge", es: "Registros", fr: "Opérations", pt: "Lançamentos" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Registros",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
             emptyLine: t({
                 en: "Days fill in as you log entries.",
                 de: "Die Tage füllen sich, wenn du Einträge erfasst.",
                 es: "Los días se llenan al registrar movimientos.",
                 fr: "Les jours se remplissent au fil de vos opérations.",
                 pt: "Os dias se preenchem conforme você lança.",
+                "pt-PT": "Os dias se preenchem conforme lança.",
             }),
             emptyTitle: t({
                 en: "Nothing spent yet",
@@ -44,6 +52,7 @@ const dashboardHome = {
                     es: "{{count}} días, sin movimientos",
                     fr: "{{count}} jours, aucune opération",
                     pt: "{{count}} dias, sem lançamentos",
+                    "pt-PT": "{{count}} dias, sem registos",
                 })
             ),
             more: t({ en: "More", de: "Mehr", es: "Más", fr: "Plus", pt: "Mais" }),
@@ -57,10 +66,24 @@ const dashboardHome = {
                     pt: "Dia de {{name}}",
                 })
             ),
-            monthTitle: t({ en: "Every month", de: "Jeder Monat", es: "Cada mes", fr: "Chaque mois", pt: "Todo mês" }),
+            monthTitle: t({
+                en: "Every month",
+                de: "Jeder Monat",
+                es: "Cada mes",
+                fr: "Chaque mois",
+                pt: "Todo mês",
+                "pt-PT": "Todos os meses",
+            }),
             highest: t({ en: "Highest", de: "Höchster", es: "El más alto", fr: "Le plus haut", pt: "Maior" }),
             lowest: t({ en: "Lowest", de: "Niedrigster", es: "El más bajo", fr: "Le plus bas", pt: "Menor" }),
-            oneEntry: t({ en: "1 entry", de: "1 Eintrag", es: "1 movimiento", fr: "1 opération", pt: "1 lançamento" }),
+            oneEntry: t({
+                en: "1 entry",
+                de: "1 Eintrag",
+                es: "1 movimiento",
+                fr: "1 opération",
+                pt: "1 lançamento",
+                "pt-PT": "1 registo",
+            }),
             manyEntries: insert(
                 t({
                     en: "{{count}} entries",
@@ -68,6 +91,7 @@ const dashboardHome = {
                     es: "{{count}} movimientos",
                     fr: "{{count}} opérations",
                     pt: "{{count}} lançamentos",
+                    "pt-PT": "{{count}} registos",
                 })
             ),
         },
@@ -90,7 +114,14 @@ const dashboardHome = {
                     pt: "{{points}} pts",
                 })
             ),
-            netWorth: t({ en: "Net worth", de: "Vermögen", es: "Patrimonio", fr: "Patrimoine", pt: "Patrimônio" }),
+            netWorth: t({
+                en: "Net worth",
+                de: "Vermögen",
+                es: "Patrimonio",
+                fr: "Patrimoine",
+                pt: "Patrimônio",
+                "pt-PT": "Património",
+            }),
             now: t({ en: "Now", de: "Jetzt", es: "Ahora", fr: "Maintenant", pt: "Agora" }),
             share: insert(
                 t({
@@ -218,6 +249,7 @@ const dashboardHome = {
                 es: "Aún no hay movimientos",
                 fr: "Pas encore d'opérations",
                 pt: "Ainda sem lançamentos",
+                "pt-PT": "Ainda sem registos",
             }),
             fillsIn: t({
                 en: "Fills in with your first entry.",
@@ -225,6 +257,7 @@ const dashboardHome = {
                 es: "Se llena con tu primer movimiento.",
                 fr: "Se remplit avec votre première opération.",
                 pt: "Se preenche com seu primeiro lançamento.",
+                "pt-PT": "Se preenche com seu primeiro registo.",
             }),
             import: t({ en: "Import", de: "Import", es: "Importar", fr: "Importer", pt: "Importar" }),
             logIncome: t({
@@ -233,6 +266,7 @@ const dashboardHome = {
                 es: "Registra ingresos para ver la proporción.",
                 fr: "Enregistrez des revenus pour voir la part.",
                 pt: "Registre receitas para ver a proporção.",
+                "pt-PT": "Registe receitas para ver a proporção.",
             }),
             phoneHint: t({
                 en: "Do this on your phone and it shows up here.",
@@ -278,6 +312,7 @@ const dashboardHome = {
                     es: "Registra un movimiento",
                     fr: "Enregistrer une opération",
                     pt: "Registrar um lançamento",
+                    "pt-PT": "Registar um registo",
                 }),
             },
             titleAccount: t({
@@ -307,6 +342,7 @@ const dashboardHome = {
                 es: "Ahora registra tu primer movimiento",
                 fr: "Enregistrez maintenant votre première opération",
                 pt: "Agora registre seu primeiro lançamento",
+                "pt-PT": "Agora registe seu primeiro registo",
             }),
         },
         spentOfIncome: {
@@ -360,8 +396,10 @@ const dashboardHome = {
                 en: "Preview only, nothing is saved. Escape returns to the real amount.",
                 de: "Nur Vorschau, nichts wird gespeichert. Mit Esc kehrst du zum echten Betrag zurück.",
                 es: "Solo una vista previa, no se guarda nada. Escape vuelve al monto real.",
+                "es-ES": "Solo una vista previa, no se guarda nada. Escape vuelve al importe real.",
                 fr: "Aperçu uniquement, rien n'est enregistré. Échap revient au montant réel.",
                 pt: "Só prévia, nada é salvo. Esc volta ao valor real.",
+                "pt-PT": "Só prévia, nada é guardado. Esc volta ao valor real.",
             }),
             shareOfSpent: t({
                 en: "Share of spent",
@@ -459,7 +497,14 @@ const dashboardHome = {
                 fr: "Sans sous-catégorie",
                 pt: "Sem subcategoria",
             }),
-            onTrackLabel: t({ en: "On track", de: "Im Plan", es: "En regla", fr: "Dans les temps", pt: "Em dia" }),
+            onTrackLabel: t({
+                en: "On track",
+                de: "Im Plan",
+                es: "En regla",
+                fr: "Dans les temps",
+                pt: "Em dia",
+                "pt-PT": "Atualizado",
+            }),
             overCount: insert(
                 t({
                     en: "{{count}} over",
@@ -561,7 +606,14 @@ const dashboardHome = {
                     pt: "Acabou em {{day}}, 1 dia antes.",
                 })
             ),
-            share: t({ en: "Share", de: "Anteil", es: "Parte", fr: "Part", pt: "Proporção" }),
+            share: t({
+                en: "Share",
+                de: "Anteil",
+                es: "Parte",
+                fr: "Part",
+                pt: "Proporção",
+                "pt-PT": "Proporção",
+            }),
             upcoming: t({ en: "Upcoming", de: "Anstehend", es: "Próximos", fr: "À venir", pt: "Próximos" }),
             versus: t({
                 en: "vs last 3 months",
@@ -601,7 +653,7 @@ const dashboardHome = {
             }),
             columns: {
                 account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
-                amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+                amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
                 category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
                 date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
                 merchant: t({ en: "Merchant", de: "Händler", es: "Comercio", fr: "Commerçant", pt: "Comerciante" }),
@@ -622,6 +674,7 @@ const dashboardHome = {
                 es: "Comisión de tarjeta",
                 fr: "Frais de carte",
                 pt: "Tarifa do cartão",
+                "pt-PT": "Comissão do cartão",
             }),
             count: insert(
                 t({
@@ -630,10 +683,18 @@ const dashboardHome = {
                     es: "{{count}} movimientos",
                     fr: "{{count}} opérations",
                     pt: "{{count}} lançamentos",
+                    "pt-PT": "{{count}} registos",
                 })
             ),
-            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
-            feeWord: t({ en: "fee", de: "Gebühr", es: "comisión", fr: "frais", pt: "tarifa" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
+            feeWord: t({ en: "fee", de: "Gebühr", es: "comisión", fr: "frais", pt: "tarifa", "pt-PT": "comissão" }),
             backTo: insert(
                 t({
                     en: "Back to {{month}}",
@@ -643,7 +704,14 @@ const dashboardHome = {
                     pt: "Voltar para {{month}}",
                 })
             ),
-            countOne: t({ en: "1 entry", de: "1 Eintrag", es: "1 movimiento", fr: "1 opération", pt: "1 lançamento" }),
+            countOne: t({
+                en: "1 entry",
+                de: "1 Eintrag",
+                es: "1 movimiento",
+                fr: "1 opération",
+                pt: "1 lançamento",
+                "pt-PT": "1 registo",
+            }),
             noAccount: t({ en: "No account", de: "Kein Konto", es: "Sin cuenta", fr: "Sans compte", pt: "Sem conta" }),
             quietLine: insert(
                 t({
@@ -652,6 +720,7 @@ const dashboardHome = {
                     es: "Nada registrado entre {{from}} y {{to}}.",
                     fr: "Rien d'enregistré entre {{from}} et {{to}}.",
                     pt: "Nada registrado entre {{from}} e {{to}}.",
+                    "pt-PT": "Nada registado entre {{from}} e {{to}}.",
                 })
             ),
             quietTitle: t({
@@ -660,6 +729,7 @@ const dashboardHome = {
                 es: "No se encontraron movimientos",
                 fr: "Aucune opération trouvée",
                 pt: "Nenhum lançamento encontrado",
+                "pt-PT": "Nenhum registo encontrado",
             }),
             empty: t({
                 en: "No entries in this view.",
@@ -667,6 +737,7 @@ const dashboardHome = {
                 es: "No hay movimientos en esta vista.",
                 fr: "Aucune opération dans cette vue.",
                 pt: "Nenhum lançamento nesta visão.",
+                "pt-PT": "Nenhum registo nesta visão.",
             }),
             next: t({
                 en: "Next page",
@@ -697,6 +768,7 @@ const dashboardHome = {
                     en: "Largest",
                     de: "Größte",
                     es: "Mayor monto",
+                    "es-ES": "Mayor importe",
                     fr: "Montant le plus élevé",
                     pt: "Maior valor",
                 }),
@@ -715,7 +787,14 @@ const dashboardHome = {
                     pt: "Mais antigos",
                 }),
             },
-            title: t({ en: "Transactions", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            title: t({
+                en: "Transactions",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
             transfer: t({ en: "Transfer", de: "Umbuchung", es: "Transferencia", fr: "Virement", pt: "Transferência" }),
         },
         uncategorized: t({

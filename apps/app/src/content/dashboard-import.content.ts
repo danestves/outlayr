@@ -13,7 +13,7 @@ const dashboardImport = {
                 fr: "Déjà dans Outlayr",
                 pt: "Já no Outlayr",
             }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
             dateInFile: t({
@@ -22,8 +22,16 @@ const dashboardImport = {
                 es: "Fecha en el archivo",
                 fr: "Date dans le fichier",
                 pt: "Data no arquivo",
+                "pt-PT": "Data no ficheiro",
             }),
-            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
             firstRows: t({
                 en: "First rows",
                 de: "Erste Zeilen",
@@ -46,14 +54,15 @@ const dashboardImport = {
                 es: "En tu archivo",
                 fr: "Dans votre fichier",
                 pt: "No seu arquivo",
+                "pt-PT": "No seu ficheiro",
             }),
             into: t({ en: "Into", de: "In", es: "En", fr: "Vers", pt: "Em" }),
             merchant: t({ en: "Merchant", de: "Händler", es: "Comercio", fr: "Commerçant", pt: "Estabelecimento" }),
             net: t({ en: "Net", de: "Netto", es: "Neto", fr: "Net", pt: "Líquido" }),
             rows: t({ en: "Rows", de: "Zeilen", es: "Filas", fr: "Lignes", pt: "Linhas" }),
-            share: t({ en: "Share", de: "Anteil", es: "Porción", fr: "Part", pt: "Parcela" }),
+            share: t({ en: "Share", de: "Anteil", es: "Porción", fr: "Part", pt: "Parcela", "pt-PT": "Prestação" }),
             source: t({ en: "Source", de: "Quelle", es: "Origen", fr: "Source", pt: "Origem" }),
-            status: t({ en: "Status", de: "Status", es: "Estado", fr: "Statut", pt: "Status" }),
+            status: t({ en: "Status", de: "Status", es: "Estado", fr: "Statut", pt: "Status", "pt-PT": "Estado" }),
             why: t({ en: "Why", de: "Warum", es: "Por qué", fr: "Pourquoi", pt: "Por quê" }),
             written: t({ en: "Written", de: "Übernommen", es: "Escrito", fr: "Écrit", pt: "Gravado" }),
         },
@@ -68,7 +77,14 @@ const dashboardImport = {
                     pt: "{{amount}} acima do extrato",
                 })
             ),
-            added: t({ en: "Added", de: "Hinzugefügt", es: "Agregados", fr: "Ajoutées", pt: "Adicionados" }),
+            added: t({
+                en: "Added",
+                de: "Hinzugefügt",
+                es: "Agregados",
+                "es-ES": "Añadidos",
+                fr: "Ajoutées",
+                pt: "Adicionados",
+            }),
             amountPlaceholder: t({ en: "0.00", de: "0,00", es: "0,00", fr: "0,00", pt: "0,00" }),
             balance: insert(
                 t({
@@ -99,8 +115,10 @@ const dashboardImport = {
                 en: "Removes everything this import added. What you logged since stays.",
                 de: "Entfernt alles, was dieser Import hinzugefügt hat. Was du seitdem erfasst hast, bleibt.",
                 es: "Quita todo lo que agregó esta importación. Lo que registraste después se queda.",
+                "es-ES": "Quita todo lo que añadió esta importación. Lo que registraste después se queda.",
                 fr: "Retire tout ce que cette importation a ajouté. Ce que vous avez saisi depuis reste.",
                 pt: "Remove tudo o que esta importação adicionou. O que você lançou depois fica.",
+                "pt-PT": "Remove tudo o que esta importação adicionou. O que lançou depois fica.",
             }),
             didntMake: insert(
                 t({
@@ -127,6 +145,7 @@ const dashboardImport = {
                     es: "{{count}} movimientos",
                     fr: "{{count}} opérations",
                     pt: "{{count}} lançamentos",
+                    "pt-PT": "{{count}} registos",
                 })
             ),
             failed: t({ en: "Failed", de: "Fehlgeschlagen", es: "Fallidas", fr: "Échecs", pt: "Falharam" }),
@@ -224,6 +243,7 @@ const dashboardImport = {
                 es: "Abrir movimientos",
                 fr: "Ouvrir les opérations",
                 pt: "Abrir lançamentos",
+                "pt-PT": "Abrir registos",
             }),
             otherAreIn: insert(
                 t({
@@ -239,8 +259,12 @@ const dashboardImport = {
                 en: "Retry only writes the rows you fixed. Leaving them out keeps the balance off until you add them by hand.",
                 de: "Erneut versuchen schreibt nur die Zeilen, die du korrigiert hast. Wenn du sie weglässt, stimmt der Kontostand erst wieder, wenn du sie von Hand hinzufügst.",
                 es: "Reintentar solo escribe las filas que arreglaste. Si las dejas fuera, el saldo queda desfasado hasta que las agregues a mano.",
+                "es-ES":
+                    "Reintentar solo escribe las filas que arreglaste. Si las dejas fuera, el saldo queda desfasado hasta que las añadas a mano.",
                 fr: "Réessayer n'écrit que les lignes corrigées. Les laisser de côté garde l'écart de solde jusqu'à ce que vous les ajoutiez à la main.",
                 pt: "Tentar de novo só grava as linhas corrigidas. Deixá-las de fora mantém o saldo diferente até você lançá-las à mão.",
+                "pt-PT":
+                    "Tentar de novo só grava as linhas corrigidas. Deixá-las de fora mantém o saldo diferente até lançá-las à mão.",
             }),
             retryOne: t({
                 en: "Retry 1 row",
@@ -278,6 +302,7 @@ const dashboardImport = {
                 en: "Unreadable amount",
                 de: "Betrag nicht lesbar",
                 es: "Monto ilegible",
+                "es-ES": "Importe ilegible",
                 fr: "Montant illisible",
                 pt: "Valor ilegível",
             }),
@@ -337,13 +362,22 @@ const dashboardImport = {
             ),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
             dismiss: t({ en: "Dismiss", de: "Verwerfen", es: "Cerrar", fr: "Fermer", pt: "Fechar" }),
-            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
             entriesAdded: t({
                 en: "Entries added",
                 de: "Hinzugefügte Einträge",
                 es: "Movimientos agregados",
+                "es-ES": "Movimientos añadidos",
                 fr: "Opérations ajoutées",
                 pt: "Lançamentos adicionados",
+                "pt-PT": "Registos adicionados",
             }),
             importUndone: t({
                 en: "Import undone",
@@ -359,6 +393,7 @@ const dashboardImport = {
                 es: "No se pudo deshacer la importación. Sus movimientos siguen en tu registro.",
                 fr: "Impossible d'annuler l'importation. Ses opérations sont toujours dans votre registre.",
                 pt: "Não foi possível desfazer a importação. Os lançamentos continuam no seu registro.",
+                "pt-PT": "Não foi possível desfazer a importação. Os registos continuam no seu registo.",
             }),
             in: t({ en: "In", de: "Ein", es: "Entró", fr: "Entrées", pt: "Entrou" }),
             last30: t({
@@ -446,6 +481,7 @@ const dashboardImport = {
                     es: "Ver {{count}} movimientos",
                     fr: "Voir {{count}} opérations",
                     pt: "Ver {{count}} lançamentos",
+                    "pt-PT": "Ver {{count}} registos",
                 })
             ),
             source: t({ en: "Source", de: "Quelle", es: "Origen", fr: "Source", pt: "Origem" }),
@@ -482,6 +518,7 @@ const dashboardImport = {
                 es: "Elegir un archivo",
                 fr: "Choisir un fichier",
                 pt: "Escolher um arquivo",
+                "pt-PT": "Escolher um ficheiro",
             }),
             dropAnywhere: t({
                 en: "Drop a CSV or PDF anywhere",
@@ -496,6 +533,7 @@ const dashboardImport = {
                 es: "Elegimos el camino según el archivo.",
                 fr: "Nous choisissons la bonne voie selon le fichier.",
                 pt: "Escolhemos o caminho certo pelo arquivo.",
+                "pt-PT": "Escolhemos o caminho certo pelo ficheiro.",
             }),
             dropHere: t({
                 en: "Drop to import it",
@@ -518,6 +556,7 @@ const dashboardImport = {
                     es: "{{count}} movimientos en {{account}}",
                     fr: "{{count}} opérations dans {{account}}",
                     pt: "{{count}} lançamentos em {{account}}",
+                    "pt-PT": "{{count}} registos em {{account}}",
                 })
             ),
             forget: t({
@@ -549,6 +588,8 @@ const dashboardImport = {
                 es: "Los CSV se leen en este dispositivo. El texto de un estado de cuenta en PDF va a nuestro proveedor de IA, y el archivo se borra después de leerlo.",
                 fr: "Les fichiers CSV sont lus sur cet appareil. Le texte d'un relevé PDF est envoyé à notre fournisseur d'IA, et le fichier est supprimé après lecture.",
                 pt: "Arquivos CSV são lidos neste dispositivo. O texto de um extrato em PDF vai para nosso provedor de IA, e o arquivo é apagado depois da leitura.",
+                "pt-PT":
+                    "Ficheiros CSV são lidos neste dispositivo. O texto de um extrato em PDF vai para nosso provedor de IA, e o ficheiro é apagado depois da leitura.",
             }),
             recent: t({
                 en: "Recent imports",
@@ -564,6 +605,7 @@ const dashboardImport = {
                 es: "Ver movimientos",
                 fr: "Voir les opérations",
                 pt: "Ver lançamentos",
+                "pt-PT": "Ver registos",
             }),
             tellUs: t({
                 en: "Tell us which one",
@@ -594,6 +636,7 @@ const dashboardImport = {
                 es: "Importando…",
                 fr: "Importation…",
                 pt: "Importando…",
+                "pt-PT": "A importar…",
             }),
             keepOpen: t({
                 en: "They show in your ledger now. Keep this tab open until they're saved.",
@@ -601,6 +644,7 @@ const dashboardImport = {
                 es: "Ya aparecen en tu registro. Mantén esta pestaña abierta hasta que se guarden.",
                 fr: "Elles apparaissent déjà dans votre registre. Gardez cet onglet ouvert jusqu'à leur enregistrement.",
                 pt: "Já aparecem no seu registro. Mantenha esta aba aberta até serem salvos.",
+                "pt-PT": "Já aparecem no seu registo. Mantenha esta aba aberta até serem guardados.",
             }),
             noCategory: t({
                 en: "No category",
@@ -616,11 +660,12 @@ const dashboardImport = {
                     es: "Importando {{count}} movimientos…",
                     fr: "Importation de {{count}} opérations…",
                     pt: "Importando {{count}} lançamentos…",
+                    "pt-PT": "A importar {{count}} registos…",
                 })
             ),
         },
         match: {
-            amountShort: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amountShort: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             bothWays: insert(
                 t({
                     en: "All {{count}} rows work both ways",
@@ -638,6 +683,7 @@ const dashboardImport = {
                     es: "Las categorías vienen de la columna {{column}}. Las que aún no tienes se crean.",
                     fr: "Les catégories viennent de la colonne {{column}}. Celles que vous n'avez pas encore sont créées.",
                     pt: "As categorias vêm da coluna {{column}}. As que você ainda não tem são criadas.",
+                    "pt-PT": "As categorias vêm da coluna {{column}}. As que ainda não tem são criadas.",
                 })
             ),
             chooseDifferent: t({
@@ -646,6 +692,7 @@ const dashboardImport = {
                 es: "Elegir otro archivo",
                 fr: "Choisir un autre fichier",
                 pt: "Escolher outro arquivo",
+                "pt-PT": "Escolher outro ficheiro",
             }),
             createAccount: t({
                 en: "Create account",
@@ -667,6 +714,7 @@ const dashboardImport = {
                     en: "Amount, signed",
                     de: "Betrag, mit Vorzeichen",
                     es: "Monto, con signo",
+                    "es-ES": "Importe, con signo",
                     fr: "Montant signé",
                     pt: "Valor com sinal",
                 }),
@@ -674,6 +722,7 @@ const dashboardImport = {
                     en: "Amount in",
                     de: "Betrag ein",
                     es: "Monto que entra",
+                    "es-ES": "Importe que entra",
                     fr: "Montant entrant",
                     pt: "Valor de entrada",
                 }),
@@ -681,6 +730,7 @@ const dashboardImport = {
                     en: "Amount out",
                     de: "Betrag aus",
                     es: "Monto que sale",
+                    "es-ES": "Importe que sale",
                     fr: "Montant sortant",
                     pt: "Valor de saída",
                 }),
@@ -712,6 +762,7 @@ const dashboardImport = {
                     en: "No amount column",
                     de: "Keine Betragsspalte",
                     es: "Sin columna de monto",
+                    "es-ES": "Sin columna de importe",
                     fr: "Pas de colonne de montant",
                     pt: "Sem coluna de valor",
                 }),
@@ -744,6 +795,8 @@ const dashboardImport = {
                     es: "No encontramos las columnas correctas. {{gaps}}: elige una abajo, o escoge un archivo que ya la tenga.",
                     fr: "Nous n'avons pas trouvé les bonnes colonnes. {{gaps}} : choisissez-en une ci-dessous, ou un fichier qui en a déjà une.",
                     pt: "Não encontramos as colunas certas. {{gaps}}: escolha uma abaixo, ou um arquivo que já tenha.",
+                    "pt-PT":
+                        "Não encontramos as colunas certas. {{gaps}}: escolha uma abaixo, ou um ficheiro que já tenha.",
                 })
             ),
             monthFirst: t({
@@ -754,7 +807,7 @@ const dashboardImport = {
                 pt: "Mês primeiro",
             }),
             need: {
-                amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+                amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
                 date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
                 label: t({
                     en: "Description or category",
@@ -778,6 +831,7 @@ const dashboardImport = {
                 es: "Los movimientos entran sin cuenta.",
                 fr: "Les opérations arrivent sans compte.",
                 pt: "Os lançamentos entram sem conta.",
+                "pt-PT": "Os registos entram sem conta.",
             }),
             noCategoryColumn: insert(
                 t({
@@ -810,7 +864,14 @@ const dashboardImport = {
                 fr: "Choisir un champ",
                 pt: "Escolha um campo",
             }),
-            preview: t({ en: "Preview", de: "Vorschau", es: "Vista previa", fr: "Aperçu", pt: "Prévia" }),
+            preview: t({
+                en: "Preview",
+                de: "Vorschau",
+                es: "Vista previa",
+                fr: "Aperçu",
+                pt: "Prévia",
+                "pt-PT": "Pré-visualização",
+            }),
             previewCount: insert(
                 t({
                     en: "{{shown}} of {{total}} rows",
@@ -874,10 +935,19 @@ const dashboardImport = {
                 es: "Ningún día de este archivo pasa de 12, así que no lo sabemos. Tu elección aplica a todas las filas.",
                 fr: "Aucun jour de ce fichier ne dépasse 12, il ne peut donc pas nous le dire. Votre choix s'applique à chaque ligne.",
                 pt: "Nenhum dia deste arquivo passa de 12, então ele não diz. Sua escolha vale para todas as linhas.",
+                "pt-PT":
+                    "Nenhum dia deste ficheiro passa de 12, então ele não diz. Sua escolha vale para todas as linhas.",
             }),
         },
         notion: {
-            connect: t({ en: "Connect", de: "Verbinden", es: "Conectar", fr: "Connecter", pt: "Conectar" }),
+            connect: t({
+                en: "Connect",
+                de: "Verbinden",
+                es: "Conectar",
+                fr: "Connecter",
+                pt: "Conectar",
+                "pt-PT": "Ligar",
+            }),
             connectFailed: t({
                 en: "Notion didn't connect. Try again.",
                 de: "Notion wurde nicht verbunden. Versuch es noch mal.",
@@ -921,6 +991,7 @@ const dashboardImport = {
                 es: "Bases de datos",
                 fr: "Bases de données",
                 pt: "Bancos de dados",
+                "pt-PT": "Bases de dados",
             }),
             disconnect: t({
                 en: "Disconnect Notion",
@@ -934,6 +1005,7 @@ const dashboardImport = {
                     en: "None of these has a date and an amount column.",
                     de: "Keine davon hat eine Datums- und eine Betragsspalte.",
                     es: "Ninguna tiene columna de fecha y de monto.",
+                    "es-ES": "Ninguna tiene columna de fecha y de importe.",
                     fr: "Aucune n'a de colonne de date et de montant.",
                     pt: "Nenhum tem coluna de data e valor.",
                 }),
@@ -988,6 +1060,7 @@ const dashboardImport = {
                 es: "Leyendo tu espacio de trabajo…",
                 fr: "Lecture de votre espace de travail…",
                 pt: "Lendo seu espaço de trabalho…",
+                "pt-PT": "A ler seu espaço de trabalho…",
             }),
             more: t({ en: "More", de: "Mehr", es: "Más", fr: "Plus", pt: "Mais" }),
             noDatabases: t({
@@ -996,21 +1069,31 @@ const dashboardImport = {
                 es: "Aún no hay bases de datos compartidas con Outlayr.",
                 fr: "Aucune base de données n'est encore partagée avec Outlayr.",
                 pt: "Nenhum banco de dados foi compartilhado com o Outlayr ainda.",
+                "pt-PT": "Nenhum banco de dados foi partilhado com o Outlayr ainda.",
             }),
             noDateAmount: t({
                 en: "No date or amount column",
                 de: "Keine Datums- oder Betragsspalte",
                 es: "Sin columna de fecha o monto",
+                "es-ES": "Sin columna de fecha o importe",
                 fr: "Pas de colonne de date ou de montant",
                 pt: "Sem coluna de data ou valor",
             }),
-            reading: t({ en: "Reading…", de: "Wird gelesen…", es: "Leyendo…", fr: "Lecture…", pt: "Lendo…" }),
+            reading: t({
+                en: "Reading…",
+                de: "Wird gelesen…",
+                es: "Leyendo…",
+                fr: "Lecture…",
+                pt: "Lendo…",
+                "pt-PT": "A ler…",
+            }),
             shareMore: t({
                 en: "Share more pages in Notion",
                 de: "Mehr Seiten in Notion teilen",
                 es: "Compartir más páginas en Notion",
                 fr: "Partager plus de pages dans Notion",
                 pt: "Compartilhar mais páginas no Notion",
+                "pt-PT": "Partilhar mais páginas no Notion",
             }),
             text: t({
                 en: "Pick databases in Notion and import them. Import again any time, no files.",
@@ -1018,6 +1101,7 @@ const dashboardImport = {
                 es: "Elige bases de datos en Notion e impórtalas. Vuelve a importar cuando quieras, sin archivos.",
                 fr: "Choisissez des bases de données dans Notion et importez-les. Réimportez quand vous voulez, sans fichier.",
                 pt: "Escolha bancos de dados no Notion e importe. Importe de novo quando quiser, sem arquivos.",
+                "pt-PT": "Escolha bases de dados no Notion e importe-as. Importe de novo quando quiser, sem ficheiros.",
             }),
             title: t({ en: "Notion", de: "Notion", es: "Notion", fr: "Notion", pt: "Notion" }),
             uploadExport: t({
@@ -1048,6 +1132,7 @@ const dashboardImport = {
             es: "Abrir Ajustes",
             fr: "Ouvrir les réglages",
             pt: "Abrir Ajustes",
+            "pt-PT": "Abrir Definições",
         }),
         resolve: {
             accounts: t({ en: "Accounts", de: "Konten", es: "Cuentas", fr: "Comptes", pt: "Contas" }),
@@ -1066,7 +1151,14 @@ const dashboardImport = {
                 fr: "Modèle consulté",
                 pt: "Consulta ao modelo",
             }),
-            asking: t({ en: "Asking…", de: "Frage läuft…", es: "Consultando…", fr: "En cours…", pt: "Consultando…" }),
+            asking: t({
+                en: "Asking…",
+                de: "Frage läuft…",
+                es: "Consultando…",
+                fr: "En cours…",
+                pt: "Consultando…",
+                "pt-PT": "A consultar…",
+            }),
             bringAs: t({
                 en: "Bring it in as",
                 de: "Übernehmen als",
@@ -1082,6 +1174,7 @@ const dashboardImport = {
                     es: "Tus movimientos",
                     fr: "Vos opérations",
                     pt: "Seus lançamentos",
+                    "pt-PT": "Seus registos",
                 }),
                 file: t({
                     en: "Your file",
@@ -1089,6 +1182,7 @@ const dashboardImport = {
                     es: "Tu archivo",
                     fr: "Votre fichier",
                     pt: "Seu arquivo",
+                    "pt-PT": "Seu ficheiro",
                 }),
                 none: t({
                     en: "Nothing yet",
@@ -1098,7 +1192,7 @@ const dashboardImport = {
                     pt: "Nada ainda",
                 }),
                 rule: t({ en: "A rule", de: "Eine Regel", es: "Una regla", fr: "Une règle", pt: "Uma regra" }),
-                you: t({ en: "You", de: "Du", es: "Tú", fr: "Vous", pt: "Você" }),
+                you: t({ en: "You", de: "Du", es: "Tú", fr: "Vous", pt: "Você", "pt-PT": "" }),
             },
             fromAi: t({ en: "From AI", de: "Von der KI", es: "De la IA", fr: "De l'IA", pt: "Da IA" }),
             leaveForLater: insert(
@@ -1201,13 +1295,18 @@ const dashboardImport = {
                 es: "Preparando",
                 fr: "Préparation",
                 pt: "Preparando",
+                "pt-PT": "A preparar",
             }),
             privacyLine: t({
                 en: "Only unmatched merchant names and your category names are sent. Never your amounts, dates, or the file itself.",
                 de: "Gesendet werden nur nicht zugeordnete Händlernamen und deine Kategorienamen. Nie deine Beträge, Daten oder die Datei selbst.",
                 es: "Solo se envían los nombres de comercios sin asignar y los nombres de tus categorías. Nunca tus montos, fechas ni el archivo.",
+                "es-ES":
+                    "Solo se envían los nombres de comercios sin asignar y los nombres de tus categorías. Nunca tus importes, fechas ni el archivo.",
                 fr: "Seuls les noms de commerçants non associés et vos noms de catégories sont envoyés. Jamais vos montants, dates, ni le fichier.",
                 pt: "Só os nomes de estabelecimentos sem associação e os nomes das suas categorias são enviados. Nunca seus valores, datas ou o arquivo.",
+                "pt-PT":
+                    "Só os nomes de estabelecimentos sem associação e os nomes das suas categorias são enviados. Nunca seus valores, datas ou o ficheiro.",
             }),
             readFile: t({
                 en: "Read the file",
@@ -1215,6 +1314,7 @@ const dashboardImport = {
                 es: "Leer el archivo",
                 fr: "Lire le fichier",
                 pt: "Ler o arquivo",
+                "pt-PT": "Ler o ficheiro",
             }),
             readRows: insert(
                 t({
@@ -1247,6 +1347,7 @@ const dashboardImport = {
                     es: "No tienes conexión.",
                     fr: "Vous êtes hors ligne.",
                     pt: "Você está offline.",
+                    "pt-PT": "Está offline.",
                 }),
                 rateLimit: t({ en: "Rate limit", de: "Anfragelimit", es: "Límite", fr: "Limite", pt: "Limite" }),
                 rateLimitHint: t({
@@ -1255,6 +1356,7 @@ const dashboardImport = {
                     es: "Demasiadas importaciones en esta hora.",
                     fr: "Trop d'importations cette heure-ci.",
                     pt: "Importações demais nesta hora.",
+                    "pt-PT": "Demasiadas importações nesta hora.",
                 }),
                 timeout: t({
                     en: "Timeout",
@@ -1269,6 +1371,7 @@ const dashboardImport = {
                     es: "Tardó demasiado.",
                     fr: "Cela a pris trop de temps.",
                     pt: "Demorou demais.",
+                    "pt-PT": "Demorou demasiado.",
                 }),
                 tooLarge: t({
                     en: "Too large",
@@ -1292,6 +1395,7 @@ const dashboardImport = {
                     es: "Revisar {{count}} movimientos",
                     fr: "Vérifier {{count}} opérations",
                     pt: "Revisar {{count}} lançamentos",
+                    "pt-PT": "Revisar {{count}} registos",
                 })
             ),
             rowsCount: insert(
@@ -1326,6 +1430,7 @@ const dashboardImport = {
                     es: "Mostrando {{shown}} de {{total}} comercios",
                     fr: "{{shown}} commerçants sur {{total}}",
                     pt: "Mostrando {{shown}} de {{total}} estabelecimentos",
+                    "pt-PT": "A mostrar {{shown}} de {{total}} estabelecimentos",
                 })
             ),
             skipped: t({ en: "Off", de: "Aus", es: "Desactivado", fr: "Désactivé", pt: "Desativado" }),
@@ -1358,6 +1463,7 @@ const dashboardImport = {
                     es: "No tienes conexión.",
                     fr: "Vous êtes hors ligne.",
                     pt: "Você está offline.",
+                    "pt-PT": "Está offline.",
                 }),
                 providerError: t({
                     en: "The service didn't answer.",
@@ -1372,6 +1478,7 @@ const dashboardImport = {
                     es: "Demasiadas importaciones en esta hora.",
                     fr: "Trop d'importations cette heure-ci.",
                     pt: "Importações demais nesta hora.",
+                    "pt-PT": "Demasiadas importações nesta hora.",
                 }),
             },
             unreadPages: insert(
@@ -1406,10 +1513,19 @@ const dashboardImport = {
                 en: "Add another file",
                 de: "Weitere Datei hinzufügen",
                 es: "Agregar otro archivo",
+                "es-ES": "Añadir otro archivo",
                 fr: "Ajouter un autre fichier",
                 pt: "Adicionar outro arquivo",
+                "pt-PT": "Adicionar outro ficheiro",
             }),
-            added: t({ en: "Added", de: "Hinzugefügt", es: "Agregado", fr: "Ajouté", pt: "Adicionado" }),
+            added: t({
+                en: "Added",
+                de: "Hinzugefügt",
+                es: "Agregado",
+                "es-ES": "Añadido",
+                fr: "Ajouté",
+                pt: "Adicionado",
+            }),
             all: t({ en: "All", de: "Alle", es: "Todos", fr: "Tous", pt: "Todos" }),
             balanceCheck: t({
                 en: "Balance check",
@@ -1441,6 +1557,7 @@ const dashboardImport = {
                     es: "Importar {{count}} movimientos",
                     fr: "Importer {{count}} opérations",
                     pt: "Importar {{count}} lançamentos",
+                    "pt-PT": "Importar {{count}} registos",
                 })
             ),
             importOne: t({
@@ -1449,6 +1566,7 @@ const dashboardImport = {
                 es: "Importar 1 movimiento",
                 fr: "Importer 1 opération",
                 pt: "Importar 1 lançamento",
+                "pt-PT": "Importar 1 registo",
             }),
             inOutlayr: t({
                 en: "In Outlayr",
@@ -1463,6 +1581,7 @@ const dashboardImport = {
                 es: "En este archivo",
                 fr: "Dans ce fichier",
                 pt: "Neste arquivo",
+                "pt-PT": "Neste ficheiro",
             }),
             keptNote: t({
                 en: "Your file and progress were kept.",
@@ -1470,11 +1589,13 @@ const dashboardImport = {
                 es: "Tu archivo y tu progreso se guardaron.",
                 fr: "Votre fichier et votre progression ont été conservés.",
                 pt: "Seu arquivo e seu progresso foram guardados.",
+                "pt-PT": "Seu ficheiro e seu progresso foram guardados.",
             }),
             matchRule: t({
                 en: "Same day, amount and currency count as a match.",
                 de: "Gleicher Tag, gleicher Betrag und gleiche Währung zählen als Treffer.",
                 es: "Mismo día, monto y moneda cuentan como coincidencia.",
+                "es-ES": "Mismo día, importe y moneda cuentan como coincidencia.",
                 fr: "Même jour, montant et devise comptent comme une correspondance.",
                 pt: "Mesmo dia, valor e moeda contam como coincidência.",
             }),
@@ -1495,6 +1616,7 @@ const dashboardImport = {
                     es: "{{count}} movimientos nuevos",
                     fr: "{{count}} nouvelles opérations",
                     pt: "{{count}} lançamentos novos",
+                    "pt-PT": "{{count}} registos novos",
                 })
             ),
             next: t({
@@ -1517,6 +1639,7 @@ const dashboardImport = {
                 es: "La escritura falló, así que tu registro no cambió. Tus selecciones siguen aquí.",
                 fr: "L'écriture a échoué, votre registre est donc inchangé. Vos sélections sont toujours là.",
                 pt: "A gravação falhou, então seu registro não mudou. Suas seleções continuam aqui.",
+                "pt-PT": "A gravação falhou, então seu registo não mudou. Suas seleções continuam aqui.",
             }),
             nothingSelected: t({
                 en: "Pick at least one row to import.",
@@ -1554,6 +1677,7 @@ const dashboardImport = {
                 es: "Retomando donde lo dejaste",
                 fr: "Reprise là où vous vous étiez arrêté",
                 pt: "Retomando de onde você parou",
+                "pt-PT": "A retomar de onde parou",
             }),
             previous: t({
                 en: "Previous page",
@@ -1576,6 +1700,7 @@ const dashboardImport = {
                     es: "Mostrando {{shown}} de {{total}}",
                     fr: "{{shown}} sur {{total}}",
                     pt: "Mostrando {{shown}} de {{total}}",
+                    "pt-PT": "A mostrar {{shown}} de {{total}}",
                 })
             ),
             sideBySide: t({
@@ -1625,13 +1750,21 @@ const dashboardImport = {
             }),
         },
         sources: {
-            csv: t({ en: "CSV file", de: "CSV-Datei", es: "Archivo CSV", fr: "Fichier CSV", pt: "Arquivo CSV" }),
+            csv: t({
+                en: "CSV file",
+                de: "CSV-Datei",
+                es: "Archivo CSV",
+                fr: "Fichier CSV",
+                pt: "Arquivo CSV",
+                "pt-PT": "Ficheiro CSV",
+            }),
             csvHint: t({
                 en: "Any bank or spreadsheet",
                 de: "Von jeder Bank oder Tabelle",
                 es: "Cualquier banco u hoja de cálculo",
                 fr: "N'importe quelle banque ou feuille de calcul",
                 pt: "Qualquer banco ou planilha",
+                "pt-PT": "Qualquer banco ou folha de cálculo",
             }),
             fromApp: t({
                 en: "From another app",
@@ -1639,6 +1772,7 @@ const dashboardImport = {
                 es: "Desde otra app",
                 fr: "Depuis une autre app",
                 pt: "De outro app",
+                "pt-PT": "De outra app",
             }),
             fromFile: t({
                 en: "From a file",
@@ -1646,6 +1780,7 @@ const dashboardImport = {
                 es: "Desde un archivo",
                 fr: "Depuis un fichier",
                 pt: "De um arquivo",
+                "pt-PT": "De um ficheiro",
             }),
             moneyManager: t({
                 en: "Money Manager",
@@ -1677,6 +1812,7 @@ const dashboardImport = {
                 es: "Conectado",
                 fr: "Connecté",
                 pt: "Conectado",
+                "pt-PT": "Ligado",
             }),
             notionHint: t({
                 en: "Markdown & CSV export",
@@ -1707,7 +1843,15 @@ const dashboardImport = {
             undone: t({ en: "Undone", de: "Rückgängig gemacht", es: "Deshecho", fr: "Annulé", pt: "Desfeito" }),
         },
         steps: {
-            done: t({ en: "Done", de: "Fertig", es: "Listo", fr: "Terminé", pt: "Pronto" }),
+            done: t({
+                en: "Done",
+                de: "Fertig",
+                es: "Listo",
+                "es-ES": "Hecho",
+                fr: "Terminé",
+                pt: "Pronto",
+                "pt-PT": "Concluir",
+            }),
             match: t({
                 en: "Match columns",
                 de: "Spalten zuordnen",
@@ -1715,7 +1859,7 @@ const dashboardImport = {
                 fr: "Associer les colonnes",
                 pt: "Associar colunas",
             }),
-            review: t({ en: "Review", de: "Prüfen", es: "Revisar", fr: "Vérifier", pt: "Revisar" }),
+            review: t({ en: "Review", de: "Prüfen", es: "Revisar", fr: "Vérifier", pt: "Revisar", "pt-PT": "Rever" }),
             upload: t({ en: "Upload", de: "Hochladen", es: "Subir", fr: "Envoi", pt: "Enviar" }),
         },
         tabs: {
@@ -1754,6 +1898,7 @@ const dashboardImport = {
                 es: "Movimientos que se quitan",
                 fr: "Opérations retirées",
                 pt: "Lançamentos removidos",
+                "pt-PT": "Registos removidos",
             }),
             title: t({
                 en: "Undo the import?",
@@ -1782,6 +1927,7 @@ const dashboardImport = {
                 en: "We couldn't read this statement",
                 de: "Wir konnten diesen Kontoauszug nicht lesen",
                 es: "No pudimos leer este estado de cuenta",
+                "es-ES": "No pudimos leer este extracto",
                 fr: "Nous n'avons pas pu lire ce relevé",
                 pt: "Não conseguimos ler este extrato",
             }),
@@ -1791,6 +1937,8 @@ const dashboardImport = {
                 es: "Puede ser un escaneo o tener contraseña. Pide a tu banco un CSV o un PDF con texto seleccionable.",
                 fr: "C'est peut-être un scan ou il est protégé par un mot de passe. Demandez à votre banque un CSV ou un PDF avec du texte sélectionnable.",
                 pt: "Pode ser uma digitalização ou ter senha. Peça ao seu banco um CSV ou um PDF com texto selecionável.",
+                "pt-PT":
+                    "Pode ser uma digitalização ou ter palavra-passe. Peça ao seu banco um CSV ou um PDF com texto selecionável.",
             }),
             chooseCsv: t({
                 en: "Choose CSV",
@@ -1814,7 +1962,14 @@ const dashboardImport = {
                 fr: "Au moins 3",
                 pt: "Pelo menos 3",
             }),
-            csvCard: t({ en: "CSV file", de: "CSV-Datei", es: "Archivo CSV", fr: "Fichier CSV", pt: "Arquivo CSV" }),
+            csvCard: t({
+                en: "CSV file",
+                de: "CSV-Datei",
+                es: "Archivo CSV",
+                fr: "Fichier CSV",
+                pt: "Arquivo CSV",
+                "pt-PT": "Ficheiro CSV",
+            }),
             csvLimit: t({
                 en: "CSV up to 10 MB",
                 de: "CSV bis 10 MB",
@@ -1843,6 +1998,7 @@ const dashboardImport = {
                 es: "Los archivos grandes se leen solo en tu dispositivo.",
                 fr: "Les gros fichiers sont lus uniquement sur votre appareil.",
                 pt: "Arquivos grandes são lidos só no seu dispositivo.",
+                "pt-PT": "Os ficheiros grandes só são lidos no seu dispositivo.",
             }),
             dropPdf: t({
                 en: "Drop your statement here",
@@ -1865,7 +2021,7 @@ const dashboardImport = {
                 fr: "Déposez pour le lire",
                 pt: "Solte para ler",
             }),
-            file: t({ en: "File", de: "Datei", es: "Archivo", fr: "Fichier", pt: "Arquivo" }),
+            file: t({ en: "File", de: "Datei", es: "Archivo", fr: "Fichier", pt: "Arquivo", "pt-PT": "Ficheiro" }),
             importCsvInstead: t({
                 en: "Import a CSV instead",
                 de: "Stattdessen CSV importieren",
@@ -1877,6 +2033,7 @@ const dashboardImport = {
                 en: "Outlayr needs at least a date, an amount, and a category or description column.",
                 de: "Outlayr braucht mindestens eine Spalte für Datum, Betrag und Kategorie oder Beschreibung.",
                 es: "Outlayr necesita al menos una fecha, un monto y una columna de categoría o descripción.",
+                "es-ES": "Outlayr necesita al menos una fecha, un importe y una columna de categoría o descripción.",
                 fr: "Outlayr a besoin au moins d'une date, d'un montant et d'une colonne de catégorie ou de description.",
                 pt: "O Outlayr precisa de pelo menos uma data, um valor e uma coluna de categoria ou descrição.",
             }),
@@ -1886,6 +2043,7 @@ const dashboardImport = {
                 es: "Ningún archivo elegido",
                 fr: "Aucun fichier choisi",
                 pt: "Nenhum arquivo escolhido",
+                "pt-PT": "Nenhum ficheiro escolhido",
             }),
             notCsv: t({
                 en: "This doesn't look like a CSV file",
@@ -1893,6 +2051,7 @@ const dashboardImport = {
                 es: "Esto no parece un archivo CSV",
                 fr: "Ceci ne ressemble pas à un fichier CSV",
                 pt: "Isto não parece um arquivo CSV",
+                "pt-PT": "Isto não parece um ficheiro CSV",
             }),
             notCsvHint: t({
                 en: "We couldn't find any comma-separated data in this file.",
@@ -1900,6 +2059,7 @@ const dashboardImport = {
                 es: "No encontramos datos separados por comas en este archivo.",
                 fr: "Nous n'avons trouvé aucune donnée séparée par des virgules dans ce fichier.",
                 pt: "Não encontramos dados separados por vírgula neste arquivo.",
+                "pt-PT": "Não encontrámos dados separados por vírgulas neste ficheiro.",
             }),
             notPdf: t({
                 en: "This doesn't look like a PDF",
@@ -1930,6 +2090,7 @@ const dashboardImport = {
                 es: "No se leyó, el archivo se borró",
                 fr: "Non lu, le fichier a été supprimé",
                 pt: "Não lido, o arquivo foi apagado",
+                "pt-PT": "Não lido, o ficheiro foi apagado",
             }),
             notReadYet: insert(
                 t({
@@ -1946,6 +2107,7 @@ const dashboardImport = {
                 es: "Otros errores de archivo",
                 fr: "Autres erreurs de fichier",
                 pt: "Outros erros de arquivo",
+                "pt-PT": "Outros erros de ficheiro",
             }),
             pdfCard: t({
                 en: "Bank statement PDF",
@@ -1967,6 +2129,8 @@ const dashboardImport = {
                 es: "El archivo va a nuestro servidor, que lo borra después de leerlo. Su texto va a Anthropic con los números largos de cuentas y tarjetas ocultos, e incluye tu nombre y dirección si aparecen.",
                 fr: "Le fichier est envoyé à notre serveur, qui le supprime après lecture. Son texte est envoyé à Anthropic avec les longs numéros de compte et de carte masqués. Votre nom et votre adresse, s'ils y figurent, sont envoyés sans masquage.",
                 pt: "O arquivo vai para nosso servidor, que o apaga depois de ler. O texto vai para a Anthropic com números longos de conta e cartão ocultos. Seu nome e endereço, se aparecerem, são enviados sem ocultar.",
+                "pt-PT":
+                    "O ficheiro vai para nosso servidor, que o apaga depois de ler. O texto vai para a Anthropic com números longos de conta e cartão ocultos. Seu nome e endereço, se aparecerem, são enviados sem ocultar.",
             }),
             problem: {
                 cantOpen: t({
@@ -1982,6 +2146,7 @@ const dashboardImport = {
                     es: "No pudimos leer ese archivo.",
                     fr: "Nous n'avons pas pu lire ce fichier.",
                     pt: "Não conseguimos ler esse arquivo.",
+                    "pt-PT": "Não conseguimos ler esse ficheiro.",
                 }),
                 fewColumns: t({
                     en: "Few columns",
@@ -2003,6 +2168,7 @@ const dashboardImport = {
                     es: "Este archivo tiene muy pocas columnas",
                     fr: "Ce fichier a trop peu de colonnes",
                     pt: "Este arquivo tem poucas colunas",
+                    "pt-PT": "Este ficheiro tem poucas colunas",
                 }),
                 noRows: t({ en: "No rows", de: "Keine Zeilen", es: "Sin filas", fr: "Aucune ligne", pt: "Sem linhas" }),
                 noRowsHint: t({
@@ -2018,6 +2184,7 @@ const dashboardImport = {
                     es: "Este archivo no tiene filas",
                     fr: "Ce fichier n'a aucune ligne",
                     pt: "Este arquivo não tem linhas",
+                    "pt-PT": "Este ficheiro não tem linhas",
                 }),
                 offline: t({ en: "Offline", de: "Offline", es: "Sin conexión", fr: "Hors ligne", pt: "Offline" }),
                 offlineHint: t({
@@ -2089,6 +2256,7 @@ const dashboardImport = {
                     es: "Este archivo pesa más de 10 MB",
                     fr: "Ce fichier dépasse 10 Mo",
                     pt: "Este arquivo passa de 10 MB",
+                    "pt-PT": "Este ficheiro passa de 10 MB",
                 }),
             },
             readByAi: insert(
@@ -2111,8 +2279,10 @@ const dashboardImport = {
                 en: "Reading statement…",
                 de: "Kontoauszug wird gelesen…",
                 es: "Leyendo estado de cuenta…",
+                "es-ES": "Leyendo extracto…",
                 fr: "Lecture du relevé…",
                 pt: "Lendo extrato…",
+                "pt-PT": "A ler o extrato…",
             }),
             readingNote: t({
                 en: "This takes up to a minute. You can keep this tab in the background.",
@@ -2120,6 +2290,7 @@ const dashboardImport = {
                 es: "Esto tarda hasta un minuto. Puedes dejar esta pestaña en segundo plano.",
                 fr: "Cela prend jusqu'à une minute. Vous pouvez laisser cet onglet en arrière-plan.",
                 pt: "Isso leva até um minuto. Você pode deixar esta aba em segundo plano.",
+                "pt-PT": "Isso leva até um minuto. pode deixar esta aba em segundo plano.",
             }),
             rows: t({ en: "Rows", de: "Zeilen", es: "Filas", fr: "Lignes", pt: "Linhas" }),
             rowsNeed: t({
@@ -2150,6 +2321,7 @@ const dashboardImport = {
                 es: "Enviando estado de cuenta…",
                 fr: "Envoi du relevé…",
                 pt: "Enviando extrato…",
+                "pt-PT": "A enviar extrato…",
             }),
             worksWith: t({
                 en: "Works with",
@@ -2164,6 +2336,8 @@ const dashboardImport = {
                 es: "Los CSV se leen en este dispositivo. El texto de un estado de cuenta en PDF va a nuestro proveedor de IA.",
                 fr: "Les fichiers CSV sont lus sur cet appareil. Le texte d'un relevé PDF est envoyé à notre fournisseur d'IA.",
                 pt: "Arquivos CSV são lidos neste dispositivo. O texto de um extrato em PDF vai para nosso provedor de IA.",
+                "pt-PT":
+                    "Ficheiros CSV são lidos neste dispositivo. O texto de um extrato em PDF vai para nosso provedor de IA.",
             }),
         },
     },

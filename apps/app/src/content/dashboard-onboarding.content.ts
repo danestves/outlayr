@@ -18,6 +18,7 @@ const dashboardOnboarding = {
             es: "Pasos de configuración",
             fr: "Étapes de configuration",
             pt: "Etapas da configuração",
+            "pt-PT": "Etapas da definição",
         }),
         rail: {
             currency: t({
@@ -33,6 +34,7 @@ const dashboardOnboarding = {
                 es: "Registro automático",
                 fr: "Saisie automatique",
                 pt: "Registro automático",
+                "pt-PT": "Registo automático",
             }),
             rhythm: t({
                 en: "Rhythm",
@@ -47,6 +49,7 @@ const dashboardOnboarding = {
                 es: "Primera entrada",
                 fr: "Première opération",
                 pt: "Primeiro lançamento",
+                "pt-PT": "Primeiro registo",
             }),
         },
         welcome: {
@@ -70,6 +73,7 @@ const dashboardOnboarding = {
                 es: "Un registro que llevas a mano. Cada entrada es tuya, en este dispositivo.",
                 fr: "Un journal tenu à la main. Chaque opération vous appartient, sur cet appareil.",
                 pt: "Um livro-caixa que você preenche à mão. Cada lançamento é seu, neste dispositivo.",
+                "pt-PT": "Um livro-caixa que preenche à mão. Cada registo é seu, neste dispositivo.",
             }),
             continue: t({
                 en: "Continue",
@@ -84,6 +88,7 @@ const dashboardOnboarding = {
                 es: "¿Vienes de otra app?",
                 fr: "Vous venez d'une autre app ?",
                 pt: "Vindo de outro app?",
+                "pt-PT": "Vem de outra app?",
             }),
             screenshot: t({
                 en: "The Outlayr dashboard",
@@ -100,6 +105,7 @@ const dashboardOnboarding = {
                 es: "¿Vienes de otra app?",
                 fr: "Vous venez d'une autre app ?",
                 pt: "Vindo de outro app?",
+                "pt-PT": "Vem de outra app?",
             }),
             skip: t({
                 en: "Skip for now",
@@ -114,6 +120,7 @@ const dashboardOnboarding = {
                 es: "Desde otra app",
                 fr: "Depuis une autre app",
                 pt: "De outro app",
+                "pt-PT": "De outra app",
             }),
             fromFile: t({
                 en: "From a file",
@@ -121,6 +128,7 @@ const dashboardOnboarding = {
                 es: "Desde un archivo",
                 fr: "Depuis un fichier",
                 pt: "De um arquivo",
+                "pt-PT": "De um ficheiro",
             }),
             moneyManagerHint: t({
                 en: "Orange Dog · .mmbackup",
@@ -142,6 +150,7 @@ const dashboardOnboarding = {
                 es: "Archivo CSV",
                 fr: "Fichier CSV",
                 pt: "Arquivo CSV",
+                "pt-PT": "Ficheiro CSV",
             }),
             csvHint: t({
                 en: "Any bank or spreadsheet",
@@ -149,11 +158,13 @@ const dashboardOnboarding = {
                 es: "Cualquier banco u hoja de cálculo",
                 fr: "N'importe quelle banque ou feuille de calcul",
                 pt: "Qualquer banco ou planilha",
+                "pt-PT": "Qualquer banco ou folha de cálculo",
             }),
             pdf: t({
                 en: "Bank statement PDF",
                 de: "Kontoauszug als PDF",
                 es: "PDF de estado de cuenta",
+                "es-ES": "PDF de extracto bancario",
                 fr: "Relevé bancaire PDF",
                 pt: "Extrato bancário em PDF",
             }),
@@ -170,6 +181,8 @@ const dashboardOnboarding = {
                 es: "Los CSV se leen en este dispositivo. El texto de los PDF va a nuestro proveedor de IA.",
                 fr: "Les CSV sont lus sur cet appareil. Le texte des relevés PDF va à notre fournisseur d'IA.",
                 pt: "CSVs são lidos neste dispositivo. O texto dos extratos em PDF vai para o nosso provedor de IA.",
+                "pt-PT":
+                    "Os CSV são lidos neste dispositivo. O texto dos extratos em PDF vai para o nosso fornecedor de IA.",
             }),
             tellUs: t({
                 en: "Using another app? Tell us which one",
@@ -177,6 +190,7 @@ const dashboardOnboarding = {
                 es: "¿Usas otra app? Dinos cuál",
                 fr: "Vous utilisez une autre app ? Dites-nous laquelle",
                 pt: "Usa outro app? Diga qual",
+                "pt-PT": "Usa outra app? Diga qual",
             }),
         },
         moneyManager: {
@@ -191,8 +205,10 @@ const dashboardOnboarding = {
                 en: "In Money Manager, open Settings and find Backup.",
                 de: "Öffne in Money Manager die Einstellungen und such Backup.",
                 es: "En Money Manager, abre la configuración y busca la copia de seguridad.",
+                "es-ES": "En Money Manager, abre los ajustes y busca la copia de seguridad.",
                 fr: "Dans Money Manager, ouvrez les réglages et trouvez la sauvegarde.",
                 pt: "No Money Manager, abra os ajustes e encontre o backup.",
+                "pt-PT": "No Money Manager, abra as definições e encontre a cópia de segurança.",
             }),
             two: t({
                 en: "Create a backup and tap Share.",
@@ -200,6 +216,7 @@ const dashboardOnboarding = {
                 es: "Crea una copia y toca Compartir.",
                 fr: "Créez une sauvegarde et touchez Partager.",
                 pt: "Crie um backup e toque em Compartilhar.",
+                "pt-PT": "Crie uma cópia e toque em Partilhar.",
             }),
             three: t({
                 en: "Save it to Downloads, then choose it below.",
@@ -207,6 +224,7 @@ const dashboardOnboarding = {
                 es: "Guárdala en Descargas y elígela abajo.",
                 fr: "Enregistrez-la dans Téléchargements, puis choisissez-la ci-dessous.",
                 pt: "Salve em Downloads e escolha abaixo.",
+                "pt-PT": "Guarde-a em Transferências e escolha-a abaixo.",
             }),
             fileHint: t({
                 en: "The file ends in .mmbackup",
@@ -214,6 +232,7 @@ const dashboardOnboarding = {
                 es: "El archivo termina en .mmbackup",
                 fr: "Le fichier se termine par .mmbackup",
                 pt: "O arquivo termina em .mmbackup",
+                "pt-PT": "O ficheiro termina em .mmbackup",
             }),
             back: t({
                 en: "Back",
@@ -228,6 +247,7 @@ const dashboardOnboarding = {
                 es: "Elegir la copia",
                 fr: "Choisir la sauvegarde",
                 pt: "Escolher o backup",
+                "pt-PT": "Escolher a cópia",
             }),
         },
         currency: {
@@ -237,6 +257,7 @@ const dashboardOnboarding = {
                 es: "¿En qué moneda manejas tu dinero?",
                 fr: "Dans quelle devise comptez-vous ?",
                 pt: "Em qual moeda você controla seu dinheiro?",
+                "pt-PT": "Em que moeda controla o seu dinheiro?",
             }),
             body: t({
                 en: "Everything totals in this. Change it any time; old entries keep their own.",
@@ -244,6 +265,7 @@ const dashboardOnboarding = {
                 es: "Todo se suma en esta moneda. Cámbiala cuando quieras; las entradas anteriores conservan la suya.",
                 fr: "Tous les totaux sont dans cette devise. Modifiable à tout moment : les anciennes opérations gardent la leur.",
                 pt: "Tudo é somado nesta moeda. Mude quando quiser; os lançamentos antigos mantêm a deles.",
+                "pt-PT": "Tudo é somado nesta moeda. Altere quando quiser; os registos antigos mantêm a deles.",
             }),
             label: t({
                 en: "Currency",
@@ -258,6 +280,7 @@ const dashboardOnboarding = {
                 es: "Buscar monedas",
                 fr: "Rechercher une devise",
                 pt: "Buscar moedas",
+                "pt-PT": "Pesquisar moedas",
             }),
             none: t({
                 en: "No currency matches",
@@ -286,6 +309,7 @@ const dashboardOnboarding = {
                 es: "Outlayr no pudo registrar tu moneda. Inténtalo de nuevo.",
                 fr: "Outlayr n'a pas pu enregistrer votre devise. Réessayez.",
                 pt: "O Outlayr não conseguiu registrar sua moeda. Tente de novo.",
+                "pt-PT": "O Outlayr não conseguiu registar a sua moeda. Tente de novo.",
             }),
             inCode: insert(
                 t({
@@ -318,6 +342,7 @@ const dashboardOnboarding = {
                 es: "Deja que Outlayr escriba por ti",
                 fr: "Laissez Outlayr saisir pour vous",
                 pt: "Deixe o Outlayr digitar por você",
+                "pt-PT": "Deixe o Outlayr escrever por si",
             }),
             siriHint: t({
                 en: '"Log an expense in Outlayr"',
@@ -332,6 +357,7 @@ const dashboardOnboarding = {
                 es: "Cada pago con la tarjeta se registra solo",
                 fr: "Chaque paiement par carte s'enregistre seul",
                 pt: "Cada pagamento com o cartão se registra sozinho",
+                "pt-PT": "Cada pagamento com o cartão regista-se sozinho",
             }),
             bank: t({
                 en: "Bank notifications",
@@ -353,6 +379,7 @@ const dashboardOnboarding = {
                 es: "Configúralo en tu teléfono",
                 fr: "À configurer sur votre téléphone",
                 pt: "Configure no celular",
+                "pt-PT": "Configure no telemóvel",
             }),
             continue: t({
                 en: "Continue",
@@ -369,6 +396,7 @@ const dashboardOnboarding = {
                 es: "Un registro solo funciona si escribes en él.",
                 fr: "Un journal ne sert que si vous écrivez dedans.",
                 pt: "Um livro-caixa só funciona se você escrever nele.",
+                "pt-PT": "Um livro-caixa só funciona se escrever nele.",
             }),
             body: t({
                 en: "One quiet nudge each evening. Your browser isn't asked for permission until your first entry is saved.",
@@ -376,6 +404,8 @@ const dashboardOnboarding = {
                 es: "Un aviso discreto cada noche. Tu navegador no te pide permiso hasta que guardes tu primera entrada.",
                 fr: "Un rappel discret chaque soir. Votre navigateur ne demandera l'autorisation qu'après l'enregistrement de votre première opération.",
                 pt: "Um lembrete discreto toda noite. O navegador só pede permissão depois que você salvar seu primeiro lançamento.",
+                "pt-PT":
+                    "Um lembrete discreto toda noite. O navegador só pede permissão depois que guardar seu primeiro registo.",
             }),
             time: t({
                 en: "Time",
@@ -383,6 +413,7 @@ const dashboardOnboarding = {
                 es: "Hora",
                 fr: "Heure",
                 pt: "Horário",
+                "pt-PT": "Hora",
             }),
             none: t({
                 en: "Don't remind me",
@@ -427,6 +458,7 @@ const dashboardOnboarding = {
                 es: "Ayer escribiste 3 líneas.",
                 fr: "Hier, vous avez écrit 3 lignes.",
                 pt: "Ontem você escreveu 3 linhas.",
+                "pt-PT": "Ontem escreveu 3 linhas.",
             }),
             unsupported: t({
                 en: "This browser can't show reminders.",
@@ -443,6 +475,7 @@ const dashboardOnboarding = {
                 es: "¿Qué fue lo último que pagaste?",
                 fr: "Qu'avez-vous payé en dernier ?",
                 pt: "Qual foi a última coisa que você pagou?",
+                "pt-PT": "Qual foi a última coisa que pagou?",
             }),
             sentence: t({
                 en: "Spent {amount} on {category} today.",
@@ -455,6 +488,7 @@ const dashboardOnboarding = {
                 en: "Amount",
                 de: "Betrag",
                 es: "Monto",
+                "es-ES": "Importe",
                 fr: "Montant",
                 pt: "Valor",
             }),
@@ -471,6 +505,7 @@ const dashboardOnboarding = {
                 es: "Más tarde",
                 fr: "Plus tard",
                 pt: "Depois",
+                "pt-PT": "Mais tarde",
             }),
             save: t({
                 en: "Save",
@@ -478,6 +513,7 @@ const dashboardOnboarding = {
                 es: "Guardar",
                 fr: "Enregistrer",
                 pt: "Salvar",
+                "pt-PT": "Guardar",
             }),
             transactions: t({
                 en: "Transactions",
@@ -485,6 +521,7 @@ const dashboardOnboarding = {
                 es: "Transacciones",
                 fr: "Opérations",
                 pt: "Lançamentos",
+                "pt-PT": "Registos",
             }),
             empty: t({
                 en: "Your first line lands here.",
@@ -506,11 +543,13 @@ const dashboardOnboarding = {
                 es: "Outlayr no pudo guardar tu entrada. Inténtalo de nuevo.",
                 fr: "Outlayr n'a pas pu enregistrer votre opération. Réessayez.",
                 pt: "O Outlayr não conseguiu salvar seu lançamento. Tente de novo.",
+                "pt-PT": "O Outlayr não conseguiu guardar seu registo. Tente de novo.",
             }),
             rateMissing: t({
                 en: "There is no exchange rate for this currency yet. Try again in a moment.",
                 de: "Für diese Währung gibt es noch keinen Wechselkurs. Versuch es gleich noch mal.",
                 es: "Todavía no hay tasa de cambio para esta moneda. Inténtalo de nuevo en un momento.",
+                "es-ES": "Todavía No hay tipo de cambio de cambio para esta moneda. Inténtalo de nuevo en un momento.",
                 fr: "Il n'y a pas encore de taux de change pour cette devise. Réessayez dans un instant.",
                 pt: "Ainda não há taxa de câmbio para esta moeda. Tente de novo em instantes.",
             }),
@@ -650,6 +689,7 @@ const dashboardOnboarding = {
                         es: "Otro lugar",
                         fr: "Autre chose",
                         pt: "Outro lugar",
+                        "pt-PT": "Outro sítio",
                     }),
                 },
             },

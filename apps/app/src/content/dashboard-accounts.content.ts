@@ -32,7 +32,14 @@ const dashboardAccounts = {
                 fr: "Vérifier le solde",
                 pt: "Conferir saldo",
             }),
-            delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            delete: t({
+                en: "Delete",
+                de: "Löschen",
+                es: "Eliminar",
+                fr: "Supprimer",
+                pt: "Excluir",
+                "pt-PT": "Eliminar",
+            }),
             moveToAccount: t({
                 en: "Move to account",
                 de: "In Konto verschieben",
@@ -73,6 +80,7 @@ const dashboardAccounts = {
                 es: "Saldar antes del",
                 fr: "Solder avant le",
                 pt: "Quitar até",
+                "pt-PT": "Liquidar até",
             }),
             newPurchase: t({
                 en: "New purchase",
@@ -88,6 +96,7 @@ const dashboardAccounts = {
                 es: "Tu orden",
                 fr: "Votre ordre",
                 pt: "Sua ordem",
+                "pt-PT": "A sua ordem",
             }),
         },
         card: {
@@ -231,6 +240,7 @@ const dashboardAccounts = {
                 es: "Los movimientos de esta cuenta aparecerán aquí.",
                 fr: "Les opérations de ce compte s'afficheront ici.",
                 pt: "Os lançamentos desta conta vão aparecer aqui.",
+                "pt-PT": "Os registos desta conta vão aparecer aqui.",
             }),
             emptyTitle: t({
                 en: "Nothing attached yet",
@@ -245,6 +255,7 @@ const dashboardAccounts = {
                 es: "Importar movimientos",
                 fr: "Importer des opérations",
                 pt: "Importar lançamentos",
+                "pt-PT": "Importar registos",
             }),
             mainCurrency: t({
                 en: "Main currency",
@@ -262,6 +273,7 @@ const dashboardAccounts = {
                     es: "Sin movimientos en {{period}}",
                     fr: "Aucune opération en {{period}}",
                     pt: "Nenhum lançamento em {{period}}",
+                    "pt-PT": "Nenhum registo em {{period}}",
                 })
             ),
             addEntry: t({
@@ -270,9 +282,10 @@ const dashboardAccounts = {
                 es: "Añadir movimiento",
                 fr: "Ajouter une opération",
                 pt: "Adicionar lançamento",
+                "pt-PT": "Adicionar registo",
             }),
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             available: t({ en: "Available", de: "Verfügbar", es: "Disponible", fr: "Disponible", pt: "Disponível" }),
             average: t({
                 en: "Average in a month",
@@ -306,6 +319,7 @@ const dashboardAccounts = {
                 es: "Compáralo con la app de tu banco",
                 fr: "Comparez avec l'app de votre banque",
                 pt: "Compare com o app do seu banco",
+                "pt-PT": "Compare com a app do seu banco",
             }),
             checkTitle: t({
                 en: "Check your balance",
@@ -313,6 +327,7 @@ const dashboardAccounts = {
                 es: "Revisa tu saldo",
                 fr: "Vérifiez votre solde",
                 pt: "Confira seu saldo",
+                "pt-PT": "Confira o seu saldo",
             }),
             currency: t({ en: "Currency", de: "Währung", es: "Moneda", fr: "Devise", pt: "Moeda" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
@@ -338,7 +353,14 @@ const dashboardAccounts = {
                     pt: "Atrasada desde {{date}}",
                 })
             ),
-            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
             entriesIn: insert(
                 t({
                     en: "{{count}} entries in {{period}}",
@@ -346,6 +368,7 @@ const dashboardAccounts = {
                     es: "{{count}} movimientos en {{period}}",
                     fr: "{{count}} opérations en {{period}}",
                     pt: "{{count}} lançamentos em {{period}}",
+                    "pt-PT": "{{count}} registos em {{period}}",
                 })
             ),
             entriesCount: insert(
@@ -355,6 +378,7 @@ const dashboardAccounts = {
                     es: "{{count}} movimientos",
                     fr: "{{count}} opérations",
                     pt: "{{count}} lançamentos",
+                    "pt-PT": "{{count}} registos",
                 })
             ),
             entryCount: t({
@@ -363,6 +387,7 @@ const dashboardAccounts = {
                 es: "1 movimiento",
                 fr: "1 opération",
                 pt: "1 lançamento",
+                "pt-PT": "1 registo",
             }),
             entryIn: insert(
                 t({
@@ -371,6 +396,7 @@ const dashboardAccounts = {
                     es: "1 movimiento en {{period}}",
                     fr: "1 opération en {{period}}",
                     pt: "1 lançamento em {{period}}",
+                    "pt-PT": "1 registo em {{period}}",
                 })
             ),
             fromName: insert(
@@ -565,6 +591,7 @@ const dashboardAccounts = {
                 es: "Movimientos",
                 fr: "Opérations",
                 pt: "Lançamentos",
+                "pt-PT": "Registos",
             }),
             transfer: t({ en: "Transfer", de: "Umbuchung", es: "Transferencia", fr: "Virement", pt: "Transferência" }),
             transferFrom: insert(
@@ -621,6 +648,8 @@ const dashboardAccounts = {
                 es: "Sale de tus listas y totales. Se conservan todos los movimientos y puedes restaurarla cuando quieras.",
                 fr: "Il quitte vos listes et vos totaux. Toutes les opérations sont conservées et vous pouvez le restaurer à tout moment.",
                 pt: "Ela sai das suas listas e totais. Todas as transações são mantidas e você pode restaurá-la quando quiser.",
+                "pt-PT":
+                    "Ela sai das suas listas e totais. Todas as transações são mantidas e pode restaurá-la quando quiser.",
             }),
             archiveFailed: insert(
                 t({
@@ -673,8 +702,10 @@ const dashboardAccounts = {
                 en: "Purchase in installments",
                 de: "Kauf auf Raten",
                 es: "Compra en cuotas",
+                "es-ES": "Compra a plazos",
                 fr: "Achat en plusieurs fois",
                 pt: "Compra parcelada",
+                "pt-PT": "Compra a prestações",
             }),
             cardOrLoan: t({
                 en: "Card or loan",
@@ -692,6 +723,7 @@ const dashboardAccounts = {
                 es: "Compáralo con tu banco o billetera.",
                 fr: "Comparez-le avec votre banque ou votre portefeuille.",
                 pt: "Compare com seu banco ou carteira.",
+                "pt-PT": "Compare com o seu banco ou carteira.",
             }),
             checkDifferent: t({
                 en: "No, it's different",
@@ -716,6 +748,7 @@ const dashboardAccounts = {
                     es: "Registrar {{amount}} y marcar revisado",
                     fr: "Enregistrer {{amount}} et marquer vérifié",
                     pt: "Registrar {{amount}} e marcar conferido",
+                    "pt-PT": "Registar {{amount}} e marcar conferido",
                 })
             ),
             checkMarkChecked: t({
@@ -825,6 +858,7 @@ const dashboardAccounts = {
                 es: "Buscar monedas",
                 fr: "Rechercher une devise",
                 pt: "Buscar moedas",
+                "pt-PT": "Pesquisar moedas",
             }),
             currencyYours: t({
                 en: "Your accounts",
@@ -832,6 +866,7 @@ const dashboardAccounts = {
                 es: "Tus cuentas",
                 fr: "Vos comptes",
                 pt: "Suas contas",
+                "pt-PT": "As suas contas",
             }),
             day: insert(
                 t({ en: "Day {{day}}", de: "Tag {{day}}", es: "Día {{day}}", fr: "Jour {{day}}", pt: "Dia {{day}}" })
@@ -842,6 +877,7 @@ const dashboardAccounts = {
                 es: "Eliminar cuenta",
                 fr: "Supprimer le compte",
                 pt: "Excluir conta",
+                "pt-PT": "Eliminar conta",
             }),
             deleteBody: t({
                 en: "Its transactions are kept; they just stop belonging to an account.",
@@ -864,6 +900,7 @@ const dashboardAccounts = {
                     es: "No se pudo eliminar {{name}}. Inténtalo de nuevo.",
                     fr: "Impossible de supprimer {{name}}. Réessayez.",
                     pt: "Não foi possível excluir {{name}}. Tente novamente.",
+                    "pt-PT": "Não foi possível eliminar {{name}}. Tente novamente.",
                 })
             ),
             deleteTitle: insert(
@@ -873,6 +910,7 @@ const dashboardAccounts = {
                     es: "¿Eliminar {{name}}?",
                     fr: "Supprimer {{name}} ?",
                     pt: "Excluir {{name}}?",
+                    "pt-PT": "Eliminar {{name}}?",
                 })
             ),
             deletedToast: t({
@@ -881,6 +919,7 @@ const dashboardAccounts = {
                 es: "Cuenta eliminada",
                 fr: "Compte supprimé",
                 pt: "Conta excluída",
+                "pt-PT": "Conta eliminada",
             }),
             editTitle: t({
                 en: "Edit account",
@@ -890,13 +929,14 @@ const dashboardAccounts = {
                 pt: "Editar conta",
             }),
             emoji: t({ en: "Emoji", de: "Emoji", es: "Emoji", fr: "Emoji", pt: "Emoji" }),
-            icon: t({ en: "Icon", de: "Symbol", es: "Ícono", fr: "Icône", pt: "Ícone" }),
+            icon: t({ en: "Icon", de: "Symbol", es: "Ícono", "es-ES": "Icono", fr: "Icône", pt: "Ícone" }),
             lastEntry: t({
                 en: "Last entry",
                 de: "Letzter Eintrag",
                 es: "Último movimiento",
                 fr: "Dernière opération",
                 pt: "Último lançamento",
+                "pt-PT": "Último registo",
             }),
             logo: t({ en: "Logo", de: "Logo", es: "Logo", fr: "Logo", pt: "Logo" }),
             logoSearch: t({
@@ -905,6 +945,7 @@ const dashboardAccounts = {
                 es: "Buscar bancos y tarjetas",
                 fr: "Rechercher banques et cartes",
                 pt: "Buscar bancos e cartões",
+                "pt-PT": "Pesquisar bancos e cartões",
             }),
             moneyIOwe: t({
                 en: "Money I owe",
@@ -918,6 +959,7 @@ const dashboardAccounts = {
                 en: "Chase, Cash, Nubank…",
                 de: "Sparkasse, Bargeld, N26…",
                 es: "Chase, Efectivo, Nubank…",
+                "es-ES": "BBVA, Efectivo, Revolut…",
                 fr: "Chase, Espèces, Nubank…",
                 pt: "Chase, Dinheiro, Nubank…",
             }),
@@ -968,16 +1010,19 @@ const dashboardAccounts = {
                 en: "Installment plans, deleted",
                 de: "Ratenpläne, gelöscht",
                 es: "Planes a cuotas, eliminados",
+                "es-ES": "Planes a plazos, eliminados",
                 fr: "Paiements échelonnés, supprimés",
                 pt: "Parcelamentos, excluídos",
+                "pt-PT": "Prestações, eliminadas",
             }),
-            reorderDone: t({ en: "Done", de: "Fertig", es: "Listo", fr: "Terminé", pt: "Concluir" }),
+            reorderDone: t({ en: "Done", de: "Fertig", es: "Listo", "es-ES": "Hecho", fr: "Terminé", pt: "Concluir" }),
             reorderFailed: t({
                 en: "Couldn't save your order. Try again.",
                 de: "Die Reihenfolge konnte nicht gespeichert werden. Versuch es noch mal.",
                 es: "No se pudo guardar tu orden. Inténtalo de nuevo.",
                 fr: "Impossible d'enregistrer votre ordre. Réessayez.",
                 pt: "Não foi possível salvar sua ordem. Tente novamente.",
+                "pt-PT": "Não foi possível guardar sua ordem. Tente novamente.",
             }),
             reorderHint: t({
                 en: "Drag to reorder",
@@ -1011,6 +1056,7 @@ const dashboardAccounts = {
                 es: "Guardar tarjeta",
                 fr: "Enregistrer la carte",
                 pt: "Salvar cartão",
+                "pt-PT": "Guardar cartão",
             }),
             saveAccount: t({
                 en: "Save account",
@@ -1018,6 +1064,7 @@ const dashboardAccounts = {
                 es: "Guardar cuenta",
                 fr: "Enregistrer le compte",
                 pt: "Salvar conta",
+                "pt-PT": "Guardar conta",
             }),
             saveFailed: t({
                 en: "Couldn't save this account. Try again.",
@@ -1025,6 +1072,7 @@ const dashboardAccounts = {
                 es: "No se pudo guardar esta cuenta. Inténtalo de nuevo.",
                 fr: "Impossible d'enregistrer ce compte. Réessayez.",
                 pt: "Não foi possível salvar esta conta. Tente novamente.",
+                "pt-PT": "Não foi possível guardar esta conta. Tente novamente.",
             }),
             seeTransactions: t({
                 en: "See transactions",
@@ -1060,6 +1108,7 @@ const dashboardAccounts = {
                 es: "Transferencias, eliminadas",
                 fr: "Virements, supprimés",
                 pt: "Transferências, excluídas",
+                "pt-PT": "Transferências, eliminadas",
             }),
             arrives: t({ en: "Arrives", de: "Eingang", es: "Llega", fr: "Arrive", pt: "Chega" }),
             balanceThen: insert(
@@ -1101,6 +1150,7 @@ const dashboardAccounts = {
                 en: "Use official rate",
                 de: "Offiziellen Kurs verwenden",
                 es: "Usar tasa oficial",
+                "es-ES": "Usar tipo de cambio oficial",
                 fr: "Utiliser le taux officiel",
                 pt: "Usar cotação oficial",
             }),
@@ -1111,6 +1161,7 @@ const dashboardAccounts = {
                 es: "Guardar transferencia",
                 fr: "Enregistrer le virement",
                 pt: "Salvar transferência",
+                "pt-PT": "Guardar transferência",
             }),
             swap: t({ en: "Swap", de: "Tauschen", es: "Intercambiar", fr: "Inverser", pt: "Inverter" }),
             transferNeedsAccounts: t({
@@ -1124,6 +1175,7 @@ const dashboardAccounts = {
                 en: "No rate for this date. Pick another date.",
                 de: "Für dieses Datum gibt es keinen Kurs. Wähle ein anderes Datum.",
                 es: "No hay tasa para esta fecha. Elige otra fecha.",
+                "es-ES": "No hay tipo de cambio para esta fecha. Elige otra fecha.",
                 fr: "Aucun taux pour cette date. Choisissez une autre date.",
                 pt: "Sem taxa para esta data. Escolha outra data.",
             }),
@@ -1140,8 +1192,16 @@ const dashboardAccounts = {
                 es: "Transferencia guardada",
                 fr: "Virement enregistré",
                 pt: "Transferência salva",
+                "pt-PT": "Transferência guardada",
             }),
-            youSend: t({ en: "You send", de: "Du sendest", es: "Envías", fr: "Vous envoyez", pt: "Você envia" }),
+            youSend: t({
+                en: "You send",
+                de: "Du sendest",
+                es: "Envías",
+                fr: "Vous envoyez",
+                pt: "Você envia",
+                "pt-PT": "Envia",
+            }),
             undo: t({ en: "Undo", de: "Rückgängig", es: "Deshacer", fr: "Annuler", pt: "Desfazer" }),
         },
         kpi: {
@@ -1162,7 +1222,14 @@ const dashboardAccounts = {
                 pt: "Crédito disponível",
             }),
             have: t({ en: "Have", de: "Guthaben", es: "Tienes", fr: "Avoirs", pt: "Tenho" }),
-            netWorth: t({ en: "Net worth", de: "Nettovermögen", es: "Patrimonio", fr: "Patrimoine", pt: "Patrimônio" }),
+            netWorth: t({
+                en: "Net worth",
+                de: "Nettovermögen",
+                es: "Patrimonio",
+                fr: "Patrimoine",
+                pt: "Patrimônio",
+                "pt-PT": "Património",
+            }),
             of: insert(
                 t({
                     en: "of {{amount}}",
@@ -1212,8 +1279,16 @@ const dashboardAccounts = {
                 pt: "Nada agendado.",
             }),
             accounts: t({ en: "Accounts", de: "Konten", es: "Cuentas", fr: "Comptes", pt: "Contas" }),
-            goals: t({ en: "Goals", de: "Ziele", es: "Metas", fr: "Objectifs", pt: "Metas" }),
-            installments: t({ en: "Installments", de: "Raten", es: "Cuotas", fr: "Échéances", pt: "Parcelas" }),
+            goals: t({ en: "Goals", de: "Ziele", es: "Metas", fr: "Objectifs", pt: "Metas", "pt-PT": "Objetivos" }),
+            installments: t({
+                en: "Installments",
+                de: "Raten",
+                es: "Cuotas",
+                "es-ES": "Plazos",
+                fr: "Échéances",
+                pt: "Parcelas",
+                "pt-PT": "Prestações",
+            }),
             payment: t({ en: "Payment", de: "Zahlung", es: "Pago", fr: "Paiement", pt: "Pagamento" }),
             planFallback: t({ en: "Order", de: "Bestellung", es: "Compra", fr: "Achat", pt: "Compra" }),
             planLeft: insert(
@@ -1280,6 +1355,7 @@ const dashboardAccounts = {
                     en: "{{codes}} has no rate for today yet, so its total is approximate.",
                     de: "Für {{codes}} gibt es heute noch keinen Kurs, deshalb ist die Summe ungefähr.",
                     es: "{{codes}} aún no tiene tasa de hoy, así que su total es aproximado.",
+                    "es-ES": "{{codes}} aún no tiene tipo de cambio de hoy, así que su total es aproximado.",
                     fr: "{{codes}} n'a pas encore de taux pour aujourd'hui, son total est donc approximatif.",
                     pt: "{{codes}} ainda não tem cotação de hoje, então o total é aproximado.",
                 })
@@ -1293,7 +1369,7 @@ const dashboardAccounts = {
                     pt: "{{from}} para {{to}}",
                 })
             ),
-            rates: t({ en: "Rates", de: "Kurse", es: "Tasas", fr: "Taux", pt: "Cotações" }),
+            rates: t({ en: "Rates", de: "Kurse", es: "Tasas", "es-ES": "Tipos de cambio", fr: "Taux", pt: "Cotações" }),
             title: t({ en: "Accounts", de: "Konten", es: "Cuentas", fr: "Comptes", pt: "Contas" }),
             transfers: t({
                 en: "Transfers",
@@ -1370,13 +1446,23 @@ const dashboardAccounts = {
                     en: "Installments in {{region}}",
                     de: "Ratenzahlung in {{region}}",
                     es: "Cuotas en {{region}}",
+                    "es-ES": "Plazos en {{region}}",
                     fr: "Paiement fractionné en {{region}}",
                     pt: "Parcelas em {{region}}",
+                    "pt-PT": "Prestações em {{region}}",
                 })
             ),
             add: t({ en: "Add", de: "Hinzufügen", es: "Añadir", fr: "Ajouter", pt: "Adicionar" }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
-            count: t({ en: "Installments", de: "Raten", es: "Cuotas", fr: "Échéances", pt: "Parcelas" }),
+            count: t({
+                en: "Installments",
+                de: "Raten",
+                es: "Cuotas",
+                "es-ES": "Plazos",
+                fr: "Échéances",
+                pt: "Parcelas",
+                "pt-PT": "Prestações",
+            }),
             each: t({ en: "Each", de: "Je", es: "Cada una", fr: "Chacune", pt: "Cada uma" }),
             every: t({ en: "Every", de: "Alle", es: "Cada", fr: "Tous les", pt: "A cada" }),
             everyDays14: t({ en: "14 days", de: "14 Tage", es: "14 días", fr: "14 jours", pt: "14 dias" }),
@@ -1411,6 +1497,7 @@ const dashboardAccounts = {
                 es: "Lo que compraste",
                 fr: "Ce que vous avez acheté",
                 pt: "O que você comprou",
+                "pt-PT": "O que comprou",
             }),
             importScreenshot: t({
                 en: "Import from a screenshot",
@@ -1453,13 +1540,21 @@ const dashboardAccounts = {
                     pt: "{{from}} a {{to}}",
                 })
             ),
-            save: t({ en: "Save", de: "Speichern", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+            save: t({
+                en: "Save",
+                de: "Speichern",
+                es: "Guardar",
+                fr: "Enregistrer",
+                pt: "Salvar",
+                "pt-PT": "Guardar",
+            }),
             saveFailed: t({
                 en: "Couldn't save this purchase. Try again.",
                 de: "Der Kauf konnte nicht gespeichert werden. Versuch es noch mal.",
                 es: "No se pudo guardar esta compra. Inténtalo de nuevo.",
                 fr: "Impossible d'enregistrer cet achat. Réessayez.",
                 pt: "Não foi possível salvar esta compra. Tente novamente.",
+                "pt-PT": "Não foi possível guardar esta compra. Tente novamente.",
             }),
             thenEach: insert(
                 t({
@@ -1475,16 +1570,20 @@ const dashboardAccounts = {
                     en: "Then {{count}} installments",
                     de: "Danach {{count}} Raten",
                     es: "Luego {{count}} cuotas",
+                    "es-ES": "Luego {{count}} plazos",
                     fr: "Puis {{count}} échéances",
                     pt: "Depois {{count}} parcelas",
+                    "pt-PT": "Depois {{count}} prestações",
                 })
             ),
             title: t({
                 en: "New purchase in installments",
                 de: "Neuer Kauf auf Raten",
                 es: "Nueva compra en cuotas",
+                "es-ES": "Nueva compra a plazos",
                 fr: "Nouvel achat en plusieurs fois",
                 pt: "Nova compra parcelada",
+                "pt-PT": "Nova compra a prestações",
             }),
             total: t({ en: "Total", de: "Gesamt", es: "Total", fr: "Total", pt: "Total" }),
             totalRequired: t({
@@ -1494,11 +1593,19 @@ const dashboardAccounts = {
                 fr: "Saisissez le prix.",
                 pt: "Digite o preço.",
             }),
-            upfront: t({ en: "Upfront", de: "Anzahlung", es: "Inicial", fr: "Acompte", pt: "Entrada" }),
+            upfront: t({
+                en: "Upfront",
+                de: "Anzahlung",
+                es: "Inicial",
+                "es-ES": "Entrada",
+                fr: "Acompte",
+                pt: "Entrada",
+            }),
             upfrontTooHigh: t({
                 en: "The upfront leaves nothing to pay in installments.",
                 de: "Die Anzahlung lässt nichts für die Raten übrig.",
                 es: "La inicial no deja nada para pagar en cuotas.",
+                "es-ES": "La inicial no deja nada para pagar en plazos.",
                 fr: "L'acompte ne laisse rien à payer en plusieurs fois.",
                 pt: "A entrada não deixa nada para parcelar.",
             }),

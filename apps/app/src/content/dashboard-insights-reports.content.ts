@@ -37,8 +37,16 @@ const dashboardInsightsReports = {
                 es: "Guardar reporte",
                 fr: "Enregistrer le rapport",
                 pt: "Salvar relatório",
+                "pt-PT": "Guardar relatório",
             }),
-            share: t({ en: "Share", de: "Teilen", es: "Compartir", fr: "Partager", pt: "Compartilhar" }),
+            share: t({
+                en: "Share",
+                de: "Teilen",
+                es: "Compartir",
+                fr: "Partager",
+                pt: "Compartilhar",
+                "pt-PT": "Partilhar",
+            }),
             update: t({
                 en: "Update report",
                 de: "Bericht aktualisieren",
@@ -101,7 +109,7 @@ const dashboardInsightsReports = {
         },
         csv: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
             description: t({
@@ -122,6 +130,7 @@ const dashboardInsightsReports = {
                 es: "Tus movimientos se quedan. Solo se va el reporte guardado.",
                 fr: "Vos opérations restent. Seul le rapport enregistré disparaît.",
                 pt: "Seus lançamentos ficam. Só o relatório salvo é removido.",
+                "pt-PT": "Seus registos ficam. Só o relatório guardado é removido.",
             }),
             cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
             confirm: t({
@@ -130,6 +139,7 @@ const dashboardInsightsReports = {
                 es: "Eliminar reporte",
                 fr: "Supprimer le rapport",
                 pt: "Excluir relatório",
+                "pt-PT": "Eliminar relatório",
             }),
             title: insert(
                 t({
@@ -138,6 +148,7 @@ const dashboardInsightsReports = {
                     es: "¿Eliminar {{name}}?",
                     fr: "Supprimer {{name}} ?",
                     pt: "Excluir {{name}}?",
+                    "pt-PT": "Eliminar {{name}}?",
                 })
             ),
         },
@@ -226,6 +237,7 @@ const dashboardInsightsReports = {
                 es: "Solo la tabla, para hojas de cálculo",
                 fr: "Tableau uniquement, pour les tableurs",
                 pt: "Somente tabela, para planilhas",
+                "pt-PT": "Somente tabela, para folhas de cálculo",
             }),
             entries: t({
                 en: "Every entry behind the totals",
@@ -233,6 +245,7 @@ const dashboardInsightsReports = {
                 es: "Cada movimiento detrás de los totales",
                 fr: "Toutes les opérations derrière les totaux",
                 pt: "Todos os lançamentos por trás dos totais",
+                "pt-PT": "Todos os registos por trás dos totais",
             }),
             entriesNote: insert(
                 t({
@@ -241,6 +254,7 @@ const dashboardInsightsReports = {
                     es: "{{count}} movimientos",
                     fr: "{{count}} opérations",
                     pt: "{{count}} lançamentos",
+                    "pt-PT": "{{count}} registos",
                 })
             ),
             fileName: t({
@@ -249,6 +263,7 @@ const dashboardInsightsReports = {
                 es: "Nombre del archivo",
                 fr: "Nom du fichier",
                 pt: "Nome do arquivo",
+                "pt-PT": "Nome do ficheiro",
             }),
             format: t({ en: "Format", de: "Format", es: "Formato", fr: "Format", pt: "Formato" }),
             pdf: t({ en: "PDF", de: "PDF", es: "PDF", fr: "PDF", pt: "PDF" }),
@@ -345,7 +360,14 @@ const dashboardInsightsReports = {
             },
         },
         kpi: {
-            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
             rise: insert(
                 t({
                     en: "Biggest rise, {{from}} to {{to}}",
@@ -386,7 +408,14 @@ const dashboardInsightsReports = {
                     fr: "Lignes par colonnes",
                     pt: "Linhas por colunas",
                 }),
-                sharing: t({ en: "Sharing", de: "Freigabe", es: "Compartido", fr: "Partage", pt: "Compartilhamento" }),
+                sharing: t({
+                    en: "Sharing",
+                    de: "Freigabe",
+                    es: "Compartido",
+                    fr: "Partage",
+                    pt: "Compartilhamento",
+                    "pt-PT": "Partilha",
+                }),
                 total: t({ en: "Total", de: "Gesamt", es: "Total", fr: "Total", pt: "Total" }),
             },
             count: insert(
@@ -412,6 +441,7 @@ const dashboardInsightsReports = {
                 es: "Buscar reportes",
                 fr: "Rechercher des rapports",
                 pt: "Buscar relatórios",
+                "pt-PT": "Pesquisar relatórios",
             }),
             sharing: {
                 all: t({
@@ -428,6 +458,7 @@ const dashboardInsightsReports = {
                         es: "Hay {{count}} enlaces activos de reportes guardados en otro navegador.",
                         fr: "{{count}} liens sont actifs pour des rapports enregistrés dans un autre navigateur.",
                         pt: "{{count}} links estão ativos para relatórios salvos em outro navegador.",
+                        "pt-PT": "{{count}} links estão ativos para relatórios guardados em outro navegador.",
                     })
                 ),
                 elsewhereOne: t({
@@ -436,8 +467,16 @@ const dashboardInsightsReports = {
                     es: "Hay 1 enlace activo de un reporte guardado en otro navegador.",
                     fr: "1 lien est actif pour un rapport enregistré dans un autre navigateur.",
                     pt: "1 link está ativo para um relatório salvo em outro navegador.",
+                    "pt-PT": "1 link está ativo para um relatório guardado em outro navegador.",
                 }),
-                filter: t({ en: "Shared", de: "Geteilt", es: "Compartidos", fr: "Partagé", pt: "Compartilhado" }),
+                filter: t({
+                    en: "Shared",
+                    de: "Geteilt",
+                    es: "Compartidos",
+                    fr: "Partagé",
+                    pt: "Compartilhado",
+                    "pt-PT": "Partilhado",
+                }),
                 linkOn: t({ en: "Link on", de: "Link aktiv", es: "Enlace activo", fr: "Lien actif", pt: "Link ativo" }),
                 none: t({
                     en: "No report matches this filter.",
@@ -471,6 +510,7 @@ const dashboardInsightsReports = {
                 es: "Promedio por movimiento",
                 fr: "Moyenne par opération",
                 pt: "Média por lançamento",
+                "pt-PT": "Média por registo",
             }),
             count: t({
                 en: "Entry count",
@@ -478,6 +518,7 @@ const dashboardInsightsReports = {
                 es: "Cantidad de movimientos",
                 fr: "Nombre d'opérations",
                 pt: "Quantidade de lançamentos",
+                "pt-PT": "Quantidade de registos",
             }),
             income: t({ en: "Income", de: "Einnahmen", es: "Ingresos", fr: "Revenus", pt: "Receitas" }),
             net: t({ en: "Net", de: "Netto", es: "Neto", fr: "Net", pt: "Líquido" }),
@@ -505,6 +546,7 @@ const dashboardInsightsReports = {
                     es: "Ningún movimiento coincide con {{filters}} de {{range}}.",
                     fr: "Aucune opération ne correspond à {{filters}} sur {{range}}.",
                     pt: "Nenhum lançamento corresponde a {{filters}} em {{range}}.",
+                    "pt-PT": "Nenhum registo corresponde a {{filters}} em {{range}}.",
                 })
             ),
             without: insert(
@@ -514,6 +556,7 @@ const dashboardInsightsReports = {
                     es: "No hay movimientos de {{range}}.",
                     fr: "Aucune opération de {{range}}.",
                     pt: "Nenhum lançamento de {{range}}.",
+                    "pt-PT": "Nenhum registo de {{range}}.",
                 })
             ),
         },
@@ -566,7 +609,14 @@ const dashboardInsightsReports = {
             }),
         },
         rowMenu: {
-            delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            delete: t({
+                en: "Delete",
+                de: "Löschen",
+                es: "Eliminar",
+                fr: "Supprimer",
+                pt: "Excluir",
+                "pt-PT": "Eliminar",
+            }),
             duplicate: t({ en: "Duplicate", de: "Duplizieren", es: "Duplicar", fr: "Dupliquer", pt: "Duplicar" }),
             export: t({ en: "Export", de: "Exportieren", es: "Exportar", fr: "Exporter", pt: "Exportar" }),
             more: insert(
@@ -586,6 +636,7 @@ const dashboardInsightsReports = {
                 es: "Compartir enlace",
                 fr: "Lien de partage",
                 pt: "Link de compartilhamento",
+                "pt-PT": "Link de partilha",
             }),
         },
         saved: {
@@ -611,6 +662,7 @@ const dashboardInsightsReports = {
                 es: "Los reportes que guardes aparecen aquí.",
                 fr: "Les rapports que vous enregistrez apparaissent ici.",
                 pt: "Os relatórios que você salva aparecem aqui.",
+                "pt-PT": "Os relatórios que guardada aparecem aqui.",
             }),
             months: insert(
                 t({
@@ -621,7 +673,14 @@ const dashboardInsightsReports = {
                     pt: "{{count}} mês",
                 })
             ),
-            title: t({ en: "Saved", de: "Gespeichert", es: "Guardados", fr: "Enregistré", pt: "Salvo" }),
+            title: t({
+                en: "Saved",
+                de: "Gespeichert",
+                es: "Guardados",
+                fr: "Enregistré",
+                pt: "Salvo",
+                "pt-PT": "Guardado",
+            }),
             year: t({ en: "Year", de: "Jahr", es: "Año", fr: "Année", pt: "Ano" }),
         },
         saving: {
@@ -650,6 +709,7 @@ const dashboardInsightsReports = {
                 es: "Guardar reporte",
                 fr: "Enregistrer le rapport",
                 pt: "Salvar relatório",
+                "pt-PT": "Guardar relatório",
             }),
             title: t({
                 en: "Save report",
@@ -657,6 +717,7 @@ const dashboardInsightsReports = {
                 es: "Guardar reporte",
                 fr: "Enregistrer le rapport",
                 pt: "Salvar relatório",
+                "pt-PT": "Guardar relatório",
             }),
         },
         sharing: {
@@ -664,6 +725,7 @@ const dashboardInsightsReports = {
                 en: "Show amounts",
                 de: "Beträge anzeigen",
                 es: "Mostrar montos",
+                "es-ES": "Mostrar importes",
                 fr: "Afficher les montants",
                 pt: "Mostrar valores",
             }),
@@ -683,7 +745,7 @@ const dashboardInsightsReports = {
             }),
             copied: t({ en: "Copied", de: "Kopiert", es: "Copiado", fr: "Copié", pt: "Copiado" }),
             copy: t({ en: "Copy", de: "Kopieren", es: "Copiar", fr: "Copier", pt: "Copiar" }),
-            done: t({ en: "Done", de: "Fertig", es: "Listo", fr: "Terminé", pt: "Concluído" }),
+            done: t({ en: "Done", de: "Fertig", es: "Listo", "es-ES": "Hecho", fr: "Terminé", pt: "Concluído" }),
             expires: t({ en: "Expires", de: "Läuft ab", es: "Vence", fr: "Expire", pt: "Expira" }),
             failed: t({
                 en: "The link could not be updated. Try again.",
@@ -712,6 +774,7 @@ const dashboardInsightsReports = {
                     es: "Compartir {{name}}",
                     fr: "Partager {{name}}",
                     pt: "Compartilhar {{name}}",
+                    "pt-PT": "Partilhar {{name}}",
                 })
             ),
             url: t({

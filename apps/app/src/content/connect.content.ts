@@ -23,6 +23,7 @@ const connect = {
             es: "Comprobando…",
             fr: "Vérification…",
             pt: "Verificando…",
+            "pt-PT": "A verificar…",
         }),
         continueLabel: t({ en: "Continue", de: "Weiter", es: "Continuar", fr: "Continuer", pt: "Continuar" }),
         connectAgentTitle: t({
@@ -83,6 +84,7 @@ const connect = {
             es: "Aprobando…",
             fr: "Approbation…",
             pt: "Aprovando…",
+            "pt-PT": "A aprovar…",
         }),
         allow: t({ en: "Allow", de: "Erlauben", es: "Permitir", fr: "Autoriser", pt: "Permitir" }),
         allowing: t({
@@ -91,6 +93,7 @@ const connect = {
             es: "Permitiendo…",
             fr: "Autorisation…",
             pt: "Permitindo…",
+            "pt-PT": "A permitir…",
         }),
         approved: t({ en: "Approved", de: "Genehmigt", es: "Aprobado", fr: "Approuvé", pt: "Aprovado" }),
         done: t({

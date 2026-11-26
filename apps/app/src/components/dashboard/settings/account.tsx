@@ -8,7 +8,7 @@ import SmartPhone01Icon from "@hugeicons/core-free-icons/SmartPhone01Icon";
 import SquareLock02Icon from "@hugeicons/core-free-icons/SquareLock02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
-import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Alert } from "panelui-web/alert";
@@ -51,7 +51,7 @@ async function succeed(call: AuthResult) {
 
 function useDateText() {
     const { locale } = useLocale();
-    const { date } = LANGUAGES[localeFromParam(locale)];
+    const { date } = LANGUAGES[locale];
     return (value: Date | string | number) =>
         new Intl.DateTimeFormat(date === "en-GB" ? "en-US" : date, {
             day: "numeric",

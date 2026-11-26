@@ -9,6 +9,7 @@ export default {
             es: "No se pudieron cargar tus movimientos",
             fr: "Impossible de charger vos opérations",
             pt: "Não foi possível carregar seus lançamentos",
+            "pt-PT": "Não foi possível carregar seus registos",
         }),
         body: t({
             en: "Try again in a moment.",

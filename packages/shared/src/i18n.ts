@@ -5,20 +5,54 @@ import { SITE_URL } from "./urls";
 
 export type Locale = DeclaredLocales;
 
-export const LANGUAGES = {
+interface LanguageMeta {
+    date: string;
+    hreflang: string;
+    image: string;
+    lang: string;
+    name: string;
+    og: string;
+}
+
+type EuropeanLocale = "es-ES" | "pt-PT";
+type BaseLocale = Exclude<Locale, EuropeanLocale>;
+
+const BASE_LANGUAGES = {
     en: { date: "en-GB", hreflang: "en", image: "/og/en.png", lang: "en", name: "English", og: "en_US" },
     de: { date: "de-DE", hreflang: "de", image: "/og/de.png", lang: "de", name: "Deutsch", og: "de_DE" },
     es: { date: "es-419", hreflang: "es", image: "/og/es.png?v=2", lang: "es-419", name: "Español", og: "es_LA" },
     pt: { date: "pt-BR", hreflang: "pt", image: "/og/pt.png", lang: "pt-BR", name: "Português", og: "pt_BR" },
     fr: { date: "fr-FR", hreflang: "fr", image: "/og/fr.png", lang: "fr", name: "Français", og: "fr_FR" },
-} as const satisfies Record<
-    Locale,
-    { date: string; hreflang: string; image: string; lang: string; name: string; og: string }
->;
+} as const satisfies Record<BaseLocale, LanguageMeta>;
+
+export const LANGUAGES = {
+    ...BASE_LANGUAGES,
+    "es-ES": {
+        date: "es-ES",
+        hreflang: "es-ES",
+        image: "/og/es.png?v=2",
+        lang: "es-ES",
+        name: "Español (España)",
+        og: "es_ES",
+    },
+    "pt-PT": {
+        date: "pt-PT",
+        hreflang: "pt-PT",
+        image: "/og/pt.png",
+        lang: "pt-PT",
+        name: "Português (Portugal)",
+        og: "pt_PT",
+    },
+} as const satisfies Record<BaseLocale | EuropeanLocale, LanguageMeta>;
 
 export function localeFromParam(param: string | undefined): Locale {
     const { localePrefix } = validatePrefix(param);
     return isDeclaredLocale(localePrefix) ? localePrefix : defaultLocale;
+}
+
+function baseLocale(locale: Locale): Locale {
+    const [primary = locale] = locale.split("-");
+    return isDeclaredLocale(primary) ? primary : locale;
 }
 
 export function pageUrl(path: string, locale: Locale, origin: string = SITE_URL): string {
@@ -27,7 +61,8 @@ export function pageUrl(path: string, locale: Locale, origin: string = SITE_URL)
 
 export function sitePageUrl(path: string, locale: Locale): string {
     const [pathname = "/", hash] = path.split("#");
-    const prefix = locale === defaultLocale || !isPublished(pathname, locale) ? "" : `/${locale}`;
+    const siteLocale = baseLocale(locale);
+    const prefix = siteLocale === defaultLocale || !isPublished(pathname, siteLocale) ? "" : `/${siteLocale}`;
     const localized = prefix && pathname === "/" ? prefix : `${prefix}${pathname}`;
     return `${SITE_URL}${localized}${hash === undefined ? "" : `#${hash}`}`;
 }

@@ -4,7 +4,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ACCENT_PALETTE } from "@outlayr/money/accent";
 import { chooseConsent, readConsent, subscribeConsent } from "@outlayr/shared/analytics";
 import { LANGUAGES } from "@outlayr/shared/i18n";
-import type { Locale } from "@outlayr/shared/i18n";
 import { chooseTheme, readTheme, subscribeTheme, THEMES } from "@outlayr/shared/theme";
 import { Select } from "panelui-web/select";
 import { useContext, useId, useState, useSyncExternalStore } from "react";
@@ -133,14 +132,6 @@ function UpcomingCard() {
     );
 }
 
-const LANGUAGE_NAMES: Record<Locale, string> = {
-    de: "Deutsch",
-    en: "English",
-    es: "Español",
-    fr: "Français",
-    pt: "Português",
-};
-
 function LanguageRow() {
     const { language } = useIntlayer("dashboard-settings");
     const { locale } = useLocale();
@@ -148,7 +139,7 @@ function LanguageRow() {
     return (
         <Row label={language} labelFor={id}>
             <Select
-                items={DASHBOARD_LOCALES.map((value) => ({ label: LANGUAGE_NAMES[value], value }))}
+                items={DASHBOARD_LOCALES.map((value) => ({ label: LANGUAGES[value].name, value }))}
                 onValueChange={(next) => next && chooseDashboardLocale(next)}
                 value={locale}
             >
@@ -158,7 +149,7 @@ function LanguageRow() {
                 <Select.Content>
                     {DASHBOARD_LOCALES.map((value) => (
                         <Select.Item key={value} lang={LANGUAGES[value].lang} value={value}>
-                            {LANGUAGE_NAMES[value]}
+                            {LANGUAGES[value].name}
                         </Select.Item>
                     ))}
                 </Select.Content>

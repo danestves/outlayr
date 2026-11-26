@@ -18,6 +18,7 @@ const dashboardBudgetsPlan = {
                     es: "En {{month}} te recuperas.",
                     fr: "Vous repassez au vert en {{month}}.",
                     pt: "Em {{month}} você se recupera.",
+                    "pt-PT": "Em {{month}} se recupera.",
                 })
             ),
             covered: t({
@@ -100,12 +101,19 @@ const dashboardBudgetsPlan = {
             note: t({ en: "Note", de: "Notiz", es: "Nota", fr: "Note", pt: "Nota" }),
             now: t({ en: "Now", de: "Jetzt", es: "Ahora", fr: "Actuel", pt: "Agora" }),
             out: t({ en: "Out", de: "Raus", es: "Sale", fr: "Sorties", pt: "Sai" }),
-            planned: t({ en: "Planned", de: "Geplant", es: "Planificado", fr: "Planifié", pt: "Planejado" }),
+            planned: t({
+                en: "Planned",
+                de: "Geplant",
+                es: "Planificado",
+                fr: "Planifié",
+                pt: "Planejado",
+                "pt-PT": "Planeado",
+            }),
             result: t({ en: "Result", de: "Ergebnis", es: "Resultado", fr: "Résultat", pt: "Resultado" }),
             setAside: t({ en: "Set aside", de: "Zurückgelegt", es: "Apartado", fr: "Mis de côté", pt: "Reservado" }),
             source: t({ en: "Source", de: "Quelle", es: "Fuente", fr: "Source", pt: "Fonte" }),
             spent: t({ en: "Spent", de: "Ausgegeben", es: "Gastado", fr: "Dépensé", pt: "Gasto" }),
-            status: t({ en: "Status", de: "Status", es: "Estado", fr: "Statut", pt: "Status" }),
+            status: t({ en: "Status", de: "Status", es: "Estado", fr: "Statut", pt: "Status", "pt-PT": "Estado" }),
             toward: t({ en: "Toward", de: "Für", es: "Hacia", fr: "Vers", pt: "Rumo a" }),
             typical: t({ en: "Typical", de: "Üblich", es: "Habitual", fr: "Habituel", pt: "Habitual" }),
             used: t({ en: "Used", de: "Verbraucht", es: "Usado", fr: "Utilisé", pt: "Usado" }),
@@ -124,6 +132,7 @@ const dashboardBudgetsPlan = {
                 en: "Add income",
                 de: "Einnahme hinzufügen",
                 es: "Agregar ingreso",
+                "es-ES": "Añadir ingreso",
                 fr: "Ajouter un revenu",
                 pt: "Adicionar receita",
             }),
@@ -131,6 +140,7 @@ const dashboardBudgetsPlan = {
                 en: "Add a category",
                 de: "Kategorie hinzufügen",
                 es: "Agregar una categoría",
+                "es-ES": "Añadir una categoría",
                 fr: "Ajouter une catégorie",
                 pt: "Adicionar uma categoria",
             }),
@@ -167,6 +177,7 @@ const dashboardBudgetsPlan = {
                 es: "No se pudo guardar el plan. Inténtalo de nuevo.",
                 fr: "Impossible d'enregistrer le plan. Réessayez.",
                 pt: "Não foi possível salvar o plano. Tente de novo.",
+                "pt-PT": "Não foi possível guardar o plano. Tente de novo.",
             }),
             fill: t({ en: "Fill", de: "Auffüllen", es: "Rellenar", fr: "Remplir", pt: "Preencher" }),
             fixes: insert(
@@ -223,6 +234,7 @@ const dashboardBudgetsPlan = {
                 en: "Same amount every month",
                 de: "Jeden Monat derselbe Betrag",
                 es: "El mismo monto cada mes",
+                "es-ES": "El mismo importe cada mes",
                 fr: "Le même montant chaque mois",
                 pt: "O mesmo valor todo mês",
             }),
@@ -233,6 +245,7 @@ const dashboardBudgetsPlan = {
                     es: "Guardar el plan {{year}}",
                     fr: "Enregistrer le plan {{year}}",
                     pt: "Salvar o plano {{year}}",
+                    "pt-PT": "Guardar o plano {{year}}",
                 })
             ),
             saved: t({
@@ -241,6 +254,7 @@ const dashboardBudgetsPlan = {
                 es: "Plan guardado",
                 fr: "Plan enregistré",
                 pt: "Plano salvo",
+                "pt-PT": "Plano guardado",
             }),
             saves: t({ en: "Saves", de: "Spart", es: "Ahorra", fr: "Économise", pt: "Economiza" }),
             stillShort: insert(
@@ -287,6 +301,7 @@ const dashboardBudgetsPlan = {
                 en: "Add what you expect to come in, then what each category should get.",
                 de: "Füge hinzu, was du erwartest, und dann, was jede Kategorie bekommen soll.",
                 es: "Agrega lo que esperas que entre y luego lo que debe recibir cada categoría.",
+                "es-ES": "Añade lo que esperas que entre y luego lo que debe recibir cada categoría.",
                 fr: "Ajoutez ce que vous attendez en entrée, puis ce que chaque catégorie doit recevoir.",
                 pt: "Adicione o que espera receber e depois quanto cada categoria deve ter.",
             }),
@@ -297,6 +312,7 @@ const dashboardBudgetsPlan = {
                     es: "Nada planificado para {{month}}",
                     fr: "Rien de planifié pour {{month}}",
                     pt: "Nada planejado para {{month}}",
+                    "pt-PT": "Nada planeado para {{month}}",
                 })
             ),
             planFirst: insert(
@@ -306,12 +322,14 @@ const dashboardBudgetsPlan = {
                     es: "Planificar {{month}}",
                     fr: "Planifier {{month}}",
                     pt: "Planejar {{month}}",
+                    "pt-PT": "Planear {{month}}",
                 })
             ),
             yearLine: t({
                 en: "Add what comes in and what goes out, month by month.",
                 de: "Füge Einnahmen und Ausgaben hinzu, Monat für Monat.",
                 es: "Agrega lo que entra y lo que sale, mes a mes.",
+                "es-ES": "Añade lo que entra y lo que sale, mes a mes.",
                 fr: "Ajoutez ce qui entre et ce qui sort, mois par mois.",
                 pt: "Adicione o que entra e o que sai, mês a mês.",
             }),
@@ -322,6 +340,7 @@ const dashboardBudgetsPlan = {
                     es: "Nada planificado para {{year}}",
                     fr: "Rien de planifié pour {{year}}",
                     pt: "Nada planejado para {{year}}",
+                    "pt-PT": "Nada planeado para {{year}}",
                 })
             ),
         },
@@ -397,6 +416,7 @@ const dashboardBudgetsPlan = {
                 es: "Meses planificados",
                 fr: "Mois planifiés",
                 pt: "Meses planejados",
+                "pt-PT": "Meses planeados",
             }),
             noGoals: t({
                 en: "No goals",
@@ -439,6 +459,7 @@ const dashboardBudgetsPlan = {
                 es: "Nada planificado",
                 fr: "Rien de planifié",
                 pt: "Nada planejado",
+                "pt-PT": "Nada planeado",
             }),
             ofIncome: t({
                 en: "of income",
@@ -465,7 +486,14 @@ const dashboardBudgetsPlan = {
                     pt: "{{amount}} por mês",
                 })
             ),
-            planned: t({ en: "Planned", de: "Geplant", es: "Planificado", fr: "Planifié", pt: "Planejado" }),
+            planned: t({
+                en: "Planned",
+                de: "Geplant",
+                es: "Planificado",
+                fr: "Planifié",
+                pt: "Planejado",
+                "pt-PT": "Planeado",
+            }),
             setAside: t({ en: "Set aside", de: "Zurückgelegt", es: "Apartado", fr: "Mis de côté", pt: "Reservado" }),
             setAsideAmount: insert(
                 t({
@@ -525,6 +553,7 @@ const dashboardBudgetsPlan = {
                     es: "Planificar {{year}}",
                     fr: "Planifier {{year}}",
                     pt: "Planejar {{year}}",
+                    "pt-PT": "Planear {{year}}",
                 })
             ),
             trim: t({ en: "Trim", de: "Kürzen", es: "Recortar", fr: "Réduire", pt: "Cortar" }),
@@ -534,6 +563,7 @@ const dashboardBudgetsPlan = {
                 en: "Add a category",
                 de: "Kategorie hinzufügen",
                 es: "Agregar una categoría",
+                "es-ES": "Añadir una categoría",
                 fr: "Ajouter une catégorie",
                 pt: "Adicionar uma categoria",
             }),
@@ -541,6 +571,7 @@ const dashboardBudgetsPlan = {
                 en: "Add income",
                 de: "Einnahme hinzufügen",
                 es: "Agregar ingreso",
+                "es-ES": "Añadir ingreso",
                 fr: "Ajouter un revenu",
                 pt: "Adicionar receita",
             }),
@@ -553,6 +584,7 @@ const dashboardBudgetsPlan = {
                 es: "Editar cambia el periodo actual, no este.",
                 fr: "Modifier change la période en cours, pas celle-ci.",
                 pt: "Editar muda o período atual, não este.",
+                "pt-PT": "Editar altera o período atual, não este.",
             }),
             noGoals: t({
                 en: "No goals are setting money aside.",
@@ -560,6 +592,7 @@ const dashboardBudgetsPlan = {
                 es: "Ninguna meta está apartando dinero.",
                 fr: "Aucun objectif ne met d'argent de côté.",
                 pt: "Nenhuma meta está reservando dinheiro.",
+                "pt-PT": "Nenhuma meta está a reservar dinheiro.",
             }),
             noIncome: t({
                 en: "Nothing has come in yet.",

@@ -1,5 +1,5 @@
 import { wallNoon } from "@outlayr/money/ledger-zone";
-import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { Badge } from "panelui-web/badge";
 import { useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -19,7 +19,7 @@ export const NOTE = "text-muted-foreground text-app-label";
 
 export function useShortDay() {
     const { locale } = useLocale();
-    const { date } = LANGUAGES[localeFromParam(locale)];
+    const { date } = LANGUAGES[locale];
     return useMemo(() => {
         const format = new Intl.DateTimeFormat(date === "en-GB" ? "en-US" : date, {
             day: "numeric",

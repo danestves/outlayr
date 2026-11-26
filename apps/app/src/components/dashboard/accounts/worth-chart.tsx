@@ -1,5 +1,5 @@
 import { wallNoon } from "@outlayr/money/ledger-zone";
-import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { Plot } from "panelui-web/plot";
 import { useMemo } from "react";
 import { useLocale } from "react-intlayer";
@@ -27,7 +27,7 @@ export interface WorthDatum {
 
 export function useMonthShort() {
     const { locale } = useLocale();
-    const { date } = LANGUAGES[localeFromParam(locale)];
+    const { date } = LANGUAGES[locale];
     return useMemo(() => {
         const short = new Intl.DateTimeFormat(date === "en-GB" ? "en-US" : date, {
             month: "short",

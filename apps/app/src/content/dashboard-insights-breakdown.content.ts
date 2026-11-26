@@ -32,7 +32,14 @@ const dashboardInsightsBreakdown = {
                 pt: "Limpar categoria",
             }),
             byMonth: t({ en: "By month", de: "Nach Monat", es: "Por mes", fr: "Par mois", pt: "Por mês" }),
-            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
             open: insert(
                 t({
                     en: "Open {{name}}",
@@ -239,8 +246,10 @@ const dashboardInsightsBreakdown = {
                 en: "Add entry",
                 de: "Eintrag hinzufügen",
                 es: "Agregar movimiento",
+                "es-ES": "Añadir movimiento",
                 fr: "Ajouter une opération",
                 pt: "Adicionar lançamento",
+                "pt-PT": "Adicionar registo",
             }),
             income: insert(
                 t({
@@ -292,6 +301,7 @@ const dashboardInsightsBreakdown = {
                 en: "Nothing to chart",
                 de: "Nichts zum Darstellen",
                 es: "Nada que graficar",
+                "es-ES": "Nada que mostrar",
                 fr: "Rien à afficher",
                 pt: "Nada para mostrar",
             }),
@@ -309,7 +319,14 @@ const dashboardInsightsBreakdown = {
             byDay: t({ en: "By day", de: "Nach Tag", es: "Por día", fr: "Par jour", pt: "Por dia" }),
             categories: t({ en: "Categories", de: "Kategorien", es: "Categorías", fr: "Catégories", pt: "Categorias" }),
             change: t({ en: "Change", de: "Veränderung", es: "Cambio", fr: "Variation", pt: "Variação" }),
-            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
             income: t({ en: "Income", de: "Einnahmen", es: "Ingresos", fr: "Revenus", pt: "Receitas" }),
             left: insert(
                 t({
@@ -446,7 +463,7 @@ const dashboardInsightsBreakdown = {
         },
         table: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             average: t({ en: "Average", de: "Durchschnitt", es: "Promedio", fr: "Moyenne", pt: "Média" }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             change: t({ en: "Change", de: "Veränderung", es: "Cambio", fr: "Variation", pt: "Variação" }),
@@ -458,7 +475,14 @@ const dashboardInsightsBreakdown = {
                 pt: "Mostrar menos",
             }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
-            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
             expand: t({
                 en: "Show all",
                 de: "Alle anzeigen",
@@ -479,7 +503,14 @@ const dashboardInsightsBreakdown = {
             ),
             ofTotal: t({ en: "Of total", de: "Vom Gesamten", es: "Del total", fr: "Du total", pt: "Do total" }),
             percent: t({ en: "%", de: "%", es: "%", fr: "%", pt: "%" }),
-            share: t({ en: "Share", de: "Anteil", es: "Proporción", fr: "Part", pt: "Proporção" }),
+            share: t({
+                en: "Share",
+                de: "Anteil",
+                es: "Proporción",
+                fr: "Part",
+                pt: "Proporção",
+                "pt-PT": "Proporção",
+            }),
             subcategory: t({
                 en: "Subcategory",
                 de: "Unterkategorie",

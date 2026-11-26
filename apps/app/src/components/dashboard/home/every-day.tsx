@@ -1,6 +1,6 @@
 import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import { wallNoon } from "@outlayr/money/ledger-zone";
-import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { DayGrid } from "panelui-web/day-grid";
 import { useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
@@ -39,7 +39,7 @@ const NO_TAG = "[&>span.absolute]:hidden";
 function useMonthName(width: "narrow" | "short") {
     const { locale } = useLocale();
     return useMemo(() => {
-        const format = new Intl.DateTimeFormat(LANGUAGES[localeFromParam(locale)].date, {
+        const format = new Intl.DateTimeFormat(LANGUAGES[locale].date, {
             month: width,
             timeZone: "UTC",
         });

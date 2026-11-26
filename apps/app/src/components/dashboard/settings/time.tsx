@@ -1,7 +1,7 @@
 import { BUDGET_TYPE, periodEnd, startOfPeriod } from "@outlayr/money/budget-window";
 import { addDays } from "@outlayr/money/calendar";
 import { isoWeek, monthGrid, weekDays, weekdayOrder } from "@outlayr/money/time-grid";
-import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { Select } from "panelui-web/select";
 import { useContext, useId, useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -20,7 +20,7 @@ function useRange(type: number) {
     const { firstDayOfMonth, firstWeekday } = useContext(LedgerSettingsContext);
     const { today } = useDashboard().ledger;
     const { locale } = useLocale();
-    const { date } = LANGUAGES[localeFromParam(locale)];
+    const { date } = LANGUAGES[locale];
     return useMemo(() => {
         const start = startOfPeriod(new Date(`${today}T12:00:00`), type, { firstDayOfMonth, firstWeekday });
         const last = addDays(periodEnd(start, type), -1);
@@ -140,7 +140,7 @@ function zoneLabel(timeZone: string) {
 function Calendar({ firstWeekday, today }: { firstWeekday: number; today: string }) {
     const { time } = useIntlayer("dashboard-settings");
     const { locale } = useLocale();
-    const { date } = LANGUAGES[localeFromParam(locale)];
+    const { date } = LANGUAGES[locale];
     const week = new Set(weekDays(today, firstWeekday));
     const title = new Intl.DateTimeFormat(date, { month: "long", timeZone: "UTC", year: "numeric" }).format(
         new Date(`${today}T12:00:00Z`)

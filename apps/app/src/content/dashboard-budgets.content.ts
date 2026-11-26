@@ -7,6 +7,7 @@ const dashboardBudgets = {
             en: "Add a limit",
             de: "Limit hinzufügen",
             es: "Agregar un límite",
+            "es-ES": "Añadir un límite",
             fr: "Ajouter une limite",
             pt: "Adicionar um limite",
         }),
@@ -57,7 +58,7 @@ const dashboardBudgets = {
                 fr: "Face à la limite",
                 pt: "Contra o limite",
             }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
             left: t({ en: "Left", de: "Übrig", es: "Queda", fr: "Reste", pt: "Resta" }),
@@ -81,7 +82,7 @@ const dashboardBudgets = {
                 pt: "Parte dos gastos",
             }),
             spent: t({ en: "Spent", de: "Ausgegeben", es: "Gastado", fr: "Dépensé", pt: "Gasto" }),
-            status: t({ en: "Status", de: "Status", es: "Estado", fr: "État", pt: "Status" }),
+            status: t({ en: "Status", de: "Status", es: "Estado", fr: "État", pt: "Status", "pt-PT": "Estado" }),
             used: t({ en: "Used", de: "Verbraucht", es: "Usado", fr: "Utilisé", pt: "Usado" }),
             window: {
                 day: t({ en: "Day", de: "Tag", es: "Día", fr: "Jour", pt: "Dia" }),
@@ -106,6 +107,7 @@ const dashboardBudgets = {
                 es: "Eliminar presupuesto",
                 fr: "Supprimer le budget",
                 pt: "Excluir orçamento",
+                "pt-PT": "Eliminar orçamento",
             }),
             failed: t({
                 en: "Couldn't delete. Try again.",
@@ -113,6 +115,7 @@ const dashboardBudgets = {
                 es: "No se pudo eliminar. Inténtalo de nuevo.",
                 fr: "Suppression impossible. Réessayez.",
                 pt: "Não foi possível excluir. Tente de novo.",
+                "pt-PT": "Não foi possível eliminar. Tente de novo.",
             }),
             overallBody: t({
                 en: "Transactions stay. Your spending no longer has an overall limit.",
@@ -128,6 +131,7 @@ const dashboardBudgets = {
                     es: "¿Eliminar el presupuesto de {{name}}?",
                     fr: "Supprimer le budget {{name}} ?",
                     pt: "Excluir o orçamento de {{name}}?",
+                    "pt-PT": "Eliminar o orçamento de {{name}}?",
                 })
             ),
             toast: t({
@@ -136,6 +140,7 @@ const dashboardBudgets = {
                 es: "Presupuesto eliminado",
                 fr: "Budget supprimé",
                 pt: "Orçamento excluído",
+                "pt-PT": "Orçamento eliminado",
             }),
         },
         detail: {
@@ -153,6 +158,7 @@ const dashboardBudgets = {
                 es: "Editar cambia el período actual, no este.",
                 fr: "Modifier change la période en cours, pas celle-ci.",
                 pt: "Editar muda o período atual, não este.",
+                "pt-PT": "Editar altera o período atual, não este.",
             }),
             edit: t({ en: "Edit", de: "Bearbeiten", es: "Editar", fr: "Modifier", pt: "Editar" }),
             every: t({ en: "Every", de: "Alle", es: "Cada", fr: "Chaque", pt: "A cada" }),
@@ -249,6 +255,7 @@ const dashboardBudgets = {
                     es: "Ya gastaste {{spent}}. Empiezas {{over}} por encima.",
                     fr: "Déjà {{spent}} dépensés. Vous démarrez {{over}} au-dessus.",
                     pt: "Já foram {{spent}} gastos. Você começa {{over}} acima.",
+                    "pt-PT": "Já foram {{spent}} gastos. começa {{over}} acima.",
                 })
             ),
             cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
@@ -258,6 +265,7 @@ const dashboardBudgets = {
                 es: "Lo que no gastes se suma al próximo período, y lo que te excedas se le resta.",
                 fr: "Ce que vous ne dépensez pas s'ajoute à la période suivante, et le dépassement en est retiré.",
                 pt: "O que você não gastar é somado ao próximo período, e o que exceder é descontado dele.",
+                "pt-PT": "O que não gastar é somado ao próximo período, e o que exceder é descontado dele.",
             }),
             carryOver: t({
                 en: "Carry over",
@@ -282,6 +290,7 @@ const dashboardBudgets = {
                 es: "Eliminar presupuesto",
                 fr: "Supprimer le budget",
                 pt: "Excluir orçamento",
+                "pt-PT": "Eliminar orçamento",
             }),
             editTitle: t({
                 en: "Edit budget",
@@ -297,6 +306,7 @@ const dashboardBudgets = {
                 es: "No se pudo guardar. Inténtalo de nuevo.",
                 fr: "Enregistrement impossible. Réessayez.",
                 pt: "Não foi possível salvar. Tente de novo.",
+                "pt-PT": "Não foi possível guardar. Tente de novo.",
             }),
             from: t({ en: "From", de: "Von", es: "Desde", fr: "Depuis", pt: "Desde" }),
             hasLimit: t({
@@ -379,7 +389,14 @@ const dashboardBudgets = {
                 fr: "Choisissez la catégorie couverte par cette limite.",
                 pt: "Escolha a categoria que este limite cobre.",
             }),
-            save: t({ en: "Save", de: "Speichern", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+            save: t({
+                en: "Save",
+                de: "Speichern",
+                es: "Guardar",
+                fr: "Enregistrer",
+                pt: "Salvar",
+                "pt-PT": "Guardar",
+            }),
             set: t({
                 en: "Set budget",
                 de: "Budget festlegen",
@@ -578,7 +595,14 @@ const dashboardBudgets = {
                 fr: "Modifier la limite",
                 pt: "Alterar limite",
             }),
-            delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            delete: t({
+                en: "Delete",
+                de: "Löschen",
+                es: "Eliminar",
+                fr: "Supprimer",
+                pt: "Excluir",
+                "pt-PT": "Eliminar",
+            }),
             more: insert(
                 t({
                     en: "More for {{name}}",
@@ -654,6 +678,7 @@ const dashboardBudgets = {
                 en: "Add a transaction",
                 de: "Eintrag hinzufügen",
                 es: "Agregar una transacción",
+                "es-ES": "Añadir una transacción",
                 fr: "Ajouter une transaction",
                 pt: "Adicionar uma transação",
             }),

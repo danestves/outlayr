@@ -3,13 +3,22 @@ import type { Dictionary } from "intlayer";
 
 const dashboardSettings = {
     content: {
-        title: t({ en: "Settings", de: "Einstellungen", es: "Configuración", fr: "Réglages", pt: "Ajustes" }),
+        title: t({
+            en: "Settings",
+            de: "Einstellungen",
+            es: "Configuración",
+            "es-ES": "Ajustes",
+            fr: "Réglages",
+            pt: "Ajustes",
+            "pt-PT": "Definições",
+        }),
         saveFailed: t({
             en: "Couldn't save that change. Try again.",
             de: "Diese Änderung konnte nicht gespeichert werden. Versuch es noch mal.",
             es: "No se pudo guardar ese cambio. Inténtalo de nuevo.",
             fr: "Impossible d'enregistrer ce changement. Réessayez.",
             pt: "Não foi possível salvar essa alteração. Tente novamente.",
+            "pt-PT": "Não foi possível guardar essa alteração. Tente novamente.",
         }),
         sections: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
@@ -34,7 +43,7 @@ const dashboardSettings = {
             }),
             email: t({ en: "Email", de: "E-Mail", es: "Correo", fr: "E-mail", pt: "E-mail" }),
             sync: t({ en: "Sync", de: "Synchronisierung", es: "Sincronización", fr: "Synchro", pt: "Sincronização" }),
-            usage: t({ en: "Usage", de: "Nutzung", es: "Uso", fr: "Utilisation", pt: "Uso" }),
+            usage: t({ en: "Usage", de: "Nutzung", es: "Uso", fr: "Utilisation", pt: "Uso", "pt-PT": "Utilização" }),
             invite: t({ en: "Invite", de: "Einladen", es: "Invitar", fr: "Inviter", pt: "Convidar" }),
             connections: t({
                 en: "Connections",
@@ -57,8 +66,10 @@ const dashboardSettings = {
                 en: "Voice and receipts",
                 de: "Sprache und Belege",
                 es: "Voz y recibos",
+                "es-ES": "Voz y tickets",
                 fr: "Voix et reçus",
                 pt: "Voz e recibos",
+                "pt-PT": "Voz e talões",
             }),
             ofCapacity: insert(
                 t({
@@ -85,6 +96,7 @@ const dashboardSettings = {
                 es: "Registro automático",
                 fr: "Saisie automatique",
                 pt: "Registro automático",
+                "pt-PT": "Registo automático",
             }),
             unlimited: t({ en: "Unlimited", de: "Unbegrenzt", es: "Ilimitado", fr: "Illimité", pt: "Ilimitado" }),
             friends: t({
@@ -104,8 +116,10 @@ const dashboardSettings = {
                 en: "Receipt scans",
                 de: "Belegscans",
                 es: "Escaneos de recibos",
+                "es-ES": "Escaneos de tickets",
                 fr: "Scans de reçus",
                 pt: "Digitalizações de recibos",
+                "pt-PT": "Digitalizações de talões",
             }),
             voice: t({ en: "Voice", de: "Sprache", es: "Voz", fr: "Voix", pt: "Voz" }),
             suggestions: t({
@@ -141,8 +155,10 @@ const dashboardSettings = {
                 en: "Installment apps",
                 de: "Ratenzahlungs-Apps",
                 es: "Apps de cuotas",
+                "es-ES": "Apps de pago a plazos",
                 fr: "Apps de paiement en plusieurs fois",
                 pt: "Apps de parcelamento",
+                "pt-PT": "Apps de prestações",
             }),
             payoffPlans: t({
                 en: "Payoff plans",
@@ -150,6 +166,7 @@ const dashboardSettings = {
                 es: "Planes de pago",
                 fr: "Plans de remboursement",
                 pt: "Planos de quitação",
+                "pt-PT": "Planos de liquidação",
             }),
             autoLogMonth: t({
                 en: "Auto-log, a month",
@@ -157,6 +174,7 @@ const dashboardSettings = {
                 es: "Registro automático, al mes",
                 fr: "Saisie automatique, par mois",
                 pt: "Registro automático, por mês",
+                "pt-PT": "Registo automático, por mês",
             }),
             capturesMonth: t({
                 en: "Captures, a month",
@@ -183,6 +201,7 @@ const dashboardSettings = {
                 es: "Compartir analíticas",
                 fr: "Partager les statistiques",
                 pt: "Compartilhar análises",
+                "pt-PT": "Partilhar análises",
             }),
             smartFill: t({
                 en: "Smart fill",
@@ -204,13 +223,18 @@ const dashboardSettings = {
                 es: "Enviar datos a proveedores de IA",
                 fr: "Envoyer les données aux fournisseurs d'IA",
                 pt: "Enviar dados a provedores de IA",
+                "pt-PT": "Enviar dados a fornecedores de IA",
             }),
             sendToAiHint: t({
                 en: "Lets this browser send bank statement PDFs, unmatched merchants from an import and installment plan screenshots to an AI provider",
                 de: "Erlaubt diesem Browser, Kontoauszugs-PDFs, nicht zugeordnete Händler aus einem Import und Screenshots von Ratenplänen an einen KI-Anbieter zu senden",
                 es: "Permite que este navegador envíe estados de cuenta en PDF, comercios sin asignar de una importación y capturas de planes de cuotas a un proveedor de IA",
+                "es-ES":
+                    "Permite que este navegador envíe estados de cuenta en PDF, comercios sin asignar de una importación y capturas de planes de plazos a un proveedor de IA",
                 fr: "Permet à ce navigateur d'envoyer des relevés PDF, les commerçants non associés d'une importation et des captures de plans de paiement à un fournisseur d'IA",
                 pt: "Permite que este navegador envie extratos em PDF, estabelecimentos sem associação de uma importação e capturas de planos de parcelamento a um provedor de IA",
+                "pt-PT":
+                    "Permite que este navegador envie extratos em PDF, estabelecimentos sem associação de uma importação e capturas de planos de prestações a um provedor de IA",
             }),
         },
         help: {
@@ -221,6 +245,7 @@ const dashboardSettings = {
                 es: "Contactar soporte",
                 fr: "Contacter l'assistance",
                 pt: "Falar com o suporte",
+                "pt-PT": "Contactar o suporte",
             }),
         },
         language: t({ en: "Language", de: "Sprache", es: "Idioma", fr: "Langue", pt: "Idioma" }),
@@ -234,7 +259,7 @@ const dashboardSettings = {
                     pt: "{{count}} de {{total}}",
                 })
             ),
-            usage: t({ en: "Usage", de: "Nutzung", es: "Uso", fr: "Utilisation", pt: "Uso" }),
+            usage: t({ en: "Usage", de: "Nutzung", es: "Uso", fr: "Utilisation", pt: "Uso", "pt-PT": "Utilização" }),
             device: t({ en: "Device", de: "Gerät", es: "Dispositivo", fr: "Appareil", pt: "Dispositivo" }),
             renews: insert(
                 t({
@@ -245,7 +270,14 @@ const dashboardSettings = {
                     pt: "Outlayr Pro, renova em {{date}}",
                 })
             ),
-            signOut: t({ en: "Sign out", de: "Abmelden", es: "Cerrar sesión", fr: "Se déconnecter", pt: "Sair" }),
+            signOut: t({
+                en: "Sign out",
+                de: "Abmelden",
+                es: "Cerrar sesión",
+                fr: "Se déconnecter",
+                pt: "Sair",
+                "pt-PT": "Terminar sessão",
+            }),
             profile: t({ en: "Profile", de: "Profil", es: "Perfil", fr: "Profil", pt: "Perfil" }),
             name: t({ en: "Name", de: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
             edit: t({ en: "Edit", de: "Bearbeiten", es: "Editar", fr: "Modifier", pt: "Editar" }),
@@ -278,6 +310,7 @@ const dashboardSettings = {
                 es: "Correo y contraseña",
                 fr: "E-mail et mot de passe",
                 pt: "E-mail e senha",
+                "pt-PT": "E-mail e palavra-passe",
             }),
             passwordSet: t({
                 en: "Password set",
@@ -285,6 +318,7 @@ const dashboardSettings = {
                 es: "Contraseña definida",
                 fr: "Mot de passe défini",
                 pt: "Senha definida",
+                "pt-PT": "Palavra-passe definida",
             }),
             passwordNone: t({
                 en: "No password",
@@ -292,6 +326,7 @@ const dashboardSettings = {
                 es: "Sin contraseña",
                 fr: "Aucun mot de passe",
                 pt: "Sem senha",
+                "pt-PT": "Sem palavra-passe",
             }),
             add: t({ en: "Add", de: "Hinzufügen", es: "Añadir", fr: "Ajouter", pt: "Adicionar" }),
             sessions: t({ en: "Sessions", de: "Sitzungen", es: "Sesiones", fr: "Sessions", pt: "Sessões" }),
@@ -338,6 +373,7 @@ const dashboardSettings = {
                 es: "Un teléfono conserva su propio registro al cerrar sesión.",
                 fr: "Un téléphone garde son propre journal à la déconnexion.",
                 pt: "Um telefone mantém seus lançamentos ao sair.",
+                "pt-PT": "Um telefone mantém seus registos ao sair.",
             }),
             deleteTitle: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Apagar" }),
             deleteAccount: t({
@@ -360,6 +396,7 @@ const dashboardSettings = {
                 es: "La eliminación empezó y no terminó",
                 fr: "La suppression a commencé sans se terminer",
                 pt: "A exclusão começou e não terminou",
+                "pt-PT": "A eliminação começou e não terminou",
             }),
             deleteFinish: t({ en: "Finish", de: "Abschließen", es: "Terminar", fr: "Terminer", pt: "Concluir" }),
             deleteConfirmTitle: t({
@@ -375,6 +412,8 @@ const dashboardSettings = {
                 es: "Tu cuenta y todo lo sincronizado en ella se eliminan de forma definitiva, junto con la copia de este navegador. Un teléfono conserva su propio registro. Cancela cualquier suscripción en la tienda donde la compraste.",
                 fr: "Votre compte et tout ce qui y est synchronisé sont supprimés définitivement, ainsi que la copie de ce navigateur. Un téléphone garde son propre journal. Résiliez tout abonnement dans la boutique où vous l'avez acheté.",
                 pt: "Sua conta e tudo o que foi sincronizado com ela são apagados para sempre, junto com a cópia deste navegador. Um telefone mantém seus lançamentos. Cancele qualquer assinatura na loja onde a comprou.",
+                "pt-PT":
+                    "Sua conta e tudo o que foi sincronizado com ela são apagados para sempre, junto com a cópia deste navegador. Um telefone mantém seus registos. Cancele qualquer subscrição na loja onde a comprou.",
             }),
             deleteFailed: t({
                 en: "The account was not fully deleted. Try again.",
@@ -396,16 +435,39 @@ const dashboardSettings = {
                 es: "No podrás iniciar sesión con él hasta que lo vuelvas a vincular.",
                 fr: "Vous ne pourrez plus vous connecter ainsi tant qu'il n'est pas associé à nouveau.",
                 pt: "Você não poderá entrar com ele até vinculá-lo de novo.",
+                "pt-PT": "Não poderá entrar com ele até vinculá-lo de novo.",
             }),
-            save: t({ en: "Save", de: "Speichern", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
-            saving: t({ en: "Saving…", de: "Speichern…", es: "Guardando…", fr: "Enregistrement…", pt: "Salvando…" }),
-            sending: t({ en: "Sending…", de: "Senden…", es: "Enviando…", fr: "Envoi…", pt: "Enviando…" }),
+            save: t({
+                en: "Save",
+                de: "Speichern",
+                es: "Guardar",
+                fr: "Enregistrer",
+                pt: "Salvar",
+                "pt-PT": "Guardar",
+            }),
+            saving: t({
+                en: "Saving…",
+                de: "Speichern…",
+                es: "Guardando…",
+                fr: "Enregistrement…",
+                pt: "Salvando…",
+                "pt-PT": "A guardar…",
+            }),
+            sending: t({
+                en: "Sending…",
+                de: "Senden…",
+                es: "Enviando…",
+                fr: "Envoi…",
+                pt: "Enviando…",
+                "pt-PT": "A enviar…",
+            }),
             confirming: t({
                 en: "Confirming…",
                 de: "Bestätigen…",
                 es: "Confirmando…",
                 fr: "Confirmation…",
                 pt: "Confirmando…",
+                "pt-PT": "A confirmar…",
             }),
             cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
             sendCode: t({
@@ -451,6 +513,7 @@ const dashboardSettings = {
                 es: "Cambiar contraseña",
                 fr: "Modifier le mot de passe",
                 pt: "Alterar senha",
+                "pt-PT": "Alterar palavra-passe",
             }),
             addPasswordTitle: t({
                 en: "Add a password",
@@ -458,6 +521,7 @@ const dashboardSettings = {
                 es: "Añadir contraseña",
                 fr: "Ajouter un mot de passe",
                 pt: "Adicionar senha",
+                "pt-PT": "Adicionar palavra-passe",
             }),
             addPasswordBody: t({
                 en: "We email you a code. Adding a password signs you out everywhere.",
@@ -465,6 +529,7 @@ const dashboardSettings = {
                 es: "Te enviamos un código por correo. Añadir una contraseña cierra todas tus sesiones.",
                 fr: "Nous vous envoyons un code. Ajouter un mot de passe vous déconnecte partout.",
                 pt: "Enviamos um código por e-mail. Adicionar uma senha encerra todas as sessões.",
+                "pt-PT": "Enviamos um código por e-mail. Adicionar uma palavra-passe encerra todas as sessões.",
             }),
             currentPassword: t({
                 en: "Current password",
@@ -472,6 +537,7 @@ const dashboardSettings = {
                 es: "Contraseña actual",
                 fr: "Mot de passe actuel",
                 pt: "Senha atual",
+                "pt-PT": "Palavra-passe atual",
             }),
             newPassword: t({
                 en: "New password",
@@ -479,6 +545,7 @@ const dashboardSettings = {
                 es: "Contraseña nueva",
                 fr: "Nouveau mot de passe",
                 pt: "Nova senha",
+                "pt-PT": "Nova palavra-passe",
             }),
             failed: t({
                 en: "That didn't work. Check it and try again.",
@@ -494,8 +561,10 @@ const dashboardSettings = {
                 en: "Show cents",
                 de: "Cent anzeigen",
                 es: "Mostrar centavos",
+                "es-ES": "Mostrar céntimos",
                 fr: "Afficher les centimes",
                 pt: "Mostrar centavos",
+                "pt-PT": "Mostrar cêntimos",
             }),
             incomeTracking: t({
                 en: "Income tracking",
@@ -503,6 +572,7 @@ const dashboardSettings = {
                 es: "Seguimiento de ingresos",
                 fr: "Suivi des revenus",
                 pt: "Controle de receitas",
+                "pt-PT": "Controlo de receitas",
             }),
         },
         appearance: {
@@ -547,6 +617,7 @@ const dashboardSettings = {
                 es: "Próximos registros",
                 fr: "Opérations à venir",
                 pt: "Próximos lançamentos",
+                "pt-PT": "Próximos registos",
             }),
             show: t({
                 en: "Show on the Log",
@@ -554,6 +625,7 @@ const dashboardSettings = {
                 es: "Mostrar en el registro",
                 fr: "Afficher dans le Journal",
                 pt: "Mostrar em Lançamentos",
+                "pt-PT": "Mostrar em Registos",
             }),
             showHint: t({
                 en: "The next few sit above today",
@@ -577,6 +649,7 @@ const dashboardSettings = {
                 es: "Laboratorio de funciones",
                 fr: "Labo",
                 pt: "Laboratório de recursos",
+                "pt-PT": "Laboratório de funcionalidades",
             }),
             experimental: t({
                 en: "Experimental: these can change or disappear.",
@@ -596,8 +669,10 @@ const dashboardSettings = {
                 en: "Throws confetti over a transaction the moment you add it.",
                 de: "Wirft Konfetti über einen Eintrag, sobald du ihn hinzufügst.",
                 es: "Lanza confeti sobre una transacción en el momento en que la agregas.",
+                "es-ES": "Lanza confeti sobre una transacción en el momento en que la añades.",
                 fr: "Lance des confettis sur une opération dès que vous l'ajoutez.",
                 pt: "Joga confete sobre um lançamento assim que você o adiciona.",
+                "pt-PT": "Atira confetti sobre um registo assim que o adiciona.",
             }),
             lineGraph: t({
                 en: "Show line graph",
@@ -619,6 +694,7 @@ const dashboardSettings = {
                 es: "Si lo desactivas, los presupuestos se muestran en una cuadrícula de dos en dos en vez de una lista.",
                 fr: "Désactivé, les budgets s'affichent en grille sur deux colonnes au lieu d'une liste.",
                 pt: "Se desativado, os orçamentos aparecem em uma grade, dois por linha, em vez de uma lista.",
+                "pt-PT": "Se desativado, os orçamentos aparecem numa grelha, dois por linha, em vez de uma lista.",
             }),
             swapTime: t({
                 en: "Replace time label",
@@ -626,6 +702,7 @@ const dashboardSettings = {
                 es: "Reemplazar etiqueta de hora",
                 fr: "Remplacer l'heure",
                 pt: "Trocar o horário pela categoria",
+                "pt-PT": "Trocar a hora pela categoria",
             }),
             swapTimeNote: t({
                 en: "Each transaction shows its category instead of its time.",
@@ -633,6 +710,7 @@ const dashboardSettings = {
                 es: "Cada transacción muestra su categoría en vez de su hora.",
                 fr: "Chaque opération affiche sa catégorie au lieu de son heure.",
                 pt: "Cada lançamento mostra a categoria em vez do horário.",
+                "pt-PT": "Cada registo mostra a categoria em vez do horário.",
             }),
         },
         time: {
@@ -721,6 +799,7 @@ const dashboardSettings = {
                 en: "Every account converts at the day's rate",
                 de: "Jedes Konto wird zum Kurs des jeweiligen Tages umgerechnet",
                 es: "Cada cuenta se convierte a la tasa del día",
+                "es-ES": "Cada cuenta se convierte a la Tipo de cambio del día",
                 fr: "Chaque compte est converti au taux du jour",
                 pt: "Cada conta é convertida pela taxa do dia",
             }),
@@ -745,6 +824,7 @@ const dashboardSettings = {
                     en: "{{date}} rate",
                     de: "Kurs vom {{date}}",
                     es: "Tasa del {{date}}",
+                    "es-ES": "Tipo de cambio del {{date}}",
                     fr: "Taux du {{date}}",
                     pt: "Taxa de {{date}}",
                 })
@@ -770,6 +850,7 @@ const dashboardSettings = {
                 en: "Totals convert to it at each day's rate",
                 de: "Summen werden zum Kurs des jeweiligen Tages in diese Währung umgerechnet",
                 es: "Los totales se convierten a ella con la tasa de cada día",
+                "es-ES": "Los totales se convierten a ella con el tipo de cambio de cada día",
                 fr: "Les totaux sont convertis au taux de chaque jour",
                 pt: "Os totais são convertidos com a cotação de cada dia",
             }),
@@ -780,6 +861,7 @@ const dashboardSettings = {
                 es: "Buscar monedas",
                 fr: "Rechercher une devise",
                 pt: "Buscar moedas",
+                "pt-PT": "Pesquisar moedas",
             }),
             use: insert(
                 t({
@@ -795,6 +877,7 @@ const dashboardSettings = {
                     en: "Add {{code}}",
                     de: "{{code}} hinzufügen",
                     es: "Agregar {{code}}",
+                    "es-ES": "Añadir {{code}}",
                     fr: "Ajouter {{code}}",
                     pt: "Adicionar {{code}}",
                 })

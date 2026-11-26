@@ -25,15 +25,30 @@ const plan = {
             fr: "Réessayer",
             pt: "Tentar novamente",
         }),
-        opening: t({ en: "Opening…", de: "Wird geöffnet…", es: "Abriendo…", fr: "Ouverture…", pt: "Abrindo…" }),
+        opening: t({
+            en: "Opening…",
+            de: "Wird geöffnet…",
+            es: "Abriendo…",
+            fr: "Ouverture…",
+            pt: "Abrindo…",
+            "pt-PT": "A abrir…",
+        }),
         restoring: t({
             en: "Restoring…",
             de: "Wird wiederhergestellt…",
             es: "Restaurando…",
             fr: "Restauration…",
             pt: "Restaurando…",
+            "pt-PT": "A restaurar…",
         }),
-        loadingPlan: t({ en: "Loading…", de: "Wird geladen…", es: "Cargando…", fr: "Chargement…", pt: "Carregando…" }),
+        loadingPlan: t({
+            en: "Loading…",
+            de: "Wird geladen…",
+            es: "Cargando…",
+            fr: "Chargement…",
+            pt: "Carregando…",
+            "pt-PT": "A carregar…",
+        }),
         plan: t({ en: "Plan", de: "Plan", es: "Plan", fr: "Forfait", pt: "Plano" }),
         price: t({ en: "Price", de: "Preis", es: "Precio", fr: "Prix", pt: "Preço" }),
         paid: t({ en: "Paid", de: "Bezahlt", es: "Pagado", fr: "Payé", pt: "Pago" }),
@@ -91,6 +106,7 @@ const plan = {
                 es: "Mientras sigas en la lista",
                 fr: "Tant que vous restez sur la liste",
                 pt: "Enquanto você estiver na lista",
+                "pt-PT": "Enquanto estiver na lista",
             }),
         },
         unbilled: {
@@ -107,6 +123,7 @@ const plan = {
                 en: "This server sells no Pro. Ask its admin to add your account.",
                 de: "Dieser Server verkauft kein Pro. Bitte den Admin, dein Konto hinzuzufügen.",
                 es: "Este servidor no vende Pro. Pídele a su admin que agregue tu cuenta.",
+                "es-ES": "Este servidor no vende Pro. Pídele a su admin que añada tu cuenta.",
                 fr: "Ce serveur ne vend pas Pro. Demandez à son admin d'ajouter votre compte.",
                 pt: "Este servidor não vende o Pro. Peça ao admin para adicionar sua conta.",
             }),
@@ -188,6 +205,7 @@ const plan = {
                 es: "Pro se renueva el {{date}}. Cancela antes y no se te cobrará.",
                 fr: "Pro se renouvelle le {{date}}. Résiliez avant et vous ne serez pas débité.",
                 pt: "O Pro renova em {{date}}. Cancele antes e você não será cobrado.",
+                "pt-PT": "O Pro renova em {{date}}. Cancele antes e não será cobrado.",
             })
         ),
         trialFooter: t({
@@ -196,6 +214,8 @@ const plan = {
             es: "Cuando termine la prueba gratis pasa a ser una suscripción de pago, salvo que canceles antes.",
             fr: "À la fin de l'essai gratuit, il devient un abonnement payant, sauf si vous résiliez avant.",
             pt: "Quando o teste grátis terminar, ele vira uma assinatura paga, a menos que você cancele antes.",
+            "pt-PT":
+                "Quando o período experimental terminar, passa a ser uma subscrição paga, a menos que cancele antes.",
         }),
         renewsFooter: insert(
             t({
@@ -212,6 +232,7 @@ const plan = {
             es: "Después, la app web se bloquea y tu teléfono pasa a Gratis.",
             fr: "Ensuite, l'application web se verrouille et votre téléphone passe à Gratuit.",
             pt: "Depois disso, o app web é bloqueado e seu celular passa para o Grátis.",
+            "pt-PT": "Depois disso, a app web é bloqueada e seu telemóvel passa para o Grátis.",
         }),
         manageBilling: t({
             en: "Manage billing",
@@ -226,6 +247,7 @@ const plan = {
             es: "Cancelar suscripción",
             fr: "Résilier l'abonnement",
             pt: "Cancelar assinatura",
+            "pt-PT": "Cancelar subscrição",
         }),
         cancelTrial: t({
             en: "Cancel trial",
@@ -242,6 +264,7 @@ const plan = {
                 es: "¿Cancelar tu suscripción?",
                 fr: "Résilier votre abonnement ?",
                 pt: "Cancelar sua assinatura?",
+                "pt-PT": "Cancelar sua subscrição?",
             }),
             body: insert(
                 t({
@@ -250,6 +273,8 @@ const plan = {
                     es: "Pro sigue activo hasta el {{date}}. Después, la app web se bloquea, tu teléfono pasa a Gratis y no te cobramos más.",
                     fr: "Pro reste actif jusqu'au {{date}}. Ensuite, l'application web se verrouille, votre téléphone passe à Gratuit et nous ne vous débitons plus.",
                     pt: "O Pro continua ativo até {{date}}. Depois, o app web é bloqueado, seu celular passa para o Grátis e não cobramos mais.",
+                    "pt-PT":
+                        "O Pro continua ativo até {{date}}. Depois, a app web é bloqueada, seu telemóvel passa para o Grátis e não cobramos mais.",
                 })
             ),
             sync: t({
@@ -266,6 +291,7 @@ const plan = {
                 es: "Registro automático / mes",
                 fr: "Saisie auto / mois",
                 pt: "Registro automático / mês",
+                "pt-PT": "Registo automático / mês",
             }),
             budgets: t({
                 en: "Category budgets",
@@ -289,6 +315,7 @@ const plan = {
                 es: "Lo que usas",
                 fr: "Ce que vous utilisez",
                 pt: "O que você usa",
+                "pt-PT": "O que usa",
             }),
             onFree: t({
                 en: "What changes on Free",
@@ -312,6 +339,7 @@ const plan = {
                 es: "Registro automático este mes",
                 fr: "Saisie auto ce mois-ci",
                 pt: "Registro automático este mês",
+                "pt-PT": "Registo automático este mês",
             }),
             autoLogOnPhone: t({
                 en: "Auto-log runs on your phone, and only the phone counts it for now.",
@@ -319,6 +347,7 @@ const plan = {
                 es: "El registro automático funciona en tu teléfono, y por ahora solo el teléfono lo cuenta.",
                 fr: "La saisie auto fonctionne sur votre téléphone, et pour l'instant seul le téléphone la compte.",
                 pt: "O registro automático funciona no seu celular, e por enquanto só o celular o conta.",
+                "pt-PT": "O registo automático funciona no seu telemóvel, e por enquanto só o telemóvel o conta.",
             }),
             captures: t({
                 en: "Captures, 30 days",
@@ -339,8 +368,10 @@ const plan = {
                 en: "Installment apps",
                 de: "Ratenzahlungs-Apps",
                 es: "Apps de cuotas",
+                "es-ES": "Apps de pago a plazos",
                 fr: "Applis de paiement échelonné",
                 pt: "Apps de parcelas",
+                "pt-PT": "Apps de prestações",
             }),
             payoffPlans: t({
                 en: "Payoff plans",
@@ -348,6 +379,7 @@ const plan = {
                 es: "Planes de pago",
                 fr: "Plans de remboursement",
                 pt: "Planos de quitação",
+                "pt-PT": "Planos de liquidação",
             }),
             currencies: t({
                 en: "Account currencies",
@@ -376,6 +408,7 @@ const plan = {
                 es: "Conexión con Notion",
                 fr: "Connexion Notion",
                 pt: "Conexão com o Notion",
+                "pt-PT": "Ligação ao Notion",
             }),
             on: t({ en: "On", de: "An", es: "Activado", fr: "Activé", pt: "Ativado" }),
             off: t({ en: "Off", de: "Aus", es: "Desactivado", fr: "Désactivé", pt: "Desativado" }),
@@ -394,6 +427,7 @@ const plan = {
                 es: "Todo se registra solo",
                 fr: "Tout s'enregistre",
                 pt: "Tudo se registra sozinho",
+                "pt-PT": "Tudo se regista sozinho",
             }),
             logsHint: t({
                 en: "Free stops at 30 a month",
@@ -420,8 +454,10 @@ const plan = {
                 en: "Every installment plan",
                 de: "Jeder Ratenplan",
                 es: "Todos los planes de cuotas",
+                "es-ES": "Todos los planes de plazos",
                 fr: "Tous les paiements échelonnés",
                 pt: "Todos os planos de parcelas",
+                "pt-PT": "Todos os planos de prestações",
             }),
             installmentsHint: t({
                 en: "Free tracks 2",
@@ -436,6 +472,7 @@ const plan = {
                 es: "Sincroniza con tu otro teléfono",
                 fr: "Synchro avec votre autre téléphone",
                 pt: "Sincronize com seu outro celular",
+                "pt-PT": "Sincronize com o seu outro telemóvel",
             }),
             syncHint: t({
                 en: "And a backup if you lose this one",
@@ -443,6 +480,7 @@ const plan = {
                 es: "Y una copia si pierdes este",
                 fr: "Et une sauvegarde si vous perdez celui-ci",
                 pt: "E um backup se você perder este",
+                "pt-PT": "E um backup se perder este",
             }),
         },
         freeTrial: t({
@@ -498,6 +536,7 @@ const plan = {
                     es: "Compraste Pro en tu iPhone, así que Apple lo factura. Cámbialo o cancélalo allí.",
                     fr: "Vous avez acheté Pro sur votre iPhone, Apple le facture donc. Modifiez-le ou résiliez-le là-bas.",
                     pt: "Você comprou o Pro no iPhone, então a Apple faz a cobrança. Altere ou cancele por lá.",
+                    "pt-PT": "Comprou o Pro no iPhone, então a Apple faz a cobrança. Altere ou cancele por lá.",
                 }),
                 step1: t({
                     en: "Open Settings on your iPhone",
@@ -512,6 +551,7 @@ const plan = {
                     es: "Toca tu nombre y luego Suscripciones",
                     fr: "Touchez votre nom, puis Abonnements",
                     pt: "Toque no seu nome e em Assinaturas",
+                    "pt-PT": "Toque no seu nome e em Subscrições",
                 }),
                 footer: t({
                     en: "Subscriptions renew automatically until you cancel them.",
@@ -519,6 +559,7 @@ const plan = {
                     es: "Las suscripciones se renuevan automáticamente hasta que las canceles.",
                     fr: "Les abonnements se renouvellent automatiquement jusqu'à leur résiliation.",
                     pt: "As assinaturas renovam automaticamente até você cancelar.",
+                    "pt-PT": "As subscrições renovam automaticamente até cancelar.",
                 }),
                 open: t({
                     en: "Open App Store",
@@ -541,6 +582,7 @@ const plan = {
                         es: "Pagaste una sola vez a través de Apple, así que no hay ninguna suscripción que administrar ni cancelar.",
                         fr: "Vous avez payé une seule fois via Apple : il n'y a donc aucun abonnement à gérer ni à résilier.",
                         pt: "Você pagou uma única vez pela Apple, então não há assinatura para gerenciar nem cancelar.",
+                        "pt-PT": "Pagou uma única vez pela Apple, então não há subscrição para gerenciar nem cancelar.",
                     }),
                 },
             },
@@ -565,6 +607,7 @@ const plan = {
                     es: "Compraste Pro en tu Android, así que Google lo factura. Cámbialo o cancélalo allí.",
                     fr: "Vous avez acheté Pro sur votre téléphone Android, Google le facture donc. Modifiez-le ou résiliez-le là-bas.",
                     pt: "Você comprou o Pro no Android, então o Google faz a cobrança. Altere ou cancele por lá.",
+                    "pt-PT": "Comprou o Pro no Android, então o Google faz a cobrança. Altere ou cancele por lá.",
                 }),
                 step1: t({
                     en: "Open Google Play and tap your profile",
@@ -579,6 +622,7 @@ const plan = {
                     es: "Toca Pagos y suscripciones y luego Suscripciones",
                     fr: "Touchez Paiements et abonnements, puis Abonnements",
                     pt: "Toque em Pagamentos e assinaturas e depois em Assinaturas",
+                    "pt-PT": "Toque em Pagamentos e subscrições e depois em Subscrições",
                 }),
                 footer: t({
                     en: "Subscriptions renew automatically until you cancel them. Cancel anytime in Google Play.",
@@ -586,6 +630,8 @@ const plan = {
                     es: "Las suscripciones se renuevan automáticamente hasta que las canceles. Cancela cuando quieras en Google Play.",
                     fr: "Les abonnements se renouvellent automatiquement jusqu'à leur résiliation. Résiliez à tout moment dans Google Play.",
                     pt: "As assinaturas renovam automaticamente até você cancelar. Cancele quando quiser no Google Play.",
+                    "pt-PT":
+                        "As subscrições renovam automaticamente até cancelar. Cancele quando quiser no Google Play.",
                 }),
                 open: t({
                     en: "Open Google Play",
@@ -608,6 +654,8 @@ const plan = {
                         es: "Pagaste una sola vez a través de Google, así que no hay ninguna suscripción que administrar ni cancelar.",
                         fr: "Vous avez payé une seule fois via Google : il n'y a donc aucun abonnement à gérer ni à résilier.",
                         pt: "Você pagou uma única vez pelo Google, então não há assinatura para gerenciar nem cancelar.",
+                        "pt-PT":
+                            "Pagou uma única vez pelo Google, então não há subscrição para gerenciar nem cancelar.",
                     }),
                 },
             },

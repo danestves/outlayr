@@ -11,7 +11,7 @@ const dashboardGoals = {
                 fr: "Après ceci",
                 pt: "Depois disso",
             }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             arrives: t({ en: "Arrives", de: "Kommt an", es: "Llega", fr: "Arrive", pt: "Chega" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
             from: t({ en: "From", de: "Von", es: "Desde", fr: "Depuis", pt: "De" }),
@@ -20,6 +20,7 @@ const dashboardGoals = {
                 en: "No exchange rate for that day yet.",
                 de: "Für diesen Tag gibt es noch keinen Wechselkurs.",
                 es: "Aún no hay tasa de cambio para ese día.",
+                "es-ES": "Aún No hay tipo de cambio de cambio para ese día.",
                 fr: "Pas encore de taux de change pour ce jour.",
                 pt: "Ainda não há cotação para esse dia.",
             }),
@@ -27,6 +28,7 @@ const dashboardGoals = {
                 en: "Add another account to move money from.",
                 de: "Füge ein weiteres Konto hinzu, von dem du Geld verschieben kannst.",
                 es: "Agrega otra cuenta desde la cual mover dinero.",
+                "es-ES": "Añade otra cuenta desde la cual mover dinero.",
                 fr: "Ajoutez un autre compte d'où transférer l'argent.",
                 pt: "Adicione outra conta de onde mover o dinheiro.",
             }),
@@ -36,6 +38,7 @@ const dashboardGoals = {
                 es: "Se registra como transferencia, porque el progreso es el saldo de esta cuenta.",
                 fr: "Enregistré comme virement, car la progression est le solde de ce compte.",
                 pt: "Registrado como transferência, porque o progresso é o saldo desta conta.",
+                "pt-PT": "Registado como transferência, porque o progresso é o saldo desta conta.",
             }),
             ofTarget: insert(
                 t({
@@ -60,6 +63,7 @@ const dashboardGoals = {
                     en: "Added {{amount}} to {{name}}",
                     de: "{{amount}} zu {{name}} hinzugefügt",
                     es: "Agregaste {{amount}} a {{name}}",
+                    "es-ES": "Añadiste {{amount}} a {{name}}",
                     fr: "{{amount}} ajoutés à {{name}}",
                     pt: "{{amount}} adicionados a {{name}}",
                 })
@@ -69,6 +73,7 @@ const dashboardGoals = {
                     en: "Add {{amount}}",
                     de: "{{amount}} hinzufügen",
                     es: "Agregar {{amount}}",
+                    "es-ES": "Añadir {{amount}}",
                     fr: "Ajouter {{amount}}",
                     pt: "Adicionar {{amount}}",
                 })
@@ -77,6 +82,7 @@ const dashboardGoals = {
                 en: "Add money",
                 de: "Geld hinzufügen",
                 es: "Agregar dinero",
+                "es-ES": "Añadir dinero",
                 fr: "Ajouter de l'argent",
                 pt: "Adicionar dinheiro",
             }),
@@ -85,6 +91,7 @@ const dashboardGoals = {
                     en: "Add money to {{name}}",
                     de: "Geld zu {{name}} hinzufügen",
                     es: "Agregar dinero a {{name}}",
+                    "es-ES": "Añadir dinero a {{name}}",
                     fr: "Ajouter de l'argent à {{name}}",
                     pt: "Adicionar dinheiro a {{name}}",
                 })
@@ -95,6 +102,7 @@ const dashboardGoals = {
                 en: "Enter an amount above {{zero}}.",
                 de: "Gib einen Betrag über {{zero}} ein.",
                 es: "Escribe un monto mayor que {{zero}}.",
+                "es-ES": "Escribe un importe mayor que {{zero}}.",
                 fr: "Saisissez un montant supérieur à {{zero}}.",
                 pt: "Digite um valor acima de {{zero}}.",
             })
@@ -113,8 +121,11 @@ const dashboardGoals = {
                 en: "No exchange rate for this account yet, so there is nothing to plot against the target.",
                 de: "Für dieses Konto gibt es noch keinen Wechselkurs, deshalb lässt sich nichts gegen das Ziel darstellen.",
                 es: "Aún no hay tasa de cambio para esta cuenta, así que no hay nada que trazar frente al objetivo.",
+                "es-ES":
+                    "Aún no hay tipo de cambio para esta cuenta, así que no hay nada que trazar frente al objetivo.",
                 fr: "Pas encore de taux de change pour ce compte : rien à comparer à l'objectif.",
                 pt: "Ainda não há cotação para esta conta, então não há nada para comparar com o objetivo.",
+                "pt-PT": "Ainda não há cotação para esta conta, por isso não há nada para comparar com o valor-alvo.",
             }),
             pace: t({ en: "Pace", de: "Tempo", es: "Ritmo", fr: "Rythme", pt: "Ritmo" }),
             progress: t({ en: "Progress", de: "Fortschritt", es: "Progreso", fr: "Progression", pt: "Progresso" }),
@@ -152,7 +163,14 @@ const dashboardGoals = {
         close: t({ en: "Close", de: "Schließen", es: "Cerrar", fr: "Fermer", pt: "Fechar" }),
         columns: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
-            added: t({ en: "Added", de: "Hinzugefügt", es: "Agregado", fr: "Ajouté", pt: "Adicionado" }),
+            added: t({
+                en: "Added",
+                de: "Hinzugefügt",
+                es: "Agregado",
+                "es-ES": "Añadido",
+                fr: "Ajouté",
+                pt: "Adicionado",
+            }),
             balance: t({ en: "Balance", de: "Kontostand", es: "Saldo", fr: "Solde", pt: "Saldo" }),
             by: t({ en: "By", de: "Bis", es: "Para", fr: "Pour le", pt: "Até" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
@@ -163,7 +181,7 @@ const dashboardGoals = {
             pace: t({ en: "Pace", de: "Tempo", es: "Ritmo", fr: "Rythme", pt: "Ritmo" }),
             progress: t({ en: "Progress", de: "Fortschritt", es: "Progreso", fr: "Progression", pt: "Progresso" }),
             saved: t({ en: "Saved", de: "Gespart", es: "Ahorrado", fr: "Épargné", pt: "Guardado" }),
-            status: t({ en: "Status", de: "Status", es: "Estado", fr: "Statut", pt: "Status" }),
+            status: t({ en: "Status", de: "Status", es: "Estado", fr: "Statut", pt: "Status", "pt-PT": "Estado" }),
             target: t({ en: "Target", de: "Ziel", es: "Objetivo", fr: "Cible", pt: "Objetivo" }),
         },
         contributions: {
@@ -210,6 +228,7 @@ const dashboardGoals = {
                 es: "Eliminar meta",
                 fr: "Supprimer l'objectif",
                 pt: "Apagar meta",
+                "pt-PT": "Apagar objetivo",
             }),
             failed: t({
                 en: "Couldn't delete the goal.",
@@ -233,6 +252,7 @@ const dashboardGoals = {
                 es: "Meta eliminada",
                 fr: "Objectif supprimé",
                 pt: "Meta apagada",
+                "pt-PT": "Objetivo apagado",
             }),
         },
         detail: {
@@ -272,6 +292,7 @@ const dashboardGoals = {
                 en: "No rate yet",
                 de: "Noch kein Kurs",
                 es: "Sin tasa aún",
+                "es-ES": "Sin tipo de cambio aún",
                 fr: "Pas encore de taux",
                 pt: "Sem cotação ainda",
             }),
@@ -301,7 +322,7 @@ const dashboardGoals = {
                 pt: "Além do objetivo",
             }),
             perMonth: t({ en: "Per month", de: "Pro Monat", es: "Por mes", fr: "Par mois", pt: "Por mês" }),
-            status: t({ en: "Status", de: "Status", es: "Estado", fr: "Statut", pt: "Status" }),
+            status: t({ en: "Status", de: "Status", es: "Estado", fr: "Statut", pt: "Status", "pt-PT": "Estado" }),
             target: t({ en: "Target", de: "Ziel", es: "Objetivo", fr: "Cible", pt: "Objetivo" }),
             toMakeDate: t({
                 en: "to make the date",
@@ -319,6 +340,7 @@ const dashboardGoals = {
                 es: "El progreso es el saldo de esta cuenta, así que no se puede cambiar.",
                 fr: "La progression est le solde de ce compte, il ne peut donc pas être changé.",
                 pt: "O progresso é o saldo desta conta, então ela não pode ser trocada.",
+                "pt-PT": "O progresso é o saldo desta conta, por isso não pode ser trocada.",
             }),
             accountRequired: t({
                 en: "Pick an account.",
@@ -336,7 +358,7 @@ const dashboardGoals = {
                     pt: "{{account}} já tem esse valor",
                 })
             ),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             by: t({ en: "By", de: "Bis", es: "Para", fr: "Pour le", pt: "Até" }),
             committing: insert(
                 t({
@@ -345,6 +367,7 @@ const dashboardGoals = {
                     es: "Comprometiendo {{amount}} al mes",
                     fr: "Engagement de {{amount}} par mois",
                     pt: "Comprometendo {{amount}} por mês",
+                    "pt-PT": "A comprometer {{amount}} por mês",
                 })
             ),
             createAccount: t({
@@ -387,6 +410,7 @@ const dashboardGoals = {
                 es: "Eliminar meta",
                 fr: "Supprimer l'objectif",
                 pt: "Apagar meta",
+                "pt-PT": "Apagar objetivo",
             }),
             editTitle: t({
                 en: "Edit goal",
@@ -411,6 +435,7 @@ const dashboardGoals = {
                 es: "Nueva meta",
                 fr: "Nouvel objectif",
                 pt: "Nova meta",
+                "pt-PT": "Novo objetivo",
             }),
             noAccounts: t({
                 en: "No accounts yet",
@@ -433,6 +458,7 @@ const dashboardGoals = {
                 es: "No se pudo guardar la meta. Inténtalo de nuevo.",
                 fr: "Impossible d'enregistrer l'objectif. Réessayez.",
                 pt: "Não foi possível salvar a meta. Tente de novo.",
+                "pt-PT": "Não foi possível guardar a meta. Tente de novo.",
             }),
             saveGoal: t({
                 en: "Save goal",
@@ -440,6 +466,7 @@ const dashboardGoals = {
                 es: "Guardar meta",
                 fr: "Enregistrer",
                 pt: "Salvar meta",
+                "pt-PT": "Guardar objetivo",
             }),
             setGoal: t({
                 en: "Set goal",
@@ -447,6 +474,7 @@ const dashboardGoals = {
                 es: "Crear meta",
                 fr: "Créer l'objectif",
                 pt: "Criar meta",
+                "pt-PT": "Criar objetivo",
             }),
             summary: insert(
                 t({
@@ -462,6 +490,8 @@ const dashboardGoals = {
                     en: "{{account}}'s balance can't be converted yet, and a goal freezes it as its starting point. Try again once its exchange rate is available.",
                     de: "Der Kontostand von {{account}} lässt sich noch nicht umrechnen, und ein Sparziel hält ihn als Startpunkt fest. Versuch es noch mal, sobald sein Wechselkurs verfügbar ist.",
                     es: "El saldo de {{account}} aún no se puede convertir, y una meta lo congela como punto de partida. Inténtalo de nuevo cuando haya tasa de cambio.",
+                    "es-ES":
+                        "El saldo de {{account}} aún no se puede convertir, y una meta lo congela como punto de partida. Inténtalo de nuevo cuando haya tipo de cambio.",
                     fr: "Le solde de {{account}} ne peut pas encore être converti, et un objectif le fige comme point de départ. Réessayez quand son taux de change sera disponible.",
                     pt: "O saldo de {{account}} ainda não pode ser convertido, e uma meta o congela como ponto de partida. Tente de novo quando houver cotação.",
                 })
@@ -482,6 +512,7 @@ const dashboardGoals = {
                     es: "Guardaste {{amount}} en {{month}}. Ponle nombre a para qué es.",
                     fr: "Vous avez gardé {{amount}} en {{month}}. Dites à quoi il servira.",
                     pt: "Você guardou {{amount}} em {{month}}. Dê um nome para o que ele é.",
+                    "pt-PT": "Guardou {{amount}} em {{month}}. Dê um nome para o que ele é.",
                 })
             ),
             line: t({
@@ -563,6 +594,7 @@ const dashboardGoals = {
                 en: "Add money",
                 de: "Geld hinzufügen",
                 es: "Agregar dinero",
+                "es-ES": "Añadir dinero",
                 fr: "Ajouter de l'argent",
                 pt: "Adicionar dinheiro",
             }),
@@ -585,11 +617,19 @@ const dashboardGoals = {
                 en: "Added each month",
                 de: "Jeden Monat hinzugefügt",
                 es: "Agregado cada mes",
+                "es-ES": "Añadido cada mes",
                 fr: "Ajouté chaque mois",
                 pt: "Adicionado por mês",
             }),
         },
-        newGoal: t({ en: "New goal", de: "Neues Sparziel", es: "Nueva meta", fr: "Nouvel objectif", pt: "Nova meta" }),
+        newGoal: t({
+            en: "New goal",
+            de: "Neues Sparziel",
+            es: "Nueva meta",
+            fr: "Nouvel objectif",
+            pt: "Nova meta",
+            "pt-PT": "Novo objetivo",
+        }),
         pace: {
             ahead: insert(
                 t({
@@ -609,9 +649,23 @@ const dashboardGoals = {
                     pt: "{{amount}} atrás",
                 })
             ),
-            noRate: t({ en: "No rate", de: "Kein Kurs", es: "Sin tasa", fr: "Sans taux", pt: "Sem cotação" }),
+            noRate: t({
+                en: "No rate",
+                de: "Kein Kurs",
+                es: "Sin tasa",
+                "es-ES": "Sin tipo de cambio",
+                fr: "Sans taux",
+                pt: "Sem cotação",
+            }),
             onPace: t({ en: "On pace", de: "Im Plan", es: "A buen ritmo", fr: "Dans les temps", pt: "No ritmo" }),
-            reached: t({ en: "Reached", de: "Erreicht", es: "Alcanzada", fr: "Atteint", pt: "Alcançada" }),
+            reached: t({
+                en: "Reached",
+                de: "Erreicht",
+                es: "Alcanzada",
+                fr: "Atteint",
+                pt: "Alcançada",
+                "pt-PT": "Alcançado",
+            }),
         },
         sections: {
             active: t({ en: "Active", de: "Aktiv", es: "Activas", fr: "En cours", pt: "Ativas" }),
@@ -640,7 +694,7 @@ const dashboardGoals = {
             target: t({ en: "Target", de: "Ziel", es: "Objetivo", fr: "Cible", pt: "Objetivo" }),
             title: t({ en: "The goal", de: "Das Sparziel", es: "La meta", fr: "L'objectif", pt: "A meta" }),
         },
-        title: t({ en: "Goals", de: "Sparziele", es: "Metas", fr: "Objectifs", pt: "Metas" }),
+        title: t({ en: "Goals", de: "Sparziele", es: "Metas", fr: "Objectifs", pt: "Metas", "pt-PT": "Objetivos" }),
         toast: {
             created: t({
                 en: "Goal set",
@@ -655,6 +709,7 @@ const dashboardGoals = {
                 es: "Meta guardada",
                 fr: "Objectif enregistré",
                 pt: "Meta salva",
+                "pt-PT": "Meta guardada",
             }),
         },
     },

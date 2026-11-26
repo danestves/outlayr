@@ -31,6 +31,7 @@ const dashboardData = {
                 es: "Archivo completo",
                 fr: "Archive complète",
                 pt: "Arquivo completo",
+                "pt-PT": "Ficheiro completo",
             }),
             archiveHint: t({
                 en: "Every entry, category and budget. The file to restore from.",
@@ -38,6 +39,7 @@ const dashboardData = {
                 es: "Cada registro, categoría y presupuesto. El archivo para restaurar.",
                 fr: "Chaque opération, catégorie et budget. Le fichier à restaurer.",
                 pt: "Cada lançamento, categoria e orçamento. O arquivo para restaurar.",
+                "pt-PT": "Cada registo, categoria e orçamento. O ficheiro para restaurar.",
             }),
             range: t({ en: "Range", de: "Zeitraum", es: "Período", fr: "Période", pt: "Período" }),
             allTime: t({ en: "All time", de: "Gesamte Zeit", es: "Todo", fr: "Tout", pt: "Tudo" }),
@@ -73,6 +75,7 @@ const dashboardData = {
                 es: "Exportar archivo",
                 fr: "Exporter l'archive",
                 pt: "Exportar arquivo",
+                "pt-PT": "Exportar ficheiro",
             }),
             notInFile: t({
                 en: "Not in the file",
@@ -80,6 +83,7 @@ const dashboardData = {
                 es: "No está en el archivo",
                 fr: "Absent du fichier",
                 pt: "Fora do arquivo",
+                "pt-PT": "Fora do ficheiro",
             }),
             leftNotes: t({
                 en: "Notes, the longer text under a transaction",
@@ -102,6 +106,7 @@ const dashboardData = {
                 es: "Calendarios de suscripciones y sus recordatorios",
                 fr: "Échéances d'abonnements et leurs rappels",
                 pt: "Agendas de assinaturas e seus lembretes",
+                "pt-PT": "Agendas de subscrições e seus lembretes",
             }),
             columns: t({ en: "Columns", de: "Spalten", es: "Columnas", fr: "Colonnes", pt: "Colunas" }),
             download: t({ en: "Download", de: "Herunterladen", es: "Descargar", fr: "Télécharger", pt: "Baixar" }),
@@ -111,6 +116,7 @@ const dashboardData = {
                 es: "Preparando el archivo completo…",
                 fr: "Préparation de l'archive…",
                 pt: "Preparando o arquivo completo…",
+                "pt-PT": "A preparar o ficheiro completo…",
             }),
             wholeLedger: t({
                 en: "Your whole ledger, deleted entries included",
@@ -118,6 +124,7 @@ const dashboardData = {
                 es: "Todo tu registro, con las entradas eliminadas",
                 fr: "Tout votre journal, opérations supprimées comprises",
                 pt: "Todos os seus lançamentos, inclusive os apagados",
+                "pt-PT": "Todos os seus registos, inclusive os apagados",
             }),
             failed: t({
                 en: "Export failed. Try again.",
@@ -141,6 +148,7 @@ const dashboardData = {
                 es: "Reemplazando",
                 fr: "Remplacement en cours",
                 pt: "Substituindo",
+                "pt-PT": "A substituir",
             }),
             title: t({
                 en: "Restore everything",
@@ -153,8 +161,12 @@ const dashboardData = {
                 en: "A full archive replaces this ledger with the one in the file, on every device you sync. It doesn't add entries.",
                 de: "Ein vollständiges Archiv ersetzt dieses Haushaltsbuch durch das aus der Datei, auf jedem Gerät, das du synchronisierst. Es fügt keine Einträge hinzu.",
                 es: "Un archivo completo reemplaza este registro por el del archivo, en todos los dispositivos que sincronizas. No agrega registros.",
+                "es-ES":
+                    "Un archivo completo reemplaza este registro por el del archivo, en todos los dispositivos que sincronizas. No añade registros.",
                 fr: "Une archive complète remplace ce journal par celui du fichier, sur tous vos appareils synchronisés. Elle n'ajoute pas d'opérations.",
                 pt: "Um arquivo completo substitui estes lançamentos pelos do arquivo, em todos os dispositivos sincronizados. Ele não adiciona lançamentos.",
+                "pt-PT":
+                    "Um ficheiro completo substitui estes registos pelos do ficheiro, em todos os dispositivos sincronizados. Ele não adiciona registos.",
             }),
             action: t({
                 en: "Restore from an archive",
@@ -162,6 +174,7 @@ const dashboardData = {
                 es: "Restaurar desde un archivo",
                 fr: "Restaurer depuis une archive",
                 pt: "Restaurar de um arquivo",
+                "pt-PT": "Restaurar de um ficheiro",
             }),
             drop: t({
                 en: "Drop the file here",
@@ -169,6 +182,7 @@ const dashboardData = {
                 es: "Suelta el archivo aquí",
                 fr: "Déposez le fichier ici",
                 pt: "Solte o arquivo aqui",
+                "pt-PT": "Solte o ficheiro aqui",
             }),
             choose: t({
                 en: "Choose file",
@@ -176,6 +190,7 @@ const dashboardData = {
                 es: "Elegir archivo",
                 fr: "Choisir un fichier",
                 pt: "Escolher arquivo",
+                "pt-PT": "Escolher ficheiro",
             }),
             badTitle: t({
                 en: "That is not an Outlayr archive",
@@ -183,6 +198,7 @@ const dashboardData = {
                 es: "Ese no es un archivo de Outlayr",
                 fr: "Ce n'est pas une archive Outlayr",
                 pt: "Esse não é um arquivo do Outlayr",
+                "pt-PT": "Isto não é um ficheiro do Outlayr",
             }),
             badBody: t({
                 en: "The file could not be read, or it was written by a newer version of the app.",
@@ -190,6 +206,7 @@ const dashboardData = {
                 es: "No se pudo leer el archivo, o lo escribió una versión más reciente de la app.",
                 fr: "Le fichier est illisible, ou il a été créé par une version plus récente de l'app.",
                 pt: "Não foi possível ler o arquivo, ou ele foi gravado por uma versão mais nova do app.",
+                "pt-PT": "Não foi possível ler o ficheiro, ou foi gravado por uma versão mais recente da app.",
             }),
             confirmTitle: t({
                 en: "Replace this ledger?",
@@ -197,6 +214,7 @@ const dashboardData = {
                 es: "¿Reemplazar este registro?",
                 fr: "Remplacer ce journal ?",
                 pt: "Substituir estes lançamentos?",
+                "pt-PT": "Substituir estes registos?",
             }),
             confirmBody: insert(
                 t({
@@ -205,6 +223,8 @@ const dashboardData = {
                     es: "Tu registro, en todos los dispositivos que sincronizas, se reemplaza por las {{count}} filas del archivo. Esto no se puede deshacer.",
                     fr: "Votre journal, sur tous vos appareils synchronisés, sera remplacé par les {{count}} lignes de l'archive. Cette action est irréversible.",
                     pt: "Seus lançamentos, em todos os dispositivos sincronizados, são substituídos pelas {{count}} linhas do arquivo. Isso não pode ser desfeito.",
+                    "pt-PT":
+                        "Seus registos, em todos os dispositivos sincronizados, são substituídos pelas {{count}} linhas do ficheiro. Isso não pode ser desfeito.",
                 })
             ),
             replace: t({ en: "Replace", de: "Ersetzen", es: "Reemplazar", fr: "Remplacer", pt: "Substituir" }),
@@ -224,6 +244,7 @@ const dashboardData = {
                     es: "Restaurando {{count}} filas…",
                     fr: "Restauration de {{count}} lignes…",
                     pt: "Restaurando {{count}} linhas…",
+                    "pt-PT": "A restaurar {{count}} linhas…",
                 })
             ),
             done: t({
@@ -232,6 +253,7 @@ const dashboardData = {
                 es: "Registro reemplazado",
                 fr: "Journal remplacé",
                 pt: "Lançamentos substituídos",
+                "pt-PT": "Registos substituídos",
             }),
             failed: t({
                 en: "Restore didn't finish. Try again.",
@@ -246,6 +268,7 @@ const dashboardData = {
                 es: "Este registro",
                 fr: "Ce journal",
                 pt: "Estes lançamentos",
+                "pt-PT": "Estes registos",
             }),
             notChanged: t({
                 en: "Not changed",
@@ -267,6 +290,7 @@ const dashboardData = {
                 es: "Transacciones",
                 fr: "Opérations",
                 pt: "Lançamentos",
+                "pt-PT": "Registos",
             }),
             categories: t({ en: "Categories", de: "Kategorien", es: "Categorías", fr: "Catégories", pt: "Categorias" }),
             budgets: t({ en: "Budgets", de: "Budgets", es: "Presupuestos", fr: "Budgets", pt: "Orçamentos" }),
@@ -277,6 +301,7 @@ const dashboardData = {
                 es: "Exporta un archivo antes si quizás quieras recuperar esto",
                 fr: "Exportez d'abord une archive si vous voulez pouvoir revenir en arrière",
                 pt: "Exporte um arquivo antes se quiser recuperar isto",
+                "pt-PT": "Exporte um ficheiro antes se quiser recuperar isto",
             }),
         },
         deleted: {
@@ -286,6 +311,7 @@ const dashboardData = {
                 es: "Entradas eliminadas",
                 fr: "Opérations supprimées",
                 pt: "Lançamentos apagados",
+                "pt-PT": "Registos apagados",
             }),
             emptyTitle: t({
                 en: "Nothing has been deleted",
@@ -300,6 +326,7 @@ const dashboardData = {
                 es: "Las entradas que elimines llegan aquí y te esperan. Outlayr nunca descarta ninguna.",
                 fr: "Les opérations que vous supprimez arrivent ici et y attendent. Outlayr n'en jette jamais aucune.",
                 pt: "Os lançamentos que você apagar chegam aqui e ficam esperando. O Outlayr nunca joga nenhum fora.",
+                "pt-PT": "Os registos que apagar chegam aqui e ficam a esperar. O Outlayr nunca joga nenhum fora.",
             }),
             footer: t({
                 en: "Restoring puts the entry back where its date belongs. A subscription you ended stays ended.",
@@ -307,13 +334,15 @@ const dashboardData = {
                 es: "Restaurar devuelve la entrada donde le corresponde por fecha. Una suscripción que terminaste sigue terminada.",
                 fr: "La restauration remet l'opération à sa date. Un abonnement que vous avez arrêté le reste.",
                 pt: "Restaurar coloca o lançamento de volta no lugar da data dele. Uma assinatura que você encerrou continua encerrada.",
+                "pt-PT":
+                    "Restaurar coloca o registo de volta no lugar da data dele. Uma subscrição que encerrou continua encerrada.",
             }),
             merchant: t({ en: "Merchant", de: "Händler", es: "Comercio", fr: "Commerçant", pt: "Estabelecimento" }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
             deletedOn: t({ en: "Deleted", de: "Gelöscht", es: "Eliminada", fr: "Supprimée", pt: "Apagado" }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             restore: t({ en: "Restore", de: "Wiederherstellen", es: "Restaurar", fr: "Restaurer", pt: "Restaurar" }),
             loadFailed: t({
                 en: "Couldn't load deleted entries.",
@@ -321,6 +350,7 @@ const dashboardData = {
                 es: "No se pudieron cargar las entradas eliminadas.",
                 fr: "Impossible de charger les opérations supprimées.",
                 pt: "Não foi possível carregar os lançamentos apagados.",
+                "pt-PT": "Não foi possível carregar os registos apagados.",
             }),
             retry: t({
                 en: "Try again",
@@ -335,6 +365,7 @@ const dashboardData = {
                 es: "La entrada no se restauró. No se perdió nada. Inténtalo de nuevo.",
                 fr: "Opération non restaurée. Rien n'est perdu. Réessayez.",
                 pt: "O lançamento não foi restaurado. Nada se perdeu. Tente de novo.",
+                "pt-PT": "O registo não foi restaurado. Nada se perdeu. Tente de novo.",
             }),
         },
         erase: {
@@ -345,6 +376,7 @@ const dashboardData = {
                 es: "transacciones registradas",
                 fr: "opérations saisies",
                 pt: "lançamentos registrados",
+                "pt-PT": "registos efetuados",
             }),
             transactionsOnly: t({
                 en: "Transactions only",
@@ -352,6 +384,7 @@ const dashboardData = {
                 es: "Solo las transacciones",
                 fr: "Opérations uniquement",
                 pt: "Só os lançamentos",
+                "pt-PT": "Só os registos",
             }),
             transactionsOnlyHint: t({
                 en: "Every transaction and recurring template. Budgets and categories are kept.",
@@ -359,6 +392,7 @@ const dashboardData = {
                 es: "Todas las transacciones y plantillas recurrentes. Los presupuestos y las categorías se conservan.",
                 fr: "Toutes les opérations et tous les modèles récurrents. Les budgets et les catégories sont conservés.",
                 pt: "Todos os lançamentos e modelos recorrentes. Orçamentos e categorias são mantidos.",
+                "pt-PT": "Todos os registos e modelos recorrentes. Orçamentos e categorias são mantidos.",
             }),
             everything: t({
                 en: "Transactions and budgets",
@@ -366,11 +400,14 @@ const dashboardData = {
                 es: "Transacciones y presupuestos",
                 fr: "Opérations et budgets",
                 pt: "Lançamentos e orçamentos",
+                "pt-PT": "Registos e orçamentos",
             }),
             everythingHint: t({
                 en: "Also transfers, budgets and photos. Accounts, categories, goals, tags and settings are kept.",
                 de: "Auch Umbuchungen, Budgets und Fotos. Konten, Kategorien, Sparziele, Tags und Einstellungen bleiben erhalten.",
                 es: "También transferencias, presupuestos y fotos. Cuentas, categorías, metas, etiquetas y configuración se conservan.",
+                "es-ES":
+                    "También transferencias, presupuestos y fotos. Cuentas, categorías, metas, etiquetas y ajustes se conservan.",
                 fr: "Aussi les virements, budgets et photos. Comptes, catégories, objectifs, étiquettes et réglages sont conservés.",
                 pt: "Também transferências, orçamentos e fotos. Contas, categorias, metas, tags e ajustes são mantidos.",
             }),
@@ -394,6 +431,7 @@ const dashboardData = {
                 es: "Archivo completo",
                 fr: "Archive complète",
                 pt: "Arquivo completo",
+                "pt-PT": "Ficheiro completo",
             }),
             archiveHint: t({
                 en: "The file to restore from",
@@ -401,6 +439,7 @@ const dashboardData = {
                 es: "El archivo para restaurar",
                 fr: "Le fichier à restaurer",
                 pt: "O arquivo para restaurar",
+                "pt-PT": "O ficheiro para restaurar",
             }),
             export: t({ en: "Export", de: "Exportieren", es: "Exportar", fr: "Exporter", pt: "Exportar" }),
             action: t({ en: "Erase", de: "Löschen", es: "Borrar", fr: "Effacer", pt: "Apagar" }),
@@ -411,6 +450,7 @@ const dashboardData = {
                     es: "Borrar {{count}} transacciones",
                     fr: "Effacer {{count}} opérations",
                     pt: "Apagar {{count}} lançamentos",
+                    "pt-PT": "Apagar {{count}} registos",
                 })
             ),
             confirmTransactionsTitle: t({
@@ -419,6 +459,7 @@ const dashboardData = {
                 es: "¿Borrar las transacciones?",
                 fr: "Effacer les opérations ?",
                 pt: "Apagar os lançamentos?",
+                "pt-PT": "Apagar os registos?",
             }),
             confirmTransactionsBody: t({
                 en: "Every transaction and recurring template will be deleted on every device you sync. Budgets and categories are kept. This can't be undone.",
@@ -426,6 +467,8 @@ const dashboardData = {
                 es: "Se eliminarán todas las transacciones y plantillas recurrentes en todos los dispositivos que sincronizas. Los presupuestos y las categorías se conservan. Esto no se puede deshacer.",
                 fr: "Toutes les opérations et tous les modèles récurrents seront supprimés sur tous vos appareils synchronisés. Les budgets et les catégories sont conservés. Cette action est irréversible.",
                 pt: "Todos os lançamentos e modelos recorrentes serão apagados em todos os dispositivos sincronizados. Orçamentos e categorias são mantidos. Isso não pode ser desfeito.",
+                "pt-PT":
+                    "Todos os registos e modelos recorrentes serão apagados em todos os dispositivos sincronizados. Orçamentos e categorias são mantidos. Isso não pode ser desfeito.",
             }),
             confirmEverythingTitle: t({
                 en: "Erase everything?",
@@ -438,8 +481,12 @@ const dashboardData = {
                 en: "Every transaction, recurring template, transfer, budget and photo will be deleted on every device you sync. Your accounts, categories, savings goals, tags and settings are kept. This can't be undone.",
                 de: "Jeder Eintrag, jede Vorlage für Wiederkehrendes, jede Umbuchung, jedes Budget und jedes Foto wird auf jedem Gerät, das du synchronisierst, gelöscht. Deine Konten, Kategorien, Sparziele, Tags und Einstellungen bleiben erhalten. Das lässt sich nicht rückgängig machen.",
                 es: "Se eliminarán todas las transacciones, plantillas recurrentes, transferencias, presupuestos y fotos en todos los dispositivos que sincronizas. Tus cuentas, categorías, metas de ahorro, etiquetas y configuración se conservan. Esto no se puede deshacer.",
+                "es-ES":
+                    "Se eliminarán todas las transacciones, plantillas recurrentes, transferencias, presupuestos y fotos en todos los dispositivos que sincronizas. Tus cuentas, categorías, metas de ahorro, etiquetas y ajustes se conservan. Esto no se puede deshacer.",
                 fr: "Toutes les opérations, modèles récurrents, virements, budgets et photos seront supprimés sur tous vos appareils synchronisés. Vos comptes, catégories, objectifs d'épargne, étiquettes et réglages sont conservés. Cette action est irréversible.",
                 pt: "Todos os lançamentos, modelos recorrentes, transferências, orçamentos e fotos serão apagados em todos os dispositivos sincronizados. Suas contas, categorias, metas de economia, tags e ajustes são mantidos. Isso não pode ser desfeito.",
+                "pt-PT":
+                    "Todos os registos, modelos recorrentes, transferências, orçamentos e fotos serão apagados em todos os dispositivos sincronizados. Suas contas, categorias, metas de economia, tags e ajustes são mantidos. Isso não pode ser desfeito.",
             }),
             erasing: t({
                 en: "Erasing…",
@@ -447,6 +494,7 @@ const dashboardData = {
                 es: "Borrando…",
                 fr: "Effacement…",
                 pt: "Apagando…",
+                "pt-PT": "A apagar…",
             }),
             word: t({ en: "ERASE", de: "LÖSCHEN", es: "BORRAR", fr: "EFFACER", pt: "APAGAR" }),
             typeBefore: t({ en: "Type", de: "Tippe", es: "Escribe", fr: "Saisissez", pt: "Digite" }),

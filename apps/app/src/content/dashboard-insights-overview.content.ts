@@ -19,7 +19,14 @@ const dashboardInsightsOverview = {
                 fr: "Revenus et net",
                 pt: "Receitas e líquido",
             }),
-            netWorth: t({ en: "Net worth", de: "Vermögen", es: "Patrimonio", fr: "Patrimoine", pt: "Patrimônio" }),
+            netWorth: t({
+                en: "Net worth",
+                de: "Vermögen",
+                es: "Patrimonio",
+                fr: "Patrimoine",
+                pt: "Patrimônio",
+                "pt-PT": "Património",
+            }),
             perDay: insert(
                 t({
                     en: "{{amount}} a day",
@@ -54,9 +61,17 @@ const dashboardInsightsOverview = {
                     es: "{{count}} movimientos",
                     fr: "{{count}} opérations",
                     pt: "{{count}} lançamentos",
+                    "pt-PT": "{{count}} registos",
                 })
             ),
-            entry: t({ en: "1 entry", de: "1 Eintrag", es: "1 movimiento", fr: "1 opération", pt: "1 lançamento" }),
+            entry: t({
+                en: "1 entry",
+                de: "1 Eintrag",
+                es: "1 movimiento",
+                fr: "1 opération",
+                pt: "1 lançamento",
+                "pt-PT": "1 registo",
+            }),
             month: t({
                 en: "Pace, usual spending and answers start after 3 months.",
                 de: "Tempo, übliche Ausgaben und Antworten gibt es nach 3 Monaten.",
@@ -104,9 +119,17 @@ const dashboardInsightsOverview = {
                     es: "{{count}} movimientos",
                     fr: "{{count}} opérations",
                     pt: "{{count}} lançamentos",
+                    "pt-PT": "{{count}} registos",
                 })
             ),
-            entry: t({ en: "1 entry", de: "1 Eintrag", es: "1 movimiento", fr: "1 opération", pt: "1 lançamento" }),
+            entry: t({
+                en: "1 entry",
+                de: "1 Eintrag",
+                es: "1 movimiento",
+                fr: "1 opération",
+                pt: "1 lançamento",
+                "pt-PT": "1 registo",
+            }),
             first: {
                 month: t({
                     en: "Your first month",
@@ -214,6 +237,7 @@ const dashboardInsightsOverview = {
                 es: "Estás gastando como de costumbre",
                 fr: "Vous dépensez comme d'habitude",
                 pt: "Você está gastando como de costume",
+                "pt-PT": "Está a gastar como de costume",
             }),
             chart: t({
                 en: "Spending added up by day",
@@ -228,6 +252,7 @@ const dashboardInsightsOverview = {
                 es: "Gastaste como de costumbre",
                 fr: "Vous avez dépensé comme d'habitude",
                 pt: "Você gastou como de costume",
+                "pt-PT": "Gastou como de costume",
             }),
             closedLess: t({
                 en: "You spent less than usual",
@@ -235,6 +260,7 @@ const dashboardInsightsOverview = {
                 es: "Gastaste menos de lo normal",
                 fr: "Vous avez dépensé moins que d'habitude",
                 pt: "Você gastou menos que o habitual",
+                "pt-PT": "Gastou menos que o habitual",
             }),
             closedLine: insert(
                 t({
@@ -243,6 +269,7 @@ const dashboardInsightsOverview = {
                     es: "{{amount}} en {{period}}. Normalmente gastas {{usual}}.",
                     fr: "{{amount}} en {{period}}. Vous dépensez habituellement {{usual}}.",
                     pt: "{{amount}} em {{period}}. Você costuma gastar {{usual}}.",
+                    "pt-PT": "{{amount}} em {{period}}. costuma gastar {{usual}}.",
                 })
             ),
             closedMore: t({
@@ -251,6 +278,7 @@ const dashboardInsightsOverview = {
                 es: "Gastaste más de lo normal",
                 fr: "Vous avez dépensé plus que d'habitude",
                 pt: "Você gastou mais que o habitual",
+                "pt-PT": "Gastou mais que o habitual",
             }),
             closedPlain: insert(
                 t({
@@ -259,6 +287,7 @@ const dashboardInsightsOverview = {
                     es: "Gastaste {{amount}}",
                     fr: "Vous avez dépensé {{amount}}",
                     pt: "Você gastou {{amount}}",
+                    "pt-PT": "Gastou {{amount}}",
                 })
             ),
             course: insert(
@@ -268,6 +297,7 @@ const dashboardInsightsOverview = {
                     es: "Vas camino a cerrar cerca de {{amount}}. A esta altura normalmente gastas {{usual}}.",
                     fr: "Vous êtes en voie de terminer près de {{amount}}. Vous dépensez habituellement {{usual}} à ce stade.",
                     pt: "Você está no ritmo de terminar perto de {{amount}}. Normalmente gasta {{usual}} até agora.",
+                    "pt-PT": "Está no ritmo de terminar perto de {{amount}}. Normalmente gasta {{usual}} até agora.",
                 })
             ),
             faster: t({
@@ -276,6 +306,7 @@ const dashboardInsightsOverview = {
                 es: "Estás gastando más rápido de lo normal",
                 fr: "Vous dépensez plus vite que d'habitude",
                 pt: "Você está gastando mais rápido que o habitual",
+                "pt-PT": "Está a gastar mais rápido que o habitual",
             }),
             noUsual: t({
                 en: "No usual to compare with yet.",
@@ -298,6 +329,7 @@ const dashboardInsightsOverview = {
                     es: "Has gastado {{amount}} hasta ahora",
                     fr: "Vous avez dépensé {{amount}} jusqu'ici",
                     pt: "Você gastou {{amount}} até agora",
+                    "pt-PT": "Gastou {{amount}} até agora",
                 })
             ),
             slower: t({
@@ -306,6 +338,7 @@ const dashboardInsightsOverview = {
                 es: "Estás gastando más lento de lo normal",
                 fr: "Vous dépensez plus lentement que d'habitude",
                 pt: "Você está gastando mais devagar que o habitual",
+                "pt-PT": "Está a gastar mais devagar que o habitual",
             }),
             today: insert(
                 t({
@@ -344,8 +377,15 @@ const dashboardInsightsOverview = {
                     fr: "Restaurants",
                     pt: "Restaurantes",
                 }),
-                groceries: t({ en: "Groceries", de: "Lebensmittel", es: "Mercado", fr: "Courses", pt: "Mercado" }),
-                rent: t({ en: "Rent", de: "Miete", es: "Alquiler", fr: "Loyer", pt: "Aluguel" }),
+                groceries: t({
+                    en: "Groceries",
+                    de: "Lebensmittel",
+                    es: "Mercado",
+                    fr: "Courses",
+                    pt: "Mercado",
+                    "pt-PT": "Supermercado",
+                }),
+                rent: t({ en: "Rent", de: "Miete", es: "Alquiler", fr: "Loyer", pt: "Aluguel", "pt-PT": "Renda" }),
                 shopping: t({ en: "Shopping", de: "Shopping", es: "Compras", fr: "Achats", pt: "Compras" }),
                 subscriptions: t({
                     en: "Subscriptions",
@@ -353,8 +393,16 @@ const dashboardInsightsOverview = {
                     es: "Suscripciones",
                     fr: "Abonnements",
                     pt: "Assinaturas",
+                    "pt-PT": "Subscrições",
                 }),
-                transport: t({ en: "Transport", de: "Mobilität", es: "Transporte", fr: "Transport", pt: "Transporte" }),
+                transport: t({
+                    en: "Transport",
+                    de: "Mobilität",
+                    es: "Transporte",
+                    fr: "Transport",
+                    pt: "Transporte",
+                    "pt-PT": "Transportes",
+                }),
             },
             cta: t({
                 en: "Log your first expense",
@@ -362,6 +410,7 @@ const dashboardInsightsOverview = {
                 es: "Registra tu primer gasto",
                 fr: "Enregistrez votre première dépense",
                 pt: "Registre sua primeira despesa",
+                "pt-PT": "Registe a sua primeira despesa",
             }),
             gaveBack: insert(
                 t({
@@ -387,6 +436,7 @@ const dashboardInsightsOverview = {
                 es: "El tuyo empieza a llenarse con tu primer movimiento.",
                 fr: "Le vôtre commence à se remplir dès votre première opération.",
                 pt: "O seu começa a se preencher com o primeiro lançamento.",
+                "pt-PT": "O seu começa a se preencher com o primeiro registo.",
             }),
             title: t({
                 en: "This is what a month looks like",
@@ -422,6 +472,7 @@ const dashboardInsightsOverview = {
                     es: "1 suscripción te cuesta {{amount}} al mes",
                     fr: "1 abonnement vous coûte {{amount}} par mois",
                     pt: "1 assinatura custa {{amount}} por mês",
+                    "pt-PT": "1 subscrição custa {{amount}} por mês",
                 })
             ),
             seeAll: t({ en: "See all", de: "Alle anzeigen", es: "Ver todas", fr: "Tout voir", pt: "Ver todos" }),
@@ -432,6 +483,7 @@ const dashboardInsightsOverview = {
                     es: "{{count}} suscripciones te cuestan {{amount}} al mes",
                     fr: "{{count}} abonnements vous coûtent {{amount}} par mois",
                     pt: "{{count}} assinaturas custam {{amount}} por mês",
+                    "pt-PT": "{{count}} subscrições custam {{amount}} por mês",
                 })
             ),
         },
@@ -463,6 +515,7 @@ const dashboardInsightsOverview = {
                     es: "{{category}} va {{amount}} por encima de lo normal a esta altura",
                     fr: "{{category}} est {{amount}} au-dessus de votre niveau habituel à ce stade",
                     pt: "{{category}} está {{amount}} acima de onde você costuma estar até agora",
+                    "pt-PT": "{{category}} está {{amount}} acima de onde costuma estar até agora",
                 })
             ),
             under: insert(
@@ -472,6 +525,7 @@ const dashboardInsightsOverview = {
                     es: "{{category}} va {{amount}} por debajo de lo normal a esta altura",
                     fr: "{{category}} est {{amount}} en dessous de votre niveau habituel à ce stade",
                     pt: "{{category}} está {{amount}} abaixo de onde você costuma estar até agora",
+                    "pt-PT": "{{category}} está {{amount}} abaixo de onde costuma estar até agora",
                 })
             ),
             usual: t({ en: "Usual", de: "Üblich", es: "Lo normal", fr: "Habituel", pt: "Habitual" }),
@@ -492,6 +546,7 @@ const dashboardInsightsOverview = {
                 es: "Desglose",
                 fr: "Répartition",
                 pt: "Detalhamento",
+                "pt-PT": "Detalhe",
             }),
             title: t({
                 en: "Where it went",
