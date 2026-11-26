@@ -7,7 +7,7 @@ export type WebhookEndpoint = WebhookStatusView["endpoints"][number];
 export const INBOUND_TOKEN_PREFIX = "olh_";
 export const SIGNING_SECRET_PREFIX = "whsec_";
 
-const BASE64URL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+const BASE64_PADDING = /[=]+$/;
 const SECRET_BYTES = 32;
 const INBOUND_PATH = "/hooks/in";
 
@@ -15,25 +15,11 @@ export function webhooksOpen(now: number): boolean {
     return now >= WEBHOOKS_EFFECTIVE_AT_MS;
 }
 
-export function encodeBase64Url(bytes: Uint8Array): string {
-    let out = "";
-    let buffer = 0;
-    let bits = 0;
-    for (const byte of bytes) {
-        buffer = buffer * 256 + byte;
-        bits += 8;
-        while (bits >= 6) {
-            const rest = bits - 6;
-            const divisor = 2 ** rest;
-            out += BASE64URL.charAt(Math.floor(buffer / divisor));
-            buffer %= divisor;
-            bits = rest;
-        }
-    }
-    if (bits > 0) {
-        out += BASE64URL.charAt(buffer * 2 ** (6 - bits));
-    }
-    return out;
+function encodeBase64Url(bytes: Uint8Array): string {
+    return btoa(String.fromCodePoint(...bytes))
+        .replaceAll("+", "-")
+        .replaceAll("/", "_")
+        .replace(BASE64_PADDING, "");
 }
 
 const mint = (prefix: string) => `${prefix}${encodeBase64Url(crypto.getRandomValues(new Uint8Array(SECRET_BYTES)))}`;
