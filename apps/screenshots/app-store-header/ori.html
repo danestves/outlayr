@@ -55,7 +55,7 @@ function search(){
  card(-1430,1060,-4,1.35,`<div class="k">${COPY.month}</div><div class="n">${big(1018.59)}</div><div class="k">${COPY.left(plain(3900))}</div>`,"c1");
  card(2470,780,4,1.35,`<div class="k">${COPY.subs}</div><div class="n">${big(203.65)}</div><div class="k">${COPY.subsSub}</div>`,"c2");
  card(2500,1440,-2,1.35,`<div class="k" style="min-width:500px">${COPY.week}</div>${SPARK}`,"c3");
- if(!P.has("noori"))ori("ori-wave",1060,420,1900);
+ ori("ori-wave",1060,420,1900);
 }
 Promise.all(["700 230px SFR","500 118px SFM","700 230px G","500 118px GM"].map(f=>document.fonts.load(f).catch(()=>null))).then(()=>{
  (T==="header"?header:search)();
