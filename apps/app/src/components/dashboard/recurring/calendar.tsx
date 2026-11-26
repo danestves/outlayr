@@ -2,14 +2,13 @@ import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import { wallNoon } from "@outlayr/money/ledger-zone";
 import { Button } from "panelui-web/button";
-import { useIntlayer, useLocale } from "react-intlayer";
+import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
-import { useMeta } from "@/lib/ledger-settings";
 import { addDays, isActive, monthEvents, nextCharges } from "@/lib/recurring";
 import type { MonthEvent, RecurringModel } from "@/lib/recurring";
-import { weekStart, weekStartIso } from "@/lib/week-start";
+import { weekStartIso } from "@/lib/week-start";
 
 import { Glyph } from "../accounts/glyph";
 import type { ScheduleActions } from "./menu";
@@ -68,17 +67,13 @@ export interface CalendarProps {
 
 function useCalendar({ day, model, month }: Pick<CalendarProps, "day" | "model" | "month">) {
     const { ledger } = useDashboard();
-    const meta = useMeta();
-    const { locale } = useLocale();
-    const chosen = meta.get("firstWeekday");
-    const firstWeekday = weekStart(chosen === "1" || chosen === "2" ? Number(chosen) : null, locale);
-    const days = gridDays(month, firstWeekday);
+    const days = gridDays(month, ledger.firstWeekday);
     const months = [...new Set(days.map((each) => each.slice(0, 7)))];
     const events = months.flatMap((key) => monthEvents(model, ledger, key));
     const byDay = Map.groupBy(events, (event) => event.day);
     const inMonth = events.filter((event) => event.day.startsWith(month));
     const fallback = month === ledger.today.slice(0, 7) ? ledger.today : (inMonth.at(0)?.day ?? `${month}-01`);
-    return { byDay, days, firstWeekday, inMonth, selected: day ?? fallback };
+    return { byDay, days, firstWeekday: ledger.firstWeekday, inMonth, selected: day ?? fallback };
 }
 
 export function CalendarGrid(props: CalendarProps) {
