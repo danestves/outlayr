@@ -348,6 +348,7 @@ const WIDTHS: Partial<Record<HeadKey, string>> = {
     category: "w-44",
     date: "w-24",
     fee: "w-24",
+    merchant: "@7xl:w-[15%]",
     notes: "w-48",
     paidVia: "w-32",
     tags: "w-36",
