@@ -27,7 +27,12 @@ export function keepUnsent(key: string, value: string) {
 
 export function onUnsentStop(stop: () => void) {
     stops.add(stop);
+    return () => {
+        stops.delete(stop);
+    };
 }
+
+export const unsentWritesStopped = () => forgotten;
 
 export function stopUnsentWrites() {
     forgotten = true;

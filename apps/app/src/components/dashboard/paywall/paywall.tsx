@@ -565,11 +565,9 @@ function AlreadyPro({ plan, unconfirmedAtStart }: { plan: BillingPlan; unconfirm
                             </Alert>
                         ) : null}
                     </SettingsCard>
-                    {onJoined ? (
-                        <div className="mt-4">
-                            <JoinedProfiles personal />
-                        </div>
-                    ) : null}
+                    <div className="mt-4">
+                        <JoinedProfiles personal={onJoined} />
+                    </div>
                 </div>
             </main>
         </BrandPage>

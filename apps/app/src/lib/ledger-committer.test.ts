@@ -8,6 +8,7 @@ import { ledgerCommitter } from "./ledger-committer";
 import { ledgerBooks, preloadLedger } from "./ledger-db";
 import type { LedgerPusher } from "./ledger-write";
 import { fakeConvex } from "./test-convex";
+import { stopUnsentWrites } from "./unsent";
 
 const HOLD_MS = 60_000;
 const answered = { accepted: 1, nextSeq: 1, skipped: 0 };
@@ -200,11 +201,12 @@ describe("ledger committer", () => {
         expect(await committer.flushAll()).toBe(false);
     });
 
-    it("keeps refusing a leave after a failed commit has settled", async () => {
+    it("lets a leave through once a failed commit has already rolled back", async () => {
         const committer = ledgerCommitter(await openTab(() => Promise.reject(new Error("refused"))), "owner");
 
         expect(await committer.commit([entry("a")]).settled).toMatchObject({ status: "failed" });
-        expect(await committer.flushAll()).toBe(false);
+        expect(committer.getSnapshot()).toStrictEqual({ failed: 1, held: 0, sending: 0 });
+        expect(await committer.flushAll()).toBe(true);
     });
 
     it("reverts rows added to a held commit with the same undo", async () => {
@@ -295,5 +297,16 @@ describe("ledger committer", () => {
         expect(push).not.toHaveBeenCalled();
         expect(storedRows()).toHaveLength(1);
         expect(committer.getSnapshot()).toStrictEqual({ failed: 0, held: 0, sending: 0 });
+    });
+
+    it("stops sending for a profile whose removal has started", async () => {
+        const push = vi.fn<Push>(() => Promise.resolve(answered));
+        const committer = ledgerCommitter(await openTab(push), "owner");
+        stopUnsentWrites();
+
+        expect(await committer.commit([entry("a")]).settled).toStrictEqual({ status: "undone" });
+
+        expect(push).not.toHaveBeenCalled();
+        expect(storedRows()).toHaveLength(0);
     });
 });

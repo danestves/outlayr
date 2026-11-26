@@ -18,7 +18,7 @@ export async function removeProfileAndSwitch(profileId: string) {
     }
     removing = true;
     stopUnsentWrites();
-    await forgetProfileCookie({ data: { profileId } }).catch(() => undefined);
     forgetProfileUnsent(profileId);
+    await forgetProfileCookie({ data: { profileId } }).catch(() => undefined);
     window.location.reload();
 }
