@@ -37,8 +37,8 @@ const readLegacyLocale = (): Locale | null => {
     }
 };
 
-export function readDashboardLocale(): Locale {
-    return chosen ?? readCookieLocale() ?? readLegacyLocale() ?? defaultLocale;
+export function readDashboardLocale(fallback: Locale = defaultLocale): Locale {
+    return chosen ?? readCookieLocale() ?? readLegacyLocale() ?? fallback;
 }
 
 const persistDashboardLocale = createServerFn({ method: "POST" })
@@ -55,9 +55,7 @@ export const requestDashboardLocale = createIsomorphicFn()
         }
         return matchAcceptLanguage(getRequestHeader("accept-language"), locales) ?? defaultLocale;
     })
-    .client(readDashboardLocale);
-
-export const serverDashboardLocale = (locale: Locale) => (): Locale => locale;
+    .client(() => readDashboardLocale());
 
 export function subscribeDashboardLocale(listener: () => void) {
     listeners.add(listener);

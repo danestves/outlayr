@@ -3,6 +3,8 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { defaultLocale, getIntlayer, isDeclaredLocale } from "intlayer";
 
+import { readDashboardLocale } from "./dashboard-locale";
+
 interface MatchLike {
     loaderData?: unknown;
 }
@@ -13,10 +15,7 @@ const decodeRootData = Schema.decodeUnknownOption(Schema.Struct({ locale: Schema
 
 export const localeOf = (matches: readonly MatchLike[]): Locale => {
     const root = Option.getOrUndefined(decodeRootData(matches[0]?.loaderData));
-    if (root !== undefined && isDeclaredLocale(root.locale)) {
-        return root.locale;
-    }
-    return defaultLocale;
+    return readDashboardLocale(root !== undefined && isDeclaredLocale(root.locale) ? root.locale : defaultLocale);
 };
 
 export function pageHead(key: RouteTitleKey) {

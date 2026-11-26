@@ -22,7 +22,6 @@ import {
     migrateDashboardLocale,
     readDashboardLocale,
     requestDashboardLocale,
-    serverDashboardLocale,
     subscribeDashboardLocale,
 } from "@/lib/dashboard-locale";
 import type { Session } from "@/lib/session";
@@ -79,8 +78,8 @@ function RootDocument({ children }: { children: ReactNode }) {
     const { country, locale: requestLocale } = Route.useLoaderData();
     const locale = useSyncExternalStore(
         subscribeDashboardLocale,
-        readDashboardLocale,
-        serverDashboardLocale(requestLocale)
+        () => readDashboardLocale(requestLocale),
+        () => requestLocale
     );
     useOnMount(() => {
         migrateDashboardLocale();

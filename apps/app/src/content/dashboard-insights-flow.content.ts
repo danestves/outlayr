@@ -179,8 +179,8 @@ const dashboardInsightsFlow = {
                 en: "of {{amount}} in",
                 de: "von {{amount}} Einnahmen",
                 es: "de {{amount}} que entraron",
-                fr: "sur {{amount}} en",
-                pt: "de {{amount}} em",
+                fr: "sur {{amount}} de revenus",
+                pt: "de {{amount}} que entraram",
             })
         ),
         ofIncome: t({ en: "of income", de: "der Einnahmen", es: "del ingreso", fr: "des revenus", pt: "das receitas" }),
