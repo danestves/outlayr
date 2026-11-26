@@ -71,8 +71,10 @@ const PENDING = String.raw`\b(?:is\s+on\s+its\s+way|est[aá]\s+en\s+camino)\b`;
 // A shipped LogNotificationIntent or PurchaseListenerService reads only the pattern keys it was built with, so the
 // reminder and pending cues ride on declined, which already drops the whole text there.
 const NO_CHARGE = new RegExp(`(?:${DECLINED})|(?:${REMINDER})|(?:${PENDING})`, "iu");
+// "JANE SMITH received your $77.50 Zelle payment" is the user paying and the bank confirming it, and an Indian UPI
+// debit names the payee "credited": a debit earlier in the text turns every later credit word into the payee's side.
 const INCOMING = new RegExp(
-    String.raw`\b(?:received|refund(?:ed)?|reversal|credited|deposited|depositad[ao]|recibi(?:ste|d[ao])|reembols(?:o|ad[ao])|devoluci[oó]n|abon(?:o|ad[ao])|acreditad[ao])\b|\bte\s+(?:transfer[ií]|pagu[eé]|envi[eé]|mand[eé]|deposit[eé]|pas[eé]|hice)(?!\p{L})`,
+    String.raw`^(?:(?!\bdebited\b)[\s\S])*?\b(?:you\s+received|received(?!\s+your\b)|refund(?:ed)?|reversal|credited|deposited|direct\s+deposit|pending\s+credit|credit\s+(?:of|on|from|to)\b|sent\s+you|paid\s+you|depositad[ao]|recibi(?:ste|d[ao])|reembols(?:o|ad[ao])|devoluci[oó]n|abon(?:o|ad[ao])|acreditad[ao])\b|\bte\s+(?:transfer[ií]|pagu[eé]|envi[eé]|mand[eé]|deposit[eé]|pas[eé]|hice)(?!\p{L})`,
     "iu"
 );
 
@@ -94,11 +96,27 @@ const EXCHANGE_RATE = String.raw`(?<![A-Za-z])(?:tasa\s+(?:de\s+)?(?:compra|vent
 // balanceBefore to reach it without a native release.
 const BALANCE_BEFORE = new RegExp(`(?:${BALANCE})|(?:${EXCHANGE_RATE})`, "iu");
 
-const STOP = String.raw`(?=\s+(?:with|using|via|on|for|con|usando|por|el|la|desde|mediante)\b|[,.;\n]|$)`;
-const PAID_TO = new RegExp(String.raw`\b(?:at|in|en|to|a|de|@)\s+(?!las?\s+\d|fecha\b)(.+?)${STOP}`, "iu");
+// A period only ends the name before whitespace or the end, so "AMAZON.COM" survives but "Burger King. Questions"
+// stops; a period before a company suffix ("CHARGEPOINT. INC") is part of the name. "for" stops only before a
+// function word or a number, so "Transport for London" survives.
+const STOP = String.raw`(?=\s+(?:with|using|via|on|con|usando|por|el|la|desde|mediante)\b|\s+for\s+(?:(?:your|the|a|an|this|that|my|our|their|its|each|every|all|any|credit|debit|payment|purchase|more|less|info|details|delivery|shipping|order|merchant|store)\b|[^\p{L}])|\s+(?:was|has\s+been|is|exceeds|view\s+(?:recent|details|in|activity|your))\b|\s+a\s+été(?!\p{L})|\s+(?:balance|saldo|solde)\b|\s+(?:a|en)\s+(?:tu|your)\s+cuenta\b|\s+credited\b|\.?\s*avl\s+bal\b|\s+\d{1,2}:\d{2}|\s+\d{1,2}/\d{1,2}|[,;\n]|\.(?=\s|$)(?!\s+(?:inc|llc|ltd|corp|co|plc|gmbh|s\.?a|spa|ag|bv|a\.?s|oy|ab|pty)\b)|$)`;
+// An intro after a sentence end belongs to the bank's boilerplate ("Log in to view details"), not to the charge.
+const UNTIL_END = String.raw`(?:(?![!?]|\.(?:\s|$))[\s\S])*?`;
+// "Rs.500.00 in CHENNAI at VETRIVEL AGENCIES" names the city with "in" and the store with a later "at".
+const CITY = String.raw`\b(?:in|en)\s+(?!(?:(?!\.\s)[^\n])*?\bat\s+(?!\d))`;
+const CARD = String.raw`\b(?:with|con)\s+(?!(?:your|card|credit|debit|tu|tarjeta|visa|mastercard|amex|cuenta)\b|[^\n]*?(?<![•*])[•*]{2,}\s?\d{4})`;
+const LABEL = String.raw`(?:^|[\s(])(?:at|to|local|merch(?:ant)?|store|payee)\s*:\s*`;
+const CREDITED = String.raw`;\s+(?=[^;\n]*\bcredited\b)`;
+const COLLECTED = String.raw`\bcollected\s+by\s+`;
+// A card's last digits, a time, a date, a phone number, an account or "your card" is not a payee.
+const NOT_PAYEE = String.raw`(?:las?\s+\d|fecha\b|operaci[oó]n\b|\d{1,2}:\d{2}|\d{4,}|\d{1,2}/\d{1,2}|(?:la\s+|the\s+|your\s+|tu\s+)?(?:cuenta|account|acct)\b|your\s+(?:card|alerts|settings|statement|balance)\b|tu\s+(?:tarjeta|cuenta)\b)`;
+const PAID_TO = new RegExp(
+    String.raw`^${UNTIL_END}(?:${CITY}|\b(?:at|to|a|de|chez|em)\s+|@\s+|${CARD}|${LABEL}|${CREDITED}|${COLLECTED})(?!${NOT_PAYEE})(.+?)${STOP}`,
+    "iu"
+);
 const DEPOSITED = String.raw`(?=\s+(?:was|has\s+been|fue|ha\s+sido)\s+deposit)`;
 const RECEIVED_FROM = new RegExp(
-    String.raw`\b(?:from|de|por parte de)\s+(?!operaci[oó]n\b)(.+?)(?:${DEPOSITED}|${STOP})`,
+    String.raw`^${UNTIL_END}(?:\b(?:from|por\s+parte\s+de)\s+|\bde\s+|${LABEL})(?!${NOT_PAYEE})(.+?)(?:${DEPOSITED}|${STOP})`,
     "iu"
 );
 const SENT_BY = new RegExp(String.raw`\bde\s+(\p{Lu}[\p{Lu} .'-]*\p{Lu})\s+por\s*$`, "u");
@@ -107,13 +125,15 @@ const YOUR_CHARGE = new RegExp(
     "iu"
 );
 
-const CARD_USED = new RegExp(String.raw`\b(?:with|con)\s+([^\n]*?[•*]{2,}\s?\d{4})(?!\d)`, "iu");
+const CARD_USED = new RegExp(String.raw`\b(?:with|con)\s+([^\n]*?(?<![•*])[•*]{2,}\s?\d{4})(?!\d)`, "iu");
 const CARD_REFERENCE = new RegExp(String.raw`\byour\b.*\bcard\b|\btu\b.*\btarjeta\b|[x*•]{3,}[-\s]?\d{3,4}`, "iu");
 const PARENTHESIZED = new RegExp(String.raw`\(([^()]+)\)`, "u");
 const CHARGE_WORDS = new RegExp(
     String.raw`\b(?:card|tarjeta|ending|recent|latest|last|online|contactless|debit|credit|pending|scheduled|recurring|international)\b`,
     "iu"
 );
+// "STRAND BARBER & BEAUTY in SAN FRANCISCO" names the city with a lowercase "in"; "JACK IN THE BOX" keeps its own.
+const CITY_AFTER = /\s+in\s+(?=\p{Lu})/u;
 const NAME_START = new RegExp(String.raw`^[\p{Lu}\d]`, "u");
 
 const USER_OWES = new RegExp(String.raw`\b(?:me\s+debes|you\s+owe\s+me|te\s+prest[eé]|i\s+lent\s+you)(?!\p{L})`, "iu");
@@ -399,7 +419,7 @@ function shownAmount(
 }
 
 export function cleanMerchant(raw: string | null): string | null {
-    const cleaned = raw?.split(",", 1)[0]?.replace(POS_PREFIX, "").trim();
+    const cleaned = raw?.split(",", 1)[0]?.split(CITY_AFTER, 1)[0]?.replace(POS_PREFIX, "").trim();
     return cleaned || null;
 }
 
@@ -411,6 +431,7 @@ function lineBefore(text: string, moneyAt: number): string | null {
     if (above.length < 2 || above.at(-1)?.trim()) {
         return null;
     }
-    const line = above.at(-2)?.trim() ?? "";
+    // Revolut titles an account push "<account> · <merchant>", so only the part after the separator names the store.
+    const line = (above.at(-2)?.split("·").at(-1) ?? "").trim();
     return !line || AFTER_NUMBER.test(line) ? null : line;
 }
