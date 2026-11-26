@@ -2,6 +2,7 @@ import { Navigate, createFileRoute, redirect } from "@tanstack/react-router";
 import { useSyncExternalStore } from "react";
 
 import { SettingsNav } from "@/components/dashboard/settings/nav";
+import { pageHead } from "@/lib/route-title";
 
 const DESKTOP = "(min-width: 64rem)";
 
@@ -12,6 +13,7 @@ const onWidthChange = (onChange: () => void) => {
 };
 
 export const Route = createFileRoute("/_account/_app/settings/")({
+    head: pageHead("settings"),
     beforeLoad: () => {
         if (!import.meta.env.SSR && matchMedia(DESKTOP).matches) {
             throw redirect({ replace: true, to: "/settings/account" });

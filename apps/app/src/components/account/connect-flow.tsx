@@ -13,6 +13,7 @@ import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
 import { useState } from "react";
 import type { FormEvent, ReactNode } from "react";
+import { useIntlayer } from "react-intlayer";
 
 import { ArtCard, BrandPage, Centered, SessionEmail } from "@/components/brand-page";
 import { SettingsCard } from "@/components/dashboard/settings/parts";
@@ -36,9 +37,9 @@ const connectRequest = Effect.fn("Connect.request")(function* connectRequest<A>(
     return yield* Effect.tryPromise({ catch: (cause) => new ConnectFailure({ cause }), try: call });
 });
 
-function failure(cause: unknown): string {
+function failure(cause: unknown, fallback: string): string {
     const message = cause instanceof ConvexError ? decodeMessage(cause.data) : Option.none();
-    return Option.getOrElse(message, () => "Something went wrong. Try again.");
+    return Option.getOrElse(message, () => fallback);
 }
 
 export function ConnectFlow({ requestId }: { requestId: string | undefined }) {
@@ -50,6 +51,7 @@ export function ConnectFlow({ requestId }: { requestId: string | undefined }) {
 }
 
 function FindRequest() {
+    const copy = useIntlayer("connect");
     const find = useMutation(findAuthRequest);
     const [code, setCode] = useState("");
     const [busy, setBusy] = useState(false);
@@ -63,12 +65,15 @@ function FindRequest() {
             Effect.gen(function* submitProgram() {
                 const request = yield* connectRequest(() => find({ userCode: code }));
                 if (request === null) {
-                    setError("No request matches that code.");
+                    setError(copy.noMatch.value);
                     return;
                 }
                 window.location.assign(`/connect?request=${encodeURIComponent(request)}`);
             }).pipe(
-                Effect.catchTags({ ConnectFailure: (failed) => Effect.sync(() => setError(failure(failed.cause))) }),
+                Effect.catchTags({
+                    ConnectFailure: (failed) =>
+                        Effect.sync(() => setError(failure(failed.cause, copy.genericError.value))),
+                }),
                 Effect.ensuring(Effect.sync(() => setBusy(false)))
             )
         );
@@ -80,11 +85,11 @@ function FindRequest() {
                 footer={
                     <div className="flex w-full justify-end">
                         <Button aria-busy={busy} disabled={busy || !code.trim()} type="submit">
-                            {busy ? "Checking…" : "Continue"}
+                            {busy ? copy.checking : copy.continueLabel}
                         </Button>
                     </div>
                 }
-                title="Connect an agent"
+                title={copy.connectAgentTitle}
             >
                 <div className="p-4">
                     <TextField
@@ -93,7 +98,7 @@ function FindRequest() {
                         autoFocus
                         className="font-mono"
                         error={error}
-                        label="Code from your agent"
+                        label={copy.codeLabel}
                         onChange={(event) => setCode(event.target.value)}
                         value={code}
                     />
@@ -104,6 +109,7 @@ function FindRequest() {
 }
 
 function Consent({ requestId }: { requestId: string }) {
+    const copy = useIntlayer("connect");
     const request = useQuery(getAuthRequest, { requestId });
     const [done, setDone] = useState(false);
     if (request === undefined) {
@@ -112,9 +118,11 @@ function Consent({ requestId }: { requestId: string }) {
     if (request === null || (request.status !== "pending" && !done)) {
         return (
             <ArtCard
-                action={<Button render={<a aria-label="Enter a code" href="/connect" />}>Enter a code</Button>}
-                body="This request has expired or was already used."
-                title="Connect request closed"
+                action={
+                    <Button render={<a aria-label={copy.enterCode.value} href="/connect" />}>{copy.enterCode}</Button>
+                }
+                body={copy.expiredBody}
+                title={copy.closedTitle}
             />
         );
     }
@@ -176,12 +184,13 @@ function Decision({
     request: AuthRequest;
     requestId: string;
 }) {
+    const copy = useIntlayer("connect");
     const decide = useAction(authorize);
     const email = authClient.useSession().data?.user.email;
     const [busy, setBusy] = useState<"approve" | "deny" | null>(null);
     const [error, setError] = useState<string | null>(null);
     const device = request.kind === "device";
-    const clientName = request.clientName ?? "an agent";
+    const clientName = request.clientName ?? copy.anAgent.value;
 
     const answer = (approve: boolean) => {
         setError(null);
@@ -204,7 +213,7 @@ function Decision({
                 Effect.catchTags({
                     ConnectFailure: (failed) =>
                         Effect.sync(() => {
-                            setError(failure(failed.cause));
+                            setError(failure(failed.cause, copy.genericError.value));
                             setBusy(null);
                         }),
                 })
@@ -216,26 +225,26 @@ function Decision({
     if (device) {
         intro = (
             <div className="px-4 pt-3 pb-4">
-                <p className="text-muted-foreground text-app-label">Make sure your agent shows this code</p>
+                <p className="text-muted-foreground text-app-label">{copy.showCode}</p>
                 <p className="text-app-figure mt-1 font-mono font-semibold tracking-widest">{request.userCode}</p>
             </div>
         );
     } else if (request.redirectUri) {
         intro = (
             <p className="text-muted-foreground text-app-label px-4 py-3">
-                {redirectHost(request.redirectUri)} will be able to:
+                {copy.willBeAble({ client: redirectHost(request.redirectUri) })}
             </p>
         );
     }
-    const approveLabel = device ? "Approve" : "Allow";
-    const approvingLabel = device ? "Approving…" : "Allowing…";
+    const approveLabel = device ? copy.approve : copy.allow;
+    const approvingLabel = device ? copy.approving : copy.allowing;
 
     return (
         <SettingsCard
             action={
                 done ? (
                     <Badge dot variant="success">
-                        Approved
+                        {copy.approved}
                     </Badge>
                 ) : null
             }
@@ -243,13 +252,13 @@ function Decision({
                 done ? (
                     <p className="text-app-body flex items-center gap-2">
                         <HugeiconsIcon className="text-app-income" icon={Tick02Icon} size={16} />
-                        Done. Go back to your agent.
+                        {copy.done}
                     </p>
                 ) : (
                     <div className="flex w-full items-center gap-2">
                         {email ? (
                             <span className="text-muted-foreground ph-no-capture text-app-label mr-auto truncate">
-                                Signed in as {email}
+                                {copy.signedInAs({ email })}
                             </span>
                         ) : (
                             <span className="mr-auto" />
@@ -260,7 +269,7 @@ function Decision({
                             onClick={() => answer(false)}
                             variant="ghost"
                         >
-                            Deny
+                            {copy.deny}
                         </Button>
                         <Button aria-busy={busy === "approve"} disabled={busy !== null} onClick={() => answer(true)}>
                             {busy === "approve" ? approvingLabel : approveLabel}
@@ -270,8 +279,8 @@ function Decision({
             }
             title={
                 <span className="flex items-center gap-2">
-                    Connect {clientName}
-                    {done ? null : <Badge variant="outline">unverified</Badge>}
+                    {copy.connectClient({ client: clientName })}
+                    {done ? null : <Badge variant="outline">{copy.unverified}</Badge>}
                 </span>
             }
         >

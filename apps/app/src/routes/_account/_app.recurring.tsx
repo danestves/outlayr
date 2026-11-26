@@ -5,8 +5,10 @@ import { recurringToasts } from "@/components/dashboard/recurring/data";
 import { LiveRecurring } from "@/components/dashboard/recurring/recurring-screen";
 import { patched, recurringSearch } from "@/components/dashboard/recurring/search";
 import type { RecurringPatch } from "@/components/dashboard/recurring/search";
+import { pageHead } from "@/lib/route-title";
 
 export const Route = createFileRoute("/_account/_app/recurring")({
+    head: pageHead("recurring"),
     component: Recurring,
     validateSearch: recurringSearch,
 });

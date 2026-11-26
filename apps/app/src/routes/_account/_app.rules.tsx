@@ -5,8 +5,10 @@ import { ruleToasts } from "@/components/dashboard/rules/data";
 import { LiveRules } from "@/components/dashboard/rules/rules-screen";
 import { patched, rulesSearch } from "@/components/dashboard/rules/search";
 import type { RulesPatch } from "@/components/dashboard/rules/search";
+import { pageHead } from "@/lib/route-title";
 
 export const Route = createFileRoute("/_account/_app/rules")({
+    head: pageHead("rules"),
     component: Rules,
     validateSearch: rulesSearch,
 });

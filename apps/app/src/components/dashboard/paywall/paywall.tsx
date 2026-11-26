@@ -281,7 +281,7 @@ function Offer({
 }) {
     const copy = useIntlayer("paywall");
     const { locale } = useLocale();
-    const country = useLoaderData({ from: "__root__" });
+    const { country } = useLoaderData({ from: "__root__" });
     const [plan, setPlan] = useState<ProPlan>("annual");
     const prices = paywallPrices(country, locale);
     const [renewal] = useState(() => {

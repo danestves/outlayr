@@ -563,11 +563,11 @@ const dashboardSettings = {
                 pt: "Os próximos ficam acima de hoje",
             }),
             soon: t({
-                en: "Limit to 14-Day Outlook",
-                de: "Auf die nächsten 14 Tage beschränken",
-                es: "Limitar a 14 días",
-                fr: "Limiter aux 14 prochains jours",
-                pt: "Limitar a 14 dias",
+                en: "Only show the next 14 days",
+                de: "Nur die nächsten 14 Tage anzeigen",
+                es: "Mostrar solo los próximos 14 días",
+                fr: "Afficher uniquement les 14 prochains jours",
+                pt: "Mostrar apenas os próximos 14 dias",
             }),
         },
         lab: {
