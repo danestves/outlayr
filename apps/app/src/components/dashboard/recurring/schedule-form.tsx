@@ -26,6 +26,7 @@ import { DialogContent } from "@/components/ui/dialog-content";
 import { MoneyField } from "@/components/ui/money-field";
 import { parseAmount } from "@/lib/account-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
+import { useNumberLocale } from "@/lib/exchange-locale";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { addDays, walk } from "@/lib/recurring";
 import type { Schedule } from "@/lib/recurring";
@@ -431,6 +432,7 @@ function FormView({
     const copy = useIntlayer("dashboard-recurring");
     const { ledger } = useDashboard();
     const { money } = useDisplayFormat();
+    const numberLocale = useNumberLocale();
     const { locale } = useLocale();
     const repeat = useRepeatText();
     const categoryOptions = useCategoryOptions(ledger, values.income);
@@ -455,7 +457,7 @@ function FormView({
     const problems = new Set<DraftProblem>(tried ? draftProblems(draft) : []);
     const preset = values.every === 1 ? PRESETS.find((each) => each.type === values.type) : undefined;
     const perMonth = draft.amount * monthlyChargeCount(values.type, values.every);
-    const shownAmount = draft.amount > 0 ? money(draft.amount, currency) : "";
+    const shownAmount = draft.amount > 0 ? amountText(draft.amount, currency, numberLocale) : "";
     const save = () => {
         setTried(true);
         if (draftProblems(draft).length === 0) {
@@ -514,7 +516,9 @@ function FormView({
                             value={{ amount: Number.isFinite(amount) ? amount : null, code: currency }}
                         />
                         {problems.has("amount") ? (
-                            <Field.Error match>{errors.amount({ zero: money(0, currency) })}</Field.Error>
+                            <Field.Error match>
+                                {errors.amount({ zero: amountText(0, currency, numberLocale) })}
+                            </Field.Error>
                         ) : null}
                     </Field>
                     <Slot label={copy.fields.account}>
