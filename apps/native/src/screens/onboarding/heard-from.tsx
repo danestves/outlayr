@@ -29,6 +29,8 @@ import { useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { useHardwareBack } from "@/screens/import/use-hardware-back";
 
+import { useFinishOnboarding } from "./finish";
+
 const ICONS: Record<HeardFromSource, IconSvgElement> = {
     ai_assistant: AiChat02Icon,
     app_store: Platform.OS === "android" ? PlayStoreIcon : AppStoreIcon,
@@ -54,6 +56,21 @@ const LABELS = {
     tiktok: "onboarding.heardFrom.source.tiktok",
     x: "onboarding.heardFrom.source.x",
 } as const satisfies Record<HeardFromSource, TranslationKey>;
+
+export function OnboardingHeardFrom() {
+    const t = useTranslation();
+    const { clearFailed, failed, finish } = useFinishOnboarding();
+    return (
+        <HeardFrom
+            error={failed}
+            eyebrow={t("onboarding.heardFrom.lastStep")}
+            onDone={() => {
+                clearFailed();
+                finish();
+            }}
+        />
+    );
+}
 
 interface HeardFromProps {
     error: string | null;

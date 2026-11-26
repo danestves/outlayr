@@ -474,7 +474,12 @@ const writeEntry = Effect.fn("ReceiptScan.writeEntry")(function* writeEntry(db: 
     input.onSaved();
 });
 
-function ScanFlowScreen() {
+export interface ScanFlowScreenProps {
+    onNeedsForm?: (draft: ResolvedReceipt, attachment: string | null) => void;
+    onSaved?: () => void;
+}
+
+export function ScanFlowScreen({ onNeedsForm, onSaved }: ScanFlowScreenProps = {}) {
     const router = useRouter();
     const entitled = useProEntitled();
     const db = useDatabase();
@@ -542,6 +547,14 @@ function ScanFlowScreen() {
         );
     };
 
+    const needsForm = (draft: ResolvedReceipt, attachment: string | null) => {
+        if (onNeedsForm) {
+            onNeedsForm(draft, attachment);
+        } else {
+            openForm(draft, attachment);
+        }
+    };
+
     const save = (draft: ResolvedReceipt, categoryId: string | null, image: ArrayBuffer) => {
         setSaving(true);
         const attachment = keptScan(image);
@@ -553,14 +566,18 @@ function ScanFlowScreen() {
                 onFailed: () => {
                     setSaving(false);
                     if (navigation.isFocused()) {
-                        openForm(draft, attachment);
+                        needsForm(draft, attachment);
                     }
                 },
                 onSaved: () => {
                     haptics("success");
                     // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
                     if (navigation.isFocused()) {
-                        router.back();
+                        if (onSaved) {
+                            onSaved();
+                        } else {
+                            router.back();
+                        }
                     }
                 },
             })
@@ -586,7 +603,7 @@ function ScanFlowScreen() {
                             savable === null
                                 ? {
                                       label: t("receipt.action.finish"),
-                                      onPress: () => openForm(receipt, keptScan(phase.image)),
+                                      onPress: () => needsForm(receipt, keptScan(phase.image)),
                                   }
                                 : {
                                       label: t("receipt.action.save"),
@@ -595,7 +612,7 @@ function ScanFlowScreen() {
                         }
                         secondary={{
                             label: t("receipt.action.edit"),
-                            onPress: () => openForm(receipt, keptScan(phase.image)),
+                            onPress: () => needsForm(receipt, keptScan(phase.image)),
                         }}
                         tertiary={{ label: t("receipt.action.another"), onPress: reset }}
                     />

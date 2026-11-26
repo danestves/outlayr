@@ -29,6 +29,8 @@ import { SILENT } from "@/state/atom-command";
 import { createOnboardingAccountsCommand } from "@/state/onboarding-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 
+import { useFirstLineDoors } from "./first-line";
+
 const TILE = 28;
 
 const accountKey = (name: string, currency: string) => `${name}\u0000${currency}`;
@@ -100,13 +102,14 @@ export function OnboardingAccounts() {
     const [saving, setSaving] = useState(false);
     const [failed, setFailed] = useState(false);
     const slow = useLongWait(saving);
+    const doors = useFirstLineDoors();
 
     const fresh = picks.filter((pick) => picked.has(pick.id) && !isHeld(pick));
     const { now, waiting } = splitByFreeLimits(fresh, held, locked);
     const shown = [...held.map((account) => account.currency), ...fresh.map((pick) => pick.currency)];
     const accountCount = held.length + fresh.length;
 
-    const next = () => router.push("/onboarding/auto-log");
+    const next = () => router.push(doors.auto || doors.scan ? "/onboarding/first-line" : "/onboarding/first-entry");
     const createAccounts = useAtomAction(
         createOnboardingAccountsCommand,
         {

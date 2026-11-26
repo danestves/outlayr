@@ -7,11 +7,14 @@ import { OutlayrMark } from "@/components/outlayr-mark";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
 import { useDatabase } from "@/contexts/local-data-context";
+import { useMeta } from "@/data/app-meta";
 import { formatTimeOfDay, REMINDER_EVENING, reminderTime } from "@/domain/reminder";
 import { useTranslation } from "@/i18n/context";
 import { SILENT } from "@/state/atom-command";
 import { chooseFirstRunReminderCommand } from "@/state/settings-flow-commands";
 import { useAtomAction } from "@/state/use-atom-action";
+
+import { useFinishOnboarding } from "./finish";
 
 const EVENING = reminderTime(REMINDER_EVENING, { hour: 20, minute: 0 });
 
@@ -37,7 +40,15 @@ export function OnboardingRhythm() {
     const db = useDatabase();
     const t = useTranslation();
     const router = useRouter();
-    const next = () => router.push("/onboarding/first-entry");
+    const shareAnalytics = useMeta(db, "shareAnalytics");
+    const { clearFailed, failed, finish } = useFinishOnboarding();
+    const next = () => {
+        if (shareAnalytics) {
+            router.push("/onboarding/heard-from");
+        } else {
+            finish();
+        }
+    };
     const chooseReminder = useAtomAction(
         chooseFirstRunReminderCommand,
         {
@@ -47,8 +58,14 @@ export function OnboardingRhythm() {
         SILENT
     );
 
-    const remind = () => chooseReminder({ db, option: REMINDER_EVENING });
-    const skip = () => chooseReminder({ db, option: null });
+    const remind = () => {
+        clearFailed();
+        chooseReminder({ db, option: REMINDER_EVENING });
+    };
+    const skip = () => {
+        clearFailed();
+        chooseReminder({ db, option: null });
+    };
 
     return (
         <FirstRun
@@ -59,6 +76,7 @@ export function OnboardingRhythm() {
                 onPress: remind,
             }}
             body={t("onboarding.rhythm.body")}
+            error={failed}
             eyebrow={t("onboarding.rhythm.eyebrow")}
             object={
                 <View className="items-center">
