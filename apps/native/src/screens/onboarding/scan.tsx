@@ -34,11 +34,28 @@ export function OnboardingScan() {
 
 function ScanAdoptionGate() {
     const { status } = useLedgerAdoption();
-    const { finish } = useFinishOnboarding();
+    const { clearFailed, failed, finish } = useFinishOnboarding();
+    const t = useTranslation();
     const asked = status === "ask";
     useWhen(asked, () => {
         finish();
     });
+    if (failed !== null) {
+        return (
+            <FirstRun
+                action={{
+                    label: t("common.retry"),
+                    onPress: () => {
+                        clearFailed();
+                        finish();
+                    },
+                }}
+                error={failed}
+                eyebrow={t("onboarding.firstLine.scan.title")}
+                title={t("onboarding.scan.signInTitle")}
+            />
+        );
+    }
     if (status !== "settled") {
         return <ScanSignIn restoring />;
     }

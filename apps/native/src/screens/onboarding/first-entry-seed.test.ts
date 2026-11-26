@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { ResolvedReceipt } from "@/domain/receipt-scan";
 
@@ -38,5 +38,9 @@ describe("firstEntryHref", () => {
     it("drops an amount the typed step would save in the wrong currency", () => {
         expect(seedOf({ ...receipt, currency: "EUR" }, "USD")).not.toHaveProperty("amount");
         expect(seedOf({ ...receipt, currencyUnresolved: true }, "USD")).not.toHaveProperty("amount");
+    });
+
+    it("leaves an income receipt out of the expense-only typed step", () => {
+        expect(seedOf({ ...receipt, income: true }, "USD")).toStrictEqual({});
     });
 });

@@ -6,6 +6,9 @@ export type FirstEntrySeed = Partial<Record<"amount" | "categoryId" | "merchant"
 
 export function firstEntryHref(draft: ResolvedReceipt, currency: string): Href {
     const params: FirstEntrySeed = {};
+    if (draft.income) {
+        return { params, pathname: "/onboarding/first-entry" };
+    }
     if (draft.currency === currency && !draft.currencyUnresolved && draft.amount > 0) {
         params.amount = String(draft.amount);
     }
