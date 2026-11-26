@@ -232,8 +232,6 @@ const profileSharing = {
                     pt: "As {{limit}} vagas estão ocupadas.",
                 })
             ),
-            newLink: t({ en: "New link", de: "Neuer Link", es: "Enlace nuevo", fr: "Nouveau lien", pt: "Link novo" }),
-
             seatsLeft: insert(
                 t({
                     en: "{{count}} seats left",
@@ -330,6 +328,14 @@ const profileSharing = {
                 fr: "Vos opérations restent pour les autres",
                 pt: "Seus lançamentos ficam para os outros",
             }),
+
+            unsynced: t({
+                en: "Couldn't save your latest changes. Try again before leaving.",
+                de: "Deine letzten Änderungen konnten nicht gespeichert werden. Versuch es vor dem Verlassen noch mal.",
+                es: "No se pudieron guardar tus últimos cambios. Inténtalo de nuevo antes de salir.",
+                fr: "Impossible d'enregistrer vos dernières modifications. Réessayez avant de quitter.",
+                pt: "Não foi possível salvar suas últimas alterações. Tente de novo antes de sair.",
+            }),
             label: t({
                 en: "Leave profile",
                 de: "Profil verlassen",
@@ -348,6 +354,13 @@ const profileSharing = {
                 })
             ),
         },
+        formerMembers: t({
+            en: "Former members",
+            de: "Ehemalige Mitglieder",
+            es: "Miembros anteriores",
+            fr: "Anciens membres",
+            pt: "Membros anteriores",
+        }),
         memberUnknown: t({ en: "Member", de: "Mitglied", es: "Miembro", fr: "Membre", pt: "Membro" }),
         members: {
             count: insert(
@@ -446,6 +459,7 @@ const profileSharing = {
             fr: "Vous n'avez plus accès à ce profil. Ses données ont quitté ce navigateur.",
             pt: "Você não tem mais acesso a esse perfil. Os dados dele saíram deste navegador.",
         }),
+        open: t({ en: "Open", de: "Öffnen", es: "Abrir", fr: "Ouvrir", pt: "Abrir" }),
         sharedWithYou: t({
             en: "Shared with you",
             de: "Mit dir geteilt",

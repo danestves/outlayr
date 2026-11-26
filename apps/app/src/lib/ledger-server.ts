@@ -4,8 +4,9 @@ import type { LedgerOpening } from "@outlayr/money/ledger-view";
 import type { DehydratedDbState } from "@tanstack/react-db";
 import type { QueryClient } from "@tanstack/react-query";
 import { createIsomorphicFn } from "@tanstack/react-start";
-import { getRequestHeaders } from "@tanstack/react-start/server";
+import { deleteCookie, getCookie, getRequestHeaders } from "@tanstack/react-start/server";
 import { ConvexHttpClient } from "convex/browser";
+import { ConvexError } from "convex/values";
 import * as Schema from "effect/Schema";
 
 import {
@@ -31,8 +32,9 @@ import type { ExchangeRate } from "./ledger-db";
 import type { PulledPage, PulledRow } from "./ledger-sync";
 import { lightSince, opensLight } from "./light-views";
 import type { LightPath } from "./light-views";
-import { currentProfileId, profileArgs } from "./profile";
+import { currentProfileId, PROFILE_COOKIE, parseProfileId, profileArgs } from "./profile";
 import { acceptedProfileId } from "./profile-access";
+import { profileLossCode } from "./profile-loss";
 import { profilesOf } from "./profile-registry";
 import type { JoinedProfile, ProfileMembersView } from "./profile-sharing";
 import { timed } from "./server-timing";
@@ -44,10 +46,20 @@ export interface ServerLedger {
     lostProfileId: string | null;
     members: ProfileMembersView | null;
     opening: LedgerOpening | null;
+    paywalled: boolean;
     profile: Profile | undefined;
     profileId: string | null;
     profiles: PulledPage;
 }
+
+const proRequired = (error: Error) =>
+    (error instanceof ConvexError ? String(error.data) : error.message).includes("Pro is required");
+
+const forgetRequestProfile = (profileId: string) => {
+    if (parseProfileId(getCookie(PROFILE_COOKIE)) === profileId) {
+        deleteCookie(PROFILE_COOKIE, { path: "/" });
+    }
+};
 
 const SessionAnswer = Schema.Struct({
     session: Schema.Struct({ id: Schema.String }),
@@ -169,55 +181,116 @@ export const serverLedger = createIsomorphicFn()
             const client = new ConvexHttpClient(serverConvexUrl(), { auth: token });
             const profile = tokenProfile(token) ?? timed("profile", () => readProfile(convexSiteUrl));
             const rates = timed("rates", () => client.query(api.ledger.exchangeRates, {}));
-            const [profilesPage, rateRows] = await Promise.all([
-                timed(
-                    "profiles",
-                    () => pullProfiles(client, requestedProfileId !== null),
-                    (page) => `${page.rows.length} rows`
-                ),
-                rates,
-            ]);
-            const own = profilesOf(profilesPage).some((row) => row.id === requestedProfileId);
+            let registryFailed = false;
+            let registryError: Error | null = null;
+            const registry = timed(
+                "profiles",
+                () => pullProfiles(client, requestedProfileId !== null),
+                (page) => `${page.rows.length} rows`
+            ).catch((error) => {
+                registryFailed = true;
+                registryError = error instanceof Error ? error : new Error(String(error));
+                return EMPTY_PAGE;
+            });
+            const [profilesPage, rateRows] = await Promise.all([registry, rates]);
+            const own = !registryFailed && profilesOf(profilesPage).some((row) => row.id === requestedProfileId);
             let joined: readonly JoinedProfile[] | null = null;
             let joinedKnown = false;
+            let joinedError: Error | null = null;
             if (requestedProfileId !== null && !own) {
                 const answer = await timed("joined", () =>
-                    client.query(api.profileSharing.joined, {}).catch(() => null)
+                    client.query(api.profileSharing.joined, {}).catch((error) => {
+                        joinedError = error instanceof Error ? error : new Error(String(error));
+                        return null;
+                    })
                 );
                 if (answer !== null) {
                     joined = answer;
                     joinedKnown = true;
                 }
             }
-            const profileId = acceptedProfileId(requestedProfileId, own, joined ?? []);
-            const pull = async () =>
+            let profileId: string | null = null;
+            let lostProfileId: string | null = null;
+            if (requestedProfileId !== null) {
+                if (own) {
+                    profileId = requestedProfileId;
+                } else if (joinedKnown) {
+                    if (acceptedProfileId(requestedProfileId, own, joined ?? []) !== null) {
+                        profileId = requestedProfileId;
+                    } else if (registryFailed) {
+                        throw registryError ?? new Error("Could not read the visitor's profiles");
+                    } else {
+                        lostProfileId = requestedProfileId;
+                    }
+                } else if (registryFailed) {
+                    throw registryError ?? new Error("Could not read the visitor's profiles");
+                } else {
+                    throw joinedError ?? new Error("Could not verify the profile's membership");
+                }
+            }
+            if (lostProfileId !== null) {
+                forgetRequestProfile(lostProfileId);
+            }
+            const pull = async (scope: string | null) =>
                 (light
                     ? await timed(
                           "recent",
-                          () => pullLight(client, Promise.resolve(rateRows), profileId, light),
+                          () => pullLight(client, Promise.resolve(rateRows), scope, light),
                           (pulled) =>
                               pulled ? `${pulled.rows.length} rows, ${pulled.opening.cells.length} cells` : "none"
                       )
                     : null) ??
                 (await timed(
                     "pull",
-                    () => pullLedger(client, profileId),
+                    () => pullLedger(client, scope),
                     (pulled) => `${pulled.rows.length} rows`
                 ));
-            const members =
-                profileId === null
-                    ? null
-                    : timed("members", () => client.query(api.profileSharing.members, { profileId }).catch(() => null));
-            const [{ cursor, opening, rows }, memberRows] = await Promise.all([pull(), members]);
+            const read = async (scope: string | null) => {
+                const members =
+                    scope === null
+                        ? null
+                        : timed("members", () =>
+                              client.query(api.profileSharing.members, { profileId: scope }).catch(() => null)
+                          );
+                const [{ cursor, opening, rows }, memberRows] = await Promise.all([pull(scope), members]);
+                return { cursor, memberRows, opening, rows };
+            };
+            let loaded: Awaited<ReturnType<typeof read>>;
+            let paywalled = false;
+            const readPersonal = async () => {
+                try {
+                    return await read(null);
+                } catch (fallback) {
+                    const failure = fallback instanceof Error ? fallback : new Error(String(fallback));
+                    if (!proRequired(failure)) {
+                        throw failure;
+                    }
+                    paywalled = true;
+                    return { cursor: 0, memberRows: null, opening: null, rows: [] };
+                }
+            };
+            if (lostProfileId === null) {
+                try {
+                    loaded = await read(profileId);
+                } catch (error) {
+                    if (profileId === null || !(error instanceof Error) || profileLossCode(error) === null) {
+                        throw error;
+                    }
+                    lostProfileId = profileId;
+                    forgetRequestProfile(profileId);
+                    profileId = null;
+                    loaded = await readPersonal();
+                }
+            } else {
+                loaded = await readPersonal();
+            }
             return {
-                collections: ledgerSeed(rows, cursor, rateRows),
+                collections: ledgerSeed(loaded.rows, loaded.cursor, rateRows),
                 joined,
-                lostProfileId:
-                    requestedProfileId !== null && profileId === null && (own || joinedKnown)
-                        ? requestedProfileId
-                        : null,
-                members: memberRows,
-                opening,
+                lostProfileId,
+                members: loaded.memberRows,
+                opening: loaded.opening,
+                paywalled,
                 profile: await profile,
                 profileId,
                 profiles: profilesPage,

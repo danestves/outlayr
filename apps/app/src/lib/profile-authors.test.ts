@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { authorId, unsentOf, UNSENT_SEQ } from "./profile-authors";
+import { authorBucket, authorId, FORMER_AUTHORS, unsentOf, UNSENT_SEQ } from "./profile-authors";
 
 const OWNER = "owner-1";
 const ME = "me-2";
@@ -29,5 +29,21 @@ describe("unsentOf", () => {
     it("recognizes the seq a shown row gets before its push", () => {
         expect(unsentOf({ seq: UNSENT_SEQ })).toBe(true);
         expect(unsentOf({ seq: 12 })).toBe(false);
+    });
+});
+
+describe("authorBucket", () => {
+    const members = new Set([OWNER, ME]);
+
+    it("keeps an author who is still a member", () => {
+        expect(authorBucket(OWNER, members)).toBe(OWNER);
+    });
+
+    it("puts a departed author in the former members bucket", () => {
+        expect(authorBucket(OTHER, members)).toBe(FORMER_AUTHORS);
+    });
+
+    it("leaves an unattributed row out", () => {
+        expect(authorBucket(null, members)).toBeNull();
     });
 });

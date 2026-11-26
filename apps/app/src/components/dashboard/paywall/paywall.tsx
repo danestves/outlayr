@@ -16,7 +16,7 @@ import type { ProPlan } from "@outlayr/money/pro-prices";
 import { useOnMount } from "@outlayr/shared/lifecycle";
 import { SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useLoaderData, useRouteContext, useSearch } from "@tanstack/react-router";
+import { useLoaderData, useMatch, useRouteContext, useSearch } from "@tanstack/react-router";
 import { Alert } from "panelui-web/alert";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
@@ -29,13 +29,16 @@ import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { BrandPage, SessionEmail } from "@/components/brand-page";
-import { SettingsCard } from "@/components/dashboard/settings/parts";
+import { ProfileTile } from "@/components/dashboard/profile/tile";
+import { Row, SettingsCard } from "@/components/dashboard/settings/parts";
 import { signOut } from "@/components/dashboard/shell/account-menu";
 import { SiteLink } from "@/components/site-link";
 import { CHECKOUT_CONFIRMED, HELD_STATES, startCheckout } from "@/lib/billing";
 import { convexClient } from "@/lib/convex";
 import { track } from "@/lib/launch-analytics";
 import { paywallPrices } from "@/lib/paywall-prices";
+import { joinedLook, useJoinedProfiles } from "@/lib/profile-sharing";
+import { switchToProfile } from "@/lib/profile-switch";
 import { currentToken } from "@/lib/session";
 
 const TRIAL_DAYS = 3;
@@ -594,6 +597,35 @@ function Layout({
     );
 }
 
+function JoinedProfiles() {
+    const shareCopy = useIntlayer("profile-sharing");
+    const joined = useJoinedProfiles();
+    const loaded = useMatch({ from: "/_account/_app", select: (match) => match.loaderData, shouldThrow: false });
+    if (joined.length === 0) {
+        return null;
+    }
+    return (
+        <SettingsCard title={shareCopy.sharedWithYou}>
+            {joined.map((profile) => (
+                <Row
+                    key={profile.profileId}
+                    label={profile.look.name}
+                    leading={<ProfileTile look={joinedLook(profile)} size="sm" />}
+                >
+                    <Button
+                        disabled={loaded?.profileId === profile.profileId}
+                        onClick={() => switchToProfile(profile.profileId).catch(() => undefined)}
+                        size="sm"
+                        variant="outline"
+                    >
+                        {shareCopy.open}
+                    </Button>
+                </Row>
+            ))}
+        </SettingsCard>
+    );
+}
+
 export function Paywall() {
     const copy = useIntlayer("paywall");
     const planCopy = useIntlayer("plan");
@@ -658,7 +690,12 @@ export function Paywall() {
     const frame = (right: ReactNode) => (
         <Layout
             actions={needsAccount ? <GuestActions /> : <AccountActions />}
-            left={ended ? <ComesBack /> : <Compare />}
+            left={
+                <div className="flex flex-col gap-4">
+                    <JoinedProfiles />
+                    {ended ? <ComesBack /> : <Compare />}
+                </div>
+            }
             right={right}
             sub={ended ? copy.endedSub : copy.subhead}
             title={ended?.expiresAtMs ? copy.endedOn({ date: format(ended.expiresAtMs) }) : copy.headline}

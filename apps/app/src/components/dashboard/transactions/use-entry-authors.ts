@@ -28,7 +28,11 @@ export function useEntryAuthors(
     const names = new Map(people.map((member) => [member.id, member.name]));
     const authorOf = useMemo(
         () => (row: FoldedRow) =>
-            "fromId" in row ? null : authorIdOf(list.catalog.transaction(row.id), ownerId, viewerId),
+            authorIdOf(
+                "fromId" in row ? list.catalog.transfer(row.id) : list.catalog.transaction(row.id),
+                ownerId,
+                viewerId
+            ),
         [list, ownerId, viewerId]
     );
     const labelOf = (id: string | null) => {

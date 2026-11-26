@@ -9,6 +9,7 @@ export function catalogOf(ledger: Pick<Ledger, "books" | "budgetTargets" | "cate
     const categories = new Map(ledger.books.categories.map((row) => [row.localId, row]));
     const accounts = new Map(ledger.books.accounts.map((row) => [row.localId, row]));
     const transactions = new Map(ledger.books.transactions.map((row) => [row.localId, row]));
+    const transfers = new Map(ledger.books.transfers.map((row) => [row.localId, row]));
     return {
         account: (id: string | null) => {
             const row = id === null ? undefined : accounts.get(id);
@@ -23,6 +24,7 @@ export function catalogOf(ledger: Pick<Ledger, "books" | "budgetTargets" | "cate
             };
         },
         transaction: (id: string) => transactions.get(id),
+        transfer: (id: string) => transfers.get(id),
     };
 }
 

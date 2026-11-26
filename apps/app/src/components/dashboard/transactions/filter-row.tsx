@@ -435,19 +435,19 @@ export function FilterRow({
                             <span className="text-muted-foreground font-mono">{option.id === NO_TAG ? "∅" : "#"}</span>
                         )}
                     />
-                    {people.length > 1 ? (
-                        <PickMenu
-                            icon={UserMultipleIcon}
-                            label={words.loggedBy}
-                            onChange={(ids) => setSearch({ by: ids.length === 0 ? null : ids.join(",") })}
-                            options={people}
-                            picked={by}
-                            searchLabel={words.searchPeople.value}
-                            renderTile={(option) => <Avatar name={option.name} size="xs" />}
-                        />
-                    ) : null}
                 </>
             )}
+            {people.length > 1 ? (
+                <PickMenu
+                    icon={UserMultipleIcon}
+                    label={words.loggedBy}
+                    onChange={(ids) => setSearch({ by: ids.length === 0 ? null : ids.join(",") })}
+                    options={people}
+                    picked={by}
+                    searchLabel={words.searchPeople.value}
+                    renderTile={(option) => <Avatar name={option.name} size="xs" />}
+                />
+            ) : null}
             <AmountMenu query={query} setSearch={setSearch} />
             {transfers ? null : (
                 <PickMenu

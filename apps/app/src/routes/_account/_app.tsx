@@ -78,6 +78,16 @@ export const Route = createFileRoute("/_account/_app")({
                 const path = lightPathOf(location.pathname, location.searchStr);
                 const seed = await serverLedger(token, path ? { asOf, path } : null, requestedProfileId);
                 ({ opening, profileId: activeProfileId, lostProfileId } = seed);
+                if (seed.paywalled) {
+                    return {
+                        asOf,
+                        lostProfileId,
+                        opening: null,
+                        profileId: activeProfileId,
+                        synced: false,
+                        userId,
+                    };
+                }
                 context.dbClient.hydrate({ collections: seed.collections });
                 offerProfile(context.queryClient, seed.profile);
                 context.queryClient.setQueryData(profilesQuery.queryKey, seed.profiles);
@@ -106,12 +116,15 @@ export const Route = createFileRoute("/_account/_app")({
 });
 
 function App() {
-    const { synced } = Route.useLoaderData();
+    const { lostProfileId, synced } = Route.useLoaderData();
     if (!synced) {
         return (
-            <Suspense fallback={null}>
-                <Paywall />
-            </Suspense>
+            <Toast.Provider position="bottom-right">
+                <LostProfile profileId={lostProfileId} />
+                <Suspense fallback={null}>
+                    <Paywall />
+                </Suspense>
+            </Toast.Provider>
         );
     }
     return <Ledgered />;

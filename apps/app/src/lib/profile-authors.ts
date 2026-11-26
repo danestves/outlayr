@@ -1,4 +1,5 @@
 export const UNSENT_SEQ = Number.MAX_SAFE_INTEGER;
+export const FORMER_AUTHORS = "former-authors";
 export const authorId = (
     createdBy: string | null | undefined,
     unsent: boolean,
@@ -7,6 +8,13 @@ export const authorId = (
 ): string | null => createdBy ?? (unsent ? viewerId : ownerId);
 
 export const unsentOf = (row: { seq: number }) => row.seq === UNSENT_SEQ;
+
+export const authorBucket = (id: string | null, members: ReadonlySet<string>): string | null => {
+    if (id === null) {
+        return null;
+    }
+    return members.has(id) ? id : FORMER_AUTHORS;
+};
 
 export const authorIdOf = (
     row: { createdBy?: string | null; seq: number } | null | undefined,

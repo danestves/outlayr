@@ -182,6 +182,24 @@ describe("ledger committer", () => {
         expect(await held.settled).toStrictEqual({ status: "saved" });
     });
 
+    it("flushes every held commit before a leave", async () => {
+        const push = vi.fn<Push>(() => Promise.resolve(answered));
+        const committer = ledgerCommitter(await openTab(push), "owner");
+        committer.commit([entry("a")], { holdMs: HOLD_MS });
+        expect(storedRows()).toHaveLength(0);
+
+        expect(await committer.flushAll()).toBe(true);
+        expect(sentIds(push)).toStrictEqual([["a"]]);
+        expect(storedRows()).toHaveLength(0);
+    });
+
+    it("says a write failed so a leave does not revoke access first", async () => {
+        const committer = ledgerCommitter(await openTab(() => Promise.reject(new Error("refused"))), "owner");
+        committer.commit([entry("a")], { holdMs: HOLD_MS });
+
+        expect(await committer.flushAll()).toBe(false);
+    });
+
     it("reverts rows added to a held commit with the same undo", async () => {
         const db = await openTab(unanswered);
         const held = ledgerCommitter(db, "owner").commit([entry("a")], { holdMs: HOLD_MS });

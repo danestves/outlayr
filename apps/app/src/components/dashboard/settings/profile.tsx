@@ -1,7 +1,6 @@
 import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import DoorOpenIcon from "@hugeicons/core-free-icons/DoorOpenIcon";
 import Link01Icon from "@hugeicons/core-free-icons/Link01Icon";
-import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { useMirror } from "@outlayr/shared/lifecycle";
@@ -17,10 +16,11 @@ import { figureOf, foldFees } from "@/components/dashboard/home/rows";
 import { ProfileEditor } from "@/components/dashboard/profile/editor";
 import { PERSONAL_LOOK, ProfileTile } from "@/components/dashboard/profile/tile";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { convexClient } from "@/lib/convex";
 import { useDisplayFormat } from "@/lib/ledger-settings";
-import { authorId, unsentOf } from "@/lib/profile-authors";
+import { authorBucket, authorId, FORMER_AUTHORS, unsentOf } from "@/lib/profile-authors";
 import { activeProfileOf, profileLook, useLedgerProfiles } from "@/lib/profile-registry";
 import type { LedgerProfile, ProfileLook } from "@/lib/profile-registry";
 import {
@@ -68,7 +68,6 @@ function InviteCard({
     full,
     link,
     onCopy,
-    onNew,
     seats,
 }: {
     code: string | null;
@@ -77,7 +76,6 @@ function InviteCard({
     full: boolean;
     link: string;
     onCopy: () => void;
-    onNew: () => void;
     seats: number;
 }) {
     const copy = useIntlayer("profile-sharing");
@@ -93,15 +91,7 @@ function InviteCard({
     const left = copy.invite.seatsLeft({ count: String(seats) }).value;
     const shown = link.replace(/^https?:\/\//u, "");
     return (
-        <SettingsCard
-            action={
-                <Button disabled={code === null} onClick={onNew} size="sm" variant="outline">
-                    <HugeiconsIcon icon={RefreshIcon} strokeWidth={2} />
-                    {copy.invite.newLink}
-                </Button>
-            }
-            title={copy.invite.title}
-        >
+        <SettingsCard title={copy.invite.title}>
             <Row
                 hint={`${expires === null ? "" : `${expires} · `}${left}. ${copy.invite.anyone.value}`}
                 label={
@@ -151,28 +141,38 @@ function MonthSplit({ members, viewerId }: { members: ProfileMembersView; viewer
     const ownerId = ownerOf(members)?.id ?? null;
     const splits = useMemo(() => {
         const raw = new Map(ledger.books.transactions.map((row) => [row.localId, row]));
+        const known = new Set(members.members.map((member) => member.id));
         const totals = new Map<string, { count: number; total: number }>();
         for (const row of foldFees(ledger.rows.filter((each) => each.day.startsWith(monthKey)))) {
             if ("fromId" in row) {
                 continue;
             }
             const source = raw.get(row.id);
-            const id = authorId(source?.createdBy, source ? unsentOf(source) : false, ownerId, viewerId);
+            const id = authorBucket(
+                authorId(source?.createdBy, source ? unsentOf(source) : false, ownerId, viewerId),
+                known
+            );
             if (id === null) {
                 continue;
             }
             const figure = figureOf(ledger, row);
-            const known = totals.get(id) ?? { count: 0, total: 0 };
+            const current = totals.get(id) ?? { count: 0, total: 0 };
             totals.set(id, {
-                count: known.count + 1,
-                total: known.total + (row.income ? figure.amount : -figure.amount),
+                count: current.count + 1,
+                total: current.total + (row.income ? figure.amount : -figure.amount),
             });
         }
-        return [...members.members].map((member) => ({
-            ...member,
-            ...(totals.get(member.id) ?? { count: 0, total: 0 }),
-        }));
-    }, [ledger, members.members, monthKey, ownerId, viewerId]);
+        const former = totals.get(FORMER_AUTHORS);
+        return [
+            ...members.members.map((member) => ({
+                ...member,
+                ...(totals.get(member.id) ?? { count: 0, total: 0 }),
+            })),
+            ...(former
+                ? [{ count: former.count, id: FORMER_AUTHORS, name: copy.formerMembers.value, total: former.total }]
+                : []),
+        ];
+    }, [copy.formerMembers.value, ledger, members.members, monthKey, ownerId, viewerId]);
     return (
         <SettingsCard title={copy.month.title({ month: formatMonth(locale, ledger.today) })}>
             {splits.map((split) => {
@@ -290,7 +290,8 @@ function SharingSection({
     const issuing = useRef(false);
     const seats = seatCountOf(members);
     const full = seats >= PROFILE_SEAT_LIMIT;
-    const invite = members?.invite ?? issued;
+    const liveCode = members?.invite?.code ?? null;
+    const invite = !full && issued !== null && issued.code === liveCode ? issued : null;
     const inviteLink = invite === null ? "" : profileInviteLink(invite.code);
     const canInvite = enabled && active !== null && !full;
 
@@ -320,8 +321,8 @@ function SharingSection({
         }
     };
 
-    useMirror([canInvite, members, active], () => {
-        if (canInvite && members?.invite === null && !issuing.current) {
+    useMirror([canInvite, seats, liveCode, active], () => {
+        if (canInvite && !issuing.current) {
             void issue();
         }
     });
@@ -368,7 +369,6 @@ function SharingSection({
                     full={false}
                     link={inviteLink}
                     onCopy={() => copyLink().catch(() => undefined)}
-                    onNew={() => issue().catch(() => undefined)}
                     seats={PROFILE_SEAT_LIMIT - seats}
                 />
             ) : null}
@@ -380,7 +380,6 @@ function SharingSection({
                     full
                     link=""
                     onCopy={() => undefined}
-                    onNew={() => undefined}
                     seats={0}
                 />
             ) : null}
@@ -433,6 +432,7 @@ export function ProfileSettings() {
     const joined = joinedProfileOf(joinedProfiles, profileId);
     const members = useProfileMembers(profileId);
     const enabled = useProfileSharingEnabled();
+    const committer = useLedgerCommitter();
     const { ledger } = useDashboard();
     const [editing, setEditing] = useState(false);
     const [confirming, setConfirming] = useState(false);
@@ -470,6 +470,12 @@ export function ProfileSettings() {
             return;
         }
         setBusy(true);
+        if (!(await committer.flushAll())) {
+            toast.add({ title: sharing.leave.unsynced.value, type: "destructive" });
+            setLeaving(false);
+            setBusy(false);
+            return;
+        }
         try {
             await convexClient().mutation(api.profileSharing.leave, { profileId });
         } catch {

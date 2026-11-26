@@ -62,6 +62,7 @@ type Phase = keyof PendingCommits;
 
 export interface LedgerCommitter {
     commit: (rows: readonly PushRow[], policy?: { holdMs: number }) => LedgerCommit;
+    flushAll: () => Promise<boolean>;
     getSnapshot: () => PendingCommits;
     resume: () => void;
     subscribe: (listener: () => void) => () => void;
@@ -122,6 +123,7 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
     let pending: PendingCommits = { failed: 0, held: 0, sending: 0 };
     const listeners = new Set<() => void>();
     const heldPushes = new Set<() => void>();
+    const inFlight = new Set<Promise<CommitOutcome>>();
     const sendingKeys = new Set<string>();
     let watchingPageHide = false;
 
@@ -249,6 +251,8 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
         const settled = new Promise<CommitOutcome>((resolve) => {
             settle = resolve;
         });
+        inFlight.add(settled);
+        void settled.then(() => inFlight.delete(settled));
 
         function flush() {
             if (!outcome) {
@@ -298,6 +302,17 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
 
     return {
         commit: (rows, policy) => start(rows, policy?.holdMs),
+        flushAll: async () => {
+            for (const flush of heldPushes) {
+                flush();
+            }
+            const outcomes: CommitOutcome[] = [];
+            while (inFlight.size > 0) {
+                // oxlint-disable-next-line no-await-in-loop -- a retry can start while an earlier commit settles.
+                outcomes.push(...(await Promise.all(inFlight)));
+            }
+            return outcomes.every((outcome) => outcome.status !== "failed");
+        },
         getSnapshot: () => pending,
         resume: () => {
             const profileId = profileOf(db);

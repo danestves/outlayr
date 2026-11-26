@@ -17,6 +17,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { editableDoc } from "@/lib/bulk-writes";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { photoSrc } from "@/lib/photo-src";
+import { authorBucket, FORMER_AUTHORS } from "@/lib/profile-authors";
 import { useProfileMembers } from "@/lib/profile-sharing";
 
 import { useDateFormat } from "../home/format";
@@ -411,27 +412,25 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
         if (!authors.shared || transfers) {
             return [];
         }
-        const people = new Map(authors.people.map((person) => [person.id, { count: 0, total: 0 }]));
+        const memberIds = new Set(authors.people.map((person) => person.id));
+        const splitTotals = new Map<string, { count: number; total: number }>();
         for (const row of rows) {
             if ("fromId" in row) {
                 continue;
             }
-            const id = authors.authorOf(row);
+            const id = authorBucket(authors.authorOf(row), memberIds);
             if (id === null) {
                 continue;
             }
-            const known = people.get(id);
-            if (known === undefined) {
-                continue;
-            }
             const figure = figureOf(ledger, row);
-            people.set(id, {
+            const known = splitTotals.get(id) ?? { count: 0, total: 0 };
+            splitTotals.set(id, {
                 count: known.count + 1,
                 total: known.total + (row.income ? figure.amount : -figure.amount),
             });
         }
-        return authors.people.flatMap((person) => {
-            const known = people.get(person.id);
+        const people = authors.people.flatMap((person) => {
+            const known = splitTotals.get(person.id);
             if (known === undefined || known.count === 0) {
                 return [];
             }
@@ -446,7 +445,11 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                 },
             ];
         });
-    }, [authors, ledger, rows, sharing.memberUnknown.value, sharing.you.value, transfers]);
+        const former = splitTotals.get(FORMER_AUTHORS);
+        return former
+            ? [...people, { id: FORMER_AUTHORS, label: sharing.formerMembers.value, total: former.total }]
+            : people;
+    }, [authors, ledger, rows, sharing.formerMembers.value, sharing.memberUnknown.value, sharing.you.value, transfers]);
     const perPerson = splits.length > 0;
     const cash = (value: number, sign: "always" | "auto" = "auto") => money(value, ledger.currency, sign);
     const moves = rows.flatMap((row) => ("fromId" in row ? [row] : []));
@@ -809,13 +812,14 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                                     </span>
                                 ) : null}
                                 <span className="ms-auto flex flex-wrap items-center gap-x-4 gap-y-1">
+                                    {footerFigures()}
                                     {perPerson
                                         ? splits.map((split) => (
                                               <Figure key={split.id} label={split.label}>
                                                   {cash(split.total, "always")}
                                               </Figure>
                                           ))
-                                        : footerFigures()}
+                                        : null}
                                 </span>
                             </footer>
                         )}
