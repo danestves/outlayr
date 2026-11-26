@@ -19,9 +19,3 @@ export function trackOnboarding<Event extends keyof OnboardingEvents>(
         posthog?.capture(event, properties);
     }
 }
-
-export function trackMoneyGoal(goal: typeof MoneyGoal.Type): void {
-    if (disclosed()) {
-        posthog?.setPersonProperties({ money_goal: goal });
-    }
-}

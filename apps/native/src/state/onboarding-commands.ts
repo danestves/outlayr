@@ -10,7 +10,7 @@ import type { MoneyGoal } from "@/domain/money-goal";
 import type { AccountPick } from "@/domain/onboarding-accounts";
 import { armChosenReminder } from "@/lib/chosen-reminder";
 import { fetchMerchantImage } from "@/lib/logo-fetch";
-import { trackMoneyGoal, trackOnboarding } from "@/lib/onboarding-events";
+import { trackOnboarding } from "@/lib/onboarding-events";
 import { persistLogo } from "@/lib/persist-logo";
 import { posthog } from "@/lib/posthog";
 import { appRuntime } from "@/lib/runtime";
@@ -120,7 +120,6 @@ export const setMoneyGoalCommand = createRuntimeCommand(appRuntime, {
     }) {
         yield* Meta.set(input.db, "moneyGoal", input.goal);
         yield* Effect.sync(() => {
-            trackMoneyGoal(input.goal);
             if (input.source === "onboarding") {
                 trackOnboarding("onboarding_goal_chosen", { goal: input.goal });
             }

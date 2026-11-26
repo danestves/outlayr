@@ -12,11 +12,13 @@ import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { authClient } from "@/lib/auth-client";
 import { isGoogleSignInAvailable } from "@/lib/google-sign-in";
+import { useWhen } from "@/lib/lifecycle";
 import { posthog } from "@/lib/posthog";
 import { purchaseListener } from "@/lib/purchase-listener";
 import { TRIGGERS_IN_SHORTCUTS } from "@/lib/wallet-shortcut";
 
 import { STEP_PROGRESS } from "./progress";
+import { holdScanForSignIn, scanHeldForSignIn } from "./scan-sign-in";
 import { ScanSignInSheet } from "./scan-sign-in-sheet";
 
 type FirstLineDoor = "auto" | "scan" | "type";
@@ -48,7 +50,13 @@ export function OnboardingFirstLine() {
     const doors = useFirstLineDoors();
     const gate = useAiGate();
     const [signInOpen, setSignInOpen] = useState(false);
+    useWhen(gate === "signed-in" && scanHeldForSignIn(), () => {
+        holdScanForSignIn(false);
+        setSignInOpen(false);
+        router.push("/onboarding/scan");
+    });
     const typeInstead = () => {
+        holdScanForSignIn(false);
         setSignInOpen(false);
         captureDoor("type");
         router.push("/onboarding/first-entry");
@@ -102,7 +110,10 @@ export function OnboardingFirstLine() {
             {authClient === null ? null : (
                 <ScanSignInSheet
                     client={authClient}
-                    onOpenChange={setSignInOpen}
+                    onOpenChange={(next) => {
+                        holdScanForSignIn(next && scanHeldForSignIn());
+                        setSignInOpen(next);
+                    }}
                     onType={typeInstead}
                     open={signInOpen}
                 />
