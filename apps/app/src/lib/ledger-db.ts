@@ -1,5 +1,6 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import type { Doc } from "@outlayr/backend/convex/_generated/dataModel";
+import { useMirror } from "@outlayr/shared/lifecycle";
 import { convexCollectionOptions } from "@tanstack/convex-db-collection";
 import { collectionOptions, useDbClient } from "@tanstack/react-db";
 import type {
@@ -15,6 +16,7 @@ import type {
 import { ConvexError } from "convex/values";
 import { useMemo, useSyncExternalStore } from "react";
 
+import { convexClient } from "./convex";
 import { CONVEX, SERVER } from "./db";
 import type { LedgerConvex } from "./db";
 import type { LedgerBooks, RateRow } from "./ledger-books";
@@ -24,6 +26,7 @@ import { profileOf, pushRows } from "./ledger-write";
 import { browserRatesPublic } from "./profile";
 import { noteProfileLost, profileLossCode } from "./profile-loss";
 import { removeProfileAndSwitch } from "./profile-switch";
+import { missingRateQuotes, publicRateRow, rateCursors, rateWindowAt } from "./public-rates";
 
 const convexOf = (db: DbClient) => db.requireDependency<LedgerConvex>(CONVEX);
 const onServer = (db: DbClient) => db.getDependency<boolean>(SERVER) === true;
@@ -273,6 +276,49 @@ export const ledgerCollections = {
 } satisfies Record<keyof LedgerBooks | RecordTable | TagTable, { id: string }>;
 
 export type ExchangeRate = LedgerBooks["exchangeRates"][number];
+
+const requestedRateQuotes = new Set<string>();
+
+const addMissingRates = async (db: DbClient, books: LedgerBooks) => {
+    if (!browserRatesPublic()) {
+        return;
+    }
+    const missing = missingRateQuotes(books).filter((quote) => !requestedRateQuotes.has(quote));
+    if (missing.length === 0) {
+        return;
+    }
+    for (const quote of missing) {
+        requestedRateQuotes.add(quote);
+    }
+    const at = rateWindowAt();
+    const wanted = new Set(missing);
+    const pages = await Promise.all(
+        rateCursors(missing).map((cursor) =>
+            convexClient()
+                .query(api.exchangeRates.pullRates, { at, cursor })
+                .catch(() => null)
+        )
+    );
+    const rates = db.collection(ledgerCollections.exchangeRates);
+    for (const page of pages) {
+        for (const row of page?.rows ?? []) {
+            if (row.rateType !== "official" || !wanted.has(row.quote)) {
+                continue;
+            }
+            const rate = publicRateRow(row);
+            if (!rates.has(rate._id)) {
+                rates.insert(rate);
+            }
+        }
+    }
+};
+
+export function useMissingRates(books: LedgerBooks) {
+    const db = useDbClient();
+    useMirror([db, books], () => {
+        addMissingRates(db, books).catch(() => undefined);
+    });
+}
 
 export const syncedTableNames = (): readonly SyncedTable[] => syncedTables;
 

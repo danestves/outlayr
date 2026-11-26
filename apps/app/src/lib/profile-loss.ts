@@ -44,12 +44,15 @@ export function noteProfileDeleted(profileId: string) {
     storage()?.setItem(DELETED_NOTICE, profileId);
 }
 
-export function takeProfileDeleted(profileId: string) {
+export function takeDeletedProfile(profileId: string | null): string | null {
     const store = storage();
     if (store === null) {
-        return false;
+        return null;
     }
-    const deleted = store.getItem(DELETED_NOTICE) === profileId;
+    const deleted = store.getItem(DELETED_NOTICE);
+    if (deleted === null || (profileId !== null && deleted !== profileId)) {
+        return null;
+    }
     store.removeItem(DELETED_NOTICE);
     return deleted;
 }

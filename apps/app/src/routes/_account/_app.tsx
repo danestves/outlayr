@@ -36,14 +36,14 @@ import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { watchKeyboardInset } from "@/lib/keyboard-inset";
 import type { LedgerBooks } from "@/lib/ledger-books";
 import { ledgerCommitter } from "@/lib/ledger-committer";
-import { ledgerSync, markLanded, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
+import { ledgerSync, markLanded, preloadLedger, useLedgerBooks, useMissingRates } from "@/lib/ledger-db";
 import { serverLedger } from "@/lib/ledger-server";
 import { lightPathOf, viewCovered } from "@/lib/light-views";
 import { viewTransition } from "@/lib/motion";
 import { onboardingDue, readProgress, subscribeProgress } from "@/lib/onboarding";
 import { currentProfileId, profileScript } from "@/lib/profile";
 import { forgetProfileCookie } from "@/lib/profile-cookie";
-import { noteProfileLost, profileLossCode, takeProfileDeleted, takeProfileLost } from "@/lib/profile-loss";
+import { noteProfileLost, profileLossCode, takeDeletedProfile, takeProfileLost } from "@/lib/profile-loss";
 import { activeProfileOf, profilesOf, profilesQuery } from "@/lib/profile-registry";
 import { joinedProfileOf } from "@/lib/profile-sharing";
 import { removeProfileAndSwitch } from "@/lib/profile-switch";
@@ -293,13 +293,20 @@ function LostProfile({ profileId }: { profileId: string | null }) {
     const { removed } = useIntlayer("profile-sharing");
     const { deleted } = useIntlayer("profiles");
     useOnMount(() => {
-        if (profileId === null) {
+        const deletedId = takeDeletedProfile(profileId);
+        const lostId = deletedId ?? profileId;
+        if (lostId === null) {
             return;
         }
-        const wasDeleted = takeProfileDeleted(profileId);
-        forgetProfileUnsent(profileId);
-        forgetProfileCookie({ data: { profileId } }).catch(() => undefined);
-        toast.add({ title: wasDeleted ? deleted.value : removed.value, type: wasDeleted ? "success" : "destructive" });
+        if (deletedId !== null) {
+            takeProfileLost();
+        }
+        forgetProfileUnsent(lostId);
+        forgetProfileCookie({ data: { profileId: lostId } }).catch(() => undefined);
+        toast.add({
+            title: deletedId === null ? removed.value : deleted.value,
+            type: deletedId === null ? "destructive" : "success",
+        });
     });
     return null;
 }
@@ -317,6 +324,7 @@ function ProfileLostNotice() {
 
 function LiveDashboard({ bare, books, children }: { bare: boolean; books: LedgerBooks; children: ReactNode }) {
     const loaded = Route.useLoaderData();
+    useMissingRates(books);
     const registry = useQuery(profilesQuery);
     const joined = useQuery(joinedProfilesQuery);
     const profiles = useMemo(() => profilesOf(registry.data), [registry.data]);

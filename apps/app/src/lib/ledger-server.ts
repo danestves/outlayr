@@ -1,9 +1,5 @@
-import { ANCHOR_PAIR_CATALOG, PAIRS_PER_PAGE } from "@outlayr/backend/confect/exchangeRates";
 import { PULL_PAGE_MAX } from "@outlayr/backend/confect/sync";
 import { api } from "@outlayr/backend/convex/_generated/api";
-import { utcDateString } from "@outlayr/money/dates";
-import { parseFavourites } from "@outlayr/money/favourite-currencies";
-import { settingsOf } from "@outlayr/money/ledger-view";
 import type { LedgerOpening } from "@outlayr/money/ledger-view";
 import type { DehydratedDbState } from "@tanstack/react-db";
 import type { QueryClient } from "@tanstack/react-query";
@@ -42,6 +38,7 @@ import { profileAccess } from "./profile-access";
 import { profileLossCode } from "./profile-loss";
 import { profilesOf } from "./profile-registry";
 import type { JoinedProfile, ProfileMembersView } from "./profile-sharing";
+import { publicRateRow, quotedCurrencies, rateCursors, rateWindowAt } from "./public-rates";
 import { timed } from "./server-timing";
 import { tokenProfile } from "./session";
 
@@ -135,41 +132,21 @@ async function pullLight(
 
 const EMPTY_PAGE: PulledPage = { cursor: 0, hasMore: false, rows: [] };
 
-const rateWindowAt = () => Date.parse(utcDateString(Date.now()));
-
-const publicRateRow = (
-    row: Pick<RateRow, "date" | "fetchedAt" | "quote" | "rate" | "rateType" | "source">
-): RateRow => ({
-    ...row,
-    _creationTime: row.fetchedAt,
-    _id: `${row.quote}:${row.rateType}:${row.date}`,
-});
+const ratePage = (client: ConvexHttpClient, at: number, cursor: number) =>
+    client
+        .query(api.exchangeRates.pullRates, { at, cursor })
+        .catch(() => client.query(api.exchangeRates.pullRates, { at, cursor }))
+        .catch(() => null);
 
 const sharedRates = async (client: ConvexHttpClient, rows: readonly PulledRow[]): Promise<readonly RateRow[]> => {
     const books = pulledBooks(rows, []);
-    const favourites = books.appMeta.find((row) => row.key === "favouriteCurrencies")?.value ?? null;
-    const quotes = new Set(
-        [
-            settingsOf(books.appMeta).currency,
-            ...parseFavourites(favourites),
-            ...books.accounts.filter((row) => row.deletedAt === null).map((row) => row.currency),
-        ].filter((code) => code !== "USD")
-    );
-    const cursors = [
-        ...new Set(
-            [...quotes].flatMap((quote) => {
-                const index = ANCHOR_PAIR_CATALOG.findIndex(
-                    (pair) => pair.quote === quote && pair.rateType === "official"
-                );
-                return index === -1 ? [] : [Math.floor(index / PAIRS_PER_PAGE) * PAIRS_PER_PAGE];
-            })
-        ),
-    ];
+    const quotes = quotedCurrencies(books);
+    const wanted = new Set(quotes);
     const at = rateWindowAt();
-    const pages = await Promise.all(cursors.map((cursor) => client.query(api.exchangeRates.pullRates, { at, cursor })));
+    const pages = await Promise.all(rateCursors(quotes).map((cursor) => ratePage(client, at, cursor)));
     return pages
-        .flatMap((page) => page.rows)
-        .filter((row) => row.rateType === "official" && quotes.has(row.quote))
+        .flatMap((page) => page?.rows ?? [])
+        .filter((row) => row.rateType === "official" && wanted.has(row.quote))
         .map(publicRateRow);
 };
 
@@ -351,9 +328,7 @@ export const serverLedger = createIsomorphicFn()
             if (paywalled) {
                 rateRows = [];
             } else if (profileRates) {
-                rateRows = await timed("rates-shared", () => sharedRates(client, loaded.rows)).catch(() =>
-                    ratesForViewer()
-                );
+                rateRows = await timed("rates-shared", () => sharedRates(client, loaded.rows));
             } else {
                 rateRows = await ratesForViewer();
             }
