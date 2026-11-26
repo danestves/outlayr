@@ -551,7 +551,7 @@ const saveAccounts = FunctionImpl.make(
         const currency = (yield* setting(userId, "currency")) ?? "USD";
         const nextSortOrder = ledgerAccounts.reduce((highest, row) => Math.max(highest, row.sortOrder), -1) + 1;
         let created = 0;
-        let saved = 0;
+        let added = 0;
         for (const account of accounts) {
             const existing = yield* getByIndex(
                 reader.table("bankAccounts").get("by_provider_and_accountId", provider, account.id)
@@ -589,6 +589,7 @@ const saveAccounts = FunctionImpl.make(
                     status: account.status,
                     userId,
                 });
+                added += 1;
             } else {
                 yield* writer.table("bankAccounts").patch(existing._id, {
                     institution: account.institution,
@@ -601,12 +602,11 @@ const saveAccounts = FunctionImpl.make(
             if (id !== undefined && account.status === "active") {
                 yield* scheduler.runAfter(Duration.zero, refs.internal.banking.pull, { id });
             }
-            saved += 1;
         }
         if (created > 0) {
             yield* counter.advanceTo(counter.nextSeq + created);
         }
-        return saved;
+        return added;
     }, Effect.orDie)
 );
 

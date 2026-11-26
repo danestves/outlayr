@@ -57,6 +57,7 @@ export const StartedLink = Schema.Union([
 ]);
 
 export const FinishedLink = Schema.Union([
+    // `linked` counts accounts this link added; a sign-in again for accounts already linked adds none.
     Schema.Struct({ kind: Schema.Literal("linked"), linked: Schema.Number }),
     Schema.Struct({ kind: Schema.Literals(["plan", "unavailable", "failed"]) }),
 ]);
