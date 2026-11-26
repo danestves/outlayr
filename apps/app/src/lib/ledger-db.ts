@@ -299,17 +299,15 @@ const addMissingRates = async (db: DbClient, books: LedgerBooks) => {
                 .catch(() => null)
         )
     );
-    const rates = db.collection(ledgerCollections.exchangeRates);
-    for (const page of pages) {
-        for (const row of page?.rows ?? []) {
-            if (row.rateType !== "official" || !wanted.has(row.quote)) {
-                continue;
-            }
+    const rows = pages
+        .flatMap((page) => page?.rows ?? [])
+        .filter((row) => row.rateType === "official" && wanted.has(row.quote))
+        .map((row) => {
             const rate = publicRateRow(row);
-            if (!rates.has(rate._id)) {
-                rates.insert(rate);
-            }
-        }
+            return { key: rate._id, value: rate };
+        });
+    if (rows.length > 0) {
+        db.applyCollectionChunk({ collectionId: ledgerCollections.exchangeRates.id, rows });
     }
 };
 
