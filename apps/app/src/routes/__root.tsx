@@ -101,9 +101,8 @@ function RootDocument({ children }: { children: ReactNode }) {
     return (
         <html lang={LANGUAGES[locale].lang} suppressHydrationWarning>
             <head>
-                <HeadContent />
-                {/* TanStack's head keeps one meta per name, so the media variant cannot ride in `head()`. */}
                 <meta content="#131209" media="(prefers-color-scheme: dark)" name="theme-color" />
+                <HeadContent />
             </head>
             <body className="flex min-h-dvh flex-col">
                 <IntlayerProvider locale={locale}>

@@ -7,16 +7,15 @@ import Pdf01Icon from "@hugeicons/core-free-icons/Pdf01Icon";
 import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
-import { Link } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { PhoneButton } from "@/components/dashboard/home/setup";
 import { SuggestDialog } from "@/components/dashboard/settings/about/suggest";
 import { SettingsCard } from "@/components/dashboard/settings/parts";
-import { viewTransition } from "@/lib/motion";
 
 import { HEADLINE, Plate, QUIET, Solo, Tile } from "./chrome";
 
@@ -120,13 +119,10 @@ export function MoneyManagerSteps({ onBack }: { onBack: () => void }) {
                             <HugeiconsIcon icon={ArrowLeft02Icon} />
                             {moneyManager.back}
                         </Button>
-                        <Button
-                            nativeButton={false}
-                            render={<Link to="/import/money-manager" viewTransition={viewTransition("push-left")} />}
-                        >
+                        <PhoneButton>
                             <HugeiconsIcon icon={Upload04Icon} />
                             {moneyManager.choose}
-                        </Button>
+                        </PhoneButton>
                     </>
                 }
                 title={moneyManager.title}
