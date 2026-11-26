@@ -106,11 +106,11 @@ const about = {
                     fr: "Plateformes",
                 }),
                 text: t({
-                    en: "iPhone with iOS 18 or later, and Android.",
-                    de: "iPhone mit iOS 18 oder neuer und Android.",
-                    es: "iPhone con iOS 18 o posterior, y Android.",
-                    pt: "iPhone com iOS 18 ou posterior e Android.",
-                    fr: "iPhone avec iOS 18 ou plus récent, et Android.",
+                    en: "iPhone with iOS 18 or later, Android, and the web with Pro.",
+                    de: "iPhone mit iOS 18 oder neuer, Android und das Web mit Pro.",
+                    es: "iPhone con iOS 18 o posterior, Android y la web con Pro.",
+                    pt: "iPhone com iOS 18 ou posterior, Android e a web com o Pro.",
+                    fr: "iPhone avec iOS 18 ou plus récent, Android et le Web avec Pro.",
                 }),
             },
             {
