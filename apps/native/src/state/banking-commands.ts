@@ -25,6 +25,7 @@ const linkBank = Effect.fn("Banking.linkBank")(function* linkBank(
     return yield* cloudAction(api.banking.finishLink, {
         completion: null,
         provider: started.provider,
+        repair,
         sessionId: sheet.sessionId,
     });
 });

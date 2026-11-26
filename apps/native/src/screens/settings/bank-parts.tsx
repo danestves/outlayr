@@ -114,7 +114,7 @@ export function BankFilesIntoRow({
     );
 }
 
-type LinkFailure = "canceled" | "retired" | "failed";
+type LinkFailure = "canceled" | "retired" | "failed" | "expired";
 
 interface LinkAttempt {
     added: ReadonlySet<string>;
@@ -153,6 +153,12 @@ export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?:
             onSettled: () => setBusy(false),
             onSuccess: (outcome) => {
                 if (outcome.kind === "linked") {
+                    if (!outcome.repaired && outcome.added.length === 0) {
+                        haptics("error");
+                        setFailure("expired");
+                        failureRef.current?.present();
+                        return;
+                    }
                     haptics("success");
                     // A sign-in again adds no accounts, so no result sheet would ever close the link screen.
                     if (outcome.added.length === 0) {
@@ -172,7 +178,7 @@ export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?:
     );
 
     const link = (institution: BankInstitution, repair: LinkedBankAccount["id"] | null) => {
-        if (busy) {
+        if (busy || (attempt?.added.size ?? 0) > 0) {
             return;
         }
         setAttempt({ added: new Set(), institution, repair });

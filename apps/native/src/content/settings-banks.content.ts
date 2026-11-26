@@ -329,6 +329,14 @@ const settingsBanks = {
             fr: "Cette banque ne peut plus être liée. Recherchez-la à nouveau ou ajoutez-la manuellement.",
             pt: "Este banco não pode mais ser vinculado. Busque de novo ou adicione manualmente.",
         }),
+        "settings.banks.failure.expired": t({
+            en: "That account still needs you to sign in. Try again and pick the same account.",
+            de: "Dieses Konto braucht weiterhin eine neue Anmeldung. Versuch es erneut und wähle dasselbe Konto.",
+            es: "Esa cuenta todavía necesita que inicies sesión. Inténtalo de nuevo y elige la misma cuenta.",
+            fr: "Ce compte a toujours besoin que vous vous reconnectiez. Réessayez et choisissez le même compte.",
+            pt: "Essa conta ainda precisa que você entre de novo. Tente de novo e escolha a mesma conta.",
+            "pt-PT": "Essa conta ainda precisa que inicie sessão de novo. Tente de novo e escolha a mesma conta.",
+        }),
         "settings.banks.failure.notNow": t({
             en: "Not now",
             de: "Nicht jetzt",
