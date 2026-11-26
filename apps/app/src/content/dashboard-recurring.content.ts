@@ -721,7 +721,13 @@ const dashboardRecurring = {
         },
         kpi: {
             aMonth: t({ en: "a month", de: "pro Monat", es: "al mes", fr: "par mois", pt: "por mês" }),
-            detected: t({ en: "Detected", de: "Erkannt", es: "Detectados", fr: "Détectés", pt: "Detectados" }),
+            detected: t({
+                en: "Detected spending",
+                de: "Erkannte Ausgaben",
+                es: "Gastos detectados",
+                fr: "Dépenses détectées",
+                pt: "Gastos detectados",
+            }),
             dueNow: t({ en: "Due now", de: "Jetzt fällig", es: "Por pagar", fr: "À payer", pt: "A pagar" }),
             ifConfirmed: t({
                 en: "If all confirmed",
@@ -747,11 +753,11 @@ const dashboardRecurring = {
                 pt: "Nada a pagar",
             }),
             nothingToConfirm: t({
-                en: "Nothing to confirm",
-                de: "Nichts zu bestätigen",
-                es: "Nada por confirmar",
-                fr: "Rien à confirmer",
-                pt: "Nada para confirmar",
+                en: "No spending to confirm",
+                de: "Keine Ausgaben zu bestätigen",
+                es: "Ningún gasto por confirmar",
+                fr: "Aucune dépense à confirmer",
+                pt: "Nenhum gasto para confirmar",
             }),
             ofIncome: insert(
                 t({
