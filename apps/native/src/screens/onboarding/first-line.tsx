@@ -51,6 +51,9 @@ export function OnboardingFirstLine() {
     const gate = useAiGate();
     const [signInOpen, setSignInOpen] = useState(false);
     useWhen(gate === "signed-in" && scanHeldForSignIn(), () => {
+        if (!scanHeldForSignIn()) {
+            return;
+        }
         holdScanForSignIn(false);
         setSignInOpen(false);
         router.push("/onboarding/scan");
