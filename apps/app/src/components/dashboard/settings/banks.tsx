@@ -23,7 +23,6 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
-import { Empty } from "@/components/dashboard/home/empty";
 import { timeOfDay } from "@/components/dashboard/home/format";
 import { useEntryDay } from "@/components/dashboard/import/file-parts";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -39,7 +38,7 @@ import { byInstitution, linkBank, needsSignIn } from "@/lib/linked-banks";
 import type { BankInstitution, BankLinkOutcome, InstitutionGroup, LinkedBankAccount } from "@/lib/linked-banks";
 import { STRIPE_READY } from "@/lib/stripe-link";
 
-import { SettingsCard } from "./parts";
+import { Row, SettingsCard } from "./parts";
 
 const POPUP = "app-shell ph-no-capture z-60";
 const NOOP = () => undefined;
@@ -570,12 +569,17 @@ export function Banks() {
                     title={copy.banks}
                 >
                     {data !== undefined && accounts.length === 0 ? (
-                        <Empty
-                            action={linkButton("default")}
-                            icon={BankIcon}
-                            line={copy.emptyBody}
-                            title={copy.emptyTitle}
-                        />
+                        <Row
+                            hint={copy.emptyBody}
+                            label={copy.emptyTitle}
+                            leading={
+                                <span className="bg-app-fill text-muted-foreground rounded-app-sm grid size-8 shrink-0 place-items-center">
+                                    <HugeiconsIcon icon={BankIcon} size={16} />
+                                </span>
+                            }
+                        >
+                            {linkButton("default")}
+                        </Row>
                     ) : (
                         <BankTable>
                             {data === undefined ? (
