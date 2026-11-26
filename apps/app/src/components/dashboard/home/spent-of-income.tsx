@@ -22,6 +22,7 @@ import {
     shiftPeriodKey,
 } from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
+import { useNumberLocale } from "@/lib/exchange-locale";
 import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { viewTransition } from "@/lib/motion";
@@ -231,6 +232,7 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
     const { filters, ledger } = useDashboard();
     const copy = useIntlayer("dashboard-home");
     const { money } = useDisplayFormat();
+    const numberLocale = useNumberLocale();
     const period = filters.range;
     const figures = useMemo(
         () => kpis(ledger, period, { accounts: filters.accounts }),
@@ -304,7 +306,7 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
                 <RangeMeter.Scale
                     className="dash-figure text-app-label mt-3.5"
                     end={hasIncome ? shown(income) : copy.spentOfIncome.noIncome}
-                    start={moneyIn(0, ledger.currency, "auto", false)}
+                    start={moneyIn(0, ledger.currency, "auto", false, numberLocale)}
                 />
                 <div className="text-app-body mt-6 flex flex-wrap items-baseline justify-between gap-x-3">
                     <span className="text-muted-foreground text-app-label flex items-center gap-2">

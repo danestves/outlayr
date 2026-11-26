@@ -8,7 +8,7 @@ import { Cell, DataTable } from "@/components/dashboard/accounts/accounts-screen
 import { useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
-import { money } from "@/lib/ledger";
+import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { Card, Columns, ImportPage } from "../parts";
 import { accountOf, fill, planOf, spentThisMonth, targetName } from "./model";
@@ -24,6 +24,7 @@ interface Props {
 }
 
 export function Uncategorized({ draft, onBack, onChoices }: Props) {
+    const { money } = useDisplayFormat();
     const { bar, uncategorized: copy } = useIntlayer("dashboard-import-mm");
     const date = useDateFormat();
     const { analysis, choices } = draft;
@@ -187,6 +188,7 @@ export function Budgets({ draft, onBack, onChoices }: Props) {
 }
 
 export function Balances({ draft, onBack, onChoices }: Props) {
+    const { money } = useDisplayFormat();
     const { balances: copy, bar } = useIntlayer("dashboard-import-mm");
     const { analysis, choices } = draft;
     return (

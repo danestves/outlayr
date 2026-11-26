@@ -81,8 +81,8 @@ export function useInsightsFormat({
                     ? shortMonth.format(wallNoon(span.from)).replace(".", "")
                     : shortDate(span.from);
             },
-            whole: (value: number) => moneyIn(value, currency, "auto", false),
-            signedWhole: (value: number) => moneyIn(value, currency, "always", false),
+            whole: (value: number) => moneyIn(value, currency, "auto", false, numberLocale),
+            signedWhole: (value: number) => moneyIn(value, currency, "always", false, numberLocale),
             month: (key: string) => shortMonth.format(wallNoon(`${key}-15`)),
             periodName: (period: Period) => {
                 if (firstDayOfMonth !== 1) {

@@ -267,11 +267,17 @@ export function TransferEditor({
                                             : change({
                                                   feeTexts: {
                                                       ...values.feeTexts,
-                                                      [side]: money(parseAmount(text, decimalsFor(feeIn)), feeIn),
+                                                      [side]: money(
+                                                          parseAmount(text, decimalsFor(feeIn)),
+                                                          feeIn,
+                                                          "auto",
+                                                          true,
+                                                          locale
+                                                      ),
                                                   },
                                               })
                                     }
-                                    placeholder={money(0, feeIn)}
+                                    placeholder={money(0, feeIn, "auto", true, locale)}
                                     value={text}
                                 />
                                 <span className="text-muted-foreground truncate text-sm">

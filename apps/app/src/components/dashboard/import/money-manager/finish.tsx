@@ -14,7 +14,7 @@ import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { money } from "@/lib/ledger";
+import { useDisplayFormat } from "@/lib/ledger-settings";
 import type { MoneyManagerImported } from "@/lib/money-manager/writes";
 
 import { Banner, Card, Columns, ImportPage } from "../parts";
@@ -105,6 +105,7 @@ interface DoneProps {
 }
 
 export function Done({ at, entryCount, imported, onUndo, undone }: DoneProps) {
+    const { money } = useDisplayFormat();
     const { bar, done } = useIntlayer("dashboard-import-mm");
     const date = useDateFormat();
     const { ledger, overview } = useDashboard();
