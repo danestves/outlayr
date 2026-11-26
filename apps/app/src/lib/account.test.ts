@@ -51,6 +51,11 @@ describe("failureKey", () => {
         expect(failureKey({ code: "INVALID_EMAIL_OR_PASSWORD", status: 401 })).toBe("credentials");
     });
 
+    it("tells an expired code apart from a wrong one", () => {
+        expect(failureKey({ code: "OTP_EXPIRED", status: 400 })).toBe("expired");
+        expect(failureKey({ code: "INVALID_OTP", status: 400 })).toBe("code");
+    });
+
     it("reports rate limits whatever the code", () => {
         expect(failureKey({ code: "SOMETHING", status: 429 })).toBe("rateLimited");
     });
