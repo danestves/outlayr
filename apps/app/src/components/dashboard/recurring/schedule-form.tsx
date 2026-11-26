@@ -455,7 +455,7 @@ function FormView({
     const problems = new Set<DraftProblem>(tried ? draftProblems(draft) : []);
     const preset = values.every === 1 ? PRESETS.find((each) => each.type === values.type) : undefined;
     const perMonth = draft.amount * monthlyChargeCount(values.type, values.every);
-    const shownAmount = draft.amount > 0 ? amountText(draft.amount, currency) : "";
+    const shownAmount = draft.amount > 0 ? money(draft.amount, currency) : "";
     const save = () => {
         setTried(true);
         if (draftProblems(draft).length === 0) {
@@ -514,7 +514,7 @@ function FormView({
                             value={{ amount: Number.isFinite(amount) ? amount : null, code: currency }}
                         />
                         {problems.has("amount") ? (
-                            <Field.Error match>{errors.amount({ zero: amountText(0, currency) })}</Field.Error>
+                            <Field.Error match>{errors.amount({ zero: money(0, currency) })}</Field.Error>
                         ) : null}
                     </Field>
                     <Slot label={copy.fields.account}>

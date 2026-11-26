@@ -276,7 +276,7 @@ export function deletedAccount(books: LedgerBooks, account: Account, at: number)
 
 const SEPARATORS = /[.,]/g;
 const NOT_AMOUNT = /[^\d.,]/g;
-const SYMBOL_MARK = /(?<=\p{L})[.,]/gu;
+const SYMBOL_MARK = /(?<=\p{L})[.,](?=\s)/gu;
 const GROUP_DIGITS = 3;
 
 /**

@@ -335,6 +335,7 @@ function EntryFields({
     values: EntryValues;
 }) {
     const { ledger, overview } = useDashboard();
+    const display = useDisplayFormat();
     const { form, kind } = useIntlayer("dashboard-transactions");
     const quiet = layout === "drawer";
     const accounts = openAccounts(ledger.books);
@@ -396,7 +397,7 @@ function EntryFields({
         />
     );
     const feeRate = parseFee(values.feeText, values.currency)?.rate;
-    const feeShown = feeRate == null ? null : money(feeOfRate(values, feeRate), values.currency);
+    const feeShown = feeRate == null ? null : display.money(feeOfRate(values, feeRate), values.currency);
     const name = <Input onChange={(event) => onChange({ note: event.target.value })} value={values.note} />;
     return (
         <>
