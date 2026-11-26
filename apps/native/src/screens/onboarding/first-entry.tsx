@@ -1,5 +1,5 @@
 import * as Cause from "effect/Cause";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { ScrollView } from "react-native";
 
@@ -10,35 +10,25 @@ import { Sentence } from "@/components/sentence/sentence";
 import { SentenceValue } from "@/components/sentence/sentence-value";
 import { StepCategory } from "@/components/transaction-form/stage/step-category";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useGlobalCurrency, useMeta } from "@/data/app-meta";
+import { useGlobalCurrency } from "@/data/app-meta";
 import { useCategoriesByNamespace } from "@/data/categories";
 import { useNow } from "@/data/use-now";
-import { formatSignedAmount } from "@/domain/account-display";
 import { firstEntryCategory } from "@/domain/first-entry-category";
 import { formatAmount, minorUnitsFor, roundToMinorUnits } from "@/domain/money";
-import { numpadToNumber } from "@/domain/numpad";
-import type { TranslationKey } from "@/i18n/catalog";
+import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT } from "@/state/atom-command";
-import { finishFirstRunCommand } from "@/state/lifecycle-commands";
 import { saveFirstEntryCommand } from "@/state/onboarding-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
-import { HeardFrom } from "./heard-from";
-import { useOnboardingOfferDue } from "./pro";
-
-const FAILURE_COPY = {
-    finish: "onboarding.firstEntry.finishFailed",
-    save: "transaction.save.failedBody",
-} as const satisfies Record<string, TranslationKey>;
+import type { FirstEntrySeed } from "./first-entry-seed";
 
 export function OnboardingFirstEntry() {
     const db = useDatabase();
     const router = useRouter();
-    const offerDue = useOnboardingOfferDue();
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
@@ -46,41 +36,20 @@ export function OnboardingFirstEntry() {
     const nowMs = useNow();
     const currency = useGlobalCurrency(db);
     const categories = useCategoriesByNamespace(db, false);
-    const shareAnalytics = useMeta(db, "shareAnalytics");
-    const [amount, setAmount] = useState("");
-    const [pickedId, setPickedId] = useState<string | null>(null);
+    const seed = useLocalSearchParams<FirstEntrySeed>();
+    const [amount, setAmount] = useState(() =>
+        numberToNumpad(numpadToNumber(seed.amount ?? ""), minorUnitsFor(currency))
+    );
+    const [pickedId, setPickedId] = useState<string | null>(seed.categoryId ?? null);
     const [step, setStep] = useState<"amount" | "category">("amount");
     const [saving, setSaving] = useState(false);
     const savingRef = useRef(false);
-    const [saved, setSaved] = useState(false);
-    const [asking, setAsking] = useState(false);
-    const [failed, setFailed] = useState<keyof typeof FAILURE_COPY | null>(null);
+    const [failed, setFailed] = useState(false);
 
     const picked = categories.flatMap((parent) => [parent, ...parent.children]).find((row) => row.id === pickedId);
     const category = picked ?? firstEntryCategory(categories, new Date(nowMs).getHours());
     const figure = numpadToNumber(amount);
 
-    const finishFailed = (cause: Cause.Cause<unknown>) => {
-        console.error("Finishing onboarding failed", Cause.squash(cause));
-        haptics("error");
-        setFailed("finish");
-    };
-    const finishFirstRun = useAtomAction(finishFirstRunCommand, { onFailure: finishFailed }, SILENT);
-    const finishOnboarding = () => {
-        if (offerDue) {
-            router.push("/onboarding/pro");
-        } else {
-            finishFirstRun(db);
-        }
-    };
-    const skipOnboarding = useAtomAction(
-        finishFirstRunCommand,
-        {
-            onFailure: finishFailed,
-            onSuccess: () => posthog?.capture("onboarding_first_entry", { outcome: "skipped" }),
-        },
-        SILENT
-    );
     const saveFirstEntry = useAtomAction(
         saveFirstEntryCommand,
         {
@@ -88,18 +57,15 @@ export function OnboardingFirstEntry() {
                 console.error("Saving the first entry failed", Cause.squash(cause));
                 savingRef.current = false;
                 haptics("error");
-                setFailed("save");
+                setFailed(true);
             },
             onSettled: () => setSaving(false),
             onSuccess: (written) => {
                 savingRef.current = written;
                 haptics(written ? "success" : "error");
-                setFailed(written ? null : "save");
-                setSaved(written);
-                if (written && shareAnalytics) {
-                    setAsking(true);
-                } else if (written) {
-                    finishOnboarding();
+                setFailed(!written);
+                if (written) {
+                    router.replace("/onboarding/smart-features");
                 }
             },
         },
@@ -112,7 +78,7 @@ export function OnboardingFirstEntry() {
         }
         savingRef.current = true;
         setSaving(true);
-        setFailed(null);
+        setFailed(false);
         saveFirstEntry({
             db,
             draft: {
@@ -122,7 +88,7 @@ export function OnboardingFirstEntry() {
                 currency: null,
                 details: null,
                 income: false,
-                merchant: "",
+                merchant: seed.merchant ?? "",
                 schedule: null,
             },
         });
@@ -132,41 +98,19 @@ export function OnboardingFirstEntry() {
         if (saving) {
             return;
         }
-        setFailed(null);
-        if (saved) {
-            finishOnboarding();
-        } else if (offerDue) {
-            posthog?.capture("onboarding_first_entry", { outcome: "skipped" });
-            router.push("/onboarding/pro");
-        } else {
-            skipOnboarding(db);
-        }
+        setFailed(false);
+        posthog?.capture("onboarding_first_entry", { outcome: "skipped" });
+        router.push("/onboarding/smart-features");
     };
-
-    if (asking && category !== null) {
-        return (
-            <HeardFrom
-                error={failed === null ? null : t(FAILURE_COPY[failed])}
-                eyebrow={t("onboarding.heardFrom.eyebrow", {
-                    amount: formatSignedAmount(-roundToMinorUnits(figure, currency), currency, true, language),
-                    category: category.name ?? "",
-                })}
-                onDone={() => {
-                    setFailed(null);
-                    finishOnboarding();
-                }}
-            />
-        );
-    }
 
     return (
         <FirstRun
             action={{
-                disabled: figure <= 0 || category === null || saving || saved,
+                disabled: figure <= 0 || category === null || saving,
                 label: t("common.save"),
                 onPress: save,
             }}
-            error={failed === null ? null : t(FAILURE_COPY[failed])}
+            error={failed ? t("transaction.save.failedBody") : null}
             eyebrow={t("onboarding.firstEntry.eyebrow")}
             skip={{ label: t("onboarding.firstEntry.later"), onPress: later }}
             title={t("onboarding.firstEntry.title")}

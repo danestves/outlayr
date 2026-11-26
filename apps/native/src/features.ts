@@ -23,6 +23,17 @@ export const features = {
         says: ["open source licenses", "the licenses screen", "third-party notices"],
         steps: [{ press: 'label="Open source licenses"' }, { see: "@babel/runtime, MIT" }],
     },
+    "onboarding-first-line": {
+        link: "/onboarding/first-line",
+        proves: "A new user's first entry starts from auto-log or a receipt scan, with typing as the fallback.",
+        says: ["onboarding first entry", "the first line step", "set up auto-log during onboarding"],
+        steps: [
+            { see: "Your first entry, without typing" },
+            { see: "Scan a receipt" },
+            { press: 'label="Type one instead"' },
+            { see: "What did you last pay for?" },
+        ],
+    },
     "add-expense": {
         link: "/transactions/create",
         proves: "An amount can be entered, filed under Groceries, saved, and the new entry appears in the log.",

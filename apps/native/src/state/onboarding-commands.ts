@@ -17,6 +17,18 @@ import { createRuntimeCommand } from "./atom-command";
 import { commitEntry } from "./entry-commit";
 import type { EntryDraft } from "./entry-commit";
 
+const recordFirstEntrySaved = Effect.fn("Onboarding.recordFirstEntrySaved")(function* recordFirstEntrySaved(
+    db: Database,
+    method: "manual" | "scan"
+) {
+    const now = yield* DateTime.nowAsDate;
+    yield* Effect.all([
+        Meta.set(db, "secondEntryNudgeSavedAt", now.getTime()),
+        Meta.set(db, "secondEntryNudgeArmedAt", 0),
+    ]).pipe(Effect.catchCause((cause) => Effect.logError("Marking the second-entry nudge failed", cause)));
+    posthog?.capture("onboarding_first_entry", { outcome: "saved", method });
+});
+
 export const saveFirstEntryCommand = createRuntimeCommand(appRuntime, {
     execute: Effect.fn("Onboarding.saveFirstEntry")(function* saveFirstEntry(input: {
         db: Database;
@@ -31,14 +43,15 @@ export const saveFirstEntryCommand = createRuntimeCommand(appRuntime, {
         if (outcome.kind === "failed") {
             return false;
         }
-        yield* Effect.all([
-            Meta.set(input.db, "secondEntryNudgeSavedAt", now.getTime()),
-            Meta.set(input.db, "secondEntryNudgeArmedAt", 0),
-        ]).pipe(Effect.catchCause((cause) => Effect.logError("Marking the second-entry nudge failed", cause)));
-        posthog?.capture("onboarding_first_entry", { outcome: "saved" });
+        yield* recordFirstEntrySaved(input.db, "manual");
         return true;
     }),
     label: "onboarding:save-first-entry",
+});
+
+export const saveScanFirstEntryCommand = createRuntimeCommand(appRuntime, {
+    execute: (db: Database) => recordFirstEntrySaved(db, "scan"),
+    label: "onboarding:save-scan-entry",
 });
 
 export const awaitReminderPromptCommand = createRuntimeCommand(appRuntime, {

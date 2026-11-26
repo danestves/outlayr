@@ -474,7 +474,13 @@ const writeEntry = Effect.fn("ReceiptScan.writeEntry")(function* writeEntry(db: 
     input.onSaved();
 });
 
-function ScanFlowScreen() {
+export interface ScanFlowScreenProps {
+    limitFallback?: BarAction;
+    onNeedsForm?: (draft: ResolvedReceipt, attachment: string | null) => void;
+    onSaved?: () => void;
+}
+
+export function ScanFlowScreen({ limitFallback, onNeedsForm, onSaved }: ScanFlowScreenProps = {}) {
     const router = useRouter();
     const entitled = useProEntitled();
     const db = useDatabase();
@@ -502,7 +508,7 @@ function ScanFlowScreen() {
         "receiptScan",
         phase.kind === "failed" && isLimitRefusal(phase.reason) ? phase.reason : null
     );
-    const limitToast = <LimitToast feature="receiptScan" {...limit} />;
+    const limitToast = <LimitToast feature="receiptScan" linked={limitFallback === undefined} {...limit} />;
 
     const receipt = useResolvedPhase(phase, (next) =>
         next.kind === "review" ? resolveReceipt({ ...next.context, draft: next.draft, now: new Date() }) : null
@@ -542,6 +548,14 @@ function ScanFlowScreen() {
         );
     };
 
+    const needsForm = (draft: ResolvedReceipt, attachment: string | null) => {
+        if (onNeedsForm) {
+            onNeedsForm(draft, attachment);
+        } else {
+            openForm(draft, attachment);
+        }
+    };
+
     const save = (draft: ResolvedReceipt, categoryId: string | null, image: ArrayBuffer) => {
         setSaving(true);
         const attachment = keptScan(image);
@@ -553,14 +567,18 @@ function ScanFlowScreen() {
                 onFailed: () => {
                     setSaving(false);
                     if (navigation.isFocused()) {
-                        openForm(draft, attachment);
+                        needsForm(draft, attachment);
                     }
                 },
                 onSaved: () => {
                     haptics("success");
                     // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
                     if (navigation.isFocused()) {
-                        router.back();
+                        if (onSaved) {
+                            onSaved();
+                        } else {
+                            router.back();
+                        }
                     }
                 },
             })
@@ -586,7 +604,7 @@ function ScanFlowScreen() {
                             savable === null
                                 ? {
                                       label: t("receipt.action.finish"),
-                                      onPress: () => openForm(receipt, keptScan(phase.image)),
+                                      onPress: () => needsForm(receipt, keptScan(phase.image)),
                                   }
                                 : {
                                       label: t("receipt.action.save"),
@@ -595,7 +613,7 @@ function ScanFlowScreen() {
                         }
                         secondary={{
                             label: t("receipt.action.edit"),
-                            onPress: () => openForm(receipt, keptScan(phase.image)),
+                            onPress: () => needsForm(receipt, keptScan(phase.image)),
                         }}
                         tertiary={{ label: t("receipt.action.another"), onPress: reset }}
                     />
@@ -640,12 +658,15 @@ function ScanFlowScreen() {
         let primary: BarAction | null = libraryAction;
         let secondary: BarAction | null = null;
         if (phase.reason === "notEntitled" && !entitled) {
-            primary = { label: t("pro.action.see"), onPress: () => router.push(paywallHref("captures")) };
+            primary = limitFallback ?? {
+                label: t("pro.action.see"),
+                onPress: () => router.push(paywallHref("captures")),
+            };
         } else if (phase.reason === "notEntitled") {
             primary = phase.photo === null ? cameraAction : { label: t("receipt.action.retry"), onPress: retry };
             secondary = libraryAction;
         } else if (phase.reason === "quotaExceeded") {
-            primary = null;
+            primary = limitFallback ?? null;
         } else if (phase.reason === "denied") {
             primary = { label: t("receipt.action.settings"), onPress: () => runFlow(openAppSettings) };
             secondary = libraryAction;

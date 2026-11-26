@@ -14,30 +14,35 @@ export type EmailSignInRoute = "/auth/email" | "/settings/email";
 
 export function ProviderSignInButtons({
     busy,
+    disabled = false,
     emailRoute,
     start,
 }: {
     busy: SignInProvider | null;
-    emailRoute: EmailSignInRoute;
+    disabled?: boolean;
+    emailRoute?: EmailSignInRoute;
     start: ProviderSignIn["start"];
 }) {
+    const blocked = disabled || busy !== null;
     return (
         <View className="gap-3">
             {Platform.OS === "ios" ? (
                 <AppleSignInButton
-                    disabled={busy !== null}
+                    disabled={blocked}
                     onPress={() => start({ getCredential: appleCredential, provider: "apple" })}
                     pending={busy === "apple"}
                 />
             ) : null}
             {isGoogleSignInAvailable ? (
                 <GoogleSignInButton
-                    disabled={busy !== null}
+                    disabled={blocked}
                     onPress={() => start({ getCredential: googleIdToken, provider: "google" })}
                     pending={busy === "google"}
                 />
             ) : null}
-            <EmailSignInButton disabled={busy !== null} onPress={() => router.push(emailRoute)} />
+            {emailRoute === undefined ? null : (
+                <EmailSignInButton disabled={blocked} onPress={() => router.push(emailRoute)} />
+            )}
         </View>
     );
 }

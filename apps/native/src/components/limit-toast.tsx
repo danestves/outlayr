@@ -17,11 +17,13 @@ const TOP_OFFSET = 72;
 
 export function LimitToast({
     feature,
+    linked = true,
     notice,
     now,
     pro,
 }: {
     feature: CaptureFeature;
+    linked?: boolean;
     notice: LimitNotice | null;
     now: number;
     pro: boolean;
@@ -61,7 +63,7 @@ export function LimitToast({
             style={{ left: 16, position: "absolute", right: 16, top: TOP_OFFSET }}
         >
             <NoticeSlip
-                actionLabel={t(toPro ? "settings.usage.toast.pro" : "settings.usage.toast.usage")}
+                actionLabel={linked ? t(toPro ? "settings.usage.toast.pro" : "settings.usage.toast.usage") : undefined}
                 body={description ?? undefined}
                 onAction={() => router.push(toPro ? paywallHref("captures") : "/settings/usage")}
                 title={title}

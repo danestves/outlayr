@@ -1,5 +1,6 @@
 import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
+import { useRef } from "react";
 import { View } from "react-native";
 
 import { FirstRun } from "@/components/first-run";
@@ -7,11 +8,14 @@ import { OutlayrMark } from "@/components/outlayr-mark";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
 import { useDatabase } from "@/contexts/local-data-context";
+import { useMeta } from "@/data/app-meta";
 import { formatTimeOfDay, REMINDER_EVENING, reminderTime } from "@/domain/reminder";
 import { useTranslation } from "@/i18n/context";
 import { SILENT } from "@/state/atom-command";
 import { chooseFirstRunReminderCommand } from "@/state/settings-flow-commands";
 import { useAtomAction } from "@/state/use-atom-action";
+
+import { useFinishOnboarding } from "./finish";
 
 const EVENING = reminderTime(REMINDER_EVENING, { hour: 20, minute: 0 });
 
@@ -37,18 +41,38 @@ export function OnboardingRhythm() {
     const db = useDatabase();
     const t = useTranslation();
     const router = useRouter();
-    const next = () => router.push("/onboarding/first-entry");
+    const shareAnalytics = useMeta(db, "shareAnalytics");
+    const { clearFailed, failed, finish } = useFinishOnboarding();
+    const next = () => {
+        if (shareAnalytics) {
+            router.push("/onboarding/heard-from");
+        } else {
+            finish();
+        }
+    };
+    const choosing = useRef(false);
     const chooseReminder = useAtomAction(
         chooseFirstRunReminderCommand,
         {
             onFailure: (cause) => console.error("Saving the first-run reminder choice failed", Cause.squash(cause)),
-            onSettled: next,
+            onSettled: () => {
+                choosing.current = false;
+                next();
+            },
         },
         SILENT
     );
 
-    const remind = () => chooseReminder({ db, option: REMINDER_EVENING });
-    const skip = () => chooseReminder({ db, option: null });
+    const choose = (option: number | null) => {
+        if (choosing.current) {
+            return;
+        }
+        choosing.current = true;
+        clearFailed();
+        chooseReminder({ db, option });
+    };
+    const remind = () => choose(REMINDER_EVENING);
+    const skip = () => choose(null);
 
     return (
         <FirstRun
@@ -59,6 +83,7 @@ export function OnboardingRhythm() {
                 onPress: remind,
             }}
             body={t("onboarding.rhythm.body")}
+            error={failed}
             eyebrow={t("onboarding.rhythm.eyebrow")}
             object={
                 <View className="items-center">
