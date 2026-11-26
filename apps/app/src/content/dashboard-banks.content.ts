@@ -274,18 +274,11 @@ const dashboardBanks = {
             })
         ),
         resultBody: t({
-            en: "Pick the account each one files into.",
-            de: "Wähle für jedes das Konto, in das es bucht.",
-            es: "Elige la cuenta en la que se registra cada una.",
-            fr: "Choisissez le compte dans lequel chacun est classé.",
-            pt: "Escolha a conta em que cada uma lança.",
-        }),
-        resultSkip: t({
-            en: "Skip one and its charges come in without an account. You can pick one later.",
-            de: "Lässt du eines aus, kommen seine Abbuchungen ohne Konto an. Du kannst später eines wählen.",
-            es: "Si omites una, sus cargos llegan sin cuenta. Puedes elegir una después.",
-            fr: "Si vous en passez un, ses débits arrivent sans compte. Vous pourrez en choisir un plus tard.",
-            pt: "Se pular uma, as cobranças dela chegam sem conta. Você pode escolher uma depois.",
+            en: "Each one files into the account shown. Change any of them now or later.",
+            de: "Jedes bucht in das angezeigte Konto. Du kannst es jetzt oder später ändern.",
+            es: "Cada una se registra en la cuenta que ves. Puedes cambiarla ahora o después.",
+            fr: "Chacun est classé dans le compte affiché. Vous pouvez le changer maintenant ou plus tard.",
+            pt: "Cada uma lança na conta mostrada. Você pode mudar agora ou depois.",
         }),
         done: t({ en: "Done", de: "Fertig", es: "Listo", fr: "Terminé", pt: "Concluído" }),
         signedInAgain: insert(
@@ -295,6 +288,15 @@ const dashboardBanks = {
                 es: "{{bank}} vuelve a funcionar",
                 fr: "{{bank}} fonctionne à nouveau",
                 pt: "{{bank}} voltou a funcionar",
+            })
+        ),
+        stillExpired: insert(
+            t({
+                en: "{{bank}} still needs a sign-in for one account",
+                de: "{{bank}} braucht für ein Konto weiterhin eine Anmeldung",
+                es: "{{bank}} todavía necesita que inicies sesión para una cuenta",
+                fr: "{{bank}} demande toujours une connexion pour un compte",
+                pt: "{{bank}} ainda precisa de login em uma conta",
             })
         ),
         failedTitle: insert(

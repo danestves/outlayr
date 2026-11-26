@@ -91,16 +91,17 @@ function usePulledAt() {
     };
 }
 
-function useFilingTargets() {
+function useFilingTargets(filesInto: string | null) {
     const { ledger } = useDashboard();
-    return openAccounts(ledger.books)
-        .filter((row) => !isPerson(row))
-        .map((row) => ({ label: row.name, value: row.localId }));
+    const open = openAccounts(ledger.books).filter((row) => !isPerson(row));
+    const kept = ledger.books.accounts.find((row) => row.localId === filesInto && row.deletedAt === null);
+    const rows = kept === undefined || open.includes(kept) ? open : [kept, ...open];
+    return rows.map((row) => ({ label: row.name, value: row.localId }));
 }
 
 function FilesInto({ account, onFile }: { account: Shown; onFile: (accountId: string) => void }) {
     const copy = useIntlayer("dashboard-banks");
-    const targets = useFilingTargets();
+    const targets = useFilingTargets(account.filesInto);
     const current = targets.find((target) => target.value === account.filesInto) ?? null;
     if (account.status === "disconnected") {
         return <span>{current?.label}</span>;
@@ -295,8 +296,11 @@ function LinkBody({
                         inputValue={query}
                         loading={found.data === undefined && !found.isError}
                         loadingMessage={copy.searching.value}
-                        onInputValueChange={setQuery}
-                        onValueChange={(id) => setPicked(rows.find((row) => row.id === id) ?? picked)}
+                        onInputValueChange={(next) => {
+                            setQuery(next);
+                            setPicked((current) => (current && labelOf(current).label === next ? current : null));
+                        }}
+                        onValueChange={(id) => setPicked(rows.find((row) => row.id === id) ?? null)}
                         placeholder={copy.search.value}
                         presentation="inline"
                         value={picked?.id}
@@ -345,8 +349,20 @@ function LinkBody({
     );
 }
 
-function ResultBody({ accounts, bank, onFile }: { accounts: readonly Shown[]; bank: string; onFile: FileHandler }) {
+function ResultBody({
+    accounts,
+    bank,
+    expected,
+    onFile,
+}: {
+    accounts: readonly Shown[];
+    bank: string;
+    expected: number;
+    onFile: FileHandler;
+}) {
     const copy = useIntlayer("dashboard-banks");
+    const arriving = accounts.length < expected;
+    const shown = arriving ? SAMPLE_GROUP.accounts : accounts;
     return (
         <>
             <Dialog.Header>
@@ -354,26 +370,29 @@ function ResultBody({ accounts, bank, onFile }: { accounts: readonly Shown[]; ba
                 <Dialog.Description>{copy.resultBody}</Dialog.Description>
             </Dialog.Header>
             <Dialog.Body className="flex flex-col gap-3">
-                <ul>
-                    {accounts.map((account) => (
-                        <li
-                            className="border-app-rule flex items-center gap-3 border-t py-2.5 first:border-t-0"
-                            key={account.id}
-                        >
-                            <span className="min-w-0 flex-1">
-                                <b className="ph-no-capture block truncate font-medium">
-                                    {account.name}
-                                    <Last4 last4={account.last4} />
-                                </b>
-                                <span className="text-muted-foreground text-app-label">{copy.kinds[account.kind]}</span>
-                            </span>
-                            <span className="ph-no-capture w-56 shrink-0">
-                                <FilesInto account={account} onFile={(accountId) => onFile(account, accountId)} />
-                            </span>
-                        </li>
-                    ))}
-                </ul>
-                <p className="text-muted-foreground text-app-label">{copy.resultSkip}</p>
+                <Skeleton loading={arriving}>
+                    <ul>
+                        {shown.map((account) => (
+                            <li
+                                className="border-app-rule flex items-center gap-3 border-t py-2.5 first:border-t-0"
+                                key={account.id}
+                            >
+                                <span className="min-w-0 flex-1">
+                                    <b className="ph-no-capture block truncate font-medium">
+                                        {account.name}
+                                        <Last4 last4={account.last4} />
+                                    </b>
+                                    <span className="text-muted-foreground text-app-label">
+                                        {copy.kinds[account.kind]}
+                                    </span>
+                                </span>
+                                <span className="ph-no-capture w-56 shrink-0">
+                                    <FilesInto account={account} onFile={(accountId) => onFile(account, accountId)} />
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                </Skeleton>
             </Dialog.Body>
             <Dialog.Footer>
                 <Dialog.Close render={<Button />}>{copy.done}</Dialog.Close>
@@ -413,9 +432,13 @@ function useBankLink(accounts: readonly LinkedBankAccount[]) {
         const fail = (failure: Failure) => setStep({ bank, failure, institution, kind: "failed", request });
         switch (outcome.kind) {
             case "linked": {
+                const stillExpired = request.repair !== null && !outcome.repaired;
                 if (outcome.added.length > 0) {
                     setStep({ added: new Set(outcome.added), bank, kind: "result" });
-                } else if (request.repair !== null && !outcome.repaired) {
+                    if (stillExpired) {
+                        toast.add({ title: copy.stillExpired({ bank }).value, type: "warning" });
+                    }
+                } else if (stillExpired) {
                     fail("expired");
                 } else {
                     toast.add({ title: copy.signedInAgain({ bank }).value });
@@ -591,7 +614,9 @@ export function Banks() {
                             request={step.request}
                         />
                     ) : null}
-                    {step?.kind === "result" ? <ResultBody accounts={fresh} bank={step.bank} onFile={file} /> : null}
+                    {step?.kind === "result" ? (
+                        <ResultBody accounts={fresh} bank={step.bank} expected={step.added.size} onFile={file} />
+                    ) : null}
                     {step?.kind === "failed" ? (
                         <FailedBody
                             bank={step.bank}
