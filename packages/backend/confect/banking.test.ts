@@ -1,19 +1,24 @@
 /// <reference types="vite/client" />
 
 import type { BankAccount } from "@outlayr/banking/provider";
+import { BankingError } from "@outlayr/banking/provider";
+import { bankingProviders } from "@outlayr/banking/registry";
 import { PRO_ENTITLEMENT_ID } from "@outlayr/money/contract";
 import { LEDGER_CELLS_VERSION } from "@outlayr/money/ledger-cells";
 import { RevenueCat } from "convex-revenuecat";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import type { WithoutSystemFields } from "convex/server";
+import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api, components, internal } from "../convex/_generated/api";
 import type { Doc } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
 import { toBankEntry } from "./banking";
+import { rankInstitutions } from "./banking.impl";
 import { BANKING_EFFECTIVE_AT_MS } from "./legal";
 import { PURGE_BATCH } from "./lib/account";
 import { incomingWins } from "./lib/syncTables";
@@ -121,6 +126,21 @@ const claimLease = async (t: TestClient, id: Awaited<ReturnType<typeof insertBan
     }
     return lease;
 };
+
+const institutionRow = (
+    overrides: Partial<WithoutSystemFields<Doc<"bankInstitutions">>> = {}
+): WithoutSystemFields<Doc<"bankInstitutions">> => ({
+    catchAll: false,
+    country: "US",
+    externalId: "ins_1",
+    logo: null,
+    name: "Chase",
+    popularity: 0,
+    provider: "stripe",
+    retired: false,
+    seenAt: 1,
+    ...overrides,
+});
 
 const bank = (overrides: Partial<Tx> = {}): Tx => ({
     accountId: "acct_1",
@@ -1547,6 +1567,117 @@ describe("bank access", () => {
         await syncEntitlement(t, identity.userId, new Date(Date.now() + 86_400_000).toISOString());
 
         await expect(t.query(internal.banking.accessFor, { userId: identity.userId })).resolves.toBe("unavailable");
+    });
+});
+
+describe("bank institutions", () => {
+    const failingStripe = () => {
+        const original = bankingProviders.stripe;
+        bankingProviders.stripe = {
+            connect: original.connect.pipe(
+                Config.map((client) =>
+                    client.pipe(
+                        Option.map((value) => ({
+                            ...value,
+                            institutions: () =>
+                                Effect.fail(
+                                    new BankingError({
+                                        operation: "institutions",
+                                        provider: "stripe",
+                                        reason: "transport",
+                                    })
+                                ),
+                        }))
+                    )
+                )
+            ),
+        };
+        return () => {
+            bankingProviders.stripe = original;
+        };
+    };
+
+    it("retires nothing when the provider's institution list fails", async () => {
+        configureStripe();
+        const t = setup();
+        const stale = await t.run((ctx) =>
+            ctx.db.insert("bankInstitutions", institutionRow({ externalId: "ins_gone", name: "Gone", popularity: 4 }))
+        );
+        const restore = failingStripe();
+        try {
+            await expect(t.action(internal.banking.syncInstitutions, {})).resolves.toBeNull();
+        } finally {
+            restore();
+        }
+
+        await expect(t.run((ctx) => ctx.db.get(stale))).resolves.toMatchObject({ popularity: 4, retired: false });
+    });
+
+    it("retires missing banks, revives a returning one, and keeps a row's popularity", async () => {
+        configureStripe();
+        const t = setup();
+        const [gone, back, used] = await t.run((ctx) =>
+            Promise.all([
+                ctx.db.insert(
+                    "bankInstitutions",
+                    institutionRow({ externalId: "ins_gone", name: "Gone", popularity: 4 })
+                ),
+                ctx.db.insert(
+                    "bankInstitutions",
+                    institutionRow({
+                        country: "CA",
+                        externalId: "CA",
+                        name: "Canadian banks (old)",
+                        popularity: 7,
+                        retired: true,
+                        seenAt: 1,
+                    })
+                ),
+                ctx.db.insert(
+                    "bankInstitutions",
+                    institutionRow({ country: "US", externalId: "US", name: "US banks", popularity: 9, seenAt: 1 })
+                ),
+            ])
+        );
+
+        await expect(t.action(internal.banking.syncInstitutions, {})).resolves.toBeNull();
+
+        await expect(t.run((ctx) => ctx.db.get(gone))).resolves.toMatchObject({ retired: true });
+        await expect(t.run((ctx) => ctx.db.get(back))).resolves.toMatchObject({
+            name: "Canadian banks",
+            popularity: 7,
+            retired: false,
+        });
+        await expect(t.run((ctx) => ctx.db.get(used))).resolves.toMatchObject({ popularity: 9 });
+        await expect(t.run((ctx) => ctx.db.query("bankInstitutions").collect())).resolves.toHaveLength(3);
+    });
+
+    it("refuses to start a link on a retired institution", async () => {
+        vi.useFakeTimers({ now: BANKING_EFFECTIVE_AT_MS + 86_400_000 });
+        try {
+            configureStripe();
+            const t = setup();
+            const identity = await seedProUser(t);
+            const id = await t.run((ctx) => ctx.db.insert("bankInstitutions", institutionRow({ retired: true })));
+
+            await expect(
+                authenticatedAs(t, identity).action(api.banking.startLink, { institution: id })
+            ).resolves.toStrictEqual({ kind: "retired" });
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("ranks the region's banks first and leaves the search order otherwise", () => {
+        const rows = [
+            { country: "CA", name: "Zed" },
+            { country: "US", name: "First" },
+            { country: "CA", name: "Apple" },
+            { country: "US", name: "Second" },
+        ];
+
+        expect(rankInstitutions(rows, "US").map(({ name }) => name)).toStrictEqual(["First", "Second", "Zed", "Apple"]);
+        expect(rankInstitutions(rows, null)).toStrictEqual(rows);
     });
 });
 

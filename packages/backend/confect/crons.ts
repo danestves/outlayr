@@ -19,6 +19,14 @@ export default CronJobs.make()
     .add(
         CronJob.make("disconnect lapsed bank links", Duration.hours(24), refs.internal.banking.sweep, { cursor: null })
     )
+    .add(
+        CronJob.make(
+            "sync bank institutions",
+            Cron.parseUnsafe("20 3 * * *"),
+            refs.internal.banking.syncInstitutions,
+            {}
+        )
+    )
     .add(CronJob.make("refresh open stats", Cron.parseUnsafe("10 0 * * *"), refs.internal.openStats.refresh))
     .add(CronJob.make("drop expired shared reports", Duration.hours(1), refs.internal.sharedReports.dropExpired, {}))
     .add(CronJob.make("pump webhook deliveries", Duration.minutes(10), refs.internal.webhooks.pump, {}))

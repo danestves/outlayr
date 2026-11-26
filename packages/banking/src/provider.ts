@@ -60,10 +60,21 @@ export class BankingError extends Schema.TaggedError<BankingError>()("BankingErr
     }
 }
 
+export const Institution = Schema.Struct({
+    // A catch-all row opens the provider's own bank picker for `country` instead of one bank.
+    catchAll: Schema.Boolean,
+    // ISO 3166-1 alpha-2. A bank in several countries is one row per country, since each has its own login.
+    country: Schema.String.check(Schema.isPattern(/^[A-Z]{2}$/)),
+    // The provider's own id, stable across syncs.
+    id: Schema.String,
+    logo: Schema.NullOr(Schema.String),
+    name: Schema.String,
+});
+export type Institution = typeof Institution.Type;
+
 export interface LinkRequest {
-    // One of the provider's `countries`; it decides which banks the picker lists.
-    readonly country: string;
     readonly holder: string;
+    readonly institution: Institution;
 }
 
 export interface LinkSession {
@@ -91,14 +102,14 @@ export interface BankingClient {
     // Disconnects every account of the given holders plus any holder found by search for this user, then deletes
     // those holders. Safe to repeat.
     readonly forgetUser: (userId: string, holders: readonly string[]) => Call<void>;
+    // Every bank the provider can link today; a bank missing from a successful call is retired from search.
+    readonly institutions: () => Call<readonly Institution[]>;
     readonly startLink: (request: LinkRequest) => Call<LinkSession>;
     // An account with no finished refresh yet returns no transactions and keeps the cursor.
     readonly transactions: (accountId: string, cursor: Option.Option<string>) => Call<TransactionPage>;
 }
 
 export interface BankingProvider {
-    // ISO 3166-1 alpha-2 countries whose banks the provider can link.
-    readonly countries: readonly string[];
     readonly connect: Config.Config<Option.Option<BankingClient>>;
 }
 

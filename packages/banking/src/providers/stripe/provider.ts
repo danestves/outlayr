@@ -6,13 +6,19 @@ import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import { BankingError, secret } from "../../provider";
-import type { BankingClient, BankingEvent, BankingProvider, LinkRequest } from "../../provider";
+import type { BankingClient, BankingEvent, BankingProvider, Institution, LinkRequest } from "../../provider";
 import { List, StripeAccount, StripeEvent, StripeSession, StripeTransaction, listAll, stripeCall } from "./api";
 import { verifySignature } from "./signature";
 import { toBankAccount, toBankTransaction } from "./transform";
 
 const COUNTRIES = ["US", "CA"];
 const HOLDER_KEY = "outlayr_user_id";
+
+// Stripe publishes no bank list, so a single row per country opens its own picker instead of one bank.
+const CATCH_ALL: readonly Institution[] = [
+    { catchAll: true, country: "US", id: "US", logo: null, name: "US banks" },
+    { catchAll: true, country: "CA", id: "CA", logo: null, name: "Canadian banks" },
+];
 
 const ACCOUNT_EVENTS = new Set([
     "financial_connections.account.deactivated",
@@ -144,7 +150,9 @@ const makeClient = (key: Redacted.Redacted, webhookSecret: string): BankingClien
             );
         }
     }),
-    startLink: Effect.fn("StripeBanking.startLink")(function* startLink({ country, holder }: LinkRequest) {
+    institutions: () => Effect.succeed(CATCH_ALL),
+    startLink: Effect.fn("StripeBanking.startLink")(function* startLink({ holder, institution }: LinkRequest) {
+        const { country } = institution;
         if (!COUNTRIES.includes(country)) {
             return yield* failure("startLink", "rejected");
         }
@@ -201,5 +209,4 @@ export const stripe: BankingProvider = {
             )
         )
     ),
-    countries: COUNTRIES,
 };

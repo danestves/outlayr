@@ -1,7 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Document, QueryInitializer } from "@confect/server";
-import type { BankAccount, BankingProviderName } from "@outlayr/banking/provider";
-import { bankingProviders } from "@outlayr/banking/registry";
+import type { BankAccount, BankingProviderName, Institution } from "@outlayr/banking/provider";
 import { isPerson } from "@outlayr/money/account-kind";
 import { entryRow } from "@outlayr/money/entry-row";
 import { DAY_MS, fixedOffset, utcOffsetOf, zoneCalendar } from "@outlayr/money/ledger-zone";
@@ -61,6 +60,9 @@ const LINK_AMOUNT_EPSILON = 0.005;
 // A page files 100 entries, so each may read only a few rows' link status before the index-read budget runs out.
 const LINK_READS_PER_ENTRY = 8;
 const SUBSCRIPTION_PRICE_BAND = { max: 2, min: 0.5 } as const;
+const INSTITUTION_PAGE = 200;
+const INSTITUTION_SEARCH_LIMIT = 50;
+const REGION_ROWS = 20;
 
 type Configured = Effect.Success<ReturnType<typeof configuredClients>>[number];
 
@@ -70,9 +72,28 @@ const getById = <A>(effect: Effect.Effect<A, Document.DocumentDecodeError | Quer
 const getByIndex = <A>(effect: Effect.Effect<A, Document.DocumentDecodeError | QueryInitializer.GetByIndexFailure>) =>
     effect.pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
 
-const countriesOf = (configured: readonly Configured[]) => [
-    ...new Set(configured.flatMap(({ name }) => bankingProviders[name].countries)),
-];
+// Region only decides what ranks first: a stable partition keeps the search's own relevance order otherwise.
+export const rankInstitutions = <Row extends { readonly country: string }>(
+    rows: readonly Row[],
+    region: string | null
+): Row[] => {
+    if (region === null) {
+        return [...rows];
+    }
+    const local = rows.filter((row) => row.country === region);
+    return [...local, ...rows.filter((row) => row.country !== region)];
+};
+
+type InstitutionDoc = Document.Document<typeof databaseSchema, "bankInstitutions">;
+
+const institutionView = (row: InstitutionDoc) => ({
+    catchAll: row.catchAll,
+    country: row.country,
+    id: row._id,
+    logo: row.logo,
+    name: row.name,
+    provider: row.provider,
+});
 
 const accessForUser = Effect.fn("Banking.accessForUser")(function* accessForUser(
     ctx: Entitled,
@@ -127,8 +148,53 @@ const overview = FunctionImpl.make(
                     pulledAt: row.pulledAt ?? null,
                     status: row.status,
                 })),
-                countries: countriesOf(configured),
             };
+        },
+        Effect.catchTags({ Unauthenticated: dieAsConvexError }),
+        Effect.orDie
+    )
+);
+
+const searchInstitutions = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "searchInstitutions",
+    Effect.fn("Banking.searchInstitutions")(
+        function* searchInstitutions({ q: query, region }) {
+            const ctx = yield* QueryCtx;
+            yield* requireUserId(ctx);
+            const reader = yield* DatabaseReader;
+            const country = region === null ? null : region.trim().toUpperCase();
+            const catchAllRows = yield* reader
+                .table("bankInstitutions")
+                .index("by_retired_and_catchAll", (range) => range.eq("retired", false).eq("catchAll", true))
+                .collect();
+            const text = query.trim();
+            let rows: readonly InstitutionDoc[] = [];
+            if (text !== "") {
+                const hits = yield* reader
+                    .table("bankInstitutions")
+                    .search("search_name", (search) => search.search("name", text).eq("retired", false))
+                    .take(INSTITUTION_SEARCH_LIMIT);
+                rows = rankInstitutions(
+                    hits.filter((row) => !row.catchAll),
+                    country
+                );
+            } else if (country !== null) {
+                const regional = yield* (
+                    reader
+                        .table("bankInstitutions")
+                        .index(
+                            "by_retired_and_country_and_popularity",
+                            (range) => range.eq("retired", false).eq("country", country),
+                            "desc"
+                        )
+                        // Catch-all rows share the country, so leave room for them before the cut.
+                        .take(REGION_ROWS + catchAllRows.length)
+                );
+                rows = regional.filter((row) => !row.catchAll).slice(0, REGION_ROWS);
+            }
+            return [...rows.map(institutionView), ...rankInstitutions(catchAllRows, country).map(institutionView)];
         },
         Effect.catchTags({ Unauthenticated: dieAsConvexError }),
         Effect.orDie
@@ -140,21 +206,25 @@ const startLink = FunctionImpl.make(
     spec,
     "startLink",
     Effect.fn("Banking.startLink")(
-        function* startLink({ country }) {
+        function* startLink({ institution: institutionId }) {
             const { runMutation } = yield* MutationRunner;
             const { runQuery } = yield* QueryRunner;
             const user = yield* bankingUser();
             if (user === null) {
                 return { kind: "unavailable" as const };
             }
+            const institution = yield* runQuery(refs.internal.banking.institutionFor, { id: institutionId });
+            if (institution === null || institution.retired) {
+                return { kind: "retired" as const };
+            }
             const configured = yield* configuredClients();
+            const match = configured.find(({ name }) => name === institution.provider);
+            if (match === undefined) {
+                return { kind: "unavailable" as const };
+            }
             const access = yield* accessForUser(yield* ActionCtx, user.id, configured);
             if (access !== "allowed") {
                 return { kind: access };
-            }
-            const match = configured.find(({ name }) => bankingProviders[name].countries.includes(country));
-            if (match === undefined) {
-                return { kind: "country" as const };
             }
             const existing = yield* runQuery(refs.internal.banking.holderFor, {
                 provider: match.name,
@@ -185,7 +255,8 @@ const startLink = FunctionImpl.make(
                 }
                 ({ holder } = saved);
             }
-            const session = yield* match.client.startLink({ country, holder });
+            const session = yield* match.client.startLink({ holder, institution: institution.institution });
+            yield* runMutation(refs.internal.banking.countInstitutionUse, { id: institutionId });
             return {
                 clientSecret: session.clientSecret,
                 id: session.id,
@@ -1536,6 +1607,151 @@ const sweep = FunctionImpl.make(
     )
 );
 
+const institutionFor = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "institutionFor",
+    Effect.fn("Banking.institutionFor")(function* institutionFor({ id }) {
+        const row = yield* getById((yield* DatabaseReader).table("bankInstitutions").get(id));
+        if (row === null) {
+            return null;
+        }
+        return {
+            institution: {
+                catchAll: row.catchAll,
+                country: row.country,
+                id: row.externalId,
+                logo: row.logo,
+                name: row.name,
+            },
+            provider: row.provider,
+            retired: row.retired,
+        };
+    }, Effect.orDie)
+);
+
+const countInstitutionUse = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "countInstitutionUse",
+    Effect.fn("Banking.countInstitutionUse")(function* countInstitutionUse({ id }) {
+        const row = yield* getById((yield* DatabaseReader).table("bankInstitutions").get(id));
+        if (row !== null) {
+            yield* (yield* DatabaseWriter).table("bankInstitutions").patch(id, { popularity: row.popularity + 1 });
+        }
+        return null;
+    }, Effect.orDie)
+);
+
+const saveInstitutions = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "saveInstitutions",
+    Effect.fn("Banking.saveInstitutions")(function* saveInstitutions({ institutions, provider, seenAt }) {
+        const reader = yield* DatabaseReader;
+        const writer = yield* DatabaseWriter;
+        for (const institution of institutions) {
+            const existing = yield* getByIndex(
+                reader.table("bankInstitutions").get("by_provider_and_externalId", provider, institution.id)
+            );
+            if (existing === null) {
+                yield* writer.table("bankInstitutions").insert({
+                    catchAll: institution.catchAll,
+                    country: institution.country,
+                    externalId: institution.id,
+                    logo: institution.logo,
+                    name: institution.name,
+                    popularity: 0,
+                    provider,
+                    retired: false,
+                    seenAt,
+                });
+                continue;
+            }
+            yield* writer.table("bankInstitutions").patch(existing._id, {
+                catchAll: institution.catchAll,
+                country: institution.country,
+                logo: institution.logo,
+                name: institution.name,
+                retired: false,
+                seenAt,
+            });
+        }
+        return null;
+    }, Effect.orDie)
+);
+
+const retireInstitutions = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "retireInstitutions",
+    Effect.fn("Banking.retireInstitutions")(function* retireInstitutions({ cursor, provider, seenAt }) {
+        const reader = yield* DatabaseReader;
+        const writer = yield* DatabaseWriter;
+        const page = yield* reader
+            .table("bankInstitutions")
+            .index("by_provider_and_seenAt", (q) => q.eq("provider", provider).lt("seenAt", seenAt))
+            .paginate({ cursor, numItems: INSTITUTION_PAGE });
+        for (const row of page.page) {
+            if (!row.retired) {
+                yield* writer.table("bankInstitutions").patch(row._id, { retired: true });
+            }
+        }
+        return page.isDone ? null : page.continueCursor;
+    }, Effect.orDie)
+);
+
+const syncInstitutions = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "syncInstitutions",
+    Effect.fn("Banking.syncInstitutions")(
+        function* syncInstitutions() {
+            const { runMutation } = yield* MutationRunner;
+            const configured = yield* configuredClients();
+            const seenAt = yield* Clock.currentTimeMillis;
+            for (const { client, name } of configured) {
+                const listed = yield* client.institutions().pipe(
+                    Effect.map((rows) => Option.some(rows)),
+                    Effect.catchTags({
+                        BankingError: (error) =>
+                            Console.warn(`[banking] could not list ${name} institutions`, error).pipe(
+                                Effect.as(Option.none<readonly Institution[]>())
+                            ),
+                    })
+                );
+                // A provider outage must not retire its banks: only a successful list proves what is gone.
+                if (Option.isNone(listed)) {
+                    continue;
+                }
+                const byId = new Map<string, Institution>();
+                for (const institution of listed.value) {
+                    byId.set(institution.id, institution);
+                }
+                const unique = [...byId.values()];
+                for (let start = 0; start < unique.length; start += INSTITUTION_PAGE) {
+                    yield* runMutation(refs.internal.banking.saveInstitutions, {
+                        institutions: unique.slice(start, start + INSTITUTION_PAGE),
+                        provider: name,
+                        seenAt,
+                    });
+                }
+                let cursor: string | null = null;
+                do {
+                    cursor = yield* runMutation(refs.internal.banking.retireInstitutions, {
+                        cursor,
+                        provider: name,
+                        seenAt,
+                    });
+                } while (cursor !== null);
+            }
+            return null;
+        },
+        Effect.provide(outboundHttp),
+        Effect.orDie
+    )
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(overview),
     Layer.provide(startLink),
@@ -1555,6 +1771,16 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(pull),
     Layer.provide(refreshAccount),
     Layer.provide(lapsed),
-    Layer.provide(sweep),
+    Layer.provide(
+        Layer.mergeAll(
+            sweep,
+            searchInstitutions,
+            syncInstitutions,
+            institutionFor,
+            countInstitutionUse,
+            saveInstitutions,
+            retireInstitutions
+        )
+    ),
     GroupImpl.finalize
 );

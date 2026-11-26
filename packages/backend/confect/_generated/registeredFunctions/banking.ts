@@ -10,6 +10,7 @@ export default {
 ["overview"]: RegisteredConvexFunction.register({ ...definitions["overview"], handler: forward(definitions["overview"].handler) }),
 ["startLink"]: RegisteredConvexFunction.register({ ...definitions["startLink"], handler: forward(definitions["startLink"].handler) }),
 ["finishLink"]: RegisteredConvexFunction.register({ ...definitions["finishLink"], handler: forward(definitions["finishLink"].handler) }),
+["searchInstitutions"]: RegisteredConvexFunction.register({ ...definitions["searchInstitutions"], handler: forward(definitions["searchInstitutions"].handler) }),
 ["unlink"]: RegisteredConvexFunction.register({ ...definitions["unlink"], handler: forward(definitions["unlink"].handler) }),
 ["setFilesInto"]: RegisteredConvexFunction.register({ ...definitions["setFilesInto"], handler: forward(definitions["setFilesInto"].handler) }),
 ["accessFor"]: RegisteredConvexFunction.register({ ...definitions["accessFor"], handler: forward(definitions["accessFor"].handler) }),
@@ -31,4 +32,9 @@ export default {
 ["refreshAccount"]: RegisteredConvexFunction.register({ ...definitions["refreshAccount"], handler: forward(definitions["refreshAccount"].handler) }),
 ["lapsed"]: RegisteredConvexFunction.register({ ...definitions["lapsed"], handler: forward(definitions["lapsed"].handler) }),
 ["sweep"]: RegisteredConvexFunction.register({ ...definitions["sweep"], handler: forward(definitions["sweep"].handler) }),
+["institutionFor"]: RegisteredConvexFunction.register({ ...definitions["institutionFor"], handler: forward(definitions["institutionFor"].handler) }),
+["countInstitutionUse"]: RegisteredConvexFunction.register({ ...definitions["countInstitutionUse"], handler: forward(definitions["countInstitutionUse"].handler) }),
+["saveInstitutions"]: RegisteredConvexFunction.register({ ...definitions["saveInstitutions"], handler: forward(definitions["saveInstitutions"].handler) }),
+["retireInstitutions"]: RegisteredConvexFunction.register({ ...definitions["retireInstitutions"], handler: forward(definitions["retireInstitutions"].handler) }),
+["syncInstitutions"]: RegisteredConvexFunction.register({ ...definitions["syncInstitutions"], handler: forward(definitions["syncInstitutions"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../banking.spec")["default"]>;
