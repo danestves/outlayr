@@ -22,6 +22,7 @@ import { MoneyField } from "@/components/ui/money-field";
 import { deletedAccount, frozenUsd } from "@/lib/account-writes";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { wallInstant, wallText } from "@/lib/entry-writes";
+import { useNumberLocale } from "@/lib/exchange-locale";
 import { addDays } from "@/lib/ledger";
 import type { CommitRow } from "@/lib/ledger-committer";
 import { ledgerBooks } from "@/lib/ledger-db";
@@ -535,7 +536,7 @@ interface NewDebtDraft {
 const isOnCredit = (verb: NewVerb) => verb === "bought" || verb === "sold";
 
 /** The person, when new, then whatever moved: an entry on credit, a transfer, or only an opening balance. */
-function newDebtRows(ledger: Ledger, draft: NewDebtDraft, id: string, at: number): MovedRows {
+function newDebtRows(ledger: Ledger, draft: NewDebtDraft, id: string, at: number, numberLocale: string): MovedRows {
     const { amount, currency, move, person, usd, verb } = draft;
     const opened = person
         ? []
@@ -557,7 +558,7 @@ function newDebtRows(ledger: Ledger, draft: NewDebtDraft, id: string, at: number
         const made = onCreditRows(
             ledger,
             {
-                amountText: plainAmount(amount, currency),
+                amountText: plainAmount(amount, currency, numberLocale),
                 categoryId: draft.categoryId,
                 currency,
                 dateText: wallText(at, ledger),
@@ -744,6 +745,7 @@ function NewDebt({
     const { form, newForm } = useIntlayer("dashboard-debts");
     const write = useWrite();
     const settledText = useSettledToast();
+    const numberLocale = useNumberLocale();
     const formId = useId();
     const { accounts, askCurrency, draft, nameText, people, preset, set, typed } = useNewDebtDraft(personId, startVerb);
     const { amount, currency, move, person, verb } = draft;
@@ -769,7 +771,7 @@ function NewDebt({
         }
         const current = { ...ledger, books: ledgerBooks(db) };
         const id = person?.account.id ?? crypto.randomUUID();
-        const made = newDebtRows(current, draft, id, at);
+        const made = newDebtRows(current, draft, id, at, numberLocale);
         if ("problem" in made) {
             setProblem(made.problem);
             return;
@@ -926,6 +928,7 @@ function SomethingIOwe({ onClose }: { onClose: () => void }) {
     const { form, kinds, owe } = useIntlayer("dashboard-debts");
     const write = useWrite();
     const { money } = useDisplayFormat();
+    const numberLocale = useNumberLocale();
     const weekdayDay = useWeekdayDay();
     const formId = useId();
     const { choices, people } = usePeopleChoices();
@@ -976,7 +979,8 @@ function SomethingIOwe({ onClose }: { onClose: () => void }) {
                 verb: "bought",
             },
             id,
-            at
+            at,
+            numberLocale
         );
         if ("problem" in made) {
             setProblem(made.problem);

@@ -27,6 +27,7 @@ import { AccountTile } from "@/components/ledger/tiles";
 import { MoneyField } from "@/components/ui/money-field";
 import { parseAmount } from "@/lib/account-writes";
 import { wallInstant, wallText } from "@/lib/entry-writes";
+import { useNumberLocale } from "@/lib/exchange-locale";
 import { addDays } from "@/lib/ledger";
 import { viewTransition } from "@/lib/motion";
 import {
@@ -376,13 +377,16 @@ function GoalForm({
     const copy = useIntlayer("dashboard-goals");
     const { dialog } = copy;
     const format = useGoalMoney();
+    const numberLocale = useNumberLocale();
     const formId = useId();
     const save = useSaveGoal({ onClose, onSwitch, view });
     const rows = useMemo(() => accountRows(ledger, overview), [ledger, overview]);
     const currency = view?.goal.currency ?? ledger.currency;
     const [accountId, setAccountId] = useState(view?.account.id ?? rows[0]?.id ?? null);
     const [name, setName] = useState(view?.name ?? "");
-    const [amountText, setAmountText] = useState(view ? plainAmount(view.goal.targetAmount, currency) : "");
+    const [amountText, setAmountText] = useState(() =>
+        view ? plainAmount(view.goal.targetAmount, currency, numberLocale) : ""
+    );
     const [day, setDay] = useState(view?.targetDay ?? addDays(ledger.today, DEFAULT_SPAN_DAYS));
     const [tried, setTried] = useState(false);
     const [failed, setFailed] = useState(false);

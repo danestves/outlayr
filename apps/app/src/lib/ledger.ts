@@ -28,9 +28,15 @@ export function clockTime(time: string, use24HourClock = false) {
 const wholeUnits = (amount: number, showCents: boolean) =>
     showCents || (amount !== 0 && Math.abs(amount) < 0.5) ? {} : { maximumFractionDigits: 0, minimumFractionDigits: 0 };
 
-export function money(amount: number, currency: string, sign: "always" | "auto" = "auto", showCents = true) {
-    // Intl has no symbol for the bolivar in en-US and would spell out its code.
-    return new Intl.NumberFormat("en-US", {
+export function money(
+    amount: number,
+    currency: string,
+    sign: "always" | "auto" = "auto",
+    showCents = true,
+    numberLocale = "en-US"
+) {
+    // Intl has no symbol for the bolivar and would spell out its code.
+    return new Intl.NumberFormat(numberLocale, {
         currency,
         signDisplay: sign === "always" ? "exceptZero" : "auto",
         style: "currency",

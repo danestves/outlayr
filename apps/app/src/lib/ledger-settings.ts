@@ -3,6 +3,7 @@ import type { LedgerSettings } from "@outlayr/money/ledger-view";
 import type { DbClient } from "@tanstack/react-db";
 import { createContext, useContext, useMemo } from "react";
 
+import { useNumberLocale } from "./exchange-locale";
 import { clockTime, money } from "./ledger";
 import { ledgerCollections, useRows } from "./ledger-db";
 
@@ -42,12 +43,13 @@ export function writeSettings(db: DbClient, changes: Readonly<Record<string, str
 
 export function useDisplayFormat() {
     const { showCents, use24HourClock } = useContext(LedgerSettingsContext);
+    const numberLocale = useNumberLocale();
     return useMemo(
         () => ({
             clockTime: (time: string) => clockTime(time, use24HourClock),
             money: (amount: number, currency: string, sign?: "always" | "auto") =>
-                money(amount, currency, sign, showCents),
+                money(amount, currency, sign, showCents, numberLocale),
         }),
-        [showCents, use24HourClock]
+        [numberLocale, showCents, use24HourClock]
     );
 }

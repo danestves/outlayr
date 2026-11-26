@@ -10,6 +10,7 @@ import { parseAmount } from "@/lib/account-writes";
 import { editableDoc, entryEdit, toAmount } from "@/lib/bulk-writes";
 import type { EditRefusal } from "@/lib/bulk-writes";
 import type { Ledger, LedgerRow } from "@/lib/dashboard-series-ledger";
+import { useNumberLocale } from "@/lib/exchange-locale";
 
 import { merchantOf } from "./entry-form";
 import { entryNotices } from "./use-delete";
@@ -30,13 +31,13 @@ const focusOnMount = (node: HTMLInputElement | null) => {
 };
 
 /** The entry an amount edit rewrites, with its figure as typed text, or null when the drawer's rules lock it. */
-export function amountDraft(ledger: Ledger, row: LedgerRow) {
+export function amountDraft(ledger: Ledger, row: LedgerRow, numberLocale = "en-US") {
     const doc = editableDoc(ledger.books, row.id);
     if (!doc) {
         return null;
     }
     const currency = doc.currency ?? ledger.currency;
-    const text = new Intl.NumberFormat("en-US", {
+    const text = new Intl.NumberFormat(numberLocale, {
         maximumFractionDigits: decimalsFor(currency),
         minimumFractionDigits: decimalsFor(currency),
     }).format(doc.amount);
@@ -46,6 +47,7 @@ export function amountDraft(ledger: Ledger, row: LedgerRow) {
 /** Each write answers with the message to show in the cell, or null once it has gone through. */
 export function useInlineWrites() {
     const committer = useLedgerCommitter(entryNotices);
+    const numberLocale = useNumberLocale();
     const { form } = useIntlayer("dashboard-transactions");
     const { inline } = useIntlayer("dashboard-ledger");
     const refusalText = (refusal: EditRefusal) => {
@@ -56,7 +58,7 @@ export function useInlineWrites() {
     };
     const amount = (row: LedgerRow, text: string): string | null => {
         const current = committer.current();
-        const draft = amountDraft(current, row);
+        const draft = amountDraft(current, row, numberLocale);
         if (draft !== null && parseAmount(text, decimalsFor(draft.currency)) === draft.amount) {
             return null;
         }

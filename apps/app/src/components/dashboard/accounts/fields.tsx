@@ -16,11 +16,13 @@ import { useIntlayer } from "react-intlayer";
 
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { parseAmount } from "@/lib/account-writes";
+import { useNumberLocale } from "@/lib/exchange-locale";
 import { money } from "@/lib/ledger";
 
 import { Glyph } from "./glyph";
 
-export const amountText = (amount: number, currency: string) => money(amount, currency);
+export const amountText = (amount: number, currency: string, numberLocale = "en-US") =>
+    money(amount, currency, "auto", true, numberLocale);
 
 // The catalog title-cases every name, and the picker reads as a sentence: "US dollar", "Hong Kong dollar".
 const currencyName = (code: string) => {
@@ -55,6 +57,7 @@ export function AmountInput({
     text: string;
     unit?: string;
 }) {
+    const numberLocale = useNumberLocale();
     return (
         <Input.Group size={size}>
             {sign ? <Input.Addon className="dash-figure text-foreground pe-1.5!">{sign}</Input.Addon> : null}
@@ -64,11 +67,11 @@ export function AmountInput({
                 inputMode="decimal"
                 onBlur={() => {
                     if (text.trim() !== "") {
-                        onText(amountText(parseAmount(text, decimalsFor(currency)), currency));
+                        onText(amountText(parseAmount(text, decimalsFor(currency)), currency, numberLocale));
                     }
                 }}
                 onChange={(event) => onText(event.target.value)}
-                placeholder={amountText(0, currency)}
+                placeholder={amountText(0, currency, numberLocale)}
                 ref={autoFocus ? focusNode : undefined}
                 value={text}
             />
@@ -204,11 +207,12 @@ export function Fact({ children, label }: { children: ReactNode; label: ReactNod
     );
 }
 
-export const plainAmount = (amount: number, currency: string) => {
+export const plainAmount = (amount: number, currency: string, numberLocale = "en-US") => {
     const decimals = decimalsFor(currency);
-    return new Intl.NumberFormat("en-US", { maximumFractionDigits: decimals, minimumFractionDigits: decimals }).format(
-        amount
-    );
+    return new Intl.NumberFormat(numberLocale, {
+        maximumFractionDigits: decimals,
+        minimumFractionDigits: decimals,
+    }).format(amount);
 };
 
 export function DayField({

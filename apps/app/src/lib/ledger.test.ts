@@ -23,3 +23,9 @@ describe("showCents off", () => {
         expect(money(0.3, "USD", "auto", false)).toBe("$0.30");
     });
 });
+
+describe("number locale", () => {
+    it("groups and decimalises the figure as the reader's locale does", () => {
+        expect(money(12_345.5, "USD", "auto", true, "es-ES")).toBe("12.345,50\u00A0US$");
+    });
+});
