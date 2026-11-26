@@ -11,6 +11,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { onOffLabel } from "@/data/settings-core";
 import { useWalletState } from "@/data/use-wallet-state";
 import { useTranslation } from "@/i18n/context";
+import { trackAutologSetup } from "@/lib/autolog-events";
 import { notifyFailure } from "@/lib/notify";
 import { SILENT } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
@@ -42,7 +43,10 @@ export function BankNotifications() {
         },
         SILENT
     );
-    const getBankShortcut = () => openBankShortcut(undefined);
+    const getBankShortcut = () => {
+        trackAutologSetup({ outcome: "started", surface: "settings", trigger: "bank_shortcut" });
+        openBankShortcut(undefined);
+    };
 
     if (!lastNotification) {
         return (

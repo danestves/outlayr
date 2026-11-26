@@ -29,6 +29,7 @@ import { autologAccessOf } from "@/domain/autolog-cap";
 import type { AutologAccess } from "@/domain/meta-values";
 import { formatAmount } from "@/domain/money";
 import { translateNow } from "@/i18n/runtime";
+import { trackAutologSetup } from "@/lib/autolog-events";
 import { ratesPuller, watchRecentRates } from "@/lib/cloud-rates";
 import { convex } from "@/lib/convex";
 import { sendEnrichmentQueue } from "@/lib/enrichment-queue";
@@ -183,10 +184,14 @@ const mirrorWalletRun = Effect.fn("SystemSync.mirrorWalletRun")(function* mirror
     if (at == null) {
         return;
     }
-    if ((yield* Meta.get(db, "walletLastRunAt")) === at) {
+    const previous = yield* Meta.get(db, "walletLastRunAt");
+    if (previous === at) {
         return;
     }
     yield* Meta.set(db, "walletLastRunAt", at);
+    if (previous === null) {
+        yield* Effect.sync(() => trackAutologSetup({ outcome: "granted", trigger: "wallet_shortcut" }));
+    }
 });
 
 const announceRepriced = Effect.fn("SystemSync.announceRepriced")(function* announceRepriced(db: Database) {

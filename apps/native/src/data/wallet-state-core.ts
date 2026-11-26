@@ -1,12 +1,14 @@
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
+import { Platform } from "react-native";
 
 import type { Database } from "@/db/client";
 import { transaction } from "@/db/transaction";
 import type { CardAccountCandidate } from "@/domain/match-card-account";
 import { matchCardAccount } from "@/domain/match-card-account";
 import type { NotificationText, RepricedSubscription, WalletCard } from "@/domain/meta-values";
+import { trackAutologSetup } from "@/lib/autolog-events";
 
 import { accountsRepo, getAccountById } from "./accounts-core";
 import { Meta } from "./app-meta-core";
@@ -54,6 +56,9 @@ export const rememberNotification = Effect.fn("WalletState.rememberNotification"
     }
     const next = [...kept, entry].slice(-NOTIFICATION_TEXTS_LIMIT);
     yield* Meta.set(db, "notificationTexts", next);
+    if (kept.length === 0 && Platform.OS === "ios") {
+        yield* Effect.sync(() => trackAutologSetup({ outcome: "granted", trigger: "bank_shortcut" }));
+    }
 });
 
 export const rememberWalletEntry = Effect.fn("WalletState.rememberWalletEntry")(function* rememberWalletEntry(

@@ -10,6 +10,7 @@ import { useAutoLogSources } from "@/hooks/use-auto-log-sources";
 import { useBankTexts } from "@/hooks/use-bank-texts";
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useTranslation } from "@/i18n/context";
+import { setupStarted, trackAutologSetup } from "@/lib/autolog-events";
 
 import { OnboardingBankTexts } from "./bank-texts";
 
@@ -31,10 +32,18 @@ function AutoLogSources() {
     const t = useTranslation();
     const sources = useAutoLogSources(db);
     const on = sources.filter((source) => source.on).length;
+    const skipUnset = () => {
+        for (const source of sources) {
+            if (source.trigger !== undefined && !source.on && !setupStarted(source.trigger)) {
+                trackAutologSetup({ outcome: "skipped", surface: "onboarding", trigger: source.trigger });
+            }
+        }
+        router.push("/onboarding/smart-features");
+    };
 
     return (
         <FirstRun
-            action={{ label: t("common.continue"), onPress: () => router.push("/onboarding/smart-features") }}
+            action={{ label: t("common.continue"), onPress: skipUnset }}
             eyebrow={t("onboarding.autoLog.eyebrow")}
             title={t("onboarding.autoLog.title")}
         >

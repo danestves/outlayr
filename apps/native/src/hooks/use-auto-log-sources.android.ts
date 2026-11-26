@@ -1,6 +1,5 @@
 import { useTranslation } from "@/i18n/context";
-import { purchaseListener } from "@/lib/purchase-listener";
-import { usePurchaseListener } from "@/lib/use-purchase-listener";
+import { openListenerAccess, usePurchaseListener } from "@/lib/use-purchase-listener";
 
 import type { useAutoLogSources as useIosAutoLogSources } from "./use-auto-log-sources";
 
@@ -14,8 +13,9 @@ export const useAutoLogSources: typeof useIosAutoLogSources = () => {
             icon: "Wallet01",
             id: "purchaseListener",
             on: listener.enabled && listener.allowed.size > 0,
-            onSetUp: () => purchaseListener?.openSettings(),
+            onSetUp: () => openListenerAccess({ surface: "onboarding", trigger: "notification_access" }),
             title: t("nav.settings.wallet"),
+            trigger: "notification_access",
         },
     ];
 };

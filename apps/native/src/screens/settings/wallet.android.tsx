@@ -11,7 +11,7 @@ import { onOffLabel } from "@/data/settings-core";
 import { useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { purchaseListener } from "@/lib/purchase-listener";
-import { usePurchaseListener } from "@/lib/use-purchase-listener";
+import { openListenerAccess, usePurchaseListener } from "@/lib/use-purchase-listener";
 import type { Wallet as IosWallet } from "@/screens/settings/wallet";
 
 import { SourceRow } from "./source-row";
@@ -40,6 +40,7 @@ export const Wallet: typeof IosWallet = () => {
         }
         purchaseListener?.setApps([...next]);
         posthog?.setPersonProperties({ autolog_enabled: next.size > 0 });
+        posthog?.capture("setting_changed", { enabled: on, setting: "autologApp" });
         refreshListener();
     };
 
@@ -50,7 +51,13 @@ export const Wallet: typeof IosWallet = () => {
                     <Text className="text-m3-on-surface-variant text-body leading-snug">
                         {t("settings.wallet.androidLead")}
                     </Text>
-                    <Button className="rounded-full" fullWidth onPress={openSettings} size="md" variant="primary">
+                    <Button
+                        className="rounded-full"
+                        fullWidth
+                        onPress={() => openListenerAccess({ surface: "settings", trigger: "notification_access" })}
+                        size="md"
+                        variant="primary"
+                    >
                         {t("settings.wallet.allowAccess")}
                     </Button>
                     <Text className="text-m3-on-surface-variant text-caption leading-5">

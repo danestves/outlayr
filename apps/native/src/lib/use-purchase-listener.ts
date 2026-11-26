@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from "react";
 
 import { subscribeAppState } from "@/lib/app-state";
+import { trackAutologSetup } from "@/lib/autolog-events";
+import type { AutologSurface } from "@/lib/autolog-events";
 import { purchaseListener } from "@/lib/purchase-listener";
 import type { PurchaseSender } from "@/lib/purchase-listener";
 
@@ -9,6 +11,11 @@ export interface ListenerState {
     enabled: boolean;
     messagesApp: string | null;
     senders: PurchaseSender[];
+}
+
+interface ListenerAccessRequest {
+    surface: AutologSurface;
+    trigger: "notification_access" | "bank_texts";
 }
 
 function readListener(): ListenerState {
@@ -22,6 +29,30 @@ function readListener(): ListenerState {
 
 let current = readListener();
 const watchers = new Set<() => void>();
+let stopAwaiting: (() => void) | null = null;
+
+export function settleAccess(request: ListenerAccessRequest): void {
+    const state = readListener();
+    const granted =
+        request.trigger === "notification_access"
+            ? state.enabled
+            : state.enabled && state.messagesApp !== null && state.allowed.has(state.messagesApp);
+    trackAutologSetup({ ...request, outcome: granted ? "granted" : "denied" });
+}
+
+export function openListenerAccess(request: ListenerAccessRequest): void {
+    trackAutologSetup({ ...request, outcome: "started" });
+    stopAwaiting?.();
+    const stop = subscribeAppState((status) => {
+        if (status === "active") {
+            stop();
+            stopAwaiting = null;
+            settleAccess(request);
+        }
+    });
+    stopAwaiting = stop;
+    purchaseListener?.openSettings();
+}
 
 function refresh() {
     current = readListener();

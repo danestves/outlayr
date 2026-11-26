@@ -1,6 +1,7 @@
 import { SettingsSection } from "@/components/list/list-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { useTranslation } from "@/i18n/context";
+import { posthog } from "@/lib/posthog";
 import { purchaseListener } from "@/lib/purchase-listener";
 import { usePurchaseListener } from "@/lib/use-purchase-listener";
 
@@ -15,6 +16,7 @@ export function MessageSenders() {
 
     const toggle = (from: string, on: boolean) => {
         purchaseListener?.setSender(from, on);
+        posthog?.capture("setting_changed", { enabled: on, setting: "autologSender" });
         refreshListener();
     };
 
