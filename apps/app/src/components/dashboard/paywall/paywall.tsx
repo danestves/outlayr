@@ -13,6 +13,7 @@ import { api } from "@outlayr/backend/convex/_generated/api";
 import { FREE_CAPTURES, PRO_CAPTURES } from "@outlayr/money/capture-allowance";
 import { TRIAL_REMINDER_LEAD_MS, TRIAL_REMINDERS_FROM_MS } from "@outlayr/money/contract";
 import type { ProPlan } from "@outlayr/money/pro-prices";
+import { useOnMount } from "@outlayr/shared/lifecycle";
 import { SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLoaderData, useRouteContext, useSearch } from "@tanstack/react-router";
@@ -33,6 +34,7 @@ import { signOut } from "@/components/dashboard/shell/account-menu";
 import { SiteLink } from "@/components/site-link";
 import { CHECKOUT_CONFIRMED, HELD_STATES, startCheckout } from "@/lib/billing";
 import { convexClient } from "@/lib/convex";
+import { track } from "@/lib/launch-analytics";
 import { paywallPrices } from "@/lib/paywall-prices";
 import { currentToken } from "@/lib/session";
 
@@ -600,6 +602,11 @@ export function Paywall() {
     const { checkout, restore: restored } = useSearch({ from: "/_account/_app" });
     const plan = usePlan();
     const confirming = checkout !== undefined && checkout !== CHECKOUT_CONFIRMED;
+    useOnMount(() => {
+        if (checkout === undefined) {
+            track({ event: "paywall_viewed" });
+        }
+    });
     const confirm = useQuery({
         enabled: confirming,
         queryFn: async () => {
@@ -623,6 +630,7 @@ export function Paywall() {
     });
     const buy = useMutation({
         mutationFn: async (chosen: ProPlan) => {
+            track({ event: "purchase_started", properties: { plan: chosen } });
             const answer = await startCheckout(chosen, await currentToken(session));
             if (answer.kind === "redirect") {
                 window.location.assign(answer.url);

@@ -32,6 +32,8 @@ export const AUTOLOG_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
 
 export const ONBOARDING_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
 
+export const WEB_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
+
 const GUEST_PURCHASE_AT_MS = Date.UTC(2026, 10, 21);
 const PROFILES_AT_MS = JANUARY_NOTICE_AT_MS;
 
@@ -1144,6 +1146,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Setup in analytics",
                 },
                 {
+                    detail: "Once you sign in on the web, while the PostHog cookie is on: when you sign in and how, when you add an entry (expense or income, typed or spoken), when Outlayr Pro opens, and which plan you pick when you start a checkout. From then until you sign out, that browser's events in the web app are linked to your account ID, starting from a new random ID so earlier visits stay unlinked. Never amounts, merchants or notes.",
+                    label: "Web app analytics",
+                },
+                {
                     detail: "With Pro you can keep separate profiles, such as Work or Family. Each profile's name, icon, and color sync with its own ledger. The web app and a connected AI assistant see only your Personal profile, and Notion imports go there too.",
                     label: "Profiles",
                 },
@@ -1176,6 +1182,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Mit eingeschaltetem „Analysedaten teilen“: welches der vier Ziele du bei der Einrichtung wählst, ob du das vorgeschlagene Monatsbudget übernimmst oder überspringst und wann du fertig bist. Nie Beträge, Namen oder Notizen.",
                     label: "Die Einrichtung in Analysen",
+                },
+                {
+                    detail: "Sobald du dich im Web anmeldest und solange das PostHog-Cookie aktiv ist: wann und wie du dich anmeldest, wann du einen Eintrag hinzufügst (Ausgabe oder Einnahme, getippt oder gesprochen), wann sich Outlayr Pro öffnet und welchen Plan du wählst, wenn du einen Kauf beginnst. Ab dann bis zur Abmeldung werden die Ereignisse dieses Browsers in der Web-App mit deiner Konto-ID verknüpft, beginnend mit einer neuen zufälligen ID, sodass frühere Besuche nicht verknüpft werden. Nie Beträge, Händler oder Notizen.",
+                    label: "Analysen in der Web-App",
                 },
                 {
                     detail: "Mit Pro kannst du getrennte Profile führen, etwa Arbeit oder Familie. Name, Symbol und Farbe jedes Profils werden mit seinem eigenen Haushaltsbuch synchronisiert. Die Web-App und ein verbundener KI-Assistent sehen nur dein Profil „Privat“, und Notion-Importe landen ebenfalls dort.",
@@ -1212,6 +1222,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "La configuración inicial en analíticas",
                 },
                 {
+                    detail: "Cuando inicias sesión en la web y mientras la cookie de PostHog esté activada: cuándo inicias sesión y cómo, cuándo agregas una entrada (gasto o ingreso, escrita o dictada), cuándo se abre Outlayr Pro y qué plan eliges al empezar un pago. Desde ahí hasta que cierres sesión, los eventos de ese navegador en la app web se vinculan con el ID de tu cuenta, empezando con un ID aleatorio nuevo para que las visitas anteriores no queden vinculadas. Nunca montos, comercios ni notas.",
+                    label: "Analíticas en la app web",
+                },
+                {
                     detail: "Con Pro puedes tener perfiles separados, como Trabajo o Familia. El nombre, el ícono y el color de cada perfil se sincronizan con su propio registro. La app web y un asistente de IA conectado solo ven tu perfil Personal, y las importaciones de Notion también van ahí.",
                     label: "Perfiles",
                 },
@@ -1246,6 +1260,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "La configuration dans les statistiques",
                 },
                 {
+                    detail: "Une fois connecté sur le web, et tant que le cookie PostHog est activé : quand vous vous connectez et comment, quand vous ajoutez une opération (dépense ou revenu, saisie ou dictée), quand Outlayr Pro s'ouvre et quel forfait vous choisissez en lançant un paiement. Dès lors et jusqu'à votre déconnexion, les événements de ce navigateur dans l'app web sont liés à l'identifiant de votre compte, en partant d'un nouvel identifiant aléatoire pour que les visites précédentes ne soient pas liées. Jamais de montants, de commerçants ni de notes.",
+                    label: "Les statistiques de l'app web",
+                },
+                {
                     detail: "Avec Pro, vous pouvez tenir des profils séparés, comme Travail ou Famille. Le nom, l'icône et la couleur de chaque profil se synchronisent avec son propre registre. L'app web et un assistant IA connecté ne voient que votre profil Personnel, et les imports Notion y arrivent aussi.",
                     label: "Profils",
                 },
@@ -1278,6 +1296,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Com Compartilhar análises ativado: durante a configuração inicial, qual das quatro metas você escolhe, se você mantém o orçamento mensal sugerido ou pula essa etapa, e quando você termina. Nunca valores, nomes ou notas.",
                     label: "A configuração inicial nas análises",
+                },
+                {
+                    detail: "Quando você entra pela web e enquanto o cookie do PostHog estiver ativado: quando você entra e como, quando adiciona um lançamento (despesa ou receita, digitado ou falado), quando o Outlayr Pro abre e qual plano você escolhe ao começar um pagamento. Dali até você sair, os eventos desse navegador no app web ficam vinculados ao ID da sua conta, começando com um novo ID aleatório para que as visitas anteriores não fiquem vinculadas. Nunca valores, estabelecimentos nem notas.",
+                    label: "Análises no app web",
                 },
                 {
                     detail: "Com o Pro você pode manter perfis separados, como Trabalho ou Família. O nome, o ícone e a cor de cada perfil sincronizam com o registro próprio dele. O app web e um assistente de IA conectado veem só o seu perfil Pessoal, e as importações do Notion também vão para ele.",
