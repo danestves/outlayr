@@ -54,3 +54,4 @@ jobs:
                     exit 1
                   fi
                   npx convex deploy -y
+                  npx convex run banking:syncInstitutions || echo "::warning::Bank list sync failed; the nightly run will retry."

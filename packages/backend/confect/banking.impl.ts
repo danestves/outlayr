@@ -63,6 +63,9 @@ const SUBSCRIPTION_PRICE_BAND = { max: 2, min: 0.5 } as const;
 const INSTITUTION_PAGE = 200;
 const INSTITUTION_SEARCH_LIMIT = 50;
 const REGION_ROWS = 20;
+const SEARCH_MAX_LENGTH = 100;
+const SEARCH_MAX_TERMS = 16;
+const WHITESPACE = /\s+/;
 
 type Configured = Effect.Success<ReturnType<typeof configuredClients>>[number];
 
@@ -71,6 +74,10 @@ const getById = <A>(effect: Effect.Effect<A, Document.DocumentDecodeError | Quer
 
 const getByIndex = <A>(effect: Effect.Effect<A, Document.DocumentDecodeError | QueryInitializer.GetByIndexFailure>) =>
     effect.pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
+
+// Convex search rejects a query with more than 16 terms.
+const boundSearch = (query: string) =>
+    query.trim().slice(0, SEARCH_MAX_LENGTH).split(WHITESPACE).slice(0, SEARCH_MAX_TERMS).join(" ");
 
 // Region only decides what ranks first: a stable partition keeps the search's own relevance order otherwise.
 export const rankInstitutions = <Row extends { readonly country: string }>(
@@ -169,17 +176,30 @@ const searchInstitutions = FunctionImpl.make(
                 .table("bankInstitutions")
                 .index("by_retired_and_catchAll", (range) => range.eq("retired", false).eq("catchAll", true))
                 .collect();
-            const text = query.trim();
+            const text = boundSearch(query);
             let rows: readonly InstitutionDoc[] = [];
             if (text !== "") {
-                const hits = yield* reader
+                let local: readonly InstitutionDoc[] = [];
+                if (country !== null) {
+                    local = yield* reader
+                        .table("bankInstitutions")
+                        .search("search_name", (search) =>
+                            search
+                                .search("name", text)
+                                .eq("retired", false)
+                                .eq("catchAll", false)
+                                .eq("country", country)
+                        )
+                        .take(REGION_ROWS);
+                }
+                const global = yield* reader
                     .table("bankInstitutions")
-                    .search("search_name", (search) => search.search("name", text).eq("retired", false))
+                    .search("search_name", (search) =>
+                        search.search("name", text).eq("retired", false).eq("catchAll", false)
+                    )
                     .take(INSTITUTION_SEARCH_LIMIT);
-                rows = rankInstitutions(
-                    hits.filter((row) => !row.catchAll),
-                    country
-                );
+                const localIds = new Set(local.map((row) => row._id));
+                rows = [...local, ...global.filter((row) => !localIds.has(row._id))];
             } else if (country !== null) {
                 const regional = yield* (
                     reader
@@ -1647,7 +1667,9 @@ const saveInstitutions = FunctionImpl.make(
         const writer = yield* DatabaseWriter;
         for (const institution of institutions) {
             const existing = yield* getByIndex(
-                reader.table("bankInstitutions").get("by_provider_and_externalId", provider, institution.id)
+                reader
+                    .table("bankInstitutions")
+                    .get("by_provider_and_externalId_and_country", provider, institution.id, institution.country)
             );
             if (existing === null) {
                 yield* writer.table("bankInstitutions").insert({
@@ -1661,6 +1683,10 @@ const saveInstitutions = FunctionImpl.make(
                     retired: false,
                     seenAt,
                 });
+                continue;
+            }
+            // An older run must not overwrite or revive what a newer run already wrote.
+            if (existing.seenAt > seenAt) {
                 continue;
             }
             yield* writer.table("bankInstitutions").patch(existing._id, {
@@ -1688,9 +1714,8 @@ const retireInstitutions = FunctionImpl.make(
             .index("by_provider_and_seenAt", (q) => q.eq("provider", provider).lt("seenAt", seenAt))
             .paginate({ cursor, numItems: INSTITUTION_PAGE });
         for (const row of page.page) {
-            if (!row.retired) {
-                yield* writer.table("bankInstitutions").patch(row._id, { retired: true });
-            }
+            // Stamping the run keeps an older, still running sync from reviving the row.
+            yield* writer.table("bankInstitutions").patch(row._id, { retired: true, seenAt });
         }
         return page.isDone ? null : page.continueCursor;
     }, Effect.orDie)
@@ -1719,11 +1744,11 @@ const syncInstitutions = FunctionImpl.make(
                 if (Option.isNone(listed)) {
                     continue;
                 }
-                const byId = new Map<string, Institution>();
+                const byCountryAndId = new Map<string, Institution>();
                 for (const institution of listed.value) {
-                    byId.set(institution.id, institution);
+                    byCountryAndId.set(`${institution.country}:${institution.id}`, institution);
                 }
-                const unique = [...byId.values()];
+                const unique = [...byCountryAndId.values()];
                 for (let start = 0; start < unique.length; start += INSTITUTION_PAGE) {
                     yield* runMutation(refs.internal.banking.saveInstitutions, {
                         institutions: unique.slice(start, start + INSTITUTION_PAGE),
