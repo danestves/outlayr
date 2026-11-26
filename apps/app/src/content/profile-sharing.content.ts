@@ -330,11 +330,11 @@ const profileSharing = {
             }),
 
             unsynced: t({
-                en: "Couldn't save your latest changes. Try again before leaving.",
-                de: "Deine letzten Änderungen konnten nicht gespeichert werden. Versuch es vor dem Verlassen noch mal.",
-                es: "No se pudieron guardar tus últimos cambios. Inténtalo de nuevo antes de salir.",
-                fr: "Impossible d'enregistrer vos dernières modifications. Réessayez avant de quitter.",
-                pt: "Não foi possível salvar suas últimas alterações. Tente de novo antes de sair.",
+                en: "Couldn't save your latest changes. Retry or undo the edit before leaving.",
+                de: "Deine letzten Änderungen konnten nicht gespeichert werden. Versuch es oder mach die Änderung rückgängig, bevor du gehst.",
+                es: "No se pudieron guardar tus últimos cambios. Reintenta o deshaz el movimiento antes de salir.",
+                fr: "Impossible d'enregistrer vos dernières modifications. Réessayez ou annulez l'opération avant de quitter.",
+                pt: "Não foi possível salvar suas últimas alterações. Tente de novo ou desfaça o lançamento antes de sair.",
             }),
             label: t({
                 en: "Leave profile",

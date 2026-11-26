@@ -4,7 +4,7 @@ import type { DbClient } from "@tanstack/react-db";
 
 import { ledgerCollections, ledgerSync } from "./ledger-db";
 import { profileOf, pushRows } from "./ledger-write";
-import { unsentKeys, unsentPrefix, keepUnsent } from "./unsent";
+import { unsentKeys, unsentPrefix, keepUnsent, onUnsentStop } from "./unsent";
 
 interface ShownRow {
     deletedAt: number | null;
@@ -122,7 +122,7 @@ const dropUnsent = (key: string) => {
 function createCommitter(db: DbClient, userId: string | undefined): LedgerCommitter {
     let pending: PendingCommits = { failed: 0, held: 0, sending: 0 };
     const listeners = new Set<() => void>();
-    const heldPushes = new Set<() => void>();
+    const heldPushes = new Map<() => void, () => void>();
     const inFlight = new Set<Promise<CommitOutcome>>();
     const sendingKeys = new Set<string>();
     let watchingPageHide = false;
@@ -140,17 +140,24 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
         }
     };
 
-    const hold = (endHold: () => void) => {
-        heldPushes.add(endHold);
+    const hold = (flush: () => void, undo: () => void) => {
+        heldPushes.set(flush, undo);
         if (!watchingPageHide) {
             watchingPageHide = true;
             window.addEventListener("pagehide", () => {
-                for (const each of heldPushes) {
+                for (const each of heldPushes.keys()) {
                     each();
                 }
             });
         }
     };
+
+    const cancelHeld = () => {
+        for (const undo of heldPushes.values()) {
+            undo();
+        }
+    };
+    onUnsentStop(cancelHeld);
 
     const start = (
         initial: readonly PushRow[],
@@ -264,12 +271,26 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
             return settled;
         }
 
+        const undo = () => {
+            if (outcome) {
+                return false;
+            }
+            leaveHold();
+            move("held", null);
+            outcome = Promise.resolve({ status: "undone" });
+            settle?.(outcome);
+            if (transaction.state === "pending") {
+                transaction.rollback();
+            }
+            return true;
+        };
+
         show(rows);
         if (holdMs === undefined) {
             void flush();
         } else {
             move(null, "held");
-            hold(flush);
+            hold(flush, undo);
             timer = setTimeout(flush, holdMs);
         }
 
@@ -284,26 +305,14 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
             },
             flush,
             settled,
-            undo: () => {
-                if (outcome) {
-                    return false;
-                }
-                leaveHold();
-                move("held", null);
-                outcome = Promise.resolve({ status: "undone" });
-                settle?.(outcome);
-                if (transaction.state === "pending") {
-                    transaction.rollback();
-                }
-                return true;
-            },
+            undo,
         };
     };
 
     return {
         commit: (rows, policy) => start(rows, policy?.holdMs),
         flushAll: async () => {
-            for (const flush of heldPushes) {
+            for (const flush of heldPushes.keys()) {
                 flush();
             }
             const outcomes: CommitOutcome[] = [];
@@ -311,7 +320,7 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
                 // oxlint-disable-next-line no-await-in-loop -- a retry can start while an earlier commit settles.
                 outcomes.push(...(await Promise.all(inFlight)));
             }
-            return outcomes.every((outcome) => outcome.status !== "failed");
+            return pending.failed === 0 && outcomes.every((outcome) => outcome.status !== "failed");
         },
         getSnapshot: () => pending,
         resume: () => {

@@ -1,5 +1,5 @@
 import { forgetProfileCookie, switchProfileCookie } from "./profile-cookie";
-import { forgetProfileUnsent } from "./unsent";
+import { forgetProfileUnsent, stopUnsentWrites } from "./unsent";
 
 export async function switchToProfile(profileId: string | null, to?: string) {
     await switchProfileCookie({ data: { profileId } });
@@ -17,6 +17,7 @@ export async function removeProfileAndSwitch(profileId: string) {
         return;
     }
     removing = true;
+    stopUnsentWrites();
     await forgetProfileCookie({ data: { profileId } }).catch(() => undefined);
     forgetProfileUnsent(profileId);
     window.location.reload();

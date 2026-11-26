@@ -200,6 +200,13 @@ describe("ledger committer", () => {
         expect(await committer.flushAll()).toBe(false);
     });
 
+    it("keeps refusing a leave after a failed commit has settled", async () => {
+        const committer = ledgerCommitter(await openTab(() => Promise.reject(new Error("refused"))), "owner");
+
+        expect(await committer.commit([entry("a")]).settled).toMatchObject({ status: "failed" });
+        expect(await committer.flushAll()).toBe(false);
+    });
+
     it("reverts rows added to a held commit with the same undo", async () => {
         const db = await openTab(unanswered);
         const held = ledgerCommitter(db, "owner").commit([entry("a")], { holdMs: HOLD_MS });

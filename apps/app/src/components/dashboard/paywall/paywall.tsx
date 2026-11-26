@@ -29,7 +29,7 @@ import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { BrandPage, SessionEmail } from "@/components/brand-page";
-import { ProfileTile } from "@/components/dashboard/profile/tile";
+import { PERSONAL_LOOK, ProfileTile } from "@/components/dashboard/profile/tile";
 import { Row, SettingsCard } from "@/components/dashboard/settings/parts";
 import { signOut } from "@/components/dashboard/shell/account-menu";
 import { SiteLink } from "@/components/site-link";
@@ -37,7 +37,7 @@ import { CHECKOUT_CONFIRMED, HELD_STATES, startCheckout } from "@/lib/billing";
 import { convexClient } from "@/lib/convex";
 import { track } from "@/lib/launch-analytics";
 import { paywallPrices } from "@/lib/paywall-prices";
-import { joinedLook, useJoinedProfiles } from "@/lib/profile-sharing";
+import { joinedLook, joinedProfileOf, useJoinedProfiles } from "@/lib/profile-sharing";
 import { switchToProfile } from "@/lib/profile-switch";
 import { currentToken } from "@/lib/session";
 
@@ -474,6 +474,9 @@ function AlreadyPro({ plan, unconfirmedAtStart }: { plan: BillingPlan; unconfirm
     const copy = useIntlayer("paywall");
     const { locale } = useLocale();
     const format = useDate();
+    const joined = useJoinedProfiles();
+    const loaded = useMatch({ from: "/_account/_app", select: (match) => match.loaderData, shouldThrow: false });
+    const onJoined = joinedProfileOf(joined, loaded?.profileId ?? null) !== null;
     const refresh = useMutation({
         mutationFn: () => convexClient().action(api.billing.restore, {}),
         onSuccess: (answer) => {
@@ -562,6 +565,11 @@ function AlreadyPro({ plan, unconfirmedAtStart }: { plan: BillingPlan; unconfirm
                             </Alert>
                         ) : null}
                     </SettingsCard>
+                    {onJoined ? (
+                        <div className="mt-4">
+                            <JoinedProfiles personal />
+                        </div>
+                    ) : null}
                 </div>
             </main>
         </BrandPage>
@@ -597,8 +605,9 @@ function Layout({
     );
 }
 
-function JoinedProfiles() {
+function JoinedProfiles({ personal = false }: { personal?: boolean }) {
     const shareCopy = useIntlayer("profile-sharing");
+    const profileCopy = useIntlayer("profiles");
     const joined = useJoinedProfiles();
     const loaded = useMatch({ from: "/_account/_app", select: (match) => match.loaderData, shouldThrow: false });
     if (joined.length === 0) {
@@ -606,6 +615,18 @@ function JoinedProfiles() {
     }
     return (
         <SettingsCard title={shareCopy.sharedWithYou}>
+            {personal ? (
+                <Row label={profileCopy.personal} leading={<ProfileTile look={PERSONAL_LOOK} size="sm" />}>
+                    <Button
+                        disabled={loaded?.profileId === null}
+                        onClick={() => switchToProfile(null).catch(() => undefined)}
+                        size="sm"
+                        variant="outline"
+                    >
+                        {shareCopy.open}
+                    </Button>
+                </Row>
+            ) : null}
             {joined.map((profile) => (
                 <Row
                     key={profile.profileId}

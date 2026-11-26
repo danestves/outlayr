@@ -3,7 +3,7 @@ import PencilEdit02Icon from "@hugeicons/core-free-icons/PencilEdit02Icon";
 import UserSearch01Icon from "@hugeicons/core-free-icons/UserSearch01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
-import { useNavigate, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Avatar } from "panelui-web/avatar";
 import { Button } from "panelui-web/button";
 import { useState } from "react";
@@ -104,7 +104,6 @@ const Perk = ({ children, icon }: { children: ReactNode; icon: ReactNode }) => (
 
 function JoinSheet({ code, invite }: { code: string; invite: NonNullable<ProfileInvite> }) {
     const copy = useIntlayer("profile-sharing");
-    const navigate = useNavigate();
     const [busy, setBusy] = useState(false);
     const [refusal, setRefusal] = useState<JoinKind | null>(null);
     const look = inviteLook(invite.look) ?? PERSONAL_LOOK;
@@ -160,11 +159,7 @@ function JoinSheet({ code, invite }: { code: string; invite: NonNullable<Profile
                         </Perk>
                     </div>
                     <div className="mt-5 flex gap-2.5">
-                        <Button
-                            className="flex-1"
-                            onClick={() => navigate({ to: "/" }).catch(() => undefined)}
-                            variant="outline"
-                        >
+                        <Button className="flex-1" onClick={() => window.location.assign("/")} variant="outline">
                             {copy.join.notNow}
                         </Button>
                         <Button className="flex-1" disabled={busy} onClick={() => join().catch(() => undefined)}>
@@ -229,7 +224,6 @@ function JoinError({
     ownerName: string | null;
 }) {
     const copy = useIntlayer("profile-sharing");
-    const navigate = useNavigate();
     const text = errorCopy(copy, kind, name, ownerName);
     return (
         <BrandPage actions={<TopActions />}>
@@ -240,11 +234,7 @@ function JoinError({
                     </span>
                     <h1 className="text-app-title pt-5 font-semibold">{text.title}</h1>
                     <p className="text-muted-foreground text-app-body pt-2">{text.body}</p>
-                    <Button
-                        className="mt-6"
-                        onClick={() => navigate({ to: "/" }).catch(() => undefined)}
-                        variant="outline"
-                    >
+                    <Button className="mt-6" onClick={() => window.location.assign("/")} variant="outline">
                         {copy.error.close}
                     </Button>
                 </div>

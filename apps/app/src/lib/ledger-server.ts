@@ -218,7 +218,11 @@ export const serverLedger = createIsomorphicFn()
                     if (acceptedProfileId(requestedProfileId, own, joined ?? []) !== null) {
                         profileId = requestedProfileId;
                     } else if (registryFailed) {
-                        throw registryError ?? new Error("Could not read the visitor's profiles");
+                        if (registryError !== null && proRequired(registryError)) {
+                            profileId = requestedProfileId;
+                        } else {
+                            throw registryError ?? new Error("Could not read the visitor's profiles");
+                        }
                     } else {
                         lostProfileId = requestedProfileId;
                     }

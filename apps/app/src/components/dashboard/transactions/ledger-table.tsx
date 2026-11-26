@@ -131,6 +131,17 @@ export function LedgerTable({
         );
     };
     const menuCell = (row: FoldedRow) => <Table.Cell className="relative z-1 w-10 ps-0">{renderMenu(row)}</Table.Cell>;
+    const authorCell = (row: FoldedRow) => {
+        const logger = authors.authorOf(row);
+        const author = authors.labelOf(logger);
+        const authorName = (logger === null ? null : authors.names.get(logger)) ?? author;
+        return author === null ? null : (
+            <span className="flex min-w-0 items-center gap-2">
+                <Avatar name={authorName ?? author} size="xs" />
+                <span className="truncate">{author}</span>
+            </span>
+        );
+    };
     const transferRow = (row: FoldedRow & LedgerTransfer) => {
         const figure = figureOf(ledger, row);
         const name = list.names.merchant(row);
@@ -150,7 +161,7 @@ export function LedgerTable({
                         </span>
                     </span>
                 ),
-                loggedBy: null,
+                loggedBy: authorCell(row),
                 notes: <span className={MUTED}>{list.transferNote(row.id)}</span>,
                 paidVia: null,
                 tags: null,
@@ -188,6 +199,7 @@ export function LedgerTable({
                 </Table.Cell>
                 <Table.Cell className={`max-w-0 truncate ${NARROW.to}`}>{list.names.account(row.toId)}</Table.Cell>
                 <Table.Cell className={`max-w-0 ${MUTED} ${NARROW.note}`}>{list.transferNote(row.id)}</Table.Cell>
+                {authors.shared ? <Table.Cell className="max-w-0">{authorCell(row)}</Table.Cell> : null}
                 <Table.Cell className={`${FIGURE} text-muted-foreground ${NARROW.date}`}>
                     {date.day(row.day)}
                 </Table.Cell>
@@ -214,9 +226,6 @@ export function LedgerTable({
         const top = ledger.categories.get(row.topId);
         const plan = raw?.installmentId ? plans.get(raw.installmentId) : undefined;
         const reviewing = list.review.has(row.id);
-        const logger = authors.authorOf(row);
-        const author = authors.labelOf(logger);
-        const authorName = (logger === null ? null : authors.names.get(logger)) ?? author;
         const category =
             row.topId === UNCATEGORIZED_ID && !fee ? (
                 <span className="text-app-tint font-medium">{words.pickCategory}</span>
@@ -274,13 +283,7 @@ export function LedgerTable({
                 </span>
             ),
             notes: <span className={MUTED}>{raw?.details ?? ""}</span>,
-            loggedBy:
-                author === null ? null : (
-                    <span className="flex min-w-0 items-center gap-2">
-                        <Avatar name={authorName ?? author} size="xs" />
-                        <span className="truncate">{author}</span>
-                    </span>
-                ),
+            loggedBy: authorCell(row),
             paidVia: <span className={MUTED}>{raw?.paidVia ?? ""}</span>,
             tags: renderTags(
                 row,
@@ -312,6 +315,9 @@ export function LedgerTable({
               { align: "start", key: "from", name: words.columns.from },
               { align: "start", key: "to", name: words.columns.to },
               { align: "start", key: "note", name: words.columns.note },
+              ...(authors.shared
+                  ? [{ align: "start" as const, key: "loggedBy" as const, name: words.columns.loggedBy }]
+                  : []),
               { align: "start", key: "date", name: words.columns.date },
               { align: "end", key: "fee", name: words.columns.fee },
               { align: "end", key: "amount", name: words.columns.amount },
