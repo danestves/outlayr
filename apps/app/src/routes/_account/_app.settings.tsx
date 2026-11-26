@@ -5,7 +5,12 @@ import { serverAccountState } from "@/lib/ledger-server";
 
 export const Route = createFileRoute("/_account/_app/settings")({
     component: Settings,
-    loader: ({ context }) => serverAccountState(context.queryClient, context.convexQueryClient?.serverHttpClient),
+    loader: ({ context, location }) =>
+        serverAccountState(
+            context.queryClient,
+            context.convexQueryClient?.serverHttpClient,
+            location.pathname === "/settings/connections/webhooks"
+        ),
 });
 
 function Settings() {

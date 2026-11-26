@@ -13,15 +13,23 @@ import { useIntlayer } from "react-intlayer";
 import { IconButton } from "@/components/ui/icon-button";
 import { writeSettings } from "@/lib/ledger-settings";
 
-export function SectionHead({ action, title }: { action?: ReactNode; title: ReactNode }) {
-    const { title: settings } = useIntlayer("dashboard-settings");
+export function SectionHead({
+    action,
+    backTo = "/settings",
+    title,
+}: {
+    action?: ReactNode;
+    backTo?: "/settings" | "/settings/connections";
+    title: ReactNode;
+}) {
+    const { sections, title: settings } = useIntlayer("dashboard-settings");
     return (
         <div className="flex min-h-16 items-center gap-2 max-lg:min-h-12">
             <IconButton
                 className="-ml-2.5 lg:hidden"
                 icon={ArrowLeft01Icon}
-                label={settings.value}
-                render={<Link to="/settings" />}
+                label={backTo === "/settings/connections" ? sections.connections.value : settings.value}
+                render={<Link to={backTo} />}
             />
             <h1 className="text-app-heading mr-auto shrink-0 font-semibold">{title}</h1>
             {action}
