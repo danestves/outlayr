@@ -38,7 +38,7 @@ const readLegacyLocale = (): Locale | null => {
 };
 
 export function readDashboardLocale(fallback: Locale = defaultLocale): Locale {
-    return chosen ?? readCookieLocale() ?? readLegacyLocale() ?? fallback;
+    return chosen ?? readCookieLocale() ?? fallback;
 }
 
 const persistDashboardLocale = createServerFn({ method: "POST" })
@@ -80,5 +80,5 @@ export function migrateDashboardLocale() {
     if (legacy === null) {
         return;
     }
-    persistDashboardLocale({ data: legacy }).catch(() => undefined);
+    chooseDashboardLocale(legacy);
 }
