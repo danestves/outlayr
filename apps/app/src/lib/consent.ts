@@ -23,13 +23,6 @@ export const findAuthRequest = makeFunctionReference<"mutation", { userCode: str
     "mcp:findAuthRequest"
 );
 
-const SCOPE_TITLES = new Map([
-    ["ledger:read", "Read your ledger"],
-    ["ledger:write", "Log entries"],
-]);
-
-export const scopeTitle = (name: string) => SCOPE_TITLES.get(name) ?? name;
-
 export function redirectHost(redirectUri: string): string {
     const { host, protocol } = new URL(redirectUri);
     return host || protocol;

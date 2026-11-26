@@ -19,7 +19,7 @@ import { ArtCard, BrandPage, Centered, SessionEmail } from "@/components/brand-p
 import { SettingsCard } from "@/components/dashboard/settings/parts";
 import { TextField } from "@/components/ui/text-field";
 import { authClient } from "@/lib/auth-client";
-import { authorize, findAuthRequest, getAuthRequest, redirectHost, scopeTitle } from "@/lib/consent";
+import { authorize, findAuthRequest, getAuthRequest, redirectHost } from "@/lib/consent";
 import type { AuthRequest } from "@/lib/consent";
 
 const SCOPE_ICONS = new Map([
@@ -156,17 +156,23 @@ function ConsentBones() {
     );
 }
 
+function hasScopeLabel<T extends object>(labels: T, name: string): name is Extract<keyof T, string> {
+    return Object.hasOwn(labels, name);
+}
+
 function ScopeRows({ scopes }: { scopes: AuthRequest["scopes"] }) {
+    const labels = useIntlayer("connect").scopes;
     return scopes.map((scope) => {
         const icon = SCOPE_ICONS.get(scope.name);
+        const label = hasScopeLabel(labels, scope.name) ? labels[scope.name] : null;
         return (
             <Frame.Row className="border-border border-t" key={scope.name}>
                 <Frame.Media className="text-muted-foreground size-5">
                     {icon ? <HugeiconsIcon icon={icon} size={16} /> : null}
                 </Frame.Media>
                 <Frame.Content>
-                    <p className="text-app-body font-medium">{scopeTitle(scope.name)}</p>
-                    <p className="text-muted-foreground text-app-label">{scope.description}</p>
+                    <p className="text-app-body font-medium">{label?.title ?? scope.name}</p>
+                    <p className="text-muted-foreground text-app-label">{label?.description ?? scope.description}</p>
                 </Frame.Content>
             </Frame.Row>
         );
