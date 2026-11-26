@@ -11,6 +11,7 @@ import * as Schema from "effect/Schema";
 
 import {
     accountsQuery,
+    bankOverviewQuery,
     connectionsQuery,
     limitsQuery,
     notionQuery,
@@ -394,6 +395,7 @@ export const serverAccountState = createIsomorphicFn()
                 client.prefetchQuery(notionQuery),
                 client.prefetchQuery(referralsQuery),
                 client.prefetchQuery(connectionsQuery),
+                client.prefetchQuery(bankOverviewQuery),
                 client.prefetchQuery(sharedLinksQuery),
                 client.prefetchQuery(pushConfigQuery),
                 ...(webhooks ? [client.prefetchQuery(webhooksQuery)] : []),

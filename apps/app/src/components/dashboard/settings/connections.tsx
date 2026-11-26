@@ -11,7 +11,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
-import { Frame } from "panelui-web/frame";
 import { Menu } from "panelui-web/menu";
 import { Table } from "panelui-web/table";
 import { useToast } from "panelui-web/toast";
@@ -27,6 +26,7 @@ import { connectionsQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 import { webhooksOpen } from "@/lib/webhooks";
 
+import { Banks } from "./banks";
 import { Row, SectionHead, SettingsCard } from "./parts";
 
 const SERVER = `${LEDGER_MCP_ORIGIN}/mcp`;
@@ -195,6 +195,7 @@ export function Connections() {
                 title={sections.connections}
             />
             <div className="@container flex flex-col gap-4 pb-8">
+                <Banks />
                 {webhooksOn ? (
                     <SettingsCard title={webhooks.webhooks}>
                         <Link
@@ -214,23 +215,18 @@ export function Connections() {
                 ) : null}
                 {agents.length === 0 ? (
                     <Skeleton loading={data === undefined}>
-                        <Frame className="min-w-0">
-                            <Frame.Panel>
-                                <div>
-                                    <Empty
-                                        action={
-                                            <Button onClick={() => setConnecting(true)}>
-                                                <HugeiconsIcon icon={BotIcon} size={16} />
-                                                {copy.connect}
-                                            </Button>
-                                        }
-                                        icon={BotIcon}
-                                        line={copy.emptyBody}
-                                        title={copy.emptyTitle}
-                                    />
-                                </div>
-                            </Frame.Panel>
-                        </Frame>
+                        <SettingsCard title={copy.agents}>
+                            <Empty
+                                action={
+                                    <Button onClick={() => setConnecting(true)} size="sm">
+                                        {copy.connect}
+                                    </Button>
+                                }
+                                icon={BotIcon}
+                                line={copy.emptyBody}
+                                title={copy.emptyTitle}
+                            />
+                        </SettingsCard>
                     </Skeleton>
                 ) : (
                     <SettingsCard footer={<ServerLine />} title={copy.agents}>

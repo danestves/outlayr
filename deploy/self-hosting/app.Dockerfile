@@ -12,6 +12,7 @@ RUN git init --quiet
 RUN CI=1 pnpm install --frozen-lockfile --trust-lockfile --filter @outlayr/app...
 
 ARG VITE_PUBLIC_POSTHOG_PROJECT_TOKEN=
+ARG VITE_STRIPE_PUBLISHABLE_KEY=
 
 WORKDIR /outlayr/apps/app
 RUN ./node_modules/.bin/varlock codegen && ./node_modules/.bin/vp build

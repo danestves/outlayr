@@ -21,6 +21,7 @@
         "@outlayr/backend": "workspace:*",
         "@outlayr/money": "workspace:*",
         "@outlayr/shared": "workspace:*",
+        "@stripe/stripe-js": "10.3.0",
         "@tailwindcss/vite": "^4.3.3",
         "@tanstack/convex-db-collection": "1.0.0-rc.1.5",
         "@tanstack/react-db": "1.0.0-rc.1.5",
