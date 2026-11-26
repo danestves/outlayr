@@ -31,7 +31,7 @@ let current = readListener();
 const watchers = new Set<() => void>();
 let stopAwaiting: (() => void) | null = null;
 
-function settleAccess(request: ListenerAccessRequest) {
+export function settleAccess(request: ListenerAccessRequest): void {
     const state = readListener();
     const granted =
         request.trigger === "notification_access"

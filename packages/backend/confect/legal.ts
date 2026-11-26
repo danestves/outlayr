@@ -1134,7 +1134,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "The app tour in analytics",
                 },
                 {
-                    detail: "With Share analytics on: when you start setting up auto-log, whether notification access is on when you come back from your phone's settings or you skip the step, and when its shortcut first runs. Never amounts, merchants or notification text.",
+                    detail: "With Share analytics on: when you start setting up auto-log, whether auto-log can read your notifications or texts when you come back from your phone's settings or you skip the step, and when its shortcut first runs in each profile. Never amounts, merchants or notification text.",
                     label: "Auto-log setup in analytics",
                 },
                 {
@@ -1164,7 +1164,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Die App-Tour in Analysen",
                 },
                 {
-                    detail: "Mit eingeschaltetem „Analysedaten teilen“: wann du mit dem Einrichten der Auto-Erfassung beginnst, ob der Benachrichtigungszugriff an ist, wenn du aus den Einstellungen deines Telefons zurückkommst, oder ob du den Schritt überspringst, und wann ihr Kurzbefehl zum ersten Mal läuft. Nie Beträge, Händler oder Benachrichtigungstexte.",
+                    detail: "Mit eingeschaltetem „Analysedaten teilen“: wann du mit dem Einrichten der Auto-Erfassung beginnst, ob die Auto-Erfassung deine Benachrichtigungen oder SMS lesen kann, wenn du aus den Einstellungen deines Telefons zurückkommst, oder ob du den Schritt überspringst, und wann ihr Kurzbefehl in jedem Profil zum ersten Mal läuft. Nie Beträge, Händler oder Benachrichtigungstexte.",
                     label: "Einrichten der Auto-Erfassung in Analysen",
                 },
                 {
@@ -1194,7 +1194,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "El recorrido por la app en analíticas",
                 },
                 {
-                    detail: "Con Compartir analíticas activado: cuándo empiezas a configurar el registro automático, si el acceso a notificaciones está activado cuando vuelves de los ajustes de tu teléfono o si saltas el paso, y cuándo su atajo se ejecuta por primera vez. Nunca montos, comercios ni el texto de las notificaciones.",
+                    detail: "Con Compartir analíticas activado: cuándo empiezas a configurar el registro automático, si el registro automático puede leer tus notificaciones o SMS cuando vuelves de los ajustes de tu teléfono o si saltas el paso, y cuándo su atajo se ejecuta por primera vez en cada perfil. Nunca montos, comercios ni el texto de las notificaciones.",
                     label: "Configuración del registro automático en analíticas",
                 },
                 {
@@ -1224,7 +1224,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "La visite de l'app dans les statistiques",
                 },
                 {
-                    detail: "Avec Partager les données d'analyse activé : quand vous commencez à configurer la saisie automatique, si l'accès aux notifications est activé quand vous revenez des réglages de votre téléphone ou si vous passez l'étape, et quand son raccourci s'exécute pour la première fois. Jamais de montants, de commerçants ni le texte des notifications.",
+                    detail: "Avec Partager les données d'analyse activé : quand vous commencez à configurer la saisie automatique, si la saisie automatique peut lire vos notifications ou SMS quand vous revenez des réglages de votre téléphone ou si vous passez l'étape, et quand son raccourci s'exécute pour la première fois dans chaque profil. Jamais de montants, de commerçants ni le texte des notifications.",
                     label: "Configuration de la saisie automatique dans les statistiques",
                 },
                 {
@@ -1254,7 +1254,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "O tour do app nas análises",
                 },
                 {
-                    detail: "Com Compartilhar análises ativado: quando você começa a configurar o registro automático, se o acesso às notificações está ativado quando você volta dos ajustes do celular ou se você pula a etapa, e quando o atalho dele roda pela primeira vez. Nunca valores, estabelecimentos nem o texto das notificações.",
+                    detail: "Com Compartilhar análises ativado: quando você começa a configurar o registro automático, se o registro automático consegue ler suas notificações ou SMS quando você volta dos ajustes do celular ou se você pula a etapa, e quando o atalho dele roda pela primeira vez em cada perfil. Nunca valores, estabelecimentos nem o texto das notificações.",
                     label: "Configuração do registro automático nas análises",
                 },
                 {
