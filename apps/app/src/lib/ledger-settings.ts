@@ -2,12 +2,10 @@ import { settingsOf } from "@outlayr/money/ledger-view";
 import type { LedgerSettings } from "@outlayr/money/ledger-view";
 import type { DbClient } from "@tanstack/react-db";
 import { createContext, useContext, useMemo } from "react";
-import { useLocale } from "react-intlayer";
 
 import { useNumberLocale } from "./exchange-locale";
 import { clockTime, money } from "./ledger";
 import { ledgerCollections, useRows } from "./ledger-db";
-import { weekStart } from "./week-start";
 
 export const LedgerSettingsContext = createContext<LedgerSettings>(settingsOf([]));
 
@@ -15,14 +13,7 @@ const useMetaRows = () => useRows(ledgerCollections.appMeta);
 
 export function useLedgerSettings(): LedgerSettings {
     const rows = useMetaRows();
-    const { locale } = useLocale();
-    return useMemo(() => {
-        const settings = settingsOf(rows);
-        const chosen = rows.find((row) => row.key === "firstWeekday")?.value;
-        const explicit = chosen === "1" || chosen === "2" ? Number(chosen) : null;
-        const firstWeekday = weekStart(explicit, locale);
-        return firstWeekday === settings.firstWeekday ? settings : { ...settings, firstWeekday };
-    }, [locale, rows]);
+    return useMemo(() => settingsOf(rows), [rows]);
 }
 
 export function useMeta(): ReadonlyMap<string, string | null> {

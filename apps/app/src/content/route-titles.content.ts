@@ -3,7 +3,7 @@ import type { Dictionary } from "intlayer";
 
 const routeTitles = {
     content: {
-        home: t({ en: "Home", de: "Startseite", es: "Inicio", fr: "Accueil", pt: "Início" }),
+        home: t({ en: "Dashboard", de: "Dashboard", es: "Panel", fr: "Tableau de bord", pt: "Painel" }),
         transactions: t({
             en: "Transactions",
             de: "Einträge",
