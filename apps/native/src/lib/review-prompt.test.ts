@@ -107,6 +107,30 @@ describe("askForReview", () => {
         await expect(pending(db)).resolves.toBe(false);
     });
 
+    it("keeps the record until the sheet is requested, so the catch-up paywall cannot open under it", async () => {
+        await writeEntries(db, [3, 2]);
+        await markPending(db);
+        let pendingDuringRequest: boolean | undefined;
+        mockStoreReview.requestReview.mockImplementationOnce(async () => {
+            pendingDuringRequest = await pending(db);
+        });
+
+        await askForReviewIfPending(db);
+
+        expect(pendingDuringRequest).toBe(true);
+        await expect(pending(db)).resolves.toBe(false);
+    });
+
+    it("does not retry a failed request for a second ask queued behind it", async () => {
+        await writeEntries(db, [3, 2]);
+        await markPending(db);
+        mockStoreReview.requestReview.mockRejectedValueOnce(new Error("no window scene"));
+
+        await Promise.allSettled([askForReviewIfPending(db), askForReviewIfPending(db)]);
+
+        expect(mockStoreReview.requestReview).toHaveBeenCalledOnce();
+    });
+
     it("spends no ask when the store request fails, so the next entry asks again without looping", async () => {
         await writeEntries(db, [3, 2]);
         await markPending(db);

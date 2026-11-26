@@ -1,4 +1,3 @@
-import * as Cause from "effect/Cause";
 import { useRouter, useSegments } from "expo-router";
 import { useSyncExternalStore } from "react";
 
@@ -11,10 +10,7 @@ import { paywallHref } from "@/domain/paywall-trigger";
 import { useProLocked } from "@/hooks/use-pro-locked";
 import { freshEntries } from "@/lib/fresh-entries";
 import { useWhen } from "@/lib/lifecycle";
-import { SILENT } from "@/state/atom-command";
-import { appAtomRegistry } from "@/state/atom-registry";
-import { markPaywallSeenCommand } from "@/state/settings-flow-commands";
-import { fireAtomCommand } from "@/state/use-atom-action";
+import { reviewRequestedThisSession } from "@/lib/review-prompt";
 
 let released = false;
 
@@ -41,20 +37,10 @@ export function useCatchUpPaywall(db: Database, ready: boolean): void {
     });
 
     useWhen(due, () => {
-        if (released) {
+        if (released || reviewRequestedThisSession()) {
             return;
         }
         released = true;
-        fireAtomCommand(
-            appAtomRegistry,
-            markPaywallSeenCommand,
-            db,
-            {
-                onFailure: (cause) =>
-                    console.warn("[outlayr] marking the catch-up paywall seen failed", Cause.squash(cause)),
-                onSettled: () => router.push(paywallHref("catch_up")),
-            },
-            SILENT
-        );
+        router.push(paywallHref("catch_up"));
     });
 }
