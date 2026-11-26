@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const dashboardBudgets = {
@@ -501,15 +501,26 @@ const dashboardBudgets = {
                     pt: "Faltam {{count}} dias",
                 })
             ),
-            daysToGo: insert(
-                t({
-                    en: "{{count}} days to go",
-                    de: "Noch {{count}} Tage",
-                    es: "Faltan {{count}} días",
-                    fr: "Encore {{count}} jours",
-                    pt: "Faltam {{count}} dias",
-                })
-            ),
+            daysToGo: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} day to go",
+                        de: "Noch {{count}} Tag",
+                        es: "Falta {{count}} día",
+                        fr: "Encore {{count}} jour",
+                        pt: "Falta {{count}} dia",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} days to go",
+                        de: "Noch {{count}} Tage",
+                        es: "Faltan {{count}} días",
+                        fr: "Encore {{count}} jours",
+                        pt: "Faltam {{count}} dias",
+                    })
+                ),
+            }),
             held: t({ en: "Held", de: "Eingehalten", es: "Se cumplió", fr: "Tenu", pt: "Cumprido" }),
             left: t({ en: "Left", de: "Übrig", es: "Queda", fr: "Reste", pt: "Resta" }),
             limit: t({ en: "Limit", de: "Limit", es: "Límite", fr: "Limite", pt: "Limite" }),

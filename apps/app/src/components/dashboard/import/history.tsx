@@ -255,7 +255,7 @@ export function LastImportCard({ record, rich }: { record: ImportRecord; rich: b
                             ? day.long(record.at)
                             : home.entriesInto({
                                   account: account?.name ?? home.accounts({ count: record.accountIds.length }).value,
-                                  count: record.entryIds.length.toLocaleString(),
+                                  count: record.entryIds.length,
                               })}
                     </small>
                 </div>

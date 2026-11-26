@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const dashboardDebts = {
@@ -848,15 +848,26 @@ const dashboardDebts = {
                     pt: "Pago em {{date}}, {{count}} dias antes",
                 })
             ),
-            months: insert(
-                t({
-                    en: "{{count}} months",
-                    de: "{{count}} Monate",
-                    es: "{{count}} meses",
-                    fr: "{{count}} mois",
-                    pt: "{{count}} meses",
-                })
-            ),
+            months: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} month",
+                        de: "{{count}} Monat",
+                        es: "{{count}} mes",
+                        fr: "{{count}} mois",
+                        pt: "{{count}} mês",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} months",
+                        de: "{{count}} Monate",
+                        es: "{{count}} meses",
+                        fr: "{{count}} mois",
+                        pt: "{{count}} meses",
+                    })
+                ),
+            }),
             monthUntil: insert(
                 t({
                     en: "A month until {{date}}",

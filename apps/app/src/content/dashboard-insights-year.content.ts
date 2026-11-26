@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const dashboardInsightsYear = {
@@ -286,15 +286,26 @@ const dashboardInsightsYear = {
             budget: t({ en: "Budgets", de: "Budgets", es: "Presupuestos", fr: "Budgets", pt: "Orçamentos" }),
         },
         twelveMonths: t({ en: "12 months", de: "12 Monate", es: "12 meses", fr: "12 mois", pt: "12 meses" }),
-        monthsCount: insert(
-            t({
-                en: "{{count}} months",
-                de: "{{count}} Monate",
-                es: "{{count}} meses",
-                fr: "{{count}} mois",
-                pt: "{{count}} meses",
-            })
-        ),
+        monthsCount: plural({
+            one: insert(
+                t({
+                    en: "{{count}} month",
+                    de: "{{count}} Monat",
+                    es: "{{count}} mes",
+                    fr: "{{count}} mois",
+                    pt: "{{count}} mês",
+                })
+            ),
+            other: insert(
+                t({
+                    en: "{{count}} months",
+                    de: "{{count}} Monate",
+                    es: "{{count}} meses",
+                    fr: "{{count}} mois",
+                    pt: "{{count}} meses",
+                })
+            ),
+        }),
     },
     key: "dashboard-insights-year",
 } satisfies Dictionary;

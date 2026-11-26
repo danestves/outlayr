@@ -218,7 +218,7 @@ function AccountsMenu({ accounts, chosen, onChange, words }: AccountsMenuProps) 
     if (chosen.length === 1 && first) {
         ({ name } = first);
     } else if (chosen.length > 1) {
-        name = copy.accounts.count({ count: String(chosen.length) }).value;
+        name = copy.accounts.count({ count: chosen.length }).value;
     }
     return (
         <Menu>

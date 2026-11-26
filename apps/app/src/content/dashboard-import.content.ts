@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const dashboardImport = {
@@ -129,25 +129,48 @@ const dashboardImport = {
                     pt: "{{count}} linhas não entraram",
                 })
             ),
-            duplicatesSkipped: insert(
-                t({
-                    en: "{{count}} duplicates skipped",
-                    de: "{{count}} Duplikate übersprungen",
-                    es: "{{count}} duplicados omitidos",
-                    fr: "{{count}} doublons ignorés",
-                    pt: "{{count}} duplicados ignorados",
-                })
-            ),
-            entriesCount: insert(
-                t({
-                    en: "{{count}} entries",
-                    de: "{{count}} Einträge",
-                    es: "{{count}} movimientos",
-                    fr: "{{count}} opérations",
-                    pt: "{{count}} lançamentos",
-                    "pt-PT": "{{count}} registos",
-                })
-            ),
+            duplicatesSkipped: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} duplicate skipped",
+                        de: "{{count}} Duplikat übersprungen",
+                        es: "{{count}} duplicado omitido",
+                        fr: "{{count}} doublon ignoré",
+                        pt: "{{count}} duplicado ignorado",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} duplicates skipped",
+                        de: "{{count}} Duplikate übersprungen",
+                        es: "{{count}} duplicados omitidos",
+                        fr: "{{count}} doublons ignorés",
+                        pt: "{{count}} duplicados ignorados",
+                    })
+                ),
+            }),
+            entriesCount: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} entry",
+                        de: "{{count}} Eintrag",
+                        es: "{{count}} movimiento",
+                        fr: "{{count}} opération",
+                        pt: "{{count}} lançamento",
+                        "pt-PT": "{{count}} registo",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} entries",
+                        de: "{{count}} Einträge",
+                        es: "{{count}} movimientos",
+                        fr: "{{count}} opérations",
+                        pt: "{{count}} lançamentos",
+                        "pt-PT": "{{count}} registos",
+                    })
+                ),
+            }),
             failed: t({ en: "Failed", de: "Fehlgeschlagen", es: "Fallidas", fr: "Échecs", pt: "Falharam" }),
             importAnother: t({
                 en: "Import another",
@@ -489,15 +512,26 @@ const dashboardImport = {
             undone: t({ en: "Undone", de: "Rückgängig gemacht", es: "Deshechas", fr: "Annulées", pt: "Desfeitas" }),
         },
         home: {
-            accounts: insert(
-                t({
-                    en: "{{count}} accounts",
-                    de: "{{count}} Konten",
-                    es: "{{count}} cuentas",
-                    fr: "{{count}} comptes",
-                    pt: "{{count}} contas",
-                })
-            ),
+            accounts: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} account",
+                        de: "{{count}} Konto",
+                        es: "{{count}} cuenta",
+                        fr: "{{count}} compte",
+                        pt: "{{count}} conta",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} accounts",
+                        de: "{{count}} Konten",
+                        es: "{{count}} cuentas",
+                        fr: "{{count}} comptes",
+                        pt: "{{count}} contas",
+                    })
+                ),
+            }),
             anotherApp: t({
                 en: "Another app?",
                 de: "Eine andere App?",
@@ -549,16 +583,28 @@ const dashboardImport = {
                 fr: "Doublons ignorés",
                 pt: "Duplicados ignorados",
             }),
-            entriesInto: insert(
-                t({
-                    en: "{{count}} entries into {{account}}",
-                    de: "{{count}} Einträge in {{account}}",
-                    es: "{{count}} movimientos en {{account}}",
-                    fr: "{{count}} opérations dans {{account}}",
-                    pt: "{{count}} lançamentos em {{account}}",
-                    "pt-PT": "{{count}} registos em {{account}}",
-                })
-            ),
+            entriesInto: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} entry into {{account}}",
+                        de: "{{count}} Eintrag in {{account}}",
+                        es: "{{count}} movimiento en {{account}}",
+                        fr: "{{count}} opération dans {{account}}",
+                        pt: "{{count}} lançamento em {{account}}",
+                        "pt-PT": "{{count}} registo em {{account}}",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} entries into {{account}}",
+                        de: "{{count}} Einträge in {{account}}",
+                        es: "{{count}} movimientos en {{account}}",
+                        fr: "{{count}} opérations dans {{account}}",
+                        pt: "{{count}} lançamentos em {{account}}",
+                        "pt-PT": "{{count}} registos em {{account}}",
+                    })
+                ),
+            }),
             forget: t({
                 en: "Remove from history",
                 de: "Aus dem Verlauf entfernen",
@@ -1316,15 +1362,26 @@ const dashboardImport = {
                 pt: "Ler o arquivo",
                 "pt-PT": "Ler o ficheiro",
             }),
-            readRows: insert(
-                t({
-                    en: "{{count}} rows",
-                    de: "{{count}} Zeilen",
-                    es: "{{count}} filas",
-                    fr: "{{count}} lignes",
-                    pt: "{{count}} linhas",
-                })
-            ),
+            readRows: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} row",
+                        de: "{{count}} Zeile",
+                        es: "{{count}} fila",
+                        fr: "{{count}} ligne",
+                        pt: "{{count}} linha",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} rows",
+                        de: "{{count}} Zeilen",
+                        es: "{{count}} filas",
+                        fr: "{{count}} lignes",
+                        pt: "{{count}} linhas",
+                    })
+                ),
+            }),
             reason: {
                 aiOff: t({
                     en: "AI off",
@@ -1609,16 +1666,28 @@ const dashboardImport = {
                 })
             ),
             new: t({ en: "New", de: "Neu", es: "Nuevos", fr: "Nouveaux", pt: "Novos" }),
-            newEntries: insert(
-                t({
-                    en: "{{count}} new entries",
-                    de: "{{count}} neue Einträge",
-                    es: "{{count}} movimientos nuevos",
-                    fr: "{{count}} nouvelles opérations",
-                    pt: "{{count}} lançamentos novos",
-                    "pt-PT": "{{count}} registos novos",
-                })
-            ),
+            newEntries: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} new entry",
+                        de: "{{count}} neuer Eintrag",
+                        es: "{{count}} movimiento nuevo",
+                        fr: "{{count}} nouvelle opération",
+                        pt: "{{count}} lançamento novo",
+                        "pt-PT": "{{count}} registo novo",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} new entries",
+                        de: "{{count}} neue Einträge",
+                        es: "{{count}} movimientos nuevos",
+                        fr: "{{count}} nouvelles opérations",
+                        pt: "{{count}} lançamentos novos",
+                        "pt-PT": "{{count}} registos novos",
+                    })
+                ),
+            }),
             next: t({
                 en: "Next page",
                 de: "Nächste Seite",

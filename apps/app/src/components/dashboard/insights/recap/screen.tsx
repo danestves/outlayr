@@ -53,7 +53,7 @@ function daysFoot(copy: Copy, empty: boolean, missing: number) {
     if (missing === 1) {
         return copy.kpi.oneDayMissing;
     }
-    return copy.kpi.daysMissing({ count: String(missing) });
+    return copy.kpi.daysMissing({ count: missing });
 }
 
 function WholePill({ delta }: { delta: number }) {

@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const dashboardInsightsRecap = {
@@ -327,16 +327,28 @@ const dashboardInsightsRecap = {
                 pt: "Dias registrados",
                 "pt-PT": "Dias registados",
             }),
-            daysMissing: insert(
-                t({
-                    en: "{{count}} days without an entry",
-                    de: "{{count}} Tage ohne Eintrag",
-                    es: "{{count}} días sin movimientos",
-                    fr: "{{count}} jours sans opération",
-                    pt: "{{count}} dias sem lançamento",
-                    "pt-PT": "{{count}} dias sem registo",
-                })
-            ),
+            daysMissing: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} day without an entry",
+                        de: "{{count}} Tag ohne Eintrag",
+                        es: "{{count}} día sin movimientos",
+                        fr: "{{count}} jour sans opération",
+                        pt: "{{count}} dia sem lançamento",
+                        "pt-PT": "{{count}} dia sem registo",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} days without an entry",
+                        de: "{{count}} Tage ohne Eintrag",
+                        es: "{{count}} días sin movimientos",
+                        fr: "{{count}} jours sans opération",
+                        pt: "{{count}} dias sem lançamento",
+                        "pt-PT": "{{count}} dias sem registo",
+                    })
+                ),
+            }),
             daysOf: insert(
                 t({
                     en: "{{logged}} of {{total}}",
@@ -423,15 +435,26 @@ const dashboardInsightsRecap = {
             })
         ),
         where: {
-            categories: insert(
-                t({
-                    en: "{{count}} categories",
-                    de: "{{count}} Kategorien",
-                    es: "{{count}} categorías",
-                    fr: "{{count}} catégories",
-                    pt: "{{count}} categorias",
-                })
-            ),
+            categories: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} category",
+                        de: "{{count}} Kategorie",
+                        es: "{{count}} categoría",
+                        fr: "{{count}} catégorie",
+                        pt: "{{count}} categoria",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} categories",
+                        de: "{{count}} Kategorien",
+                        es: "{{count}} categorías",
+                        fr: "{{count}} catégories",
+                        pt: "{{count}} categorias",
+                    })
+                ),
+            }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             ofSpending: t({
                 en: "Of spending",

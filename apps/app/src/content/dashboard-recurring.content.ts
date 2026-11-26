@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const dashboardRecurring = {
@@ -273,25 +273,48 @@ const dashboardRecurring = {
                     pt: "Mesmo valor, a cada {{count}} dias aproximadamente",
                 })
             ),
-            gapDays: insert(
-                t({
-                    en: "{{count}} days",
-                    de: "{{count}} Tage",
-                    es: "{{count}} días",
-                    fr: "{{count}} jours",
-                    pt: "{{count}} dias",
-                })
-            ),
-            matching: insert(
-                t({
-                    en: "{{count}} matching entries",
-                    de: "{{count}} passende Einträge",
-                    es: "{{count}} movimientos coinciden",
-                    fr: "{{count}} opérations correspondantes",
-                    pt: "{{count}} lançamentos correspondentes",
-                    "pt-PT": "{{count}} registos correspondentes",
-                })
-            ),
+            gapDays: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} day",
+                        de: "{{count}} Tag",
+                        es: "{{count}} día",
+                        fr: "{{count}} jour",
+                        pt: "{{count}} dia",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} days",
+                        de: "{{count}} Tage",
+                        es: "{{count}} días",
+                        fr: "{{count}} jours",
+                        pt: "{{count}} dias",
+                    })
+                ),
+            }),
+            matching: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} matching entry",
+                        de: "{{count}} passender Eintrag",
+                        es: "{{count}} movimiento coincide",
+                        fr: "{{count}} opération correspondante",
+                        pt: "{{count}} lançamento correspondente",
+                        "pt-PT": "{{count}} registo correspondente",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} matching entries",
+                        de: "{{count}} passende Einträge",
+                        es: "{{count}} movimientos coinciden",
+                        fr: "{{count}} opérations correspondantes",
+                        pt: "{{count}} lançamentos correspondentes",
+                        "pt-PT": "{{count}} registos correspondentes",
+                    })
+                ),
+            }),
             notRecurring: t({
                 en: "Not recurring",
                 de: "Nicht wiederkehrend",
@@ -317,15 +340,26 @@ const dashboardRecurring = {
                 pt: "Ver lançamentos",
                 "pt-PT": "Ver registos",
             }),
-            seen: insert(
-                t({
-                    en: "{{count}} times",
-                    de: "{{count}}-mal",
-                    es: "{{count}} veces",
-                    fr: "{{count}} fois",
-                    pt: "{{count}} vezes",
-                })
-            ),
+            seen: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} time",
+                        de: "{{count}}-mal",
+                        es: "{{count}} vez",
+                        fr: "{{count}} fois",
+                        pt: "{{count}} vez",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} times",
+                        de: "{{count}}-mal",
+                        es: "{{count}} veces",
+                        fr: "{{count}} fois",
+                        pt: "{{count}} vezes",
+                    })
+                ),
+            }),
             since: insert(
                 t({
                     en: "{{amount}} since {{month}}",

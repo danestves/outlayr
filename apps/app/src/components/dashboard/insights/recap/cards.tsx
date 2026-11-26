@@ -36,7 +36,7 @@ export function WhereItWent({ format, recap, versus }: { format: RecapFormat; re
         <Card
             action={
                 <span className={`${FIGURE} ${MUTED_FIGURE} font-normal`}>
-                    {where.categories({ count: String(recap.rows.length) })}
+                    {where.categories({ count: recap.rows.length })}
                 </span>
             }
             className="xl:col-span-2"
