@@ -2,7 +2,7 @@ import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import Share01Icon from "@hugeicons/core-free-icons/Share01Icon";
 import UserAdd01Icon from "@hugeicons/core-free-icons/UserAdd01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { RedeemStatus, ReferralOverview } from "@outlayr/backend/confect/referrals.spec";
+import type { ReferralOverview } from "@outlayr/backend/confect/referrals.spec";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import {
     normalizeReferralCode,
@@ -33,12 +33,13 @@ import { Empty } from "@/components/dashboard/home/empty";
 import { DialogContent } from "@/components/ui/dialog-content";
 import { referralsQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
+import { redeemInvite } from "@/lib/referrals";
+import type { Refusal } from "@/lib/referrals";
 
 import { Row, SectionHead, SettingsCard } from "./parts";
 import { Stat } from "./usage";
 
 type Friend = ReferralOverview["friends"][number];
-type Refusal = Exclude<RedeemStatus, "claimed" | "signedOut"> | "offline";
 
 const SEEN_KEY = "outlayr-referral-reward-seen";
 
@@ -126,16 +127,14 @@ function ClaimBody({
     }
     const claim = async () => {
         setBusy(true);
-        const status = await convexClient()
-            .action(api.referrals.redeem, { code })
-            .catch(() => "offline" as const);
+        const status = await redeemInvite(code);
         setBusy(false);
         if (status === "claimed") {
             toast.add({ title: copy.claim.claimed.value });
             onClose();
             return;
         }
-        onRefused(status === "signedOut" ? "offline" : status);
+        onRefused(status);
     };
     return (
         <>

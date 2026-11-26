@@ -24,6 +24,7 @@ import { Route as AccountAppRecurringRouteImport } from './routes/_account/_app.
 import { Route as AccountAppRulesRouteImport } from './routes/_account/_app.rules'
 import { Route as AccountAppSettingsRouteImport } from './routes/_account/_app.settings'
 import { Route as AccountAppTransactionsRouteImport } from './routes/_account/_app.transactions'
+import { Route as AccountICodeRouteImport } from './routes/_account/i.$code'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AccountAppAccountsIndexRouteImport } from './routes/_account/_app.accounts.index'
 import { Route as AccountAppAccountsAccountIdRouteImport } from './routes/_account/_app.accounts.$accountId'
@@ -138,6 +139,11 @@ const AccountAppTransactionsRoute = AccountAppTransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
   getParentRoute: () => AccountAppRoute,
+} as any)
+const AccountICodeRoute = AccountICodeRouteImport.update({
+  id: '/i/$code',
+  path: '/i/$code',
+  getParentRoute: () => AccountRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -381,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/rules': typeof AccountAppRulesRoute
   '/settings': typeof AccountAppSettingsRouteWithChildren
   '/transactions': typeof AccountAppTransactionsRoute
+  '/i/$code': typeof AccountICodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
@@ -434,6 +441,7 @@ export interface FileRoutesByTo {
   '/recurring': typeof AccountAppRecurringRoute
   '/rules': typeof AccountAppRulesRoute
   '/transactions': typeof AccountAppTransactionsRoute
+  '/i/$code': typeof AccountICodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
@@ -492,6 +500,7 @@ export interface FileRoutesById {
   '/_account/_app/rules': typeof AccountAppRulesRoute
   '/_account/_app/settings': typeof AccountAppSettingsRouteWithChildren
   '/_account/_app/transactions': typeof AccountAppTransactionsRoute
+  '/_account/i/$code': typeof AccountICodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_account/_app/': typeof AccountAppIndexRoute
   '/_account/_app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
@@ -551,6 +560,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/settings'
     | '/transactions'
+    | '/i/$code'
     | '/api/auth/$'
     | '/accounts/$accountId'
     | '/accounts/net-worth'
@@ -604,6 +614,7 @@ export interface FileRouteTypes {
     | '/recurring'
     | '/rules'
     | '/transactions'
+    | '/i/$code'
     | '/api/auth/$'
     | '/accounts/$accountId'
     | '/accounts/net-worth'
@@ -661,6 +672,7 @@ export interface FileRouteTypes {
     | '/_account/_app/rules'
     | '/_account/_app/settings'
     | '/_account/_app/transactions'
+    | '/_account/i/$code'
     | '/api/auth/$'
     | '/_account/_app/'
     | '/_account/_app/accounts/$accountId'
@@ -818,6 +830,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/transactions'
       preLoaderRoute: typeof AccountAppTransactionsRouteImport
       parentRoute: typeof AccountAppRoute
+    }
+    '/_account/i/$code': {
+      id: '/_account/i/$code'
+      path: '/i/$code'
+      fullPath: '/i/$code'
+      preLoaderRoute: typeof AccountICodeRouteImport
+      parentRoute: typeof AccountRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -1251,12 +1270,14 @@ interface AccountRouteChildren {
   AccountAppRoute: typeof AccountAppRouteWithChildren
   AccountConnectRoute: typeof AccountConnectRoute
   AccountLoginRoute: typeof AccountLoginRoute
+  AccountICodeRoute: typeof AccountICodeRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
   AccountAppRoute: AccountAppRouteWithChildren,
   AccountConnectRoute: AccountConnectRoute,
   AccountLoginRoute: AccountLoginRoute,
+  AccountICodeRoute: AccountICodeRoute,
 }
 
 const AccountRouteWithChildren =
