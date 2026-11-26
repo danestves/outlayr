@@ -123,11 +123,7 @@ function MemberView({ member, onRemove, you }: { member: ProfileMember; onRemove
         hint = copy.members.joined({ date: formatDay(locale, member.joinedAt) }).value;
     }
     return (
-        <Row
-            hint={hint}
-            label={you ? copy.members.you.value : name}
-            leading={<Avatar name={you ? copy.members.you.value : name} size="sm" />}
-        >
+        <Row hint={hint} label={you ? copy.members.you.value : name} leading={<Avatar name={name} size="sm" />}>
             {onRemove ? (
                 <Button onClick={onRemove} size="sm" variant="destructive">
                     {copy.members.remove}
@@ -184,7 +180,7 @@ function MonthSplit({ members, viewerId }: { members: ProfileMembersView; viewer
                 const name = split.name ?? copy.memberUnknown.value;
                 return (
                     <Row
-                        hint={copy.month.entries({ count: String(split.count) })}
+                        hint={copy.month.entries({ count: split.count })}
                         key={split.id}
                         label={split.id === viewerId ? copy.members.you : name}
                         leading={<Avatar name={name} size="sm" />}
@@ -265,7 +261,7 @@ function DetailsCard({
             {joined === null ? null : (
                 <>
                     <Row label={sharing.details.owner} hint={owner ?? sharing.memberUnknown} />
-                    <Row label={sharing.details.logged({ count: String(ownEntries) })} />
+                    <Row label={sharing.details.logged({ count: ownEntries })} />
                 </>
             )}
         </SettingsCard>

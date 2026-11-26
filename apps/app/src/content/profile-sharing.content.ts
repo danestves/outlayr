@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const profileSharing = {
@@ -22,15 +22,26 @@ const profileSharing = {
                 pt: "Moeda principal",
             }),
 
-            logged: insert(
-                t({
-                    en: "You logged {{count}} entries",
-                    de: "Du hast {{count}} Einträge erfasst",
-                    es: "Registraste {{count}} movimientos",
-                    fr: "Vous avez saisi {{count}} opérations",
-                    pt: "Você registrou {{count}} lançamentos",
-                })
-            ),
+            logged: plural({
+                one: insert(
+                    t({
+                        en: "You logged {{count}} entry",
+                        de: "Du hast {{count}} Eintrag erfasst",
+                        es: "Registraste {{count}} movimiento",
+                        fr: "Vous avez saisi {{count}} opération",
+                        pt: "Você registrou {{count}} lançamento",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "You logged {{count}} entries",
+                        de: "Du hast {{count}} Einträge erfasst",
+                        es: "Registraste {{count}} movimientos",
+                        fr: "Vous avez saisi {{count}} opérations",
+                        pt: "Você registrou {{count}} lançamentos",
+                    })
+                ),
+            }),
             name: t({ en: "Name", de: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
             owner: t({ en: "Owner", de: "Inhaber", es: "Dueño", fr: "Propriétaire", pt: "Dono" }),
             title: t({ en: "Details", de: "Details", es: "Detalles", fr: "Détails", pt: "Detalhes" }),
@@ -415,15 +426,26 @@ const profileSharing = {
             you: t({ en: "You", de: "Du", es: "Tú", fr: "Vous", pt: "Você" }),
         },
         month: {
-            entries: insert(
-                t({
-                    en: "{{count}} entries",
-                    de: "{{count}} Einträge",
-                    es: "{{count}} movimientos",
-                    fr: "{{count}} opérations",
-                    pt: "{{count}} lançamentos",
-                })
-            ),
+            entries: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} entry",
+                        de: "{{count}} Eintrag",
+                        es: "{{count}} movimiento",
+                        fr: "{{count}} opération",
+                        pt: "{{count}} lançamento",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} entries",
+                        de: "{{count}} Einträge",
+                        es: "{{count}} movimientos",
+                        fr: "{{count}} opérations",
+                        pt: "{{count}} lançamentos",
+                    })
+                ),
+            }),
 
             title: insert(
                 t({
