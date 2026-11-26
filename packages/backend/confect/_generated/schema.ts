@@ -6,6 +6,7 @@ import appMeta from "./tables/appMeta";
 import bankAccounts from "./tables/bankAccounts";
 import bankEntries from "./tables/bankEntries";
 import bankHolders from "./tables/bankHolders";
+import bankInstitutionSyncs from "./tables/bankInstitutionSyncs";
 import bankInstitutions from "./tables/bankInstitutions";
 import budgetPlans from "./tables/budgetPlans";
 import budgets from "./tables/budgets";
@@ -59,6 +60,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly bankAccounts: typeof bankAccounts;
   readonly bankEntries: typeof bankEntries;
   readonly bankHolders: typeof bankHolders;
+  readonly bankInstitutionSyncs: typeof bankInstitutionSyncs;
   readonly bankInstitutions: typeof bankInstitutions;
   readonly budgetPlans: typeof budgetPlans;
   readonly budgets: typeof budgets;
@@ -111,6 +113,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   bankAccounts,
   bankEntries,
   bankHolders,
+  bankInstitutionSyncs,
   bankInstitutions,
   budgetPlans,
   budgets,

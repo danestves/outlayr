@@ -57,8 +57,8 @@ export const StartedLink = Schema.Union([
 ]);
 
 export const FinishedLink = Schema.Union([
-    // `linked` counts accounts this link added; a sign-in again for accounts already linked adds none.
-    Schema.Struct({ kind: Schema.Literal("linked"), linked: Schema.Number }),
+    // `added` names only the accounts this link inserted; a sign-in again for accounts already linked adds none.
+    Schema.Struct({ added: Schema.Array(Id("bankAccounts")), kind: Schema.Literal("linked") }),
     Schema.Struct({ kind: Schema.Literals(["plan", "unavailable", "failed"]) }),
 ]);
 
@@ -93,7 +93,7 @@ export default GroupSpec.make()
     .addFunction(FunctionSpec.publicQuery({ args: () => ({}), name: "overview", returns: () => BankOverview }))
     .addFunction(
         FunctionSpec.publicAction({
-            args: () => ({ institution: Id("bankInstitutions") }),
+            args: () => ({ institution: Id("bankInstitutions"), repair: Schema.NullOr(Id("bankAccounts")) }),
             name: "startLink",
             returns: () => StartedLink,
         })
@@ -164,7 +164,7 @@ export default GroupSpec.make()
         FunctionSpec.internalMutation({
             args: () => ({ accounts: Schema.Array(BankAccount), provider: BankingProviderName, userId: Schema.String }),
             name: "saveAccounts",
-            returns: () => Schema.Number,
+            returns: () => Schema.Array(Id("bankAccounts")),
         })
     )
     .addFunction(
@@ -267,13 +267,20 @@ export default GroupSpec.make()
     )
     .addFunction(
         FunctionSpec.internalMutation({
+            args: () => ({ provider: BankingProviderName, seenAt: Schema.Number }),
+            name: "beginInstitutionSync",
+            returns: () => Schema.Boolean,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
             args: () => ({
                 institutions: Schema.Array(Institution),
                 provider: BankingProviderName,
                 seenAt: Schema.Number,
             }),
             name: "saveInstitutions",
-            returns: () => Schema.Null,
+            returns: () => Schema.Boolean,
         })
     )
     .addFunction(

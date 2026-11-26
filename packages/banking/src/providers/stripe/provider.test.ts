@@ -179,6 +179,7 @@ describe("startLink", () => {
                 .startLink({
                     holder: "cus_1",
                     institution: { catchAll: true, country: "CA", id: "CA", logo: null, name: "Canadian banks" },
+                    repair: null,
                 })
                 .pipe(Effect.provide(http.layer))
         );
@@ -198,6 +199,7 @@ describe("startLink", () => {
                     .startLink({
                         holder: "cus_1",
                         institution: { catchAll: true, country: "GB", id: "GB", logo: null, name: "UK banks" },
+                        repair: null,
                     })
                     .pipe(Effect.provide(http.layer))
             )

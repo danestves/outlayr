@@ -13,12 +13,12 @@ export default Table.make(() =>
         popularity: Schema.Number,
         provider: BankingProviderName,
         retired: Schema.Boolean,
-        // The newest sync run that saw or retired the row; a run never writes over a row a newer run stamped.
+        // The newest sync run that saw the row; a run never writes over a row a newer run stamped.
         seenAt: Schema.Number,
     })
 )
     .index("by_provider_and_externalId_and_country", ["provider", "externalId", "country"])
-    .index("by_provider_and_seenAt", ["provider", "seenAt"])
+    .index("by_provider_and_retired_and_seenAt", ["provider", "retired", "seenAt"])
     .index("by_retired_and_catchAll", ["retired", "catchAll"])
     .index("by_retired_and_country_and_popularity", ["retired", "country", "popularity"])
     .searchIndex("search_name", { filterFields: ["retired", "country", "catchAll"], searchField: "name" });

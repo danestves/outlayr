@@ -1690,12 +1690,41 @@ describe("bank institutions", () => {
     it("keeps a row a newer run retired when an older run still lists it", async () => {
         const t = setup();
         const gone = { catchAll: false, country: "US", id: "ins_gone", logo: null, name: "Gone Bank" };
+        await t.mutation(internal.banking.beginInstitutionSync, { provider: "stripe", seenAt: 50 });
         await t.mutation(internal.banking.saveInstitutions, { institutions: [gone], provider: "stripe", seenAt: 50 });
+        await t.mutation(internal.banking.beginInstitutionSync, { provider: "stripe", seenAt: 200 });
         await t.mutation(internal.banking.retireInstitutions, { cursor: null, provider: "stripe", seenAt: 200 });
-        await t.mutation(internal.banking.saveInstitutions, { institutions: [gone], provider: "stripe", seenAt: 100 });
+        await expect(
+            t.mutation(internal.banking.saveInstitutions, { institutions: [gone], provider: "stripe", seenAt: 100 })
+        ).resolves.toBeFalsy();
 
         const rows = await t.run((ctx) => ctx.db.query("bankInstitutions").collect());
         expect(rows).toMatchObject([{ retired: true }]);
+    });
+
+    it("writes nothing for an older run that saves and retires after a newer run began", async () => {
+        const t = setup();
+        await t.run((ctx) =>
+            ctx.db.insert("bankInstitutions", institutionRow({ externalId: "ins_stale", name: "Stale", seenAt: 50 }))
+        );
+        const newer = { catchAll: false, country: "US", id: "ins_new", logo: null, name: "New Bank" };
+        const older = { catchAll: false, country: "US", id: "ins_old", logo: null, name: "Old Bank" };
+        await t.mutation(internal.banking.beginInstitutionSync, { provider: "stripe", seenAt: 100 });
+        await t.mutation(internal.banking.beginInstitutionSync, { provider: "stripe", seenAt: 200 });
+        await t.mutation(internal.banking.saveInstitutions, { institutions: [newer], provider: "stripe", seenAt: 200 });
+
+        await expect(
+            t.mutation(internal.banking.saveInstitutions, { institutions: [older], provider: "stripe", seenAt: 100 })
+        ).resolves.toBeFalsy();
+        await expect(
+            t.mutation(internal.banking.retireInstitutions, { cursor: null, provider: "stripe", seenAt: 100 })
+        ).resolves.toBeNull();
+
+        const rows = await t.run((ctx) => ctx.db.query("bankInstitutions").collect());
+        expect(rows).toHaveLength(2);
+        expect(rows.find((row) => row.externalId === "ins_old")).toBeUndefined();
+        expect(rows.find((row) => row.externalId === "ins_new")).toMatchObject({ retired: false });
+        expect(rows.find((row) => row.externalId === "ins_stale")).toMatchObject({ retired: false });
     });
 
     it("syncs one provider id in two countries into two rows and retires only the dropped country", async () => {
@@ -1766,7 +1795,7 @@ describe("bank institutions", () => {
             const id = await t.run((ctx) => ctx.db.insert("bankInstitutions", institutionRow({ retired: true })));
 
             await expect(
-                authenticatedAs(t, identity).action(api.banking.startLink, { institution: id })
+                authenticatedAs(t, identity).action(api.banking.startLink, { institution: id, repair: null })
             ).resolves.toStrictEqual({ kind: "retired" });
         } finally {
             vi.useRealTimers();
@@ -1783,6 +1812,88 @@ describe("bank institutions", () => {
 
         expect(rankInstitutions(rows, "US").map(({ name }) => name)).toStrictEqual(["First", "Second", "Zed", "Apple"]);
         expect(rankInstitutions(rows, null)).toStrictEqual(rows);
+    });
+});
+
+describe("bank link", () => {
+    beforeEach(() => {
+        vi.useFakeTimers({ now: BANKING_EFFECTIVE_AT_MS + 86_400_000 });
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    const stubFinishLink = (accounts: readonly BankAccount[]) => {
+        const original = bankingProviders.stripe;
+        bankingProviders.stripe = {
+            connect: original.connect.pipe(
+                Config.map((client) =>
+                    client.pipe(Option.map((value) => ({ ...value, finishLink: () => Effect.succeed(accounts) })))
+                )
+            ),
+        };
+        return () => {
+            bankingProviders.stripe = original;
+        };
+    };
+
+    it("reports only the accounts a link inserted, so relinking the same one adds none", async () => {
+        configureStripe();
+        const t = setup();
+        const owner = await seedProUser(t);
+        await seedLedger(t, owner.userId);
+        await t.run((ctx) =>
+            ctx.db.insert("bankHolders", { holder: "cus_1", provider: "stripe", userId: owner.userId })
+        );
+        const account: BankAccount = {
+            id: "acct_1",
+            institution: "Chase",
+            kind: "credit",
+            last4: "9999",
+            name: "Sapphire",
+            status: "active",
+        };
+        const restore = stubFinishLink([account]);
+        try {
+            const linked = await authenticatedAs(t, owner).action(api.banking.finishLink, {
+                completion: null,
+                provider: "stripe",
+                sessionId: "fcs_1",
+            });
+            const row = await t.run((ctx) =>
+                ctx.db
+                    .query("bankAccounts")
+                    .withIndex("by_provider_and_accountId", (q) => q.eq("provider", "stripe").eq("accountId", "acct_1"))
+                    .unique()
+            );
+            expect(linked).toStrictEqual({ added: [row?._id], kind: "linked" });
+
+            const again = await authenticatedAs(t, owner).action(api.banking.finishLink, {
+                completion: null,
+                provider: "stripe",
+                sessionId: "fcs_1",
+            });
+            expect(again).toStrictEqual({ added: [], kind: "linked" });
+        } finally {
+            restore();
+        }
+    });
+
+    it("refuses to repair an account that belongs to another user", async () => {
+        const fetchMock = vi.fn(() => Promise.reject(new Error("unexpected provider call")));
+        vi.stubGlobal("fetch", fetchMock);
+        configureStripe();
+        const t = setup();
+        const owner = await seedProUser(t);
+        const other = await seedAuthUser(t);
+        const institution = await t.run((ctx) => ctx.db.insert("bankInstitutions", institutionRow()));
+        const foreign = await insertBank(t, other.userId);
+
+        await expect(
+            authenticatedAs(t, owner).action(api.banking.startLink, { institution, repair: foreign })
+        ).resolves.toStrictEqual({ kind: "failed" });
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 });
 

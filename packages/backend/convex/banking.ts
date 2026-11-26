@@ -2,6 +2,7 @@ import registeredFunctions from "../confect/_generated/registeredFunctions/banki
 
 export const accessFor = registeredFunctions.accessFor;
 export const advanceCursor = registeredFunctions.advanceCursor;
+export const beginInstitutionSync = registeredFunctions.beginInstitutionSync;
 export const claimPull = registeredFunctions.claimPull;
 export const countInstitutionUse = registeredFunctions.countInstitutionUse;
 export const dropBankEntries = registeredFunctions.dropBankEntries;

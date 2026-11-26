@@ -34,6 +34,7 @@ export default {
 ["sweep"]: RegisteredConvexFunction.register({ ...definitions["sweep"], handler: forward(definitions["sweep"].handler) }),
 ["institutionFor"]: RegisteredConvexFunction.register({ ...definitions["institutionFor"], handler: forward(definitions["institutionFor"].handler) }),
 ["countInstitutionUse"]: RegisteredConvexFunction.register({ ...definitions["countInstitutionUse"], handler: forward(definitions["countInstitutionUse"].handler) }),
+["beginInstitutionSync"]: RegisteredConvexFunction.register({ ...definitions["beginInstitutionSync"], handler: forward(definitions["beginInstitutionSync"].handler) }),
 ["saveInstitutions"]: RegisteredConvexFunction.register({ ...definitions["saveInstitutions"], handler: forward(definitions["saveInstitutions"].handler) }),
 ["retireInstitutions"]: RegisteredConvexFunction.register({ ...definitions["retireInstitutions"], handler: forward(definitions["retireInstitutions"].handler) }),
 ["syncInstitutions"]: RegisteredConvexFunction.register({ ...definitions["syncInstitutions"], handler: forward(definitions["syncInstitutions"].handler) }),

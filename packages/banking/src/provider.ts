@@ -75,6 +75,9 @@ export type Institution = typeof Institution.Type;
 export interface LinkRequest {
     readonly holder: string;
     readonly institution: Institution;
+    // The provider's id of a linked account whose sign-in expired; a provider with an update flow repairs
+    // that connection instead of starting a new one.
+    readonly repair: string | null;
 }
 
 export type LinkSession =
