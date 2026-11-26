@@ -103,6 +103,24 @@ export function LedgerTable({
             {name}
         </button>
     );
+    const caption = (day: string, category: ReactNode) => {
+        const when = layout.shown("date") ? date.day(day) : null;
+        const what = category !== null && layout.shown("category") ? category : null;
+        if (when === null && what === null) {
+            return null;
+        }
+        return (
+            <span className={`${CAPTION} @3xl:hidden`}>
+                {when}
+                {what === null ? null : (
+                    <span className="@xl:hidden">
+                        {when === null ? "" : " · "}
+                        {what}
+                    </span>
+                )}
+            </span>
+        );
+    };
     const menuCell = (row: FoldedRow) => <Table.Cell className="relative z-1 w-10 ps-0">{renderMenu(row)}</Table.Cell>;
     const transferRow = (row: FoldedRow & LedgerTransfer) => {
         const figure = figureOf(ledger, row);
@@ -119,10 +137,7 @@ export function LedgerTable({
                         {tile}
                         <span className="flex min-w-0 flex-col">
                             {opener(row, name)}
-                            <span className={`${CAPTION} @3xl:hidden`}>
-                                {date.day(row.day)}
-                                <span className="@xl:hidden"> · {kind.transfer}</span>
-                            </span>
+                            {caption(row.day, kind.transfer)}
                         </span>
                     </span>
                 ),
@@ -154,8 +169,9 @@ export function LedgerTable({
                         {tile}
                         <span className="flex min-w-0 flex-col">
                             {opener(row, list.names.account(row.fromId))}
-                            <span className={`${CAPTION} @xl:hidden`}>
-                                {list.names.account(row.toId)} · {date.day(row.day)}
+                            <span className={`${CAPTION} @3xl:hidden`}>
+                                <span className="@xl:hidden">{list.names.account(row.toId)} · </span>
+                                {date.day(row.day)}
                             </span>
                         </span>
                     </span>
@@ -226,10 +242,7 @@ export function LedgerTable({
                     {fee ? <FeeTile /> : <MerchantTile imageUrl={photoSrc(raw?.imageKey)} name={name} size="lg" />}
                     <span className="flex min-w-0 flex-col">
                         {opener(row, name)}
-                        <span className={`${CAPTION} @3xl:hidden`}>
-                            {date.day(row.day)}
-                            {fee ? null : <span className="@xl:hidden"> · {list.names.category(row.topId)}</span>}
-                        </span>
+                        {caption(row.day, fee ? null : list.names.category(row.topId))}
                     </span>
                     {(raw?.recurringType ?? 0) > 0 ? (
                         <HugeiconsIcon
@@ -323,8 +336,8 @@ const NARROW: Partial<Record<HeadKey, string>> = {
     date: "hidden @3xl:table-cell",
     fee: "hidden @xl:table-cell",
     note: "hidden @3xl:table-cell",
-    notes: "hidden @5xl:table-cell",
-    paidVia: "hidden @5xl:table-cell",
+    notes: "hidden @7xl:table-cell",
+    paidVia: "hidden @7xl:table-cell",
     tags: "hidden @5xl:table-cell",
     to: "hidden @xl:table-cell",
 };
@@ -335,6 +348,7 @@ const WIDTHS: Partial<Record<HeadKey, string>> = {
     category: "w-44",
     date: "w-24",
     fee: "w-24",
+    notes: "w-48",
     paidVia: "w-32",
     tags: "w-36",
 };
