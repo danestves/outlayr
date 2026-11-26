@@ -7,7 +7,7 @@ import { cn } from "@/components/tw";
 import type { Plan, PlanKind } from "@/domain/pro-plans";
 import { useTranslation } from "@/i18n/context";
 
-import { noteOf, unitOf } from "./plan-copy";
+import { noteOf, shownPrice, unitOf } from "./plan-copy";
 
 export interface PlanListProps {
     onSelect: (kind: PlanKind) => void;
@@ -39,7 +39,7 @@ function PlanCard({ best, plan, selected }: { best: boolean; plan: Plan; selecte
                     selected ? "border-accent-foreground/25" : "border-border"
                 )}
             >
-                <Text className={cn("text-body font-mono tabular-nums", ink)}>{plan.priceString}</Text>
+                <Text className={cn("text-body font-mono tabular-nums", ink)}>{shownPrice(plan)}</Text>
                 {unit === null ? null : <Text className={cn("text-micro font-mono uppercase", quiet)}>{unit}</Text>}
             </View>
         </View>

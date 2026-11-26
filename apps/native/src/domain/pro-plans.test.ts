@@ -99,6 +99,16 @@ describe("readPlans", () => {
         });
         expect(readPlans([discounted], new Set(["ANNUAL"]))[0]?.trialDays).toBeNull();
     });
+
+    it("shows a first-year price only to a customer the store will sell it to", () => {
+        const sale = offer({
+            intro: { cycles: 1, periodNumberOfUnits: 1, periodUnit: "YEAR", price: 47.99 },
+            price: 59.99,
+            type: "ANNUAL",
+        });
+        expect(readPlans([sale], new Set(["ANNUAL"]))[0]?.firstYear?.percentOff).toBe(20);
+        expect(readPlans([sale], new Set())[0]?.firstYear).toBeNull();
+    });
 });
 
 describe("readExitOffer", () => {

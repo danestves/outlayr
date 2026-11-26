@@ -6,7 +6,7 @@ import { cn } from "@/components/tw";
 import type { Plan } from "@/domain/pro-plans";
 import { useTranslation } from "@/i18n/context";
 
-import { noteOf } from "./plan-copy";
+import { noteOf, shownPrice } from "./plan-copy";
 import type { PlanListProps } from "./plan-list";
 
 const UNIT = {
@@ -23,7 +23,7 @@ function PlanRow({ onSelect, plan, selected }: { onSelect: () => void; plan: Pla
 
     return (
         <Pressable
-            accessibilityLabel={[name, note, plan.priceString, unit].filter(Boolean).join(", ")}
+            accessibilityLabel={[name, note, shownPrice(plan), unit].filter(Boolean).join(", ")}
             accessibilityRole="radio"
             accessibilityState={{ checked: selected }}
             className="border-border min-h-14 flex-row items-center gap-3 border-t py-2.5"
@@ -52,7 +52,7 @@ function PlanRow({ onSelect, plan, selected }: { onSelect: () => void; plan: Pla
                     minimumFontScale={0.6}
                     numberOfLines={1}
                 >
-                    {plan.priceString}
+                    {shownPrice(plan)}
                 </Text>
                 <MonoLabel>{unit}</MonoLabel>
             </View>

@@ -9,7 +9,7 @@ import { useTranslation } from "@/i18n/context";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
-import { noteOf, unitOf } from "./plan-copy";
+import { noteOf, shownPrice, unitOf } from "./plan-copy";
 import type { PlanListProps } from "./plan-list";
 
 export type { PlanListProps } from "./plan-list";
@@ -25,7 +25,7 @@ function PlanRow({ onSelect, plan, selected }: { onSelect: () => void; plan: Pla
 
     return (
         <Pressable
-            accessibilityLabel={[name, note, plan.priceString, unit].filter(Boolean).join(", ")}
+            accessibilityLabel={[name, note, shownPrice(plan), unit].filter(Boolean).join(", ")}
             accessibilityRole="radio"
             accessibilityState={{ checked: selected }}
             android_ripple={{ color: withAlpha(m3.onSurface, 0.1) }}
@@ -54,7 +54,7 @@ function PlanRow({ onSelect, plan, selected }: { onSelect: () => void; plan: Pla
                 {note === null ? null : <Text className={cn("text-caption", quiet)}>{note}</Text>}
             </View>
             <View className="items-end gap-0.5">
-                <Text className={cn("text-body font-mono tabular-nums", ink)}>{plan.priceString}</Text>
+                <Text className={cn("text-body font-mono tabular-nums", ink)}>{shownPrice(plan)}</Text>
                 {unit === null ? null : <Text className={cn("text-micro font-mono uppercase", quiet)}>{unit}</Text>}
             </View>
         </Pressable>
