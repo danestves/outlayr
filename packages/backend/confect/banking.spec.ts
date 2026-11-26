@@ -57,8 +57,13 @@ export const StartedLink = Schema.Union([
 ]);
 
 export const FinishedLink = Schema.Union([
-    // `added` names only the accounts this link inserted; a sign-in again for accounts already linked adds none.
-    Schema.Struct({ added: Schema.Array(Id("bankAccounts")), kind: Schema.Literal("linked") }),
+    // `added` names only the accounts this link inserted. `repaired` is false only when the account a sign in again
+    // set out to fix is still not working.
+    Schema.Struct({
+        added: Schema.Array(Id("bankAccounts")),
+        kind: Schema.Literal("linked"),
+        repaired: Schema.Boolean,
+    }),
     Schema.Struct({ kind: Schema.Literals(["plan", "unavailable", "failed"]) }),
 ]);
 
@@ -103,6 +108,7 @@ export default GroupSpec.make()
             args: () => ({
                 completion: Schema.NullOr(Schema.String),
                 provider: BankingProviderName,
+                repair: Schema.NullOr(Id("bankAccounts")),
                 sessionId: Schema.String,
             }),
             name: "finishLink",

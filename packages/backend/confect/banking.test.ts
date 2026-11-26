@@ -1859,6 +1859,7 @@ describe("bank link", () => {
             const linked = await authenticatedAs(t, owner).action(api.banking.finishLink, {
                 completion: null,
                 provider: "stripe",
+                repair: null,
                 sessionId: "fcs_1",
             });
             const row = await t.run((ctx) =>
@@ -1867,14 +1868,66 @@ describe("bank link", () => {
                     .withIndex("by_provider_and_accountId", (q) => q.eq("provider", "stripe").eq("accountId", "acct_1"))
                     .unique()
             );
-            expect(linked).toStrictEqual({ added: [row?._id], kind: "linked" });
+            expect(linked).toStrictEqual({ added: [row?._id], kind: "linked", repaired: true });
 
             const again = await authenticatedAs(t, owner).action(api.banking.finishLink, {
                 completion: null,
                 provider: "stripe",
+                repair: null,
                 sessionId: "fcs_1",
             });
-            expect(again).toStrictEqual({ added: [], kind: "linked" });
+            expect(again).toStrictEqual({ added: [], kind: "linked", repaired: true });
+        } finally {
+            restore();
+        }
+    });
+
+    it("reports a repair the link left in relink, so the app does not call it fixed", async () => {
+        configureStripe();
+        const t = setup();
+        const owner = await seedProUser(t);
+        await seedLedger(t, owner.userId);
+        await t.run((ctx) =>
+            ctx.db.insert("bankHolders", { holder: "cus_1", provider: "stripe", userId: owner.userId })
+        );
+        const repair = await insertBank(t, owner.userId, { status: "relink" });
+        const restore = stubFinishLink([
+            { id: "acct_2", institution: "Chase", kind: "cash", last4: "1111", name: "Checking", status: "active" },
+        ]);
+        try {
+            const linked = await authenticatedAs(t, owner).action(api.banking.finishLink, {
+                completion: null,
+                provider: "stripe",
+                repair,
+                sessionId: "fcs_1",
+            });
+            expect(linked).toMatchObject({ kind: "linked", repaired: false });
+        } finally {
+            restore();
+        }
+    });
+
+    it("reports a repair the link reactivated", async () => {
+        configureStripe();
+        const t = setup();
+        const owner = await seedProUser(t);
+        await seedLedger(t, owner.userId);
+        await t.run((ctx) =>
+            ctx.db.insert("bankHolders", { holder: "cus_1", provider: "stripe", userId: owner.userId })
+        );
+        const repair = await insertBank(t, owner.userId, { status: "relink" });
+        const restore = stubFinishLink([
+            { id: "acct_1", institution: "Chase", kind: "credit", last4: "9999", name: "Sapphire", status: "active" },
+        ]);
+        try {
+            const linked = await authenticatedAs(t, owner).action(api.banking.finishLink, {
+                completion: null,
+                provider: "stripe",
+                repair,
+                sessionId: "fcs_1",
+            });
+            expect(linked).toMatchObject({ kind: "linked", repaired: true });
+            await expect(t.run((ctx) => ctx.db.get(repair))).resolves.toMatchObject({ status: "active" });
         } finally {
             restore();
         }

@@ -191,6 +191,47 @@ describe("startLink", () => {
         ).toStrictEqual(["CA"]);
     });
 
+    it("relinks the expired account with its authorization instead of a country filter", async () => {
+        const http = stubHttp(({ url }) => {
+            if (url.endsWith("/financial_connections/accounts/fca_1")) {
+                return Response.json({ ...stripeAccount("fca_1"), authorization: "fcauth_1" });
+            }
+            return Response.json({ account_holder: { customer: "cus_1" }, client_secret: "secret", id: "fcs_1" });
+        });
+
+        const session = await Effect.runPromise(
+            client(ENV)
+                .startLink({
+                    holder: "cus_1",
+                    institution: { catchAll: true, country: "CA", id: "CA", logo: null, name: "Canadian banks" },
+                    repair: "fca_1",
+                })
+                .pipe(Effect.provide(http.layer))
+        );
+
+        expect(session).toStrictEqual({ clientSecret: "secret", id: "fcs_1", kind: "sdk" });
+        const form = new URLSearchParams(http.requests.find(({ method }) => method === "POST")?.body);
+        expect(form.get("relink_options[authorization]")).toBe("fcauth_1");
+        expect(form.getAll("filters[countries][]")).toStrictEqual([]);
+    });
+
+    it("refuses to relink an account with no authorization, before opening any session", async () => {
+        const http = stubHttp(() => Response.json(stripeAccount("fca_1")));
+
+        await expect(
+            failureReason(
+                client(ENV)
+                    .startLink({
+                        holder: "cus_1",
+                        institution: { catchAll: true, country: "CA", id: "CA", logo: null, name: "Canadian banks" },
+                        repair: "fca_1",
+                    })
+                    .pipe(Effect.provide(http.layer))
+            )
+        ).resolves.toBe("rejected");
+        expect(http.requests).toHaveLength(1);
+    });
+
     it("rejects an institution in a country Stripe cannot link", async () => {
         const http = stubHttp(() => Response.json({}));
         await expect(

@@ -303,7 +303,7 @@ const finishLink = FunctionImpl.make(
     spec,
     "finishLink",
     Effect.fn("Banking.finishLink")(
-        function* finishLink({ completion, provider, sessionId }) {
+        function* finishLink({ completion, provider, repair, sessionId }) {
             const { runMutation } = yield* MutationRunner;
             const { runQuery } = yield* QueryRunner;
             const user = yield* bankingUser();
@@ -329,7 +329,15 @@ const finishLink = FunctionImpl.make(
                 provider,
                 userId: user.id,
             });
-            return { kind: "linked" as const, added };
+            const target = repair === null ? null : yield* runQuery(refs.internal.banking.pullTarget, { id: repair });
+            // saveAccounts is what reactivates an account, so its status is read after the write.
+            const repaired =
+                repair === null ||
+                (target !== null &&
+                    target.userId === user.id &&
+                    target.provider === provider &&
+                    target.status === "active");
+            return { added, kind: "linked" as const, repaired };
         },
         Effect.provide(outboundHttp),
         Effect.catchTags({

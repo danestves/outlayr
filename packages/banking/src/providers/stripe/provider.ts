@@ -151,19 +151,31 @@ const makeClient = (key: Redacted.Redacted, webhookSecret: string): BankingClien
         }
     }),
     institutions: () => Effect.succeed(CATCH_ALL),
-    startLink: Effect.fn("StripeBanking.startLink")(function* startLink({ holder, institution }: LinkRequest) {
+    startLink: Effect.fn("StripeBanking.startLink")(function* startLink({ holder, institution, repair }: LinkRequest) {
         const { country } = institution;
         if (!COUNTRIES.includes(country)) {
             return yield* failure("startLink", "rejected");
         }
+        const account =
+            repair === null ? null : yield* stripeCall(key, StripeAccount, "startLink", accountPath(repair));
+        const authorization = account?.authorization ?? null;
+        // Without an authorization Stripe cannot reopen the old connection, and a plain session would leave it expired.
+        if (repair !== null && authorization === null) {
+            return yield* failure("startLink", "rejected");
+        }
         // The pinned API version honours only the first `countries` entry, so a session lists one country's banks.
+        // A relink needs no filter at all, since the authorization already names the institution and its bank.
+        const scope =
+            authorization === null
+                ? ([["filters[countries][]", country]] as const)
+                : ([["relink_options[authorization]", authorization]] as const);
         const session = yield* stripeCall(key, StripeSession, "startLink", "/financial_connections/sessions", {
             form: [
                 ["account_holder[type]", "customer"],
                 ["account_holder[customer]", holder],
                 ["permissions[]", "transactions"],
                 ["prefetch[]", "transactions"],
-                ["filters[countries][]", country],
+                ...scope,
             ],
         });
         if (session.client_secret === null) {
