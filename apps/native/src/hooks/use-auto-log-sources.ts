@@ -4,6 +4,8 @@ import type { SettingsIconName } from "@/components/settings/settings-icons";
 import { useWalletState } from "@/data/use-wallet-state";
 import type { Database } from "@/db/client";
 import { useTranslation } from "@/i18n/context";
+import { trackAutologSetup } from "@/lib/autolog-events";
+import type { AutologTrigger } from "@/lib/autolog-events";
 import { notifyFailure } from "@/lib/notify";
 import { TRIGGERS_IN_SHORTCUTS } from "@/lib/wallet-shortcut";
 import { SILENT } from "@/state/atom-command";
@@ -18,6 +20,7 @@ export interface AutoLogSource {
     on: boolean;
     onSetUp?: () => void;
     title: string;
+    trigger?: AutologTrigger;
 }
 
 const SIRI_PHRASE = "“Log an expense in Outlayr”";
@@ -57,16 +60,24 @@ export function useAutoLogSources(db: Database): AutoLogSource[] {
             icon: "Wallet01",
             id: "applePay",
             on: applePayOn,
-            onSetUp: () => openWalletShortcut(db),
+            onSetUp: () => {
+                trackAutologSetup({ outcome: "started", surface: "onboarding", trigger: "wallet_shortcut" });
+                openWalletShortcut(db);
+            },
             title: t("nav.settings.wallet"),
+            trigger: "wallet_shortcut",
         },
         {
             detail: t("onboarding.autoLog.bank.detail"),
             icon: "Bank",
             id: "bank",
             on: lastNotification != null,
-            onSetUp: () => openBankShortcut(undefined),
+            onSetUp: () => {
+                trackAutologSetup({ outcome: "started", surface: "onboarding", trigger: "bank_shortcut" });
+                openBankShortcut(undefined);
+            },
             title: t("settings.wallet.bankSection"),
+            trigger: "bank_shortcut",
         },
         siri,
     ];

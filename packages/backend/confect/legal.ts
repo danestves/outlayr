@@ -28,6 +28,8 @@ export const VOICE_KEYTERMS_AT_MS = JANUARY_NOTICE_AT_MS;
 
 export const TOUR_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
 
+export const AUTOLOG_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
+
 const GUEST_PURCHASE_AT_MS = Date.UTC(2026, 10, 21);
 const PROFILES_AT_MS = JANUARY_NOTICE_AT_MS;
 
@@ -1132,6 +1134,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "The app tour in analytics",
                 },
                 {
+                    detail: "With Share analytics on: when you start setting up auto-log, whether notification access is on when you come back from your phone's settings or you skip the step, and when its shortcut first runs. Never amounts, merchants or notification text.",
+                    label: "Auto-log setup in analytics",
+                },
+                {
                     detail: "With Pro you can keep separate profiles, such as Work or Family. Each profile's name, icon, and color sync with its own ledger. The web app and a connected AI assistant see only your Personal profile, and Notion imports go there too.",
                     label: "Profiles",
                 },
@@ -1156,6 +1162,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Mit eingeschaltetem „Analysedaten teilen“: welchen Schritt der App-Tour du erreichst und ob du sie beendest, überspringst oder neu startest. Nie Beträge, Namen oder Notizen.",
                     label: "Die App-Tour in Analysen",
+                },
+                {
+                    detail: "Mit eingeschaltetem „Analysedaten teilen“: wann du mit dem Einrichten der Auto-Erfassung beginnst, ob der Benachrichtigungszugriff an ist, wenn du aus den Einstellungen deines Telefons zurückkommst, oder ob du den Schritt überspringst, und wann ihr Kurzbefehl zum ersten Mal läuft. Nie Beträge, Händler oder Benachrichtigungstexte.",
+                    label: "Einrichten der Auto-Erfassung in Analysen",
                 },
                 {
                     detail: "Mit Pro kannst du getrennte Profile führen, etwa Arbeit oder Familie. Name, Symbol und Farbe jedes Profils werden mit seinem eigenen Haushaltsbuch synchronisiert. Die Web-App und ein verbundener KI-Assistent sehen nur dein Profil „Privat“, und Notion-Importe landen ebenfalls dort.",
@@ -1184,6 +1194,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "El recorrido por la app en analíticas",
                 },
                 {
+                    detail: "Con Compartir analíticas activado: cuándo empiezas a configurar el registro automático, si el acceso a notificaciones está activado cuando vuelves de los ajustes de tu teléfono o si saltas el paso, y cuándo su atajo se ejecuta por primera vez. Nunca montos, comercios ni el texto de las notificaciones.",
+                    label: "Configuración del registro automático en analíticas",
+                },
+                {
                     detail: "Con Pro puedes tener perfiles separados, como Trabajo o Familia. El nombre, el ícono y el color de cada perfil se sincronizan con su propio registro. La app web y un asistente de IA conectado solo ven tu perfil Personal, y las importaciones de Notion también van ahí.",
                     label: "Perfiles",
                 },
@@ -1208,6 +1222,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Avec Partager les données d'analyse activé : quelle étape de la visite de l'app vous atteignez, et si vous la terminez, la passez ou la relancez. Jamais de montants, de noms ni de notes.",
                     label: "La visite de l'app dans les statistiques",
+                },
+                {
+                    detail: "Avec Partager les données d'analyse activé : quand vous commencez à configurer la saisie automatique, si l'accès aux notifications est activé quand vous revenez des réglages de votre téléphone ou si vous passez l'étape, et quand son raccourci s'exécute pour la première fois. Jamais de montants, de commerçants ni le texte des notifications.",
+                    label: "Configuration de la saisie automatique dans les statistiques",
                 },
                 {
                     detail: "Avec Pro, vous pouvez tenir des profils séparés, comme Travail ou Famille. Le nom, l'icône et la couleur de chaque profil se synchronisent avec son propre registre. L'app web et un assistant IA connecté ne voient que votre profil Personnel, et les imports Notion y arrivent aussi.",
@@ -1236,6 +1254,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "O tour do app nas análises",
                 },
                 {
+                    detail: "Com Compartilhar análises ativado: quando você começa a configurar o registro automático, se o acesso às notificações está ativado quando você volta dos ajustes do celular ou se você pula a etapa, e quando o atalho dele roda pela primeira vez. Nunca valores, estabelecimentos nem o texto das notificações.",
+                    label: "Configuração do registro automático nas análises",
+                },
+                {
                     detail: "Com o Pro você pode manter perfis separados, como Trabalho ou Família. O nome, o ícone e a cor de cada perfil sincronizam com o registro próprio dele. O app web e um assistente de IA conectado veem só o seu perfil Pessoal, e as importações do Notion também vão para ele.",
                     label: "Perfis",
                 },
@@ -1251,7 +1273,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "privacy",
         effectiveAtMs: JANUARY_NOTICE_AT_MS,
-        postedAtMs: Date.UTC(2026, 10, 26),
+        postedAtMs: Date.UTC(2026, 10, 27),
     },
     {
         changes: {

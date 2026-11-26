@@ -18,6 +18,7 @@ import type { Database } from "@/db/client";
 import { formatChargeDate, formatTime } from "@/domain/dates";
 import type { LastWalletEntry } from "@/domain/meta-values";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { trackAutologSetup } from "@/lib/autolog-events";
 import { notifyFailure } from "@/lib/notify";
 import { TRIGGERS_IN_SHORTCUTS, WALLET_SHORTCUT_URL } from "@/lib/wallet-shortcut";
 import { SILENT } from "@/state/atom-command";
@@ -71,7 +72,10 @@ export function Wallet() {
         },
         SILENT
     );
-    const getShortcut = () => openShortcut(db);
+    const getShortcut = () => {
+        trackAutologSetup({ outcome: "started", surface: "settings", trigger: "wallet_shortcut" });
+        openShortcut(db);
+    };
     const { added, applePayOn: working, lastEntry, lastRunAt } = useWalletState(db);
     const [stepsShown, setStepsShown] = useState(false);
     // `added` is only set by the shared link, so an older inline setup stays inline.

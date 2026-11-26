@@ -1,5 +1,6 @@
+import { trackAutologSetup } from "@/lib/autolog-events";
 import { purchaseListener } from "@/lib/purchase-listener";
-import { usePurchaseListener } from "@/lib/use-purchase-listener";
+import { openListenerAccess, usePurchaseListener } from "@/lib/use-purchase-listener";
 
 export interface BankTexts {
     done: boolean;
@@ -18,9 +19,11 @@ export function useBankTexts(): BankTexts | null {
         onSetUp: () => {
             purchaseListener?.allowMessages();
             if (listener.enabled) {
+                trackAutologSetup({ outcome: "started", surface: "onboarding", trigger: "bank_texts" });
+                trackAutologSetup({ outcome: "granted", surface: "onboarding", trigger: "bank_texts" });
                 refresh();
             } else {
-                purchaseListener?.openSettings();
+                openListenerAccess({ surface: "onboarding", trigger: "bank_texts" });
             }
         },
     };

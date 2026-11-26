@@ -16,6 +16,7 @@ import { bankTextSample } from "@/domain/bank-text-sample";
 import { formatTime } from "@/domain/dates";
 import type { BankTexts } from "@/hooks/use-bank-texts";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { setupStarted, trackAutologSetup } from "@/lib/autolog-events";
 import { useColors } from "@/theme/use-colors";
 
 const NO_BREAK_SPACE = "\u00A0";
@@ -24,6 +25,12 @@ export function OnboardingBankTexts({ bankTexts }: { bankTexts: BankTexts }) {
     const router = useRouter();
     const t = useTranslation();
     const next = () => router.push("/onboarding/smart-features");
+    const skip = () => {
+        if (!setupStarted("bank_texts")) {
+            trackAutologSetup({ outcome: "skipped", surface: "onboarding", trigger: "bank_texts" });
+        }
+        next();
+    };
 
     return (
         <FirstRun
@@ -35,7 +42,7 @@ export function OnboardingBankTexts({ bankTexts }: { bankTexts: BankTexts }) {
             eyebrow={t("onboarding.autoLog.eyebrow")}
             footerHidden={bankTexts.done}
             footnote={t("onboarding.bankTexts.footnote")}
-            skip={{ label: t("aiConsent.notNow"), onPress: next }}
+            skip={{ label: t("aiConsent.notNow"), onPress: skip }}
             title={t("onboarding.bankTexts.title")}
         >
             <BankTextProof />
