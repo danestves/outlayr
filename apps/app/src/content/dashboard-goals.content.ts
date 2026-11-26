@@ -105,6 +105,7 @@ const dashboardGoals = {
                 "es-ES": "Escribe un importe mayor que {{zero}}.",
                 fr: "Saisissez un montant supérieur à {{zero}}.",
                 pt: "Digite um valor acima de {{zero}}.",
+                "pt-PT": "Introduza um valor acima de {{zero}}.",
             })
         ),
         back: t({

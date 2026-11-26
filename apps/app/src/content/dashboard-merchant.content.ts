@@ -199,7 +199,7 @@ const dashboardMerchant = {
                 es: "Se comparte con todos los que registren {{merchant}}.",
                 fr: "Partagé avec tous ceux qui enregistrent {{merchant}}.",
                 pt: "Compartilhado com todos que registrarem {{merchant}}.",
-                "pt-PT": "Partilhado com todos que registrarem {{merchant}}.",
+                "pt-PT": "Partilhado com todos os que registarem {{merchant}}.",
             })
         ),
         title: t({ en: "Merchant", de: "Händler", es: "Comercio", fr: "Marchand", pt: "Estabelecimento" }),

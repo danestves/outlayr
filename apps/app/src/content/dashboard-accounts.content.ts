@@ -424,6 +424,7 @@ const dashboardAccounts = {
                     es: "Coincidió con tu banco a las {{time}}",
                     fr: "Identique à votre banque à {{time}}",
                     pt: "Conferiu com seu banco às {{time}}",
+                    "pt-PT": "Conferiu com o seu banco às {{time}}",
                 })
             ),
             matchedOn: insert(
@@ -433,6 +434,7 @@ const dashboardAccounts = {
                     es: "Coincidió con tu banco el {{date}}",
                     fr: "Identique à votre banque le {{date}}",
                     pt: "Conferiu com seu banco em {{date}}",
+                    "pt-PT": "Conferiu com o seu banco em {{date}}",
                 })
             ),
             merchant: t({ en: "Merchant", de: "Händler", es: "Comercio", fr: "Marchand", pt: "Estabelecimento" }),
@@ -1022,7 +1024,7 @@ const dashboardAccounts = {
                 es: "No se pudo guardar tu orden. Inténtalo de nuevo.",
                 fr: "Impossible d'enregistrer votre ordre. Réessayez.",
                 pt: "Não foi possível salvar sua ordem. Tente novamente.",
-                "pt-PT": "Não foi possível guardar sua ordem. Tente novamente.",
+                "pt-PT": "Não foi possível guardar a sua ordem. Tente novamente.",
             }),
             reorderHint: t({
                 en: "Drag to reorder",
@@ -1608,6 +1610,7 @@ const dashboardAccounts = {
                 "es-ES": "La inicial no deja nada para pagar en plazos.",
                 fr: "L'acompte ne laisse rien à payer en plusieurs fois.",
                 pt: "A entrada não deixa nada para parcelar.",
+                "pt-PT": "A entrada não deixa nada para pagar em prestações.",
             }),
         },
         range: {

@@ -339,7 +339,7 @@ const dashboardSync = {
                     fr: "Un ID aléatoire par téléphone et navigateur, l'ID de chaque enregistrement et quand il a été modifié, supprimé ou restauré. Une opération supprimée garde ses détails pour pouvoir être restaurée",
                     pt: "Um ID aleatório por celular e navegador, o ID de cada registro e quando foi editado, apagado ou restaurado. Um lançamento apagado mantém seus detalhes para poder ser restaurado",
                     "pt-PT":
-                        "Um ID aleatório por telemóvel e navegador, o ID de cada registo e quando foi editado, apagado ou restaurado. Um registo apagado mantém seus detalhes para poder ser restaurado",
+                        "Um ID aleatório por telemóvel e navegador, o ID de cada registo e quando foi editado, apagado ou restaurado. Um registo apagado mantém os seus detalhes para poder ser restaurado",
                 }),
             },
         },

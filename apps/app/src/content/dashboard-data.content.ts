@@ -109,7 +109,14 @@ const dashboardData = {
                 "pt-PT": "Agendas de subscrições e seus lembretes",
             }),
             columns: t({ en: "Columns", de: "Spalten", es: "Columnas", fr: "Colonnes", pt: "Colunas" }),
-            download: t({ en: "Download", de: "Herunterladen", es: "Descargar", fr: "Télécharger", pt: "Baixar" }),
+            download: t({
+                en: "Download",
+                de: "Herunterladen",
+                es: "Descargar",
+                fr: "Télécharger",
+                pt: "Baixar",
+                "pt-PT": "Descarregar",
+            }),
             preparing: t({
                 en: "Preparing the archive…",
                 de: "Archiv wird vorbereitet…",
@@ -124,7 +131,7 @@ const dashboardData = {
                 es: "Todo tu registro, con las entradas eliminadas",
                 fr: "Tout votre journal, opérations supprimées comprises",
                 pt: "Todos os seus lançamentos, inclusive os apagados",
-                "pt-PT": "Todos os seus registos, inclusive os apagados",
+                "pt-PT": "Todos os seus registos, incluindo os apagados",
             }),
             failed: t({
                 en: "Export failed. Try again.",
@@ -141,6 +148,7 @@ const dashboardData = {
                 es: "Mantén esta pestaña abierta hasta que termine.",
                 fr: "Gardez cet onglet ouvert jusqu'à la fin.",
                 pt: "Mantenha esta aba aberta até terminar.",
+                "pt-PT": "Mantenha este separador aberto até terminar.",
             }),
             beingReplaced: t({
                 en: "Being replaced",
@@ -417,6 +425,7 @@ const dashboardData = {
                 es: "Tus categorías se conservan en ambos casos",
                 fr: "Vos catégories sont conservées dans les deux cas",
                 pt: "Suas categorias são mantidas nos dois casos",
+                "pt-PT": "As suas categorias são mantidas nos dois casos",
             }),
             before: t({
                 en: "Before you erase",

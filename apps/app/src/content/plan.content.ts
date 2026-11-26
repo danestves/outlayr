@@ -9,6 +9,7 @@ const plan = {
             es: "Administrar plan",
             fr: "Gérer le forfait",
             pt: "Gerenciar plano",
+            "pt-PT": "Gerir plano",
         }),
         pro: t({ en: "Outlayr Pro", de: "Outlayr Pro", es: "Outlayr Pro", fr: "Outlayr Pro", pt: "Outlayr Pro" }),
         couldNotLoad: t({
@@ -240,6 +241,7 @@ const plan = {
             es: "Administrar pagos",
             fr: "Gérer la facturation",
             pt: "Gerenciar cobrança",
+            "pt-PT": "Gerir cobrança",
         }),
         cancelSubscription: t({
             en: "Cancel subscription",
@@ -264,7 +266,7 @@ const plan = {
                 es: "¿Cancelar tu suscripción?",
                 fr: "Résilier votre abonnement ?",
                 pt: "Cancelar sua assinatura?",
-                "pt-PT": "Cancelar sua subscrição?",
+                "pt-PT": "Cancelar a sua subscrição?",
             }),
             body: insert(
                 t({
@@ -529,6 +531,7 @@ const plan = {
                     es: "Adminístralo en App Store",
                     fr: "Gérez-le dans l'App Store",
                     pt: "Gerencie na App Store",
+                    "pt-PT": "Gira na App Store",
                 }),
                 body: t({
                     en: "You bought Pro on your iPhone, so Apple bills it. Change or cancel it there.",
@@ -582,7 +585,7 @@ const plan = {
                         es: "Pagaste una sola vez a través de Apple, así que no hay ninguna suscripción que administrar ni cancelar.",
                         fr: "Vous avez payé une seule fois via Apple : il n'y a donc aucun abonnement à gérer ni à résilier.",
                         pt: "Você pagou uma única vez pela Apple, então não há assinatura para gerenciar nem cancelar.",
-                        "pt-PT": "Pagou uma única vez pela Apple, então não há subscrição para gerenciar nem cancelar.",
+                        "pt-PT": "Pagou uma única vez pela Apple, então não há subscrição para gerir nem cancelar.",
                     }),
                 },
             },
@@ -600,6 +603,7 @@ const plan = {
                     es: "Adminístralo en Google Play",
                     fr: "Gérez-le dans Google Play",
                     pt: "Gerencie no Google Play",
+                    "pt-PT": "Gira no Google Play",
                 }),
                 body: t({
                     en: "You bought Pro on your Android phone, so Google bills it. Change or cancel it there.",
@@ -654,8 +658,7 @@ const plan = {
                         es: "Pagaste una sola vez a través de Google, así que no hay ninguna suscripción que administrar ni cancelar.",
                         fr: "Vous avez payé une seule fois via Google : il n'y a donc aucun abonnement à gérer ni à résilier.",
                         pt: "Você pagou uma única vez pelo Google, então não há assinatura para gerenciar nem cancelar.",
-                        "pt-PT":
-                            "Pagou uma única vez pelo Google, então não há subscrição para gerenciar nem cancelar.",
+                        "pt-PT": "Pagou uma única vez pelo Google, então não há subscrição para gerir nem cancelar.",
                     }),
                 },
             },

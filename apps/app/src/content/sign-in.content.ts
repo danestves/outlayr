@@ -142,7 +142,7 @@ export default {
             es: "Restablece tu contraseña",
             fr: "Réinitialisez votre mot de passe",
             pt: "Redefina sua senha",
-            "pt-PT": "Redefina sua palavra-passe",
+            "pt-PT": "Redefina a sua palavra-passe",
         }),
         resetBody: insert(
             t({
@@ -151,7 +151,7 @@ export default {
                 es: "Escribe el código que enviamos a {{email}} y elige una contraseña nueva.",
                 fr: "Saisissez le code envoyé à {{email}} et choisissez un nouveau mot de passe.",
                 pt: "Digite o código que enviamos para {{email}} e escolha uma nova senha.",
-                "pt-PT": "Digite o código que enviamos para {{email}} e escolha uma nova palavra-passe.",
+                "pt-PT": "Introduza o código que lhe enviámos para {{email}} e escolha uma nova palavra-passe.",
             })
         ),
         setPassword: t({

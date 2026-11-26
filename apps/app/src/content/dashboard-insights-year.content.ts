@@ -33,6 +33,7 @@ const dashboardInsightsYear = {
                 es: "Gestionar plan",
                 fr: "Gérer le forfait",
                 pt: "Gerenciar plano",
+                "pt-PT": "Gerir plano",
             }),
             pro: t({ en: "Pro", de: "Pro", es: "Pro", fr: "Pro", pt: "Pro" }),
             proEnds: insert(

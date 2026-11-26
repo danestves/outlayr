@@ -255,6 +255,7 @@ const dashboardOnboarding = {
                 en: "What are your numbers in?",
                 de: "In welcher Währung rechnest du?",
                 es: "¿En qué moneda manejas tu dinero?",
+                "es-ES": "¿En qué moneda gestionas tu dinero?",
                 fr: "Dans quelle devise comptez-vous ?",
                 pt: "Em qual moeda você controla seu dinheiro?",
                 "pt-PT": "Em que moeda controla o seu dinheiro?",
@@ -405,7 +406,7 @@ const dashboardOnboarding = {
                 fr: "Un rappel discret chaque soir. Votre navigateur ne demandera l'autorisation qu'après l'enregistrement de votre première opération.",
                 pt: "Um lembrete discreto toda noite. O navegador só pede permissão depois que você salvar seu primeiro lançamento.",
                 "pt-PT":
-                    "Um lembrete discreto toda noite. O navegador só pede permissão depois que guardar seu primeiro registo.",
+                    "Um lembrete discreto todas as noites. O navegador só pede permissão depois de guardar o seu primeiro registo.",
             }),
             time: t({
                 en: "Time",
@@ -429,6 +430,7 @@ const dashboardOnboarding = {
                     es: "Recuérdame a las {{time}}",
                     fr: "Me le rappeler à {{time}}",
                     pt: "Me lembre às {{time}}",
+                    "pt-PT": "Lembre-me às {{time}}",
                 })
             ),
             notifications: t({
@@ -529,6 +531,7 @@ const dashboardOnboarding = {
                 es: "Tu primera línea aparece aquí.",
                 fr: "Votre première ligne arrive ici.",
                 pt: "Sua primeira linha aparece aqui.",
+                "pt-PT": "A sua primeira linha aparece aqui.",
             }),
             date: t({
                 en: "Date",
@@ -543,7 +546,7 @@ const dashboardOnboarding = {
                 es: "Outlayr no pudo guardar tu entrada. Inténtalo de nuevo.",
                 fr: "Outlayr n'a pas pu enregistrer votre opération. Réessayez.",
                 pt: "O Outlayr não conseguiu salvar seu lançamento. Tente de novo.",
-                "pt-PT": "O Outlayr não conseguiu guardar seu registo. Tente de novo.",
+                "pt-PT": "O Outlayr não conseguiu guardar o seu registo. Tente de novo.",
             }),
             rateMissing: t({
                 en: "There is no exchange rate for this currency yet. Try again in a moment.",
@@ -604,6 +607,7 @@ const dashboardOnboarding = {
                     es: "Nos conociste por",
                     fr: "Vous nous avez connus par",
                     pt: "Conheceu a gente por",
+                    "pt-PT": "Como nos conheceu",
                 }),
                 choose: t({
                     en: "Choose",

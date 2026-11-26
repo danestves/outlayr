@@ -35,7 +35,7 @@ const dashboardHome = {
                 es: "Los días se llenan al registrar movimientos.",
                 fr: "Les jours se remplissent au fil de vos opérations.",
                 pt: "Os dias se preenchem conforme você lança.",
-                "pt-PT": "Os dias se preenchem conforme lança.",
+                "pt-PT": "Os dias preenchem-se conforme lança.",
             }),
             emptyTitle: t({
                 en: "Nothing spent yet",
@@ -56,7 +56,14 @@ const dashboardHome = {
                 })
             ),
             more: t({ en: "More", de: "Mehr", es: "Más", fr: "Plus", pt: "Mais" }),
-            title: t({ en: "Every day", de: "Jeder Tag", es: "Cada día", fr: "Chaque jour", pt: "Todo dia" }),
+            title: t({
+                en: "Every day",
+                de: "Jeder Tag",
+                es: "Cada día",
+                fr: "Chaque jour",
+                pt: "Todo dia",
+                "pt-PT": "Todos os dias",
+            }),
             topDay: insert(
                 t({
                     en: "{{name}} day",
@@ -213,6 +220,7 @@ const dashboardHome = {
                     es: "{{name}} es tu primer gasto. Ponle un límite.",
                     fr: "{{name}} est votre première dépense. Fixez-lui une limite.",
                     pt: "{{name}} é seu primeiro gasto. Defina um limite.",
+                    "pt-PT": "{{name}} é o seu primeiro gasto. Defina um limite.",
                 })
             ),
             budgetLine: t({
@@ -257,7 +265,7 @@ const dashboardHome = {
                 es: "Se llena con tu primer movimiento.",
                 fr: "Se remplit avec votre première opération.",
                 pt: "Se preenche com seu primeiro lançamento.",
-                "pt-PT": "Se preenche com seu primeiro registo.",
+                "pt-PT": "Preenche-se com o seu primeiro registo.",
             }),
             import: t({ en: "Import", de: "Import", es: "Importar", fr: "Importer", pt: "Importar" }),
             logIncome: t({
@@ -274,6 +282,7 @@ const dashboardHome = {
                 es: "Hazlo en tu teléfono y aparece aquí.",
                 fr: "Faites-le sur votre téléphone et cela apparaîtra ici.",
                 pt: "Faça isso no seu telefone e aparece aqui.",
+                "pt-PT": "Faça isso no seu telemóvel e aparece aqui.",
             }),
             spent: insert(
                 t({
@@ -312,7 +321,7 @@ const dashboardHome = {
                     es: "Registra un movimiento",
                     fr: "Enregistrer une opération",
                     pt: "Registrar um lançamento",
-                    "pt-PT": "Registar um registo",
+                    "pt-PT": "Registar um lançamento",
                 }),
             },
             titleAccount: t({
@@ -321,6 +330,7 @@ const dashboardHome = {
                 es: "Empieza con tu primera cuenta",
                 fr: "Commencez par votre premier compte",
                 pt: "Comece com sua primeira conta",
+                "pt-PT": "Comece com a sua primeira conta",
             }),
             titleAccountNext: t({
                 en: "Now add your first account",
@@ -328,6 +338,7 @@ const dashboardHome = {
                 es: "Ahora añade tu primera cuenta",
                 fr: "Ajoutez maintenant votre premier compte",
                 pt: "Agora adicione sua primeira conta",
+                "pt-PT": "Agora adicione a sua primeira conta",
             }),
             titleBudget: t({
                 en: "Last one, set your first budget",
@@ -335,6 +346,7 @@ const dashboardHome = {
                 es: "Lo último, crea tu primer presupuesto",
                 fr: "Dernière étape, créez votre premier budget",
                 pt: "Último passo, crie seu primeiro orçamento",
+                "pt-PT": "Último passo, crie o seu primeiro orçamento",
             }),
             titleEntry: t({
                 en: "Now log your first entry",
@@ -342,7 +354,7 @@ const dashboardHome = {
                 es: "Ahora registra tu primer movimiento",
                 fr: "Enregistrez maintenant votre première opération",
                 pt: "Agora registre seu primeiro lançamento",
-                "pt-PT": "Agora registe seu primeiro registo",
+                "pt-PT": "Agora registe o seu primeiro lançamento",
             }),
         },
         spentOfIncome: {

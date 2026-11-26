@@ -644,7 +644,7 @@ const dashboardImport = {
                 es: "Ya aparecen en tu registro. Mantén esta pestaña abierta hasta que se guarden.",
                 fr: "Elles apparaissent déjà dans votre registre. Gardez cet onglet ouvert jusqu'à leur enregistrement.",
                 pt: "Já aparecem no seu registro. Mantenha esta aba aberta até serem salvos.",
-                "pt-PT": "Já aparecem no seu registo. Mantenha esta aba aberta até serem guardados.",
+                "pt-PT": "Já aparecem no seu registo. Mantenha este separador aberto até serem guardados.",
             }),
             noCategory: t({
                 en: "No category",
@@ -1060,7 +1060,7 @@ const dashboardImport = {
                 es: "Leyendo tu espacio de trabajo…",
                 fr: "Lecture de votre espace de travail…",
                 pt: "Lendo seu espaço de trabalho…",
-                "pt-PT": "A ler seu espaço de trabalho…",
+                "pt-PT": "A ler o seu espaço de trabalho…",
             }),
             more: t({ en: "More", de: "Mehr", es: "Más", fr: "Plus", pt: "Mais" }),
             noDatabases: t({
@@ -1306,7 +1306,7 @@ const dashboardImport = {
                 fr: "Seuls les noms de commerçants non associés et vos noms de catégories sont envoyés. Jamais vos montants, dates, ni le fichier.",
                 pt: "Só os nomes de estabelecimentos sem associação e os nomes das suas categorias são enviados. Nunca seus valores, datas ou o arquivo.",
                 "pt-PT":
-                    "Só os nomes de estabelecimentos sem associação e os nomes das suas categorias são enviados. Nunca seus valores, datas ou o ficheiro.",
+                    "Só os nomes de estabelecimentos sem associação e os nomes das suas categorias são enviados. Nunca os seus valores, datas ou o ficheiro.",
             }),
             readFile: t({
                 en: "Read the file",
@@ -1589,7 +1589,7 @@ const dashboardImport = {
                 es: "Tu archivo y tu progreso se guardaron.",
                 fr: "Votre fichier et votre progression ont été conservés.",
                 pt: "Seu arquivo e seu progresso foram guardados.",
-                "pt-PT": "Seu ficheiro e seu progresso foram guardados.",
+                "pt-PT": "O seu ficheiro e o seu progresso foram guardados.",
             }),
             matchRule: t({
                 en: "Same day, amount and currency count as a match.",
@@ -1639,7 +1639,7 @@ const dashboardImport = {
                 es: "La escritura falló, así que tu registro no cambió. Tus selecciones siguen aquí.",
                 fr: "L'écriture a échoué, votre registre est donc inchangé. Vos sélections sont toujours là.",
                 pt: "A gravação falhou, então seu registro não mudou. Suas seleções continuam aqui.",
-                "pt-PT": "A gravação falhou, então seu registo não mudou. Suas seleções continuam aqui.",
+                "pt-PT": "A gravação falhou, então o seu registo não mudou. As suas seleções continuam aqui.",
             }),
             nothingSelected: t({
                 en: "Pick at least one row to import.",
@@ -2074,6 +2074,7 @@ const dashboardImport = {
                 es: "Elige el estado de cuenta que tu banco permite descargar en PDF.",
                 fr: "Choisissez le relevé que votre banque permet de télécharger en PDF.",
                 pt: "Escolha o extrato que seu banco deixa baixar em PDF.",
+                "pt-PT": "Escolha o extrato que o seu banco permite descarregar em PDF.",
             }),
             notRead: insert(
                 t({
@@ -2290,7 +2291,7 @@ const dashboardImport = {
                 es: "Esto tarda hasta un minuto. Puedes dejar esta pestaña en segundo plano.",
                 fr: "Cela prend jusqu'à une minute. Vous pouvez laisser cet onglet en arrière-plan.",
                 pt: "Isso leva até um minuto. Você pode deixar esta aba em segundo plano.",
-                "pt-PT": "Isso leva até um minuto. pode deixar esta aba em segundo plano.",
+                "pt-PT": "Isso leva até um minuto. Pode deixar este separador em segundo plano.",
             }),
             rows: t({ en: "Rows", de: "Zeilen", es: "Filas", fr: "Lignes", pt: "Linhas" }),
             rowsNeed: t({

@@ -237,6 +237,7 @@ const dashboardBudgetsPlan = {
                 "es-ES": "El mismo importe cada mes",
                 fr: "Le même montant chaque mois",
                 pt: "O mesmo valor todo mês",
+                "pt-PT": "O mesmo valor todos os meses",
             }),
             save: insert(
                 t({

@@ -83,7 +83,7 @@ const dashboard = {
             es: "Cargando tus movimientos",
             fr: "Chargement de vos opérations",
             pt: "Carregando seus lançamentos",
-            "pt-PT": "A carregar seus registos",
+            "pt-PT": "A carregar os seus registos",
         }),
         filters: {
             accounts: t({ en: "accounts", de: "Konten", es: "cuentas", fr: "comptes", pt: "contas" }),

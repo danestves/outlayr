@@ -22,7 +22,14 @@ const dashboardInstallments = {
                     pt: "a cada {{count}} dias",
                 })
             ),
-            monthly: t({ en: "every month", de: "jeden Monat", es: "cada mes", fr: "chaque mois", pt: "todo mês" }),
+            monthly: t({
+                en: "every month",
+                de: "jeden Monat",
+                es: "cada mes",
+                fr: "chaque mois",
+                pt: "todo mês",
+                "pt-PT": "todos os meses",
+            }),
             semimonthly: t({
                 en: "twice a month",
                 de: "zweimal im Monat",
@@ -36,6 +43,7 @@ const dashboardInstallments = {
                 es: "cada semana",
                 fr: "chaque semaine",
                 pt: "toda semana",
+                "pt-PT": "todas as semanas",
             }),
         },
         cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
@@ -84,6 +92,8 @@ const dashboardInstallments = {
                 es: "Pasa por nuestro servidor hacia un proveedor de IA externo, que nunca recibe tu nombre, tu correo ni el ID de tu cuenta. No guardamos la captura.",
                 fr: "Elle passe par notre serveur vers un fournisseur d'IA tiers, qui ne reçoit jamais votre nom, votre e-mail ni l'identifiant de votre compte. Nous ne conservons pas la capture.",
                 pt: "Ela passa pelo nosso servidor até um provedor de IA terceiro, que nunca recebe seu nome, e-mail ou ID da conta. Não guardamos a captura.",
+                "pt-PT":
+                    "Ela passa pelo nosso servidor até um fornecedor de IA terceiro, que nunca recebe o seu nome, e-mail ou ID da conta. Não guardamos a captura.",
             }),
             planScan: t({
                 en: "Installment plan import",

@@ -96,7 +96,7 @@ const dashboardConnections = {
             es: "Deja de acceder a tus finanzas de inmediato. Los registros que hizo se quedan.",
             fr: "Il n'accède plus à vos comptes immédiatement. Les entrées qu'il a saisies restent.",
             pt: "Ele deixa de acessar suas finanças na hora. Os registros que fez continuam.",
-            "pt-PT": "Ele deixa de aceder suas finanças na hora. Os registos que fez continuam.",
+            "pt-PT": "Ele deixa de aceder às suas finanças na hora. Os registos que fez continuam.",
         }),
         disconnected: insert(
             t({
@@ -128,7 +128,7 @@ const dashboardConnections = {
             es: "Deja que un agente lea tus finanzas y registre movimientos.",
             fr: "Laissez un agent lire vos comptes et saisir des entrées.",
             pt: "Deixe um agente ler suas finanças e registrar lançamentos.",
-            "pt-PT": "Deixe um agente ler suas finanças e registar registos.",
+            "pt-PT": "Deixe um agente ler as suas finanças e registar lançamentos.",
         }),
     },
     key: "dashboard-connections",

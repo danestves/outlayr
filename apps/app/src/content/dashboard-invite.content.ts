@@ -285,6 +285,7 @@ const dashboardInvite = {
                     es: "{{name}} te regaló un mes de Pro",
                     fr: "{{name}} vous offre un mois de Pro",
                     pt: "{{name}} te deu um mês de Pro",
+                    "pt-PT": "{{name}} deu-te um mês de Pro",
                 })
             ),
             titleFriend: t({
@@ -310,7 +311,7 @@ const dashboardInvite = {
                     es: "{{name}} ve tu primer nombre y cuántos días llevas registrados, hasta {{days}}.",
                     fr: "{{name}} voit votre prénom et combien de jours vous avez saisis, jusqu'à {{days}}.",
                     pt: "{{name}} vê seu primeiro nome e quantos dias você registrou, até {{days}}.",
-                    "pt-PT": "{{name}} vê seu primeiro nome e quantos dias registou, até {{days}}.",
+                    "pt-PT": "{{name}} vê o seu primeiro nome e quantos dias registou, até {{days}}.",
                 })
             ),
             sharedPaid: insert(
@@ -320,7 +321,7 @@ const dashboardInvite = {
                     es: "{{name}} ve tu primer nombre y si compras Pro.",
                     fr: "{{name}} voit votre prénom et si vous achetez Pro.",
                     pt: "{{name}} vê seu primeiro nome e se você compra o Pro.",
-                    "pt-PT": "{{name}} vê seu primeiro nome e se compra o Pro.",
+                    "pt-PT": "{{name}} vê o seu primeiro nome e se compra o Pro.",
                 })
             ),
             sharedFriend: insert(
@@ -330,7 +331,7 @@ const dashboardInvite = {
                     es: "Tu amigo ve tu primer nombre y cuántos días llevas registrados, hasta {{days}}.",
                     fr: "Votre ami voit votre prénom et combien de jours vous avez saisis, jusqu'à {{days}}.",
                     pt: "Seu amigo vê seu primeiro nome e quantos dias você registrou, até {{days}}.",
-                    "pt-PT": "Seu amigo vê seu primeiro nome e quantos dias registou, até {{days}}.",
+                    "pt-PT": "O seu amigo vê o seu primeiro nome e quantos dias registou, até {{days}}.",
                 })
             ),
             sharedFriendPaid: t({

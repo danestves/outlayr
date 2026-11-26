@@ -74,7 +74,7 @@ const dashboardReceipt = {
                 fr: "Un PDF devient une photo de sa première page sur cet appareil, et seule cette photo est envoyée. Elle passe par notre serveur vers un fournisseur d'IA tiers, qui ne reçoit jamais votre nom, votre e-mail ni l'identifiant de votre compte. Nous ne conservons pas la photo. Rien n'est enregistré avant que vous ajoutiez l'opération, qui garde le commerçant, le montant, la date et les articles.",
                 pt: "Um PDF vira uma foto da primeira página neste dispositivo, e só essa foto é enviada. Ela passa pelo nosso servidor até um provedor de IA terceiro, que nunca recebe seu nome, e-mail ou ID da conta. Não guardamos a foto. Nada é salvo até você adicionar o lançamento, que guarda o estabelecimento, o valor, a data e os itens.",
                 "pt-PT":
-                    "Um PDF vira uma foto da primeira página neste dispositivo, e só essa foto é enviada. Ela passa pelo nosso servidor até um provedor de IA terceiro, que nunca recebe seu nome, e-mail ou ID da conta. Não guardamos a foto. Nada é guardado até adicionar o registo, que guarda o estabelecimento, o valor, a data e os itens.",
+                    "Um PDF vira uma foto da primeira página neste dispositivo, e só essa foto é enviada. Ela passa pelo nosso servidor até um provedor de IA terceiro, que nunca recebe o seu nome, e-mail ou ID da conta. Não guardamos a foto. Nada é guardado até adicionar o registo, que guarda o estabelecimento, o valor, a data e os itens.",
             }),
             sends: t({
                 en: "The photo, your account and category names, ledger currency, language, region, and today's date",

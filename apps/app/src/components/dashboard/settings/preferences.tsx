@@ -143,7 +143,7 @@ function LanguageRow() {
                 onValueChange={(next) => next && chooseDashboardLocale(next)}
                 value={locale}
             >
-                <Select.Trigger className="w-32" id={id}>
+                <Select.Trigger className="w-auto max-w-full shrink-0" id={id}>
                     <Select.Value />
                 </Select.Trigger>
                 <Select.Content>

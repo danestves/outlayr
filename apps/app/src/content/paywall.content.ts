@@ -335,7 +335,7 @@ const paywall = {
             es: "Inicia sesión antes de comprar Pro, así la compra sigue a tu registro en cada dispositivo.",
             fr: "Connectez-vous avant d'acheter Pro, pour que l'achat suive votre registre sur chaque appareil.",
             pt: "Entre antes de comprar o Pro, assim a compra acompanha seu registro em todos os dispositivos.",
-            "pt-PT": "Entre antes de comprar o Pro, assim a compra acompanha seu registo em todos os dispositivos.",
+            "pt-PT": "Entre antes de comprar o Pro, assim a compra acompanha o seu registo em todos os dispositivos.",
         }),
         signIn: t({
             en: "Sign in",
@@ -443,7 +443,7 @@ const paywall = {
                 es: "Tu panel y tu registro",
                 fr: "Votre tableau de bord et votre registre",
                 pt: "Seu painel e seu registro",
-                "pt-PT": "Seu painel e seu registo",
+                "pt-PT": "O seu painel e o seu registo",
             }),
             ledgerHint: t({
                 en: "Everything synced from your phone",
@@ -532,6 +532,7 @@ const paywall = {
             es: "Administrar plan",
             fr: "Gérer le forfait",
             pt: "Gerenciar plano",
+            "pt-PT": "Gerir plano",
         }),
         openDashboard: t({
             en: "Open dashboard",

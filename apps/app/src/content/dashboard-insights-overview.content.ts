@@ -137,6 +137,7 @@ const dashboardInsightsOverview = {
                     es: "Tu primer mes",
                     fr: "Votre premier mois",
                     pt: "Seu primeiro mês",
+                    "pt-PT": "O seu primeiro mês",
                 }),
                 week: t({
                     en: "Your first week",
@@ -144,6 +145,7 @@ const dashboardInsightsOverview = {
                     es: "Tu primera semana",
                     fr: "Votre première semaine",
                     pt: "Sua primeira semana",
+                    "pt-PT": "A sua primeira semana",
                 }),
                 year: t({
                     en: "Your first year",
@@ -151,6 +153,7 @@ const dashboardInsightsOverview = {
                     es: "Tu primer año",
                     fr: "Votre première année",
                     pt: "Seu primeiro ano",
+                    "pt-PT": "O seu primeiro ano",
                 }),
             },
             income: t({ en: "Income", de: "Einnahmen", es: "Ingresos", fr: "Revenus", pt: "Receitas" }),
@@ -436,7 +439,7 @@ const dashboardInsightsOverview = {
                 es: "El tuyo empieza a llenarse con tu primer movimiento.",
                 fr: "Le vôtre commence à se remplir dès votre première opération.",
                 pt: "O seu começa a se preencher com o primeiro lançamento.",
-                "pt-PT": "O seu começa a se preencher com o primeiro registo.",
+                "pt-PT": "O seu começa a preencher-se com o primeiro registo.",
             }),
             title: t({
                 en: "This is what a month looks like",

@@ -373,7 +373,7 @@ const dashboardSettings = {
                 es: "Un teléfono conserva su propio registro al cerrar sesión.",
                 fr: "Un téléphone garde son propre journal à la déconnexion.",
                 pt: "Um telefone mantém seus lançamentos ao sair.",
-                "pt-PT": "Um telefone mantém seus registos ao sair.",
+                "pt-PT": "Um telemóvel mantém os seus registos ao sair.",
             }),
             deleteTitle: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Apagar" }),
             deleteAccount: t({
@@ -413,7 +413,7 @@ const dashboardSettings = {
                 fr: "Votre compte et tout ce qui y est synchronisé sont supprimés définitivement, ainsi que la copie de ce navigateur. Un téléphone garde son propre journal. Résiliez tout abonnement dans la boutique où vous l'avez acheté.",
                 pt: "Sua conta e tudo o que foi sincronizado com ela são apagados para sempre, junto com a cópia deste navegador. Um telefone mantém seus lançamentos. Cancele qualquer assinatura na loja onde a comprou.",
                 "pt-PT":
-                    "Sua conta e tudo o que foi sincronizado com ela são apagados para sempre, junto com a cópia deste navegador. Um telefone mantém seus registos. Cancele qualquer subscrição na loja onde a comprou.",
+                    "A sua conta e tudo o que foi sincronizado com ela são apagados para sempre, junto com a cópia deste navegador. Um telemóvel mantém os seus registos. Cancele qualquer subscrição na loja onde a comprou.",
             }),
             deleteFailed: t({
                 en: "The account was not fully deleted. Try again.",
@@ -529,7 +529,7 @@ const dashboardSettings = {
                 es: "Te enviamos un código por correo. Añadir una contraseña cierra todas tus sesiones.",
                 fr: "Nous vous envoyons un code. Ajouter un mot de passe vous déconnecte partout.",
                 pt: "Enviamos um código por e-mail. Adicionar uma senha encerra todas as sessões.",
-                "pt-PT": "Enviamos um código por e-mail. Adicionar uma palavra-passe encerra todas as sessões.",
+                "pt-PT": "Enviámos um código por e-mail. Adicionar uma palavra-passe encerra todas as sessões.",
             }),
             currentPassword: t({
                 en: "Current password",
@@ -776,6 +776,7 @@ const dashboardSettings = {
                 es: "Sigue a tu teléfono",
                 fr: "Suit votre téléphone",
                 pt: "Segue o seu telefone",
+                "pt-PT": "Segue o seu telemóvel",
             }),
             notSet: t({
                 en: "Not set",

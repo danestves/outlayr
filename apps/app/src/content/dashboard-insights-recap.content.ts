@@ -201,7 +201,14 @@ const dashboardInsightsRecap = {
                 fr: "Copier l'image",
                 pt: "Copiar imagem",
             }),
-            download: t({ en: "Download", de: "Herunterladen", es: "Descargar", fr: "Télécharger", pt: "Baixar" }),
+            download: t({
+                en: "Download",
+                de: "Herunterladen",
+                es: "Descargar",
+                fr: "Télécharger",
+                pt: "Baixar",
+                "pt-PT": "Descarregar",
+            }),
             failed: t({
                 en: "The card could not be made.",
                 de: "Die Karte konnte nicht erstellt werden.",
@@ -276,7 +283,7 @@ const dashboardInsightsRecap = {
                 es: "Todos los días registrados",
                 fr: "Chaque jour enregistré",
                 pt: "Todo dia registrado",
-                "pt-PT": "Todo dia registado",
+                "pt-PT": "Todos os dias registados",
             }),
             average: insert(
                 t({
