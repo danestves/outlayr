@@ -39,11 +39,11 @@ const accounts = {
             pt: "Uma conta",
         }),
         "accounts.add.connectBank": t({
-            en: "Connect your bank",
-            de: "Bank verbinden",
-            es: "Conectar tu banco",
-            fr: "Connecter votre banque",
-            pt: "Conectar seu banco",
+            en: "Link a bank",
+            de: "Bank verknüpfen",
+            es: "Vincular un banco",
+            fr: "Lier une banque",
+            pt: "Vincular um banco",
         }),
         "accounts.add.installments": t({
             en: "Buy in installments",

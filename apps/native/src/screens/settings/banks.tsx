@@ -10,7 +10,7 @@ import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
-import { Alert, Platform, Pressable, TextInput, View } from "react-native";
+import { Alert, Keyboard, Platform, Pressable, TextInput, View } from "react-native";
 
 import { BusyText } from "@/components/busy-text";
 import { CategoryIconTile } from "@/components/category-icon-tile";
@@ -407,6 +407,8 @@ function BankEntry({
                                 row.catchAll ? <BankGlyph size={ENTRY_MARK} /> : <InstitutionMark logo={row.logo} />
                             }
                             onPress={() => {
+                                // Otherwise iOS hands focus back to the field when the result sheet closes.
+                                Keyboard.dismiss();
                                 setTapped(row.id);
                                 bankLink.link(row);
                             }}
