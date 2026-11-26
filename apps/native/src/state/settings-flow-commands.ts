@@ -203,6 +203,11 @@ export const markExitOfferSeenCommand = createCommand({
     label: "paywall:exit-offer-seen",
 });
 
+export const markPaywallSeenCommand = createCommand({
+    execute: (db: Database) => Meta.set(db, "paywallSeen", true),
+    label: "paywall:seen",
+});
+
 export const restorePlanCommand = revenueCatFlow(
     "restore",
     Effect.fn("Paywall.restore")(function* restore(revenueCat: RevenueCat["Service"], signedIn: Billed) {

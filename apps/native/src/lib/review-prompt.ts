@@ -18,6 +18,9 @@ const MIN_DAYS = 2;
 // Apple and Google each cap how often the sheet shows, and a spent ask stays spent for up to a year.
 const ASK_INTERVAL_MS = 120 * 24 * 60 * 60 * 1000;
 const asking = Semaphore.makeUnsafe(1);
+let requestedThisSession = false;
+
+export const reviewRequestedThisSession = () => requestedThisSession;
 
 const ReviewPromptOperation = Schema.Literals(["asked-at", "ledger", "store"]);
 
@@ -46,7 +49,7 @@ const engaged = Effect.fn("ReviewPrompt.engaged")(function* engaged(db: Database
     return (ledger?.entries ?? 0) >= MIN_ENTRIES && (ledger?.days ?? 0) >= MIN_DAYS;
 });
 
-export const askForReview = Effect.fn("ReviewPrompt.ask")(function* askForReview(db: Database) {
+const ask = Effect.fn("ReviewPrompt.ask")(function* ask(db: Database) {
     if (AppState.currentState !== "active") {
         return;
     }
@@ -59,9 +62,12 @@ export const askForReview = Effect.fn("ReviewPrompt.ask")(function* askForReview
         return;
     }
     yield* attempt("store", requestReview);
+    requestedThisSession = true;
     posthog?.capture("review_prompt_requested");
     yield* attempt("asked-at", () => AsyncStorage.setItem(ASKED_AT_KEY, String(now)));
-}, asking.withPermits(1));
+});
+
+export const askForReview = (db: Database) => asking.withPermits(1)(ask(db));
 
 export const askForReviewIfPending = Effect.fn("ReviewPrompt.askIfPending")(function* askForReviewIfPending(
     db: Database
@@ -69,6 +75,8 @@ export const askForReviewIfPending = Effect.fn("ReviewPrompt.askIfPending")(func
     if (AppState.currentState !== "active" || !(yield* Meta.get(db, "reviewPending"))) {
         return;
     }
+    // Cleared only after the ask so the catch-up paywall never opens over the review sheet.
+    const asked = yield* Effect.exit(ask(db));
     yield* Meta.set(db, "reviewPending", false);
-    yield* askForReview(db);
-});
+    return yield* asked;
+}, asking.withPermits(1));

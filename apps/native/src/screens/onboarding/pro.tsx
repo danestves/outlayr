@@ -13,6 +13,7 @@ import { PaywallRedesign } from "@/screens/paywall/redesign";
 import type { LeaveOutcome } from "@/screens/paywall/use-paywall-flow";
 import { SILENT } from "@/state/atom-command";
 import { finishOnboardingOfferCommand } from "@/state/onboarding-commands";
+import { markPaywallSeenCommand } from "@/state/settings-flow-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 
 /** The offer closes onboarding only for someone this build can sell to who is not Pro yet. */
@@ -25,6 +26,7 @@ export function OnboardingPro() {
     const haptics = useHaptics();
     const t = useTranslation();
     const isPro = useRevenueCat().kind === "pro";
+    const markSeen = useAtomAction(markPaywallSeenCommand, {}, SILENT);
     // Continue and the purchase callback can both land; a second run would create the waiting accounts twice.
     const finishing = useRef(false);
     const finish = useAtomAction(
@@ -47,6 +49,7 @@ export function OnboardingPro() {
     };
     useFocusEffect(() => {
         posthog?.capture("paywall_viewed", { trigger: "onboarding", variant: "redesign" });
+        markSeen(db);
     });
     return <PaywallRedesign onLeave={leave} trigger="onboarding" />;
 }
