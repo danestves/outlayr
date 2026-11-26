@@ -158,6 +158,7 @@ const STORED_TODAY = {
     onboardingComplete: ["true"],
     onboardingGateMigrated: ["true"],
     onboardingWaitingAccounts: ['[{"currency":"USD","domain":"zellepay.com","id":"zelle","label":"Zelle"}]'],
+    paywallSeen: BOOL,
     pdfImport: FILE_IMPORT,
     pendingWriteLedger: [
         JSON.stringify([

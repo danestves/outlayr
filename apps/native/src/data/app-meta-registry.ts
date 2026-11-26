@@ -138,6 +138,7 @@ const BOOKKEEPING = defineMeta({
         scope: "device",
     },
     notificationTexts: { elements: NotificationText, scope: "device" },
+    paywallSeen: { default: false, schema: BoolText, scope: "device" },
     // `firstLaunch` cannot stand in: bootstrap writes it before any screen exists.
     onboardingComplete: { default: false, schema: BoolText, scope: "device" },
     onboardingGateMigrated: { default: false, schema: BoolText, scope: "device" },

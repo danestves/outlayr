@@ -55,6 +55,7 @@ import type { RootScreen } from "@/lib/root-stack";
 import { identityPickerDetent, LARGE_ONLY } from "@/lib/sheet-detents";
 import { TrialReminderSync } from "@/lib/trial-reminder";
 import { useAccountOffer } from "@/lib/use-account-offer";
+import { useCatchUpPaywall } from "@/lib/use-catch-up-paywall";
 import { useSubscriptionReminderTaps } from "@/lib/use-subscription-reminder-taps";
 import { useWalletPushTaps } from "@/lib/use-wallet-push-taps";
 import { useStackChrome } from "@/navigation/stack-chrome";
@@ -265,6 +266,11 @@ function AccountOffer({ db, ready }: { db: Database; ready: boolean }) {
     return null;
 }
 
+function CatchUpPaywall({ db, ready }: { db: Database; ready: boolean }) {
+    useCatchUpPaywall(db, ready);
+    return null;
+}
+
 // Split out so `useDatabase` is only called below the splash gate, where the database is guaranteed open.
 function RootStack() {
     const db = useDatabase();
@@ -322,6 +328,7 @@ function RootStack() {
     return (
         <>
             <AccountOffer db={db} ready={tapsReady} />
+            <CatchUpPaywall db={db} ready={tapsReady} />
             <YearSheetOpener db={db} ready={tapsReady} />
             <PendingProfileJoin ready={tapsReady} />
             <PendingInviteLink ready={tapsReady} />
