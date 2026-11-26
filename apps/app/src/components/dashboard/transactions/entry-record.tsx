@@ -35,6 +35,7 @@ import { attachedFile, removedFile, splitRows } from "@/lib/record-writes";
 import { useCategoryName } from "../home/format";
 import { Pick as CategoryPick, useCategoryOptions } from "./entry-form";
 import { SavedReceipt } from "./receipt-card";
+import { TagPicker } from "./tag-picker";
 import { entryNotices } from "./use-delete";
 
 type Entry = Pick<Doc, "amount" | "categoryId" | "income" | "localId" | "receipt"> & { currency: string };
@@ -58,6 +59,7 @@ function Dot({ color }: { color: string | undefined }) {
 export function EntryRecord({ editable, entry: doc, merchant }: { editable: boolean; entry: Doc; merchant: string }) {
     const { ledger } = useDashboard();
     const { record } = useIntlayer("dashboard-transactions");
+    const { columns } = useIntlayer("dashboard-ledger");
     const entry: Entry = { ...doc, currency: doc.currency ?? ledger.currency };
     const books = useRecordBooks();
     const parts = liveSplits(books, entry.localId);
@@ -65,6 +67,12 @@ export function EntryRecord({ editable, entry: doc, merchant }: { editable: bool
     const unattached = files.some((file) => file.receipt) ? null : parseReceipt(entry.receipt);
     return (
         <div className="pb-2">
+            <div className="border-border text-app-body flex min-h-11 w-full items-center gap-3 border-b py-2">
+                <span className="text-muted-foreground w-24 shrink-0 text-left">{columns.tags}</span>
+                <div className="flex min-w-0 flex-1 justify-end">
+                    <TagPicker editable={editable} entryId={entry.localId} />
+                </div>
+            </div>
             <SplitSection editable={editable} entry={entry} parts={parts} />
             <FilesSection
                 currency={entry.currency}

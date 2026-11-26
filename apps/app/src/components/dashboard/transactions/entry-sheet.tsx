@@ -512,6 +512,7 @@ function useSheetKeys(
         },
         (event: KeyboardEvent) => {
             if (
+                event.defaultPrevented ||
                 event.metaKey ||
                 event.ctrlKey ||
                 event.altKey ||

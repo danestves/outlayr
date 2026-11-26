@@ -10,8 +10,6 @@ import { parseAmount } from "@/lib/account-writes";
 import { editableDoc, entryEdit, toAmount } from "@/lib/bulk-writes";
 import type { EditRefusal } from "@/lib/bulk-writes";
 import type { Ledger, LedgerRow } from "@/lib/dashboard-series-ledger";
-import { useTagBooks } from "@/lib/ledger-db";
-import { retagged, TAG_NAME_LIMIT, tagNamesOf } from "@/lib/rule-writes";
 
 import { merchantOf } from "./entry-form";
 import { entryNotices } from "./use-delete";
@@ -48,7 +46,6 @@ export function amountDraft(ledger: Ledger, row: LedgerRow) {
 /** Each write answers with the message to show in the cell, or null once it has gone through. */
 export function useInlineWrites() {
     const committer = useLedgerCommitter(entryNotices);
-    const tagBooks = useTagBooks();
     const { form } = useIntlayer("dashboard-transactions");
     const { inline } = useIntlayer("dashboard-ledger");
     const refusalText = (refusal: EditRefusal) => {
@@ -75,18 +72,7 @@ export function useInlineWrites() {
         committer.commitWithUndo(edit.rows, { failed: form.saveFailed.value, text: inline.amountSaved.value });
         return null;
     };
-    const tags = (row: LedgerRow, text: string): string | null => {
-        const typed = tagNamesOf(text);
-        if ("problem" in typed) {
-            return inline.tagTooLong({ limit: String(TAG_NAME_LIMIT) }).value;
-        }
-        const rows = retagged(tagBooks, row.id, typed.names, Date.now());
-        if (rows.length > 0) {
-            committer.commitWithUndo(rows, { failed: form.saveFailed.value, text: inline.tagsSaved.value });
-        }
-        return null;
-    };
-    return { amount, tags };
+    return { amount };
 }
 
 export type InlineWrites = ReturnType<typeof useInlineWrites>;
@@ -178,6 +164,36 @@ interface InlineCellProps extends Omit<EditorProps, "onCancel"> {
     onStart: () => void;
 }
 
+/** A cell's value that turns into its editor on click. */
+export function CellButton({
+    align,
+    autoFocus = false,
+    children,
+    label,
+    onFocus,
+    onStart,
+}: {
+    align: "end" | "start";
+    autoFocus?: boolean;
+    children: ReactNode;
+    label: string;
+    onFocus?: () => void;
+    onStart: () => void;
+}) {
+    return (
+        <button
+            autoFocus={autoFocus}
+            className={`rounded-app-sm hover:bg-app-hover focus-visible:ring-ring/30 relative z-1 -mx-1.5 box-content flex min-h-6 w-full min-w-0 items-center px-1.5 outline-none focus-visible:ring-3 ${align === "end" ? "justify-end" : "justify-start"}`}
+            onClick={onStart}
+            onFocus={onFocus}
+            type="button"
+        >
+            <span className="sr-only">{label}</span>
+            {children}
+        </button>
+    );
+}
+
 /** A cell that shows its value and turns into a field on click, the way the drawer's own fields write. */
 export function InlineCell({ children, editing, onEnd, onStart, ...editor }: InlineCellProps) {
     if (editing) {
@@ -196,13 +212,8 @@ export function InlineCell({ children, editing, onEnd, onStart, ...editor }: Inl
         );
     }
     return (
-        <button
-            className={`rounded-app-sm hover:bg-app-hover focus-visible:ring-ring/30 relative z-1 -mx-1.5 box-content flex min-h-6 w-full min-w-0 items-center px-1.5 outline-none focus-visible:ring-3 ${editor.align === "end" ? "justify-end" : "justify-start"}`}
-            onClick={onStart}
-            type="button"
-        >
-            <span className="sr-only">{editor.label}</span>
+        <CellButton align={editor.align} label={editor.label} onStart={onStart}>
             {children}
-        </button>
+        </CellButton>
     );
 }

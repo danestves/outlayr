@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import type { TagBooks } from "./ledger-db";
-import { linkRows, retagged, tagNamesOf } from "./rule-writes";
+import { entryTags, linkRows, retagged, tagUseCounts } from "./rule-writes";
 
 const retired = {
     deletedAt: 500,
@@ -52,13 +52,38 @@ const link = (localId: string, tagId: string) => ({
     updatedAt: 100,
 });
 
-describe("tagNamesOf", () => {
-    it("reads hashes and commas, keeps spaces inside a name and drops repeats", () => {
-        expect(tagNamesOf("#trip #Home office, trip ,#home office")).toEqual({ names: ["trip", "Home office"] });
+describe("tagUseCounts", () => {
+    // SAFETY: rows carry what the counters read, the validators are not under test.
+    const books = {
+        links: [
+            link("l-1", "bulk"),
+            { ...link("l-2", "bulk"), localId: "l-2" },
+            { ...link("l-3", "home"), transactionId: "entry-2" },
+            { ...link("l-4", "home"), deletedAt: 50 },
+            { ...link("l-5", "gone"), transactionId: "entry-3" },
+            { ...link("l-6", "home"), transactionId: "entry-gone" },
+        ],
+        tags: [tag("bulk", "bulk"), tag("home", "home"), tag("gone", "gone", 50)],
+    } as unknown as TagBooks;
+
+    const transactions = [
+        { deletedAt: null, localId: "entry-1" },
+        { deletedAt: null, localId: "entry-2" },
+        { deletedAt: null, localId: "entry-3" },
+        { deletedAt: 50, localId: "entry-gone" },
+    ];
+
+    it("counts live entries, not links, and skips retired links, tags and entries", () => {
+        expect(tagUseCounts(books, transactions)).toEqual(
+            new Map([
+                ["bulk", 1],
+                ["home", 1],
+            ])
+        );
     });
 
-    it("refuses a name longer than a tag holds", () => {
-        expect(tagNamesOf(`#ok #${"x".repeat(25)}`)).toEqual({ problem: "tooLong" });
+    it("lists an entry's live tags once each", () => {
+        expect(entryTags(books, "entry-1").map((each) => each.localId)).toEqual(["bulk"]);
     });
 });
 
