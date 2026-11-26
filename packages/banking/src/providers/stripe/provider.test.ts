@@ -128,7 +128,7 @@ describe("finishLink", () => {
         });
 
         await expect(
-            failureReason(client(ENV).finishLink("cus_1", "fcs_1").pipe(Effect.provide(http.layer)))
+            failureReason(client(ENV).finishLink("cus_1", "fcs_1", null).pipe(Effect.provide(http.layer)))
         ).resolves.toBe("transport");
         expect(http.requests.filter(({ url }) => url.endsWith("/disconnect"))).toHaveLength(2);
     });
@@ -155,7 +155,7 @@ describe("finishLink", () => {
         });
 
         await expect(
-            failureReason(client(ENV).finishLink("cus_1", "fcs_1").pipe(Effect.provide(http.layer)))
+            failureReason(client(ENV).finishLink("cus_1", "fcs_1", null).pipe(Effect.provide(http.layer)))
         ).resolves.toBe("transport");
         expect(
             http.requests

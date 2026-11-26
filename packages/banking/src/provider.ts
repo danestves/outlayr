@@ -77,11 +77,10 @@ export interface LinkRequest {
     readonly institution: Institution;
 }
 
-export interface LinkSession {
-    readonly clientSecret: string;
-    readonly id: string;
-    readonly kind: "sdk";
-}
+export type LinkSession =
+    | { readonly clientSecret: string; readonly id: string; readonly kind: "sdk" }
+    // The bank's own login page; it sends the user back to us with a code that `finishLink` exchanges.
+    | { readonly id: string; readonly kind: "redirect"; readonly url: string };
 
 export interface TransactionPage {
     // Hand back on the next pull to get only what was added or changed since this one.
@@ -96,8 +95,9 @@ export interface BankingClient {
     // Retrying after a timeout must not leave the user with a second holder.
     readonly createHolder: (user: { readonly email: string; readonly id: string }) => Call<string>;
     readonly disconnect: (accountId: string) => Call<void>;
-    // Fails with `rejected` when the session was not started for `holder`.
-    readonly finishLink: (holder: string, sessionId: string) => Call<readonly BankAccount[]>;
+    // Fails with `rejected` when the session was not started for `holder`. `completion` is what the flow handed back
+    // on success (a public token, a redirect's code); Stripe needs none.
+    readonly finishLink: (holder: string, sessionId: string, completion: string | null) => Call<readonly BankAccount[]>;
     readonly readWebhook: (body: string, headers: Headers) => Effect.Effect<Option.Option<BankingEvent>, BankingError>;
     // Disconnects every account of the given holders plus any holder found by search for this user, then deletes
     // those holders. Safe to repeat.

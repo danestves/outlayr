@@ -257,12 +257,7 @@ const startLink = FunctionImpl.make(
             }
             const session = yield* match.client.startLink({ holder, institution: institution.institution });
             yield* runMutation(refs.internal.banking.countInstitutionUse, { id: institutionId });
-            return {
-                clientSecret: session.clientSecret,
-                id: session.id,
-                kind: "sdk" as const,
-                provider: match.name,
-            };
+            return { ...session, provider: match.name };
         },
         Effect.provide(outboundHttp),
         Effect.catchTags({
@@ -278,7 +273,7 @@ const finishLink = FunctionImpl.make(
     spec,
     "finishLink",
     Effect.fn("Banking.finishLink")(
-        function* finishLink({ provider, sessionId }) {
+        function* finishLink({ completion, provider, sessionId }) {
             const { runMutation } = yield* MutationRunner;
             const { runQuery } = yield* QueryRunner;
             const user = yield* bankingUser();
@@ -298,7 +293,7 @@ const finishLink = FunctionImpl.make(
             if (existing.kind !== "holder") {
                 return { kind: "failed" as const };
             }
-            const accounts = yield* match.client.finishLink(existing.holder, sessionId);
+            const accounts = yield* match.client.finishLink(existing.holder, sessionId, completion);
             const linked = yield* runMutation(refs.internal.banking.saveAccounts, {
                 accounts,
                 provider,

@@ -47,6 +47,12 @@ export const StartedLink = Schema.Union([
         kind: Schema.Literal("sdk"),
         provider: BankingProviderName,
     }),
+    Schema.Struct({
+        id: Schema.String,
+        kind: Schema.Literal("redirect"),
+        provider: BankingProviderName,
+        url: Schema.String,
+    }),
     Schema.Struct({ kind: Schema.Literals(["plan", "unavailable", "retired", "failed"]) }),
 ]);
 
@@ -93,7 +99,11 @@ export default GroupSpec.make()
     )
     .addFunction(
         FunctionSpec.publicAction({
-            args: () => ({ provider: BankingProviderName, sessionId: Schema.String }),
+            args: () => ({
+                completion: Schema.NullOr(Schema.String),
+                provider: BankingProviderName,
+                sessionId: Schema.String,
+            }),
             name: "finishLink",
             returns: () => FinishedLink,
         })
