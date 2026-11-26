@@ -6,9 +6,11 @@ import { accountsRepo } from "@/data/accounts-core";
 import { Meta } from "@/data/app-meta-core";
 import { finishFirstRun, releaseAccountOffer } from "@/data/onboarding-core";
 import type { Database } from "@/db/client";
+import type { MoneyGoal } from "@/domain/money-goal";
 import type { AccountPick } from "@/domain/onboarding-accounts";
 import { armChosenReminder } from "@/lib/chosen-reminder";
 import { fetchMerchantImage } from "@/lib/logo-fetch";
+import { trackOnboarding } from "@/lib/onboarding-events";
 import { persistLogo } from "@/lib/persist-logo";
 import { posthog } from "@/lib/posthog";
 import { appRuntime } from "@/lib/runtime";
@@ -108,6 +110,22 @@ export const createOnboardingAccountsCommand = createRuntimeCommand(appRuntime, 
         });
     }),
     label: "onboarding:create-accounts",
+});
+
+export const setMoneyGoalCommand = createRuntimeCommand(appRuntime, {
+    execute: Effect.fn("Onboarding.setMoneyGoal")(function* setMoneyGoal(input: {
+        db: Database;
+        goal: MoneyGoal;
+        source: "onboarding" | "settings";
+    }) {
+        yield* Meta.set(input.db, "moneyGoal", input.goal);
+        yield* Effect.sync(() => {
+            if (input.source === "onboarding") {
+                trackOnboarding("onboarding_goal_chosen", { goal: input.goal });
+            }
+        });
+    }),
+    label: "onboarding:set-money-goal",
 });
 
 export const finishOnboardingOfferCommand = createRuntimeCommand(appRuntime, {

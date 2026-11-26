@@ -19,6 +19,8 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { setupStarted, trackAutologSetup } from "@/lib/autolog-events";
 import { useColors } from "@/theme/use-colors";
 
+import { STEP_PROGRESS } from "./progress";
+
 const NO_BREAK_SPACE = "\u00A0";
 
 export function OnboardingBankTexts({ bankTexts }: { bankTexts: BankTexts }) {
@@ -42,6 +44,7 @@ export function OnboardingBankTexts({ bankTexts }: { bankTexts: BankTexts }) {
             eyebrow={t("onboarding.autoLog.eyebrow")}
             footerHidden={bankTexts.done}
             footnote={t("onboarding.bankTexts.footnote")}
+            progress={STEP_PROGRESS["auto-log"]}
             skip={{ label: t("aiConsent.notNow"), onPress: skip }}
             title={t("onboarding.bankTexts.title")}
         >

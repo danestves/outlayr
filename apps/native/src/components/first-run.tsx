@@ -157,6 +157,7 @@ interface FirstRunProps {
     note?: string;
     /** Without one, the head sits at the top and `children` fill the space. */
     object?: ReactNode;
+    progress?: number;
     skip?: FirstRunSkip;
     title: string;
 }
@@ -189,6 +190,17 @@ function PlainHead({
     );
 }
 
+function ProgressBar({ value }: { value: number }) {
+    const filled = Math.min(Math.max(value, 0), 1);
+    return (
+        <View accessibilityRole="progressbar" accessibilityValue={{ max: 1, min: 0, now: filled }} className="pb-4">
+            <View className="bg-fr-rule h-1 overflow-hidden rounded-full">
+                <View className="bg-fr-ink h-1 rounded-full" style={{ width: `${filled * 100}%` }} />
+            </View>
+        </View>
+    );
+}
+
 export function FirstRun({
     object,
     centered = false,
@@ -203,6 +215,7 @@ export function FirstRun({
     footnote,
     note,
     error,
+    progress,
 }: FirstRunProps) {
     const timing = cover ? ENTRANCE.cover : ENTRANCE.step;
     const textStyle = useRise(object !== undefined, timing.text);
@@ -213,6 +226,7 @@ export function FirstRun({
         // One top offset for every screen: the steps carry a transparent OS header (44pt, 64dp on Android), and the
         // cover and the gate match it so the stage does not jump between them.
         <Frame scrolls={largeText}>
+            {progress === undefined ? null : <ProgressBar value={progress} />}
             {object === undefined ? (
                 <>
                     <PlainHead body={body} centered={centered} eyebrow={eyebrow} title={title} />

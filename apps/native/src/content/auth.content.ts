@@ -391,15 +391,13 @@ const auth = {
             pt: "Iniciado em {date}.",
         }),
         "auth.signIn.body": t({
-            en: "Your ledger is on this phone and it stays there. An account means it survives losing the phone.",
-            de: "Dein Haushaltsbuch liegt auf diesem Handy und bleibt dort. Mit einem Konto überlebt es auch den Verlust des Handys.",
-            es: "Tu registro vive en este celular y ahí se queda. Con una cuenta, sobrevive aunque pierdas el celular.",
-            "es-ES":
-                "Tu registro vive en este móvil y ahí se queda. Con una cuenta, sobrevive aunque pierdas el móvil.",
-            fr: "Votre journal est sur ce téléphone et il y reste. Avec un compte, il survit à la perte du téléphone.",
-            pt: "Seus lançamentos estão neste celular e continuam aqui. Com uma conta, eles sobrevivem mesmo se você perder o celular.",
-            "pt-PT":
-                "Os seus registos estão neste telemóvel e ficam aqui. Com uma conta, sobrevivem mesmo que perca o telemóvel.",
+            en: "Keeps every line if you lose or switch phones.",
+            de: "Behält jede Zeile, wenn du dein Handy verlierst oder wechselst.",
+            es: "Conserva cada línea si pierdes o cambias de celular.",
+            "es-ES": "Conserva cada línea si pierdes o cambias de móvil.",
+            fr: "Garde chaque ligne si vous perdez ou changez de téléphone.",
+            pt: "Mantém cada lançamento se você perder ou trocar de celular.",
+            "pt-PT": "Mantém cada registo se perder ou trocar de telemóvel.",
         }),
         "auth.signIn.eyebrow": t({
             en: "Account",
@@ -440,12 +438,12 @@ const auth = {
             "pt-PT": "A iniciar sessão…",
         }),
         "auth.signIn.title": t({
-            en: "Keep a copy of this?",
-            de: "Eine Kopie davon behalten?",
-            es: "¿Quieres guardar una copia?",
-            fr: "Garder une copie ?",
-            pt: "Quer manter uma cópia disso?",
-            "pt-PT": "Quer manter uma cópia disto?",
+            en: "Save your ledger",
+            de: "Sichere dein Haushaltsbuch",
+            es: "Guarda tu registro",
+            fr: "Sauvegardez votre journal",
+            pt: "Salve seus lançamentos",
+            "pt-PT": "Guarde os seus registos",
         }),
         "auth.signIn.written": t({
             en: "Written daily at {time}.",

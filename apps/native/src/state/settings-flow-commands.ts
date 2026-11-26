@@ -83,7 +83,7 @@ export const saveOnboardingCurrencyCommand = createRuntimeCommand(appRuntime, {
                 input.navigate();
             } else {
                 // `finishOnboarding` settles the root guard, which swaps the stack; pushing too would race it.
-                yield* finishOnboarding(input.db);
+                yield* finishOnboarding(input.db, "existingAccount");
             }
             input.track();
             yield* input.hold;

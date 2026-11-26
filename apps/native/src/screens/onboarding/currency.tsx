@@ -30,6 +30,8 @@ import { posthog } from "@/lib/posthog";
 import { runAtomCommand, SILENT } from "@/state/atom-command";
 import { saveOnboardingCurrencyCommand } from "@/state/settings-flow-commands";
 
+import { STEP_PROGRESS } from "./progress";
+
 type CommitKind = "continue" | "finish";
 
 // Typed so the form's submit-meta type is the union, not the default's literal.
@@ -151,6 +153,7 @@ export function OnboardingCurrency() {
             body={t("onboarding.currency.body")}
             eyebrow={t("onboarding.currency.eyebrow")}
             object={<CurrencyGlyph symbol={display.symbol} />}
+            progress={STEP_PROGRESS.currency}
             skip={{
                 label: t("onboarding.currency.shortcut"),
                 onPress: () => pressSubmitWith(form, FINISH),

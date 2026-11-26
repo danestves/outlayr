@@ -13,6 +13,7 @@ import { useTranslation } from "@/i18n/context";
 import { setupStarted, trackAutologSetup } from "@/lib/autolog-events";
 
 import { OnboardingBankTexts } from "./bank-texts";
+import { STEP_PROGRESS } from "./progress";
 
 export function OnboardingAutoLog() {
     const db = useDatabase();
@@ -45,6 +46,7 @@ function AutoLogSources() {
         <FirstRun
             action={{ label: t("common.continue"), onPress: skipUnset }}
             eyebrow={t("onboarding.autoLog.eyebrow")}
+            progress={STEP_PROGRESS["auto-log"]}
             title={t("onboarding.autoLog.title")}
         >
             <ScrollView className="shrink grow-0">

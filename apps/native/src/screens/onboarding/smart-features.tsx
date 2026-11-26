@@ -10,6 +10,8 @@ import { SILENT } from "@/state/atom-command";
 import { saveAiConsentCommand } from "@/state/settings-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 
+import { STEP_PROGRESS } from "./progress";
+
 /** Asked before an account exists, so the answer is in place before any feature could send. */
 export function OnboardingSmartFeatures() {
     const db = useDatabase();
@@ -31,6 +33,7 @@ export function OnboardingSmartFeatures() {
             action={{ label: t("aiConsent.allow"), onPress: () => answer(true) }}
             body={t("aiConsent.lead")}
             eyebrow={t("aiConsent.eyebrow")}
+            progress={STEP_PROGRESS["smart-features"]}
             skip={{ label: t("aiConsent.notNow"), onPress: () => answer(false) }}
             title={t("aiConsent.title")}
         >

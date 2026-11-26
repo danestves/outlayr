@@ -1,0 +1,15 @@
+export const STEP_PROGRESS = {
+    goal: 0.2,
+    currency: 0.3,
+    accounts: 0.4,
+    "first-line": 0.45,
+    "first-entry": 0.55,
+    "auto-log": 0.55,
+    scan: 0.55,
+    "smart-features": 0.6,
+    rhythm: 0.65,
+    "heard-from": 0.7,
+    spend: 0.75,
+    build: 0.85,
+    reveal: 0.95,
+} as const;

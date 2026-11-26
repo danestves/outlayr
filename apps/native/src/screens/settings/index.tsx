@@ -1,10 +1,11 @@
+import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Platform, View } from "react-native";
 
 import { AiConsentPromptSheet } from "@/components/ai-consent";
 import { UndoImportRow } from "@/components/import-flow/undo-import-row";
-import { LinkRow, SettingsSection, ToggleRow } from "@/components/list/list-row";
+import { LinkRow, PickerRow, SettingsSection, ToggleRow } from "@/components/list/list-row";
 import { AccentSwatches } from "@/components/settings/accent-swatches";
 import { AccountPanel } from "@/components/settings/account-panel";
 import { DataActions } from "@/components/settings/data-actions";
@@ -33,7 +34,9 @@ import { appIconLabel } from "@/domain/app-icons";
 import { BALANCES_ACCOUNTS } from "@/domain/balances";
 import { offeredAccentValue } from "@/domain/material-accent";
 import { formatAmount, minorUnitsFor } from "@/domain/money";
+import type { MoneyGoal } from "@/domain/money-goal";
 import { coverageNote } from "@/domain/valuation-coverage";
+import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { languageLabel } from "@/i18n/languages";
 import { translateNow } from "@/i18n/runtime";
@@ -48,6 +51,7 @@ import { emailSupport } from "@/lib/support-link";
 import { SILENT } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
 import { openLanguageSettingsCommand } from "@/state/link-commands";
+import { setMoneyGoalCommand } from "@/state/onboarding-commands";
 import { saveAiConsentCommand, setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
 import { toggleAppLockCommand } from "@/state/settings-flow-commands";
 import { fireAtomCommand, useAtomAction } from "@/state/use-atom-action";
@@ -66,11 +70,27 @@ const CENTS_LAST_KEYS = 1284;
 const BIOMETRIC_ICON: SettingsIconName = Platform.OS === "android" ? "FingerprintPattern" : "ScanFace";
 const HAPTICS_ICON: SettingsIconName = Platform.OS === "android" ? "Vibrate" : "Hand";
 
+const UNSET_GOAL = "unset";
+
+const GOAL_OPTIONS = [
+    { label: "onboarding.goal.option.track", value: "track" },
+    { label: "onboarding.goal.option.spendLess", value: "spendLess" },
+    { label: "onboarding.goal.option.save", value: "save" },
+    { label: "onboarding.goal.option.payDebt", value: "payDebt" },
+] as const satisfies readonly { label: TranslationKey; value: MoneyGoal }[];
+
 export function Settings() {
     const db = useDatabase();
     const setBool = useAtomAction(setBoolSettingCommand);
     const setNumber = useAtomAction(setNumberSettingCommand);
     const saveAiConsent = useAtomAction(saveAiConsentCommand);
+    const setMoneyGoal = useAtomAction(
+        setMoneyGoalCommand,
+        {
+            onFailure: (cause) => console.error("Saving the money goal failed", Cause.squash(cause)),
+        },
+        SILENT
+    );
     const router = useRouter();
     const t = useTranslation();
     const [lockPending, setLockPending] = useState<boolean | null>(null);
@@ -96,6 +116,11 @@ export function Settings() {
     const integrationsOn = useIntegrationsOn(db);
     const { state: settings } = useAppSettings();
     const { showCents } = useDisplaySettings().state;
+    const moneyGoal = settings.get("moneyGoal");
+    const goalOptions: readonly { label: string; value: MoneyGoal | typeof UNSET_GOAL }[] = [
+        ...(moneyGoal === null ? ([{ label: t("settings.goal.notSet"), value: UNSET_GOAL }] as const) : []),
+        ...GOAL_OPTIONS.map((option) => ({ label: t(option.label), value: option.value })),
+    ];
     const showNotifications = settings.get("showNotifications");
     const biometricLock = settings.get("biometricLock");
     const shareAnalytics = settings.get("shareAnalytics");
@@ -142,6 +167,18 @@ export function Settings() {
                     onPress={() => router.push("/settings/currency")}
                     title={t("settings.row.currency")}
                     value={currency}
+                />
+                <PickerRow
+                    icon="Star"
+                    onChange={(next: MoneyGoal | typeof UNSET_GOAL) => {
+                        if (next === UNSET_GOAL) {
+                            return;
+                        }
+                        setMoneyGoal({ db, goal: next, source: "settings" });
+                    }}
+                    options={goalOptions}
+                    title={t("settings.row.goal")}
+                    value={moneyGoal ?? UNSET_GOAL}
                 />
                 <SegmentedRow
                     icon="Calculator01"
