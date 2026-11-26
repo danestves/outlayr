@@ -42,7 +42,6 @@ import {
     wallText,
 } from "@/lib/entry-writes";
 import type { Doc, EntryBase, EntryProblem, EntryValues } from "@/lib/entry-writes";
-import { useNumberLocale } from "@/lib/exchange-locale";
 import { money } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { newLink } from "@/lib/rule-writes";
@@ -337,7 +336,6 @@ function EntryFields({
 }) {
     const { ledger, overview } = useDashboard();
     const { form, kind } = useIntlayer("dashboard-transactions");
-    const numberLocale = useNumberLocale();
     const quiet = layout === "drawer";
     const accounts = openAccounts(ledger.books);
     const inUse = useMemo(
@@ -380,13 +378,7 @@ function EntryFields({
                 amountText:
                     values.amountText.trim() === ""
                         ? ""
-                        : money(
-                              parseAmount(values.amountText, decimalsFor(values.currency)),
-                              currency,
-                              "auto",
-                              true,
-                              numberLocale
-                          ),
+                        : money(parseAmount(values.amountText, decimalsFor(values.currency)), currency),
                 currency,
                 currencyByHand: true,
                 rateType: "official",
@@ -404,8 +396,7 @@ function EntryFields({
         />
     );
     const feeRate = parseFee(values.feeText, values.currency)?.rate;
-    const feeShown =
-        feeRate == null ? null : money(feeOfRate(values, feeRate), values.currency, "auto", true, numberLocale);
+    const feeShown = feeRate == null ? null : money(feeOfRate(values, feeRate), values.currency);
     const name = <Input onChange={(event) => onChange({ note: event.target.value })} value={values.note} />;
     return (
         <>

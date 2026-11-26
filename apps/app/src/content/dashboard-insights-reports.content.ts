@@ -687,15 +687,26 @@ const dashboardInsightsReports = {
                 pt: "Os relatórios que você salva aparecem aqui.",
                 "pt-PT": "Os relatórios que guardada aparecem aqui.",
             }),
-            months: insert(
-                t({
-                    en: "{{count}} mo",
-                    de: "{{count}} Mon.",
-                    es: "{{count}} m",
-                    fr: "{{count}} mois",
-                    pt: "{{count}} mês",
-                })
-            ),
+            months: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} mo",
+                        de: "{{count}} Mon.",
+                        es: "{{count}} m",
+                        fr: "{{count}} mois",
+                        pt: "{{count}} mês",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} mo",
+                        de: "{{count}} Mon.",
+                        es: "{{count}} m",
+                        fr: "{{count}} mois",
+                        pt: "{{count}} meses",
+                    })
+                ),
+            }),
             title: t({
                 en: "Saved",
                 de: "Gespeichert",

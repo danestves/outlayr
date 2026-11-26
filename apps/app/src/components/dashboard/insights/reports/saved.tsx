@@ -93,7 +93,7 @@ export function rangeTag(report: SavedReport, currentKey: string, words: ReportW
         range.from.endsWith("-01") &&
         range.to.endsWith("-12") &&
         range.from.slice(0, 4) === range.to.slice(0, 4);
-    return wholeYear ? saved.year.value : saved.months({ count: String(monthsIn(spanOf(range, currentKey))) }).value;
+    return wholeYear ? saved.year.value : saved.months({ count: monthsIn(spanOf(range, currentKey)) }).value;
 }
 
 interface SavedListProps {

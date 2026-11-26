@@ -21,12 +21,11 @@ export const POPUP = "app-shell z-60";
 export const LABEL = "data-invalid:text-foreground has-[[aria-invalid=true]]:text-foreground";
 const NONE = "none";
 
-export const plainAmount = (amount: number, currency: string, numberLocale = "en-US") => {
+export const plainAmount = (amount: number, currency: string) => {
     const decimals = decimalsFor(currency);
-    return new Intl.NumberFormat(numberLocale, {
-        maximumFractionDigits: decimals,
-        minimumFractionDigits: decimals,
-    }).format(amount);
+    return new Intl.NumberFormat("en-US", { maximumFractionDigits: decimals, minimumFractionDigits: decimals }).format(
+        amount
+    );
 };
 
 export function DayField({

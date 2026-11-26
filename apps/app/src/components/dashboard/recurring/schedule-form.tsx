@@ -26,7 +26,6 @@ import { DialogContent } from "@/components/ui/dialog-content";
 import { MoneyField } from "@/components/ui/money-field";
 import { parseAmount } from "@/lib/account-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
-import { useNumberLocale } from "@/lib/exchange-locale";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { addDays, walk } from "@/lib/recurring";
 import type { Schedule } from "@/lib/recurring";
@@ -359,7 +358,7 @@ function CustomView({
     );
 }
 
-function valuesOf(schedule: Schedule | null, today: string, numberLocale: string): Values {
+function valuesOf(schedule: Schedule | null, today: string): Values {
     if (!schedule) {
         return {
             accountId: null,
@@ -377,7 +376,7 @@ function valuesOf(schedule: Schedule | null, today: string, numberLocale: string
     const next = schedule.next?.day ?? schedule.due.at(0)?.day ?? addDays(today, 1);
     return {
         accountId: seed.accountId,
-        amountText: amountText(seed.amount, seed.currency ?? "USD", numberLocale),
+        amountText: amountText(seed.amount, seed.currency ?? "USD"),
         categoryId: seed.categoryId,
         endDay: chain.endDay,
         every: chain.every,
@@ -432,7 +431,6 @@ function FormView({
     const copy = useIntlayer("dashboard-recurring");
     const { ledger } = useDashboard();
     const { money } = useDisplayFormat();
-    const numberLocale = useNumberLocale();
     const { locale } = useLocale();
     const repeat = useRepeatText();
     const categoryOptions = useCategoryOptions(ledger, values.income);
@@ -457,7 +455,7 @@ function FormView({
     const problems = new Set<DraftProblem>(tried ? draftProblems(draft) : []);
     const preset = values.every === 1 ? PRESETS.find((each) => each.type === values.type) : undefined;
     const perMonth = draft.amount * monthlyChargeCount(values.type, values.every);
-    const shownAmount = draft.amount > 0 ? amountText(draft.amount, currency, numberLocale) : "";
+    const shownAmount = draft.amount > 0 ? amountText(draft.amount, currency) : "";
     const save = () => {
         setTried(true);
         if (draftProblems(draft).length === 0) {
@@ -516,9 +514,7 @@ function FormView({
                             value={{ amount: Number.isFinite(amount) ? amount : null, code: currency }}
                         />
                         {problems.has("amount") ? (
-                            <Field.Error match>
-                                {errors.amount({ zero: amountText(0, currency, numberLocale) })}
-                            </Field.Error>
+                            <Field.Error match>{errors.amount({ zero: amountText(0, currency) })}</Field.Error>
                         ) : null}
                     </Field>
                     <Slot label={copy.fields.account}>
@@ -644,8 +640,7 @@ function FormBody({
 }) {
     const { ledger } = useDashboard();
     const { schedule } = target;
-    const numberLocale = useNumberLocale();
-    const [values, setValues] = useState(() => valuesOf(schedule, ledger.today, numberLocale));
+    const [values, setValues] = useState(() => valuesOf(schedule, ledger.today));
     const [custom, setCustom] = useState(false);
     if (custom) {
         return (

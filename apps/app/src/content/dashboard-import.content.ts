@@ -936,15 +936,26 @@ const dashboardImport = {
                     pt: "{{count}} de 3 obrigatórias",
                 })
             ),
-            spreads: insert(
-                t({
-                    en: "{{order}} spreads them across {{count}} months",
-                    de: "{{order}} verteilt sie auf {{count}} Monate",
-                    es: "{{order}} las reparte en {{count}} meses",
-                    fr: "{{order}} les répartit sur {{count}} mois",
-                    pt: "{{order}} espalha em {{count}} meses",
-                })
-            ),
+            spreads: plural({
+                one: insert(
+                    t({
+                        en: "{{order}} spreads them across {{count}} month",
+                        de: "{{order}} verteilt sie auf {{count}} Monat",
+                        es: "{{order}} las reparte en {{count}} mes",
+                        fr: "{{order}} les répartit sur {{count}} mois",
+                        pt: "{{order}} espalha em {{count}} mês",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{order}} spreads them across {{count}} months",
+                        de: "{{order}} verteilt sie auf {{count}} Monate",
+                        es: "{{order}} las reparte en {{count}} meses",
+                        fr: "{{order}} les répartit sur {{count}} mois",
+                        pt: "{{order}} espalha em {{count}} meses",
+                    })
+                ),
+            }),
             title: t({
                 en: "Match columns",
                 de: "Spalten zuordnen",

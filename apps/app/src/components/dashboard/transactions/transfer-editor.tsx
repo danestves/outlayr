@@ -132,8 +132,11 @@ export function TransferEditor({
             : detail.perUnit({ currency: arrivedCurrency, rate: formatRate(sent / arrived, locale) }).value;
     const typeSent = (sentText: string) => {
         const moved = parseAmount(sentText, decimalsFor(sentCurrency)) !== sent;
-        // One currency moves one amount until someone says it arrived short.
-        const mirrored = !crossed && values.sentText === values.arrivedText;
+        // One currency moves one amount until someone says it arrived short, read from the figures so a
+        // reformatted draft still mirrors; a leg left blank stays blank.
+        const sentBlank = values.sentText.trim() === "";
+        const arrivedBlank = values.arrivedText.trim() === "";
+        const mirrored = !crossed && (sentBlank || arrivedBlank ? sentBlank === arrivedBlank : sent === arrived);
         change({
             arrivedText: mirrored ? sentText : values.arrivedText,
             rateType: crossed && moved ? "custom" : values.rateType,
@@ -267,17 +270,11 @@ export function TransferEditor({
                                             : change({
                                                   feeTexts: {
                                                       ...values.feeTexts,
-                                                      [side]: money(
-                                                          parseAmount(text, decimalsFor(feeIn)),
-                                                          feeIn,
-                                                          "auto",
-                                                          true,
-                                                          locale
-                                                      ),
+                                                      [side]: money(parseAmount(text, decimalsFor(feeIn)), feeIn),
                                                   },
                                               })
                                     }
-                                    placeholder={money(0, feeIn, "auto", true, locale)}
+                                    placeholder={money(0, feeIn)}
                                     value={text}
                                 />
                                 <span className="text-muted-foreground truncate text-sm">

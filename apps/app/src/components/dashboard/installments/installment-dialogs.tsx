@@ -27,7 +27,6 @@ import { MoneyField } from "@/components/ui/money-field";
 import { parseAmount } from "@/lib/account-writes";
 import { startOfDay } from "@/lib/dashboard-series-ledger";
 import { wallInstant, wallText } from "@/lib/entry-writes";
-import { useNumberLocale } from "@/lib/exchange-locale";
 import {
     deletedInstallment,
     editedInstallment,
@@ -246,19 +245,17 @@ function transferValues(
         amount,
         dateText,
         leaves,
-        numberLocale,
         source,
         view,
     }: {
         amount: number | null;
         dateText: string;
         leaves: number | null | undefined;
-        numberLocale: string;
         source: Source | null;
         view: PlanView;
     }
 ) {
-    const amountText = amount === null ? "" : plainAmount(amount, view.currency, numberLocale);
+    const amountText = amount === null ? "" : plainAmount(amount, view.currency);
     const bare: NewTransferValues = {
         arrivedByHand: false,
         arrivedText: "",
@@ -281,7 +278,7 @@ function transferValues(
             ...bare,
             arrivedByHand: leaves !== undefined,
             arrivedText: amountText,
-            sentText: shown === null ? "" : plainAmount(shown, source.currency, numberLocale),
+            sentText: shown === null ? "" : plainAmount(shown, source.currency),
         },
     };
 }
@@ -344,7 +341,6 @@ function PayDialog({ all, onClose, view }: { all: boolean; onClose: () => void; 
     const { ledger } = useDashboard();
     const db = useLedgerDb();
     const committer = useLedgerCommitter();
-    const numberLocale = useNumberLocale();
     const { cancel, failed, fee: feeCopy, pay } = useIntlayer("dashboard-installments");
     const format = useGoalMoney();
     const formId = useId();
@@ -376,7 +372,6 @@ function PayDialog({ all, onClose, view }: { all: boolean; onClose: () => void; 
         amount: shownAmount,
         dateText,
         leaves: typedLeaves,
-        numberLocale,
         source,
         view,
     });

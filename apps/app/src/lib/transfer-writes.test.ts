@@ -143,6 +143,14 @@ describe("editedTransfer", () => {
         expect(fields.get("note")).toBe("rent");
     });
 
+    it("keeps an untouched fee's stored precision instead of re-reading its rounded draft", () => {
+        const { rows } = editOf([fee({ amount: 1.23456, amountUsd: 1.23456 })], (values) => ({
+            ...values,
+            note: "rent",
+        }));
+        expect(fieldsOf(rows, "f1").fields.get("amount")).toBe(1.23456);
+    });
+
     it("scales frozen USD with a changed amount and stores the rate the two amounts give", () => {
         const { rows } = editOf([], (values) => ({
             ...values,
