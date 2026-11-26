@@ -1,5 +1,5 @@
 import * as Cause from "effect/Cause";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { ScrollView } from "react-native";
 
@@ -15,7 +15,7 @@ import { useCategoriesByNamespace } from "@/data/categories";
 import { useNow } from "@/data/use-now";
 import { firstEntryCategory } from "@/domain/first-entry-category";
 import { formatAmount, minorUnitsFor, roundToMinorUnits } from "@/domain/money";
-import { numpadToNumber } from "@/domain/numpad";
+import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
@@ -23,6 +23,8 @@ import { SILENT } from "@/state/atom-command";
 import { saveFirstEntryCommand } from "@/state/onboarding-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
+
+import type { FirstEntrySeed } from "./first-entry-seed";
 
 export function OnboardingFirstEntry() {
     const db = useDatabase();
@@ -34,8 +36,11 @@ export function OnboardingFirstEntry() {
     const nowMs = useNow();
     const currency = useGlobalCurrency(db);
     const categories = useCategoriesByNamespace(db, false);
-    const [amount, setAmount] = useState("");
-    const [pickedId, setPickedId] = useState<string | null>(null);
+    const seed = useLocalSearchParams<FirstEntrySeed>();
+    const [amount, setAmount] = useState(() =>
+        numberToNumpad(numpadToNumber(seed.amount ?? ""), minorUnitsFor(currency))
+    );
+    const [pickedId, setPickedId] = useState<string | null>(seed.categoryId ?? null);
     const [step, setStep] = useState<"amount" | "category">("amount");
     const [saving, setSaving] = useState(false);
     const savingRef = useRef(false);
@@ -60,7 +65,7 @@ export function OnboardingFirstEntry() {
                 haptics(written ? "success" : "error");
                 setFailed(!written);
                 if (written) {
-                    router.push("/onboarding/smart-features");
+                    router.replace("/onboarding/smart-features");
                 }
             },
         },
@@ -83,7 +88,7 @@ export function OnboardingFirstEntry() {
                 currency: null,
                 details: null,
                 income: false,
-                merchant: "",
+                merchant: seed.merchant ?? "",
                 schedule: null,
             },
         });

@@ -6,15 +6,21 @@ import { ProviderSignInButtons } from "@/components/account/provider-sign-in-but
 import { AiConsentGate } from "@/components/ai-consent";
 import { FirstRun } from "@/components/first-run";
 import { useDatabase } from "@/contexts/local-data-context";
+import { useGlobalCurrency } from "@/data/app-meta";
 import { useAiConsent } from "@/data/settings";
 import { useAiGate } from "@/hooks/use-ai-gate";
 import { useTranslation } from "@/i18n/context";
 import { authClient } from "@/lib/auth-client";
+import { useLedgerAdoption } from "@/lib/ledger-adoption";
+import { useWhen } from "@/lib/lifecycle";
 import { useProviderSignIn } from "@/lib/use-provider-sign-in";
 import { ScanFlowScreen } from "@/screens/transaction/scan";
 import { SILENT } from "@/state/atom-command";
 import { saveScanFirstEntryCommand } from "@/state/onboarding-commands";
 import { useAtomAction } from "@/state/use-atom-action";
+
+import { useFinishOnboarding } from "./finish";
+import { firstEntryHref } from "./first-entry-seed";
 
 type AuthClient = NonNullable<typeof authClient>;
 
@@ -22,6 +28,19 @@ export function OnboardingScan() {
     const gate = useAiGate();
     if (gate !== "signed-in") {
         return <ScanSignIn restoring={gate === "restoring"} />;
+    }
+    return <ScanAdoptionGate />;
+}
+
+function ScanAdoptionGate() {
+    const { status } = useLedgerAdoption();
+    const { finish } = useFinishOnboarding();
+    const asked = status === "ask";
+    useWhen(asked, () => {
+        finish();
+    });
+    if (status !== "settled") {
+        return <ScanSignIn restoring />;
     }
     return (
         <>
@@ -46,6 +65,9 @@ function ScanConsentFlow() {
 function ScanEntry() {
     const db = useDatabase();
     const router = useRouter();
+    const t = useTranslation();
+    const currency = useGlobalCurrency(db);
+    const typeInstead = () => router.replace("/onboarding/first-entry");
     const recordSaved = useAtomAction(
         saveScanFirstEntryCommand,
         {
@@ -57,7 +79,8 @@ function ScanEntry() {
     return (
         <View className="pt-safe bg-background flex-1">
             <ScanFlowScreen
-                onNeedsForm={() => router.replace("/onboarding/first-entry")}
+                limitFallback={{ label: t("onboarding.firstLine.type"), onPress: typeInstead }}
+                onNeedsForm={(draft) => router.replace(firstEntryHref(draft, currency))}
                 onSaved={() => recordSaved(db)}
             />
         </View>

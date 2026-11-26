@@ -475,11 +475,12 @@ const writeEntry = Effect.fn("ReceiptScan.writeEntry")(function* writeEntry(db: 
 });
 
 export interface ScanFlowScreenProps {
+    limitFallback?: BarAction;
     onNeedsForm?: (draft: ResolvedReceipt, attachment: string | null) => void;
     onSaved?: () => void;
 }
 
-export function ScanFlowScreen({ onNeedsForm, onSaved }: ScanFlowScreenProps = {}) {
+export function ScanFlowScreen({ limitFallback, onNeedsForm, onSaved }: ScanFlowScreenProps = {}) {
     const router = useRouter();
     const entitled = useProEntitled();
     const db = useDatabase();
@@ -507,7 +508,7 @@ export function ScanFlowScreen({ onNeedsForm, onSaved }: ScanFlowScreenProps = {
         "receiptScan",
         phase.kind === "failed" && isLimitRefusal(phase.reason) ? phase.reason : null
     );
-    const limitToast = <LimitToast feature="receiptScan" {...limit} />;
+    const limitToast = <LimitToast feature="receiptScan" linked={limitFallback === undefined} {...limit} />;
 
     const receipt = useResolvedPhase(phase, (next) =>
         next.kind === "review" ? resolveReceipt({ ...next.context, draft: next.draft, now: new Date() }) : null
@@ -657,12 +658,15 @@ export function ScanFlowScreen({ onNeedsForm, onSaved }: ScanFlowScreenProps = {
         let primary: BarAction | null = libraryAction;
         let secondary: BarAction | null = null;
         if (phase.reason === "notEntitled" && !entitled) {
-            primary = { label: t("pro.action.see"), onPress: () => router.push(paywallHref("captures")) };
+            primary = limitFallback ?? {
+                label: t("pro.action.see"),
+                onPress: () => router.push(paywallHref("captures")),
+            };
         } else if (phase.reason === "notEntitled") {
             primary = phase.photo === null ? cameraAction : { label: t("receipt.action.retry"), onPress: retry };
             secondary = libraryAction;
         } else if (phase.reason === "quotaExceeded") {
-            primary = null;
+            primary = limitFallback ?? null;
         } else if (phase.reason === "denied") {
             primary = { label: t("receipt.action.settings"), onPress: () => runFlow(openAppSettings) };
             secondary = libraryAction;

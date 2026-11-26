@@ -1,5 +1,6 @@
 import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
+import { useRef } from "react";
 import { View } from "react-native";
 
 import { FirstRun } from "@/components/first-run";
@@ -49,23 +50,29 @@ export function OnboardingRhythm() {
             finish();
         }
     };
+    const choosing = useRef(false);
     const chooseReminder = useAtomAction(
         chooseFirstRunReminderCommand,
         {
             onFailure: (cause) => console.error("Saving the first-run reminder choice failed", Cause.squash(cause)),
-            onSettled: next,
+            onSettled: () => {
+                choosing.current = false;
+                next();
+            },
         },
         SILENT
     );
 
-    const remind = () => {
+    const choose = (option: number | null) => {
+        if (choosing.current) {
+            return;
+        }
+        choosing.current = true;
         clearFailed();
-        chooseReminder({ db, option: REMINDER_EVENING });
+        chooseReminder({ db, option });
     };
-    const skip = () => {
-        clearFailed();
-        chooseReminder({ db, option: null });
-    };
+    const remind = () => choose(REMINDER_EVENING);
+    const skip = () => choose(null);
 
     return (
         <FirstRun
