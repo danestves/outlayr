@@ -20,10 +20,13 @@ type AuthClient = NonNullable<typeof authClient>;
 
 export function OnboardingScan() {
     const gate = useAiGate();
+    if (gate !== "signed-in") {
+        return <ScanSignIn restoring={gate === "restoring"} />;
+    }
     return (
         <>
             <Stack.Screen options={{ headerShown: false }} />
-            {gate === "signed-in" ? <ScanConsentFlow /> : <ScanSignIn restoring={gate === "restoring"} />}
+            <ScanConsentFlow />
         </>
     );
 }
