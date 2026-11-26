@@ -19,7 +19,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ENV } from "@/env";
 import { startMotion } from "@/lib/motion";
-import { APP_ID, FOUNDER_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp } from "@/lib/seo";
+import { APP_ID, FOUNDER_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp, webApp } from "@/lib/seo";
 import { COMPANY, FOUNDER, INSTAGRAM_URL, LINKEDIN_URL, SOURCE_URL, TIKTOK_URL, X_URL } from "@/lib/site";
 
 import appCss from "../index.css?url";
@@ -89,7 +89,7 @@ function siteGraph(locale: Locale) {
                 "@type": "SoftwareSourceCode",
                 codeRepository: SOURCE_URL,
                 description:
-                    "The source code of Outlayr: the Expo and React Native app for iPhone and Android, under GPL-3.0, and its Convex server, under AGPL-3.0.",
+                    "The source code of Outlayr: the Expo and React Native app for iPhone and Android and the web app, under GPL-3.0, and its Convex server, under AGPL-3.0.",
                 license: ["https://www.gnu.org/licenses/gpl-3.0.html", "https://www.gnu.org/licenses/agpl-3.0.html"],
                 name: "Outlayr",
                 programmingLanguage: "TypeScript",
@@ -100,6 +100,7 @@ function siteGraph(locale: Locale) {
                 featureList: extras.map((extra) => `${extra.label}: ${extra.text}`),
                 image: `${SITE_URL}${LANGUAGES[locale].image}`,
             }),
+            webApp(meta.description),
         ],
     };
 }

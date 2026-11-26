@@ -162,18 +162,18 @@ const home = {
             },
             {
                 answer: t({
-                    en: "Yes. Outlayr is on the App Store for iPhone with iOS 18 or later, and on Google Play for Android.",
-                    de: "Ja. Outlayr gibt es im App Store für das iPhone mit iOS 18 oder neuer und bei Google Play für Android.",
-                    es: "Sí. Outlayr está en el App Store para iPhone con iOS 18 o posterior, y en Google Play para Android.",
-                    pt: "Sim. O Outlayr está na App Store para iPhone com iOS 18 ou posterior, e no Google Play para Android.",
-                    fr: "Oui. Outlayr est sur l'App Store pour iPhone sous iOS 18 ou version ultérieure, et sur Google Play pour Android.",
+                    en: "Yes. Outlayr is on the App Store for iPhone with iOS 18 or later, and on Google Play for Android. You can also use it on the web at app.tryoutlayr.com with Pro, on the same account, with your entries synced.",
+                    de: "Ja. Outlayr gibt es im App Store für das iPhone mit iOS 18 oder neuer und bei Google Play für Android. Du kannst es auch im Web unter app.tryoutlayr.com mit Pro nutzen, mit demselben Konto und synchronisierten Einträgen.",
+                    es: "Sí. Outlayr está en el App Store para iPhone con iOS 18 o posterior, y en Google Play para Android. También puedes usarlo en la web en app.tryoutlayr.com con Pro, con la misma cuenta y tus registros sincronizados.",
+                    pt: "Sim. O Outlayr está na App Store para iPhone com iOS 18 ou posterior, e no Google Play para Android. Você também pode usá-lo na web em app.tryoutlayr.com com o Pro, na mesma conta e com os lançamentos sincronizados.",
+                    fr: "Oui. Outlayr est sur l'App Store pour iPhone sous iOS 18 ou version ultérieure, et sur Google Play pour Android. Vous pouvez aussi l'utiliser sur le Web à app.tryoutlayr.com avec Pro, avec le même compte et vos opérations synchronisées.",
                 }),
                 question: t({
-                    en: "Is Outlayr on iPhone and Android?",
-                    de: "Gibt es Outlayr für iPhone und Android?",
-                    es: "¿Outlayr está en iPhone y Android?",
-                    pt: "O Outlayr está disponível para iPhone e Android?",
-                    fr: "Outlayr est-il disponible sur iPhone et Android ?",
+                    en: "Is Outlayr on iPhone, Android and the web?",
+                    de: "Gibt es Outlayr für iPhone, Android und das Web?",
+                    es: "¿Outlayr está en iPhone, Android y la web?",
+                    pt: "O Outlayr está disponível para iPhone, Android e na web?",
+                    fr: "Outlayr est-il disponible sur iPhone, Android et le Web ?",
                 }),
             },
             {

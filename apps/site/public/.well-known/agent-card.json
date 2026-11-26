@@ -1,6 +1,6 @@
 {
     "name": "Outlayr",
-    "description": "Answers questions about Outlayr, the mobile expense tracker, budget app, and subscription tracker by danestves LLC, with its product facts. It cannot read or change anyone's ledger.",
+    "description": "Answers questions about Outlayr, the expense tracker, budget app, and subscription tracker for iPhone, Android and the web, by danestves LLC, with its product facts. It cannot read or change anyone's ledger.",
     "supportedInterfaces": [
         {
             "url": "https://tryoutlayr.com/a2a",
@@ -27,7 +27,14 @@
             "id": "product-facts",
             "name": "Outlayr product facts",
             "description": "Returns Outlayr's product facts as Markdown: features, Free and Pro plans, privacy, platforms, languages, guides, and comparisons. Every message gets the same document.",
-            "tags": ["expense tracker", "budget app", "subscription tracker", "personal finance", "mobile app"],
+            "tags": [
+                "expense tracker",
+                "budget app",
+                "subscription tracker",
+                "personal finance",
+                "mobile app",
+                "web app"
+            ],
             "examples": ["What does Outlayr do?", "What does Outlayr Pro include?", "Does Outlayr work offline?"]
         }
     ]

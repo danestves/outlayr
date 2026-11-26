@@ -1,12 +1,12 @@
 # Outlayr
 
-> Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log. Available on the App Store for iPhone (iOS 18 or later) and on Google Play for Android. English, Spanish, Portuguese, French, and German.
+> Outlayr is an open source expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log. Available on the App Store for iPhone (iOS 18 or later), on Google Play for Android, and on the web at https://app.tryoutlayr.com with Pro. English, Spanish, Portuguese, French, and German.
 
 ## Key facts
 
 - Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.
 - Price: free to start, with no ads on any plan. Outlayr Pro in the US is $9.99 a month, $59.99 a year with 3 days free, or $199.99 once.
-- Platforms: iPhone (iOS 18 or later) on the App Store and Android on Google Play.
+- Platforms: iPhone (iOS 18 or later) on the App Store, Android on Google Play, and the web at https://app.tryoutlayr.com with Pro.
 - Currencies: 165. Totals convert to your main currency at the rate from the day of each purchase.
 - Bank connection: none. Outlayr never links bank accounts or asks for a bank login.
 - Open source: the app is GPL-3.0 and the server is AGPL-3.0, at https://github.com/danestves/outlayr
@@ -50,7 +50,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 ## Open source
 
 - The code for the app and its server is public on GitHub: https://github.com/danestves/outlayr
-- The app (Expo and React Native, for iPhone and Android) is licensed under GPL-3.0. The server (Convex: sign-in, sync, exchange rates) is licensed under AGPL-3.0.
+- The app (Expo and React Native, for iPhone and Android, plus the web app in apps/app) is licensed under GPL-3.0. The server (Convex: sign-in, sync, exchange rates) is licensed under AGPL-3.0.
 
 ## Connect Outlayr to your AI assistant
 

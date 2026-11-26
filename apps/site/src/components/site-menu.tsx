@@ -1,3 +1,4 @@
+import { APP_URL } from "@outlayr/shared/urls";
 import { Sheet } from "panelui-web/sheet";
 import { useIntlayer } from "react-intlayer";
 
@@ -46,6 +47,11 @@ export function SiteMenu({
                     <li>
                         <a className={MENU_LINK} href={SOURCE_URL}>
                             {nav.github}
+                        </a>
+                    </li>
+                    <li>
+                        <a className={MENU_LINK} href={`${APP_URL}/login`}>
+                            {nav.signIn}
                         </a>
                     </li>
                 </ul>

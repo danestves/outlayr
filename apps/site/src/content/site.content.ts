@@ -479,6 +479,7 @@ const site = {
             label: t({ en: "Main", de: "Hauptnavigation", es: "Principal", pt: "Principal", fr: "Principal" }),
             open: t({ en: "Open menu", de: "Menü öffnen", es: "Abrir menú", pt: "Abrir menu", fr: "Ouvrir le menu" }),
             pricing: t({ en: "Pricing", de: "Preise", es: "Precios", pt: "Preços", fr: "Tarifs" }),
+            signIn: t({ en: "Sign in", de: "Anmelden", es: "Iniciar sesión", pt: "Entrar", fr: "Se connecter" }),
             skip: t({
                 en: "Skip to content",
                 de: "Zum Inhalt springen",

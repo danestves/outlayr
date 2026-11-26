@@ -1,6 +1,6 @@
 import { LANGUAGES, pageUrl } from "@outlayr/shared/i18n";
 import type { Locale } from "@outlayr/shared/i18n";
-import { APP_STORE_URL, PLAY_STORE_URL, SITE_URL } from "@outlayr/shared/urls";
+import { APP_STORE_URL, APP_URL, PLAY_STORE_URL, SITE_URL } from "@outlayr/shared/urls";
 import { getIntlayer } from "intlayer";
 import type { JSX } from "react";
 
@@ -139,11 +139,26 @@ export function mobileApp(locale: Locale, description: string, fields: { readonl
         inLanguage: APP_LANGUAGES,
         name: "Outlayr",
         offers: offers(locale),
-        operatingSystem: "iOS, Android",
+        operatingSystem: "iOS, Android, Web",
         publisher: { "@id": ORGANIZATION_ID },
         sameAs: [APP_STORE_URL, PLAY_STORE_URL, X_URL, SOURCE_URL, WIKIDATA_URL],
         url: pageUrl("/", locale),
         ...fields,
+    };
+}
+
+export function webApp(description: string) {
+    return {
+        "@id": `${APP_URL}/#webapp`,
+        "@type": "WebApplication",
+        applicationCategory: "FinanceApplication",
+        browserRequirements: "Requires JavaScript",
+        description,
+        inLanguage: APP_LANGUAGES,
+        name: "Outlayr",
+        operatingSystem: "Web",
+        publisher: { "@id": ORGANIZATION_ID },
+        url: APP_URL,
     };
 }
 

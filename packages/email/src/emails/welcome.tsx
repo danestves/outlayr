@@ -21,6 +21,7 @@ interface WelcomeCopy {
     preview: string;
     signedInWith: string;
     subject: string;
+    web: string;
 }
 
 const COPY = {
@@ -40,6 +41,7 @@ const COPY = {
         preview: "What your account adds.",
         signedInWith: "Signed in with",
         subject: "Your Outlayr account is ready",
+        web: "You can also open your ledger on the web at app.tryoutlayr.com with Pro.",
     },
     de: {
         account: "Konto",
@@ -60,6 +62,7 @@ const COPY = {
         preview: "Was dein Konto dir bringt.",
         signedInWith: "Angemeldet mit",
         subject: "Dein Outlayr-Konto ist bereit",
+        web: "Du kannst dein Haushaltsbuch auch im Web unter app.tryoutlayr.com mit Pro öffnen.",
     },
     es: {
         account: "Cuenta",
@@ -77,6 +80,7 @@ const COPY = {
         preview: "Lo que suma tu cuenta.",
         signedInWith: "Acceso con",
         subject: "Tu cuenta de Outlayr está lista",
+        web: "También puedes abrir tu registro en la web en app.tryoutlayr.com con Pro.",
     },
     fr: {
         account: "Compte",
@@ -94,6 +98,7 @@ const COPY = {
         preview: "Ce que votre compte ajoute.",
         signedInWith: "Connexion avec",
         subject: "Votre compte Outlayr est prêt",
+        web: "Vous pouvez aussi ouvrir votre journal sur le Web à app.tryoutlayr.com avec Pro.",
     },
     pt: {
         account: "Conta",
@@ -111,6 +116,7 @@ const COPY = {
         preview: "O que sua conta adiciona.",
         signedInWith: "Acesso com",
         subject: "Sua conta do Outlayr está pronta",
+        web: "Você também pode abrir seus lançamentos na web em app.tryoutlayr.com com o Pro.",
     },
 } satisfies Record<Language, WelcomeCopy>;
 
@@ -130,7 +136,10 @@ export default function WelcomeEmail({ email, language, provider }: WelcomeEmail
             language={language}
             lead={copy.lead}
             preview={copy.preview}
-            sections={[{ intro: copy.intro, items: copy.items }]}
+            sections={[
+                { intro: copy.intro, items: copy.items },
+                { intro: copy.web, items: [] },
+            ]}
         />
     );
 }

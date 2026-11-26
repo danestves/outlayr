@@ -1,3 +1,4 @@
+import { APP_URL } from "@outlayr/shared/urls";
 import { useLocation } from "@tanstack/react-router";
 import { getPathWithoutLocale } from "intlayer";
 import { lazy, Suspense, useState } from "react";
@@ -107,6 +108,11 @@ export function SiteHeader() {
                         >
                             <Icon className="text-xl" name="github-logo" />
                         </a>
+                        <span className="hidden lg:block">
+                            <a className={PILL} href={`${APP_URL}/login`}>
+                                {nav.signIn}
+                            </a>
+                        </span>
                         <GetAppButton
                             className="bg-foreground text-background hover:not-disabled:bg-foreground/90 h-10 px-5 text-[0.9375rem]"
                             placement="nav"
