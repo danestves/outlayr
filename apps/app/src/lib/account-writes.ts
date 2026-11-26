@@ -276,6 +276,7 @@ export function deletedAccount(books: LedgerBooks, account: Account, at: number)
 
 const SEPARATORS = /[.,]/g;
 const NOT_AMOUNT = /[^\d.,]/g;
+const SYMBOL_MARK = /(?<=\p{L})[.,]/gu;
 const GROUP_DIGITS = 3;
 
 /**
@@ -283,7 +284,7 @@ const GROUP_DIGITS = 3;
  * `thousands` is off for a figure where three decimals are ordinary, such as a rate.
  */
 export function parseAmount(text: string, decimals: number, thousands = decimals !== GROUP_DIGITS): number {
-    const clean = text.replaceAll(NOT_AMOUNT, "");
+    const clean = text.replaceAll(SYMBOL_MARK, "").replaceAll(NOT_AMOUNT, "");
     const marks = clean.match(SEPARATORS) ?? [];
     const last = Math.max(clean.lastIndexOf("."), clean.lastIndexOf(","));
     const tail = clean.slice(last + 1);
