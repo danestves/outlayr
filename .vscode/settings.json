@@ -58,5 +58,8 @@
   "editor.formatOnSave": true,
   "emmet.showExpandedAbbreviation": "never",
   "js/ts.tsdk.path": "node_modules/typescript/lib",
-  "js/ts.tsdk.promptToUseWorkspaceVersion": true
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "oxc.disableNestedConfig": true,
+  "oxc.fmt.disableNestedConfig": true,
+  "editor.formatOnSaveMode": "file"
 }
