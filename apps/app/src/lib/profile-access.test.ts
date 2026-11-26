@@ -1,23 +1,23 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { acceptedProfileId } from "./profile-access";
+import { profileAccess } from "./profile-access";
 
 const JOINED = [{ profileId: "joined-1" }];
 
-describe("acceptedProfileId", () => {
-    it("opens an own profile named by the cookie", () => {
-        expect(acceptedProfileId("own-1", true, [])).toBe("own-1");
+describe("profileAccess", () => {
+    it("names the viewer's own profile", () => {
+        expect(profileAccess("own-1", true, [])).toBe("own");
     });
 
-    it("opens a profile the viewer joined", () => {
-        expect(acceptedProfileId("joined-1", false, JOINED)).toBe("joined-1");
+    it("names a profile the viewer joined", () => {
+        expect(profileAccess("joined-1", false, JOINED)).toBe("joined");
     });
 
     it("refuses an id that is neither own nor joined", () => {
-        expect(acceptedProfileId("other-1", false, JOINED)).toBeNull();
+        expect(profileAccess("other-1", false, JOINED)).toBe("unknown");
     });
 
-    it("keeps Personal when the cookie names nothing", () => {
-        expect(acceptedProfileId(null, false, JOINED)).toBeNull();
+    it("has no profile when the cookie names nothing", () => {
+        expect(profileAccess(null, false, JOINED)).toBe("none");
     });
 });

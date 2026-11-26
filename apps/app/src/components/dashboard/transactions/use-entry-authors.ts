@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { authorIdOf } from "@/lib/profile-authors";
+import { authorIdOf, memberNames } from "@/lib/profile-authors";
 import type { ProfileMember, ProfileMembersView } from "@/lib/profile-sharing";
 
 import type { FoldedRow } from "../home/rows";
@@ -10,7 +10,7 @@ import type { LedgerList } from "./use-ledger-list";
 export interface EntryAuthors {
     authorOf: (row: FoldedRow) => string | null;
     labelOf: (id: string | null) => string | null;
-    names: ReadonlyMap<string, string | null>;
+    names: ReadonlyMap<string, string>;
     ownerId: string | null;
     people: readonly ProfileMember[];
     shared: boolean;
@@ -25,7 +25,7 @@ export function useEntryAuthors(
     const copy = useIntlayer("profile-sharing");
     const people = members?.members ?? [];
     const ownerId = people.find((member) => member.owner)?.id ?? null;
-    const names = new Map(people.map((member) => [member.id, member.name]));
+    const names = memberNames(people, copy.memberUnknown.value);
     const authorOf = useMemo(
         () => (row: FoldedRow) =>
             authorIdOf(

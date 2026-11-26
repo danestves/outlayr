@@ -184,11 +184,11 @@ const profileSharing = {
         },
         invite: {
             anyone: t({
-                en: "Anyone with the link can join",
-                de: "Jeder mit dem Link kann beitreten",
-                es: "Cualquiera con el enlace puede unirse",
-                fr: "Toute personne avec le lien peut rejoindre",
-                pt: "Qualquer pessoa com o link pode entrar",
+                en: "Each link lets one person join",
+                de: "Jeder Link lässt eine Person beitreten",
+                es: "Cada enlace permite unirse a una persona",
+                fr: "Chaque lien permet à une personne de rejoindre",
+                pt: "Cada link permite a entrada de uma pessoa",
             }),
             copied: t({
                 en: "Invite link copied",
@@ -268,13 +268,6 @@ const profileSharing = {
                     pt: "{{name}} convidou você para",
                 })
             ),
-            invitedUnknown: t({
-                en: "You're invited to",
-                de: "Du bist eingeladen zu",
-                es: "Te invitaron a",
-                fr: "Vous êtes invité à",
-                pt: "Você foi convidado para",
-            }),
             joining: t({
                 en: "Joining…",
                 de: "Beitritt läuft…",

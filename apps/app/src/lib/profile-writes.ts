@@ -1,6 +1,7 @@
 import type { PushRow } from "@outlayr/backend/confect/sync";
 import { api } from "@outlayr/backend/convex/_generated/api";
 
+import { categoryPush, seededCategories } from "./category-writes";
 import { convexClient } from "./convex";
 import { webDeviceId } from "./ledger-write";
 import type { LedgerProfile } from "./profile-registry";
@@ -26,16 +27,8 @@ const settingsRows = (settings: Readonly<Record<string, string>>, updatedAt: num
         updatedAt,
     }));
 
-const pushProfileSettings = async (
-    profileId: string,
-    settings: Readonly<Record<string, string>>,
-    updatedAt: number
-) => {
-    await convexClient().mutation(api.sync.push, {
-        deviceId: webDeviceId(),
-        profileId,
-        rows: settingsRows(settings, updatedAt),
-    });
+const pushProfileRows = async (profileId: string, rows: PushRow[]) => {
+    await convexClient().mutation(api.sync.push, { deviceId: webDeviceId(), profileId, rows });
 };
 
 const fieldsOf = (
@@ -56,12 +49,20 @@ const fieldsOf = (
 
 export async function createProfile(
     profiles: readonly LedgerProfile[],
-    input: { currency: string; identity: ProfileIdentity; name: string }
+    input: {
+        categoryLabel: (preset: string) => string;
+        currency: string;
+        identity: ProfileIdentity;
+        name: string;
+    }
 ) {
     const now = Date.now();
     const id = crypto.randomUUID();
     const sortOrder = Math.max(-1, ...profiles.map((profile) => profile.sortOrder)) + 1;
-    await pushProfileSettings(id, { currency: input.currency, currencyChosen: "true" }, now);
+    await pushProfileRows(id, [
+        ...settingsRows({ currency: input.currency, currencyChosen: "true" }, now),
+        ...seededCategories(input.categoryLabel, now).map((row) => categoryPush(row)),
+    ]);
     await pushProfileRow({
         deletedAt: null,
         fields: {

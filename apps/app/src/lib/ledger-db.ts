@@ -17,10 +17,11 @@ import { useMemo, useSyncExternalStore } from "react";
 
 import { CONVEX, SERVER } from "./db";
 import type { LedgerConvex } from "./db";
-import type { LedgerBooks } from "./ledger-books";
+import type { LedgerBooks, RateRow } from "./ledger-books";
 import { createLedgerSync, isSavedCursor } from "./ledger-sync";
 import type { LedgerSync, PulledRow } from "./ledger-sync";
 import { profileOf, pushRows } from "./ledger-write";
+import { browserRatesPublic } from "./profile";
 import { noteProfileLost, profileLossCode } from "./profile-loss";
 import { removeProfileAndSwitch } from "./profile-switch";
 
@@ -243,13 +244,13 @@ export const ledgerCollections = {
     budgets: ledgerTable(docs("budgets")),
     categories: ledgerTable(docs("categories")),
     exchangeRates: collectionOptions("ledger.exchangeRates", (db) =>
-        onServer(db)
+        onServer(db) || browserRatesPublic()
             ? {
                   getKey: (row: ExchangeRate) => row._id,
                   id: "ledger.exchangeRates",
                   sync: serverSync<ExchangeRate>(),
               }
-            : convexCollectionOptions({
+            : convexCollectionOptions<typeof api.ledger.exchangeRates, RateRow>({
                   client: convexOf(db),
                   getKey: (row) => row._id,
                   queryArgs: {},

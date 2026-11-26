@@ -21,3 +21,8 @@ export const authorIdOf = (
     ownerId: string | null,
     viewerId: string | null
 ) => (row ? authorId(row.createdBy, unsentOf(row), ownerId, viewerId) : authorId(null, false, ownerId, viewerId));
+
+export const memberNames = (
+    members: readonly { id: string; name: string | null }[],
+    fallback: string
+): ReadonlyMap<string, string> => new Map(members.map((member) => [member.id, member.name ?? fallback]));

@@ -21,6 +21,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { convexClient } from "@/lib/convex";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { authorBucket, authorId, FORMER_AUTHORS, unsentOf } from "@/lib/profile-authors";
+import { noteProfileDeleted } from "@/lib/profile-loss";
 import { activeProfileOf, profileLook, useLedgerProfiles } from "@/lib/profile-registry";
 import type { LedgerProfile, ProfileLook } from "@/lib/profile-registry";
 import {
@@ -122,7 +123,11 @@ function MemberView({ member, onRemove, you }: { member: ProfileMember; onRemove
         hint = copy.members.joined({ date: formatDay(locale, member.joinedAt) }).value;
     }
     return (
-        <Row hint={hint} label={you ? copy.members.you.value : name} leading={<Avatar name={name} size="sm" />}>
+        <Row
+            hint={hint}
+            label={you ? copy.members.you.value : name}
+            leading={<Avatar name={you ? copy.members.you.value : name} size="sm" />}
+        >
             {onRemove ? (
                 <Button onClick={onRemove} size="sm" variant="destructive">
                     {copy.members.remove}
@@ -456,6 +461,7 @@ export function ProfileSettings() {
             setBusy(false);
             return;
         }
+        noteProfileDeleted(active.id);
         try {
             await removeProfileAndSwitch(active.id);
         } catch {

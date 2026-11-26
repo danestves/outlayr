@@ -1,5 +1,9 @@
+import { ANCHOR_PAIR_CATALOG, PAIRS_PER_PAGE } from "@outlayr/backend/confect/exchangeRates";
 import { PULL_PAGE_MAX } from "@outlayr/backend/confect/sync";
 import { api } from "@outlayr/backend/convex/_generated/api";
+import { utcDateString } from "@outlayr/money/dates";
+import { parseFavourites } from "@outlayr/money/favourite-currencies";
+import { settingsOf } from "@outlayr/money/ledger-view";
 import type { LedgerOpening } from "@outlayr/money/ledger-view";
 import type { DehydratedDbState } from "@tanstack/react-db";
 import type { QueryClient } from "@tanstack/react-query";
@@ -27,13 +31,14 @@ import {
 } from "./account-state";
 import type { Profile } from "./account-state";
 import { convexUrls, serverConvexUrl } from "./convex";
+import type { RateRow } from "./ledger-books";
 import { ledgerSeed, pulledBooks, syncedTableNames } from "./ledger-db";
 import type { ExchangeRate } from "./ledger-db";
 import type { PulledPage, PulledRow } from "./ledger-sync";
 import { lightSince, opensLight } from "./light-views";
 import type { LightPath } from "./light-views";
 import { currentProfileId, PROFILE_COOKIE, parseProfileId, profileArgs } from "./profile";
-import { acceptedProfileId } from "./profile-access";
+import { profileAccess } from "./profile-access";
 import { profileLossCode } from "./profile-loss";
 import { profilesOf } from "./profile-registry";
 import type { JoinedProfile, ProfileMembersView } from "./profile-sharing";
@@ -50,6 +55,7 @@ export interface ServerLedger {
     profile: Profile | undefined;
     profileId: string | null;
     profiles: PulledPage;
+    ratesPublic: boolean;
 }
 
 const proRequired = (error: Error) =>
@@ -129,6 +135,44 @@ async function pullLight(
 
 const EMPTY_PAGE: PulledPage = { cursor: 0, hasMore: false, rows: [] };
 
+const rateWindowAt = () => Date.parse(utcDateString(Date.now()));
+
+const publicRateRow = (
+    row: Pick<RateRow, "date" | "fetchedAt" | "quote" | "rate" | "rateType" | "source">
+): RateRow => ({
+    ...row,
+    _creationTime: row.fetchedAt,
+    _id: `${row.quote}:${row.rateType}:${row.date}`,
+});
+
+const sharedRates = async (client: ConvexHttpClient, rows: readonly PulledRow[]): Promise<readonly RateRow[]> => {
+    const books = pulledBooks(rows, []);
+    const favourites = books.appMeta.find((row) => row.key === "favouriteCurrencies")?.value ?? null;
+    const quotes = new Set(
+        [
+            settingsOf(books.appMeta).currency,
+            ...parseFavourites(favourites),
+            ...books.accounts.filter((row) => row.deletedAt === null).map((row) => row.currency),
+        ].filter((code) => code !== "USD")
+    );
+    const cursors = [
+        ...new Set(
+            [...quotes].flatMap((quote) => {
+                const index = ANCHOR_PAIR_CATALOG.findIndex(
+                    (pair) => pair.quote === quote && pair.rateType === "official"
+                );
+                return index === -1 ? [] : [Math.floor(index / PAIRS_PER_PAGE) * PAIRS_PER_PAGE];
+            })
+        ),
+    ];
+    const at = rateWindowAt();
+    const pages = await Promise.all(cursors.map((cursor) => client.query(api.exchangeRates.pullRates, { at, cursor })));
+    return pages
+        .flatMap((page) => page.rows)
+        .filter((row) => row.rateType === "official" && quotes.has(row.quote))
+        .map(publicRateRow);
+};
+
 async function pullProfiles(client: ConvexHttpClient, required: boolean) {
     try {
         return await client.query(api.sync.pullSince, {
@@ -180,7 +224,6 @@ export const serverLedger = createIsomorphicFn()
             const { convexSiteUrl } = convexUrls();
             const client = new ConvexHttpClient(serverConvexUrl(), { auth: token });
             const profile = tokenProfile(token) ?? timed("profile", () => readProfile(convexSiteUrl));
-            const rates = timed("rates", () => client.query(api.ledger.exchangeRates, {}));
             let registryFailed = false;
             let registryError: Error | null = null;
             const registry = timed(
@@ -192,7 +235,7 @@ export const serverLedger = createIsomorphicFn()
                 registryError = error instanceof Error ? error : new Error(String(error));
                 return EMPTY_PAGE;
             });
-            const [profilesPage, rateRows] = await Promise.all([registry, rates]);
+            const profilesPage = await registry;
             const own = !registryFailed && profilesOf(profilesPage).some((row) => row.id === requestedProfileId);
             let joined: readonly JoinedProfile[] | null = null;
             let joinedKnown = false;
@@ -215,7 +258,7 @@ export const serverLedger = createIsomorphicFn()
                 if (own) {
                     profileId = requestedProfileId;
                 } else if (joinedKnown) {
-                    if (acceptedProfileId(requestedProfileId, own, joined ?? []) !== null) {
+                    if (profileAccess(requestedProfileId, own, joined ?? []) === "joined") {
                         profileId = requestedProfileId;
                     } else if (registryFailed) {
                         if (registryError !== null && proRequired(registryError)) {
@@ -235,11 +278,23 @@ export const serverLedger = createIsomorphicFn()
             if (lostProfileId !== null) {
                 forgetRequestProfile(lostProfileId);
             }
+            let profileRates = profileId !== null;
+            let rateFailure: Error | null = null;
+            let viewerRates: Promise<readonly ExchangeRate[]> | null = null;
+            const loadRates = async (): Promise<readonly ExchangeRate[]> => {
+                try {
+                    return await client.query(api.ledger.exchangeRates, {});
+                } catch (error) {
+                    rateFailure = error instanceof Error ? error : new Error(String(error));
+                    return [];
+                }
+            };
+            const ratesForViewer = () => (viewerRates ??= timed("rates", loadRates));
             const pull = async (scope: string | null) =>
-                (light
+                (light !== null && !profileRates
                     ? await timed(
                           "recent",
-                          () => pullLight(client, Promise.resolve(rateRows), scope, light),
+                          () => pullLight(client, ratesForViewer(), scope, light),
                           (pulled) =>
                               pulled ? `${pulled.rows.length} rows, ${pulled.opening.cells.length} cells` : "none"
                       )
@@ -283,10 +338,24 @@ export const serverLedger = createIsomorphicFn()
                     lostProfileId = profileId;
                     forgetRequestProfile(profileId);
                     profileId = null;
+                    profileRates = false;
                     loaded = await readPersonal();
                 }
             } else {
                 loaded = await readPersonal();
+            }
+            if (!profileRates && rateFailure !== null && !proRequired(rateFailure)) {
+                throw rateFailure;
+            }
+            let rateRows: readonly ExchangeRate[];
+            if (paywalled) {
+                rateRows = [];
+            } else if (profileRates) {
+                rateRows = await timed("rates-shared", () => sharedRates(client, loaded.rows)).catch(() =>
+                    ratesForViewer()
+                );
+            } else {
+                rateRows = await ratesForViewer();
             }
             return {
                 collections: ledgerSeed(loaded.rows, loaded.cursor, rateRows),
@@ -298,6 +367,7 @@ export const serverLedger = createIsomorphicFn()
                 profile: await profile,
                 profileId,
                 profiles: profilesPage,
+                ratesPublic: profileRates,
             };
         }
     )

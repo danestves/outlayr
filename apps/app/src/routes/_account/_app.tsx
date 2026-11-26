@@ -43,7 +43,7 @@ import { viewTransition } from "@/lib/motion";
 import { onboardingDue, readProgress, subscribeProgress } from "@/lib/onboarding";
 import { currentProfileId, profileScript } from "@/lib/profile";
 import { forgetProfileCookie } from "@/lib/profile-cookie";
-import { noteProfileLost, profileLossCode, takeProfileLost } from "@/lib/profile-loss";
+import { noteProfileLost, profileLossCode, takeProfileDeleted, takeProfileLost } from "@/lib/profile-loss";
 import { activeProfileOf, profilesOf, profilesQuery } from "@/lib/profile-registry";
 import { joinedProfileOf } from "@/lib/profile-sharing";
 import { removeProfileAndSwitch } from "@/lib/profile-switch";
@@ -73,17 +73,19 @@ export const Route = createFileRoute("/_account/_app")({
         let activeProfileId = requestedProfileId;
         let lostProfileId: string | null = null;
         let opening: LedgerOpening | null = null;
+        let ratesPublic = false;
         try {
             if (import.meta.env.SSR) {
                 const path = lightPathOf(location.pathname, location.searchStr);
                 const seed = await serverLedger(token, path ? { asOf, path } : null, requestedProfileId);
-                ({ opening, profileId: activeProfileId, lostProfileId } = seed);
+                ({ opening, profileId: activeProfileId, lostProfileId, ratesPublic } = seed);
                 if (seed.paywalled) {
                     return {
                         asOf,
                         lostProfileId,
                         opening: null,
                         profileId: activeProfileId,
+                        ratesPublic,
                         synced: false,
                         userId,
                     };
@@ -101,17 +103,33 @@ export const Route = createFileRoute("/_account/_app")({
             await preloadLedger(context.dbClient);
         } catch (error) {
             if (error instanceof Error && proRequired(error)) {
-                return { asOf, lostProfileId, opening: null, profileId: activeProfileId, synced: false, userId };
+                return {
+                    asOf,
+                    lostProfileId,
+                    opening: null,
+                    profileId: activeProfileId,
+                    ratesPublic: false,
+                    synced: false,
+                    userId,
+                };
             }
             throw error;
         }
-        return { asOf, lostProfileId, opening, profileId: activeProfileId, synced: true, userId };
+        return {
+            asOf,
+            lostProfileId,
+            opening,
+            profileId: activeProfileId,
+            ratesPublic,
+            synced: true,
+            userId,
+        };
     },
     pendingComponent: Pending,
     pendingMinMs: 0,
     pendingMs: 0,
     head: ({ loaderData }) => ({
-        scripts: [{ children: profileScript(loaderData?.profileId ?? null) }],
+        scripts: [{ children: profileScript(loaderData?.profileId ?? null, loaderData?.ratesPublic ?? false) }],
     }),
 });
 
@@ -273,13 +291,15 @@ function useLiveLedger(userId: string | undefined, onLanded: (outcome: "landed" 
 function LostProfile({ profileId }: { profileId: string | null }) {
     const toast = useToast();
     const { removed } = useIntlayer("profile-sharing");
+    const { deleted } = useIntlayer("profiles");
     useOnMount(() => {
         if (profileId === null) {
             return;
         }
+        const wasDeleted = takeProfileDeleted(profileId);
         forgetProfileUnsent(profileId);
         forgetProfileCookie({ data: { profileId } }).catch(() => undefined);
-        toast.add({ title: removed.value, type: "destructive" });
+        toast.add({ title: wasDeleted ? deleted.value : removed.value, type: wasDeleted ? "success" : "destructive" });
     });
     return null;
 }

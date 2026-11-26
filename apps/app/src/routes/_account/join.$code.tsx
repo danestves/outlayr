@@ -109,6 +109,7 @@ function JoinSheet({ code, invite }: { code: string; invite: NonNullable<Profile
     const look = inviteLook(invite.look) ?? PERSONAL_LOOK;
     const name = invite.look?.name ?? "";
     const { ownerName } = invite;
+    const inviter = ownerName ?? copy.memberUnknown.value;
 
     if (refusal !== null) {
         return <JoinError kind={refusal} look={look} name={name} ownerName={ownerName} />;
@@ -138,10 +139,8 @@ function JoinSheet({ code, invite }: { code: string; invite: NonNullable<Profile
             <main className="flex flex-1 justify-center px-6 pt-16 pb-24 max-sm:px-4">
                 <div className="flex w-full max-w-120 flex-col">
                     <div className="flex items-center gap-3">
-                        <Avatar name={ownerName ?? "?"} size="sm" />
-                        <p className="text-muted-foreground">
-                            {ownerName === null ? copy.join.invitedUnknown : copy.join.invited({ name: ownerName })}
-                        </p>
+                        <Avatar name={inviter} size="sm" />
+                        <p className="text-muted-foreground">{copy.join.invited({ name: inviter })}</p>
                     </div>
                     <div className="mt-6 flex items-center gap-4">
                         <ProfileTile look={look} size="xl" />

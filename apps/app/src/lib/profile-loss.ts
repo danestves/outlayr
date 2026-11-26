@@ -16,6 +16,7 @@ export function profileLossCode(error: Error): ProfileLossCode | null {
 }
 
 const LOST_NOTICE = "outlayr-profile-lost";
+const DELETED_NOTICE = "outlayr-profile-deleted";
 
 const storage = () => {
     try {
@@ -37,4 +38,18 @@ export function takeProfileLost() {
     const lost = store.getItem(LOST_NOTICE) !== null;
     store.removeItem(LOST_NOTICE);
     return lost;
+}
+
+export function noteProfileDeleted(profileId: string) {
+    storage()?.setItem(DELETED_NOTICE, profileId);
+}
+
+export function takeProfileDeleted(profileId: string) {
+    const store = storage();
+    if (store === null) {
+        return false;
+    }
+    const deleted = store.getItem(DELETED_NOTICE) === profileId;
+    store.removeItem(DELETED_NOTICE);
+    return deleted;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { authorBucket, authorId, FORMER_AUTHORS, unsentOf, UNSENT_SEQ } from "./profile-authors";
+import { authorBucket, authorId, FORMER_AUTHORS, memberNames, unsentOf, UNSENT_SEQ } from "./profile-authors";
 
 const OWNER = "owner-1";
 const ME = "me-2";
@@ -45,5 +45,24 @@ describe("authorBucket", () => {
 
     it("leaves an unattributed row out", () => {
         expect(authorBucket(null, members)).toBeNull();
+    });
+});
+
+describe("memberNames", () => {
+    it("names a member with no display name with the fallback", () => {
+        expect(
+            memberNames(
+                [
+                    { id: ME, name: null },
+                    { id: OTHER, name: "Ana" },
+                ],
+                "Member"
+            )
+        ).toEqual(
+            new Map([
+                [ME, "Member"],
+                [OTHER, "Ana"],
+            ])
+        );
     });
 });
