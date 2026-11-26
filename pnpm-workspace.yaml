@@ -84,3 +84,4 @@ patchedDependencies:
 overrides:
     "@coderabbitai/config>zod": "catalog:"
     vite@*: "catalog:"
+    "shell-quote@<1.11.0": ^1.11.0
