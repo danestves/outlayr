@@ -7,8 +7,11 @@ import { collectBankAccounts } from "@/lib/stripe-link";
 
 import { createCommand } from "./atom-command";
 
-const linkBank = Effect.fn("Banking.linkBank")(function* linkBank(institution: BankInstitution["id"]) {
-    const started = yield* cloudAction(api.banking.startLink, { institution });
+const linkBank = Effect.fn("Banking.linkBank")(function* linkBank(
+    institution: BankInstitution["id"],
+    repair: LinkedBankAccount["id"] | null
+) {
+    const started = yield* cloudAction(api.banking.startLink, { institution, repair });
     if (started.kind === "redirect") {
         return { kind: "failed" as const };
     }
@@ -29,7 +32,13 @@ const linkBank = Effect.fn("Banking.linkBank")(function* linkBank(institution: B
 export type BankLinkOutcome = Effect.Success<ReturnType<typeof linkBank>>;
 
 export const linkBankCommand = createCommand({
-    execute: ({ institution }: { institution: BankInstitution["id"] }) => linkBank(institution),
+    execute: ({
+        institution,
+        repair,
+    }: {
+        institution: BankInstitution["id"];
+        repair: LinkedBankAccount["id"] | null;
+    }) => linkBank(institution, repair),
     label: "banking:link",
 });
 

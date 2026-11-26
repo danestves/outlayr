@@ -91,12 +91,13 @@ export function LinkedBanks() {
 }
 
 export function LinkBank() {
-    const params = useLocalSearchParams<{ q?: string | string[] }>();
+    const params = useLocalSearchParams<{ q?: string | string[]; repair?: string | string[] }>();
     const query = Array.isArray(params.q) ? undefined : params.q;
-    return <BanksRoute mode="link" query={query} />;
+    const repair = Array.isArray(params.repair) ? undefined : params.repair;
+    return <BanksRoute mode="link" query={query} repair={repair} />;
 }
 
-function BanksRoute({ mode, query }: { mode: "link" | "list"; query?: string }) {
+function BanksRoute({ mode, query, repair }: { mode: "link" | "list"; query?: string; repair?: string }) {
     const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
@@ -105,6 +106,7 @@ function BanksRoute({ mode, query }: { mode: "link" | "list"; query?: string }) 
     const overview = useBankOverview();
     const ready = overview.kind === "ready" ? overview.overview : null;
     const bankLink = useBankLink(ready?.accounts ?? NO_ACCOUNTS, mode === "link" ? () => router.back() : undefined);
+    const repairing = ready?.accounts.find((account) => account.id === repair)?.id ?? null;
     const screen = banksScreen({
         mode,
         overview,
@@ -140,6 +142,7 @@ function BanksRoute({ mode, query }: { mode: "link" | "list"; query?: string }) 
                     <BankEntry
                         bankLink={bankLink}
                         initialQuery={query}
+                        repair={repairing}
                         onLeave={
                             mode === "link"
                                 ? () => {
@@ -319,10 +322,12 @@ function BankEntry({
     bankLink,
     initialQuery,
     onLeave,
+    repair,
 }: {
     bankLink: BankLink;
     initialQuery?: string;
     onLeave?: () => void;
+    repair: LinkedBankAccount["id"] | null;
 }) {
     const t = useTranslation();
     const colors = useColors();
@@ -417,7 +422,7 @@ function BankEntry({
                                 // Otherwise iOS hands focus back to the field when the result sheet closes.
                                 Keyboard.dismiss();
                                 setTapped(row.id);
-                                bankLink.link(row);
+                                bankLink.link(row, repair);
                             }}
                             title={copy.title}
                         />
@@ -473,7 +478,7 @@ function BanksList({ accounts }: { accounts: readonly LinkedBankAccount[] }) {
     const android = Platform.OS === "android";
 
     const signIn = (account: LinkedBankAccount) => {
-        router.push({ pathname: BANK_LINK_ROUTE, params: { q: account.institution } });
+        router.push({ pathname: BANK_LINK_ROUTE, params: { q: account.institution, repair: account.id } });
     };
 
     return (

@@ -117,9 +117,9 @@ export function BankFilesIntoRow({
 type LinkFailure = "canceled" | "retired" | "failed";
 
 interface LinkAttempt {
+    added: ReadonlySet<string>;
     institution: BankInstitution;
-    known: ReadonlySet<string>;
-    linked: boolean;
+    repair: LinkedBankAccount["id"] | null;
 }
 
 /**
@@ -135,7 +135,7 @@ export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?:
     const [failure, setFailure] = useState<LinkFailure | null>(null);
     const resultRef = useRef<BottomSheetModal>(null);
     const failureRef = useRef<BottomSheetModal>(null);
-    const fresh = attempt?.linked ? accounts.filter((account) => !attempt.known.has(account.id)) : [];
+    const fresh = attempt ? accounts.filter((account) => attempt.added.has(account.id)) : [];
 
     // The new accounts reach the overview query on its own clock, before or after the action returns.
     useWhen(fresh.length > 0, () => {
@@ -155,11 +155,11 @@ export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?:
                 if (outcome.kind === "linked") {
                     haptics("success");
                     // A sign-in again adds no accounts, so no result sheet would ever close the link screen.
-                    if (outcome.linked === 0) {
+                    if (outcome.added.length === 0) {
                         onFinished?.();
                         return;
                     }
-                    setAttempt((current) => current && { ...current, linked: true });
+                    setAttempt((current) => current && { ...current, added: new Set(outcome.added) });
                 } else if (outcome.kind === "plan") {
                     openPaywall("banks");
                 } else if (outcome.kind !== "unavailable") {
@@ -171,13 +171,13 @@ export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?:
         SILENT
     );
 
-    const link = (institution: BankInstitution) => {
+    const link = (institution: BankInstitution, repair: LinkedBankAccount["id"] | null) => {
         if (busy) {
             return;
         }
-        setAttempt({ institution, known: new Set(accounts.map((account) => account.id)), linked: false });
+        setAttempt({ added: new Set(), institution, repair });
         setBusy(true);
-        run({ institution: institution.id });
+        run({ institution: institution.id, repair });
     };
 
     const sheets = (
@@ -195,7 +195,7 @@ export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?:
                 onRetry={() => {
                     failureRef.current?.dismiss();
                     if (attempt !== null) {
-                        link(attempt.institution);
+                        link(attempt.institution, attempt.repair);
                     }
                 }}
                 ref={failureRef}
