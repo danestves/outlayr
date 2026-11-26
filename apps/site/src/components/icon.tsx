@@ -12,6 +12,7 @@ import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
 import FingerprintPatternIcon from "@hugeicons/core-free-icons/FingerprintPatternIcon";
 import FlashIcon from "@hugeicons/core-free-icons/FlashIcon";
 import GithubIcon from "@hugeicons/core-free-icons/GithubIcon";
+import Globe02Icon from "@hugeicons/core-free-icons/Globe02Icon";
 import Home03Icon from "@hugeicons/core-free-icons/Home03Icon";
 import Invoice01Icon from "@hugeicons/core-free-icons/Invoice01Icon";
 import Mail01Icon from "@hugeicons/core-free-icons/Mail01Icon";
@@ -48,6 +49,7 @@ const ICONS = {
     "file-csv": Csv01Icon,
     fingerprint: FingerprintPatternIcon,
     "github-logo": GithubIcon,
+    globe: Globe02Icon,
     house: Home03Icon,
     lightning: FlashIcon,
     "magnifying-glass": Search01Icon,

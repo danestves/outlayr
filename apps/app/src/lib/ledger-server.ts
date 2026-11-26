@@ -14,6 +14,8 @@ import {
     limitsQuery,
     notionQuery,
     planQuery,
+    profileMembersQuery,
+    profileSharingEnabledQuery,
     pushConfigQuery,
     referralsQuery,
     seedProfile,
@@ -29,13 +31,18 @@ import type { ExchangeRate } from "./ledger-db";
 import type { PulledPage, PulledRow } from "./ledger-sync";
 import { lightSince, opensLight } from "./light-views";
 import type { LightPath } from "./light-views";
-import { profileArgs } from "./profile";
+import { currentProfileId, profileArgs } from "./profile";
+import { acceptedProfileId } from "./profile-access";
 import { profilesOf } from "./profile-registry";
+import type { JoinedProfile, ProfileMembersView } from "./profile-sharing";
 import { timed } from "./server-timing";
 import { tokenProfile } from "./session";
 
 export interface ServerLedger {
     collections: DehydratedDbState["collections"];
+    joined: readonly JoinedProfile[] | null;
+    lostProfileId: string | null;
+    members: ProfileMembersView | null;
     opening: LedgerOpening | null;
     profile: Profile | undefined;
     profileId: string | null;
@@ -170,9 +177,19 @@ export const serverLedger = createIsomorphicFn()
                 ),
                 rates,
             ]);
-            const profileId = profilesOf(profilesPage).some((row) => row.id === requestedProfileId)
-                ? requestedProfileId
-                : null;
+            const own = profilesOf(profilesPage).some((row) => row.id === requestedProfileId);
+            let joined: readonly JoinedProfile[] | null = null;
+            let joinedKnown = false;
+            if (requestedProfileId !== null && !own) {
+                const answer = await timed("joined", () =>
+                    client.query(api.profileSharing.joined, {}).catch(() => null)
+                );
+                if (answer !== null) {
+                    joined = answer;
+                    joinedKnown = true;
+                }
+            }
+            const profileId = acceptedProfileId(requestedProfileId, own, joined ?? []);
             const pull = async () =>
                 (light
                     ? await timed(
@@ -187,9 +204,19 @@ export const serverLedger = createIsomorphicFn()
                     () => pullLedger(client, profileId),
                     (pulled) => `${pulled.rows.length} rows`
                 ));
-            const { cursor, opening, rows } = await pull();
+            const members =
+                profileId === null
+                    ? null
+                    : timed("members", () => client.query(api.profileSharing.members, { profileId }).catch(() => null));
+            const [{ cursor, opening, rows }, memberRows] = await Promise.all([pull(), members]);
             return {
                 collections: ledgerSeed(rows, cursor, rateRows),
+                joined,
+                lostProfileId:
+                    requestedProfileId !== null && profileId === null && (own || joinedKnown)
+                        ? requestedProfileId
+                        : null,
+                members: memberRows,
                 opening,
                 profile: await profile,
                 profileId,
@@ -221,6 +248,24 @@ export const serverAccountState = createIsomorphicFn()
         const plan = convex
             ? [client.prefetchQuery({ ...planQuery, queryFn: () => convex.action(api.billing.plan, {}) })]
             : [];
+        const profileId = currentProfileId();
+        const members =
+            convex && profileId !== null
+                ? [
+                      client.prefetchQuery({
+                          ...profileMembersQuery(profileId),
+                          queryFn: () => convex.query(api.profileSharing.members, { profileId }),
+                      }),
+                  ]
+                : [];
+        const sharing = convex
+            ? [
+                  client.prefetchQuery({
+                      ...profileSharingEnabledQuery,
+                      queryFn: () => convex.query(api.profileSharing.enabled, {}),
+                  }),
+              ]
+            : [];
         await timed("account", () =>
             Promise.all([
                 client.prefetchQuery(limitsQuery),
@@ -231,6 +276,8 @@ export const serverAccountState = createIsomorphicFn()
                 client.prefetchQuery(pushConfigQuery),
                 ...(webhooks ? [client.prefetchQuery(webhooksQuery)] : []),
                 ...plan,
+                ...members,
+                ...sharing,
                 readProfile(convexSiteUrl).then((profile) => seedProfile(client, profile)),
                 client.prefetchQuery({
                     ...sessionsQuery,

@@ -40,6 +40,13 @@ const profileJoin = {
             fr: "Ouvrir dans Outlayr pour rejoindre ce profil",
             pt: "Abrir no Outlayr para entrar neste perfil",
         }),
+        web: t({
+            en: "Join on the web",
+            de: "Im Web beitreten",
+            es: "Unirme en la web",
+            fr: "Rejoindre sur le web",
+            pt: "Entrar na web",
+        }),
         title: t({
             en: "Join a shared profile",
             de: "Einem geteilten Profil beitreten",

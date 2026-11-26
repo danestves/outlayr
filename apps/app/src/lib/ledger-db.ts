@@ -21,6 +21,8 @@ import type { LedgerBooks } from "./ledger-books";
 import { createLedgerSync, isSavedCursor } from "./ledger-sync";
 import type { LedgerSync, PulledRow } from "./ledger-sync";
 import { profileOf, pushRows } from "./ledger-write";
+import { noteProfileLost, profileLossCode } from "./profile-loss";
+import { removeProfileAndSwitch } from "./profile-switch";
 
 const convexOf = (db: DbClient) => db.requireDependency<LedgerConvex>(CONVEX);
 const onServer = (db: DbClient) => db.getDependency<boolean>(SERVER) === true;
@@ -114,6 +116,12 @@ export function ledgerSync(db: DbClient) {
     const scope = profileId === null ? {} : { profileId };
     const engine = createLedgerSync({
         onStale: () => window.location.reload(),
+        onStopped: (error) => {
+            if (profileId !== null && profileLossCode(error) !== null) {
+                noteProfileLost();
+                void removeProfileAndSwitch(profileId);
+            }
+        },
         source: {
             head: () => convex.watchQuery(api.sync.currentSeq, scope),
             pull: (cursor) => convex.watchQuery(api.sync.pullSince, { cursor, tables: syncedTables, ...scope }),

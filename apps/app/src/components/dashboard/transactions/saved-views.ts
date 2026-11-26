@@ -10,6 +10,7 @@ import type { SearchPatch } from "./search";
 
 export const VIEW_PARAMS = [
     "accounts",
+    "by",
     "category",
     "from",
     "max",

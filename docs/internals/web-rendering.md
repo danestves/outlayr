@@ -47,11 +47,13 @@ A load of `/`, `/accounts` or `/transactions` with no search params does not pul
 A profile is a whole ledger. The web app opens one profile per page load, never two in one document.
 
 - The cookie `outlayr-profile` names it, so the loader knows the ledger before it reads it. `serverLedger`, `pullRecent`, `pullSince`, `currentSeq`, `push` and `ledgerCells.build` all take the id. Personal is the absence of an id.
-- The registry is the synced `profiles` table in Personal's ledger. A load reads it first, with no profile, and falls back to Personal when the cookie names a profile that is gone. The switcher reads the same rows as a live query, so a rename lands without a reload.
+- The registry is the synced `profiles` table in Personal's ledger. A load reads it first, with no profile, and falls back to Personal when the cookie names a profile that is gone. A cookie may also name a profile the visitor joined: the loader asks `profileSharing.joined`, accepts the id when it is listed, and seeds that list and the profile's `profileSharing.members` into the query cache for the switcher, the settings page and the Log's author column. A load that names neither falls back to Personal and tells the browser to drop the profile's unsent rows.
+- The switcher reads the registry rows and the joined rows as live queries, so a rename, a removal or a new join lands without a reload.
 - The active profile is on the `DbClient` under the `PROFILE` dependency, which is how `pushRows` and `ledgerSync` scope their calls. Client code never reads the cookie: the page's first `<head>` script sets `window.__OUTLAYR_PROFILE__` to the validated id, and every collection and store opened after it is that profile's.
 - Switching writes the cookie through a server function and reloads the page, as the phone reloads. Nothing of the old ledger survives with the new id: unsent rows, onboarding progress, import drafts and saved reports are keyed per profile, and signing out still clears every unsent key.
 - Profile rows are written straight to Personal (`push` with no `profileId`), never through the active ledger's committer, so creating or renaming one while another profile is open cannot land in that profile.
-- Notion imports and the MCP assistant still read Personal only. Sharing is not on the web yet.
+- Notion imports and the MCP assistant still read Personal only.
+- A sync refused with `NOT_PROFILE_MEMBER` or `PROFILE_DELETED` leaves a note the next load reads, forgets the profile's unsent rows and its cookie, and lands on Personal. `profile-sharing` is off until `PROFILE_SHARING` is set; the invite, remove and month split hide when it is off, while a joined profile keeps its members and Leave so a member can still get out.
 
 ## Data that is not a ledger row
 

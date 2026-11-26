@@ -8,9 +8,11 @@ import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
 import SortingDownIcon from "@hugeicons/core-free-icons/SortingDownIcon";
 import Store01Icon from "@hugeicons/core-free-icons/Store01Icon";
 import TickDouble02Icon from "@hugeicons/core-free-icons/TickDouble02Icon";
+import UserMultipleIcon from "@hugeicons/core-free-icons/UserMultipleIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 import { currencyDisplayFor, decimalsFor } from "@outlayr/money/currency";
+import { Avatar } from "panelui-web/avatar";
 import { Button } from "panelui-web/button";
 import { Chip } from "panelui-web/chip";
 import { Field } from "panelui-web/field";
@@ -311,7 +313,7 @@ function SortMenu({ setSearch, sort }: { setSearch: (patch: SearchPatch) => void
     );
 }
 
-function ColumnsMenu({ layout }: { layout: LayoutControls }) {
+function ColumnsMenu({ layout, showLoggedBy }: { layout: LayoutControls; showLoggedBy: boolean }) {
     const { columns: words } = useIntlayer("dashboard-ledger");
     return (
         <Menu>
@@ -344,7 +346,7 @@ function ColumnsMenu({ layout }: { layout: LayoutControls }) {
                 <Menu.Separator />
                 <Menu.Group>
                     <Menu.GroupLabel>{words.label}</Menu.GroupLabel>
-                    {COLUMNS.map((column) => (
+                    {COLUMNS.filter((column) => column !== "loggedBy" || showLoggedBy).map((column) => (
                         <ColumnRow column={column} key={column} layout={layout} />
                     ))}
                 </Menu.Group>
@@ -369,9 +371,11 @@ function ColumnRow({ column, layout }: { column: Column; layout: LayoutControls 
 }
 
 interface FilterRowProps {
+    by: readonly string[];
     layout: LayoutControls;
     merchants: readonly PickOption[];
     onMarkAll: (() => void) | null;
+    people: readonly PickOption[];
     query: PageQuery;
     searchField: RefObject<HTMLInputElement | null>;
     setSearch: (patch: SearchPatch, options?: { replace?: boolean }) => void;
@@ -380,9 +384,11 @@ interface FilterRowProps {
 }
 
 export function FilterRow({
+    by,
     layout,
     merchants,
     onMarkAll,
+    people,
     query,
     searchField,
     setSearch,
@@ -429,6 +435,17 @@ export function FilterRow({
                             <span className="text-muted-foreground font-mono">{option.id === NO_TAG ? "∅" : "#"}</span>
                         )}
                     />
+                    {people.length > 1 ? (
+                        <PickMenu
+                            icon={UserMultipleIcon}
+                            label={words.loggedBy}
+                            onChange={(ids) => setSearch({ by: ids.length === 0 ? null : ids.join(",") })}
+                            options={people}
+                            picked={by}
+                            searchLabel={words.searchPeople.value}
+                            renderTile={(option) => <Avatar name={option.name} size="xs" />}
+                        />
+                    ) : null}
                 </>
             )}
             <AmountMenu query={query} setSearch={setSearch} />
@@ -451,7 +468,7 @@ export function FilterRow({
                         {review.markAll}
                     </Button>
                 ) : (
-                    <ColumnsMenu layout={layout} />
+                    <ColumnsMenu layout={layout} showLoggedBy={people.length > 1} />
                 )}
             </span>
         </div>

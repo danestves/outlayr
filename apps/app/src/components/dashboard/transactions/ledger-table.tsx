@@ -1,6 +1,7 @@
 import Calendar02Icon from "@hugeicons/core-free-icons/Calendar02Icon";
 import RepeatIcon from "@hugeicons/core-free-icons/RepeatIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Avatar } from "panelui-web/avatar";
 import { Badge } from "panelui-web/badge";
 import { Checkbox } from "panelui-web/checkbox";
 import { Table } from "panelui-web/table";
@@ -20,6 +21,7 @@ import { figureOf } from "../home/rows";
 import type { FoldedRow } from "../home/rows";
 import type { Column, LayoutControls } from "./columns";
 import { installmentTags } from "./model";
+import type { EntryAuthors } from "./use-entry-authors";
 import type { LedgerList } from "./use-ledger-list";
 
 const FIGURE = "font-mono tabular-nums whitespace-nowrap";
@@ -32,6 +34,7 @@ const ENTRY_COLUMNS: readonly Column[] = [
     "category",
     "tags",
     "account",
+    "loggedBy",
     "date",
     "notes",
     "paidVia",
@@ -49,6 +52,7 @@ export interface TablePicking {
 }
 
 interface LedgerTableProps {
+    authors: EntryAuthors;
     renderAmount: (row: LedgerRow, content: ReactNode) => ReactNode;
     renderCategory: (row: LedgerRow, content: ReactNode) => ReactNode;
     renderTags: (row: LedgerRow, content: ReactNode) => ReactNode;
@@ -64,6 +68,7 @@ interface LedgerTableProps {
 }
 
 export function LedgerTable({
+    authors,
     renderAmount,
     renderCategory,
     renderTags,
@@ -83,7 +88,11 @@ export function LedgerTable({
     const { money } = useDisplayFormat();
     const date = useDateFormat();
     const plans = useMemo(() => installmentTags(ledger.books), [ledger.books]);
-    const columns = transfers ? [] : ENTRY_COLUMNS.filter((column) => layout.shown(column) || column === "merchant");
+    const columns = transfers
+        ? []
+        : ENTRY_COLUMNS.filter(
+              (column) => column === "merchant" || (layout.shown(column) && (column !== "loggedBy" || authors.shared))
+          );
     const pickCell = (row: FoldedRow, name: string) => (
         <Table.Cell className={PICK}>
             <Checkbox
@@ -141,6 +150,7 @@ export function LedgerTable({
                         </span>
                     </span>
                 ),
+                loggedBy: null,
                 notes: <span className={MUTED}>{list.transferNote(row.id)}</span>,
                 paidVia: null,
                 tags: null,
@@ -204,6 +214,9 @@ export function LedgerTable({
         const top = ledger.categories.get(row.topId);
         const plan = raw?.installmentId ? plans.get(raw.installmentId) : undefined;
         const reviewing = list.review.has(row.id);
+        const logger = authors.authorOf(row);
+        const author = authors.labelOf(logger);
+        const authorName = (logger === null ? null : authors.names.get(logger)) ?? author;
         const category =
             row.topId === UNCATEGORIZED_ID && !fee ? (
                 <span className="text-app-tint font-medium">{words.pickCategory}</span>
@@ -261,6 +274,13 @@ export function LedgerTable({
                 </span>
             ),
             notes: <span className={MUTED}>{raw?.details ?? ""}</span>,
+            loggedBy:
+                author === null ? null : (
+                    <span className="flex min-w-0 items-center gap-2">
+                        <Avatar name={authorName ?? author} size="xs" />
+                        <span className="truncate">{author}</span>
+                    </span>
+                ),
             paidVia: <span className={MUTED}>{raw?.paidVia ?? ""}</span>,
             tags: renderTags(
                 row,
@@ -348,6 +368,7 @@ const WIDTHS: Partial<Record<HeadKey, string>> = {
     category: "w-44",
     date: "w-24",
     fee: "w-24",
+    loggedBy: "w-32",
     merchant: "@7xl:w-[15%]",
     notes: "w-48",
     paidVia: "w-32",

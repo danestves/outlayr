@@ -4,6 +4,7 @@ import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { placed } from "@outlayr/money/ledger-log";
 import { useEventListener } from "@outlayr/shared/lifecycle";
+import { useMatch } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Chip } from "panelui-web/chip";
 import { useMemo, useRef, useState } from "react";
@@ -16,8 +17,10 @@ import { IconButton } from "@/components/ui/icon-button";
 import { editableDoc } from "@/lib/bulk-writes";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { photoSrc } from "@/lib/photo-src";
+import { useProfileMembers } from "@/lib/profile-sharing";
 
 import { useDateFormat } from "../home/format";
+import { figureOf } from "../home/rows";
 import type { FoldedRow } from "../home/rows";
 import { QuietTable } from "../home/setup";
 import { BulkBar } from "./bulk-bar";
@@ -42,6 +45,7 @@ import { merchantParam, pageQueryOf, patched } from "./search";
 import type { PageQuery, PageSearch, SearchPatch } from "./search";
 import { TagPicker } from "./tag-picker";
 import { useDeleteEntries } from "./use-delete";
+import { useEntryAuthors } from "./use-entry-authors";
 import { useLedgerList } from "./use-ledger-list";
 import type { ListParams } from "./use-ledger-list";
 import { ViewDialogs } from "./view-dialogs";
@@ -54,6 +58,7 @@ const DAY_MS = 86_400_000;
 
 const CLEARED: SearchPatch = {
     accounts: null,
+    by: null,
     category: null,
     from: null,
     max: null,
@@ -109,6 +114,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const { filters, ledger } = useDashboard();
     const words = useIntlayer("dashboard-ledger");
     const legacy = useIntlayer("dashboard-transactions");
+    const sharing = useIntlayer("profile-sharing");
     const { add } = useIntlayer("dashboard");
     const { open } = useAccountFlows();
     const { locale } = useLocale();
@@ -118,6 +124,9 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const searchField = useRef<HTMLInputElement>(null);
     const query = useMemo(() => pageQueryOf(search), [search]);
     const list = useLedgerList();
+    const loaded = useMatch({ from: "/_account/_app", select: (match) => match.loaderData, shouldThrow: false });
+    const members = useProfileMembers(loaded?.profileId ?? null);
+    const authors = useEntryAuthors(list, members, loaded?.userId ?? null);
     const layout = useLayout();
     const saved = useSavedViews();
     const writes = useRowWrites();
@@ -129,9 +138,19 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const view = saved.views.find((each) => each.id === search.view) ?? null;
     const transfers = query.tab === "transfers";
 
-    const all = useMemo(
+    const queried = useMemo(
         () => list.rows(listParamsOf(query, filters.accounts, filters.categories)),
         [filters.accounts, filters.categories, list, query]
+    );
+    const all = useMemo(
+        () =>
+            query.loggedBy.length === 0
+                ? queried
+                : queried.filter((row) => {
+                      const author = authors.authorOf(row);
+                      return author !== null && query.loggedBy.includes(author);
+                  }),
+        [authors, queried, query.loggedBy]
     );
     const counts = useMemo(() => tabCounts(all, list.review), [all, list.review]);
     const rows = useMemo(() => all.filter((row) => inTab(query.tab, row, list.review)), [all, list.review, query.tab]);
@@ -144,11 +163,18 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                     const categories = each.params.category?.split(",") ?? [];
                     const matched = list
                         .rows(listParamsOf(scoped, accounts, categories))
-                        .filter((row) => inTab(scoped.tab, row, list.review));
+                        .filter((row) => inTab(scoped.tab, row, list.review))
+                        .filter((row) => {
+                            if (scoped.loggedBy.length === 0) {
+                                return true;
+                            }
+                            const author = authors.authorOf(row);
+                            return author !== null && scoped.loggedBy.includes(author);
+                        });
                     return [each.id, matched.length];
                 })
             ),
-        [list, saved.views]
+        [authors, list, saved.views]
     );
 
     const filterKey = JSON.stringify([query, filters.accounts, filters.categories]);
@@ -279,6 +305,20 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
         }
         return [...seen.values()].toSorted((left, right) => right.count - left.count);
     }, [all, list]);
+    const personOptions = useMemo((): PickOption[] => {
+        const byPerson = new Map<string, number>();
+        for (const row of queried) {
+            const author = authors.authorOf(row);
+            if (author !== null) {
+                byPerson.set(author, (byPerson.get(author) ?? 0) + 1);
+            }
+        }
+        return authors.people.map((person) => ({
+            count: byPerson.get(person.id) ?? 0,
+            id: person.id,
+            name: person.id === authors.viewerId ? sharing.you.value : (person.name ?? sharing.memberUnknown.value),
+        }));
+    }, [authors, queried, sharing.memberUnknown.value, sharing.you.value]);
 
     const applied = useMemo(() => {
         const chips: { key: string; label: string; patch: SearchPatch }[] = [];
@@ -308,11 +348,19 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                 patch: { merchant: merchantParam(query.merchants.filter((each) => each !== name)) },
             });
         }
+        for (const id of query.loggedBy) {
+            const person = authors.people.find((each) => each.id === id);
+            chips.push({
+                key: `p${id}`,
+                label: id === authors.viewerId ? sharing.you.value : (person?.name ?? sharing.memberUnknown.value),
+                patch: { by: query.loggedBy.filter((each) => each !== id).join(",") || null },
+            });
+        }
         if (query.min !== null || query.max !== null) {
             chips.push({ key: "amount", label: amountLabel(query), patch: { max: null, min: null } });
         }
         return chips;
-    }, [amountLabel, filters.accounts, filters.categories, list, query, words.filters.noTag.value]);
+    }, [amountLabel, authors, filters.accounts, filters.categories, list, query, sharing, words.filters.noTag.value]);
 
     const exportCsv = (listed: readonly FoldedRow[], { tagsAndNotes }: ExportOptions) => {
         const header = [
@@ -359,6 +407,47 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const fresh = ledger.rows.length === 0 && ledger.transfers.length === 0;
     const narrowedByFilter = applied.length > 0 || query.q.trim() !== "";
     const totals = tally(ledger, rows);
+    const splits = useMemo(() => {
+        if (!authors.shared || transfers) {
+            return [];
+        }
+        const people = new Map(authors.people.map((person) => [person.id, { count: 0, total: 0 }]));
+        for (const row of rows) {
+            if ("fromId" in row) {
+                continue;
+            }
+            const id = authors.authorOf(row);
+            if (id === null) {
+                continue;
+            }
+            const known = people.get(id);
+            if (known === undefined) {
+                continue;
+            }
+            const figure = figureOf(ledger, row);
+            people.set(id, {
+                count: known.count + 1,
+                total: known.total + (row.income ? figure.amount : -figure.amount),
+            });
+        }
+        return authors.people.flatMap((person) => {
+            const known = people.get(person.id);
+            if (known === undefined || known.count === 0) {
+                return [];
+            }
+            return [
+                {
+                    id: person.id,
+                    label:
+                        person.id === authors.viewerId
+                            ? sharing.you.value
+                            : (person.name ?? sharing.memberUnknown.value),
+                    total: known.total,
+                },
+            ];
+        });
+    }, [authors, ledger, rows, sharing.memberUnknown.value, sharing.you.value, transfers]);
+    const perPerson = splits.length > 0;
     const cash = (value: number, sign: "always" | "auto" = "auto") => money(value, ledger.currency, sign);
     const moves = rows.flatMap((row) => ("fromId" in row ? [row] : []));
     const moved = moves.reduce((sum, move) => sum + move.amount, 0);
@@ -554,11 +643,13 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                             views={saved.views}
                         />
                         <FilterRow
+                            by={query.loggedBy}
                             layout={layout}
                             merchants={merchantOptions}
                             onMarkAll={
                                 query.tab === "review" && reviewIds.length > 0 ? () => writes.reviewed(reviewIds) : null
                             }
+                            people={personOptions}
                             query={query}
                             searchField={searchField}
                             setSearch={filtering}
@@ -588,6 +679,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                                 empty()
                             ) : (
                                 <LedgerTable
+                                    authors={authors}
                                     renderAmount={(row, content) => {
                                         const draft = amountDraft(ledger, row);
                                         if (draft === null) {
@@ -717,7 +809,13 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                                     </span>
                                 ) : null}
                                 <span className="ms-auto flex flex-wrap items-center gap-x-4 gap-y-1">
-                                    {footerFigures()}
+                                    {perPerson
+                                        ? splits.map((split) => (
+                                              <Figure key={split.id} label={split.label}>
+                                                  {cash(split.total, "always")}
+                                              </Figure>
+                                          ))
+                                        : footerFigures()}
                                 </span>
                             </footer>
                         )}

@@ -24,6 +24,7 @@ export interface SyncSink {
 
 interface SyncOptions<Table extends string> {
     onStale: () => void;
+    onStopped?: (error: Error) => void;
     source: SyncSource;
     tables: readonly Table[];
     wait?: (ms: number) => Promise<void>;
@@ -53,7 +54,13 @@ const sleep = (ms: number) =>
 
 export type LedgerSync<Table extends string> = ReturnType<typeof createLedgerSync<Table>>;
 
-export function createLedgerSync<Table extends string>({ onStale, source, tables, wait = sleep }: SyncOptions<Table>) {
+export function createLedgerSync<Table extends string>({
+    onStale,
+    onStopped,
+    source,
+    tables,
+    wait = sleep,
+}: SyncOptions<Table>) {
     const sinks = new Map<string, SyncSink>();
     const restored = new Map<string, number>();
     const reaching = new Set<{ resolve: () => void; seq: number }>();
@@ -113,6 +120,7 @@ export function createLedgerSync<Table extends string>({ onStale, source, tables
         const failed = [...sinks.values()];
         sinks.clear();
         halt("stopped", error);
+        onStopped?.(error);
         for (const sink of failed) {
             sink.fail(error);
         }
