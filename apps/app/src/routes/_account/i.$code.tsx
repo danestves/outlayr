@@ -5,12 +5,15 @@ import { ConvexHttpClient } from "convex/browser";
 
 import { InviteClaim } from "@/components/invite/claim-page";
 import { serverConvexUrl } from "@/lib/convex";
+import { pageHead } from "@/lib/route-title";
+
+const inviteHead = (ctx: { matches: readonly { loaderData?: unknown }[] }) => ({
+    meta: [...pageHead("invite")(ctx).meta, { content: "noindex", name: "robots" }],
+});
 
 export const Route = createFileRoute("/_account/i/$code")({
     component: Invite,
-    head: () => ({
-        meta: [{ title: "A month of Pro · Outlayr" }, { content: "noindex", name: "robots" }],
-    }),
+    head: inviteHead,
     loader: async ({ params }) => {
         const code = normalizeReferralCode(params.code);
         if (code === null) {
