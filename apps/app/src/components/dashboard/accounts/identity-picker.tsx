@@ -11,7 +11,7 @@ import type { ChangeEvent, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
-import { useUploadPhoto } from "@/lib/photo-upload";
+import { UnreadablePhotoError, useUploadPhoto } from "@/lib/photo-upload";
 
 import { Glyph } from "./glyph";
 
@@ -126,7 +126,9 @@ async function squarePhoto(file: File) {
 export function useUploadSquare() {
     const upload = useUploadPhoto();
     return async (file: File) => {
-        const body = await squarePhoto(file);
+        const body = await squarePhoto(file).catch((cause: unknown) => {
+            throw new UnreadablePhotoError({ cause });
+        });
         return { key: await upload(body, "image/jpeg"), preview: URL.createObjectURL(body) };
     };
 }

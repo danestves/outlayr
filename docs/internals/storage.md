@@ -5,6 +5,7 @@ Files and their urls go through the `@outlayr/storage` Convex component (`packag
 ## Traps
 
 - **Convex file storage takes POST, a bucket takes PUT.** `objects.uploadUrl` answers `{ method, url }` and the clients use that method. A PUT to the Convex upload url gets a 405, so the old hardcoded PUT never worked on the default store.
+- **A bucket needs a CORS rule for the web app.** Browsers PUT straight to the signed bucket url, so the bucket must allow `PUT` with a `Content-Type` header from the web origin. Native skips CORS, so a missing rule fails only on web, and only for uploads: `<img>` reads need none.
 - **Buckets go through `files-sdk`'s `s3-fetch` adapter.** It signs with aws4fetch, not the AWS SDK, inside a Convex mutation. With `S3_ENDPOINT` unset the endpoint is `https://s3.<region>.amazonaws.com`. R2 is the same adapter with region `auto`.
 - **Components cannot read the app's environment.** The provider travels in the arguments of every call, so a credential rotation needs no component redeploy.
 - **Bucket credentials ride in the scheduled delete's arguments.** `objects.remove` schedules `removeFromBucket` with the provider, as the old R2 component did, because a mutation cannot make the network call.

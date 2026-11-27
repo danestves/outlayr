@@ -1,11 +1,38 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { useMatch, useRouteContext } from "@tanstack/react-router";
+import { ConvexError } from "convex/values";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 import { profileArgs } from "./profile";
 
 const EXTENSIONS = { "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png" } as const;
 
 export type UploadType = keyof typeof EXTENSIONS;
+
+export type PhotoTrouble = "failed" | "full" | "offline" | "pro" | "unreadable";
+
+export class UnreadablePhotoError extends Schema.TaggedError<UnreadablePhotoError>()("UnreadablePhotoError", {
+    cause: Schema.Unknown,
+}) {}
+
+const decodeRefusal = Schema.decodeUnknownOption(Schema.Struct({ code: Schema.String }));
+
+export function photoTrouble(error: Error): PhotoTrouble {
+    if (error instanceof UnreadablePhotoError) {
+        return "unreadable";
+    }
+    if (!navigator.onLine) {
+        return "offline";
+    }
+    if (!(error instanceof ConvexError)) {
+        return "failed";
+    }
+    if (String(error.data).includes("Pro is required")) {
+        return "pro";
+    }
+    return Option.exists(decodeRefusal(error.data), ({ code }) => code === "PHOTO_QUOTA_EXCEEDED") ? "full" : "failed";
+}
 
 /** Puts the bytes in the visitor's photo store and answers the key a ledger row names them by. */
 export function useUploadPhoto() {
