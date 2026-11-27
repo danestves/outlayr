@@ -845,7 +845,7 @@ const CONTAINED_DEVICES: ReadonlySet<Device> = new Set<Device>([
   "tvos", "watchos", "carplay", "mac", "duo-outer-landscape", "duo-inner-landscape",
 ]);
 
-function getSlideGeometry(slide: Slide, device: Device, orientation: Orientation) {
+function getSlideGeometry(slide: Slide, device: Device, orientation: Orientation, scene?: Scene) {
   const { cW, cH } = getCanvas(device, orientation);
   const { Comp: Frame, widthFn, smallWidthFn } = getFrameForDevice(device, orientation);
   const frameAspect = getFrameAspect(device, orientation);
@@ -871,6 +871,9 @@ function getSlideGeometry(slide: Slide, device: Device, orientation: Orientation
     slide.layout, cW, cH, frameAspect, fwFrac, fwSmallFrac,
     CONTAINED_DEVICES.has(device),
   );
+  if (!duo && defaults.device && sceneOf(scene).deviceFinish === "light" && orientation === "portrait" && (device === "iphone" || device === "android")) {
+    defaults.device = { ...defaults.device, height: defaults.device.width / LIGHT_PHONE_ASPECT[device] };
+  }
   if (slide.callout && defaults.device) defaults.callout = defaultCalloutRect(defaults.device, cW, cH);
   // Duo landscape copy runs across the top as one line, so it can be a size smaller.
   const typeUnit = duo && cW > cH ? cH * 0.86 : undefined;
@@ -916,7 +919,7 @@ export function getElementTransform(
     const cardId = cardElementKey(id);
     return slide.cardElements?.find((element) => element.id === cardId)?.transform;
   }
-  const { cW, cH, defaults } = getSlideGeometry(slide, device, orientation);
+  const { cW, cH, defaults } = getSlideGeometry(slide, device, orientation, scene);
   const rectDefaults =
     isFeatureGraphicSlide(slide, device) && id === "device"
       ? { device: featureGraphicDeviceRect(cW, cH, featureGraphicDeviceAspect(sceneOf(scene))) }
@@ -1588,7 +1591,7 @@ function SlideElements({
 }) {
   const screenshot = resolveScreenshot(slide.screenshot, locale);
   const screenshotSecondary = resolveScreenshot(slide.screenshotSecondary, locale);
-  const { cW, cH, Frame, frameAspect, defaults, typeUnit } = getSlideGeometry(slide, device, orientation);
+  const { cW, cH, Frame, frameAspect, defaults, typeUnit } = getSlideGeometry(slide, device, orientation, scene);
   const inverted = !!slide.inverted;
   const colors = slideColors(theme, slide);
   const captionRect = rectFor("caption", slide, defaults);
@@ -1687,11 +1690,9 @@ function SlideElements({
     const saved = slide.transforms?.[id];
     const rotation = saved?.rotation ?? 0;
     const zIndex = saved?.zIndex ?? (id === "deviceSecondary" ? 2 : 3);
-    // Default rects use the bezel frame's aspect; the light frame is a little taller.
-    const box = lightFinish && !saved ? { ...rect, height: rect.width / aspect } : rect;
     return (
       <Movable
-        rect={toGlobal(box)}
+        rect={toGlobal(rect)}
         boundsW={boundsW}
         boundsH={boundsH}
         editable={editable}

@@ -427,6 +427,7 @@ if (withSchedules) {
     if (index !== -1) {
         const [carrier] = entries.splice(index, 1);
         carrier.d = Math.min(tomorrow.getDate(), new Date(prev.getFullYear(), prev.getMonth() + 1, 0).getDate());
+        carrier.anchor = tomorrow.getDate();
         entries.unshift(carrier);
     }
 }
@@ -485,7 +486,7 @@ for (const entry of entries) {
 
     statements.push(
         `INSERT INTO transactions (id, amount, income, currency, note, details, date, day, month, icon, emoji, customColor, imageColor, imageUri, onceRecurring, recurringType, recurringCoefficient, recurringEndDate, categoryId, updatedAt, deletedAt, amountUsd, exchangeRate, exchangeRateType, imageKey, reminderLeadDays, accountId, recurringAnchorDay, transferId)
-     VALUES (${q(randomUUID())}, ${amount}, ${income}, ${q(account.currency)}, ${q(noteOf(entry))}, ${q(region.details[entry.det] ?? entry.det ?? "")}, ${date}, ${dayMs(entry.year, entry.month, entry.d)}, ${monthMs(entry.year, entry.month)}, '', '', '', ${q(imageColor)}, ${q(imageUri)}, 0, ${schedule ? (entry.every ?? RECURRING_MONTHLY) : 0}, 1, NULL, ${q(CATEGORY[entry.cat])}, ${NOW}, NULL, ${amountUsd}, ${rate}, ${q(rateType)}, '', ${q(schedule ? SCHEDULE_LEADS.get(entry.note) : null)}, ${q(account.id)}, ${schedule ? entry.d : "NULL"}, NULL);`
+     VALUES (${q(randomUUID())}, ${amount}, ${income}, ${q(account.currency)}, ${q(noteOf(entry))}, ${q(region.details[entry.det] ?? entry.det ?? "")}, ${date}, ${dayMs(entry.year, entry.month, entry.d)}, ${monthMs(entry.year, entry.month)}, '', '', '', ${q(imageColor)}, ${q(imageUri)}, 0, ${schedule ? (entry.every ?? RECURRING_MONTHLY) : 0}, 1, NULL, ${q(CATEGORY[entry.cat])}, ${NOW}, NULL, ${amountUsd}, ${rate}, ${q(rateType)}, '', ${q(schedule ? SCHEDULE_LEADS.get(entry.note) : null)}, ${q(account.id)}, ${schedule ? (entry.anchor ?? entry.d) : "NULL"}, NULL);`
     );
 }
 
