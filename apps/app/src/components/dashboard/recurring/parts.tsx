@@ -1,7 +1,7 @@
 import { entryLook } from "@outlayr/money/ledger-log";
 import { wallNoon } from "@outlayr/money/ledger-zone";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
-import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { Badge } from "panelui-web/badge";
 import { useCallback, useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -67,7 +67,7 @@ export function useChargeMoney() {
 
 export function useDay() {
     const { locale } = useLocale();
-    const { date } = LANGUAGES[localeFromParam(locale)];
+    const { date } = LANGUAGES[locale];
     return useMemo(() => {
         const dated = date === "en-GB" ? "en-US" : date;
         const short = new Intl.DateTimeFormat(dated, { day: "numeric", month: "short", timeZone: "UTC" });
@@ -156,7 +156,7 @@ export function useRepeatText() {
             return repeat.long.onWeekday({ every: each, weekday: days.weekday(day) }).value;
         }
         const date = Number(day.slice(8, 10));
-        const english = localeFromParam(locale) === "en";
+        const english = locale === "en";
         const dayText =
             type === RECURRING_TYPE.yearly
                 ? days.day(day, day)

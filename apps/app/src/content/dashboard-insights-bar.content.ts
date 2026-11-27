@@ -52,6 +52,7 @@ const dashboardInsightsBar = {
                 es: "Desglose",
                 fr: "Répartition",
                 pt: "Detalhamento",
+                "pt-PT": "Detalhe",
             }),
             cashFlow: t({
                 en: "Cash flow",

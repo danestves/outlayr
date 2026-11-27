@@ -1,6 +1,6 @@
 import { formatWait, projectLimit } from "@outlayr/money/limit-projection";
 import { earnedThisYear } from "@outlayr/money/referrals";
-import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { Kpi } from "panelui-web/kpi";
 import { Table } from "panelui-web/table";
@@ -89,7 +89,7 @@ export function Usage() {
         [text.capturesMonth, String(captures.capacity)],
         [text.syncBackup, limits.pro ? text.yes : text.no],
     ];
-    const resetDay = new Intl.DateTimeFormat(LANGUAGES[localeFromParam(locale)].date, {
+    const resetDay = new Intl.DateTimeFormat(LANGUAGES[locale].date, {
         day: "numeric",
         month: "short",
     });

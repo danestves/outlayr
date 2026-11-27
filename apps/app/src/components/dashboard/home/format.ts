@@ -1,5 +1,5 @@
 import { wallNoon } from "@outlayr/money/ledger-zone";
-import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { useMemo } from "react";
 import type { CSSProperties } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -15,7 +15,7 @@ const WEEK = 7;
 
 export function useDateFormat() {
     const { locale } = useLocale();
-    const { date } = LANGUAGES[localeFromParam(locale)];
+    const { date } = LANGUAGES[locale];
     return useMemo(() => {
         // The redesign reads "Oct 28" in English; the site's en-GB date locale would flip it.
         const dated = date === "en-GB" ? "en-US" : date;
@@ -52,7 +52,7 @@ export function useDateFormat() {
 export function useWeekLetters(firstWeekday: number) {
     const { locale } = useLocale();
     return useMemo(() => {
-        const format = new Intl.DateTimeFormat(LANGUAGES[localeFromParam(locale)].date, {
+        const format = new Intl.DateTimeFormat(LANGUAGES[locale].date, {
             timeZone: "UTC",
             weekday: "narrow",
         });

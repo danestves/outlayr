@@ -16,6 +16,7 @@ export default {
             de: "Mit einem Cookie zählen wir wiederkehrende Besuche und sehen, welche Seiten helfen.",
             es: "Una cookie nos permite contar las visitas que vuelven y ver qué páginas ayudan.",
             pt: "Um cookie nos permite contar as visitas que voltam e ver quais páginas ajudam.",
+            "pt-PT": "Um cookie permite-nos contar as visitas que regressam e ver que páginas ajudam.",
             fr: "Un cookie nous permet de compter les visites récurrentes et de voir quelles pages sont utiles.",
         }),
         decline: t({ en: "Decline", de: "Ablehnen", es: "Rechazar", pt: "Recusar", fr: "Refuser" }),

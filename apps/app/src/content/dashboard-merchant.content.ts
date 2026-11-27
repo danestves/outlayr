@@ -10,6 +10,7 @@ const dashboardMerchant = {
                 es: "Se aplica a {{count}} movimientos de {{merchant}}",
                 fr: "S'applique à {{count}} opérations {{merchant}}",
                 pt: "Vale para {{count}} lançamentos de {{merchant}}",
+                "pt-PT": "Vale para {{count}} registos de {{merchant}}",
             })
         ),
         appliesOne: insert(
@@ -19,6 +20,7 @@ const dashboardMerchant = {
                 es: "También se aplica a los nuevos movimientos de {{merchant}}",
                 fr: "S'applique aussi aux nouvelles opérations {{merchant}}",
                 pt: "Vale também para novos lançamentos de {{merchant}}",
+                "pt-PT": "Vale também para novos registos de {{merchant}}",
             })
         ),
         cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
@@ -28,6 +30,7 @@ const dashboardMerchant = {
             es: "Buscando un logo…",
             fr: "Recherche d'un logo…",
             pt: "Procurando um logo…",
+            "pt-PT": "A procurar um logótipo…",
         }),
         choosePhoto: t({
             en: "Choose a photo",
@@ -45,6 +48,8 @@ const dashboardMerchant = {
                     es: "{{from}} pasa a llamarse {{to}} en {{count}} movimientos. Los nuevos movimientos de {{from}} también tendrán el nuevo nombre.",
                     fr: "{{from}} devient {{to}} sur {{count}} opérations. Les nouvelles opérations {{from}} prendront aussi le nouveau nom.",
                     pt: "{{from}} passa a se chamar {{to}} em {{count}} lançamentos. Os novos lançamentos de {{from}} também vão ter o novo nome.",
+                    "pt-PT":
+                        "{{from}} passa a se chamar {{to}} em {{count}} registos. Os novos registos de {{from}} também vão ter o novo nome.",
                 })
             ),
             bodyOne: insert(
@@ -54,6 +59,8 @@ const dashboardMerchant = {
                     es: "{{from}} pasa a llamarse {{to}}. Los nuevos movimientos de {{from}} también tendrán el nuevo nombre.",
                     fr: "{{from}} devient {{to}}. Les nouvelles opérations {{from}} prendront aussi le nouveau nom.",
                     pt: "{{from}} passa a se chamar {{to}}. Os novos lançamentos de {{from}} também vão ter o novo nome.",
+                    "pt-PT":
+                        "{{from}} passa a se chamar {{to}}. Os novos registos de {{from}} também vão ter o novo nome.",
                 })
             ),
             title: insert(
@@ -63,6 +70,7 @@ const dashboardMerchant = {
                     es: "¿Renombrar {{count}} movimientos?",
                     fr: "Renommer {{count}} opérations ?",
                     pt: "Renomear {{count}} lançamentos?",
+                    "pt-PT": "Renomear {{count}} registos?",
                 })
             ),
             titleOne: t({
@@ -86,6 +94,7 @@ const dashboardMerchant = {
             es: "No se pudo guardar el comercio",
             fr: "Impossible d'enregistrer le marchand",
             pt: "Não foi possível salvar o estabelecimento",
+            "pt-PT": "Não foi possível guardar o estabelecimento",
         }),
         find: t({
             en: "Find logo",
@@ -93,6 +102,7 @@ const dashboardMerchant = {
             es: "Buscar logo",
             fr: "Chercher le logo",
             pt: "Buscar logo",
+            "pt-PT": "Pesquisar logo",
         }),
         found: insert(
             t({
@@ -101,6 +111,7 @@ const dashboardMerchant = {
                 es: "Logo de {{domain}}",
                 fr: "Logo de {{domain}}",
                 pt: "Logo de {{domain}}",
+                "pt-PT": "Logótipo de {{domain}}",
             })
         ),
         logo: t({ en: "Logo", de: "Logo", es: "Logo", fr: "Logo", pt: "Logo" }),
@@ -115,6 +126,7 @@ const dashboardMerchant = {
             en: "Add the website and Outlayr will look there.",
             de: "Füge die Website hinzu, dann sucht Outlayr dort.",
             es: "Agrega el sitio web y Outlayr buscará ahí.",
+            "es-ES": "Añade el sitio web y Outlayr buscará ahí.",
             fr: "Ajoutez le site web et Outlayr cherchera là.",
             pt: "Adicione o site e o Outlayr vai procurar lá.",
         }),
@@ -138,6 +150,7 @@ const dashboardMerchant = {
             es: "No hay un logo en esa dirección.",
             fr: "Aucun logo à cette adresse.",
             pt: "Nenhum logo nesse endereço.",
+            "pt-PT": "Nenhum logótipo nesse endereço.",
         }),
         photo: t({ en: "Photo", de: "Foto", es: "Foto", fr: "Photo", pt: "Foto" }),
         photoChosen: t({
@@ -160,6 +173,7 @@ const dashboardMerchant = {
             es: "Guardar cambios",
             fr: "Enregistrer",
             pt: "Salvar alterações",
+            "pt-PT": "Guardar alterações",
         }),
         saved: t({
             en: "Merchant updated",
@@ -175,6 +189,7 @@ const dashboardMerchant = {
                 es: "{{count}} movimientos actualizados",
                 fr: "{{count}} opérations mises à jour",
                 pt: "{{count}} lançamentos atualizados",
+                "pt-PT": "{{count}} registos atualizados",
             })
         ),
         shared: insert(
@@ -184,6 +199,7 @@ const dashboardMerchant = {
                 es: "Se comparte con todos los que registren {{merchant}}.",
                 fr: "Partagé avec tous ceux qui enregistrent {{merchant}}.",
                 pt: "Compartilhado com todos que registrarem {{merchant}}.",
+                "pt-PT": "Partilhado com todos os que registarem {{merchant}}.",
             })
         ),
         title: t({ en: "Merchant", de: "Händler", es: "Comercio", fr: "Marchand", pt: "Estabelecimento" }),

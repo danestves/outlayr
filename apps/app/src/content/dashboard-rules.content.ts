@@ -6,7 +6,7 @@ const dashboardRules = {
         cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
         close: t({ en: "Close", de: "Schließen", es: "Cerrar", fr: "Fermer", pt: "Fechar" }),
         columns: {
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             becomes: t({ en: "Becomes", de: "Wird zu", es: "Pasa a", fr: "Devient", pt: "Passa a" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
             description: t({
@@ -16,8 +16,22 @@ const dashboardRules = {
                 fr: "Description",
                 pt: "Descrição",
             }),
-            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
-            entry: t({ en: "Entry", de: "Eintrag", es: "Movimiento", fr: "Opération", pt: "Lançamento" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
+            entry: t({
+                en: "Entry",
+                de: "Eintrag",
+                es: "Movimiento",
+                fr: "Opération",
+                pt: "Lançamento",
+                "pt-PT": "Registo",
+            }),
             lastMatch: t({
                 en: "Last match",
                 de: "Letzter Treffer",
@@ -35,6 +49,7 @@ const dashboardRules = {
                 es: "La elegiste",
                 fr: "Votre choix",
                 pt: "Você escolheu",
+                "pt-PT": "Escolheu",
             }),
             result: t({ en: "Result", de: "Ergebnis", es: "Resultado", fr: "Résultat", pt: "Resultado" }),
             rule: t({ en: "Rule", de: "Regel", es: "Regla", fr: "Règle", pt: "Regra" }),
@@ -49,6 +64,7 @@ const dashboardRules = {
                     es: "{{first}} y {{second}} coinciden en {{count}} movimientos",
                     fr: "{{first}} et {{second}} correspondent à {{count}} opérations",
                     pt: "{{first}} e {{second}} coincidem em {{count}} lançamentos",
+                    "pt-PT": "{{first}} e {{second}} coincidem em {{count}} registos",
                 })
             ),
             bothOne: insert(
@@ -58,6 +74,7 @@ const dashboardRules = {
                     es: "{{first}} y {{second}} coinciden en 1 movimiento",
                     fr: "{{first}} et {{second}} correspondent à 1 opération",
                     pt: "{{first}} e {{second}} coincidem em 1 lançamento",
+                    "pt-PT": "{{first}} e {{second}} coincidem em 1 registo",
                 })
             ),
             emptyLine: t({
@@ -66,6 +83,7 @@ const dashboardRules = {
                 es: "Aquí aparecen dos reglas que mandan los mismos movimientos a categorías distintas.",
                 fr: "Deux règles qui classent les mêmes opérations dans des catégories différentes apparaissent ici.",
                 pt: "Duas regras que mandam os mesmos lançamentos para categorias diferentes aparecem aqui.",
+                "pt-PT": "Duas regras que mandam os mesmos registos para categorias diferentes aparecem aqui.",
             }),
             emptyTitle: t({
                 en: "No conflicts",
@@ -130,6 +148,7 @@ const dashboardRules = {
                 es: "Guardar elección",
                 fr: "Enregistrer le choix",
                 pt: "Salvar escolha",
+                "pt-PT": "Guardar escolha",
             }),
             secondLine: insert(
                 t({
@@ -138,6 +157,7 @@ const dashboardRules = {
                     es: "Estos {{count}} movimientos pasan a {{category}}.",
                     fr: "Ces {{count}} opérations passent dans {{category}}.",
                     pt: "Estes {{count}} lançamentos passam para {{category}}.",
+                    "pt-PT": "Estes {{count}} registos passam para {{category}}.",
                 })
             ),
             secondLineOne: insert(
@@ -147,6 +167,7 @@ const dashboardRules = {
                     es: "Este movimiento pasa a {{category}}.",
                     fr: "Cette opération passe dans {{category}}.",
                     pt: "Este lançamento passa para {{category}}.",
+                    "pt-PT": "Este registo passa para {{category}}.",
                 })
             ),
             skipLine: insert(
@@ -154,8 +175,10 @@ const dashboardRules = {
                     en: "Adds a condition to {{name}}, so it leaves these entries alone.",
                     de: "Fügt {{name}} eine Bedingung hinzu, damit die Regel diese Einträge in Ruhe lässt.",
                     es: "Agrega una condición a {{name}} para que no toque estos movimientos.",
+                    "es-ES": "Añade una condición a {{name}} para que no toque estos movimientos.",
                     fr: "Ajoute une condition à {{name}}, qui laisse alors ces opérations.",
                     pt: "Adiciona uma condição a {{name}}, que deixa de tocar nestes lançamentos.",
+                    "pt-PT": "Adiciona uma condição a {{name}}, que deixa de tocar nestes registos.",
                 })
             ),
             skipLineTags: insert(
@@ -163,8 +186,10 @@ const dashboardRules = {
                     en: "Adds a condition to {{name}}, so these entries get no {{tags}} tag.",
                     de: "Fügt {{name}} eine Bedingung hinzu, damit diese Einträge kein Tag {{tags}} bekommen.",
                     es: "Agrega una condición a {{name}}, así estos movimientos no reciben la etiqueta {{tags}}.",
+                    "es-ES": "Añade una condición a {{name}}, así estos movimientos no reciben la etiqueta {{tags}}.",
                     fr: "Ajoute une condition à {{name}} : ces opérations ne reçoivent plus l'étiquette {{tags}}.",
                     pt: "Adiciona uma condição a {{name}}, e estes lançamentos não recebem a etiqueta {{tags}}.",
+                    "pt-PT": "Adiciona uma condição a {{name}}, e estes registos não recebem a etiqueta {{tags}}.",
                 })
             ),
             skipTitle: insert(
@@ -202,6 +227,7 @@ const dashboardRules = {
                     es: "Sus {{count}} movimientos conservan sus categorías. Los nuevos ya no coincidirán.",
                     fr: "Ses {{count}} opérations gardent leur catégorie. Les nouvelles ne correspondront plus.",
                     pt: "Seus {{count}} lançamentos mantêm as categorias. Os novos não vão mais coincidir.",
+                    "pt-PT": "Seus {{count}} registos mantêm as categorias. Os novos não vão mais coincidir.",
                 })
             ),
             bodyNone: t({
@@ -210,6 +236,7 @@ const dashboardRules = {
                 es: "Los movimientos nuevos ya no coincidirán.",
                 fr: "Les nouvelles opérations ne correspondront plus.",
                 pt: "Os novos lançamentos não vão mais coincidir.",
+                "pt-PT": "Os novos registos não vão mais coincidir.",
             }),
             bodyOne: t({
                 en: "Its entry keeps its category. New ones won't match it.",
@@ -217,6 +244,7 @@ const dashboardRules = {
                 es: "Su movimiento conserva su categoría. Los nuevos ya no coincidirán.",
                 fr: "Son opération garde sa catégorie. Les nouvelles ne correspondront plus.",
                 pt: "Seu lançamento mantém a categoria. Os novos não vão mais coincidir.",
+                "pt-PT": "Seu registo mantém a categoria. Os novos não vão mais coincidir.",
             }),
             confirm: t({
                 en: "Delete rule",
@@ -224,6 +252,7 @@ const dashboardRules = {
                 es: "Eliminar regla",
                 fr: "Supprimer la règle",
                 pt: "Excluir regra",
+                "pt-PT": "Eliminar regra",
             }),
             title: insert(
                 t({
@@ -232,6 +261,7 @@ const dashboardRules = {
                     es: "¿Eliminar {{name}}?",
                     fr: "Supprimer {{name}} ?",
                     pt: "Excluir {{name}}?",
+                    "pt-PT": "Eliminar {{name}}?",
                 })
             ),
         },
@@ -242,6 +272,7 @@ const dashboardRules = {
                 es: "Las reglas ponen una categoría o etiqueta a los movimientos que coinciden, apenas llegan.",
                 fr: "Les règles posent une catégorie ou une étiquette sur les opérations qui correspondent, dès leur arrivée.",
                 pt: "As regras colocam uma categoria ou etiqueta nos lançamentos que coincidem, assim que chegam.",
+                "pt-PT": "As regras colocam uma categoria ou etiqueta nos registos que coincidem, assim que chegam.",
             }),
             see: insert(
                 t({
@@ -268,7 +299,7 @@ const dashboardRules = {
             }),
         },
         fields: {
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             description: t({
                 en: "Description",
                 de: "Beschreibung",
@@ -309,6 +340,7 @@ const dashboardRules = {
                     es: "Moviendo {{name}} a {{position}}. Esc cancela.",
                     fr: "Déplacement de {{name}} en {{position}}. Échap annule.",
                     pt: "Movendo {{name}} para {{position}}. Esc cancela.",
+                    "pt-PT": "A mover {{name}} para {{position}}. Esc cancela.",
                 })
             ),
             one: t({ en: "1 rule", de: "1 Regel", es: "1 regla", fr: "1 règle", pt: "1 regra" }),
@@ -332,10 +364,18 @@ const dashboardRules = {
                 es: "De tus movimientos",
                 fr: "De vos opérations",
                 pt: "Dos seus lançamentos",
+                "pt-PT": "Dos seus registos",
             }),
         },
         menu: {
-            delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            delete: t({
+                en: "Delete",
+                de: "Löschen",
+                es: "Eliminar",
+                fr: "Supprimer",
+                pt: "Excluir",
+                "pt-PT": "Eliminar",
+            }),
             disable: t({ en: "Disable", de: "Deaktivieren", es: "Desactivar", fr: "Désactiver", pt: "Desativar" }),
             duplicate: t({ en: "Duplicate", de: "Duplizieren", es: "Duplicar", fr: "Dupliquer", pt: "Duplicar" }),
             edit: t({ en: "Edit", de: "Bearbeiten", es: "Editar", fr: "Modifier", pt: "Editar" }),
@@ -448,6 +488,7 @@ const dashboardRules = {
                     es: "Cambiar {{count}} movimientos",
                     fr: "Modifier {{count}} opérations",
                     pt: "Mudar {{count}} lançamentos",
+                    "pt-PT": "Mudar {{count}} registos",
                 })
             ),
             confirmOne: t({
@@ -456,6 +497,7 @@ const dashboardRules = {
                 es: "Cambiar 1 movimiento",
                 fr: "Modifier 1 opération",
                 pt: "Mudar 1 lançamento",
+                "pt-PT": "Mudar 1 registo",
             }),
             match: t({ en: "Match", de: "Treffer", es: "Coinciden", fr: "Correspondent", pt: "Coincidem" }),
             nothing: t({
@@ -472,6 +514,7 @@ const dashboardRules = {
                 es: "Omitir movimientos que ya tienen categoría",
                 fr: "Ignorer les opérations déjà classées",
                 pt: "Pular lançamentos que já têm categoria",
+                "pt-PT": "Pular registos que já têm categoria",
             }),
             title: insert(
                 t({
@@ -480,6 +523,7 @@ const dashboardRules = {
                     es: "Aplicar {{name}} a movimientos pasados",
                     fr: "Appliquer {{name}} aux opérations passées",
                     pt: "Aplicar {{name}} a lançamentos passados",
+                    "pt-PT": "Aplicar {{name}} a registos passados",
                 })
             ),
             titleAll: insert(
@@ -489,6 +533,7 @@ const dashboardRules = {
                     es: "Aplicar {{count}} reglas a movimientos pasados",
                     fr: "Appliquer {{count}} règles aux opérations passées",
                     pt: "Aplicar {{count}} regras a lançamentos passados",
+                    "pt-PT": "Aplicar {{count}} regras a registos passados",
                 })
             ),
         },
@@ -498,12 +543,14 @@ const dashboardRules = {
             es: "Aplicar a movimientos pasados",
             fr: "Appliquer aux opérations passées",
             pt: "Aplicar a lançamentos passados",
+            "pt-PT": "Aplicar a registos passados",
         }),
         sheet: {
             addAction: t({
                 en: "Add action",
                 de: "Aktion hinzufügen",
                 es: "Agregar acción",
+                "es-ES": "Añadir acción",
                 fr: "Ajouter une action",
                 pt: "Adicionar ação",
             }),
@@ -511,6 +558,7 @@ const dashboardRules = {
                 en: "Add condition",
                 de: "Bedingung hinzufügen",
                 es: "Agregar condición",
+                "es-ES": "Añadir condición",
                 fr: "Ajouter une condition",
                 pt: "Adicionar condição",
             }),
@@ -518,17 +566,26 @@ const dashboardRules = {
                 en: "Add tag",
                 de: "Tag hinzufügen",
                 es: "Agregar etiqueta",
+                "es-ES": "Añadir etiqueta",
                 fr: "Ajouter une étiquette",
                 pt: "Adicionar etiqueta",
             }),
             all: t({ en: "All", de: "Alle", es: "Todas", fr: "Toutes", pt: "Todas" }),
             any: t({ en: "Any", de: "Eine", es: "Alguna", fr: "Une seule", pt: "Qualquer" }),
-            delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            delete: t({
+                en: "Delete",
+                de: "Löschen",
+                es: "Eliminar",
+                fr: "Supprimer",
+                pt: "Excluir",
+                "pt-PT": "Eliminar",
+            }),
             errors: {
                 amount: t({
                     en: "Add an amount",
                     de: "Betrag angeben",
                     es: "Agrega un monto",
+                    "es-ES": "Añade un importe",
                     fr: "Ajoutez un montant",
                     pt: "Adicione um valor",
                 }),
@@ -559,6 +616,7 @@ const dashboardRules = {
                     en: "Add a name",
                     de: "Namen angeben",
                     es: "Agrega un nombre",
+                    "es-ES": "Añade un nombre",
                     fr: "Ajoutez un nom",
                     pt: "Adicione um nome",
                 }),
@@ -566,6 +624,7 @@ const dashboardRules = {
                     en: "Add a condition and an action",
                     de: "Bedingung und Aktion hinzufügen",
                     es: "Agrega una condición y una acción",
+                    "es-ES": "Añade una condición y una acción",
                     fr: "Ajoutez une condition et une action",
                     pt: "Adicione uma condição e uma ação",
                 }),
@@ -580,6 +639,7 @@ const dashboardRules = {
                     en: "Add some text",
                     de: "Text angeben",
                     es: "Agrega un texto",
+                    "es-ES": "Añade un texto",
                     fr: "Ajoutez un texte",
                     pt: "Adicione um texto",
                 }),
@@ -601,6 +661,7 @@ const dashboardRules = {
                     es: "Coincidió con {{count}} movimientos, el último el {{date}}",
                     fr: "{{count}} opérations correspondantes, la dernière le {{date}}",
                     pt: "Coincidiu com {{count}} lançamentos, o último em {{date}}",
+                    "pt-PT": "Coincidiu com {{count}} registos, o último em {{date}}",
                 })
             ),
             matchedOne: insert(
@@ -610,6 +671,7 @@ const dashboardRules = {
                     es: "Coincidió con 1 movimiento, el {{date}}",
                     fr: "1 opération correspondante, le {{date}}",
                     pt: "Coincidiu com 1 lançamento, em {{date}}",
+                    "pt-PT": "Coincidiu com 1 registo, em {{date}}",
                 })
             ),
             matchedNone: t({
@@ -625,6 +687,7 @@ const dashboardRules = {
                 es: "No coincide con movimientos pasados",
                 fr: "Aucune opération passée ne correspond",
                 pt: "Não coincide com lançamentos passados",
+                "pt-PT": "Não coincide com registos passados",
             }),
             matchesPast: insert(
                 t({
@@ -633,6 +696,7 @@ const dashboardRules = {
                     es: "Coincide con {{count}} movimientos pasados",
                     fr: "Correspond à {{count}} opérations passées",
                     pt: "Coincide com {{count}} lançamentos passados",
+                    "pt-PT": "Coincide com {{count}} registos passados",
                 })
             ),
             matchesPastOne: t({
@@ -641,6 +705,7 @@ const dashboardRules = {
                 es: "Coincide con 1 movimiento pasado",
                 fr: "Correspond à 1 opération passée",
                 pt: "Coincide com 1 lançamento passado",
+                "pt-PT": "Coincide com 1 registo passado",
             }),
             name: t({ en: "Name", de: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
             namePlaceholder: t({
@@ -689,6 +754,7 @@ const dashboardRules = {
                 es: "Aplicar también a esos movimientos",
                 fr: "Appliquer aussi à ces opérations",
                 pt: "Aplicar também a esses lançamentos",
+                "pt-PT": "Aplicar também a esses registos",
             }),
             runTooLine: t({
                 en: "Otherwise it only touches new ones",
@@ -697,7 +763,14 @@ const dashboardRules = {
                 fr: "Sinon, seules les nouvelles sont concernées",
                 pt: "Senão, só mexe nos novos",
             }),
-            save: t({ en: "Save", de: "Speichern", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+            save: t({
+                en: "Save",
+                de: "Speichern",
+                es: "Guardar",
+                fr: "Enregistrer",
+                pt: "Salvar",
+                "pt-PT": "Guardar",
+            }),
             setCategory: t({
                 en: "Set category",
                 de: "Kategorie festlegen",
@@ -728,6 +801,7 @@ const dashboardRules = {
                 es: "Texto a buscar",
                 fr: "Texte à trouver",
                 pt: "Texto a buscar",
+                "pt-PT": "Texto a pesquisar",
             }),
         },
         suggested: {
@@ -735,6 +809,7 @@ const dashboardRules = {
                 en: "Add rule",
                 de: "Regel hinzufügen",
                 es: "Agregar regla",
+                "es-ES": "Añadir regla",
                 fr: "Ajouter la règle",
                 pt: "Adicionar regra",
             }),
@@ -759,6 +834,7 @@ const dashboardRules = {
                 es: "Encontradas en movimientos que tú categorizaste",
                 fr: "Trouvées dans les opérations que vous avez classées",
                 pt: "Encontradas em lançamentos que você categorizou",
+                "pt-PT": "Encontradas em registos que categorizou",
             }),
             pickedOf: insert(
                 t({
@@ -790,6 +866,8 @@ const dashboardRules = {
                     es: "Igual se aplicaría a los nuevos. Ninguno de {{count}} movimientos tiene {{value}} en {{field}}.",
                     fr: "Elle s'appliquerait quand même aux nouvelles. Aucune des {{count}} opérations n'a {{value}} dans {{field}}.",
                     pt: "Ela ainda valeria para os novos. Nenhum de {{count}} lançamentos tem {{value}} em {{field}}.",
+                    "pt-PT":
+                        "Ela ainda valeria para os novos. Nenhum de {{count}} registos tem {{value}} em {{field}}.",
                 })
             ),
             emptyLine: insert(
@@ -799,6 +877,7 @@ const dashboardRules = {
                     es: "Igual se aplicaría a los nuevos. Ninguno de {{count}} movimientos coincide.",
                     fr: "Elle s'appliquerait quand même aux nouvelles. Aucune des {{count}} opérations ne correspond.",
                     pt: "Ela ainda valeria para os novos. Nenhum de {{count}} lançamentos coincide.",
+                    "pt-PT": "Ela ainda valeria para os novos. Nenhum de {{count}} registos coincide.",
                 })
             ),
             emptyTitle: t({
@@ -807,6 +886,7 @@ const dashboardRules = {
                 es: "Ningún movimiento pasado coincide",
                 fr: "Aucune opération passée ne correspond",
                 pt: "Nenhum lançamento passado coincide",
+                "pt-PT": "Nenhum registo passado coincide",
             }),
             entries: insert(
                 t({
@@ -815,6 +895,7 @@ const dashboardRules = {
                     es: "{{count}} movimientos",
                     fr: "{{count}} opérations",
                     pt: "{{count}} lançamentos",
+                    "pt-PT": "{{count}} registos",
                 })
             ),
             entriesOne: t({
@@ -823,6 +904,7 @@ const dashboardRules = {
                 es: "1 movimiento",
                 fr: "1 opération",
                 pt: "1 lançamento",
+                "pt-PT": "1 registo",
             }),
             fieldDescription: t({
                 en: "description",
@@ -866,6 +948,7 @@ const dashboardRules = {
                     es: "{{count}} movimientos cambiados",
                     fr: "{{count}} opérations modifiées",
                     pt: "{{count}} lançamentos alterados",
+                    "pt-PT": "{{count}} registos alterados",
                 })
             ),
             changedOne: t({
@@ -874,6 +957,7 @@ const dashboardRules = {
                 es: "1 movimiento cambiado",
                 fr: "1 opération modifiée",
                 pt: "1 lançamento alterado",
+                "pt-PT": "1 registo alterado",
             }),
             deleted: insert(
                 t({
@@ -882,6 +966,7 @@ const dashboardRules = {
                     es: "{{name}} eliminada",
                     fr: "{{name}} supprimée",
                     pt: "{{name}} excluída",
+                    "pt-PT": "{{name}} eliminada",
                 })
             ),
             moved: insert(
@@ -891,6 +976,7 @@ const dashboardRules = {
                     es: "{{count}} movimientos pasaron a {{category}}",
                     fr: "{{count}} opérations déplacées vers {{category}}",
                     pt: "{{count}} lançamentos foram para {{category}}",
+                    "pt-PT": "{{count}} registos foram para {{category}}",
                 })
             ),
             movedOne: insert(
@@ -900,6 +986,7 @@ const dashboardRules = {
                     es: "1 movimiento pasó a {{category}}",
                     fr: "1 opération déplacée vers {{category}}",
                     pt: "1 lançamento foi para {{category}}",
+                    "pt-PT": "1 registo foi para {{category}}",
                 })
             ),
             off: insert(
@@ -909,6 +996,7 @@ const dashboardRules = {
                     es: "{{name}} está desactivada. Sus {{count}} movimientos conservan sus categorías.",
                     fr: "{{name}} est désactivée. Ses {{count}} opérations gardent leur catégorie.",
                     pt: "{{name}} está desativada. Seus {{count}} lançamentos mantêm as categorias.",
+                    "pt-PT": "{{name}} está desativada. Seus {{count}} registos mantêm as categorias.",
                 })
             ),
             offNone: insert(
@@ -927,6 +1015,7 @@ const dashboardRules = {
                     es: "{{name}} está desactivada. Su movimiento conserva su categoría.",
                     fr: "{{name}} est désactivée. Son opération garde sa catégorie.",
                     pt: "{{name}} está desativada. Seu lançamento mantém a categoria.",
+                    "pt-PT": "{{name}} está desativada. Seu registo mantém a categoria.",
                 })
             ),
             saveFailed: t({
@@ -935,6 +1024,7 @@ const dashboardRules = {
                 es: "No se pudo guardar. Intenta de nuevo.",
                 fr: "Échec de l'enregistrement. Réessayez.",
                 pt: "Não foi possível salvar. Tente de novo.",
+                "pt-PT": "Não foi possível guardar. Tente de novo.",
             }),
         },
     },

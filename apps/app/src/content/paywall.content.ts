@@ -3,13 +3,22 @@ import type { Dictionary } from "intlayer";
 
 const paywall = {
     content: {
-        signOut: t({ en: "Sign out", de: "Abmelden", es: "Cerrar sesión", fr: "Se déconnecter", pt: "Sair" }),
+        signOut: t({
+            en: "Sign out",
+            de: "Abmelden",
+            es: "Cerrar sesión",
+            fr: "Se déconnecter",
+            pt: "Sair",
+            "pt-PT": "Terminar sessão",
+        }),
         headline: t({
             en: "Logs itself. Every currency. Every installment.",
             de: "Erfasst sich selbst. Jede Währung. Jede Rate.",
             es: "Se registra solo. Cada moneda. Cada cuota.",
+            "es-ES": "Se registra solo. Cada moneda. Cada plazo.",
             fr: "Tout s'enregistre. Chaque devise. Chaque échéance.",
             pt: "Registra sozinho. Cada moeda. Cada parcela.",
+            "pt-PT": "Regista sozinho. Cada moeda. Cada prestação.",
         }),
         subhead: t({
             en: "Everything Free does, without the limits.",
@@ -34,6 +43,7 @@ const paywall = {
                 es: "Registro automático / mes",
                 fr: "Saisie auto / mois",
                 pt: "Registro automático / mês",
+                "pt-PT": "Registo automático / mês",
             }),
             captures: t({
                 en: "Captures / 30 days",
@@ -47,8 +57,10 @@ const paywall = {
                 en: "Installment apps",
                 de: "Ratenzahlungs-Apps",
                 es: "Apps de cuotas",
+                "es-ES": "Apps de pago a plazos",
                 fr: "Applis de paiement échelonné",
                 pt: "Apps de parcelas",
+                "pt-PT": "Apps de prestações",
             }),
             payoffPlans: t({
                 en: "Payoff plans",
@@ -56,6 +68,7 @@ const paywall = {
                 es: "Planes de pago",
                 fr: "Plans de remboursement",
                 pt: "Planos de quitação",
+                "pt-PT": "Planos de liquidação",
             }),
             budgets: t({
                 en: "Category budgets",
@@ -84,6 +97,7 @@ const paywall = {
                 es: "Copia de fotos de recibos",
                 fr: "Sauvegarde des photos de reçus",
                 pt: "Backup de fotos de recibos",
+                "pt-PT": "Backup de fotos de talões",
             }),
             aiMatching: t({
                 en: "AI matching on import",
@@ -105,6 +119,7 @@ const paywall = {
                 es: "Búsqueda web de comercios",
                 fr: "Recherche web des commerçants",
                 pt: "Busca web de estabelecimentos",
+                "pt-PT": "Pesquisa web de estabelecimentos",
             }),
         },
         plans: {
@@ -149,7 +164,14 @@ const paywall = {
             fr: "Chaque appareil",
             pt: "Cada dispositivo",
         }),
-        afterThat: t({ en: "After that", de: "Danach", es: "Después", fr: "Ensuite", pt: "Depois" }),
+        afterThat: t({
+            en: "After that",
+            de: "Danach",
+            es: "Después",
+            fr: "Ensuite",
+            pt: "Depois",
+            "pt-PT": "Mais tarde",
+        }),
         dayN: insert(
             t({ en: "Day {{day}}", de: "Tag {{day}}", es: "Día {{day}}", fr: "Jour {{day}}", pt: "Dia {{day}}" })
         ),
@@ -166,6 +188,7 @@ const paywall = {
             es: "Te avisamos por correo",
             fr: "On vous prévient par e-mail",
             pt: "Avisamos você por e-mail",
+            "pt-PT": "Avisamos por e-mail",
         }),
         firstCharge: t({
             en: "First charge",
@@ -210,6 +233,7 @@ const paywall = {
             es: "El mismo Pro, el mismo registro",
             fr: "Même Pro, même registre",
             pt: "O mesmo Pro, o mesmo registro",
+            "pt-PT": "O mesmo Pro, o mesmo registo",
         }),
         noMoreCharges: t({
             en: "No more charges",
@@ -279,6 +303,7 @@ const paywall = {
             es: "Activando Pro…",
             fr: "Activation de Pro…",
             pt: "Ativando o Pro…",
+            "pt-PT": "A ativar o Pro…",
         }),
         checkoutBy: t({
             en: "Checkout runs on Stripe, which receives your name and email.",
@@ -294,6 +319,7 @@ const paywall = {
             es: "Restaurando…",
             fr: "Restauration…",
             pt: "Restaurando…",
+            "pt-PT": "A restaurar…",
         }),
         loadingPlans: t({
             en: "Loading plans…",
@@ -301,6 +327,7 @@ const paywall = {
             es: "Cargando planes…",
             fr: "Chargement des forfaits…",
             pt: "Carregando planos…",
+            "pt-PT": "A carregar planos…",
         }),
         needsAccount: t({
             en: "Sign in before buying Pro, so the purchase follows your ledger to every device.",
@@ -308,8 +335,16 @@ const paywall = {
             es: "Inicia sesión antes de comprar Pro, así la compra sigue a tu registro en cada dispositivo.",
             fr: "Connectez-vous avant d'acheter Pro, pour que l'achat suive votre registre sur chaque appareil.",
             pt: "Entre antes de comprar o Pro, assim a compra acompanha seu registro em todos os dispositivos.",
+            "pt-PT": "Entre antes de comprar o Pro, assim a compra acompanha o seu registo em todos os dispositivos.",
         }),
-        signIn: t({ en: "Sign in", de: "Anmelden", es: "Iniciar sesión", fr: "Se connecter", pt: "Entrar" }),
+        signIn: t({
+            en: "Sign in",
+            de: "Anmelden",
+            es: "Iniciar sesión",
+            fr: "Se connecter",
+            pt: "Entrar",
+            "pt-PT": "Iniciar sessão",
+        }),
         notNow: t({ en: "Not now", de: "Nicht jetzt", es: "Ahora no", fr: "Pas maintenant", pt: "Agora não" }),
         terms: t({ en: "Terms", de: "Nutzungsbedingungen", es: "Términos", fr: "Conditions", pt: "Termos" }),
         privacy: t({ en: "Privacy", de: "Datenschutz", es: "Privacidad", fr: "Confidentialité", pt: "Privacidade" }),
@@ -326,6 +361,7 @@ const paywall = {
             es: "Escribir a soporte",
             fr: "Écrire au support",
             pt: "Falar com o suporte",
+            "pt-PT": "Contactar o suporte",
         }),
         purchaseFailed: t({
             en: "The purchase did not finish. If you were charged, Restore will unlock Pro.",
@@ -333,6 +369,7 @@ const paywall = {
             es: "La compra no terminó. Si te cobraron, Restaurar activará Pro.",
             fr: "L'achat n'a pas abouti. Si vous avez été débité, Restaurer activera Pro.",
             pt: "A compra não foi concluída. Se você foi cobrado, Restaurar ativará o Pro.",
+            "pt-PT": "A compra não foi concluída. Se foi cobrado, Restaurar ativará o Pro.",
         }),
         nothingRestored: t({
             en: "No active Pro on this account.",
@@ -406,6 +443,7 @@ const paywall = {
                 es: "Tu panel y tu registro",
                 fr: "Votre tableau de bord et votre registre",
                 pt: "Seu painel e seu registro",
+                "pt-PT": "O seu painel e o seu registo",
             }),
             ledgerHint: t({
                 en: "Everything synced from your phone",
@@ -413,6 +451,7 @@ const paywall = {
                 es: "Todo lo sincronizado desde tu teléfono",
                 fr: "Tout ce qui est synchronisé depuis votre téléphone",
                 pt: "Tudo o que foi sincronizado do seu celular",
+                "pt-PT": "Tudo o que foi sincronizado do seu telemóvel",
             }),
             sync: t({
                 en: "Sync across devices",
@@ -427,6 +466,7 @@ const paywall = {
                 es: "Y una copia si pierdes el teléfono",
                 fr: "Et une sauvegarde si vous perdez votre téléphone",
                 pt: "E um backup se você perder o celular",
+                "pt-PT": "E um backup se perder o telemóvel",
             }),
             logs: t({
                 en: "Everything logs itself",
@@ -434,6 +474,7 @@ const paywall = {
                 es: "Todo se registra solo",
                 fr: "Tout s'enregistre",
                 pt: "Tudo se registra sozinho",
+                "pt-PT": "Tudo se regista sozinho",
             }),
             logsHint: t({
                 en: "No monthly limit",
@@ -453,6 +494,7 @@ const paywall = {
                 en: "Totals at the day's rate",
                 de: "Summen zum Kurs des jeweiligen Tages",
                 es: "Totales a la tasa del día",
+                "es-ES": "Totales a la Tipo de cambio del día",
                 fr: "Totaux au taux du jour",
                 pt: "Totais na cotação do dia",
             }),
@@ -460,8 +502,10 @@ const paywall = {
                 en: "Every installment plan",
                 de: "Jeder Ratenplan",
                 es: "Todos los planes de cuotas",
+                "es-ES": "Todos los planes de plazos",
                 fr: "Tous les paiements échelonnés",
                 pt: "Todos os planos de parcelas",
+                "pt-PT": "Todos os planos de prestações",
             }),
             installmentsHint: t({
                 en: "No limit on apps or plans",
@@ -488,6 +532,7 @@ const paywall = {
             es: "Administrar plan",
             fr: "Gérer le forfait",
             pt: "Gerenciar plano",
+            "pt-PT": "Gerir plano",
         }),
         openDashboard: t({
             en: "Open dashboard",

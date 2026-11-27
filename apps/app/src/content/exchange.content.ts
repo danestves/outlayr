@@ -33,6 +33,7 @@ const exchange = {
                 en: "Amount in {{name}}",
                 de: "Betrag in {{name}}",
                 es: "Monto en {{name}}",
+                "es-ES": "Importe en {{name}}",
                 fr: "Montant en {{name}}",
                 pt: "Valor em {{name}}",
             })

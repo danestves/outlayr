@@ -18,6 +18,7 @@ const aiConsent = {
             es: "sugerencias-voz-y-recibos",
             fr: "suggestions-voix-et-tickets",
             pt: "sugestões-voz-e-recibos",
+            "pt-PT": "sugestões-voz-e-talões",
         }),
         title: t({
             en: "Send data to third-party AI providers?",
@@ -25,6 +26,7 @@ const aiConsent = {
             es: "¿Enviar datos a proveedores de IA externos?",
             fr: "Envoyer des données à des fournisseurs d'IA tiers ?",
             pt: "Enviar dados a provedores de IA terceiros?",
+            "pt-PT": "Enviar dados a fornecedores de IA terceiros?",
         }),
     },
     key: "ai-consent",

@@ -4,13 +4,21 @@ import type { Dictionary } from "intlayer";
 const dashboardDebts = {
     content: {
         actions: {
-            borrow: t({ en: "Borrow", de: "Leihen", es: "Pedir prestado", fr: "Emprunter", pt: "Pegar emprestado" }),
+            borrow: t({
+                en: "Borrow",
+                de: "Leihen",
+                es: "Pedir prestado",
+                fr: "Emprunter",
+                pt: "Pegar emprestado",
+                "pt-PT": "Pedir emprestado",
+            }),
             borrowMore: t({
                 en: "Borrow more",
                 de: "Mehr leihen",
                 es: "Pedir más",
                 fr: "Emprunter plus",
                 pt: "Pegar mais",
+                "pt-PT": "Pedir mais",
             }),
             changePlan: t({
                 en: "Change plan",
@@ -19,7 +27,14 @@ const dashboardDebts = {
                 fr: "Modifier le plan",
                 pt: "Mudar plano",
             }),
-            delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            delete: t({
+                en: "Delete",
+                de: "Löschen",
+                es: "Eliminar",
+                fr: "Supprimer",
+                pt: "Excluir",
+                "pt-PT": "Eliminar",
+            }),
             gotPaidBack: t({
                 en: "Got paid back",
                 de: "Zurückbekommen",
@@ -72,7 +87,7 @@ const dashboardDebts = {
         cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
         columns: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             balance: t({ en: "Balance", de: "Saldo", es: "Saldo", fr: "Solde", pt: "Saldo" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
             last: t({
@@ -95,6 +110,8 @@ const dashboardDebts = {
                     es: "También se elimina todo lo registrado con esta persona: {{count}} movimientos y un saldo de {{amount}}.",
                     fr: "Tout ce qui est enregistré avec elle est aussi supprimé : {{count}} mouvements et un solde de {{amount}}.",
                     pt: "Tudo o que foi registrado com essa pessoa também é excluído: {{count}} movimentos e um saldo de {{amount}}.",
+                    "pt-PT":
+                        "Tudo o que foi registado com essa pessoa também é eliminado: {{count}} movimentos e um saldo de {{amount}}.",
                 })
             ),
             bodyOne: insert(
@@ -104,15 +121,25 @@ const dashboardDebts = {
                     es: "También se elimina todo lo registrado con esta persona: 1 movimiento y un saldo de {{amount}}.",
                     fr: "Tout ce qui est enregistré avec elle est aussi supprimé : 1 mouvement et un solde de {{amount}}.",
                     pt: "Tudo o que foi registrado com essa pessoa também é excluído: 1 movimento e um saldo de {{amount}}.",
+                    "pt-PT":
+                        "Tudo o que foi registado com essa pessoa também é eliminado: 1 movimento e um saldo de {{amount}}.",
                 })
             ),
-            confirm: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            confirm: t({
+                en: "Delete",
+                de: "Löschen",
+                es: "Eliminar",
+                fr: "Supprimer",
+                pt: "Excluir",
+                "pt-PT": "Eliminar",
+            }),
             failed: t({
                 en: "Couldn't delete. Try again.",
                 de: "Löschen hat nicht geklappt. Versuch es noch mal.",
                 es: "No se pudo eliminar. Intenta de nuevo.",
                 fr: "Suppression impossible. Réessayez.",
                 pt: "Não foi possível excluir. Tente de novo.",
+                "pt-PT": "Não foi possível eliminar. Tente de novo.",
             }),
             title: insert(
                 t({
@@ -121,6 +148,7 @@ const dashboardDebts = {
                     es: "Eliminar a {{name}}",
                     fr: "Supprimer {{name}}",
                     pt: "Excluir {{name}}",
+                    "pt-PT": "Eliminar {{name}}",
                 })
             ),
             toast: insert(
@@ -130,6 +158,7 @@ const dashboardDebts = {
                     es: "{{name}} eliminado",
                     fr: "{{name}} supprimé",
                     pt: "{{name}} excluído",
+                    "pt-PT": "{{name}} eliminado",
                 })
             ),
         },
@@ -141,6 +170,7 @@ const dashboardDebts = {
                 es: "Prestado a ti",
                 fr: "Emprunté",
                 pt: "Emprestado a você",
+                "pt-PT": "Emprestado a",
             }),
             borrowedTotal: insert(
                 t({
@@ -149,6 +179,7 @@ const dashboardDebts = {
                     es: "{{amount}} prestado a ti",
                     fr: "{{amount}} emprunté",
                     pt: "{{amount}} emprestado a você",
+                    "pt-PT": "{{amount}} emprestado a",
                 })
             ),
             lent: t({ en: "Lent", de: "Verliehen", es: "Prestado", fr: "Prêté", pt: "Emprestado" }),
@@ -177,7 +208,14 @@ const dashboardDebts = {
                 pt: "Esta dívida não existe mais.",
             }),
             once: t({ en: "1 time", de: "1-mal", es: "1 vez", fr: "1 fois", pt: "1 vez" }),
-            onTrack: t({ en: "On track", de: "Im Plan", es: "Al día", fr: "Dans les temps", pt: "Em dia" }),
+            onTrack: t({
+                en: "On track",
+                de: "Im Plan",
+                es: "Al día",
+                fr: "Dans les temps",
+                pt: "Em dia",
+                "pt-PT": "Atualizado",
+            }),
             outside: t({
                 en: "Outside Outlayr",
                 de: "Außerhalb von Outlayr",
@@ -213,6 +251,7 @@ const dashboardDebts = {
                     es: "{{name}} te paga antes del {{date}}",
                     fr: "{{name}} vous rembourse d'ici le {{date}}",
                     pt: "{{name}} te paga até {{date}}",
+                    "pt-PT": "{{name}} paga-lhe até {{date}}",
                 })
             ),
             times: insert(
@@ -231,6 +270,7 @@ const dashboardDebts = {
                     es: "Le pagas a {{name}} antes del {{date}}",
                     fr: "Vous remboursez {{name}} d'ici le {{date}}",
                     pt: "Você paga {{name}} até {{date}}",
+                    "pt-PT": "Paga {{name}} até {{date}}",
                 })
             ),
         },
@@ -275,8 +315,10 @@ const dashboardDebts = {
                 en: "Open installments",
                 de: "Raten öffnen",
                 es: "Abrir cuotas",
+                "es-ES": "Abrir plazos",
                 fr: "Ouvrir les paiements échelonnés",
                 pt: "Abrir parcelas",
+                "pt-PT": "Abrir prestações",
             }),
             title: insert(
                 t({
@@ -295,6 +337,7 @@ const dashboardDebts = {
                 es: "Y tú no le debes a nadie. Lo que se mueva entre tú y otra persona se reúne aquí.",
                 fr: "Et vous ne devez rien à personne. Ce qui circule entre vous et quelqu'un d'autre se retrouve ici.",
                 pt: "E você não deve a ninguém. O que circular entre você e outra pessoa aparece aqui.",
+                "pt-PT": "E não deve a ninguém. O que circular entre e outra pessoa aparece aqui.",
             }),
             title: t({
                 en: "Nobody owes you",
@@ -302,16 +345,19 @@ const dashboardDebts = {
                 es: "Nadie te debe",
                 fr: "Personne ne vous doit rien",
                 pt: "Ninguém te deve",
+                "pt-PT": "Ninguém lhe deve",
             }),
         },
         form: {
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             amountRequired: t({
                 en: "Enter an amount above zero.",
                 de: "Gib einen Betrag über null ein.",
                 es: "Ingresa un monto mayor que cero.",
+                "es-ES": "Ingresa un importe mayor que cero.",
                 fr: "Saisissez un montant supérieur à zéro.",
                 pt: "Digite um valor maior que zero.",
+                "pt-PT": "Introduza um valor maior que zero.",
             }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             categoryPlaceholder: t({
@@ -347,6 +393,7 @@ const dashboardDebts = {
                     es: "Ingresa cuánto es en {{currency}}.",
                     fr: "Saisissez le montant en {{currency}}.",
                     pt: "Digite quanto é em {{currency}}.",
+                    "pt-PT": "Introduza quanto é em {{currency}}.",
                 })
             ),
             into: t({ en: "Into", de: "In", es: "Hacia", fr: "Vers", pt: "Para" }),
@@ -362,6 +409,7 @@ const dashboardDebts = {
                 en: "Choose a person or add a name.",
                 de: "Wähle eine Person oder gib einen Namen ein.",
                 es: "Elige una persona o agrega un nombre.",
+                "es-ES": "Elige una persona o añade un nombre.",
                 fr: "Choisissez une personne ou ajoutez un nom.",
                 pt: "Escolha uma pessoa ou adicione um nome.",
             }),
@@ -370,6 +418,7 @@ const dashboardDebts = {
                     en: "Add “{{name}}”",
                     de: "„{{name}}“ hinzufügen",
                     es: "Agregar “{{name}}”",
+                    "es-ES": "Añadir “{{name}}”",
                     fr: "Ajouter « {{name}} »",
                     pt: "Adicionar “{{name}}”",
                 })
@@ -380,6 +429,7 @@ const dashboardDebts = {
                 en: "No exchange rate for that day yet.",
                 de: "Für diesen Tag gibt es noch keinen Wechselkurs.",
                 es: "Aún no hay tasa de cambio para ese día.",
+                "es-ES": "Aún No hay tipo de cambio de cambio para ese día.",
                 fr: "Pas encore de taux de change pour ce jour.",
                 pt: "Ainda não há cotação para esse dia.",
             }),
@@ -392,13 +442,21 @@ const dashboardDebts = {
                 pt: "Pagar até",
             }),
             people: t({ en: "People", de: "Personen", es: "Personas", fr: "Personnes", pt: "Pessoas" }),
-            save: t({ en: "Save", de: "Speichern", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+            save: t({
+                en: "Save",
+                de: "Speichern",
+                es: "Guardar",
+                fr: "Enregistrer",
+                pt: "Salvar",
+                "pt-PT": "Guardar",
+            }),
             saveFailed: t({
                 en: "Couldn't save. Try again.",
                 de: "Speichern hat nicht geklappt. Versuch es noch mal.",
                 es: "No se pudo guardar. Intenta de nuevo.",
                 fr: "Enregistrement impossible. Réessayez.",
                 pt: "Não foi possível salvar. Tente de novo.",
+                "pt-PT": "Não foi possível guardar. Tente de novo.",
             }),
         },
         groups: {
@@ -419,6 +477,7 @@ const dashboardDebts = {
                 es: "Me prestaron",
                 fr: "Emprunté",
                 pt: "Peguei emprestado",
+                "pt-PT": "Pedi emprestado",
             }),
             boughtOnCredit: t({
                 en: "Bought on credit",
@@ -485,8 +544,22 @@ const dashboardDebts = {
                 pt: "Saldo com pessoas",
             }),
             none: t({ en: "None", de: "Keine", es: "Ninguna", fr: "Aucune", pt: "Nenhum" }),
-            onTrack: t({ en: "On track", de: "Im Plan", es: "Al día", fr: "Dans les temps", pt: "Em dia" }),
-            owesYou: t({ en: "Owes you", de: "Schuldet dir", es: "Te deben", fr: "On vous doit", pt: "Te devem" }),
+            onTrack: t({
+                en: "On track",
+                de: "Im Plan",
+                es: "Al día",
+                fr: "Dans les temps",
+                pt: "Em dia",
+                "pt-PT": "Atualizado",
+            }),
+            owesYou: t({
+                en: "Owes you",
+                de: "Schuldet dir",
+                es: "Te deben",
+                fr: "On vous doit",
+                pt: "Te devem",
+                "pt-PT": "Devem-lhe",
+            }),
             people: insert(
                 t({
                     en: "{{count}} people",
@@ -497,7 +570,14 @@ const dashboardDebts = {
                 })
             ),
             person: t({ en: "1 person", de: "1 Person", es: "1 persona", fr: "1 personne", pt: "1 pessoa" }),
-            youOwe: t({ en: "You owe", de: "Du schuldest", es: "Debes", fr: "Vous devez", pt: "Você deve" }),
+            youOwe: t({
+                en: "You owe",
+                de: "Du schuldest",
+                es: "Debes",
+                fr: "Vous devez",
+                pt: "Você deve",
+                "pt-PT": "Deve",
+            }),
         },
         newDebt: t({ en: "New debt", de: "Neue Schuld", es: "Nueva deuda", fr: "Nouvelle dette", pt: "Nova dívida" }),
         newForm: {
@@ -515,6 +595,7 @@ const dashboardDebts = {
                     es: "Guardado con {{name}}",
                     fr: "Enregistré avec {{name}}",
                     pt: "Salvo com {{name}}",
+                    "pt-PT": "Guardado com {{name}}",
                 })
             ),
             soldNeedsCategory: t({
@@ -539,6 +620,7 @@ const dashboardDebts = {
                     es: "Me prestaron",
                     fr: "J'ai emprunté",
                     pt: "Peguei emprestado",
+                    "pt-PT": "Pedi emprestado",
                 }),
                 lent: t({ en: "I lent", de: "Ich habe verliehen", es: "Presté", fr: "J'ai prêté", pt: "Emprestei" }),
                 sold: t({
@@ -575,6 +657,7 @@ const dashboardDebts = {
                     es: "Le debes {{amount}} a {{name}}",
                     fr: "Vous devez {{amount}} à {{name}}",
                     pt: "Você deve {{amount}} a {{name}}",
+                    "pt-PT": "Deve {{amount}} a {{name}}",
                 })
             ),
             title: t({
@@ -590,8 +673,10 @@ const dashboardDebts = {
                 en: "Plumbing, a repair",
                 de: "Klempner, eine Reparatur",
                 es: "Plomería, una reparación",
+                "es-ES": "Fontanería, una reparación",
                 fr: "Plomberie, une réparation",
                 pt: "Encanamento, um conserto",
+                "pt-PT": "Canalização, uma reparação",
             }),
             who: t({ en: "Who", de: "Wem", es: "A quién", fr: "À qui", pt: "A quem" }),
             whoPlaceholder: t({
@@ -607,6 +692,7 @@ const dashboardDebts = {
                 es: "Indica a quién le debes.",
                 fr: "Indiquez à qui vous devez.",
                 pt: "Diga a quem você deve.",
+                "pt-PT": "Diga a quem deve.",
             }),
         },
         pay: {
@@ -633,6 +719,7 @@ const dashboardDebts = {
                     es: "{{name}} te pagó",
                     fr: "{{name}} vous a remboursé",
                     pt: "{{name}} te pagou",
+                    "pt-PT": "{{name}} pagou-lhe",
                 })
             ),
             owesYouNow: t({
@@ -641,6 +728,7 @@ const dashboardDebts = {
                 es: "Te debe ahora",
                 fr: "Vous doit maintenant",
                 pt: "Te deve agora",
+                "pt-PT": "Deve-lhe agora",
             }),
             payTitle: insert(
                 t({
@@ -667,9 +755,17 @@ const dashboardDebts = {
                     es: "Registrar {{amount}}",
                     fr: "Enregistrer {{amount}}",
                     pt: "Registrar {{amount}}",
+                    "pt-PT": "Registar {{amount}}",
                 })
             ),
-            recordEmpty: t({ en: "Record", de: "Erfassen", es: "Registrar", fr: "Enregistrer", pt: "Registrar" }),
+            recordEmpty: t({
+                en: "Record",
+                de: "Erfassen",
+                es: "Registrar",
+                fr: "Enregistrer",
+                pt: "Registrar",
+                "pt-PT": "Registar",
+            }),
             saved: insert(
                 t({
                     en: "{{amount}} recorded with {{name}}",
@@ -677,6 +773,7 @@ const dashboardDebts = {
                     es: "{{amount}} registrado con {{name}}",
                     fr: "{{amount}} enregistré avec {{name}}",
                     pt: "{{amount}} registrado com {{name}}",
+                    "pt-PT": "{{amount}} registado com {{name}}",
                 })
             ),
             submit: insert(
@@ -704,6 +801,7 @@ const dashboardDebts = {
                 es: "Debes ahora",
                 fr: "Vous devez maintenant",
                 pt: "Você deve agora",
+                "pt-PT": "Deve agora",
             }),
         },
         plan: {
@@ -773,6 +871,7 @@ const dashboardDebts = {
                 en: "No exchange rate prices this balance yet.",
                 de: "Für diesen Saldo gibt es noch keinen Wechselkurs.",
                 es: "Aún no hay tasa de cambio para este saldo.",
+                "es-ES": "Aún No hay tipo de cambio de cambio para este saldo.",
                 fr: "Pas encore de taux de change pour ce solde.",
                 pt: "Ainda não há cotação para este saldo.",
             }),
@@ -818,6 +917,7 @@ const dashboardDebts = {
                 es: "Liquidar antes del",
                 fr: "Solder d'ici le",
                 pt: "Quitar até",
+                "pt-PT": "Liquidar até",
             }),
             perMonth: insert(
                 t({
@@ -842,6 +942,7 @@ const dashboardDebts = {
                 es: "Guardar plan",
                 fr: "Enregistrer le plan",
                 pt: "Salvar plano",
+                "pt-PT": "Guardar plano",
             }),
             saved: t({
                 en: "Plan saved",
@@ -849,6 +950,7 @@ const dashboardDebts = {
                 es: "Plan guardado",
                 fr: "Plan enregistré",
                 pt: "Plano salvo",
+                "pt-PT": "Plano guardado",
             }),
             setTitle: t({
                 en: "Set plan",
@@ -871,6 +973,7 @@ const dashboardDebts = {
                 en: "Add a name.",
                 de: "Gib einen Namen ein.",
                 es: "Agrega un nombre.",
+                "es-ES": "Añade un nombre.",
                 fr: "Ajoutez un nom.",
                 pt: "Adicione um nome.",
             }),
@@ -890,6 +993,7 @@ const dashboardDebts = {
                 en: "Another amount",
                 de: "Anderer Betrag",
                 es: "Otro monto",
+                "es-ES": "Otro importe",
                 fr: "Autre montant",
                 pt: "Outro valor",
             }),
@@ -909,6 +1013,7 @@ const dashboardDebts = {
                     es: "Pagas los {{amount}} completos. Así {{name}} pasa a Saldadas y el plan termina.",
                     fr: "Vous remboursez les {{amount}} en entier. {{name}} passe dans Soldées et le plan se termine.",
                     pt: "Você paga os {{amount}} inteiros. Assim {{name}} vai para Quitadas e o plano termina.",
+                    "pt-PT": "Paga os {{amount}} inteiros. Assim {{name}} vai para Quitadas e o plano termina.",
                 })
             ),
             submit: insert(
@@ -948,9 +1053,23 @@ const dashboardDebts = {
         }),
         tabs: {
             all: t({ en: "All", de: "Alle", es: "Todas", fr: "Toutes", pt: "Todas" }),
-            owesYou: t({ en: "Owes you", de: "Schuldet dir", es: "Te deben", fr: "On vous doit", pt: "Te devem" }),
+            owesYou: t({
+                en: "Owes you",
+                de: "Schuldet dir",
+                es: "Te deben",
+                fr: "On vous doit",
+                pt: "Te devem",
+                "pt-PT": "Devem-lhe",
+            }),
             settled: t({ en: "Settled", de: "Beglichen", es: "Saldadas", fr: "Soldées", pt: "Quitadas" }),
-            youOwe: t({ en: "You owe", de: "Du schuldest", es: "Debes", fr: "Vous devez", pt: "Você deve" }),
+            youOwe: t({
+                en: "You owe",
+                de: "Du schuldest",
+                es: "Debes",
+                fr: "Vous devez",
+                pt: "Você deve",
+                "pt-PT": "Deve",
+            }),
         },
         title: t({ en: "Debts", de: "Schulden", es: "Deudas", fr: "Dettes", pt: "Dívidas" }),
     },

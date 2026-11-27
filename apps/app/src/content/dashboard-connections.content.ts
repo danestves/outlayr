@@ -14,13 +14,21 @@ const dashboardConnections = {
             en: "Add this server to your agent. It asks you to approve here before it reads your ledger.",
             de: "Füge diesen Server deinem Agenten hinzu. Er bittet dich hier um Freigabe, bevor er dein Haushaltsbuch liest.",
             es: "Agrega este servidor a tu agente. Te pedirá aprobarlo aquí antes de leer tus finanzas.",
+            "es-ES": "Añade este servidor a tu agente. Te pedirá aprobarlo aquí antes de leer tus finanzas.",
             fr: "Ajoutez ce serveur à votre agent. Il vous demandera de l'approuver ici avant de lire vos comptes.",
             pt: "Adicione este servidor ao seu agente. Ele pedirá sua aprovação aqui antes de ler suas finanças.",
         }),
         agents: t({ en: "Agents", de: "Agenten", es: "Agentes", fr: "Agents", pt: "Agentes" }),
         agent: t({ en: "Agent", de: "Agent", es: "Agente", fr: "Agent", pt: "Agente" }),
         access: t({ en: "Access", de: "Zugriff", es: "Acceso", fr: "Accès", pt: "Acesso" }),
-        connected: t({ en: "Connected", de: "Verbunden", es: "Conectado", fr: "Connecté", pt: "Conectado" }),
+        connected: t({
+            en: "Connected",
+            de: "Verbunden",
+            es: "Conectado",
+            fr: "Connecté",
+            pt: "Conectado",
+            "pt-PT": "Ligado",
+        }),
         lastUsed: t({
             en: "Last used",
             de: "Zuletzt genutzt",
@@ -36,8 +44,9 @@ const dashboardConnections = {
             es: "Leer, registrar",
             fr: "Lecture, saisie",
             pt: "Ler, registrar",
+            "pt-PT": "Ler, registar",
         }),
-        logOnly: t({ en: "Log", de: "Erfassen", es: "Registrar", fr: "Saisie", pt: "Registrar" }),
+        logOnly: t({ en: "Log", de: "Erfassen", es: "Registrar", fr: "Saisie", pt: "Registrar", "pt-PT": "Registar" }),
         server: t({ en: "Server", de: "Server", es: "Servidor", fr: "Serveur", pt: "Servidor" }),
         copyServer: t({
             en: "Copy server address",
@@ -54,7 +63,7 @@ const dashboardConnections = {
             fr: "Copie impossible. Sélectionnez-le et copiez-le à la main.",
             pt: "Não foi possível copiar. Selecione e copie manualmente.",
         }),
-        done: t({ en: "Done", de: "Fertig", es: "Listo", fr: "Terminé", pt: "Concluído" }),
+        done: t({ en: "Done", de: "Fertig", es: "Listo", "es-ES": "Hecho", fr: "Terminé", pt: "Concluído" }),
         more: insert(
             t({
                 en: "More for {{name}}",
@@ -64,7 +73,14 @@ const dashboardConnections = {
                 pt: "Mais opções de {{name}}",
             })
         ),
-        disconnect: t({ en: "Disconnect", de: "Trennen", es: "Desconectar", fr: "Déconnecter", pt: "Desconectar" }),
+        disconnect: t({
+            en: "Disconnect",
+            de: "Trennen",
+            es: "Desconectar",
+            fr: "Déconnecter",
+            pt: "Desconectar",
+            "pt-PT": "Desligar",
+        }),
         disconnectTitle: insert(
             t({
                 en: "Disconnect {{name}}?",
@@ -80,6 +96,7 @@ const dashboardConnections = {
             es: "Deja de acceder a tus finanzas de inmediato. Los registros que hizo se quedan.",
             fr: "Il n'accède plus à vos comptes immédiatement. Les entrées qu'il a saisies restent.",
             pt: "Ele deixa de acessar suas finanças na hora. Os registros que fez continuam.",
+            "pt-PT": "Ele deixa de aceder às suas finanças na hora. Os registos que fez continuam.",
         }),
         disconnected: insert(
             t({
@@ -111,6 +128,7 @@ const dashboardConnections = {
             es: "Deja que un agente lea tus finanzas y registre movimientos.",
             fr: "Laissez un agent lire vos comptes et saisir des entrées.",
             pt: "Deixe um agente ler suas finanças e registrar lançamentos.",
+            "pt-PT": "Deixe um agente ler as suas finanças e registar lançamentos.",
         }),
     },
     key: "dashboard-connections",

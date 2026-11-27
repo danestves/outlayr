@@ -9,6 +9,7 @@ export default {
                     en: "{{account}} goes back down by the same amount.",
                     de: "{{account}} sinkt wieder um denselben Betrag.",
                     es: "{{account}} vuelve a bajar en el mismo monto.",
+                    "es-ES": "{{account}} vuelve a bajar en el mismo importe.",
                     fr: "{{account}} redescend du même montant.",
                     pt: "{{account}} volta a cair no mesmo valor.",
                 })
@@ -18,12 +19,20 @@ export default {
                     en: "{{account}} goes back up by the same amount.",
                     de: "{{account}} steigt wieder um denselben Betrag.",
                     es: "{{account}} vuelve a subir en el mismo monto.",
+                    "es-ES": "{{account}} vuelve a subir en el mismo importe.",
                     fr: "{{account}} remonte du même montant.",
                     pt: "{{account}} volta a subir no mesmo valor.",
                 })
             ),
             cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
-            delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            delete: t({
+                en: "Delete",
+                de: "Löschen",
+                es: "Eliminar",
+                fr: "Supprimer",
+                pt: "Excluir",
+                "pt-PT": "Eliminar",
+            }),
             summary: insert(
                 t({
                     en: "{{name}}, {{amount}} on {{date}}.",
@@ -39,11 +48,13 @@ export default {
                 es: "¿Eliminar este movimiento?",
                 fr: "Supprimer cette opération ?",
                 pt: "Excluir este lançamento?",
+                "pt-PT": "Eliminar este registo?",
             }),
             transfer: t({
                 en: "Both accounts go back by the same amount.",
                 de: "Beide Konten gehen um denselben Betrag zurück.",
                 es: "Ambas cuentas vuelven atrás en el mismo monto.",
+                "es-ES": "Ambas cuentas vuelven atrás en el mismo importe.",
                 fr: "Les deux comptes reviennent du même montant.",
                 pt: "As duas contas voltam no mesmo valor.",
             }),
@@ -55,6 +66,7 @@ export default {
                 es: "Esta página falló. Tus movimientos están a salvo en este dispositivo.",
                 fr: "Cette page a planté. Vos opérations sont en sécurité sur cet appareil.",
                 pt: "Esta página travou. Seus lançamentos estão seguros neste dispositivo.",
+                "pt-PT": "Esta página travou. Seus registos estão seguros neste dispositivo.",
             }),
             copied: t({ en: "Copied", de: "Kopiert", es: "Copiado", fr: "Copié", pt: "Copiado" }),
             copyRef: t({
@@ -74,6 +86,7 @@ export default {
                 es: "Algo salió mal",
                 fr: "Un problème est survenu",
                 pt: "Algo deu errado",
+                "pt-PT": "Algo correu mal",
             }),
         },
         lost: {
@@ -108,8 +121,10 @@ export default {
                 en: "Repeating entries and installments show up here on the day they're due.",
                 de: "Wiederkehrende Einträge und Raten erscheinen hier an dem Tag, an dem sie fällig sind.",
                 es: "Los movimientos que se repiten y las cuotas aparecen aquí el día en que vencen.",
+                "es-ES": "Los movimientos que se repiten y los plazos aparecen aquí el día en que vencen.",
                 fr: "Les opérations récurrentes et les échéances apparaissent ici le jour où elles tombent.",
                 pt: "Lançamentos recorrentes e parcelas aparecem aqui no dia em que vencem.",
+                "pt-PT": "Registos recorrentes e prestações aparecem aqui no dia em que vencem.",
             }),
             emptyTitle: t({
                 en: "Nothing due",
@@ -123,8 +138,10 @@ export default {
                     en: "{{name}} installment due today",
                     de: "Rate für {{name}} heute fällig",
                     es: "Cuota de {{name}} vence hoy",
+                    "es-ES": "Plazo de {{name}} vence hoy",
                     fr: "Échéance {{name}} aujourd'hui",
                     pt: "Parcela de {{name}} vence hoje",
+                    "pt-PT": "Prestação de {{name}} vence hoje",
                 })
             ),
             installmentOverdue: insert(
@@ -132,8 +149,10 @@ export default {
                     en: "{{name}} installment overdue",
                     de: "Rate für {{name}} überfällig",
                     es: "Cuota de {{name}} ya venció",
+                    "es-ES": "Plazo de {{name}} ya venció",
                     fr: "Échéance {{name}} en retard",
                     pt: "Parcela de {{name}} venceu",
+                    "pt-PT": "Prestação de {{name}} venceu",
                 })
             ),
             loading: t({
@@ -142,6 +161,7 @@ export default {
                 es: "Cargando notificaciones",
                 fr: "Chargement des notifications",
                 pt: "Carregando notificações",
+                "pt-PT": "A carregar notificações",
             }),
             overdue: insert(
                 t({
@@ -199,6 +219,7 @@ export default {
                 es: "Estás sin conexión. Los cambios se guardan aquí y se sincronizan cuando vuelvas.",
                 fr: "Vous êtes hors ligne. Les modifications sont gardées ici et synchronisées à votre retour.",
                 pt: "Você está offline. As alterações ficam salvas aqui e sincronizam quando você voltar.",
+                "pt-PT": "Está offline. As alterações ficam guardadas aqui e sincronizam quando voltar.",
             }),
             waiting: insert(
                 t({
@@ -219,6 +240,7 @@ export default {
                     es: "Añadir “{{query}}” como movimiento",
                     fr: "Ajouter « {{query}} » comme opération",
                     pt: "Adicionar “{{query}}” como lançamento",
+                    "pt-PT": "Adicionar “{{query}}” como registo",
                 })
             ),
             addTransfer: t({
@@ -235,7 +257,14 @@ export default {
                 fr: "Catégories",
                 pt: "Categorias",
             }),
-            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
             entryCount: insert(
                 t({
                     en: "{{count}} entries",
@@ -243,9 +272,17 @@ export default {
                     es: "{{count}} movimientos",
                     fr: "{{count}} opérations",
                     pt: "{{count}} lançamentos",
+                    "pt-PT": "{{count}} registos",
                 })
             ),
-            entryOne: t({ en: "1 entry", de: "1 Eintrag", es: "1 movimiento", fr: "1 opération", pt: "1 lançamento" }),
+            entryOne: t({
+                en: "1 entry",
+                de: "1 Eintrag",
+                es: "1 movimiento",
+                fr: "1 opération",
+                pt: "1 lançamento",
+                "pt-PT": "1 registo",
+            }),
             goTo: t({ en: "Go to", de: "Gehe zu", es: "Ir a", fr: "Aller à", pt: "Ir para" }),
             label: t({
                 en: "Search Outlayr",
@@ -253,6 +290,7 @@ export default {
                 es: "Buscar en Outlayr",
                 fr: "Rechercher dans Outlayr",
                 pt: "Buscar no Outlayr",
+                "pt-PT": "Pesquisar no Outlayr",
             }),
             merchants: t({
                 en: "Merchants",
@@ -269,6 +307,7 @@ export default {
                     es: "Ningún movimiento coincide con “{{query}}”.",
                     fr: "Aucune opération ne correspond à « {{query}} ».",
                     pt: "Nenhum lançamento corresponde a “{{query}}”.",
+                    "pt-PT": "Nenhum registo corresponde a “{{query}}”.",
                 })
             ),
             noMatches: t({
@@ -286,6 +325,7 @@ export default {
                 es: "Buscar movimientos, comercios, categorías",
                 fr: "Rechercher opérations, commerçants, catégories",
                 pt: "Buscar lançamentos, estabelecimentos, categorias",
+                "pt-PT": "Pesquisar registos, estabelecimentos, categorias",
             }),
             resultCount: insert(
                 t({
@@ -303,6 +343,7 @@ export default {
                 es: "Ver todo en Movimientos",
                 fr: "Tout voir dans Opérations",
                 pt: "Ver tudo em Lançamentos",
+                "pt-PT": "Ver tudo em Registos",
             }),
         },
         session: {
@@ -312,9 +353,18 @@ export default {
                 es: "Inicia sesión otra vez para seguir sincronizando. Tus movimientos se quedan aquí y los cambios esperan hasta que vuelvas.",
                 fr: "Reconnectez-vous pour continuer la synchronisation. Vos opérations restent ici, et les modifications attendent votre retour.",
                 pt: "Entre novamente para continuar sincronizando. Seus lançamentos ficam aqui, e as alterações esperam até você voltar.",
+                "pt-PT":
+                    "Entre novamente para continuar a sincronizar. Seus registos ficam aqui, e as alterações esperam até voltar.",
             }),
             later: t({ en: "Not now", de: "Nicht jetzt", es: "Ahora no", fr: "Plus tard", pt: "Agora não" }),
-            signIn: t({ en: "Sign in", de: "Anmelden", es: "Iniciar sesión", fr: "Se connecter", pt: "Entrar" }),
+            signIn: t({
+                en: "Sign in",
+                de: "Anmelden",
+                es: "Iniciar sesión",
+                fr: "Se connecter",
+                pt: "Entrar",
+                "pt-PT": "Iniciar sessão",
+            }),
             title: t({
                 en: "Session expired",
                 de: "Sitzung abgelaufen",
@@ -363,6 +413,7 @@ export default {
                 es: "Sincronizando",
                 fr: "Synchronisation",
                 pt: "Sincronizando",
+                "pt-PT": "A sincronizar",
             }),
         },
         toDashboard: t({

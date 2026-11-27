@@ -5,7 +5,7 @@ import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
 import type { IconSvgElement } from "@hugeicons/react";
 import { wallNoon } from "@outlayr/money/ledger-zone";
-import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { useSearch } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
@@ -47,7 +47,7 @@ export const quiet = (children: ReactNode) => (
 
 export function useMonthNames() {
     const { locale } = useLocale();
-    const { date } = LANGUAGES[localeFromParam(locale)];
+    const { date } = LANGUAGES[locale];
     return useMemo(() => {
         const long = new Intl.DateTimeFormat(date, { month: "long", timeZone: "UTC", year: "numeric" });
         const short = new Intl.DateTimeFormat(date === "en-GB" ? "en-US" : date, { month: "short", timeZone: "UTC" });

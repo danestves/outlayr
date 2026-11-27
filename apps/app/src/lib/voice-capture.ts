@@ -80,15 +80,16 @@ const REASON_BY_ERROR: Record<typeof ServerErrorType.Type, ScribeFailure> = {
 };
 
 export function scribeUrl(token: string, language: string): string {
+    const [primary = language] = language.split("-");
     const query = new URLSearchParams({
         audio_format: `pcm_${SCRIBE_SAMPLE_RATE}`,
         commit_strategy: "manual",
-        language_code: language,
+        language_code: primary,
         model_id: "scribe_v3_live",
         token,
     });
     for (const other of SCRIBE_LANGUAGES) {
-        if (other !== language) {
+        if (other !== primary) {
             query.append("secondary_languages", other);
         }
     }

@@ -33,6 +33,7 @@ const dashboardInsightsYear = {
                 es: "Gestionar plan",
                 fr: "Gérer le forfait",
                 pt: "Gerenciar plano",
+                "pt-PT": "Gerir plano",
             }),
             pro: t({ en: "Pro", de: "Pro", es: "Pro", fr: "Pro", pt: "Pro" }),
             proEnds: insert(
@@ -74,6 +75,7 @@ const dashboardInsightsYear = {
                     es: "Vuelve cuando tengas 3 meses de movimientos. Tienes {{count}}.",
                     fr: "Revenez après 3 mois d'opérations. Vous en avez {{count}}.",
                     pt: "Volte depois de 3 meses de lançamentos. Você tem {{count}}.",
+                    "pt-PT": "Volte depois de 3 meses de registos. tem {{count}}.",
                 })
             ),
             title: t({
@@ -98,6 +100,7 @@ const dashboardInsightsYear = {
                 es: "Movimientos",
                 fr: "Opérations enregistrées",
                 pt: "Lançamentos registrados",
+                "pt-PT": "Registos registados",
             }),
             kept: t({
                 en: "Kept under your budgets",
@@ -119,6 +122,7 @@ const dashboardInsightsYear = {
                 es: "Meses con datos",
                 fr: "Mois enregistrés",
                 pt: "Meses registrados",
+                "pt-PT": "Meses registados",
             }),
             soFar: t({ en: "So far", de: "Bisher", es: "Hasta ahora", fr: "Jusqu'ici", pt: "Até agora" }),
             year: t({ en: "Your year", de: "Dein Jahr", es: "Tu año", fr: "Votre année", pt: "Seu ano" }),

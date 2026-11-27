@@ -30,6 +30,8 @@ const dashboardNotifications = {
             es: "Outlayr no puede volver a preguntar si las rechazaste. Permítelas en los ajustes del sitio de tu navegador.",
             fr: "Outlayr ne peut plus demander après un refus. Autorisez-les dans les réglages du site de votre navigateur.",
             pt: "O Outlayr não pode perguntar de novo depois de recusadas. Permita nas configurações do site no navegador.",
+            "pt-PT":
+                "O Outlayr não pode perguntar de novo depois de recusadas. Permita nas definições do site no navegador.",
         }),
         unsupportedTitle: t({
             en: "This browser can't show reminders",
@@ -42,8 +44,10 @@ const dashboardNotifications = {
             en: "Reminders on your phone are set in the Outlayr app.",
             de: "Erinnerungen auf deinem Handy stellst du in der Outlayr-App ein.",
             es: "Los recordatorios de tu celular se configuran en la app de Outlayr.",
+            "es-ES": "Los recordatorios de tu móvil se configuran en la app de Outlayr.",
             fr: "Les rappels sur votre téléphone se règlent dans l'app Outlayr.",
             pt: "Os lembretes do celular são definidos no app Outlayr.",
+            "pt-PT": "Os lembretes do telemóvel são definidos na app Outlayr.",
         }),
         checkAgain: t({
             en: "Check again",
@@ -65,6 +69,7 @@ const dashboardNotifications = {
             es: "Recuérdame registrar",
             fr: "Me rappeler de saisir",
             pt: "Lembrar de registrar",
+            "pt-PT": "Lembrar de registar",
         }),
         remindHint: t({
             en: "Only on days with nothing logged.",
@@ -72,6 +77,7 @@ const dashboardNotifications = {
             es: "Solo los días sin registros.",
             fr: "Seulement les jours sans saisie.",
             pt: "Só nos dias sem registros.",
+            "pt-PT": "Só nos dias sem registos.",
         }),
         morning: t({
             en: "Every morning",
@@ -79,6 +85,7 @@ const dashboardNotifications = {
             es: "Cada mañana",
             fr: "Chaque matin",
             pt: "Toda manhã",
+            "pt-PT": "Todas as manhãs",
         }),
         morningHint: insert(
             t({
@@ -89,7 +96,14 @@ const dashboardNotifications = {
                 pt: "Um aviso às {{time}}, antes de o dia gastar algo.",
             })
         ),
-        evening: t({ en: "Every evening", de: "Jeden Abend", es: "Cada noche", fr: "Chaque soir", pt: "Toda noite" }),
+        evening: t({
+            en: "Every evening",
+            de: "Jeden Abend",
+            es: "Cada noche",
+            fr: "Chaque soir",
+            pt: "Toda noite",
+            "pt-PT": "Todas as noites",
+        }),
         eveningHint: insert(
             t({
                 en: "A nudge at {{time}}, once the day is mostly done.",
@@ -122,6 +136,7 @@ const dashboardNotifications = {
             es: "No se pudo guardar. Inténtalo de nuevo.",
             fr: "Enregistrement impossible. Réessayez.",
             pt: "Não foi possível salvar. Tente de novo.",
+            "pt-PT": "Não foi possível guardar. Tente de novo.",
         }),
     },
     key: "dashboard-notifications",

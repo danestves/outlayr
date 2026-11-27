@@ -20,6 +20,7 @@ const dashboardInsightsRecap = {
                     es: "Registré {{month}} con Outlayr",
                     fr: "A enregistré {{month}} avec Outlayr",
                     pt: "Registrou {{month}} no Outlayr",
+                    "pt-PT": "Registou {{month}} no Outlayr",
                 })
             ),
             less: insert(
@@ -56,6 +57,7 @@ const dashboardInsightsRecap = {
                     es: "{{logged}} de {{total}} días registrados",
                     fr: "{{logged}} jours enregistrés sur {{total}}",
                     pt: "{{logged}} de {{total}} dias registrados",
+                    "pt-PT": "{{logged}} de {{total}} dias registados",
                 })
             ),
             url: t({
@@ -171,6 +173,7 @@ const dashboardInsightsRecap = {
                 es: "Días registrados",
                 fr: "Jours enregistrés",
                 pt: "Dias registrados",
+                "pt-PT": "Dias registados",
             }),
         },
         dialog: {
@@ -178,6 +181,7 @@ const dashboardInsightsRecap = {
                 en: "Show amounts",
                 de: "Beträge anzeigen",
                 es: "Mostrar montos",
+                "es-ES": "Mostrar importes",
                 fr: "Afficher les montants",
                 pt: "Mostrar valores",
             }),
@@ -197,7 +201,14 @@ const dashboardInsightsRecap = {
                 fr: "Copier l'image",
                 pt: "Copiar imagem",
             }),
-            download: t({ en: "Download", de: "Herunterladen", es: "Descargar", fr: "Télécharger", pt: "Baixar" }),
+            download: t({
+                en: "Download",
+                de: "Herunterladen",
+                es: "Descargar",
+                fr: "Télécharger",
+                pt: "Baixar",
+                "pt-PT": "Descarregar",
+            }),
             failed: t({
                 en: "The card could not be made.",
                 de: "Die Karte konnte nicht erstellt werden.",
@@ -219,7 +230,14 @@ const dashboardInsightsRecap = {
                 fr: "Aperçu de la carte de récapitulatif",
                 pt: "Prévia do cartão de resumo",
             }),
-            share: t({ en: "Share", de: "Teilen", es: "Compartir", fr: "Partager", pt: "Compartilhar" }),
+            share: t({
+                en: "Share",
+                de: "Teilen",
+                es: "Compartir",
+                fr: "Partager",
+                pt: "Compartilhar",
+                "pt-PT": "Partilhar",
+            }),
             size: t({ en: "Size", de: "Größe", es: "Tamaño", fr: "Taille", pt: "Tamanho" }),
             title: t({
                 en: "Share recap",
@@ -227,6 +245,7 @@ const dashboardInsightsRecap = {
                 es: "Compartir resumen",
                 fr: "Partager le récapitulatif",
                 pt: "Compartilhar resumo",
+                "pt-PT": "Partilhar resumo",
             }),
         },
         empty: {
@@ -234,8 +253,10 @@ const dashboardInsightsRecap = {
                 en: "Add entry",
                 de: "Eintrag hinzufügen",
                 es: "Agregar movimiento",
+                "es-ES": "Añadir movimiento",
                 fr: "Ajouter une opération",
                 pt: "Adicionar lançamento",
+                "pt-PT": "Adicionar registo",
             }),
             line: t({
                 en: "No savings figure this month. It comes back after a month under your budgets or below your usual spending.",
@@ -251,6 +272,7 @@ const dashboardInsightsRecap = {
                     es: "No registraste nada en {{month}}.",
                     fr: "Rien d'enregistré en {{month}}.",
                     pt: "Nada registrado em {{month}}.",
+                    "pt-PT": "Nada registado em {{month}}.",
                 })
             ),
         },
@@ -261,6 +283,7 @@ const dashboardInsightsRecap = {
                 es: "Todos los días registrados",
                 fr: "Chaque jour enregistré",
                 pt: "Todo dia registrado",
+                "pt-PT": "Todos os dias registados",
             }),
             average: insert(
                 t({
@@ -302,6 +325,7 @@ const dashboardInsightsRecap = {
                 es: "Días registrados",
                 fr: "Jours enregistrés",
                 pt: "Dias registrados",
+                "pt-PT": "Dias registados",
             }),
             daysMissing: insert(
                 t({
@@ -310,6 +334,7 @@ const dashboardInsightsRecap = {
                     es: "{{count}} días sin movimientos",
                     fr: "{{count}} jours sans opération",
                     pt: "{{count}} dias sem lançamento",
+                    "pt-PT": "{{count}} dias sem registo",
                 })
             ),
             daysOf: insert(
@@ -348,6 +373,7 @@ const dashboardInsightsRecap = {
                 es: "1 día sin movimientos",
                 fr: "1 jour sans opération",
                 pt: "1 dia sem lançamento",
+                "pt-PT": "1 dia sem registo",
             }),
             spent: t({ en: "Spent", de: "Ausgegeben", es: "Gastado", fr: "Dépensé", pt: "Gasto" }),
             under: t({
@@ -393,6 +419,7 @@ const dashboardInsightsRecap = {
                 es: "Compartir mi {{month}}",
                 fr: "Partager mon {{month}}",
                 pt: "Compartilhar meu {{month}}",
+                "pt-PT": "Partilhar meu {{month}}",
             })
         ),
         where: {
@@ -413,7 +440,14 @@ const dashboardInsightsRecap = {
                 fr: "Des dépenses",
                 pt: "Das despesas",
             }),
-            share: t({ en: "Share", de: "Anteil", es: "Proporción", fr: "Part", pt: "Proporção" }),
+            share: t({
+                en: "Share",
+                de: "Anteil",
+                es: "Proporción",
+                fr: "Part",
+                pt: "Proporção",
+                "pt-PT": "Proporção",
+            }),
             spent: t({ en: "Spent", de: "Ausgegeben", es: "Gastado", fr: "Dépensé", pt: "Gasto" }),
             title: t({
                 en: "Where it went",

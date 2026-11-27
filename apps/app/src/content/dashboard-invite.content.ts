@@ -9,6 +9,7 @@ const dashboardInvite = {
             es: "Compartir invitación",
             fr: "Partager l'invitation",
             pt: "Compartilhar convite",
+            "pt-PT": "Partilhar convite",
         }),
         shareMessage: insert(
             t({
@@ -42,6 +43,7 @@ const dashboardInvite = {
                 es: "{{count}} siguen registrando",
                 fr: "{{count}} en cours",
                 pt: "{{count}} ainda registrando",
+                "pt-PT": "{{count}} ainda a registar",
             })
         ),
         noneYet: t({
@@ -57,6 +59,7 @@ const dashboardInvite = {
             es: "Regala a un amigo un mes de Pro. Recibe otro.",
             fr: "Offrez un mois de Pro à un ami. Recevez-en un.",
             pt: "Dê um mês de Pro a um amigo. Ganhe outro.",
+            "pt-PT": "Ofereça um mês de Pro a um amigo. Receba outro.",
         }),
         yourLink: t({ en: "Your link", de: "Dein Link", es: "Tu enlace", fr: "Votre lien", pt: "Seu link" }),
         yourCode: t({ en: "Your code", de: "Dein Code", es: "Tu código", fr: "Votre code", pt: "Seu código" }),
@@ -76,6 +79,7 @@ const dashboardInvite = {
                 es: "Recibes un mes cuando un amigo registra {{days}} días. Hasta {{cap}} al año.",
                 fr: "Un mois arrive quand un ami saisit {{days}} jours. Jusqu'à {{cap}} par an.",
                 pt: "Um mês chega quando um amigo registra {{days}} dias. Até {{cap}} por ano.",
+                "pt-PT": "Um mês chega quando um amigo regista {{days}} dias. Até {{cap}} por ano.",
             })
         ),
         footnotePaid: insert(
@@ -115,6 +119,7 @@ const dashboardInvite = {
             es: "Comprobando…",
             fr: "Vérification…",
             pt: "Verificando…",
+            "pt-PT": "A verificar…",
         }),
         wrongCode: t({
             en: "Codes are 8 letters and numbers.",
@@ -130,6 +135,7 @@ const dashboardInvite = {
                 es: "Las invitaciones son para cuentas que nunca tuvieron Pro.",
                 fr: "Les invitations sont pour les comptes qui n'ont jamais eu Pro.",
                 pt: "Convites são para contas que nunca tiveram Pro.",
+                "pt-PT": "Os convites são para contas que nunca tiveram Pro.",
             }),
             invalid: t({
                 en: "That code doesn't match an invite.",
@@ -144,6 +150,7 @@ const dashboardInvite = {
                 es: "Las invitaciones son para cuentas nuevas.",
                 fr: "Les invitations sont réservées aux nouveaux comptes.",
                 pt: "Convites são para contas novas.",
+                "pt-PT": "Os convites são para contas novas.",
             }),
             offline: t({
                 en: "Couldn't reach Outlayr. Try again.",
@@ -151,6 +158,7 @@ const dashboardInvite = {
                 es: "No pudimos conectar con Outlayr. Inténtalo de nuevo.",
                 fr: "Impossible de joindre Outlayr. Réessayez.",
                 pt: "Não foi possível conectar ao Outlayr. Tente de novo.",
+                "pt-PT": "Não foi possível ligar ao Outlayr. Tente novamente.",
             }),
             own: t({
                 en: "That's your own code.",
@@ -165,6 +173,7 @@ const dashboardInvite = {
                 es: "Demasiados intentos. Prueba de nuevo en una hora.",
                 fr: "Trop d'essais. Réessayez dans une heure.",
                 pt: "Muitas tentativas. Tente de novo em uma hora.",
+                "pt-PT": "Demasiadas tentativas. Tente novamente dentro de uma hora.",
             }),
             unavailable: t({
                 en: "Couldn't check your subscription.",
@@ -172,13 +181,16 @@ const dashboardInvite = {
                 es: "No pudimos revisar tu suscripción.",
                 fr: "Impossible de vérifier votre abonnement.",
                 pt: "Não foi possível verificar sua assinatura.",
+                "pt-PT": "Não foi possível verificar a sua subscrição.",
             }),
             used: t({
                 en: "You've already used an invite.",
                 de: "Du hast schon eine Einladung eingelöst.",
                 es: "Ya usaste una invitación.",
+                "es-ES": "Ya has usado una invitación.",
                 fr: "Vous avez déjà utilisé une invitation.",
                 pt: "Você já usou um convite.",
+                "pt-PT": "Já usou um convite.",
             }),
         },
         name: t({ en: "Name", de: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
@@ -191,6 +203,7 @@ const dashboardInvite = {
                 es: "Registró {{days}} de {{total}} días",
                 fr: "{{days}} jours saisis sur {{total}}",
                 pt: "Registrou {{days}} de {{total}} dias",
+                "pt-PT": "Registou {{days}} de {{total}} dias",
             })
         ),
         waiting: t({
@@ -199,6 +212,7 @@ const dashboardInvite = {
             es: "Aún sin compra",
             fr: "Pas encore d'achat",
             pt: "Nenhuma compra ainda",
+            "pt-PT": "Ainda sem compra",
         }),
         done: insert(
             t({
@@ -207,6 +221,7 @@ const dashboardInvite = {
                 es: "Registró {{days}} días · {{date}}",
                 fr: "{{days}} jours saisis · {{date}}",
                 pt: "Registrou {{days}} dias · {{date}}",
+                "pt-PT": "Registou {{days}} dias · {{date}}",
             })
         ),
         bought: insert(
@@ -244,6 +259,7 @@ const dashboardInvite = {
                 es: "Recibes un mes cuando un amigo registra {{days}} días.",
                 fr: "Un mois arrive quand un ami saisit {{days}} jours.",
                 pt: "Um mês chega quando um amigo registra {{days}} dias.",
+                "pt-PT": "Um mês chega quando um amigo regista {{days}} dias.",
             })
         ),
         emptyBodyPaid: t({
@@ -269,14 +285,17 @@ const dashboardInvite = {
                     es: "{{name}} te regaló un mes de Pro",
                     fr: "{{name}} vous offre un mois de Pro",
                     pt: "{{name}} te deu um mês de Pro",
+                    "pt-PT": "{{name}} deu-lhe um mês de Pro",
                 })
             ),
             titleFriend: t({
                 en: "A friend gave you a month of Pro",
                 de: "Ein Freund hat dir einen Monat Pro geschenkt",
                 es: "Un amigo te regaló un mes de Pro",
+                "es-ES": "Un amigo te ha regalado un mes de Pro",
                 fr: "Un ami vous offre un mois de Pro",
                 pt: "Um amigo te deu um mês de Pro",
+                "pt-PT": "Um amigo ofereceu-lhe um mês de Pro",
             }),
             startsNow: t({
                 en: "Starts now. Nothing renews.",
@@ -292,6 +311,7 @@ const dashboardInvite = {
                     es: "{{name}} ve tu primer nombre y cuántos días llevas registrados, hasta {{days}}.",
                     fr: "{{name}} voit votre prénom et combien de jours vous avez saisis, jusqu'à {{days}}.",
                     pt: "{{name}} vê seu primeiro nome e quantos dias você registrou, até {{days}}.",
+                    "pt-PT": "{{name}} vê o seu primeiro nome e quantos dias registou, até {{days}}.",
                 })
             ),
             sharedPaid: insert(
@@ -301,6 +321,7 @@ const dashboardInvite = {
                     es: "{{name}} ve tu primer nombre y si compras Pro.",
                     fr: "{{name}} voit votre prénom et si vous achetez Pro.",
                     pt: "{{name}} vê seu primeiro nome e se você compra o Pro.",
+                    "pt-PT": "{{name}} vê o seu primeiro nome e se compra o Pro.",
                 })
             ),
             sharedFriend: insert(
@@ -310,14 +331,17 @@ const dashboardInvite = {
                     es: "Tu amigo ve tu primer nombre y cuántos días llevas registrados, hasta {{days}}.",
                     fr: "Votre ami voit votre prénom et combien de jours vous avez saisis, jusqu'à {{days}}.",
                     pt: "Seu amigo vê seu primeiro nome e quantos dias você registrou, até {{days}}.",
+                    "pt-PT": "O seu amigo vê o seu primeiro nome e quantos dias registou, até {{days}}.",
                 })
             ),
             sharedFriendPaid: t({
                 en: "Your friend sees your first name and whether you buy Pro.",
                 de: "Dein Freund sieht deinen Vornamen und ob du Pro kaufst.",
                 es: "Tu amigo ve tu primer nombre y si compras Pro.",
+                "es-ES": "Tu amigo ve tu nombre y si compras Pro.",
                 fr: "Votre ami voit votre prénom et si vous achetez Pro.",
                 pt: "Seu amigo vê seu primeiro nome e se você compra o Pro.",
+                "pt-PT": "O seu amigo vê o seu primeiro nome e se compra o Pro.",
             }),
             notNow: t({ en: "Not now", de: "Nicht jetzt", es: "Ahora no", fr: "Pas maintenant", pt: "Agora não" }),
             confirm: t({
@@ -333,6 +357,7 @@ const dashboardInvite = {
                 es: "Reclamando…",
                 fr: "Activation…",
                 pt: "Resgatando…",
+                "pt-PT": "A resgatar…",
             }),
             claimed: t({
                 en: "A month of Pro is yours",
@@ -350,6 +375,7 @@ const dashboardInvite = {
                     es: "{{name}} registró {{days}} días",
                     fr: "{{name}} a saisi {{days}} jours",
                     pt: "{{name}} registrou {{days}} dias",
+                    "pt-PT": "{{name}} registou {{days}} dias",
                 })
             ),
             whoPaid: insert(
@@ -368,6 +394,7 @@ const dashboardInvite = {
                     es: "{{count}} amigos registraron {{days}} días",
                     fr: "{{count}} amis ont saisi {{days}} jours",
                     pt: "{{count}} amigos registraram {{days}} dias",
+                    "pt-PT": "{{count}} amigos registaram {{days}} dias",
                 })
             ),
             whoManyPaid: insert(
@@ -385,6 +412,7 @@ const dashboardInvite = {
                 es: "Ganaste un mes de Pro.",
                 fr: "Vous avez gagné un mois de Pro.",
                 pt: "Você ganhou um mês de Pro.",
+                "pt-PT": "Ganhou um mês de Pro.",
             }),
             earnedMany: insert(
                 t({
@@ -393,6 +421,7 @@ const dashboardInvite = {
                     es: "Ganaste {{count}} meses de Pro.",
                     fr: "Vous avez gagné {{count}} mois de Pro.",
                     pt: "Você ganhou {{count}} meses de Pro.",
+                    "pt-PT": "Ganhou {{count}} meses de Pro.",
                 })
             ),
             until: t({ en: "Pro until", de: "Pro bis", es: "Pro hasta", fr: "Pro jusqu'au", pt: "Pro até" }),
@@ -411,7 +440,7 @@ const dashboardInvite = {
                 fr: "Mois offerts par vos amis",
                 pt: "Meses de amigos",
             }),
-            done: t({ en: "Done", de: "Fertig", es: "Listo", fr: "Terminé", pt: "Concluído" }),
+            done: t({ en: "Done", de: "Fertig", es: "Listo", "es-ES": "Hecho", fr: "Terminé", pt: "Concluído" }),
             another: t({
                 en: "Invite another friend",
                 de: "Weiteren Freund einladen",

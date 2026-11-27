@@ -12,6 +12,9 @@ const REGIONAL_FALLBACK = new Map([
 ]);
 
 export function numberLocale(language: string, browser: readonly string[]): string {
+    if (language.includes("-")) {
+        return language;
+    }
     if (language === "en") {
         return ENGLISH;
     }

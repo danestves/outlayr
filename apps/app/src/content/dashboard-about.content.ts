@@ -37,6 +37,8 @@ const dashboardAbout = {
             es: "Outlayr es de código abierto y gratuito para siempre. Está basado en Dime, una hermosa app de gastos creada por Rafael Soh, y se distribuye bajo la GNU General Public License v3.0.",
             fr: "Outlayr est open source et gratuit pour toujours. Il s'appuie sur Dime, une superbe app de suivi des dépenses créée par Rafael Soh, et il est distribué sous la GNU General Public License v3.0.",
             pt: "O Outlayr é de código aberto e gratuito para sempre. É baseado no Dime, um lindo app de gastos criado por Rafael Soh, e é distribuído sob a GNU General Public License v3.0.",
+            "pt-PT":
+                "O Outlayr é de código aberto e gratuito para sempre. É baseado no Dime, uma bela app de despesas criada por Rafael Soh, e é distribuído ao abrigo da GNU General Public License v3.0.",
         }),
         licence: t({ en: "Licence", de: "Lizenz", es: "Licencia", fr: "Licence", pt: "Licença" }),
         links: t({ en: "Links", de: "Links", es: "Enlaces", fr: "Liens", pt: "Links" }),
@@ -60,6 +62,8 @@ const dashboardAbout = {
             es: "Outlayr se distribuye SIN NINGUNA GARANTÍA, en la medida permitida por la ley. Puedes redistribuirlo bajo los términos de la GNU General Public License v3.0.",
             fr: "Outlayr est fourni SANS AUCUNE GARANTIE, dans les limites permises par la loi. Vous pouvez le redistribuer selon les termes de la GNU General Public License v3.0.",
             pt: "O Outlayr vem SEM NENHUMA GARANTIA, na medida permitida pela lei. Você pode redistribuí-lo sob os termos da GNU General Public License v3.0.",
+            "pt-PT":
+                "O Outlayr é fornecido SEM QUALQUER GARANTIA, na medida permitida por lei. Pode redistribuí-lo nos termos da GNU General Public License v3.0.",
         }),
         share: t({
             en: "Share Outlayr",
@@ -67,6 +71,7 @@ const dashboardAbout = {
             es: "Compartir Outlayr",
             fr: "Partager Outlayr",
             pt: "Compartilhar o Outlayr",
+            "pt-PT": "Partilhar o Outlayr",
         }),
         followX: t({
             en: "Follow Outlayr on X",
@@ -81,6 +86,7 @@ const dashboardAbout = {
             es: "Laboratorio de funciones",
             fr: "Labo",
             pt: "Laboratório de recursos",
+            "pt-PT": "Laboratório de funcionalidades",
         }),
         suggest: t({
             en: "Suggest a feature",
@@ -88,6 +94,7 @@ const dashboardAbout = {
             es: "Sugerir una función",
             fr: "Suggérer une fonction",
             pt: "Sugerir um recurso",
+            "pt-PT": "Sugerir uma funcionalidade",
         }),
         wish: t({
             en: "I wish Outlayr could",
@@ -103,6 +110,7 @@ const dashboardAbout = {
             es: "Avísame por correo cuando salga",
             fr: "Prévenez-moi par e-mail à sa sortie",
             pt: "Me avise por e-mail quando sair",
+            "pt-PT": "Avise-me por e-mail quando sair",
         }),
         privacy: t({
             en: "Sent with your app version, device and language. Never your entries.",
@@ -110,9 +118,17 @@ const dashboardAbout = {
             es: "Se envía con tu versión de la app, dispositivo e idioma. Nunca tus registros.",
             fr: "Envoyé avec votre version de l'app, votre appareil et votre langue. Jamais vos opérations.",
             pt: "Enviado com a versão do app, o aparelho e o idioma. Nunca seus lançamentos.",
+            "pt-PT": "Enviado com a versão da app, o dispositivo e o idioma. Nunca os seus registos.",
         }),
         send: t({ en: "Send", de: "Senden", es: "Enviar", fr: "Envoyer", pt: "Enviar" }),
-        sending: t({ en: "Sending…", de: "Senden…", es: "Enviando…", fr: "Envoi…", pt: "Enviando…" }),
+        sending: t({
+            en: "Sending…",
+            de: "Senden…",
+            es: "Enviando…",
+            fr: "Envoi…",
+            pt: "Enviando…",
+            "pt-PT": "A enviar…",
+        }),
         sent: t({
             en: "Sent. Thanks.",
             de: "Gesendet. Danke.",
@@ -126,6 +142,7 @@ const dashboardAbout = {
             es: "No se pudo enviar. Revisa tu conexión e inténtalo de nuevo.",
             fr: "Envoi impossible. Vérifiez votre connexion et réessayez.",
             pt: "Não deu para enviar. Confira sua conexão e tente de novo.",
+            "pt-PT": "Não foi possível enviar. Verifique a ligação e tente novamente.",
         }),
         rateLimited: t({
             en: "That's a lot of ideas for one hour. Try again later.",
@@ -133,6 +150,7 @@ const dashboardAbout = {
             es: "Son muchas ideas para una hora. Inténtalo más tarde.",
             fr: "Beaucoup d'idées pour une heure. Réessayez plus tard.",
             pt: "São muitas ideias para uma hora. Tente mais tarde.",
+            "pt-PT": "São muitas ideias numa hora. Tente mais tarde.",
         }),
         about: t({ en: "About", de: "Über", es: "Acerca de", fr: "À propos", pt: "Sobre" }),
         tabLicenses: t({ en: "Licenses", de: "Lizenzen", es: "Licencias", fr: "Licences", pt: "Licenças" }),
@@ -171,7 +189,7 @@ const dashboardAbout = {
             fr: "Ce paquet n'a publié aucun texte de licence.",
             pt: "Este pacote não publicou texto de licença.",
         }),
-        done: t({ en: "Done", de: "Fertig", es: "Listo", fr: "Terminé", pt: "Concluído" }),
+        done: t({ en: "Done", de: "Fertig", es: "Listo", "es-ES": "Hecho", fr: "Terminé", pt: "Concluído" }),
         cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
         labAdding: t({
             en: "Adding a transaction",
@@ -181,7 +199,14 @@ const dashboardAbout = {
             pt: "Ao adicionar uma transação",
         }),
         labBudgets: t({ en: "Budgets", de: "Budgets", es: "Presupuestos", fr: "Budgets", pt: "Orçamentos" }),
-        labLog: t({ en: "The Log", de: "Der Verlauf", es: "El registro", fr: "Le journal", pt: "O registro" }),
+        labLog: t({
+            en: "The Log",
+            de: "Der Verlauf",
+            es: "El registro",
+            fr: "Le journal",
+            pt: "O registro",
+            "pt-PT": "O registo",
+        }),
         labRows: t({
             en: "Transaction rows",
             de: "Eintragszeilen",

@@ -34,8 +34,22 @@ const dashboard = {
             }),
             label: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
             plan: t({ en: "Pro plan", de: "Pro-Plan", es: "Plan Pro", fr: "Forfait Pro", pt: "Plano Pro" }),
-            settings: t({ en: "Settings", de: "Einstellungen", es: "Ajustes", fr: "Réglages", pt: "Ajustes" }),
-            signOut: t({ en: "Sign out", de: "Abmelden", es: "Cerrar sesión", fr: "Se déconnecter", pt: "Sair" }),
+            settings: t({
+                en: "Settings",
+                de: "Einstellungen",
+                es: "Ajustes",
+                fr: "Réglages",
+                pt: "Ajustes",
+                "pt-PT": "Definições",
+            }),
+            signOut: t({
+                en: "Sign out",
+                de: "Abmelden",
+                es: "Cerrar sesión",
+                fr: "Se déconnecter",
+                pt: "Sair",
+                "pt-PT": "Terminar sessão",
+            }),
             terms: t({
                 en: "Terms and privacy",
                 de: "Nutzungsbedingungen und Datenschutz",
@@ -51,6 +65,7 @@ const dashboard = {
                 es: "Añade un movimiento y aparece aquí.",
                 fr: "Ajoutez une opération et elle s'affichera ici.",
                 pt: "Adicione um lançamento e ele aparece aqui.",
+                "pt-PT": "Adicione um registo e ele aparece aqui.",
             }),
             label: t({ en: "Add", de: "Hinzufügen", es: "Añadir", fr: "Ajouter", pt: "Adicionar" }),
             entry: t({
@@ -59,6 +74,7 @@ const dashboard = {
                 es: "Añadir movimiento",
                 fr: "Ajouter une opération",
                 pt: "Adicionar lançamento",
+                "pt-PT": "Adicionar registo",
             }),
         },
         loadingLabel: t({
@@ -67,6 +83,7 @@ const dashboard = {
             es: "Cargando tus movimientos",
             fr: "Chargement de vos opérations",
             pt: "Carregando seus lançamentos",
+            "pt-PT": "A carregar os seus registos",
         }),
         filters: {
             accounts: t({ en: "accounts", de: "Konten", es: "cuentas", fr: "comptes", pt: "contas" }),
@@ -87,7 +104,7 @@ const dashboard = {
             }),
             categoryChip: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             clear: t({ en: "Clear", de: "Zurücksetzen", es: "Quitar", fr: "Effacer", pt: "Limpar" }),
-            done: t({ en: "Done", de: "Fertig", es: "Listo", fr: "OK", pt: "Concluído" }),
+            done: t({ en: "Done", de: "Fertig", es: "Listo", "es-ES": "Hecho", fr: "OK", pt: "Concluído" }),
             month: t({ en: "Month", de: "Monat", es: "Mes", fr: "Mois", pt: "Mês" }),
             period: t({ en: "Period", de: "Zeitraum", es: "Periodo", fr: "Période", pt: "Período" }),
             range: {
@@ -179,6 +196,7 @@ const dashboard = {
                 es: "Buscar cuentas",
                 fr: "Rechercher un compte",
                 pt: "Buscar contas",
+                "pt-PT": "Pesquisar contas",
             }),
             searchCategories: t({
                 en: "Search categories",
@@ -186,6 +204,7 @@ const dashboard = {
                 es: "Buscar categorías",
                 fr: "Rechercher une catégorie",
                 pt: "Buscar categorias",
+                "pt-PT": "Pesquisar categorias",
             }),
             selected: insert(
                 t({
@@ -235,7 +254,7 @@ const dashboard = {
             }),
             dashboard: t({ en: "Dashboard", de: "Dashboard", es: "Panel", fr: "Tableau de bord", pt: "Painel" }),
             debts: t({ en: "Debts", de: "Schulden", es: "Deudas", fr: "Dettes", pt: "Dívidas" }),
-            goals: t({ en: "Goals", de: "Sparziele", es: "Metas", fr: "Objectifs", pt: "Metas" }),
+            goals: t({ en: "Goals", de: "Sparziele", es: "Metas", fr: "Objectifs", pt: "Metas", "pt-PT": "Objetivos" }),
             home: t({
                 en: "Outlayr home",
                 de: "Outlayr Startseite",
@@ -251,8 +270,23 @@ const dashboard = {
                 fr: "Statistiques",
                 pt: "Estatísticas",
             }),
-            installments: t({ en: "Installments", de: "Ratenpläne", es: "Cuotas", fr: "Échéances", pt: "Parcelas" }),
-            label: t({ en: "Ledger", de: "Haushaltsbuch", es: "Libro", fr: "Registre", pt: "Registro" }),
+            installments: t({
+                en: "Installments",
+                de: "Ratenpläne",
+                es: "Cuotas",
+                "es-ES": "Plazos",
+                fr: "Échéances",
+                pt: "Parcelas",
+                "pt-PT": "Prestações",
+            }),
+            label: t({
+                en: "Ledger",
+                de: "Haushaltsbuch",
+                es: "Libro",
+                fr: "Registre",
+                pt: "Registro",
+                "pt-PT": "Registo",
+            }),
             open: t({ en: "Open menu", de: "Menü öffnen", es: "Abrir menú", fr: "Ouvrir le menu", pt: "Abrir menu" }),
             plan: t({ en: "Plan", de: "Plan", es: "Plan", fr: "Forfait", pt: "Plano" }),
             recurring: t({
@@ -263,7 +297,14 @@ const dashboard = {
                 pt: "Recorrentes",
             }),
             rules: t({ en: "Rules", de: "Regeln", es: "Reglas", fr: "Règles", pt: "Regras" }),
-            search: t({ en: "Search", de: "Suchen", es: "Buscar", fr: "Rechercher", pt: "Buscar" }),
+            search: t({
+                en: "Search",
+                de: "Suchen",
+                es: "Buscar",
+                fr: "Rechercher",
+                pt: "Buscar",
+                "pt-PT": "Pesquisar",
+            }),
             tools: t({ en: "Tools", de: "Werkzeuge", es: "Herramientas", fr: "Outils", pt: "Ferramentas" }),
             transactions: t({
                 en: "Transactions",
@@ -271,6 +312,7 @@ const dashboard = {
                 es: "Movimientos",
                 fr: "Opérations",
                 pt: "Lançamentos",
+                "pt-PT": "Registos",
             }),
         },
     },

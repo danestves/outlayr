@@ -21,13 +21,21 @@ const dashboardLedger = {
                     pt: "Criar #{{name}}",
                 })
             ),
-            delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            delete: t({
+                en: "Delete",
+                de: "Löschen",
+                es: "Eliminar",
+                fr: "Supprimer",
+                pt: "Excluir",
+                "pt-PT": "Eliminar",
+            }),
             deleteBody: t({
                 en: "You can undo right after.",
                 de: "Du kannst es direkt danach rückgängig machen.",
                 es: "Puedes deshacerlo justo después.",
                 fr: "Tu peux annuler juste après.",
                 pt: "Você pode desfazer logo depois.",
+                "pt-PT": "Pode desfazer logo depois.",
             }),
             deleteTitle: insert(
                 t({
@@ -36,6 +44,7 @@ const dashboardLedger = {
                     es: "¿Eliminar {{count}} movimientos?",
                     fr: "Supprimer {{count}} opérations ?",
                     pt: "Excluir {{count}} lançamentos?",
+                    "pt-PT": "Eliminar {{count}} registos?",
                 })
             ),
             searchTags: t({
@@ -44,6 +53,7 @@ const dashboardLedger = {
                 es: "Busca o crea una etiqueta",
                 fr: "Chercher ou créer un tag",
                 pt: "Buscar ou criar uma tag",
+                "pt-PT": "Pesquisar ou criar uma tag",
             }),
             setAccount: t({
                 en: "Set account",
@@ -71,13 +81,13 @@ const dashboardLedger = {
         },
         columns: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             comfortable: t({ en: "Comfortable", de: "Bequem", es: "Cómoda", fr: "Confortable", pt: "Confortável" }),
             compact: t({ en: "Compact", de: "Kompakt", es: "Compacta", fr: "Compacte", pt: "Compacta" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
             density: t({ en: "Density", de: "Dichte", es: "Densidad", fr: "Densité", pt: "Densidade" }),
-            fee: t({ en: "Fee", de: "Gebühr", es: "Comisión", fr: "Frais", pt: "Tarifa" }),
+            fee: t({ en: "Fee", de: "Gebühr", es: "Comisión", fr: "Frais", pt: "Tarifa", "pt-PT": "Comissão" }),
             from: t({ en: "From", de: "Von", es: "Desde", fr: "De", pt: "De" }),
             label: t({ en: "Columns", de: "Spalten", es: "Columnas", fr: "Colonnes", pt: "Colunas" }),
             merchant: t({ en: "Merchant", de: "Händler", es: "Comercio", fr: "Commerçant", pt: "Estabelecimento" }),
@@ -92,7 +102,7 @@ const dashboardLedger = {
             }),
             reset: t({ en: "Reset", de: "Zurücksetzen", es: "Restablecer", fr: "Réinitialiser", pt: "Redefinir" }),
             select: t({ en: "Select", de: "Auswahl", es: "Selección", fr: "Sélection", pt: "Seleção" }),
-            tags: t({ en: "Tags", de: "Tags", es: "Etiquetas", fr: "Tags", pt: "Tags" }),
+            tags: t({ en: "Tags", de: "Tags", es: "Etiquetas", fr: "Tags", pt: "Tags", "pt-PT": "Etiquetas" }),
             to: t({ en: "To", de: "Nach", es: "Hacia", fr: "Vers", pt: "Para" }),
         },
         empty: {
@@ -109,6 +119,7 @@ const dashboardLedger = {
                 es: "Ningún movimiento coincide",
                 fr: "Aucune opération ne correspond",
                 pt: "Nenhum lançamento corresponde",
+                "pt-PT": "Nenhum registo corresponde",
             }),
             noResultsLine: t({
                 en: "Try a wider date range or clear a filter.",
@@ -130,12 +141,20 @@ const dashboardLedger = {
                 es: "No hay nada esperando revisión.",
                 fr: "Rien n’attend de vérification.",
                 pt: "Nada está esperando revisão.",
+                "pt-PT": "Nada está a esperar revisão.",
             }),
         },
         exporting: {
             cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
             csv: t({ en: "CSV", de: "CSV", es: "CSV", fr: "CSV", pt: "CSV" }),
-            entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            entries: t({
+                en: "Entries",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
             format: t({ en: "Format", de: "Format", es: "Formato", fr: "Format", pt: "Formato" }),
             include: t({ en: "Include", de: "Enthalten", es: "Incluir", fr: "Inclure", pt: "Incluir" }),
             net: t({ en: "Net", de: "Saldo", es: "Neto", fr: "Net", pt: "Líquido" }),
@@ -146,6 +165,7 @@ const dashboardLedger = {
                     es: "Exportar {{count}} movimientos",
                     fr: "Exporter {{count}} opérations",
                     pt: "Exportar {{count}} lançamentos",
+                    "pt-PT": "Exportar {{count}} registos",
                 })
             ),
             submitOne: t({
@@ -154,6 +174,7 @@ const dashboardLedger = {
                 es: "Exportar 1 movimiento",
                 fr: "Exporter 1 opération",
                 pt: "Exportar 1 lançamento",
+                "pt-PT": "Exportar 1 registo",
             }),
             tagsAndNotes: t({
                 en: "Tags and notes",
@@ -174,7 +195,7 @@ const dashboardLedger = {
                 fr: "Depuis le début",
                 pt: "Todo o período",
             }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             amountBetween: insert(
                 t({
                     en: "{{min}} to {{max}}",
@@ -238,6 +259,7 @@ const dashboardLedger = {
                 es: "Buscar comercios",
                 fr: "Chercher un commerçant",
                 pt: "Buscar estabelecimentos",
+                "pt-PT": "Pesquisar estabelecimentos",
             }),
             searchTags: t({
                 en: "Search tags",
@@ -245,6 +267,7 @@ const dashboardLedger = {
                 es: "Buscar etiquetas",
                 fr: "Chercher un tag",
                 pt: "Buscar tags",
+                "pt-PT": "Pesquisar tags",
             }),
             searchTransfers: t({
                 en: "Account, note",
@@ -303,6 +326,7 @@ const dashboardLedger = {
                 en: "Amount updated",
                 de: "Betrag geändert",
                 es: "Monto actualizado",
+                "es-ES": "Importe actualizado",
                 fr: "Montant modifié",
                 pt: "Valor atualizado",
             }),
@@ -311,6 +335,7 @@ const dashboardLedger = {
                     en: "Amount of {{name}}",
                     de: "Betrag von {{name}}",
                     es: "Monto de {{name}}",
+                    "es-ES": "Importe de {{name}}",
                     fr: "Montant de {{name}}",
                     pt: "Valor de {{name}}",
                 })
@@ -405,7 +430,14 @@ const dashboardLedger = {
                 fr: "Nouveau virement",
                 pt: "Nova transferência",
             }),
-            title: t({ en: "Transactions", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            title: t({
+                en: "Transactions",
+                de: "Einträge",
+                es: "Movimientos",
+                fr: "Opérations",
+                pt: "Lançamentos",
+                "pt-PT": "Registos",
+            }),
         },
         drawer: {
             openPlan: t({
@@ -457,7 +489,14 @@ const dashboardLedger = {
             ),
         },
         row: {
-            delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            delete: t({
+                en: "Delete",
+                de: "Löschen",
+                es: "Eliminar",
+                fr: "Supprimer",
+                pt: "Excluir",
+                "pt-PT": "Eliminar",
+            }),
             duplicate: t({ en: "Duplicate", de: "Duplizieren", es: "Duplicar", fr: "Dupliquer", pt: "Duplicar" }),
             duplicated: t({
                 en: "Entry duplicated",
@@ -465,6 +504,7 @@ const dashboardLedger = {
                 es: "Movimiento duplicado",
                 fr: "Opération dupliquée",
                 pt: "Lançamento duplicado",
+                "pt-PT": "Registo duplicado",
             }),
             menu: insert(
                 t({
@@ -483,6 +523,7 @@ const dashboardLedger = {
                 en: "Largest amount",
                 de: "Höchster Betrag",
                 es: "Monto más alto",
+                "es-ES": "Importe más alto",
                 fr: "Montant le plus élevé",
                 pt: "Maior valor",
             }),
@@ -499,6 +540,7 @@ const dashboardLedger = {
                 en: "Smallest amount",
                 de: "Niedrigster Betrag",
                 es: "Monto más bajo",
+                "es-ES": "Importe más bajo",
                 fr: "Montant le plus bas",
                 pt: "Menor valor",
             }),
@@ -549,6 +591,7 @@ const dashboardLedger = {
                 es: "Eliminar vista",
                 fr: "Supprimer la vue",
                 pt: "Excluir visualização",
+                "pt-PT": "Eliminar visualização",
             }),
             deleteBody: insert(
                 t({
@@ -557,6 +600,7 @@ const dashboardLedger = {
                     es: "Tus {{count}} movimientos se quedan. Solo se va la vista.",
                     fr: "Tes {{count}} opérations restent. Seule la vue disparaît.",
                     pt: "Seus {{count}} lançamentos ficam. Só a visualização sai.",
+                    "pt-PT": "Seus {{count}} registos ficam. Só a visualização sai.",
                 })
             ),
             deleteTitle: insert(
@@ -566,6 +610,7 @@ const dashboardLedger = {
                     es: "¿Eliminar {{name}}?",
                     fr: "Supprimer {{name}} ?",
                     pt: "Excluir {{name}}?",
+                    "pt-PT": "Eliminar {{name}}?",
                 })
             ),
             duplicate: t({ en: "Duplicate", de: "Duplizieren", es: "Duplicar", fr: "Dupliquer", pt: "Duplicar" }),
@@ -607,6 +652,7 @@ const dashboardLedger = {
                 es: "Sin filtros, así que la vista muestra todos los movimientos.",
                 fr: "Aucun filtre, la vue montre donc toutes les opérations.",
                 pt: "Sem filtros, então a visualização mostra todos os lançamentos.",
+                "pt-PT": "Sem filtros, então a visualização mostra todos os registos.",
             }),
             rename: t({ en: "Rename", de: "Umbenennen", es: "Renombrar", fr: "Renommer", pt: "Renomear" }),
             renameTitle: t({
@@ -622,8 +668,16 @@ const dashboardLedger = {
                 es: "Guardar vista",
                 fr: "Enregistrer la vue",
                 pt: "Salvar visualização",
+                "pt-PT": "Guardar visualização",
             }),
-            saveName: t({ en: "Save", de: "Speichern", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+            saveName: t({
+                en: "Save",
+                de: "Speichern",
+                es: "Guardar",
+                fr: "Enregistrer",
+                pt: "Salvar",
+                "pt-PT": "Guardar",
+            }),
             taken: t({
                 en: "That name is taken",
                 de: "Der Name ist schon vergeben",

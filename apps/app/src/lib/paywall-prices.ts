@@ -6,7 +6,8 @@ export function paywallPrices(country: string | null, language: string) {
     const { amount: monthly, currency } = proPrice(country, "monthly");
     const { amount: annual } = proPrice(country, "annual");
     const { amount: lifetime } = proPrice(country, "lifetime");
-    const format = new Intl.NumberFormat(localProPriceRow(country) ? `${language}-${country}` : language, {
+    const countryLocale = localProPriceRow(country) ? `${language}-${country}` : language;
+    const format = new Intl.NumberFormat(language.includes("-") ? language : countryLocale, {
         currency,
         style: "currency",
         trailingZeroDisplay: "stripIfInteger",

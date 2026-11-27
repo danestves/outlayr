@@ -26,7 +26,14 @@ const dashboardVoice = {
                 fr: "Répéter",
                 pt: "Diga de novo",
             }),
-            save: t({ en: "Save", de: "Speichern", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+            save: t({
+                en: "Save",
+                de: "Speichern",
+                es: "Guardar",
+                fr: "Enregistrer",
+                pt: "Salvar",
+                "pt-PT": "Guardar",
+            }),
             stop: t({
                 en: "Done speaking",
                 de: "Fertig gesprochen",
@@ -79,13 +86,18 @@ const dashboardVoice = {
                 es: "Para dictar un registro se necesita el servicio en la nube.",
                 fr: "La saisie vocale nécessite le service cloud.",
                 pt: "Ditar um lançamento requer o serviço na nuvem.",
+                "pt-PT": "Ditar um registo requer o serviço na nuvem.",
             }),
             notEntitled: t({
                 en: "Your free captures, voice and receipts together, are used up. They come back within 30 days; Pro lifts the limit.",
                 de: "Deine kostenlosen Erfassungen, Sprache und Belege zusammen, sind aufgebraucht. Sie kommen innerhalb von 30 Tagen zurück; Pro hebt das Limit auf.",
                 es: "Ya usaste tus capturas gratis (voz y recibos). Se renuevan en menos de 30 días; con Pro no tienes ese límite.",
+                "es-ES":
+                    "Ya has usado tus capturas gratis (voz y tickets). Se renuevan en menos de 30 días; con Pro no tienes ese límite.",
                 fr: "Vos captures gratuites (voix et tickets confondus) sont épuisées. Elles reviennent sous 30 jours ; Pro supprime la limite.",
                 pt: "Você já usou suas capturas grátis (voz e recibos). Elas se renovam em até 30 dias; com o Pro não há esse limite.",
+                "pt-PT":
+                    "Já usou as suas capturas grátis (voz e talões). Renovam-se no prazo de 30 dias; com o Pro não há este limite.",
             }),
             offline: t({
                 en: "You're offline.",
@@ -93,6 +105,7 @@ const dashboardVoice = {
                 es: "Estás sin conexión.",
                 fr: "Vous êtes hors ligne.",
                 pt: "Você está sem conexão.",
+                "pt-PT": "Está sem ligação.",
             }),
             provider: t({
                 en: "Couldn't write that down.",
@@ -105,8 +118,10 @@ const dashboardVoice = {
                 en: "The fair-use limit for captures is reached. It resets within 30 days.",
                 de: "Das Fair-Use-Limit für Erfassungen ist erreicht. Es wird innerhalb von 30 Tagen zurückgesetzt.",
                 es: "Llegaste al límite de uso justo de capturas. Se renueva en menos de 30 días.",
+                "es-ES": "Has llegado al límite de uso justo de capturas. Se renueva en menos de 30 días.",
                 fr: "La limite d'utilisation raisonnable des captures est atteinte. Elle se réinitialise sous 30 jours.",
                 pt: "Você atingiu o limite de uso justo de capturas. Ele se renova em até 30 dias.",
+                "pt-PT": "Atingiu o limite de utilização justa de capturas. Renova-se no prazo de 30 dias.",
             }),
             rateLimited: t({
                 en: "That's a lot of entries at once. Give it a moment.",
@@ -114,6 +129,7 @@ const dashboardVoice = {
                 es: "Son muchos registros seguidos. Espera un momento.",
                 fr: "Beaucoup d'opérations d'un coup. Patientez un instant.",
                 pt: "São muitos lançamentos seguidos. Espere um momento.",
+                "pt-PT": "São muitos registos seguidos. Espere um momento.",
             }),
             silent: t({
                 en: "Didn't hear anything.",
@@ -128,6 +144,7 @@ const dashboardVoice = {
                 es: "Tardó demasiado.",
                 fr: "Cela a pris trop de temps.",
                 pt: "Demorou demais.",
+                "pt-PT": "Demorou demasiado.",
             }),
             unauthenticated: t({
                 en: "Sign in to speak an entry.",
@@ -135,6 +152,7 @@ const dashboardVoice = {
                 es: "Inicia sesión para dictar un registro.",
                 fr: "Connectez-vous pour dicter une opération.",
                 pt: "Entre para ditar um lançamento.",
+                "pt-PT": "Inicie sessão para ditar um registo.",
             }),
             unclear: t({
                 en: "Didn't catch a transaction in that.",
@@ -142,14 +160,19 @@ const dashboardVoice = {
                 es: "No detecté ninguna transacción ahí.",
                 fr: "Je n'ai repéré aucune opération.",
                 pt: "Não identifiquei nenhum lançamento aí.",
+                "pt-PT": "Não identifiquei nenhum registo no que disse.",
             }),
         },
         fine: t({
             en: "Category suggestions never include amounts, dates, or accounts. We don't keep recordings, photos, screenshots, or notifications.",
             de: "Kategorievorschläge enthalten nie Beträge, Datumsangaben oder Konten. Wir speichern keine Aufnahmen, Fotos, Screenshots oder Benachrichtigungen.",
             es: "Las sugerencias de categoría nunca incluyen montos, fechas ni cuentas. No guardamos grabaciones, fotos, capturas ni notificaciones.",
+            "es-ES":
+                "Las sugerencias de categoría nunca incluyen importes, fechas ni cuentas. No guardamos grabaciones, fotos, capturas ni notificaciones.",
             fr: "Les suggestions de catégorie n'incluent jamais les montants, les dates ni les comptes. Nous ne conservons ni enregistrements, ni photos, ni captures d'écran, ni notifications.",
             pt: "As sugestões de categoria nunca incluem valores, datas ou contas. Não armazenamos gravações, fotos, capturas de tela nem notificações.",
+            "pt-PT":
+                "As sugestões de categoria nunca incluem valores, datas ou contas. Não guardamos gravações, fotos, capturas de ecrã nem notificações.",
         }),
         heard: t({ en: "Heard", de: "Gehört", es: "Escuché", fr: "Entendu", pt: "Ouvi" }),
         hint: t({
@@ -174,6 +197,7 @@ const dashboardVoice = {
                 es: "Escuchando…",
                 fr: "À l'écoute…",
                 pt: "Ouvindo…",
+                "pt-PT": "A ouvir…",
             }),
             starting: t({
                 en: "Getting ready…",
@@ -181,6 +205,7 @@ const dashboardVoice = {
                 es: "Preparando…",
                 fr: "Préparation…",
                 pt: "Preparando…",
+                "pt-PT": "A preparar…",
             }),
             thinking: t({
                 en: "Writing it down…",
@@ -188,6 +213,7 @@ const dashboardVoice = {
                 es: "Anotando…",
                 fr: "Je note…",
                 pt: "Anotando…",
+                "pt-PT": "A anotar…",
             }),
         },
         title: t({
@@ -196,6 +222,7 @@ const dashboardVoice = {
             es: "Dictar un registro",
             fr: "Saisie vocale",
             pt: "Ditar um lançamento",
+            "pt-PT": "Ditar um registo",
         }),
         voiceSends: t({
             en: "The recording, your account and category names, currency, language, and today's date",

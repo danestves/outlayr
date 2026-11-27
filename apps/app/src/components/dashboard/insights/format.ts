@@ -1,5 +1,5 @@
 import { wallNoon } from "@outlayr/money/ledger-zone";
-import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -16,7 +16,7 @@ export function useInsightsFormat({
 }: Pick<Ledger, "currency" | "firstDayOfMonth" | "today">) {
     const { locale } = useLocale();
     const { money } = useDisplayFormat();
-    const { date } = LANGUAGES[localeFromParam(locale)];
+    const { date } = LANGUAGES[locale];
     const { range } = useIntlayer("dashboard-insights-bar");
     return useMemo(() => {
         // The web frames read "Oct 28"; the site's en-GB date locale would flip it.

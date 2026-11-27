@@ -4,7 +4,14 @@ import type { Dictionary } from "intlayer";
 const dashboardRecurring = {
     content: {
         actions: {
-            delete: t({ en: "Delete", de: "Löschen", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            delete: t({
+                en: "Delete",
+                de: "Löschen",
+                es: "Eliminar",
+                fr: "Supprimer",
+                pt: "Excluir",
+                "pt-PT": "Eliminar",
+            }),
             edit: t({ en: "Edit", de: "Bearbeiten", es: "Editar", fr: "Modifier", pt: "Editar" }),
             logAgain: t({
                 en: "Log again",
@@ -45,6 +52,7 @@ const dashboardRecurring = {
             en: "Add recurring",
             de: "Wiederkehrend hinzufügen",
             es: "Agregar recurrente",
+            "es-ES": "Añadir recurrente",
             fr: "Ajouter",
             pt: "Adicionar recorrente",
         }),
@@ -92,7 +100,7 @@ const dashboardRecurring = {
             repeats: t({ en: "Repeats", de: "Wiederholung", es: "Frecuencia", fr: "Fréquence", pt: "Frequência" }),
             search: t({ en: "Name, note", de: "Name, Notiz", es: "Nombre, nota", fr: "Nom, note", pt: "Nome, nota" }),
             sort: {
-                amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+                amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
                 name: t({ en: "Name", de: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
                 next: t({
                     en: "Next date",
@@ -184,7 +192,7 @@ const dashboardRecurring = {
         close: t({ en: "Close", de: "Schließen", es: "Cerrar", fr: "Fermer", pt: "Fechar" }),
         columns: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
             gap: t({ en: "Gap", de: "Abstand", es: "Intervalo", fr: "Écart", pt: "Intervalo" }),
@@ -217,6 +225,7 @@ const dashboardRecurring = {
                     es: "Vincular {{count}} movimientos anteriores, del {{from}} al {{to}}",
                     fr: "Lier {{count}} opérations passées, du {{from}} au {{to}}",
                     pt: "Vincular {{count}} lançamentos anteriores, de {{from}} a {{to}}",
+                    "pt-PT": "Vincular {{count}} registos anteriores, de {{from}} a {{to}}",
                 })
             ),
             linkOne: insert(
@@ -226,6 +235,7 @@ const dashboardRecurring = {
                     es: "Vincular el movimiento anterior del {{from}}",
                     fr: "Lier l'opération passée du {{from}}",
                     pt: "Vincular o lançamento anterior de {{from}}",
+                    "pt-PT": "Vincular o registo anterior de {{from}}",
                 })
             ),
         },
@@ -244,6 +254,7 @@ const dashboardRecurring = {
                 es: "Los movimientos que se repiten con regularidad aparecen aquí.",
                 fr: "Les opérations qui reviennent à intervalle régulier apparaissent ici.",
                 pt: "Lançamentos que se repetem com regularidade aparecem aqui.",
+                "pt-PT": "Registos que se repetem com regularidade aparecem aqui.",
             }),
             emptyTitle: t({
                 en: "Nothing to confirm",
@@ -257,6 +268,7 @@ const dashboardRecurring = {
                     en: "Same amount, about every {{count}} days",
                     de: "Gleicher Betrag, etwa alle {{count}} Tage",
                     es: "Mismo monto, cada {{count}} días aproximadamente",
+                    "es-ES": "Mismo importe, cada {{count}} días aproximadamente",
                     fr: "Même montant, environ tous les {{count}} jours",
                     pt: "Mesmo valor, a cada {{count}} dias aproximadamente",
                 })
@@ -277,6 +289,7 @@ const dashboardRecurring = {
                     es: "{{count}} movimientos coinciden",
                     fr: "{{count}} opérations correspondantes",
                     pt: "{{count}} lançamentos correspondentes",
+                    "pt-PT": "{{count}} registos correspondentes",
                 })
             ),
             notRecurring: t({
@@ -302,6 +315,7 @@ const dashboardRecurring = {
                 es: "Ver movimientos",
                 fr: "Voir les opérations",
                 pt: "Ver lançamentos",
+                "pt-PT": "Ver registos",
             }),
             seen: insert(
                 t({
@@ -329,6 +343,7 @@ const dashboardRecurring = {
                 es: "Todos los movimientos",
                 fr: "Toutes les opérations",
                 pt: "Todos os lançamentos",
+                "pt-PT": "Todos os registos",
             }),
             ended: insert(
                 t({
@@ -356,7 +371,14 @@ const dashboardRecurring = {
                     pt: "{{repeats}}, próximo em {{date}}",
                 })
             ),
-            nextItem: t({ en: "Next item", de: "Nächster Posten", es: "Siguiente", fr: "Suivant", pt: "Próximo" }),
+            nextItem: t({
+                en: "Next item",
+                de: "Nächster Posten",
+                es: "Siguiente",
+                fr: "Suivant",
+                pt: "Próximo",
+                "pt-PT": "Seguinte",
+            }),
             noHistory: t({
                 en: "No charges logged yet",
                 de: "Noch keine Abbuchungen erfasst",
@@ -407,13 +429,16 @@ const dashboardRecurring = {
                 es: "Importa movimientos para detectarlos",
                 fr: "Importer des opérations pour les détecter",
                 pt: "Importe lançamentos para detectá-los",
+                "pt-PT": "Importe registos para detectá-los",
             }),
             line: t({
                 en: "Add rent or a subscription and it shows up here before it charges.",
                 de: "Füge Miete oder ein Abo hinzu, und es erscheint hier, bevor es abgebucht wird.",
                 es: "Agrega el alquiler o una suscripción y aparecerá aquí antes de cobrarse.",
+                "es-ES": "Añade el alquiler o una suscripción y aparecerá aquí antes de cobrarse.",
                 fr: "Ajoutez un loyer ou un abonnement et il apparaît ici avant d'être prélevé.",
                 pt: "Adicione o aluguel ou uma assinatura e ele aparece aqui antes da cobrança.",
+                "pt-PT": "Adicione a renda ou uma subscrição e ele aparece aqui antes da cobrança.",
             }),
             title: t({
                 en: "Nothing is scheduled",
@@ -427,7 +452,7 @@ const dashboardRecurring = {
         exportFile: t({ en: "recurring", de: "wiederkehrend", es: "recurrentes", fr: "recurrents", pt: "recorrentes" }),
         fields: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
-            amount: t({ en: "Amount", de: "Betrag", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amount: t({ en: "Amount", de: "Betrag", es: "Monto", "es-ES": "Importe", fr: "Montant", pt: "Valor" }),
             category: t({ en: "Category", de: "Kategorie", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
             ending: t({ en: "Ending", de: "Ende", es: "Termina", fr: "Fin", pt: "Termina" }),
             name: t({ en: "Name", de: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
@@ -482,6 +507,7 @@ const dashboardRecurring = {
                 en: "Add recurring",
                 de: "Wiederkehrend hinzufügen",
                 es: "Agregar recurrente",
+                "es-ES": "Añadir recurrente",
                 fr: "Ajouter un récurrent",
                 pt: "Adicionar recorrente",
             }),
@@ -509,7 +535,15 @@ const dashboardRecurring = {
                 fr: "Fréquence personnalisée",
                 pt: "Frequência personalizada",
             }),
-            done: t({ en: "Done", de: "Fertig", es: "Listo", fr: "OK", pt: "Pronto" }),
+            done: t({
+                en: "Done",
+                de: "Fertig",
+                es: "Listo",
+                "es-ES": "Hecho",
+                fr: "OK",
+                pt: "Pronto",
+                "pt-PT": "Concluir",
+            }),
             editTitle: insert(
                 t({
                     en: "Edit {{name}}",
@@ -525,8 +559,10 @@ const dashboardRecurring = {
                         en: "Enter an amount above {{zero}}",
                         de: "Gib einen Betrag über {{zero}} ein",
                         es: "Escribe un monto mayor a {{zero}}",
+                        "es-ES": "Escribe un importe mayor a {{zero}}",
                         fr: "Saisissez un montant supérieur à {{zero}}",
                         pt: "Digite um valor acima de {{zero}}",
+                        "pt-PT": "Introduza um valor acima de {{zero}}",
                     })
                 ),
                 category: t({
@@ -565,8 +601,10 @@ const dashboardRecurring = {
                 en: "Past entries keep their amount.",
                 de: "Frühere Einträge behalten ihren Betrag.",
                 es: "Los movimientos anteriores conservan su monto.",
+                "es-ES": "Los movimientos anteriores conservan su importe.",
                 fr: "Les opérations passées gardent leur montant.",
                 pt: "Lançamentos anteriores mantêm o valor.",
+                "pt-PT": "Registos anteriores mantêm o valor.",
             }),
             namePlaceholder: t({
                 en: "Hulu, rent, a gym",
@@ -574,6 +612,7 @@ const dashboardRecurring = {
                 es: "Netflix, alquiler, el gimnasio",
                 fr: "Netflix, loyer, la salle de sport",
                 pt: "Netflix, aluguel, a academia",
+                "pt-PT": "Netflix, renda, a academia",
             }),
             never: t({ en: "Never", de: "Nie", es: "Nunca", fr: "Jamais", pt: "Nunca" }),
             noAccount: t({ en: "No account", de: "Kein Konto", es: "Sin cuenta", fr: "Aucun compte", pt: "Sem conta" }),
@@ -591,7 +630,14 @@ const dashboardRecurring = {
                 fr: "Choisir une catégorie",
                 pt: "Escolha uma categoria",
             }),
-            save: t({ en: "Save", de: "Speichern", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+            save: t({
+                en: "Save",
+                de: "Speichern",
+                es: "Guardar",
+                fr: "Enregistrer",
+                pt: "Salvar",
+                "pt-PT": "Guardar",
+            }),
             sentence: insert(
                 t({
                     en: "{{every}}, starting {{start}}, ending {{end}}",
@@ -625,7 +671,14 @@ const dashboardRecurring = {
         },
         groups: {
             active: t({ en: "Active", de: "Aktiv", es: "Activos", fr: "Actifs", pt: "Ativos" }),
-            later: t({ en: "Later", de: "Später", es: "Más adelante", fr: "Plus tard", pt: "Depois" }),
+            later: t({
+                en: "Later",
+                de: "Später",
+                es: "Más adelante",
+                fr: "Plus tard",
+                pt: "Depois",
+                "pt-PT": "Mais tarde",
+            }),
             missed: t({ en: "Missed", de: "Verpasst", es: "Pendientes", fr: "Manqués", pt: "Atrasados" }),
             paused: t({ en: "Paused", de: "Pausiert", es: "En pausa", fr: "Suspendus", pt: "Pausados" }),
             stopped: t({ en: "Stopped", de: "Beendet", es: "Terminados", fr: "Arrêtés", pt: "Encerrados" }),
@@ -710,6 +763,7 @@ const dashboardRecurring = {
                     es: "Vencía el {{date}}, sin un movimiento que coincida desde entonces.",
                     fr: "Dû le {{date}}, aucune opération correspondante depuis.",
                     pt: "Vencia em {{date}}, sem lançamento correspondente desde então.",
+                    "pt-PT": "Vencia em {{date}}, sem registo correspondente desde então.",
                 })
             ),
             dueToday: t({
@@ -718,6 +772,7 @@ const dashboardRecurring = {
                 es: "Vence hoy, aún sin un movimiento que coincida.",
                 fr: "Dû aujourd'hui, aucune opération correspondante pour l'instant.",
                 pt: "Vence hoje, ainda sem lançamento correspondente.",
+                "pt-PT": "Vence hoje, ainda sem registo correspondente.",
             }),
             skip: t({
                 en: "Skip this one",
@@ -743,6 +798,7 @@ const dashboardRecurring = {
                 es: "Pausa una suscripción y esperará aquí hasta que vuelva.",
                 fr: "Suspendez un abonnement et il attend ici son retour.",
                 pt: "Pause uma assinatura e ela espera aqui até voltar.",
+                "pt-PT": "Pause uma subscrição e ela espera aqui até voltar.",
             }),
             emptyTitle: t({
                 en: "Nothing is paused",
@@ -827,6 +883,7 @@ const dashboardRecurring = {
                     es: "Eliminar también esos {{count}} movimientos",
                     fr: "Supprimer aussi ces {{count}} opérations",
                     pt: "Excluir também esses {{count}} lançamentos",
+                    "pt-PT": "Eliminar também esses {{count}} registos",
                 })
             ),
             alsoOne: t({
@@ -835,6 +892,7 @@ const dashboardRecurring = {
                 es: "Eliminar también ese movimiento",
                 fr: "Supprimer aussi cette opération",
                 pt: "Excluir também esse lançamento",
+                "pt-PT": "Eliminar também esse registo",
             }),
             body: insert(
                 t({
@@ -843,6 +901,8 @@ const dashboardRecurring = {
                     es: "La programación y sus próximos cobros desaparecen. Los {{count}} movimientos ya registrados se quedan en Movimientos.",
                     fr: "Le calendrier et ses prochains prélèvements disparaissent. Les {{count}} opérations déjà saisies restent dans Opérations.",
                     pt: "A programação e as próximas cobranças somem. Os {{count}} lançamentos já feitos ficam em Lançamentos.",
+                    "pt-PT":
+                        "O agendamento e as próximas cobranças somem. Os {{count}} registos já feitos ficam em Registos.",
                 })
             ),
             bodyNone: t({
@@ -851,6 +911,7 @@ const dashboardRecurring = {
                 es: "La programación y sus próximos cobros desaparecen.",
                 fr: "Le calendrier et ses prochains prélèvements disparaissent.",
                 pt: "A programação e as próximas cobranças somem.",
+                "pt-PT": "O agendamento e as próximas cobranças somem.",
             }),
             bodyOne: t({
                 en: "The schedule and its next charges go away. The entry already logged stays in Transactions.",
@@ -858,6 +919,7 @@ const dashboardRecurring = {
                 es: "La programación y sus próximos cobros desaparecen. El movimiento ya registrado se queda en Movimientos.",
                 fr: "Le calendrier et ses prochains prélèvements disparaissent. L'opération déjà saisie reste dans Opérations.",
                 pt: "A programação e as próximas cobranças somem. O lançamento já feito fica em Lançamentos.",
+                "pt-PT": "O agendamento e as próximas cobranças somem. O registo já feito fica em Registos.",
             }),
             title: insert(
                 t({
@@ -866,6 +928,7 @@ const dashboardRecurring = {
                     es: "¿Eliminar {{name}}?",
                     fr: "Supprimer {{name}} ?",
                     pt: "Excluir {{name}}?",
+                    "pt-PT": "Eliminar {{name}}?",
                 })
             ),
         },
@@ -916,7 +979,14 @@ const dashboardRecurring = {
                     fr: "Tous les jours",
                     pt: "Todos os dias",
                 }),
-                month: t({ en: "Every month", de: "Jeden Monat", es: "Cada mes", fr: "Tous les mois", pt: "Todo mês" }),
+                month: t({
+                    en: "Every month",
+                    de: "Jeden Monat",
+                    es: "Cada mes",
+                    fr: "Tous les mois",
+                    pt: "Todo mês",
+                    "pt-PT": "Todos os meses",
+                }),
                 onDay: insert(
                     t({
                         en: "{{every}}, on the {{day}}",
@@ -941,6 +1011,7 @@ const dashboardRecurring = {
                     es: "Cada semana",
                     fr: "Toutes les semaines",
                     pt: "Toda semana",
+                    "pt-PT": "Todas as semanas",
                 }),
                 year: t({ en: "Every year", de: "Jedes Jahr", es: "Cada año", fr: "Tous les ans", pt: "Todo ano" }),
             },
@@ -965,6 +1036,7 @@ const dashboardRecurring = {
                     en: "{{name}} added",
                     de: "{{name}} hinzugefügt",
                     es: "{{name}} agregado",
+                    "es-ES": "{{name}} añadido",
                     fr: "{{name}} ajouté",
                     pt: "{{name}} adicionado",
                 })
@@ -994,6 +1066,7 @@ const dashboardRecurring = {
                     es: "{{name}} eliminado",
                     fr: "{{name}} supprimé",
                     pt: "{{name}} excluído",
+                    "pt-PT": "{{name}} eliminado",
                 })
             ),
             dismissed: insert(
@@ -1011,6 +1084,7 @@ const dashboardRecurring = {
                 es: "No se pudo guardar. Inténtalo de nuevo.",
                 fr: "Enregistrement impossible. Réessayez.",
                 pt: "Não deu para salvar. Tente de novo.",
+                "pt-PT": "Não deu para guardar. Tente de novo.",
             }),
             logged: insert(
                 t({
@@ -1055,6 +1129,7 @@ const dashboardRecurring = {
                     es: "{{name}} guardado",
                     fr: "{{name}} enregistré",
                     pt: "{{name}} salvo",
+                    "pt-PT": "{{name}} guardado",
                 })
             ),
             skipped: insert(

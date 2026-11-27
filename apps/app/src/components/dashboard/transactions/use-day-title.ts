@@ -1,5 +1,5 @@
 import { wallNoon } from "@outlayr/money/ledger-zone";
-import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -12,7 +12,7 @@ const WEEKDAY_LEAD = /^([^\s,]+),?\s/u;
 /** "Sat, Nov 7" in English: the site's en-GB date locale would flip it to "Sat, 7 Nov". */
 export function useWeekday() {
     const { locale } = useLocale();
-    const { date } = LANGUAGES[localeFromParam(locale)];
+    const { date } = LANGUAGES[locale];
     return useMemo(() => {
         const format = new Intl.DateTimeFormat(date === "en-GB" ? "en-US" : date, {
             day: "numeric",

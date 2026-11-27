@@ -65,6 +65,7 @@ const dashboardInsights = {
 
                     fr: "Vous avez dépensé {{amount}} en {{period}}, comme d'habitude.",
                     pt: "Você gastou {{amount}} em {{period}}, como de costume.",
+                    "pt-PT": "Gastou {{amount}} em {{period}}, como de costume.",
                 })
             ),
             less: insert(
@@ -75,6 +76,7 @@ const dashboardInsights = {
 
                     fr: "Vous avez dépensé {{amount}} en {{period}}, {{percent}} % de moins que d'habitude.",
                     pt: "Você gastou {{amount}} em {{period}}, {{percent}}% menos que o habitual.",
+                    "pt-PT": "Gastou {{amount}} em {{period}}, {{percent}}% menos que o habitual.",
                 })
             ),
             more: insert(
@@ -85,6 +87,7 @@ const dashboardInsights = {
 
                     fr: "Vous avez dépensé {{amount}} en {{period}}, {{percent}} % de plus que d'habitude.",
                     pt: "Você gastou {{amount}} em {{period}}, {{percent}}% mais que o habitual.",
+                    "pt-PT": "Gastou {{amount}} em {{period}}, {{percent}}% mais que o habitual.",
                 })
             ),
             nothing: insert(
@@ -95,6 +98,7 @@ const dashboardInsights = {
 
                     fr: "Vous n'avez rien dépensé en {{period}}.",
                     pt: "Você não gastou nada em {{period}}.",
+                    "pt-PT": "Não gastou nada em {{period}}.",
                 })
             ),
             plain: insert(
@@ -105,6 +109,7 @@ const dashboardInsights = {
 
                     fr: "Vous avez dépensé {{amount}} en {{period}}.",
                     pt: "Você gastou {{amount}} em {{period}}.",
+                    "pt-PT": "Gastou {{amount}} em {{period}}.",
                 })
             ),
             soFarAsUsual: insert(
@@ -115,6 +120,7 @@ const dashboardInsights = {
 
                     fr: "Vous avez dépensé {{amount}} jusqu'ici en {{period}}, comme d'habitude à ce stade.",
                     pt: "Você gastou {{amount}} até agora em {{period}}, como de costume.",
+                    "pt-PT": "Gastou {{amount}} até agora em {{period}}, como de costume.",
                 })
             ),
             soFarLess: insert(
@@ -125,6 +131,7 @@ const dashboardInsights = {
 
                     fr: "Vous avez dépensé {{amount}} jusqu'ici en {{period}}, {{percent}} % de moins que d'habitude.",
                     pt: "Você gastou {{amount}} até agora em {{period}}, {{percent}}% menos que o habitual.",
+                    "pt-PT": "Gastou {{amount}} até agora em {{period}}, {{percent}}% menos que o habitual.",
                 })
             ),
             soFarMore: insert(
@@ -135,6 +142,7 @@ const dashboardInsights = {
 
                     fr: "Vous avez dépensé {{amount}} jusqu'ici en {{period}}, {{percent}} % de plus que d'habitude.",
                     pt: "Você gastou {{amount}} até agora em {{period}}, {{percent}}% mais que o habitual.",
+                    "pt-PT": "Gastou {{amount}} até agora em {{period}}, {{percent}}% mais que o habitual.",
                 })
             ),
             soFarPlain: insert(
@@ -145,6 +153,7 @@ const dashboardInsights = {
 
                     fr: "Vous avez dépensé {{amount}} jusqu'ici en {{period}}.",
                     pt: "Você gastou {{amount}} até agora em {{period}}.",
+                    "pt-PT": "Gastou {{amount}} até agora em {{period}}.",
                 })
             ),
         },
@@ -153,7 +162,7 @@ const dashboardInsights = {
             savings: t({ en: "Savings", de: "Gespart", es: "Ahorros", fr: "Épargne", pt: "Poupança" }),
         },
         months: {
-            averageLabel: t({ en: "Avg", de: "Ø", es: "Prom.", fr: "Moy.", pt: "Méd." }),
+            averageLabel: t({ en: "Avg", de: "Ø", es: "Prom.", "es-ES": "Media", fr: "Moy.", pt: "Méd." }),
             title: t({
                 en: "Spending by month",
                 de: "Ausgaben pro Monat",
@@ -163,7 +172,14 @@ const dashboardInsights = {
             }),
         },
         netWorth: {
-            title: t({ en: "Net worth", de: "Vermögen", es: "Patrimonio", fr: "Patrimoine", pt: "Patrimônio" }),
+            title: t({
+                en: "Net worth",
+                de: "Vermögen",
+                es: "Patrimonio",
+                fr: "Patrimoine",
+                pt: "Patrimônio",
+                "pt-PT": "Património",
+            }),
         },
         standsOut: {
             biggest: insert(
@@ -313,6 +329,7 @@ const dashboardInsights = {
 
                     fr: "Vous dépensez habituellement {{amount}} ici",
                     pt: "Você costuma gastar {{amount}} aqui",
+                    "pt-PT": "Costuma gastar {{amount}} aqui",
                 })
             ),
             usualByNow: insert(
@@ -323,6 +340,7 @@ const dashboardInsights = {
 
                     fr: "Vous dépensez habituellement {{amount}} ici à ce stade",
                     pt: "Você costuma gastar {{amount}} aqui até agora",
+                    "pt-PT": "Costuma gastar {{amount}} aqui até agora",
                 })
             ),
         },

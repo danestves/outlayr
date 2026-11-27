@@ -1,7 +1,28 @@
 import { t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
-const text = (en: string, de: string, es: string, fr: string, pt: string) => t({ en, de, es, fr, pt });
+interface LocaleOverrides {
+    "es-ES"?: string;
+    "pt-PT"?: string;
+}
+interface TextContent extends LocaleOverrides {
+    en: string;
+    de: string;
+    es: string;
+    fr: string;
+    pt: string;
+}
+
+const text = (en: string, de: string, es: string, fr: string, pt: string, overrides: LocaleOverrides = {}) => {
+    const content: TextContent = { en, de, es, fr, pt };
+    if (overrides["es-ES"] !== undefined) {
+        content["es-ES"] = overrides["es-ES"];
+    }
+    if (overrides["pt-PT"] !== undefined) {
+        content["pt-PT"] = overrides["pt-PT"];
+    }
+    return t(content);
+};
 
 const dashboardImportMm = {
     content: {
@@ -23,14 +44,15 @@ const dashboardImportMm = {
             ),
             balance: text("Balance", "Kontostand", "Saldo", "Solde", "Saldo"),
             bring: text("Bring it in as", "Importieren als", "Traer como", "Importer comme", "Trazer como"),
-            entries: text("Entries", "Einträge", "Movimientos", "Opérations", "Lançamentos"),
+            entries: text("Entries", "Einträge", "Movimientos", "Opérations", "Lançamentos", { "pt-PT": "Registos" }),
             goesTo: text("Goes to", "Geht nach", "Va a", "Va vers", "Vai para"),
             groupDeleted: text(
                 "Deleted in Money Manager",
                 "In Money Manager gelöscht",
                 "Eliminadas en Money Manager",
                 "Supprimés dans Money Manager",
-                "Excluídas no Money Manager"
+                "Excluídas no Money Manager",
+                { "pt-PT": "Eliminadas no Money Manager" }
             ),
             groupHidden: text(
                 "Hidden in Money Manager",
@@ -84,7 +106,8 @@ const dashboardImportMm = {
                 "Ihre Konten wurden gelöscht",
                 "Sus cuentas fueron eliminadas",
                 "Leurs comptes ont été supprimés",
-                "As contas deles foram excluídas"
+                "As contas deles foram excluídas",
+                { "pt-PT": "As contas deles foram eliminadas" }
             ),
             title: text("Accounts", "Konten", "Cuentas", "Comptes", "Contas"),
         },
@@ -95,7 +118,8 @@ const dashboardImportMm = {
                 "Einträge ergeben",
                 "Los movimientos suman",
                 "Les opérations totalisent",
-                "Os lançamentos somam"
+                "Os lançamentos somam",
+                { "pt-PT": "Os registos somam" }
             ),
             match: text("Match", "Stimmt", "Igualar", "Aligner", "Igualar"),
             note: text(
@@ -134,13 +158,14 @@ const dashboardImportMm = {
         bar: {
             back: text("Back", "Zurück", "Atrás", "Retour", "Voltar"),
             cancel: text("Cancel", "Abbrechen", "Cancelar", "Annuler", "Cancelar"),
-            done: text("Done", "Fertig", "Listo", "Terminé", "Concluir"),
+            done: text("Done", "Fertig", "Listo", "Terminé", "Concluir", { "es-ES": "Hecho" }),
             import: text(
                 "Import {n} entries",
                 "{n} Einträge importieren",
                 "Importar {n} movimientos",
                 "Importer {n} opérations",
-                "Importar {n} lançamentos"
+                "Importar {n} lançamentos",
+                { "pt-PT": "Importar {n} registos" }
             ),
             title: text("Money Manager", "Money Manager", "Money Manager", "Money Manager", "Money Manager"),
         },
@@ -161,7 +186,8 @@ const dashboardImportMm = {
                 "Sie beginnen diesen Monat, deshalb zählt, was du darin schon ausgegeben hast.",
                 "Empiezan este mes, así que lo que ya gastaste cuenta.",
                 "Ils démarrent ce mois-ci, donc ce que vous avez déjà dépensé compte.",
-                "Começam neste mês, então o que você já gastou conta."
+                "Começam neste mês, então o que você já gastou conta.",
+                { "pt-PT": "Começam neste mês, então o que já gastou conta." }
             ),
             limit: text("Limit", "Limit", "Límite", "Limite", "Limite"),
             used: text("Spent", "Ausgegeben", "Gastado", "Dépensé", "Gasto"),
@@ -189,7 +215,7 @@ const dashboardImportMm = {
         },
         categories: {
             count: text("{n} of {total}", "{n} von {total}", "{n} de {total}", "{n} sur {total}", "{n} de {total}"),
-            entries: text("Entries", "Einträge", "Movimientos", "Opérations", "Lançamentos"),
+            entries: text("Entries", "Einträge", "Movimientos", "Opérations", "Lançamentos", { "pt-PT": "Registos" }),
             expenses: text("Expenses", "Ausgaben", "Gastos", "Dépenses", "Despesas"),
             goesTo: text("Goes to", "Geht nach", "Va a", "Va vers", "Vai para"),
             how: text("How", "Wie", "Cómo", "Comment", "Como"),
@@ -214,7 +240,9 @@ const dashboardImportMm = {
                 "Categoria nova"
             ),
             newTag: text("New", "Neu", "Nueva", "Nouvelle", "Nova"),
-            noEntries: text("No entries", "Keine Einträge", "Sin movimientos", "Aucune opération", "Sem lançamentos"),
+            noEntries: text("No entries", "Keine Einträge", "Sin movimientos", "Aucune opération", "Sem lançamentos", {
+                "pt-PT": "Sem registos",
+            }),
             note: text(
                 "Each one is matched to one of Outlayr's by meaning and keeps its name, unless several land on the same one.",
                 "Jede wird nach Bedeutung einer Kategorie von Outlayr zugeordnet und behält ihren Namen, es sei denn, mehrere landen in derselben.",
@@ -273,7 +301,7 @@ const dashboardImportMm = {
             ),
             budgets: text("Budgets", "Budgets", "Presupuestos", "Budgets", "Orçamentos"),
             categories: text("Categories", "Kategorien", "Categorías", "Catégories", "Categorias"),
-            entries: text("Entries", "Einträge", "Movimientos", "Opérations", "Lançamentos"),
+            entries: text("Entries", "Einträge", "Movimientos", "Opérations", "Lançamentos", { "pt-PT": "Registos" }),
             inOutlayr: text("In Outlayr", "In Outlayr", "En Outlayr", "Dans Outlayr", "No Outlayr"),
             matchesMm: text(
                 "Matches Money Manager",
@@ -301,7 +329,8 @@ const dashboardImportMm = {
                 "Einträge öffnen",
                 "Abrir movimientos",
                 "Ouvrir les opérations",
-                "Abrir lançamentos"
+                "Abrir lançamentos",
+                { "pt-PT": "Abrir registos" }
             ),
             shows: text(
                 "Money Manager shows",
@@ -322,7 +351,13 @@ const dashboardImportMm = {
                 "{n} Einträge vom {day}. Entfernt alles, was dieser Import hinzugefügt hat. Was du seitdem erfasst hast, bleibt.",
                 "{n} movimientos del {day}. Quita todo lo que agregó esta importación. Lo que registraste después se queda.",
                 "{n} opérations du {day}. Supprime tout ce que cet import a ajouté. Ce que vous avez saisi depuis reste.",
-                "{n} lançamentos de {day}. Remove tudo o que esta importação adicionou. O que você registrou depois fica."
+                "{n} lançamentos de {day}. Remove tudo o que esta importação adicionou. O que você registrou depois fica.",
+                {
+                    "es-ES":
+                        "{n} movimientos del {day}. Quita todo lo que añadió esta importación. Lo que registraste después se queda.",
+                    "pt-PT":
+                        "{n} registos de {day}. Remove tudo o que esta importação adicionou. O que registou depois fica.",
+                }
             ),
             undoConfirm: text(
                 "Undo the Money Manager import?",
@@ -391,7 +426,8 @@ const dashboardImportMm = {
                 "{n} Einträge werden geschrieben. Lass diesen Tab offen.",
                 "Escribiendo {n} movimientos. Mantén esta pestaña abierta.",
                 "Écriture de {n} opérations. Gardez cet onglet ouvert.",
-                "Gravando {n} lançamentos. Mantenha esta aba aberta."
+                "Gravando {n} lançamentos. Mantenha esta aba aberta.",
+                { "pt-PT": "A gravar {n} registos. Mantenha esta aba aberta." }
             ),
             budgets: text(
                 "Monthly budgets",
@@ -401,11 +437,15 @@ const dashboardImportMm = {
                 "Orçamentos mensais"
             ),
             categories: text("Categories", "Kategorien", "Categorías", "Catégories", "Categorias"),
-            entries: text("Entries", "Einträge", "Movimientos", "Opérations", "Lançamentos"),
-            heading: text("Importing", "Import läuft", "Importando", "Import en cours", "Importando"),
+            entries: text("Entries", "Einträge", "Movimientos", "Opérations", "Lançamentos", { "pt-PT": "Registos" }),
+            heading: text("Importing", "Import läuft", "Importando", "Import en cours", "Importando", {
+                "pt-PT": "A importar",
+            }),
             steps: text("Steps", "Schritte", "Pasos", "Étapes", "Etapas"),
-            title: text("Importing…", "Import läuft…", "Importando…", "Import en cours…", "Importando…"),
-            writing: text("Writing", "Schreiben", "Escribiendo", "Écriture", "Gravando"),
+            title: text("Importing…", "Import läuft…", "Importando…", "Import en cours…", "Importando…", {
+                "pt-PT": "A importar…",
+            }),
+            writing: text("Writing", "Schreiben", "Escribiendo", "Écriture", "Gravando", { "pt-PT": "A gravar" }),
         },
         intro: {
             backupTitle: text(
@@ -420,7 +460,8 @@ const dashboardImportMm = {
                 "Backup wählen",
                 "Elegir el respaldo",
                 "Choisir la sauvegarde",
-                "Escolher o backup"
+                "Escolher o backup",
+                { "pt-PT": "Escolher a cópia" }
             ),
             comesOver: text("Comes over", "Wird übernommen", "Qué se importa", "Ce qui est importé", "O que vem junto"),
             drop: text(
@@ -435,7 +476,8 @@ const dashboardImportMm = {
                 "Die Datei endet auf .mmbackup",
                 "El archivo termina en .mmbackup",
                 "Le fichier se termine par .mmbackup",
-                "O arquivo termina em .mmbackup"
+                "O arquivo termina em .mmbackup",
+                { "pt-PT": "O ficheiro termina em .mmbackup" }
             ),
             items: [
                 text(
@@ -443,7 +485,8 @@ const dashboardImportMm = {
                     "Einträge und Umbuchungen",
                     "Movimientos y transferencias",
                     "Opérations et virements",
-                    "Lançamentos e transferências"
+                    "Lançamentos e transferências",
+                    { "pt-PT": "Registos e transferências" }
                 ),
                 text(
                     "Accounts and balances",
@@ -465,7 +508,8 @@ const dashboardImportMm = {
                     "Währungen und Kurse",
                     "Monedas y tasas",
                     "Devises et taux",
-                    "Moedas e taxas"
+                    "Moedas e taxas",
+                    { "es-ES": "Monedas y Tipos de cambio" }
                 ),
             ],
             nothingFinal: text(
@@ -480,7 +524,8 @@ const dashboardImportMm = {
                 "Du prüfst alles, bevor es geschrieben wird, und kannst den Import im Verlauf rückgängig machen.",
                 "Revisas todo antes de que se escriba, y puedes deshacer la importación desde el Historial.",
                 "Vous vérifiez tout avant l'écriture, et vous pouvez annuler l'import depuis l'Historique.",
-                "Você confere tudo antes de gravar e pode desfazer a importação pelo Histórico."
+                "Você confere tudo antes de gravar e pode desfazer a importação pelo Histórico.",
+                { "pt-PT": "Confere tudo antes de gravar e pode desfazer a importação pelo Histórico." }
             ),
             steps: [
                 text(
@@ -495,7 +540,8 @@ const dashboardImportMm = {
                     "Erstelle ein Backup und teile es an diesen Computer.",
                     "Crea un respaldo y pásalo a esta computadora.",
                     "Créez une sauvegarde et transférez-la sur cet ordinateur.",
-                    "Crie um backup e passe-o para este computador."
+                    "Crie um backup e passe-o para este computador.",
+                    { "es-ES": "Crea un respaldo y pásalo a esta ordenador." }
                 ),
                 text(
                     "Drop it below, or choose it.",
@@ -544,23 +590,28 @@ const dashboardImportMm = {
                 "{list} zu den Kursen von Money Manager",
                 "{list} a las tasas de Money Manager",
                 "{list} aux taux de Money Manager",
-                "{list} nas taxas do Money Manager"
+                "{list} nas taxas do Money Manager",
+                { "es-ES": "{list} a las Tipos de cambio de Money Manager" }
             ),
             deletedAccounts: text(
                 "Deleted accounts",
                 "Gelöschte Konten",
                 "Cuentas eliminadas",
                 "Comptes supprimés",
-                "Contas excluídas"
+                "Contas excluídas",
+                { "pt-PT": "Contas eliminadas" }
             ),
             deletedEntries: text(
                 "Deleted entries",
                 "Gelöschte Einträge",
                 "Movimientos eliminados",
                 "Opérations supprimées",
-                "Lançamentos excluídos"
+                "Lançamentos excluídos",
+                { "pt-PT": "Registos eliminados" }
             ),
-            entries: text("{n} entries", "{n} Einträge", "{n} movimientos", "{n} opérations", "{n} lançamentos"),
+            entries: text("{n} entries", "{n} Einträge", "{n} movimientos", "{n} opérations", "{n} lançamentos", {
+                "pt-PT": "{n} registos",
+            }),
             leftBehind: text("Left behind", "Zurückgelassen", "Lo que se queda", "Ce qui reste", "O que fica"),
             needs: text("Needs a look", "Braucht einen Blick", "Requiere atención", "À vérifier", "Precisa de atenção"),
             noCategory: text(
@@ -612,9 +663,12 @@ const dashboardImportMm = {
                 "Für dich eingerichtet",
                 "Preparado para ti",
                 "Préparé pour vous",
-                "Preparado para você"
+                "Preparado para você",
+                { "pt-PT": "Preparado para si" }
             ),
-            starting: text("Starting from", "Ab", "Empezando desde", "À partir de", "Começando de"),
+            starting: text("Starting from", "Ab", "Empezando desde", "À partir de", "Começando de", {
+                "pt-PT": "A começar de",
+            }),
             startingAll: text(
                 "Everything in the backup",
                 "Alles im Backup",
@@ -642,11 +696,12 @@ const dashboardImportMm = {
                 "Du kannst es unter Import, Verlauf rückgängig machen.",
                 "Puedes deshacerlo desde Importar, Historial.",
                 "Vous pouvez l'annuler depuis Importer, Historique.",
-                "Você pode desfazer em Importar, Histórico."
+                "Você pode desfazer em Importar, Histórico.",
+                { "pt-PT": "Pode desfazer em Importar, Histórico." }
             ),
         },
         reading: {
-            file: text("File", "Datei", "Archivo", "Fichier", "Arquivo"),
+            file: text("File", "Datei", "Archivo", "Fichier", "Arquivo", { "pt-PT": "Ficheiro" }),
             local: text(
                 "Read on this device",
                 "Auf diesem Gerät gelesen",
@@ -660,14 +715,16 @@ const dashboardImportMm = {
                 "Du prüfst Konten, Kategorien und Kontostände, bevor etwas geschrieben wird.",
                 "Revisas cuentas, categorías y saldos antes de que se escriba nada.",
                 "Vous vérifiez comptes, catégories et soldes avant toute écriture.",
-                "Você confere contas, categorias e saldos antes de gravar qualquer coisa."
+                "Você confere contas, categorias e saldos antes de gravar qualquer coisa.",
+                { "pt-PT": "Confere contas, categorias e saldos antes de gravar qualquer coisa." }
             ),
             reading: text(
                 "Reading the backup…",
                 "Backup wird gelesen…",
                 "Leyendo el respaldo…",
                 "Lecture de la sauvegarde…",
-                "Lendo o backup…"
+                "Lendo o backup…",
+                { "pt-PT": "A ler a cópia…" }
             ),
             title: text(
                 "Open the backup",
@@ -691,7 +748,8 @@ const dashboardImportMm = {
                 "Beide haben Einträge ab dem {day}",
                 "Ambos tienen movimientos desde el {day}",
                 "Les deux ont des opérations depuis le {day}",
-                "Ambos têm lançamentos desde {day}"
+                "Ambos têm lançamentos desde {day}",
+                { "pt-PT": "Ambos têm registos desde {day}" }
             ),
             cutoff: text(
                 "Stop Money Manager before {day}",
@@ -705,9 +763,12 @@ const dashboardImportMm = {
                 "Deine Outlayr-Einträge ab dann bleiben, wie sie sind.",
                 "Tus movimientos de Outlayr desde entonces quedan como están.",
                 "Vos opérations Outlayr à partir de là restent telles quelles.",
-                "Seus lançamentos do Outlayr a partir daí ficam como estão."
+                "Seus lançamentos do Outlayr a partir daí ficam como estão.",
+                { "pt-PT": "Seus registos do Outlayr a partir daí ficam como estão." }
             ),
-            entries: text("{n} entries", "{n} Einträge", "{n} movimientos", "{n} opérations", "{n} lançamentos"),
+            entries: text("{n} entries", "{n} Einträge", "{n} movimientos", "{n} opérations", "{n} lançamentos", {
+                "pt-PT": "{n} registos",
+            }),
             from: text("From {day}", "Ab dem {day}", "Desde el {day}", "À partir du {day}", "A partir de {day}"),
             inMm: text(
                 "In Money Manager",
@@ -743,9 +804,12 @@ const dashboardImportMm = {
                 "Gleicher Tag, Betrag und gleiche Währung zählen als Übereinstimmung. Gefunden: {n}.",
                 "Mismo día, monto y moneda cuentan como coincidencia. Encontradas: {n}.",
                 "Même jour, montant et devise comptent comme un doublon. Trouvés : {n}.",
-                "Mesmo dia, valor e moeda contam como coincidência. Encontradas: {n}."
+                "Mesmo dia, valor e moeda contam como coincidência. Encontradas: {n}.",
+                { "es-ES": "Mismo día, importe y moneda cuentan como coincidencia. Encontradas: {n}." }
             ),
-            title: text("Starting from", "Ab", "Empezando desde", "À partir de", "Começando de"),
+            title: text("Starting from", "Ab", "Empezando desde", "À partir de", "Começando de", {
+                "pt-PT": "A começar de",
+            }),
             why: text(
                 "Why it matters",
                 "Warum das wichtig ist",
@@ -758,12 +822,16 @@ const dashboardImportMm = {
                 "Wird ein Tag doppelt importiert, verdoppelt sich, was du ausgegeben hast. Die Standardeinstellung behält die Einträge, die du hier schon erfasst hast.",
                 "Importar un día dos veces duplica lo que gastaste. Lo predeterminado conserva los movimientos que ya registraste aquí.",
                 "Importer un jour deux fois double vos dépenses. Par défaut, on garde les opérations déjà saisies ici.",
-                "Importar um dia duas vezes dobra o que você gastou. O padrão mantém os lançamentos que você já registrou aqui."
+                "Importar um dia duas vezes dobra o que você gastou. O padrão mantém os lançamentos que você já registrou aqui.",
+                {
+                    "pt-PT":
+                        "Importar um dia duas vezes dobra o que gastou. O padrão mantém os registos que já registou aqui.",
+                }
             ),
         },
         uncategorized: {
             account: text("Account", "Konto", "Cuenta", "Compte", "Conta"),
-            amount: text("Amount", "Betrag", "Monto", "Montant", "Valor"),
+            amount: text("Amount", "Betrag", "Monto", "Montant", "Valor", { "es-ES": "Importe" }),
             date: text("Date", "Datum", "Fecha", "Date", "Data"),
             from: text("From", "Von", "Desde", "De", "De"),
             hide: text("Hide", "Ausblenden", "Ocultar", "Masquer", "Ocultar"),
@@ -779,7 +847,8 @@ const dashboardImportMm = {
                 "Sie zählen trotzdem in Summen und Kontoständen.",
                 "Igual cuentan en los totales y saldos.",
                 "Ils comptent quand même dans les totaux et les soldes.",
-                "Continuam contando nos totais e saldos."
+                "Continuam contando nos totais e saldos.",
+                { "pt-PT": "Continuam a contar nos totais e saldos." }
             ),
             makeTransfers: text(
                 "Make them transfers",
@@ -817,7 +886,8 @@ const dashboardImportMm = {
                 "Gleicher Tag und Betrag, von einem Konto raus und auf ein anderes rein.",
                 "Mismo día y monto, sale de una cuenta y entra en otra.",
                 "Même jour et même montant, sortant d'un compte et entrant dans un autre.",
-                "Mesmo dia e valor, sai de uma conta e entra em outra."
+                "Mesmo dia e valor, sai de uma conta e entra em outra.",
+                { "es-ES": "Mismo día e importe, sale de una cuenta y entra en otra." }
             ),
             rest: text("The other {n}", "Die anderen {n}", "Los otros {n}", "Les {n} autres", "Os outros {n}"),
             show: text("Show", "Anzeigen", "Mostrar", "Afficher", "Mostrar"),
@@ -844,7 +914,8 @@ const dashboardImportMm = {
                 "Andere Datei wählen",
                 "Elegir otro archivo",
                 "Choisir un autre fichier",
-                "Escolher outro arquivo"
+                "Escolher outro arquivo",
+                { "pt-PT": "Escolher outro ficheiro" }
             ),
             damaged: text("Damaged", "Beschädigt", "Dañado", "Endommagé", "Danificado"),
             damagedBody: text(
@@ -861,7 +932,7 @@ const dashboardImportMm = {
                 "Cette sauvegarde est illisible",
                 "Este backup não pode ser lido"
             ),
-            file: text("File", "Datei", "Archivo", "Fichier", "Arquivo"),
+            file: text("File", "Datei", "Archivo", "Fichier", "Arquivo", { "pt-PT": "Ficheiro" }),
             newer: text(
                 "Newer version",
                 "Neuere Version",
@@ -888,7 +959,8 @@ const dashboardImportMm = {
                 "Outlayr liest die .mmbackup-Datei, die Money Manager von Orange Dog erstellt.",
                 "Outlayr lee el archivo .mmbackup que crea Money Manager de Orange Dog.",
                 "Outlayr lit le fichier .mmbackup que crée Money Manager d'Orange Dog.",
-                "O Outlayr lê o arquivo .mmbackup criado pelo Money Manager da Orange Dog."
+                "O Outlayr lê o arquivo .mmbackup criado pelo Money Manager da Orange Dog.",
+                { "pt-PT": "O Outlayr lê o ficheiro .mmbackup criado pelo Money Manager da Orange Dog." }
             ),
             notBackupTitle: text(
                 "This isn't a Money Manager backup",
@@ -910,21 +982,24 @@ const dashboardImportMm = {
                 "Sie stammt aus Money Manager von Realbyte. Outlayr liest Backups von Money Manager von Orange Dog.",
                 "Viene de Money Manager de Realbyte. Outlayr lee respaldos de Money Manager de Orange Dog.",
                 "Elle vient de Money Manager de Realbyte. Outlayr lit les sauvegardes de Money Manager d'Orange Dog.",
-                "Ele vem do Money Manager da Realbyte. O Outlayr lê backups do Money Manager da Orange Dog."
+                "Ele vem do Money Manager da Realbyte. O Outlayr lê backups do Money Manager da Orange Dog.",
+                { "pt-PT": "Vem do Money Manager da Realbyte. O Outlayr lê cópias do Money Manager da Orange Dog." }
             ),
             realbyteTitle: text(
                 "This backup is from a different Money Manager",
                 "Dieses Backup stammt aus einem anderen Money Manager",
                 "Este respaldo es de otro Money Manager",
                 "Cette sauvegarde vient d'un autre Money Manager",
-                "Este backup é de outro Money Manager"
+                "Este backup é de outro Money Manager",
+                { "pt-PT": "Esta cópia é de outro Money Manager" }
             ),
             title: text(
                 "Can't read this file",
                 "Diese Datei kann nicht gelesen werden",
                 "No se puede leer este archivo",
                 "Impossible de lire ce fichier",
-                "Não foi possível ler este arquivo"
+                "Não foi possível ler este arquivo",
+                { "pt-PT": "Não foi possível ler este ficheiro" }
             ),
         },
     },
