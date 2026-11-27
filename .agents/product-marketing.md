@@ -5,13 +5,13 @@
 
 ## Product Overview
 **One-liner:** An expense tracker and budget app where you log a purchase in one sentence.
-**What it does:** You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, accounts, and insights update as you log. Entries live on the phone first; sync is optional.
+**What it does:** You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, accounts, and insights update as you log. In the mobile app, entries live on the phone first and sync is optional; the web app works from the synced ledger.
 **Product category:** Expense tracker / budget app / money manager (App Store: Finance, Productivity).
 **Product type:** Consumer app on iPhone and Android, with a web app at app.tryoutlayr.com.
 **Business model:** Freemium. Free tracker; Outlayr Pro as monthly, yearly, or one-time purchase. Prices vary by country and are not published on the site.
 
 ## Target Audience
-**Target users:** Anyone, anywhere, who wants to know where their money goes but quit trackers because logging is tedious. Outlayr is for everyone, in every country and currency. No market is the default.
+**Target users:** Anyone, wherever they live, who wants to know where their money goes but quit trackers because logging is tedious. Outlayr is for everyone. No market is the default.
 **Who that includes (write for all of them, not one):**
 - Students and first jobbers learning to budget on a small, irregular income.
 - Families and couples sharing a household budget.
@@ -70,7 +70,7 @@
 
 ## Markets
 **Rule:** Global first. Headlines, store listings, examples and mockups speak to everyone; no single country is the frame.
-- Country-specific content is welcome as one market among many: a page about the BCV rate, meses sin intereses in Mexico, or Klarna in Germany. It lives on its own page or guide, never in the product's general pitch.
+- Country-specific content is welcome as one market among many: a page about the BCV rate, meses sin intereses in Mexico, or Klarna in Germany. It lives on its own page or guide. A general listing may name a local feature in one line, never as the headline or the main example.
 - A general example rotates regions and currencies (USD, EUR, GBP, INR, BRL, MXN, JPY, NGN...). Never let one country's banks, apps or currency stand for "the user".
 - Every new content batch covers several regions. If a plan lists only one country, it is not done.
 - Venezuela, where Outlayr started, stays a supported market (BCV and Binance rates, bank texts, Cashea). It is not the positioning.
