@@ -21,7 +21,6 @@ if (!region) {
 
 const RECURRING_MONTHLY = 3;
 const RECURRING_YEARLY = 4;
-const RATES_FROM = Date.UTC(2025, 11, 31);
 const DAY_MS = 86_400_000;
 const RATES_PULLED_AT = new Date(2026, 8, 12, 14, 0).getTime();
 
@@ -59,6 +58,9 @@ function shifted(year, month, day) {
     return { d: Math.min(day + SHIFT_DAYS, new Date(y, m, 0).getDate()), month: m, year: y };
 }
 const FRAME = shifted(2026, 9, 1);
+// Amazon Prime, authored for November 2025, is the earliest fixture row.
+const EARLIEST = shifted(2025, 11, 1);
+const RATES_FROM = Date.UTC(EARLIEST.year, EARLIEST.month - 1, 1);
 const TRANSFER_DAY = shifted(2026, 9, 7);
 
 // `null` keeps the category glyph, as for a merchant the app cannot resolve.
