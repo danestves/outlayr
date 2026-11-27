@@ -10,7 +10,7 @@ import { Capture } from "@/components/home/capture";
 import { Dawn } from "@/components/home/dawn";
 import { InstallBar } from "@/components/home/install-bar";
 import { Night } from "@/components/home/night";
-import { loadReplicas } from "@/components/home/replica";
+import { CastContext, loadReplicas } from "@/components/home/replica";
 import { Sunrise } from "@/components/home/sunrise";
 import { Sunset } from "@/components/home/sunset";
 import { getDemoCast } from "@/lib/demo-cast";
@@ -31,8 +31,9 @@ const HERO_GROUND = "#f1f0ea";
 export const Route = createFileRoute("/{-$locale}/")({
     beforeLoad: () => loadReplicas(),
     component: HomePage,
-    loader: async () => {
-        const [cast, stats] = await Promise.all([getDemoCast(), getHomeStats()]);
+    loader: async ({ params }) => {
+        const locale = localeFromParam(params.locale);
+        const [cast, stats] = await Promise.all([getDemoCast({ data: locale }), getHomeStats()]);
         return { cast, stats };
     },
     headers: () => ({ Link: AGENT_LINKS }),
@@ -85,8 +86,9 @@ function home(main: HTMLElement | null) {
 }
 
 function HomePage() {
+    const { cast } = Route.useLoaderData();
     return (
-        <>
+        <CastContext value={cast}>
             <main className="hz-page" data-sky="day" id="main" ref={home}>
                 <Dawn />
                 <div className="hz-sheet">
@@ -107,6 +109,6 @@ function HomePage() {
                 <div />
                 <div />
             </div>
-        </>
+        </CastContext>
     );
 }

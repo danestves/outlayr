@@ -3,7 +3,7 @@ import type { Locale } from "@outlayr/shared/i18n";
 
 import { formatMoney as format } from "@/lib/money";
 
-export type Currency = "BRL" | "EUR" | "MXN" | "USD" | "VES";
+export type Currency = "BRL" | "COP" | "EUR" | "MXN" | "USD";
 
 export function formatMoney(amount: number, currency: Currency, locale: Locale): string {
     return format(Math.abs(amount), currency, LANGUAGES[locale].date, 2);

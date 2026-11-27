@@ -20,7 +20,7 @@ export const COFFEE_SHOP = {
     pt: "Starbucks",
 } as const satisfies Record<Locale, string>;
 
-const STORE = { en: "Target", de: "dm", es: "Farmatodo", fr: "Monoprix", pt: "Drogasil" } as const satisfies Record<
+const STORE = { en: "Target", de: "dm", es: "Walmart", fr: "Monoprix", pt: "Drogasil" } as const satisfies Record<
     Locale,
     string
 >;
@@ -51,7 +51,7 @@ const RECEIPT = {
         { left: "EC-KARTE", mark: null, right: "•••• 1008" },
     ],
     es: [
-        { left: "FARMATODO", mark: 1, right: "" },
+        { left: "WALMART", mark: 1, right: "" },
         { left: "SUCURSAL 214", mark: null, right: "" },
         { left: "21/09/2026", mark: 2, right: "14:32" },
         { left: "TOALLAS DE PAPEL", mark: null, right: "17.99" },

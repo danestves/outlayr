@@ -1,8 +1,19 @@
 import { proPrice } from "@outlayr/money/pro-prices";
+import type { Locale } from "@outlayr/shared/i18n";
 
-import { COUNTRY_CASTS, USD_RATES } from "./country-casts";
+import { COUNTRY_CASTS, USD_RATES, US_HISPANIC } from "./country-casts";
 import { GLOBAL } from "./global-brands";
 import LOGO_COLORS from "./logos.json";
+
+export const LOCALE_MARKET = {
+    de: "DE",
+    en: "US",
+    es: "MX",
+    fr: "FR",
+    pt: "BR",
+} as const satisfies Record<Locale, keyof typeof COUNTRY_CASTS>;
+
+const HISPANIC_ID = "US_ES";
 
 export type MerchantRole =
     | "grocery"
@@ -47,6 +58,7 @@ export interface CastRow {
 
 export interface DemoCast extends CastRow {
     readonly country: string;
+    readonly id: string;
     readonly colors: Readonly<Record<string, string | null>>;
     readonly ppp: number;
     readonly fx: number;
@@ -72,16 +84,33 @@ const brandsOf = (row: CastRow) => [
     ...Object.values(row.accounts).filter((brand) => brand !== undefined),
 ];
 
-export function demoCast(visitor: string | null): DemoCast {
+export function demoCast(visitor: string | null, locale: Locale): DemoCast {
     const found = visitor === null ? undefined : BY_COUNTRY.get(visitor);
-    const country = found ? (visitor ?? "US") : "US";
-    const row = found ?? COUNTRY_CASTS.US;
+    if (visitor !== null && found) {
+        return visitor === "US" && locale === "es"
+            ? castFor(visitor, US_HISPANIC, HISPANIC_ID)
+            : castFor(visitor, found);
+    }
+    return marketCast(locale);
+}
+
+export function plateCast(locale: Locale): DemoCast {
+    return locale === "es" ? castFor("US", US_HISPANIC, HISPANIC_ID) : marketCast(locale);
+}
+
+function marketCast(locale: Locale): DemoCast {
+    const market = LOCALE_MARKET[locale];
+    return castFor(market, COUNTRY_CASTS[market]);
+}
+
+function castFor(country: string, row: CastRow, id = country): DemoCast {
     const pro = proPrice(country, "monthly");
     const fx = usdRate(row.currency);
     return {
         ...row,
         colors: Object.fromEntries(brandsOf(row).map(({ logo }) => [logo, COLORS.get(logo) ?? null])),
         country,
+        id,
         foreignFx: usdRate(row.accounts.foreign.currency),
         fx,
         ppp: (pro.amount / US_MONTHLY) * (fx / usdRate(pro.currency)),

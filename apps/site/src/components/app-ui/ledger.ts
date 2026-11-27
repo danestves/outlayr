@@ -463,10 +463,10 @@ export type Ledger = ReturnType<typeof buildLedger>;
 const LEDGERS = new Map<string, Ledger>();
 
 export function ledgerFor(cast: DemoCast): Ledger {
-    let ledger = LEDGERS.get(cast.country);
+    let ledger = LEDGERS.get(cast.id);
     if (!ledger) {
         ledger = buildLedger(cast);
-        LEDGERS.set(cast.country, ledger);
+        LEDGERS.set(cast.id, ledger);
     }
     return ledger;
 }

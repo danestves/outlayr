@@ -9,7 +9,7 @@ import { GLOBAL } from "./global-brands";
 import { DEMO_NOW, ledgerFor } from "./ledger";
 import { formatDayTotal, formatSignedAmount, formatTrend } from "./money";
 
-const US = ledgerFor(demoCast("US"));
+const US = ledgerFor(demoCast("US", "en"));
 const LOGOS = new URL("../../../public/media/logos/", import.meta.url);
 
 describe("demo ledger", () => {
@@ -50,9 +50,16 @@ describe("demo ledger", () => {
 describe("country casts", () => {
     const countries = Object.keys(COUNTRY_CASTS);
 
+    it("shows each locale its own market unless the visitor has a cast", () => {
+        expect(demoCast(null, "es").country).toBe("MX");
+        expect(demoCast(null, "pt").country).toBe("BR");
+        expect(ledgerFor(demoCast("US", "es")).accounts.map(({ currency }) => currency)).toContain("MXN");
+        expect(demoCast("VE", "es").country).toBe("VE");
+    });
+
     it("prices every row in amounts the currency can show", () => {
         for (const country of countries) {
-            const ledger = ledgerFor(demoCast(country));
+            const ledger = ledgerFor(demoCast(country, "en"));
             for (const { amount, currency } of [
                 ...ledger.rows,
                 ...ledger.accounts.map((a) => ({ ...a, amount: a.balance })),
@@ -66,7 +73,7 @@ describe("country casts", () => {
 
     it("totals each day to the sum of the rows it shows", () => {
         for (const country of countries) {
-            const ledger = ledgerFor(demoCast(country));
+            const ledger = ledgerFor(demoCast(country, "en"));
             const scale = 10 ** decimalsFor(ledger.currency);
             for (const { rows, total } of ledger.daySections(DEMO_NOW, 31)) {
                 const minor = rows.reduce(
@@ -81,8 +88,12 @@ describe("country casts", () => {
     it("has a baked logo for every brand it shows", () => {
         const logos = new Set([
             ...Object.values(GLOBAL).map(({ logo }) => logo),
-            ...countries.flatMap((country) => ledgerFor(demoCast(country)).accounts.flatMap(({ logo }) => logo ?? [])),
-            ...countries.flatMap((country) => ledgerFor(demoCast(country)).rows.flatMap(({ logo }) => logo ?? [])),
+            ...countries.flatMap((country) =>
+                ledgerFor(demoCast(country, "en")).accounts.flatMap(({ logo }) => logo ?? [])
+            ),
+            ...countries.flatMap((country) =>
+                ledgerFor(demoCast(country, "en")).rows.flatMap(({ logo }) => logo ?? [])
+            ),
         ]);
         const missing = [...logos].filter((logo) => !existsSync(new URL(`${logo}.webp`, LOGOS)));
         expect(missing).toEqual([]);

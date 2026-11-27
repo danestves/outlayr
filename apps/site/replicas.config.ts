@@ -48,7 +48,7 @@ if (screen) {
         mount.style.width = params.get("fit") + "px";
     }
     document.documentElement.style.background = props.theme === "dark" ? "#000" : "#fff";
-    const cast = demoCast(params.get("country")?.toUpperCase() ?? null);
+    const cast = demoCast(params.get("country")?.toUpperCase() ?? null, props.locale);
     mount.innerHTML = renderToStaticMarkup(createElement(DemoCastContext, { value: cast }, createElement(screen, props)));
 } else {
     const links = Object.keys(SCREENS).flatMap((name) =>

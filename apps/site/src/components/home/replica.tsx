@@ -1,12 +1,16 @@
 import type { Locale } from "@outlayr/shared/i18n";
-import { useLoaderData } from "@tanstack/react-router";
-import { useState } from "react";
+import { createContext, use, useState } from "react";
 import type { ReactNode } from "react";
 import { useLocale } from "react-intlayer";
 
 import "@/components/app-ui/app-theme.css";
+import "@/stageshow/phone.css";
 
-type Replicas = typeof import("./replicas");
+import type { DemoCast } from "@/components/app-ui/cast";
+
+export type Replicas = typeof import("./replicas");
+
+export const CastContext = createContext<DemoCast | null>(null);
 
 const SERVER_HTML = { __html: "" };
 const RELOAD_KEY = "outlayr:replica-reload";
@@ -38,8 +42,11 @@ export async function loadReplicas() {
 
 export function Replica({ children }: { children: (replicas: Replicas, locale: Locale) => ReactNode }) {
     const { locale } = useLocale();
-    const { cast } = useLoaderData({ from: "/{-$locale}/" });
+    const cast = use(CastContext);
     const [, setLive] = useState(false);
+    if (!cast) {
+        throw new Error("Replicas render inside CastContext.");
+    }
     if (replicas) {
         return (
             <div className="contents" key="live">
