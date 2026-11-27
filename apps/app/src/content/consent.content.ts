@@ -33,10 +33,10 @@ export default {
             "pt-PT":
                 "Um cookie permite-nos contar as visitas que regressam e ver que páginas ajudam. Enquanto tiver sessão iniciada, o que faz aqui também fica associado à sua conta.",
             fr: "Un cookie nous permet de compter les visites récurrentes et de voir quelles pages sont utiles. Tant que vous êtes connecté, ce que vous faites ici est aussi lié à votre compte.",
-            it: "Un cookie ci permette di contare le visite ricorrenti e capire quali pagine sono utili.",
-            nl: "Met een cookie tellen we terugkerende bezoeken en zien we welke pagina's helpen.",
-            ja: "Cookieを使って、再訪の回数と役立っているページを把握します。",
-            ko: "쿠키로 재방문 수를 세고 어떤 페이지가 도움이 되는지 확인해요.",
+            it: "Un cookie ci permette di contare le visite ricorrenti e capire quali pagine sono utili. Mentre sei connesso, ciò che fai qui viene collegato anche al tuo account.",
+            nl: "Met een cookie tellen we terugkerende bezoeken en zien we welke pagina's helpen. Zolang je bent ingelogd, wordt wat je hier doet ook aan je account gekoppeld.",
+            ja: "Cookieを使って、再訪の回数と役立っているページを把握します。ログイン中は、ここでの操作もアカウントに紐づけられます。",
+            ko: "쿠키로 재방문 수를 세고 어떤 페이지가 도움이 되는지 확인해요. 로그인한 동안에는 여기서 하는 활동도 계정에 연결돼요.",
         }),
         decline: t({
             en: "Decline",

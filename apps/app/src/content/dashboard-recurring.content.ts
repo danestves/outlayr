@@ -745,8 +745,8 @@ const dashboardRecurring = {
                         es: "{{count}} día",
                         fr: "{{count}} jour",
                         pt: "{{count}} dia",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} giorno",
+                        nl: "{{count}} dag",
                         ja: "{{count}}日",
                         ko: "{{count}}일",
                     })
@@ -774,8 +774,8 @@ const dashboardRecurring = {
                         fr: "{{count}} opération correspondante",
                         pt: "{{count}} lançamento correspondente",
                         "pt-PT": "{{count}} registo correspondente",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} movimento corrispondente",
+                        nl: "{{count}} overeenkomende transactie",
                         ja: "一致する記録{{count}}件",
                         ko: "일치하는 기록 {{count}}건",
                     })
@@ -850,8 +850,8 @@ const dashboardRecurring = {
                         es: "{{count}} vez",
                         fr: "{{count}} fois",
                         pt: "{{count}} vez",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} volta",
+                        nl: "{{count}} keer",
                         ja: "{{count}}回",
                         ko: "{{count}}회",
                     })
@@ -1860,7 +1860,7 @@ const dashboardRecurring = {
                     it: "In scadenza il {{date}}, nessun movimento corrispondente da allora.",
                     nl: "Vervalt op {{date}}, sindsdien geen overeenkomende transactie.",
                     ja: "期日は{{date}}です。それ以降、一致する記録はありません。",
-                    ko: "납부일은 {{date}}이고, 그 이후 일치하는 기록이 없어요.",
+                    ko: "납부일({{date}}) 이후 일치하는 기록이 없어요.",
                 })
             ),
             dueToday: t({
@@ -1984,7 +1984,7 @@ const dashboardRecurring = {
                     it: "{{amount}} escono dal totale mensile durante la pausa.",
                     nl: "{{amount}} valt tijdens de pauze weg uit je maandtotaal.",
                     ja: "一時停止中は月の合計から{{amount}}が除かれます。",
-                    ko: "일시중지 중에는 월 합계에서 {{amount}}이 빠져요.",
+                    ko: "일시중지 중에는 월 합계에서 {{amount}}만큼 빠져요.",
                 })
             ),
             next: t({

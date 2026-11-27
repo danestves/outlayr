@@ -94,8 +94,8 @@ const dashboardHome = {
                         fr: "{{count}} jour, aucune opération",
                         pt: "{{count}} dia, sem lançamentos",
                         "pt-PT": "{{count}} dia, sem registos",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} giorno senza movimenti",
+                        nl: "{{count}} dag zonder transacties",
                         ja: "記録のない日が{{count}}日",
                         ko: "기록 없는 날 {{count}}일",
                     })
@@ -368,7 +368,7 @@ const dashboardHome = {
                     it: "Indica da dove arrivano quei {{amount}}.",
                     nl: "Geef aan waar die {{amount}} vandaan kwam.",
                     ja: "その{{amount}}の出どころを記録しましょう。",
-                    ko: "그 {{amount}}이 어디서 왔는지 기록해 보세요.",
+                    ko: "그 {{amount}}의 출처를 기록해 보세요.",
                 })
             ),
             accountLine: t({
@@ -1399,7 +1399,7 @@ const dashboardHome = {
                     it: "Torna a {{month}}",
                     nl: "Terug naar {{month}}",
                     ja: "{{month}}に戻る",
-                    ko: "{{month}}로 돌아가기",
+                    ko: "{{month}} 내역으로 돌아가기",
                 })
             ),
             countOne: t({

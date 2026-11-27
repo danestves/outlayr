@@ -506,8 +506,8 @@ const dashboardInsightsYear = {
                     es: "{{count}} mes",
                     fr: "{{count}} mois",
                     pt: "{{count}} mês",
-                    it: "__TODO_ONE__",
-                    nl: "__TODO_ONE__",
+                    it: "{{count}} mese",
+                    nl: "{{count}} maand",
                     ja: "{{count}}か月",
                     ko: "{{count}}개월",
                 })

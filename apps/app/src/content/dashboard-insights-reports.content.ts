@@ -23,8 +23,8 @@ const dashboardInsightsReports = {
                         es: "{{count}} cuenta",
                         fr: "{{count}} compte",
                         pt: "{{count}} conta",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} conto",
+                        nl: "{{count}} rekening",
                         ja: "{{count}}個の口座",
                         ko: "계좌 {{count}}개",
                     })
@@ -616,8 +616,8 @@ const dashboardInsightsReports = {
                         fr: "{{count}} opération",
                         pt: "{{count}} lançamento",
                         "pt-PT": "{{count}} registo",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} movimento",
+                        nl: "{{count}} transactie",
                         ja: "記録{{count}}件",
                         ko: "기록 {{count}}개",
                     })
@@ -1366,7 +1366,7 @@ const dashboardInsightsReports = {
                     it: "Nessun movimento corrisponde a {{filters}} nel periodo {{range}}.",
                     nl: "Geen transacties komen overeen met {{filters}} in {{range}}.",
                     ja: "{{range}}に{{filters}}に一致する記録はありません。",
-                    ko: "{{range}}에 {{filters}}와 일치하는 기록이 없어요.",
+                    ko: "{{range}}에 {{filters}} 조건에 맞는 기록이 없어요.",
                 })
             ),
             without: insert(
@@ -1630,8 +1630,8 @@ const dashboardInsightsReports = {
                         es: "{{count}} m",
                         fr: "{{count}} mois",
                         pt: "{{count}} mês",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} m",
+                        nl: "{{count}} mnd",
                         ja: "{{count}}か月",
                         ko: "{{count}}개월",
                     })

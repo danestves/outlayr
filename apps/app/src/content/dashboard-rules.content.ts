@@ -400,7 +400,7 @@ const dashboardRules = {
                     it: "Aggiunge una condizione a {{name}}, così questi movimenti non ricevono il tag {{tags}}.",
                     nl: "Voegt een voorwaarde toe aan {{name}}, zodat deze transacties de tag {{tags}} niet krijgen.",
                     ja: "{{name}}に条件を追加して、これらの記録にタグ{{tags}}が付かないようにします。",
-                    ko: "{{name}}에 조건을 추가해서 이 기록에 태그 {{tags}}가 붙지 않게 해요.",
+                    ko: "{{name}}에 조건을 추가해서 이 기록에는 {{tags}} 태그가 붙지 않게 해요.",
                 })
             ),
             skipTitle: insert(

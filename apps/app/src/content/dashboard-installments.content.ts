@@ -1309,8 +1309,8 @@ const dashboardInstallments = {
                         fr: "{{count}} échéance",
                         pt: "{{count}} parcela",
                         "pt-PT": "{{count}} prestação",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} rata",
+                        nl: "{{count}} termijn",
                         ja: "{{count}}回",
                         ko: "{{count}}회차",
                     })

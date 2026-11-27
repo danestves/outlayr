@@ -1253,8 +1253,8 @@ const dashboardAccounts = {
                         es: "{{count}} transferencia en {{period}}",
                         fr: "{{count}} virement en {{period}}",
                         pt: "{{count}} transferência em {{period}}",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} trasferimento in {{period}}",
+                        nl: "{{count}} overboeking in {{period}}",
                         ja: "{{period}}の振替{{count}}件",
                         ko: "{{period}} 이체 {{count}}건",
                     })
@@ -2774,8 +2774,8 @@ const dashboardAccounts = {
                         es: "{{count}} cuenta",
                         fr: "{{count}} compte",
                         pt: "{{count}} conta",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} conto",
+                        nl: "{{count}} rekening",
                         ja: "{{count}}件の口座",
                         ko: "계좌 {{count}}개",
                     })

@@ -504,8 +504,8 @@ const dashboardBudgetsPlan = {
                         es: "{{count}} mes deja de quedarse en falta.",
                         fr: "{{count}} mois ne manque plus.",
                         pt: "{{count}} mês deixa de ficar em falta.",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} mese non è più in difetto.",
+                        nl: "{{count}} maand komt niet meer tekort.",
                         ja: "{{count}}か月が不足しなくなります。",
                         ko: "{{count}}개월은 더 이상 부족하지 않아요.",
                     })
@@ -820,8 +820,8 @@ const dashboardBudgetsPlan = {
                         es: "{{count}} meta",
                         fr: "{{count}} objectif",
                         pt: "{{count}} meta",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} obiettivo",
+                        nl: "{{count}} spaardoel",
                         ja: "{{count}}件の目標",
                         ko: "목표 {{count}}개",
                     })
@@ -903,8 +903,8 @@ const dashboardBudgetsPlan = {
                         es: "{{count}} mes por delante",
                         fr: "{{count}} mois à venir",
                         pt: "{{count}} mês pela frente",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} mese in avanti",
+                        nl: "{{count}} maand vooruit",
                         ja: "{{count}}か月先",
                         ko: "{{count}}개월 앞",
                     })

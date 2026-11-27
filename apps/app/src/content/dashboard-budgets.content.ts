@@ -1141,8 +1141,8 @@ const dashboardBudgets = {
                         es: "Falta {{count}} día",
                         fr: "Encore {{count}} jour",
                         pt: "Falta {{count}} dia",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "manca {{count}} giorno",
+                        nl: "nog {{count}} dag",
                         ja: "あと{{count}}日",
                         ko: "앞으로 {{count}}일",
                     })

@@ -129,7 +129,7 @@ const dashboardInsights = {
                     it: "Hai speso {{amount}} in {{period}}, più o meno come al solito.",
                     nl: "Je gaf {{amount}} uit in {{period}}, ongeveer zoals gebruikelijk.",
                     ja: "{{period}}の支出は{{amount}}で、普段とほぼ同じです。",
-                    ko: "{{period}}에 {{amount}}을 썼어요. 평소와 비슷해요.",
+                    ko: "{{period}}에 {{amount}} 썼어요. 평소와 비슷해요.",
                 })
             ),
             less: insert(
@@ -144,7 +144,7 @@ const dashboardInsights = {
                     it: "Hai speso {{amount}} in {{period}}, il {{percent}}% in meno del solito.",
                     nl: "Je gaf {{amount}} uit in {{period}}, {{percent}}% minder dan gebruikelijk.",
                     ja: "{{period}}の支出は{{amount}}で、普段より{{percent}}%少なくなりました。",
-                    ko: "{{period}}에 {{amount}}을 썼어요. 평소보다 {{percent}}% 적어요.",
+                    ko: "{{period}}에 {{amount}} 썼어요. 평소보다 {{percent}}% 적어요.",
                 })
             ),
             more: insert(
@@ -159,7 +159,7 @@ const dashboardInsights = {
                     it: "Hai speso {{amount}} in {{period}}, il {{percent}}% in più del solito.",
                     nl: "Je gaf {{amount}} uit in {{period}}, {{percent}}% meer dan gebruikelijk.",
                     ja: "{{period}}の支出は{{amount}}で、普段より{{percent}}%多くなりました。",
-                    ko: "{{period}}에 {{amount}}을 썼어요. 평소보다 {{percent}}% 많아요.",
+                    ko: "{{period}}에 {{amount}} 썼어요. 평소보다 {{percent}}% 많아요.",
                 })
             ),
             nothing: insert(
@@ -189,7 +189,7 @@ const dashboardInsights = {
                     it: "Hai speso {{amount}} in {{period}}.",
                     nl: "Je gaf {{amount}} uit in {{period}}.",
                     ja: "{{period}}の支出は{{amount}}です。",
-                    ko: "{{period}}에 {{amount}}을 썼어요.",
+                    ko: "{{period}}에 {{amount}} 썼어요.",
                 })
             ),
             soFarAsUsual: insert(
@@ -204,7 +204,7 @@ const dashboardInsights = {
                     it: "Finora hai speso {{amount}} in {{period}}, più o meno come al solito a questo punto.",
                     nl: "Je hebt tot nu toe {{amount}} uitgegeven in {{period}}, ongeveer zoals gebruikelijk op dit moment.",
                     ja: "{{period}}のここまでの支出は{{amount}}で、この時点の普段とほぼ同じです。",
-                    ko: "{{period}}에 지금까지 {{amount}}을 썼어요. 이맘때 평소와 비슷해요.",
+                    ko: "{{period}}에 지금까지 {{amount}} 썼어요. 이맘때 평소와 비슷해요.",
                 })
             ),
             soFarLess: insert(
@@ -219,7 +219,7 @@ const dashboardInsights = {
                     it: "Finora hai speso {{amount}} in {{period}}, il {{percent}}% in meno del solito a questo punto.",
                     nl: "Je hebt tot nu toe {{amount}} uitgegeven in {{period}}, {{percent}}% minder dan gebruikelijk op dit moment.",
                     ja: "{{period}}のここまでの支出は{{amount}}で、この時点の普段より{{percent}}%少なくなっています。",
-                    ko: "{{period}}에 지금까지 {{amount}}을 썼어요. 이맘때 평소보다 {{percent}}% 적어요.",
+                    ko: "{{period}}에 지금까지 {{amount}} 썼어요. 이맘때 평소보다 {{percent}}% 적어요.",
                 })
             ),
             soFarMore: insert(
@@ -234,7 +234,7 @@ const dashboardInsights = {
                     it: "Finora hai speso {{amount}} in {{period}}, il {{percent}}% in più del solito a questo punto.",
                     nl: "Je hebt tot nu toe {{amount}} uitgegeven in {{period}}, {{percent}}% meer dan gebruikelijk op dit moment.",
                     ja: "{{period}}のここまでの支出は{{amount}}で、この時点の普段より{{percent}}%多くなっています。",
-                    ko: "{{period}}에 지금까지 {{amount}}을 썼어요. 이맘때 평소보다 {{percent}}% 많아요.",
+                    ko: "{{period}}에 지금까지 {{amount}} 썼어요. 이맘때 평소보다 {{percent}}% 많아요.",
                 })
             ),
             soFarPlain: insert(
@@ -249,7 +249,7 @@ const dashboardInsights = {
                     it: "Finora hai speso {{amount}} in {{period}}.",
                     nl: "Je hebt tot nu toe {{amount}} uitgegeven in {{period}}.",
                     ja: "{{period}}のここまでの支出は{{amount}}です。",
-                    ko: "{{period}}에 지금까지 {{amount}}을 썼어요.",
+                    ko: "{{period}}에 지금까지 {{amount}} 썼어요.",
                 })
             ),
         },
@@ -328,7 +328,7 @@ const dashboardInsights = {
                     it: "{{amount}} da {{name}} il {{date}} è l'acquisto più grande",
                     nl: "{{amount}} bij {{name}} op {{date}} is de grootste aankoop",
                     ja: "{{date}}の{{name}}での{{amount}}が最大の買い物です",
-                    ko: "{{date}} {{name}}에서 쓴 {{amount}}이 가장 큰 구매예요",
+                    ko: "{{date}} {{name}}에서 {{amount}} 쓴 게 가장 큰 구매예요",
                 })
             ),
             biggestUnnamed: insert(
@@ -342,7 +342,7 @@ const dashboardInsights = {
                     it: "L'acquisto più grande, {{amount}}, è stato il {{date}}",
                     nl: "De grootste aankoop, {{amount}}, was op {{date}}",
                     ja: "最大の買い物は{{date}}の{{amount}}です",
-                    ko: "가장 큰 구매는 {{date}}의 {{amount}}이에요",
+                    ko: "가장 큰 구매: {{date}}의 {{amount}}",
                 })
             ),
             empty: t({
@@ -528,7 +528,7 @@ const dashboardInsights = {
                     it: "Di solito qui spendi {{amount}}",
                     nl: "Je geeft hier meestal {{amount}} uit",
                     ja: "普段はここで{{amount}}使っています",
-                    ko: "여기서는 보통 {{amount}}을 써요",
+                    ko: "여기서는 보통 {{amount}} 정도 써요",
                 })
             ),
             usualByNow: insert(
@@ -543,7 +543,7 @@ const dashboardInsights = {
                     it: "Di solito qui a questo punto spendi {{amount}}",
                     nl: "Je geeft hier op dit moment meestal {{amount}} uit",
                     ja: "この時点では、普段ここで{{amount}}使っています",
-                    ko: "이맘때 여기서는 보통 {{amount}}을 써요",
+                    ko: "이맘때 여기서는 보통 {{amount}} 정도 써요",
                 })
             ),
         },

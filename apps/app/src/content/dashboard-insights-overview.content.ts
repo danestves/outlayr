@@ -317,7 +317,7 @@ const dashboardInsightsOverview = {
                     it: "{{spent}} finora. La spesa più grande, {{name}} il {{date}}, è stata di {{amount}}.",
                     nl: "{{spent}} tot nu toe. De grootste, {{name}} op {{date}}, was {{amount}}.",
                     ja: "ここまでで{{spent}}。最大は{{date}}の{{name}}で{{amount}}でした。",
-                    ko: "지금까지 {{spent}}. 가장 큰 지출은 {{date}} {{name}}의 {{amount}}이에요.",
+                    ko: "지금까지 {{spent}}. 가장 큰 지출: {{date}} {{name}}의 {{amount}}.",
                 })
             ),
             biggestClosed: insert(
@@ -330,7 +330,7 @@ const dashboardInsightsOverview = {
                     it: "{{spent}} in tutto. La spesa più grande, {{name}} il {{date}}, è stata di {{amount}}.",
                     nl: "{{spent}} in totaal. De grootste, {{name}} op {{date}}, was {{amount}}.",
                     ja: "合計{{spent}}。最大は{{date}}の{{name}}で{{amount}}でした。",
-                    ko: "총 {{spent}}. 가장 큰 지출은 {{date}} {{name}}의 {{amount}}이에요.",
+                    ko: "총 {{spent}}. 가장 큰 지출: {{date}} {{name}}의 {{amount}}.",
                 })
             ),
             biggestUnnamed: insert(
@@ -343,7 +343,7 @@ const dashboardInsightsOverview = {
                     it: "{{spent}} finora. La spesa più grande, il {{date}}, è stata di {{amount}}.",
                     nl: "{{spent}} tot nu toe. De grootste, op {{date}}, was {{amount}}.",
                     ja: "ここまでで{{spent}}。最大は{{date}}の{{amount}}でした。",
-                    ko: "지금까지 {{spent}}. 가장 큰 지출은 {{date}}의 {{amount}}이에요.",
+                    ko: "지금까지 {{spent}}. 가장 큰 지출: {{date}}의 {{amount}}.",
                 })
             ),
             biggestUnnamedClosed: insert(
@@ -356,7 +356,7 @@ const dashboardInsightsOverview = {
                     it: "{{spent}} in tutto. La spesa più grande, il {{date}}, è stata di {{amount}}.",
                     nl: "{{spent}} in totaal. De grootste, op {{date}}, was {{amount}}.",
                     ja: "合計{{spent}}。最大は{{date}}の{{amount}}でした。",
-                    ko: "총 {{spent}}. 가장 큰 지출은 {{date}}의 {{amount}}이에요.",
+                    ko: "총 {{spent}}. 가장 큰 지출: {{date}}의 {{amount}}.",
                 })
             ),
             chart: insert(
@@ -393,7 +393,7 @@ const dashboardInsightsOverview = {
                     it: "{{category}} ha superato il suo limite di {{limit}}",
                     nl: "{{category}} ging over de limiet van {{limit}}",
                     ja: "{{category}}が上限の{{limit}}を超えました",
-                    ko: "{{category}}이(가) 한도 {{limit}}을 넘었어요",
+                    ko: "{{category}} 한도({{limit}})를 넘었어요",
                 })
             ),
         },
@@ -456,7 +456,7 @@ const dashboardInsightsOverview = {
                     it: "{{amount}} in {{period}}. Di solito spendi {{usual}}.",
                     nl: "{{amount}} in {{period}}. Meestal geef je {{usual}} uit.",
                     ja: "{{period}}は{{amount}}。普段は{{usual}}使っています。",
-                    ko: "{{period}}에 {{amount}}. 보통은 {{usual}}을 써요.",
+                    ko: "{{period}}에 {{amount}}. 보통은 {{usual}} 정도 써요.",
                 })
             ),
             closedMore: t({
@@ -482,7 +482,7 @@ const dashboardInsightsOverview = {
                     it: "Hai speso {{amount}}",
                     nl: "Je gaf {{amount}} uit",
                     ja: "{{amount}}使いました",
-                    ko: "{{amount}}을 썼어요",
+                    ko: "{{amount}} 썼어요",
                 })
             ),
             course: insert(
@@ -496,7 +496,7 @@ const dashboardInsightsOverview = {
                     it: "Il trend ti porta a chiudere vicino a {{amount}}. Di solito a questo punto spendi {{usual}}.",
                     nl: "Je eindigt op dit tempo rond {{amount}}. Meestal geef je op dit moment {{usual}} uit.",
                     ja: "このままだと{{amount}}前後で終わりそうです。この時点では普段{{usual}}使っています。",
-                    ko: "이 속도라면 {{amount}} 근처에서 끝나요. 이맘때는 보통 {{usual}}을 써요.",
+                    ko: "이 속도라면 {{amount}} 근처에서 끝나요. 이맘때는 보통 {{usual}} 정도 써요.",
                 })
             ),
             faster: t({
@@ -544,7 +544,7 @@ const dashboardInsightsOverview = {
                     it: "Finora hai speso {{amount}}",
                     nl: "Je hebt tot nu toe {{amount}} uitgegeven",
                     ja: "ここまでの支出は{{amount}}",
-                    ko: "지금까지 {{amount}}을 썼어요",
+                    ko: "지금까지 {{amount}} 썼어요",
                 })
             ),
             slower: t({
@@ -714,7 +714,7 @@ const dashboardInsightsOverview = {
                     it: "{{category}} da sola ha restituito {{amount}}.",
                     nl: "{{category}} gaf alleen al {{amount}} terug.",
                     ja: "{{category}}だけで{{amount}}戻りました。",
-                    ko: "{{category}}만으로 {{amount}}이 돌아왔어요.",
+                    ko: "{{category}}만으로 {{amount}}만큼 돌아왔어요.",
                 })
             ),
             less: insert(
@@ -792,7 +792,7 @@ const dashboardInsightsOverview = {
                     it: "1 abbonamento ti costa {{amount}} al mese",
                     nl: "1 abonnement kost je {{amount}} per maand",
                     ja: "サブスク1件で月{{amount}}かかっています",
-                    ko: "구독 1개에 월 {{amount}}이 들어요",
+                    ko: "구독 1개에 월 {{amount}}의 비용이 들어요",
                 })
             ),
             seeAll: t({
@@ -817,7 +817,7 @@ const dashboardInsightsOverview = {
                     it: "{{count}} abbonamenti ti costano {{amount}} al mese",
                     nl: "{{count}} abonnementen kosten je {{amount}} per maand",
                     ja: "サブスク{{count}}件で月{{amount}}かかっています",
-                    ko: "구독 {{count}}개에 월 {{amount}}이 들어요",
+                    ko: "구독 {{count}}개에 월 {{amount}}의 비용이 들어요",
                 })
             ),
         },

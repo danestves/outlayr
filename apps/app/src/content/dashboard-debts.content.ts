@@ -290,7 +290,7 @@ const dashboardDebts = {
                     it: "Verrà eliminato anche tutto ciò che è registrato con questa persona: {{count}} movimenti e un saldo di {{amount}}.",
                     nl: "Alles wat met deze persoon is vastgelegd wordt ook verwijderd: {{count}} transacties en een saldo van {{amount}}.",
                     ja: "この相手との記録もすべて削除されます。{{count}}件の記録と{{amount}}の残高が対象です。",
-                    ko: "이 사람과 기록한 내용이 모두 삭제돼요. 기록 {{count}}건과 잔액 {{amount}}이 포함돼요.",
+                    ko: "이 사람과 기록한 내용이 모두 삭제돼요. 기록 {{count}}건과 잔액 {{amount}}도 포함돼요.",
                 })
             ),
             bodyOne: insert(
@@ -305,7 +305,7 @@ const dashboardDebts = {
                     it: "Verrà eliminato anche tutto ciò che è registrato con questa persona: 1 movimento e un saldo di {{amount}}.",
                     nl: "Alles wat met deze persoon is vastgelegd wordt ook verwijderd: 1 transactie en een saldo van {{amount}}.",
                     ja: "この相手との記録もすべて削除されます。1件の記録と{{amount}}の残高が対象です。",
-                    ko: "이 사람과 기록한 내용이 모두 삭제돼요. 기록 1건과 잔액 {{amount}}이 포함돼요.",
+                    ko: "이 사람과 기록한 내용이 모두 삭제돼요. 기록 1건과 잔액 {{amount}}도 포함돼요.",
                 })
             ),
             confirm: t({
@@ -1680,8 +1680,8 @@ const dashboardDebts = {
                         es: "{{count}} mes",
                         fr: "{{count}} mois",
                         pt: "{{count}} mês",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} mese",
+                        nl: "{{count}} maand",
                         ja: "{{count}}か月",
                         ko: "{{count}}개월",
                     })
@@ -1968,7 +1968,7 @@ const dashboardDebts = {
                     it: "Restituisci l'intero importo di {{amount}}. {{name}} passa tra i Saldati e il piano termina.",
                     nl: "Je betaalt het volledige bedrag van {{amount}} terug. {{name}} gaat naar Afbetaald en het plan eindigt.",
                     ja: "{{amount}}を全額返済します。{{name}}は完済に移り、プランは終了します。",
-                    ko: "{{amount}}을 전액 갚아요. {{name}} 항목이 상환 완료로 옮겨지고 계획은 끝나요.",
+                    ko: "{{amount}} 전액을 갚아요. {{name}} 항목이 상환 완료로 옮겨지고 계획은 끝나요.",
                 })
             ),
             submit: insert(

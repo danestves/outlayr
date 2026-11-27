@@ -440,7 +440,7 @@ const paywall = {
                 it: "Si rinnova a {{price}}",
                 nl: "Verlengt voor {{price}}",
                 ja: "{{price}}で更新",
-                ko: "{{price}}로 갱신",
+                ko: "{{price}}에 갱신",
             })
         ),
         cancelNoCharges: t({
@@ -544,7 +544,7 @@ const paywall = {
                 it: "Passa a Pro a {{price}}/mese",
                 nl: "Neem Pro voor {{price}}/maand",
                 ja: "Proを月額{{price}}で始める",
-                ko: "Pro 월 {{price}}로 시작",
+                ko: "Pro 월 {{price}}에 시작",
             })
         ),
         getLifetime: insert(
@@ -557,7 +557,7 @@ const paywall = {
                 it: "Passa a Pro a {{price}}",
                 nl: "Neem Pro voor {{price}}",
                 ja: "Proを{{price}}で購入",
-                ko: "Pro {{price}}로 구매",
+                ko: "Pro {{price}}에 구매",
             })
         ),
         cancelAnytime: t({

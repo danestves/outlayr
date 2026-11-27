@@ -504,7 +504,7 @@ const plan = {
                 it: "Pro si rinnova il {{date}} a {{price}}.",
                 nl: "Pro verlengt op {{date}} voor {{price}}.",
                 ja: "Proは{{date}}に{{price}}で更新されます。",
-                ko: "Pro는 {{date}}에 {{price}}로 갱신돼요.",
+                ko: "Pro는 {{date}}에 {{price}} 결제로 갱신돼요.",
             })
         ),
         endsFooter: t({

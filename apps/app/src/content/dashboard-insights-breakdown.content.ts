@@ -447,7 +447,7 @@ const dashboardInsightsBreakdown = {
                     it: "I tuoi {{amount}} di entrate sono sotto Entrate qui sopra.",
                     nl: "Je {{amount}} aan inkomsten staat onder Inkomsten hierboven.",
                     ja: "収入の{{amount}}は、上の「収入」にあります。",
-                    ko: "수입 {{amount}}은 위의 수입에 있어요.",
+                    ko: "수입 {{amount}} 내역은 위의 수입에 있어요.",
                 })
             ),
             nothingIncome: t({

@@ -28,7 +28,7 @@ const dashboardInsightsRecap = {
                     it: "Registrato {{month}} con Outlayr",
                     nl: "{{month}} bijgehouden met Outlayr",
                     ja: "{{month}}はOutlayrで記録",
-                    ko: "{{month}}은 Outlayr로 기록",
+                    ko: "Outlayr로 {{month}} 기록",
                 })
             ),
             less: insert(
@@ -67,7 +67,7 @@ const dashboardInsightsRecap = {
                     it: "Speso come a {{month}}",
                     nl: "Evenveel uitgegeven als {{month}}",
                     ja: "{{month}}と同じ支出",
-                    ko: "{{month}}과 같은 지출",
+                    ko: "{{month}} 지출과 같아요",
                 })
             ),
             days: insert(
@@ -118,7 +118,7 @@ const dashboardInsightsRecap = {
                     it: "La tua media di 3 mesi è {{amount}}",
                     nl: "Je driemaandsgemiddelde is {{amount}}",
                     ja: "3か月平均は{{amount}}です",
-                    ko: "3개월 평균은 {{amount}}이에요",
+                    ko: "3개월 평균: {{amount}}",
                 })
             ),
             none: t({
@@ -179,7 +179,7 @@ const dashboardInsightsRecap = {
                     it: "{{kept}} risparmiati contro i {{cost}} di Pro.",
                     nl: "{{kept}} overgehouden tegenover {{cost}} voor Pro.",
                     ja: "Proの{{cost}}に対して、{{kept}}を節約できました。",
-                    ko: "Pro 비용 {{cost}}에 비해 {{kept}}을 아꼈어요.",
+                    ko: "Pro 비용 {{cost}}에 비해 {{kept}} 아꼈어요.",
                 })
             ),
             seeBudgets: t({
@@ -457,7 +457,7 @@ const dashboardInsightsRecap = {
                     it: "La tua media di 3 mesi è {{amount}}",
                     nl: "Je driemaandsgemiddelde is {{amount}}",
                     ja: "3か月平均は{{amount}}です",
-                    ko: "3개월 평균은 {{amount}}이에요",
+                    ko: "3개월 평균: {{amount}}",
                 })
             ),
             below: insert(
@@ -518,8 +518,8 @@ const dashboardInsightsRecap = {
                         fr: "{{count}} jour sans opération",
                         pt: "{{count}} dia sem lançamento",
                         "pt-PT": "{{count}} dia sem registo",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} giorno senza movimenti",
+                        nl: "{{count}} dag zonder transactie",
                         ja: "記録のない日が{{count}}日",
                         ko: "기록 없는 날 {{count}}일",
                     })
@@ -693,8 +693,8 @@ const dashboardInsightsRecap = {
                         es: "{{count}} categoría",
                         fr: "{{count}} catégorie",
                         pt: "{{count}} categoria",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} categoria",
+                        nl: "{{count}} categorie",
                         ja: "{{count}}個のカテゴリ",
                         ko: "카테고리 {{count}}개",
                     })

@@ -170,8 +170,8 @@ const dashboardData = {
                         es: "{{count}} transacción",
                         fr: "{{count}} opération",
                         pt: "{{count}} transação",
-                        it: "__TODO_ONE__",
-                        nl: "__TODO_ONE__",
+                        it: "{{count}} movimento",
+                        nl: "{{count}} transactie",
                         ja: "{{count}}件の記録",
                         ko: "기록 {{count}}개",
                     })

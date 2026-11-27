@@ -190,7 +190,7 @@ const dashboardNotifications = {
                 it: "Prossimo promemoria alle {{time}}.",
                 nl: "Volgende herinnering om {{time}}.",
                 ja: "次のリマインダーは{{time}}です。",
-                ko: "다음 리마인더는 {{time}}이에요.",
+                ko: "다음 리마인더: {{time}}.",
             })
         ),
         none: t({

@@ -244,6 +244,10 @@ const dashboardLedger = {
                 es: "Registrado por",
                 fr: "Saisi par",
                 pt: "Registrado por",
+                it: "Registrato da",
+                nl: "Vastgelegd door",
+                ja: "記録者",
+                ko: "기록한 사람",
             }),
             merchant: t({
                 en: "Merchant",
@@ -657,6 +661,10 @@ const dashboardLedger = {
                 es: "Registrado por",
                 fr: "Saisi par",
                 pt: "Registrado por",
+                it: "Registrato da",
+                nl: "Vastgelegd door",
+                ja: "記録者",
+                ko: "기록한 사람",
             }),
             max: t({
                 en: "Max",
@@ -753,6 +761,10 @@ const dashboardLedger = {
                 es: "Buscar personas",
                 fr: "Chercher des personnes",
                 pt: "Buscar pessoas",
+                it: "Cerca persone",
+                nl: "Zoek personen",
+                ja: "メンバーを検索",
+                ko: "사람 검색",
             }),
             searchTags: t({
                 en: "Search tags",
@@ -998,6 +1010,10 @@ const dashboardLedger = {
                     es: 'Añadir "{{name}}"',
                     fr: 'Ajouter "{{name}}"',
                     pt: 'Adicionar "{{name}}"',
+                    it: "Aggiungi “{{name}}”",
+                    nl: "“{{name}}” toevoegen",
+                    ja: "「{{name}}」を追加",
+                    ko: "“{{name}}” 추가",
                 })
             ),
             noTagsFound: t({
@@ -1006,6 +1022,10 @@ const dashboardLedger = {
                 es: "No se encontraron etiquetas",
                 fr: "Aucun tag trouvé",
                 pt: "Nenhuma tag encontrada",
+                it: "Nessun tag trovato",
+                nl: "Geen tags gevonden",
+                ja: "タグが見つかりません",
+                ko: "태그를 찾을 수 없어요",
             }),
             removeTag: insert(
                 t({
@@ -1014,6 +1034,10 @@ const dashboardLedger = {
                     es: "Quitar #{{name}}",
                     fr: "Retirer #{{name}}",
                     pt: "Remover #{{name}}",
+                    it: "Rimuovi #{{name}}",
+                    nl: "#{{name}} verwijderen",
+                    ja: "#{{name}}を削除",
+                    ko: "#{{name}} 삭제",
                 })
             ),
             tagsSaved: t({
