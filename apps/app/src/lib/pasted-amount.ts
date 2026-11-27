@@ -1,7 +1,7 @@
 import { parseAmount } from "./account-writes";
 
-const DIGIT = /\d/u;
+const LABELLED_FIGURE = /^[^\d]*\d[\d\s.,]*[^\d]*$/u;
 const NOT_A_FIGURE = /[^\d\s.,-]/u;
 
 export const pastedAmount = (text: string, decimals: number): number | null =>
-    DIGIT.test(text) && NOT_A_FIGURE.test(text) ? parseAmount(text, decimals) : null;
+    LABELLED_FIGURE.test(text.trim()) && NOT_A_FIGURE.test(text) ? parseAmount(text, decimals) : null;
