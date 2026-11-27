@@ -30,6 +30,8 @@ import { writeSettings } from "@/lib/ledger-settings";
 import { merchantEdited, merchantEntries, websiteDomain } from "@/lib/merchant-writes";
 import type { MerchantChange } from "@/lib/merchant-writes";
 import { photoSrc } from "@/lib/photo-src";
+import { photoTrouble } from "@/lib/photo-upload";
+import type { PhotoTrouble } from "@/lib/photo-upload";
 
 import { useCategoryName } from "../home/format";
 import { entryNotices } from "./use-delete";
@@ -146,7 +148,7 @@ function MerchantForm({ doc, onDone, onSaved }: MerchantFormProps) {
     const [website, setWebsite] = useState(startDomain ?? "");
     const [lookup, setLookup] = useState<Lookup>(startDomain ? { domain: startDomain, state: "found" } : null);
     const [photo, setPhoto] = useState<{ key: string; preview: string } | null>(null);
-    const [photoFailed, setPhotoFailed] = useState(false);
+    const [trouble, setTrouble] = useState<PhotoTrouble | null>(null);
     const [tried, setTried] = useState(false);
     const [confirming, setConfirming] = useState(false);
 
@@ -188,11 +190,11 @@ function MerchantForm({ doc, onDone, onSaved }: MerchantFormProps) {
         if (!file) {
             return;
         }
-        setPhotoFailed(false);
+        setTrouble(null);
         try {
             setPhoto(await upload(file));
-        } catch {
-            setPhotoFailed(true);
+        } catch (error) {
+            setTrouble(error instanceof Error ? photoTrouble(error) : "failed");
         }
     };
 
@@ -308,9 +310,9 @@ function MerchantForm({ doc, onDone, onSaved }: MerchantFormProps) {
                             {photo ? copy.photoChosen : copy.choosePhoto}
                         </Button>
                         <Input accept="image/*" hidden onChange={onFile} ref={fileInput} type="file" />
-                        {photoFailed ? (
+                        {trouble ? (
                             <p className="text-destructive text-app-label" role="alert">
-                                {copy.photoFailed}
+                                {copy.photoTrouble[trouble]}
                             </p>
                         ) : null}
                     </Tabs.Content>
