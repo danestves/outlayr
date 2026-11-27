@@ -86,7 +86,11 @@ function RootDocument({ children }: { children: ReactNode }) {
         return () => undefined;
     });
     useMirror([country], () => {
-        Effect.runFork(startAnalytics(ANALYTICS_TOKEN, country).pipe(Effect.ignoreCause));
+        Effect.runFork(
+            startAnalytics(ANALYTICS_TOKEN, country, { cross_subdomain_cookie: false, persistence_name: "app" }).pipe(
+                Effect.ignoreCause
+            )
+        );
     });
     // A hydration that falls back to a client render strips what THEME_SCRIPT stamped on <html>.
     useLayoutMirror([], () => {

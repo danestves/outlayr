@@ -43,6 +43,7 @@ import {
 } from "@/lib/entry-writes";
 import type { Doc, EntryBase, EntryProblem, EntryValues } from "@/lib/entry-writes";
 import { useNumberLocale } from "@/lib/exchange-locale";
+import { track } from "@/lib/launch-analytics";
 import { money } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { newLink } from "@/lib/rule-writes";
@@ -561,7 +562,7 @@ const ruleInput = (values: EntryValues) => ({
 });
 
 /** Saves a new entry the way Add entry does, rules included, and answers with the problem that stopped it. */
-export function useAddEntry() {
+export function useAddEntry(source: "form" | "voice" = "form") {
     const { ledger } = useDashboard();
     const committer = useLedgerCommitter();
     const rules = useIncomingRules();
@@ -586,10 +587,19 @@ export function useAddEntry() {
         }
         const id = crypto.randomUUID();
         const links = ruled.tagIds.map((tagId) => newLink(id, tagId, at));
-        void committer.commit([...createdEntry(current, id, dated, at), ...links], {
-            failed: form.saveFailed.value,
-            saved: form.added.value,
-        });
+        void committer
+            .commit([...createdEntry(current, id, dated, at), ...links], {
+                failed: form.saveFailed.value,
+                saved: form.added.value,
+            })
+            .then((saved) => {
+                if (saved) {
+                    track({
+                        event: "transaction_saved",
+                        properties: { mode: "create", source, transaction_type: values.income ? "income" : "expense" },
+                    });
+                }
+            });
         return null;
     };
 }
@@ -624,7 +634,7 @@ export function EntryDialog({
     const [problem, setProblem] = useState<EntryProblem | null>(null);
     const [round, setRound] = useState(0);
     const formId = useId();
-    const addEntry = useAddEntry();
+    const addEntry = useAddEntry(flow.seed ? "voice" : "form");
     const ruled = useIncomingRules()(ruleInput(values));
     const filled =
         values.categoryId === null && ruled.categoryId !== null ? { ...values, categoryId: ruled.categoryId } : values;

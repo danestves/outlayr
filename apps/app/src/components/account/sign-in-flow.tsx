@@ -9,6 +9,8 @@ import { useIntlayer } from "react-intlayer";
 import { AuthFailure, authRequest, failureKey } from "@/lib/account";
 import type { FailureKey } from "@/lib/account";
 import { authClient } from "@/lib/auth-client";
+import { rememberSignIn } from "@/lib/launch-analytics";
+import type { SignInMethod } from "@/lib/launch-analytics";
 
 import { ErrorBand } from "../error-band";
 import { SiteLink } from "../site-link";
@@ -25,7 +27,7 @@ type Action = "create" | "other" | "reset" | "sign-in" | "verify";
 
 const FIELD_FAILURES: ReadonlySet<FailureKey> = new Set(["code", "credentials", "email"]);
 
-export function SignInFlow({ onDone, target }: { onDone: () => void; target: string }) {
+export function SignInFlow({ onDone, target }: { onDone: (method: SignInMethod) => void; target: string }) {
     const copy = useIntlayer("sign-in");
     const [step, setStep] = useState<Step>("sign-in");
     const [email, setEmail] = useState("");
@@ -56,15 +58,17 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
         );
     };
 
-    const social = (provider: "apple" | "google") =>
+    const social = (provider: "apple" | "google") => {
+        rememberSignIn(provider);
         run(authRequest(() => authClient.signIn.social({ callbackURL: target, provider })));
+    };
 
     const signIn = (event: FormEvent) => {
         event.preventDefault();
         run(
             Effect.gen(function* signInProgram() {
                 yield* authRequest(() => authClient.signIn.email({ email, password }));
-                onDone();
+                onDone("email");
             }).pipe(
                 Effect.catchIf(
                     (failure) => failure.code === "EMAIL_NOT_VERIFIED",
@@ -90,7 +94,7 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
         run(
             Effect.gen(function* verifyProgram() {
                 yield* authRequest(() => authClient.emailOtp.verifyEmail({ email, otp }));
-                onDone();
+                onDone("email");
             }),
             "verify"
         );
@@ -158,7 +162,7 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
             Effect.gen(function* resetProgram() {
                 yield* authRequest(() => authClient.emailOtp.resetPassword({ email, otp: code, password }));
                 yield* authRequest(() => authClient.signIn.email({ email, password }));
-                onDone();
+                onDone("email");
             }),
             "reset"
         );

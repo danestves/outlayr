@@ -27,6 +27,7 @@ import { MenuContent } from "@/components/ui/menu-content";
 import { SheetContent } from "@/components/ui/sheet-content";
 import { useProfile } from "@/lib/account-state";
 import { authClient } from "@/lib/auth-client";
+import { followSession } from "@/lib/launch-analytics";
 import { announceSessionChange } from "@/lib/session";
 import { forgetLedger } from "@/lib/unsent";
 
@@ -37,6 +38,7 @@ export async function signOut() {
     leaveSession();
     Skullet.forgetShapes();
     await authClient.signOut();
+    followSession(undefined);
     announceSessionChange();
     await forgetLedger();
     window.location.assign("/login");

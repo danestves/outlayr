@@ -10,6 +10,8 @@ import { SignInFlow } from "@/components/account/sign-in-flow";
 import { safeRedirect } from "@/lib/account";
 import { settleFinishedDeletion } from "@/lib/account-deletion";
 import { convexUrls } from "@/lib/convex";
+import { rememberSignIn } from "@/lib/launch-analytics";
+import type { SignInMethod } from "@/lib/launch-analytics";
 import { localizedText } from "@/lib/route-title";
 import { announceSessionChange } from "@/lib/session";
 import { forgetLedger } from "@/lib/unsent";
@@ -60,7 +62,8 @@ function Login() {
             console.warn("Could not check the deletion job", error);
         });
     });
-    const finish = () => {
+    const finish = (method: SignInMethod) => {
+        rememberSignIn(method);
         announceSessionChange();
         window.location.assign(target);
     };

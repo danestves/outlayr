@@ -16,6 +16,7 @@ import { useCategoryOptions } from "@/components/dashboard/transactions/entry-fo
 import { parseAmount } from "@/lib/account-writes";
 import { blankValues, createdEntry, draftOf, entryProblem, wallText } from "@/lib/entry-writes";
 import type { EntryProblem } from "@/lib/entry-writes";
+import { track } from "@/lib/launch-analytics";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import type { OnboardingStep } from "@/lib/onboarding";
 
@@ -68,9 +69,16 @@ export function FirstEntry({
         const found = entryProblem(current, draft, null, at);
         setProblem(found);
         if (found === null) {
-            void committer.commit(createdEntry(current, crypto.randomUUID(), draft, at), {
-                failed: firstEntry.failed.value,
-            });
+            void committer
+                .commit(createdEntry(current, crypto.randomUUID(), draft, at), { failed: firstEntry.failed.value })
+                .then((saved) => {
+                    if (saved) {
+                        track({
+                            event: "transaction_saved",
+                            properties: { mode: "create", source: "onboarding", transaction_type: "expense" },
+                        });
+                    }
+                });
             onSaved();
         }
     };

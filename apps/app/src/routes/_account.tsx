@@ -1,9 +1,11 @@
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import { useMirror } from "@outlayr/shared/lifecycle";
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
 import { authClient } from "@/lib/auth-client";
 import { convexClient } from "@/lib/convex";
-import { currentToken, signedOut } from "@/lib/session";
+import { followSession } from "@/lib/launch-analytics";
+import { currentToken, signedOut, userOf } from "@/lib/session";
 
 const ACCOUNT_PAGE = /^\/(?:login|connect|i)(?:\/|$)/u;
 
@@ -25,6 +27,9 @@ export const Route = createFileRoute("/_account")({
 
 function Account() {
     const { token } = Route.useRouteContext();
+    useMirror([token], () => {
+        followSession(token === null ? undefined : userOf(token));
+    });
     return (
         <ConvexBetterAuthProvider authClient={authClient} client={convexClient()} initialToken={token}>
             <Outlet />

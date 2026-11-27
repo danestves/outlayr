@@ -203,7 +203,7 @@ function VoiceBody({ onClose }: { onClose: () => void }) {
     const voice = useIntlayer("dashboard-voice");
     const consented = useAiConsent();
     const { phase, take } = useVoiceTake(consented);
-    const addEntry = useAddEntry();
+    const addEntry = useAddEntry("voice");
     const addTransfer = useAddTransfer();
     const resolved = useMemo(
         () => (phase.kind === "review" ? resolveVoiceDraft(ledger, phase.sent, phase.draft, phase.at) : null),
