@@ -73,3 +73,43 @@ test("reconnects and resyncs when a transition starts from a version the client 
     expect(client.localQueryResult("ledger:list", {})).toBe(42);
     await client.close();
 });
+
+const connect = () =>
+    new BaseConvexClient("https://example.convex.cloud", () => undefined, {
+        webSocketConstructor: FakeSocket as unknown as typeof WebSocket,
+        unsavedChangesWarning: false,
+        logger: false,
+    });
+
+test("closes a socket that opens after it already closed, then reconnects", async () => {
+    const client = connect();
+    const [first] = FakeSocket.instances;
+    first?.onclose?.({ code: 1006, reason: "" });
+
+    expect(() => first?.onopen?.()).not.toThrow();
+    expect(first?.closed).toBe(true);
+    expect(client.connectionState().isWebSocketConnected).toBe(false);
+
+    await vi.runOnlyPendingTimersAsync();
+    const [, second] = FakeSocket.instances;
+    second?.onopen?.();
+    expect(client.connectionState().isWebSocketConnected).toBe(true);
+    await client.close();
+});
+
+test("keeps the reconnecting socket when the old one opens late", async () => {
+    const client = connect();
+    const [first] = FakeSocket.instances;
+    first?.onclose?.({ code: 1006, reason: "" });
+    await vi.runOnlyPendingTimersAsync();
+    const [, second] = FakeSocket.instances;
+
+    first?.onopen?.();
+    expect(first?.closed).toBe(true);
+    expect(client.connectionState().isWebSocketConnected).toBe(false);
+
+    second?.onopen?.();
+    expect(second?.closed).toBe(false);
+    expect(client.connectionState().isWebSocketConnected).toBe(true);
+    await client.close();
+});

@@ -46,3 +46,43 @@ index 1b38f60..2a94d01 100644
                this.observedTimestamp(serverMessage.endVersion.ts);
                this.authenticationManager.onTransition(serverMessage);
                this.remoteQuerySet.transition(serverMessage);
+diff --git a/dist/cjs/browser/sync/web_socket_manager.js b/dist/cjs/browser/sync/web_socket_manager.js
+index 8f686cd..4cba231 100644
+--- a/dist/cjs/browser/sync/web_socket_manager.js
++++ b/dist/cjs/browser/sync/web_socket_manager.js
+@@ -202,8 +202,13 @@ class WebSocketManager {
+     this.resetServerInactivityTimeout();
+     ws.onopen = () => {
+       this.logger.logVerbose("begin ws.onopen");
+-      if (this.socket.state !== "connecting") {
+-        throw new Error("onopen called with socket not in connecting state");
++      if (this.socket.state !== "connecting" || this.socket.ws !== ws) {
++        this._logVerbose("Ignoring onopen for a socket that is no longer current");
++        ws.onclose = () => {};
++        ws.onmessage = () => {};
++        ws.onerror = () => {};
++        ws.close();
++        return;
+       }
+       this.setSocketState({
+         state: "ready",
+diff --git a/dist/esm/browser/sync/web_socket_manager.js b/dist/esm/browser/sync/web_socket_manager.js
+index 14a000b..2cd34ea 100644
+--- a/dist/esm/browser/sync/web_socket_manager.js
++++ b/dist/esm/browser/sync/web_socket_manager.js
+@@ -184,8 +184,13 @@ export class WebSocketManager {
+     this.resetServerInactivityTimeout();
+     ws.onopen = () => {
+       this.logger.logVerbose("begin ws.onopen");
+-      if (this.socket.state !== "connecting") {
+-        throw new Error("onopen called with socket not in connecting state");
++      if (this.socket.state !== "connecting" || this.socket.ws !== ws) {
++        this._logVerbose("Ignoring onopen for a socket that is no longer current");
++        ws.onclose = () => {};
++        ws.onmessage = () => {};
++        ws.onerror = () => {};
++        ws.close();
++        return;
+       }
+       this.setSocketState({
+         state: "ready",
