@@ -1,12 +1,14 @@
 FROM node:24-bookworm-slim AS build
 
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends g++ make python3 \
+    && apt-get install --yes --no-install-recommends g++ git make python3 \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global pnpm@11.20.0
 
 WORKDIR /outlayr
 COPY . .
+# The root prepare script runs `vp config`, which needs a git repository.
+RUN git init --quiet
 RUN CI=1 pnpm install --frozen-lockfile --trust-lockfile --filter @outlayr/app...
 
 ARG VITE_PUBLIC_POSTHOG_PROJECT_TOKEN=
