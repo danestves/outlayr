@@ -1163,7 +1163,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 },
                 {
                     detail: "We no longer email you before a Pro free trial you started on the web turns paid.",
-                    label: "No reminder before a web trial ends",
+                    label: "A reminder before a trial ends",
                 },
             ],
             de: [
@@ -1205,7 +1205,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 },
                 {
                     detail: "Wir senden dir keine E-Mail mehr, bevor eine im Web gestartete kostenlose Pro-Testphase kostenpflichtig wird.",
-                    label: "Keine Erinnerung vor dem Ende einer Web-Testphase",
+                    label: "Eine Erinnerung vor dem Ende einer Testphase",
                 },
             ],
             es: [
@@ -1247,7 +1247,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 },
                 {
                     detail: "Ya no te enviamos un correo antes de que una prueba gratis de Pro que empezaste en la web pase a ser de pago.",
-                    label: "Sin recordatorio antes de que termine una prueba en la web",
+                    label: "Un recordatorio antes de que termine la prueba",
                 },
             ],
             fr: [
@@ -1289,7 +1289,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 },
                 {
                     detail: "Nous ne vous envoyons plus d'e-mail avant qu'un essai gratuit de Pro commencé sur le web devienne payant.",
-                    label: "Plus de rappel avant la fin d'un essai sur le web",
+                    label: "Un rappel avant la fin de l'essai",
                 },
             ],
             pt: [
@@ -1331,7 +1331,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 },
                 {
                     detail: "Não enviamos mais um e-mail antes de um teste grátis do Pro iniciado na web passar a ser pago.",
-                    label: "Sem lembrete antes do fim de um teste na web",
+                    label: "Um lembrete antes do fim do teste",
                 },
             ],
         },
