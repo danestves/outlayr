@@ -187,7 +187,12 @@ function MerchantForm({ doc, onDone, onSaved }: MerchantFormProps) {
 
     const onFile = async (event: ChangeEvent<HTMLInputElement>) => {
         const [file] = event.target.files ?? [];
+        event.target.value = "";
         if (!file) {
+            return;
+        }
+        if (!navigator.onLine) {
+            setTrouble("offline");
             return;
         }
         setTrouble(null);
