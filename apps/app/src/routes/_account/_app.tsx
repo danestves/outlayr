@@ -139,6 +139,7 @@ function App() {
         return (
             <Toast.Provider position="bottom-right">
                 <LostProfile profileId={lostProfileId} />
+                {lostProfileId === null ? <ProfileLostNotice /> : null}
                 <Suspense fallback={null}>
                     <Paywall />
                 </Suspense>
@@ -298,9 +299,7 @@ function LostProfile({ profileId }: { profileId: string | null }) {
         if (lostId === null) {
             return;
         }
-        if (deletedId !== null) {
-            takeProfileLost();
-        }
+        takeProfileLost();
         forgetProfileUnsent(lostId);
         forgetProfileCookie({ data: { profileId: lostId } }).catch(() => undefined);
         toast.add({

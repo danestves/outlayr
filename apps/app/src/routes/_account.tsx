@@ -8,10 +8,11 @@ import { followSession } from "@/lib/launch-analytics";
 import { currentToken, signedOut, userOf } from "@/lib/session";
 
 const ACCOUNT_PAGE = /^\/(?:login|connect|i)(?:\/|$)/u;
+const INVITE_PAGE = /^\/join(?:\/|$)/u;
 
 export const Route = createFileRoute("/_account")({
     beforeLoad: async ({ context, location }) => {
-        const inApp = !ACCOUNT_PAGE.test(location.pathname);
+        const inApp = !ACCOUNT_PAGE.test(location.pathname) && !INVITE_PAGE.test(location.pathname);
         const token = signedOut() ? null : await currentToken(context.session);
         if (!token && inApp) {
             throw redirect({ search: { redirect: location.href }, to: "/login" });

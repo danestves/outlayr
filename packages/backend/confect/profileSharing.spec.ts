@@ -50,6 +50,7 @@ export default GroupSpec.make()
                     Schema.Struct({
                         look: Schema.NullOr(SharedProfileLook),
                         ownerName: Schema.NullOr(Schema.String),
+                        profileId: Schema.NullOr(Schema.String),
                         state: InviteState,
                     })
                 ),

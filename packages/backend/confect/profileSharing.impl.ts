@@ -157,8 +157,8 @@ const invite = FunctionImpl.make(
         });
         // A spent or lapsed code says only that, so a former member cannot keep reading a renamed profile.
         return state === "claimed" || state === "expired"
-            ? { look: null, ownerName: null, state }
-            : { look, ownerName, state };
+            ? { look: null, ownerName: null, profileId: null, state }
+            : { look, ownerName, profileId: state === "member" ? row.profileId : null, state };
     }, Effect.orDie)
 );
 

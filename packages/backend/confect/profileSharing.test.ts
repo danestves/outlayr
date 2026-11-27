@@ -377,6 +377,7 @@ describe("claiming an invite", () => {
         await expect(authenticatedAs(t, second).query(api.profileSharing.invite, { code })).resolves.toStrictEqual({
             look: null,
             ownerName: null,
+            profileId: null,
             state: "claimed",
         });
 
@@ -388,6 +389,32 @@ describe("claiming an invite", () => {
         vi.advanceTimersByTime(PROFILE_INVITE_TTL_MS + 1);
         await expect(claim(late, stale)).resolves.toMatchObject({ status: "expired" });
         await expect(pulled(t, late)).rejects.toThrow("Pro");
+    });
+
+    it("reads an open invite without a signed-in viewer", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const { code } = await authenticatedAs(t, owner).mutation(api.profileSharing.createInvite, {
+            look: LOOK,
+            profileId: HOME,
+        });
+
+        await expect(t.query(api.profileSharing.invite, { code })).resolves.toMatchObject({
+            profileId: null,
+            state: "open",
+        });
+    });
+
+    it("names the profile to a viewer who is already a member", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const member = await seedAuthUser(t);
+        const code = await share(t, owner, member);
+
+        await expect(authenticatedAs(t, member).query(api.profileSharing.invite, { code })).resolves.toMatchObject({
+            profileId: HOME,
+            state: "member",
+        });
     });
 
     it(`stops at ${PROFILE_MEMBER_LIMIT} members`, async () => {

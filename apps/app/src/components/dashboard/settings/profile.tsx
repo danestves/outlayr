@@ -413,7 +413,7 @@ function SharingSection({
                 onAction={() => remove().catch(() => undefined)}
                 onOpenChange={(next) => (busy ? undefined : setRemoving(next ? removing : null))}
                 open={removing !== null}
-                title={sharing.members.removeTitle({ name: removing?.name ?? "" })}
+                title={sharing.members.removeTitle({ name: removing?.name ?? sharing.memberUnknown.value })}
                 tone="destructive"
             />
         </>
