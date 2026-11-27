@@ -484,13 +484,13 @@ function ElementTransformControls({
     }
     if (isCardElementId(id)) {
       const cardId = cardElementKey(id);
-      onChange({
-        cardElements: (slide.cardElements || []).map((element) =>
+      onUpdate((latest) => ({
+        cardElements: (latest.cardElements || []).map((element) =>
           element.id === cardId
             ? { ...element, transform: { ...element.transform, ...patch } }
             : element,
         ),
-      });
+      }));
       return;
     }
     if (!isBuiltInElementId(id)) return;
@@ -558,11 +558,11 @@ function ElementTransformControls({
   }
 
   function patchCardElement(id: string, patch: Partial<CardElement>) {
-    onChange({
-      cardElements: (slide.cardElements || []).map((element) =>
+    onUpdate((latest) => ({
+      cardElements: (latest.cardElements || []).map((element) =>
         element.id === id ? { ...element, ...patch } : element,
       ),
-    });
+    }));
   }
 
   function setCardField(element: CardElement, key: "label" | "title" | "body" | "meta", value: string) {

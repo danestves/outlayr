@@ -50,7 +50,8 @@ const NOW = Date.now();
 
 // Authored as September 2026, moved to the current month with rows from mid-month so the Log shows this week.
 const SHIFT_MONTHS = (new Date(NOW).getFullYear() - 2026) * 12 + new Date(NOW).getMonth() - 8;
-const SHIFT_DAYS = 14;
+// Rows run to day 11, so on day 12 or later every fixture row is already in the past.
+const SHIFT_DAYS = Math.max(0, Math.min(14, new Date(NOW).getDate() - 12));
 function shifted(year, month, day) {
     const index = year * 12 + month - 1 + SHIFT_MONTHS;
     const y = Math.floor(index / 12);
@@ -416,15 +417,18 @@ for (const entry of entries) {
     Object.assign(entry, shifted(entry.year, entry.month, entry.d));
 }
 // The store card says Netflix is due tomorrow.
-{
-    const tomorrow = new Date(NOW + 86_400_000);
-    const prev = new Date(tomorrow.getFullYear(), tomorrow.getMonth() - 1, tomorrow.getDate());
+if (withSchedules) {
+    const today = new Date(NOW);
+    const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const prev = new Date(tomorrow.getFullYear(), tomorrow.getMonth() - 1, 1);
     const index = entries.findIndex(
         (e) => e.note === "Netflix" && e.year === prev.getFullYear() && e.month === prev.getMonth() + 1
     );
-    const [carrier] = entries.splice(index, 1);
-    carrier.d = prev.getDate();
-    entries.unshift(carrier);
+    if (index !== -1) {
+        const [carrier] = entries.splice(index, 1);
+        carrier.d = Math.min(tomorrow.getDate(), new Date(prev.getFullYear(), prev.getMonth() + 1, 0).getDate());
+        entries.unshift(carrier);
+    }
 }
 
 const SCHEDULE_LEADS = new Map([

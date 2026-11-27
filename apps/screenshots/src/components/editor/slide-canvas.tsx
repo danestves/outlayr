@@ -1414,6 +1414,7 @@ function FeatureGraphicCanvas({
   const savedDevice = slide.transforms?.device;
   const deviceRotation = savedDevice?.rotation ?? 0;
   const deviceZ = savedDevice?.zIndex ?? 3;
+  const captionZ = slide.transforms?.caption?.zIndex ?? defaultElementZ("caption");
   const DeviceFrame = scene.deviceFinish === "light" ? LightPhone : Phone;
   // An accent-coloured second line reads as a display headline, not a tagline.
   const displayHeadline = !!slide.headlineAccentColor;
@@ -1454,7 +1455,7 @@ function FeatureGraphicCanvas({
         <Blob cW={cW} color={theme.accent} x={70} y={20} size={50} opacity={0.45} />
       )}
       {displayHeadline ? (
-        <div style={{ zIndex: 2 }}>
+        <div style={{ zIndex: captionZ }}>
           <div style={{ display: "flex", alignItems: "center", gap: cW * 0.012, marginBottom: cW * 0.035 }}>
             <BrandIcon src={appIcon} size={cW * 0.044} accent={theme.accent} fg={colors.fg} fallback={appName} />
             <span style={{ fontSize: cW * 0.026 * appNameScale, fontWeight: 900, lineHeight: 1.1 }}>{appName || "App"}</span>
@@ -1462,7 +1463,7 @@ function FeatureGraphicCanvas({
           {headline}
         </div>
       ) : (
-        <div style={{ display: "flex", alignItems: "center", gap: cW * 0.03, zIndex: 2 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: cW * 0.03, zIndex: captionZ }}>
           {appIcon && img(appIcon) ? (
             <img
               src={img(appIcon)}
@@ -1686,9 +1687,11 @@ function SlideElements({
     const saved = slide.transforms?.[id];
     const rotation = saved?.rotation ?? 0;
     const zIndex = saved?.zIndex ?? (id === "deviceSecondary" ? 2 : 3);
+    // Default rects use the bezel frame's aspect; the light frame is a little taller.
+    const box = lightFinish && !saved ? { ...rect, height: rect.width / aspect } : rect;
     return (
       <Movable
-        rect={toGlobal(rect)}
+        rect={toGlobal(box)}
         boundsW={boundsW}
         boundsH={boundsH}
         editable={editable}
