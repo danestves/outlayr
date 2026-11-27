@@ -872,7 +872,11 @@ function getSlideGeometry(slide: Slide, device: Device, orientation: Orientation
     CONTAINED_DEVICES.has(device),
   );
   if (!duo && defaults.device && sceneOf(scene).deviceFinish === "light" && orientation === "portrait" && (device === "iphone" || device === "android")) {
-    defaults.device = { ...defaults.device, height: defaults.device.width / LIGHT_PHONE_ASPECT[device] };
+    const aspect = LIGHT_PHONE_ASPECT[device];
+    defaults.device = { ...defaults.device, height: defaults.device.width / aspect };
+    if (defaults.deviceSecondary) {
+      defaults.deviceSecondary = { ...defaults.deviceSecondary, height: defaults.deviceSecondary.width / aspect };
+    }
   }
   if (slide.callout && defaults.device) defaults.callout = defaultCalloutRect(defaults.device, cW, cH);
   // Duo landscape copy runs across the top as one line, so it can be a size smaller.
