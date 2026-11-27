@@ -11,6 +11,7 @@
 **/*.log
 **/*.tgz
 **/*.zip
+!apps/site/public/brand-kit/outlayr-brand-kit.zip
 deploy/self-hosting/convex.env
 apps/clips/*
 !apps/clips/package.json

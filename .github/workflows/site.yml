@@ -11,6 +11,8 @@ on:
             - apps/native/**
             - packages/**
             - patches/**
+            - .npmrc
+            - apps/app/.env.schema
             - package.json
             - pnpm-lock.yaml
             - pnpm-workspace.yaml
@@ -20,12 +22,13 @@ permissions:
     contents: read
 
 concurrency:
-    group: site
+    group: site-${{ github.ref }}
     cancel-in-progress: true
 
 jobs:
     deploy:
         name: Build and deploy
+        if: github.ref == 'refs/heads/main'
         runs-on: ubuntu-26.04
         timeout-minutes: 30
         environment: production
@@ -62,14 +65,12 @@ jobs:
                       VITE_PUBLIC_POSTHOG_PROJECT_TOKEN=${{ vars.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN }}
                   secrets: |
                       hugeicons=${{ secrets.HUGEICONS_PRO_TOKEN }}
-                  cache-from: type=gha,scope=site
-                  cache-to: type=gha,mode=max,scope=site
 
             - name: Deploy on Coolify
               env:
                   COOLIFY_TOKEN: ${{ secrets.COOLIFY_DEPLOY_TOKEN }}
                   APP: ${{ vars.COOLIFY_SITE_UUID }}
               run: |
-                  curl --fail-with-body --silent --show-error \
+                  curl --fail-with-body --silent --show-error --request POST \
                     --header "Authorization: Bearer $COOLIFY_TOKEN" \
                     "https://hephaestus.sh/api/v1/deploy?uuid=$APP&force=false"
