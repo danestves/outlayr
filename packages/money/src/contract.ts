@@ -77,7 +77,3 @@ export const referralsEarnOnPayment = (now: number) => now >= REFERRALS_PAID_FRO
 export const REFERRAL_YEARLY_CAP = 12;
 
 export const REFERRAL_CAP_WINDOW_MS = 365 * 86_400_000;
-
-export const TRIAL_REMINDER_LEAD_MS = 2 * 86_400_000;
-
-export const TRIAL_REMINDERS_FROM_MS = Date.UTC(2026, 10, 19);

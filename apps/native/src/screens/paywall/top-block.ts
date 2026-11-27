@@ -32,7 +32,6 @@ export function topBlockOf(trigger: typeof PaywallTrigger.Type, autologUsed: num
         }
         case "settings":
         case "sync":
-        case "trial_reminder":
         case "unknown":
         case "usage": {
             return "sync";

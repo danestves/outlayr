@@ -396,18 +396,6 @@ const paywall = {
             ja: "Proが使えるように",
             ko: "Pro 이용 시작",
         }),
-        weRemindYou: t({
-            en: "We remind you by email",
-            de: "Wir erinnern dich per E-Mail",
-            es: "Te avisamos por correo",
-            fr: "On vous prévient par e-mail",
-            pt: "Avisamos você por e-mail",
-            "pt-PT": "Avisamos por e-mail",
-            it: "Ti avvisiamo via email",
-            nl: "We herinneren je per e-mail",
-            ja: "メールでお知らせ",
-            ko: "이메일로 알려 드려요",
-        }),
         firstCharge: t({
             en: "First charge",
             de: "Erste Abbuchung",

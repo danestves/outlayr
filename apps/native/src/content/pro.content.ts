@@ -847,14 +847,6 @@ const pro = {
             pt: "Dia {day}",
             "pt-PT": "Dia {day}",
         }),
-        "pro.timeline.reminder": t({
-            en: "Your trial is about to end. With notifications on, we remind you.",
-            de: "Dein Test endet bald. Mit Mitteilungen erinnern wir dich daran.",
-            es: "Tu prueba está por terminar. Con las notificaciones activas, te avisamos.",
-            fr: "Votre essai se termine bientôt. Avec les notifications, nous vous le rappelons.",
-            pt: "Seu teste está acabando. Com as notificações ativas, avisamos você.",
-            "pt-PT": "O seu teste está a terminar. Com as notificações ativas, avisamos.",
-        }),
         "pro.timeline.today": t({
             en: "Every Pro feature unlocks. You pay nothing today.",
             de: "Alle Pro-Funktionen sind frei. Heute zahlst du nichts.",
@@ -1022,22 +1014,6 @@ const pro = {
             fr: "Et il se saisit tout seul. Toutes les devises, tous les paiements.",
             pt: "E registra sozinho. Todas as moedas, todas as parcelas.",
             "pt-PT": "E regista sozinho. Todas as moedas, todas as prestações.",
-        }),
-        "pro.trialReminder.body": t({
-            en: "Pro renews on {date}. Cancel before then and you won't be charged.",
-            de: "Pro verlängert sich am {date}. Kündige vorher, dann wird dir nichts berechnet.",
-            es: "Pro se renueva el {date}. Si cancelas antes, no se te cobra.",
-            fr: "Pro se renouvelle le {date}. Annulez avant et vous ne serez pas débité.",
-            pt: "O Pro renova em {date}. Cancele antes e você não será cobrado.",
-            "pt-PT": "O Pro renova a {date}. Cancele antes e não será cobrado.",
-        }),
-        "pro.trialReminder.title": t({
-            en: "Your free trial ends in {days} days",
-            de: "Deine Testphase endet in {days} Tagen",
-            es: "Tu prueba gratis termina en {days} días",
-            fr: "Votre essai gratuit se termine dans {days} jours",
-            pt: "Seu teste grátis termina em {days} dias",
-            "pt-PT": "O seu teste grátis termina em {days} dias",
         }),
         "pro.unavailable": t({
             en: "Plans are not available right now.",

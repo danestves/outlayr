@@ -2,29 +2,22 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import * as ConvexConfigProvider from "@confect/server/ConvexConfigProvider";
 import { policyChangeEmail } from "@outlayr/email/policy-change";
 import { proEmail } from "@outlayr/email/pro";
-import { trialEndingEmail } from "@outlayr/email/trial-ending";
 import { welcomeEmail } from "@outlayr/email/welcome";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Option from "effect/Option";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import { QueryRunner, Scheduler } from "./_generated/services";
 import { noticeKey, POLICY_NOTICES } from "./legal";
-import { siteUrl } from "./lib/config";
 import { deliverEmail } from "./lib/deliverEmail";
 import { EmailError, NoticesStillSending } from "./lib/email";
 import { emailSetup } from "./lib/emailSetup";
-import { outboundHttp } from "./lib/http";
 import { sendEmail } from "./lib/sendEmail";
 import spec from "./mailDelivery.spec";
-import { decodeProSubscriber, proTermOf } from "./proTerm";
-import { storeSubscriber } from "./revenuecat";
-import { catalogPrice } from "./stripe";
 
 const NOTICE_CONCURRENCY = 5;
 const POLICY_REPLY_TO = "support@tryoutlayr.com";
@@ -70,50 +63,6 @@ const sendPro = FunctionImpl.make(
             return yield* sendEmail(to.email, email).pipe(Effect.as(null), Effect.catchTags({ EmailError: unsent }));
         },
         Effect.provide(ConvexConfigProvider.layer),
-        Effect.orDie
-    )
-);
-
-const sendTrialReminder = FunctionImpl.make(
-    databaseSchema,
-    spec,
-    "sendTrialReminder",
-    Effect.fn("Mail.sendTrialReminder")(
-        function* sendTrialReminder({ userId }) {
-            const { runQuery } = yield* QueryRunner;
-            const to = yield* runQuery(refs.internal.mail.recipient, { userId });
-            if (to === null) {
-                return null;
-            }
-            const subscriber = yield* storeSubscriber(userId);
-            const decoded = subscriber === null ? Option.none() : decodeProSubscriber(subscriber);
-            if (Option.isNone(decoded)) {
-                return null;
-            }
-            const term = proTermOf(decoded.value, yield* Clock.currentTimeMillis);
-            const chargeAtMs = term.expiresAtMs;
-            if (term.state !== "trial" || term.store !== "stripe" || chargeAtMs === null) {
-                return null;
-            }
-            const manageUrl = `${yield* siteUrl}/settings/plan`;
-            const catalog =
-                term.productId === null
-                    ? null
-                    : yield* catalogPrice(term.productId).pipe(
-                          Effect.catchTags({ StripeError: () => Effect.succeed(null) })
-                      );
-            const email = yield* Effect.promise(() =>
-                trialEndingEmail({
-                    chargeAtMs,
-                    email: to.email,
-                    language: to.language,
-                    manageUrl,
-                    price: catalog?.price ?? term.price,
-                })
-            );
-            return yield* sendEmail(to.email, email).pipe(Effect.as(null), Effect.catchTags({ EmailError: unsent }));
-        },
-        Effect.provide([outboundHttp, ConvexConfigProvider.layer]),
         Effect.orDie
     )
 );
@@ -218,7 +167,6 @@ const deliver = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(sendWelcome),
     Layer.provide(sendPro),
-    Layer.provide(sendTrialReminder),
     Layer.provide(notifyPolicy),
     Layer.provide(deliver),
     GroupImpl.finalize
