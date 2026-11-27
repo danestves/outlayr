@@ -1,11 +1,14 @@
+import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import BotIcon from "@hugeicons/core-free-icons/BotIcon";
 import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import Unlink01Icon from "@hugeicons/core-free-icons/Unlink01Icon";
+import WebhookIcon from "@hugeicons/core-free-icons/WebhookIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { LEDGER_MCP_ORIGIN } from "@outlayr/shared/urls";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Frame } from "panelui-web/frame";
@@ -22,6 +25,7 @@ import { DialogContent } from "@/components/ui/dialog-content";
 import { MenuContent } from "@/components/ui/menu-content";
 import { connectionsQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
+import { webhooksOpen } from "@/lib/webhooks";
 
 import { Row, SectionHead, SettingsCard } from "./parts";
 
@@ -142,6 +146,7 @@ function useAccessLabel() {
 
 export function Connections() {
     const copy = useIntlayer("dashboard-connections");
+    const webhooks = useIntlayer("dashboard-webhooks");
     const { sections } = useIntlayer("dashboard-settings");
     const { locale } = useLocale();
     const toast = useToast();
@@ -151,6 +156,7 @@ export function Connections() {
     const [disconnecting, setDisconnecting] = useState(false);
     const [gone, setGone] = useState<ReadonlySet<string>>(new Set());
     const [thisYear] = useState(() => new Date().getFullYear());
+    const [webhooksOn] = useState(() => webhooksOpen(Date.now()));
     const { data } = useQuery(connectionsQuery);
     const agents: readonly Agent[] = (data ?? []).filter(({ id }) => !gone.has(id));
 
@@ -189,6 +195,23 @@ export function Connections() {
                 title={sections.connections}
             />
             <div className="@container flex flex-col gap-4 pb-8">
+                {webhooksOn ? (
+                    <SettingsCard title={webhooks.webhooks}>
+                        <Link
+                            className="hover:bg-app-hover min-h-app-row flex w-full items-center gap-3 px-4 py-3 text-left"
+                            to="/settings/connections/webhooks"
+                        >
+                            <span className="bg-app-fill text-app-muted rounded-app-sm grid size-7 shrink-0 place-items-center">
+                                <HugeiconsIcon icon={WebhookIcon} size={15} />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                                <span className="text-app-body block font-medium">{webhooks.rowTitle}</span>
+                                <span className="text-app-muted text-app-label block">{webhooks.rowHint}</span>
+                            </span>
+                            <HugeiconsIcon className="text-app-muted size-4.5" icon={ArrowRight01Icon} />
+                        </Link>
+                    </SettingsCard>
+                ) : null}
                 {agents.length === 0 ? (
                     <Skeleton loading={data === undefined}>
                         <Frame className="min-w-0">

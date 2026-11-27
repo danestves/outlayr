@@ -20,6 +20,7 @@ import {
     sessionRows,
     sessionsQuery,
     sharedLinksQuery,
+    webhooksQuery,
 } from "./account-state";
 import type { Profile } from "./account-state";
 import { convexUrls, serverConvexUrl } from "./convex";
@@ -168,7 +169,7 @@ const SignIns = Schema.Array(
 
 // Settings pages read these at once, so the server answers them before it renders instead of the browser after.
 export const serverAccountState = createIsomorphicFn()
-    .server(async (client: QueryClient, convex: ConvexHttpClient | undefined) => {
+    .server(async (client: QueryClient, convex: ConvexHttpClient | undefined, webhooks: boolean) => {
         const { convexSiteUrl } = convexUrls();
         const plan = convex
             ? [client.prefetchQuery({ ...planQuery, queryFn: () => convex.action(api.billing.plan, {}) })]
@@ -181,6 +182,7 @@ export const serverAccountState = createIsomorphicFn()
                 client.prefetchQuery(connectionsQuery),
                 client.prefetchQuery(sharedLinksQuery),
                 client.prefetchQuery(pushConfigQuery),
+                ...(webhooks ? [client.prefetchQuery(webhooksQuery)] : []),
                 ...plan,
                 readProfile(convexSiteUrl).then((profile) => seedProfile(client, profile)),
                 client.prefetchQuery({

@@ -64,6 +64,7 @@ import { Route as AccountAppBudgetsPlanIndexRouteImport } from './routes/_accoun
 import { Route as AccountAppBudgetsPlanMonthRouteImport } from './routes/_account/_app.budgets.plan.$month'
 import { Route as AccountAppSettingsCategoriesIndexRouteImport } from './routes/_account/_app.settings.categories.index'
 import { Route as AccountAppSettingsCategoriesCategoryIdRouteImport } from './routes/_account/_app.settings.categories.$categoryId'
+import { Route as AccountAppSettingsConnectionsWebhooksRouteImport } from './routes/_account/_app.settings.connections_.webhooks'
 
 const AccountRoute = AccountRouteImport.update({
   id: '/_account',
@@ -359,6 +360,12 @@ const AccountAppSettingsCategoriesCategoryIdRoute =
     path: '/categories/$categoryId',
     getParentRoute: () => AccountAppSettingsRoute,
   } as any)
+const AccountAppSettingsConnectionsWebhooksRoute =
+  AccountAppSettingsConnectionsWebhooksRouteImport.update({
+    id: '/connections_/webhooks',
+    path: '/connections/webhooks',
+    getParentRoute: () => AccountAppSettingsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AccountAppIndexRoute
@@ -412,6 +419,7 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AccountAppSettingsIndexRoute
   '/budgets/plan/$month': typeof AccountAppBudgetsPlanMonthRoute
   '/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
+  '/settings/connections/webhooks': typeof AccountAppSettingsConnectionsWebhooksRoute
   '/budgets/plan/': typeof AccountAppBudgetsPlanIndexRoute
   '/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
 }
@@ -464,6 +472,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AccountAppSettingsIndexRoute
   '/budgets/plan/$month': typeof AccountAppBudgetsPlanMonthRoute
   '/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
+  '/settings/connections/webhooks': typeof AccountAppSettingsConnectionsWebhooksRoute
   '/budgets/plan': typeof AccountAppBudgetsPlanIndexRoute
   '/settings/categories': typeof AccountAppSettingsCategoriesIndexRoute
 }
@@ -522,6 +531,7 @@ export interface FileRoutesById {
   '/_account/_app/settings/': typeof AccountAppSettingsIndexRoute
   '/_account/_app/budgets/plan/$month': typeof AccountAppBudgetsPlanMonthRoute
   '/_account/_app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
+  '/_account/_app/settings/connections_/webhooks': typeof AccountAppSettingsConnectionsWebhooksRoute
   '/_account/_app/budgets/plan/': typeof AccountAppBudgetsPlanIndexRoute
   '/_account/_app/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
 }
@@ -579,6 +589,7 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/budgets/plan/$month'
     | '/settings/categories/$categoryId'
+    | '/settings/connections/webhooks'
     | '/budgets/plan/'
     | '/settings/categories/'
   fileRoutesByTo: FileRoutesByTo
@@ -631,6 +642,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/budgets/plan/$month'
     | '/settings/categories/$categoryId'
+    | '/settings/connections/webhooks'
     | '/budgets/plan'
     | '/settings/categories'
   id:
@@ -688,6 +700,7 @@ export interface FileRouteTypes {
     | '/_account/_app/settings/'
     | '/_account/_app/budgets/plan/$month'
     | '/_account/_app/settings/categories/$categoryId'
+    | '/_account/_app/settings/connections_/webhooks'
     | '/_account/_app/budgets/plan/'
     | '/_account/_app/settings/categories/'
   fileRoutesById: FileRoutesById
@@ -1086,6 +1099,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppSettingsCategoriesCategoryIdRouteImport
       parentRoute: typeof AccountAppSettingsRoute
     }
+    '/_account/_app/settings/connections_/webhooks': {
+      id: '/_account/_app/settings/connections_/webhooks'
+      path: '/connections/webhooks'
+      fullPath: '/settings/connections/webhooks'
+      preLoaderRoute: typeof AccountAppSettingsConnectionsWebhooksRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
   }
 }
 
@@ -1141,6 +1161,7 @@ interface AccountAppSettingsRouteChildren {
   AccountAppSettingsUsageRoute: typeof AccountAppSettingsUsageRoute
   AccountAppSettingsIndexRoute: typeof AccountAppSettingsIndexRoute
   AccountAppSettingsCategoriesCategoryIdRoute: typeof AccountAppSettingsCategoriesCategoryIdRoute
+  AccountAppSettingsConnectionsWebhooksRoute: typeof AccountAppSettingsConnectionsWebhooksRoute
   AccountAppSettingsCategoriesIndexRoute: typeof AccountAppSettingsCategoriesIndexRoute
 }
 
@@ -1161,6 +1182,8 @@ const AccountAppSettingsRouteChildren: AccountAppSettingsRouteChildren = {
   AccountAppSettingsIndexRoute: AccountAppSettingsIndexRoute,
   AccountAppSettingsCategoriesCategoryIdRoute:
     AccountAppSettingsCategoriesCategoryIdRoute,
+  AccountAppSettingsConnectionsWebhooksRoute:
+    AccountAppSettingsConnectionsWebhooksRoute,
   AccountAppSettingsCategoriesIndexRoute:
     AccountAppSettingsCategoriesIndexRoute,
 }
