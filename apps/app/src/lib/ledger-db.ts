@@ -26,7 +26,7 @@ import { profileOf, pushRows } from "./ledger-write";
 import { browserRatesPublic } from "./profile";
 import { noteProfileLost, profileLossCode } from "./profile-loss";
 import { removeProfileAndSwitch } from "./profile-switch";
-import { missingRateQuotes, publicRateRow, rateCursors, rateWindowAt } from "./public-rates";
+import { missingRateQuotes, publicRateRow, quotedCurrencies, rateCursors, rateWindowAt } from "./public-rates";
 
 const convexOf = (db: DbClient) => db.requireDependency<LedgerConvex>(CONVEX);
 const onServer = (db: DbClient) => db.getDependency<boolean>(SERVER) === true;
@@ -315,6 +315,40 @@ export function useMissingRates(books: LedgerBooks) {
     const db = useDbClient();
     useMirror([db, books], () => {
         addMissingRates(db, books).catch(() => undefined);
+    });
+    const quoteKey = useMemo(() => quotedCurrencies(books).join("|"), [books]);
+    useMirror([db, quoteKey], () => {
+        if (!browserRatesPublic()) {
+            return;
+        }
+        const wanted = new Set(quoteKey === "" ? [] : quoteKey.split("|"));
+        const at = rateWindowAt();
+        const stops = rateCursors(wanted).map((cursor) => {
+            const watch = convexClient().watchQuery(api.exchangeRates.pullRates, { at, cursor });
+            const apply = () => {
+                const page = watch.localQueryResult();
+                if (page === undefined) {
+                    return;
+                }
+                const rows = page.rows
+                    .filter((row) => row.rateType === "official" && wanted.has(row.quote))
+                    .map((row) => {
+                        const rate = publicRateRow(row);
+                        return { key: rate._id, value: rate };
+                    });
+                if (rows.length > 0) {
+                    db.applyCollectionChunk({ collectionId: ledgerCollections.exchangeRates.id, rows });
+                }
+            };
+            const stop = watch.onUpdate(apply);
+            apply();
+            return stop;
+        });
+        return () => {
+            for (const stop of stops) {
+                stop();
+            }
+        };
     });
 }
 
