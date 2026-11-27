@@ -352,6 +352,9 @@ describe("parseNotification", () => {
             "Ganhe R$ 20 de cashback em compras acima de R$ 100",
             "Dépensez 50 € et obtenez 10 € de remise",
             "Orders over $25 ship free",
+            "Get $10 cashback when you spend at least $50",
+            "Gasta al menos Bs. 100,00 y recibe Bs. 20,00 de bono",
+            "Spend $50 and get a $10 reward",
         ]) {
             expect(parseNotification(text)).toBeNull();
             expect(hasChargeAmount(text)).toBe(false);
@@ -364,6 +367,11 @@ describe("parseNotification", () => {
         });
         expect(parseNotification("Gastaste Bs. 500,00 en FARMATODO")).toMatchObject({ amount: 500 });
         expect(parseNotification("You earned $5.00 cashback on your last purchase")).toMatchObject({ amount: 5 });
+        expect(parseNotification("Refund approved\nYou get $12.00 back for your order at OXXO")).toMatchObject({
+            amount: 12,
+            income: true,
+        });
+        expect(parseNotification("Visa ••4321\nGAME OVER\n$12.00")).toMatchObject({ amount: 12 });
     });
 
     it("keeps a purchase that a discount or a balance shares the text with", () => {
