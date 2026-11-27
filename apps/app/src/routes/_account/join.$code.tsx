@@ -46,11 +46,13 @@ const kindOfStatus = (status: ClaimStatus): JoinKind => {
     }
 };
 
-const kindOfState = (invite: NonNullable<ProfileInvite>): JoinKind | "open" => {
+const kindOfState = (invite: NonNullable<ProfileInvite>): JoinKind | "member" | "open" => {
     switch (invite.state) {
-        case "open":
-        case "member": {
+        case "open": {
             return "open";
+        }
+        case "member": {
+            return "member";
         }
         case "claimed": {
             return "invalid";
@@ -180,6 +182,34 @@ function JoinSheet({ code, invite }: { code: string; invite: NonNullable<Profile
     );
 }
 
+function MemberSheet({ invite }: { invite: NonNullable<ProfileInvite> }) {
+    const copy = useIntlayer("profile-sharing");
+    const look = inviteLook(invite.look) ?? PERSONAL_LOOK;
+    const name = invite.look?.name ?? "";
+    const { profileId } = invite;
+    return (
+        <BrandPage actions={<TopActions />}>
+            <main className="flex flex-1 justify-center px-6 pt-16 pb-24 max-sm:px-4">
+                <div className="flex w-full max-w-110 flex-col items-start">
+                    <ProfileTile look={look} size="xl" />
+                    <p className="text-muted-foreground text-app-body pt-5">{copy.join.alreadyMember({ name })}</p>
+                    <Button
+                        className="mt-6"
+                        disabled={profileId === null}
+                        onClick={() => {
+                            if (profileId !== null) {
+                                switchToProfile(profileId, "/").catch(() => undefined);
+                            }
+                        }}
+                    >
+                        {copy.join.openProfile}
+                    </Button>
+                </div>
+            </main>
+        </BrandPage>
+    );
+}
+
 function errorCopy(
     copy: ReturnType<typeof useIntlayer<"profile-sharing">>,
     kind: JoinKind,
@@ -259,6 +289,9 @@ function JoinProfile() {
     const kind = kindOfState(invite);
     if (kind === "open") {
         return <JoinSheet code={code} invite={invite} />;
+    }
+    if (kind === "member") {
+        return <MemberSheet invite={invite} />;
     }
     return (
         <JoinError

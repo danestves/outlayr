@@ -269,6 +269,15 @@ const profileSharing = {
                 fr: "Ajouter et modifier des opérations",
                 pt: "Adicione e edite lançamentos",
             }),
+            alreadyMember: insert(
+                t({
+                    en: "You are already a member of {{name}}.",
+                    de: "Du bist bereits Mitglied von {{name}}.",
+                    es: "Ya eres miembro de {{name}}.",
+                    fr: "Vous êtes déjà membre de {{name}}.",
+                    pt: "Você já é membro de {{name}}.",
+                })
+            ),
 
             invited: insert(
                 t({
@@ -294,6 +303,13 @@ const profileSharing = {
                 pt: "Saia quando quiser",
             }),
             notNow: t({ en: "Not now", de: "Nicht jetzt", es: "Ahora no", fr: "Pas maintenant", pt: "Agora não" }),
+            openProfile: t({
+                en: "Open profile",
+                de: "Profil öffnen",
+                es: "Abrir el perfil",
+                fr: "Ouvrir le profil",
+                pt: "Abrir o perfil",
+            }),
             see: t({
                 en: "See who logged each one",
                 de: "Sieh, wer was erfasst hat",
