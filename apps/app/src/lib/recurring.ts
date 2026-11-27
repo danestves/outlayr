@@ -646,7 +646,7 @@ export function kpisOf(model: RecurringModel, ledger: Clock & Pick<Ledger, "rows
     return {
         change: before > 0 ? ((perMonth - before) / before) * PERCENT : null,
         detected: detected.reduce((sum, candidate) => sum + candidate.perMonth, 0),
-        detectedCount: model.candidates.length,
+        detectedCount: detected.length,
         due: due.reduce((sum, { schedule }) => sum + schedule.worth, 0),
         missed: due.filter(({ charge }) => charge.day < today).length,
         month: month.reduce((sum, event) => sum + event.worth, 0),

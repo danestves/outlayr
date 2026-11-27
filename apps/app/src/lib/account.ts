@@ -47,7 +47,7 @@ const FAILURES = new Map<string, FailureKey>([
     ["INVALID_EMAIL", "email"],
     ["INVALID_EMAIL_OR_PASSWORD", "credentials"],
     ["INVALID_OTP", "code"],
-    ["OTP_EXPIRED", "code"],
+    ["OTP_EXPIRED", "expired"],
     ["TOO_MANY_ATTEMPTS", "attempts"],
 ]);
 
