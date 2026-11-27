@@ -342,6 +342,35 @@ describe("parseNotification", () => {
         }
     });
 
+    it("does not read a spend threshold or a reward in an offer as a charge", () => {
+        for (const text of [
+            "Binance\n💸 Aprovecha tu cashback de Black Friday\n6% extra de cashback si gastas más de $1,000 con tu Binance Card. Hasta 20 USDC. 👉",
+            "Spend $50 and get $10 back with your Uber card",
+            "Earn up to $20 in rewards this weekend",
+            "Gasta $30 y recibe $5 de bono en tu próximo pedido",
+            "Envío gratis en compras desde $15",
+            "Ganhe R$ 20 de cashback em compras acima de R$ 100",
+            "Dépensez 50 € et obtenez 10 € de remise",
+            "Orders over $25 ship free",
+            "Get $10 cashback when you spend at least $50",
+            "Gasta al menos Bs. 100,00 y recibe Bs. 20,00 de bono",
+            "Spend $50 and get a $10 reward",
+            "If you spend $50, you get $10 in cashback",
+        ]) {
+            expect(parseNotification(text)).toBeNull();
+            expect(hasChargeAmount(text)).toBe(false);
+        }
+    });
+
+    it("keeps a charge or a reward the user already got beside offer words", () => {
+        expect(parseNotification("You spent $1,000.00 at Binance with card ending 4321")).toMatchObject({
+            amount: 1000,
+        });
+        expect(parseNotification("Gastaste Bs. 500,00 en FARMATODO")).toMatchObject({ amount: 500 });
+        expect(parseNotification("You earned $5.00 cashback on your last purchase")).toMatchObject({ amount: 5 });
+        expect(parseNotification("Visa ••4321\nGAME OVER\n$12.00")).toMatchObject({ amount: 12 });
+    });
+
     it("keeps a purchase that a discount or a balance shares the text with", () => {
         expect(parseNotification("Purchase of $20.00 at STARBUCKS. Available balance $180.00")).toMatchObject({
             amount: 20,
