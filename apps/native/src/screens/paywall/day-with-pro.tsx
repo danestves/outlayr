@@ -331,14 +331,13 @@ function NetStop({ time }: { time: string }) {
     );
 }
 
-// The voice stop grows when its sentence writes in, so it is followed again once that has laid out.
 const FOLLOW = [
     [0, BEAT.alert],
     [1, BEAT.receipt],
     [2, BEAT.voice],
-    [2, BEAT.sentence + 400],
     [3, BEAT.net],
 ] as const;
+const VOICE_STOP = 2;
 
 /** `onFollow` gets the bottom of each stop as it starts playing, so the screen can scroll it into view. */
 export function DayWithPro({ onFollow }: { onFollow?: (bottom: number) => void }) {
@@ -347,19 +346,25 @@ export function DayWithPro({ onFollow }: { onFollow?: (bottom: number) => void }
     const { use24Hour } = useDisplaySettings().state;
     const reduced = useReducedMotion();
     const timers = useTimers();
-    const bottoms = useRef<number[]>([]);
+    const stops = useRef<{ bottom: number; height: number }[]>([]);
+    const follow = reduced ? undefined : onFollow;
     useOnMount(() => {
-        if (reduced || onFollow === undefined) {
+        if (follow === undefined) {
             return undefined;
         }
         for (const [index, at] of FOLLOW) {
-            timers.after(at, () => onFollow(bottoms.current[index] ?? 0));
+            timers.after(at, () => follow(stops.current[index]?.bottom ?? 0));
         }
         return undefined;
     });
     const measure = (index: number) => (event: LayoutChangeEvent) => {
         const { height, y } = event.nativeEvent.layout;
-        bottoms.current[index] = y + height;
+        const before = stops.current[index];
+        stops.current[index] = { bottom: y + height, height };
+        // Only the sentence writing in grows the voice stop, after its timed follow already ran.
+        if (index === VOICE_STOP && before !== undefined && height > before.height) {
+            follow?.(y + height);
+        }
     };
     const time = ([hours, minutes]: readonly [number, number]) =>
         formatTime(new Date(2026, 0, 1, hours, minutes), use24Hour, language);
