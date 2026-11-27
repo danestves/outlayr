@@ -2,13 +2,19 @@
 const DIACRITIC_EXCEPT_KANA_MARKS = /(?![゙゚ー])\p{Diacritic}/gu;
 // NFKC on the whole string folds superscripts too, so "Coffee²" would collide with "Coffee2".
 const HALFWIDTH_FULLWIDTH = /[\uFF00-\uFFEF]+/gu;
+// Variation selectors and Hangul fillers are letters or marks to Unicode, so a run of them would pass as a name.
+const INVISIBLE = /\p{Default_Ignorable_Code_Point}/gu;
+
+function narrowWidths(raw: string): string {
+    return raw.replaceAll(HALFWIDTH_FULLWIDTH, (run) => run.normalize("NFKC"));
+}
 
 export function foldText(raw: string): string {
-    return raw
-        .replaceAll(HALFWIDTH_FULLWIDTH, (run) => run.normalize("NFKC"))
+    return narrowWidths(raw)
         .normalize("NFD")
         .replaceAll(DIACRITIC_EXCEPT_KANA_MARKS, "")
         .normalize("NFC")
+        .replaceAll(INVISIBLE, "")
         .toLocaleLowerCase()
         .replaceAll(/[^\p{L}\p{M}\p{N}]+/gu, " ")
         .trim();
@@ -65,8 +71,9 @@ const REFERENCE_CODE = /^(?=[a-z]*\d)[a-z0-9]{5,}$|^\d+$/;
 const GLUED_SUFFIX = /(\p{Ll})(\p{Lu}{2,})/gu;
 
 export function descriptorKey(raw: string): string {
-    const star = raw.indexOf("*");
-    const body = star !== -1 && PROCESSORS.has(merchantKey(raw.slice(0, star))) ? raw.slice(star + 1) : raw;
+    const text = narrowWidths(raw);
+    const star = text.indexOf("*");
+    const body = star !== -1 && PROCESSORS.has(merchantKey(text.slice(0, star))) ? text.slice(star + 1) : text;
     const [first = "", ...rest] = merchantKey(body.replaceAll(GLUED_SUFFIX, "$1 $2")).split(" ");
     const kept = [first, ...rest.filter((token) => !REFERENCE_CODE.test(token))];
     while (kept.length > 1 && LEGAL_SUFFIXES.has(kept.at(-1) ?? "")) {

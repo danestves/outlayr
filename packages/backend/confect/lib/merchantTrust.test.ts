@@ -32,7 +32,7 @@ describe(corroborates, () => {
 
 describe(isKnowledgeKey, () => {
     it("accepts a CJK key knowledgeKeys can emit and refuses a two-letter Latin one", () => {
-        expect(isKnowledgeKey("ドトール|jpy")).toBeTruthy();
+        expect(isKnowledgeKey("無印|jpy")).toBeTruthy();
         expect(isKnowledgeKey("ab|usd")).toBeFalsy();
     });
 });

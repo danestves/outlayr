@@ -37,6 +37,11 @@ describe("merchantKey across scripts", () => {
     it("keeps a combining mark Unicode cannot compose", () => {
         expect(merchantKey("セ゚・マート")).not.toBe(merchantKey("セ・マート"));
     });
+
+    it("drops invisible characters instead of keeping them as a name", () => {
+        expect(merchantKey("\uFE0F\uFE0F\uFE0F")).toBe("");
+        expect(merchantKey("\uFFA0\uFFA0")).toBe("");
+    });
 });
 
 describe(isMatchableKey, () => {
@@ -44,6 +49,8 @@ describe(isMatchableKey, () => {
         expect(isMatchableKey("쿠팡")).toBeTruthy();
         expect(isMatchableKey("ab")).toBeFalsy();
         expect(isMatchableKey("無印")).toBeTruthy();
+        expect(isMatchableKey("𠮷")).toBeFalsy();
+        expect(isMatchableKey("𠮷野")).toBeTruthy();
     });
 });
 
@@ -58,6 +65,7 @@ describe(descriptorKey, () => {
         ["UBER *EATS PENDING", "uber eats pending"],
         ["PayPal", "paypal"],
         ["Panadería San José", "panaderia san jose"],
+        ["ＰＡＹＰＡＬ＊無印　１２３４", "無印"],
     ])("%s decodes to %s", (raw, expected) => {
         expect(descriptorKey(raw)).toBe(expected);
     });

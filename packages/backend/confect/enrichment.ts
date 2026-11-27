@@ -116,7 +116,7 @@ export function sanitizeDomain(domain: string | null): string | null {
 
 export function sanitizeMerchantName(name: string | null): string | null {
     const trimmed = name?.trim() ?? "";
-    return trimmed.length === 0 || trimmed.length > MAX_NAME_LENGTH ? null : trimmed;
+    return trimmed.length === 0 || [...trimmed].length > MAX_NAME_LENGTH ? null : trimmed;
 }
 
 const REGION_CODE_PATTERN = /^[A-Z]{2}$/;

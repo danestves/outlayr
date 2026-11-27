@@ -143,7 +143,7 @@ const suggest = FunctionImpl.make(
             }
 
             const trimmedName = args.name.trim();
-            if (trimmedName.length > MAX_NAME_LENGTH || !isMatchableKey(merchantKey(trimmedName))) {
+            if ([...trimmedName].length > MAX_NAME_LENGTH || !isMatchableKey(merchantKey(trimmedName))) {
                 return EMPTY;
             }
 
@@ -251,7 +251,7 @@ const submitWebsite = FunctionImpl.make(
             identity === null ||
             domain === null ||
             isForbiddenLogoOrigin(domain) ||
-            name.length > MAX_NAME_LENGTH ||
+            [...name].length > MAX_NAME_LENGTH ||
             !isMatchableKey(merchantKey(name))
         ) {
             return null;

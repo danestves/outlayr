@@ -38,7 +38,7 @@ export interface JobArgs {
 export const insertJob = Effect.fn("EnrichmentQueue.insertJob")(function* insertJob(userId: string, args: JobArgs) {
     const ctx = yield* MutationCtx;
     const name = args.name.trim();
-    if (!hasAiConsent(args) || name.length > MAX_NAME_LENGTH || !isMatchableKey(merchantKey(name))) {
+    if (!hasAiConsent(args) || [...name].length > MAX_NAME_LENGTH || !isMatchableKey(merchantKey(name))) {
         return null;
     }
     const [user, pro] = yield* Effect.all([
