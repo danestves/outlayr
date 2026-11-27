@@ -188,6 +188,42 @@ describe("queryRows", () => {
     });
 });
 
+describe("prepareLedger", () => {
+    const books = (transactions: readonly unknown[]) =>
+        ({
+            accounts: [account("chase", "USD")],
+            appMeta: [{ key: "timeZone", value: "America/Caracas" }],
+            budgetPlans: [],
+            budgets: [],
+            categories: [category("food")],
+            exchangeRates: [],
+            installmentPlans: [],
+            installments: [],
+            savingsGoals: [],
+            mainBudget: [],
+            outsideMoves: [],
+            outsidePayments: [],
+            transactions,
+            transfers: [],
+        }) as unknown as LedgerBooks;
+
+    it("keeps future entries in upcoming, soonest first, and out of the rows the totals read", () => {
+        const next = prepareLedger(
+            books([
+                entry("past", "2026-11-01T14:00:00Z", 20),
+                entry("next year", "2027-03-02T14:00:00Z", 90),
+                entry("soon", "2026-12-01T14:00:00Z", 10),
+                entry("deleted", "2027-01-10T14:00:00Z", 5, { deletedAt: 1 }),
+                entry("transfer leg", "2027-01-10T14:00:00Z", 5, { transferId: "move" }),
+            ]),
+            NOW
+        );
+
+        expect(next.rows.map((row) => row.id)).toStrictEqual(["past"]);
+        expect(next.upcoming.map((row) => row.id)).toStrictEqual(["soon", "next year"]);
+    });
+});
+
 describe("rangeOf", () => {
     it("widens the picked month to its quarter or year, honouring the first day of the month", () => {
         expect(rangeOf({ custom: {}, key: "2026-11", span: "quarter" }, 1)).toStrictEqual({

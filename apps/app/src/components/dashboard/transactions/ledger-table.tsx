@@ -15,6 +15,7 @@ import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
 import type { LedgerRow, LedgerTransfer } from "@/lib/dashboard-series-ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { photoSrc } from "@/lib/photo-src";
+import { cn } from "@/lib/utils";
 
 import { useDateFormat } from "../home/format";
 import { figureOf } from "../home/rows";
@@ -27,6 +28,7 @@ import type { LedgerList } from "./use-ledger-list";
 const FIGURE = "font-mono tabular-nums whitespace-nowrap";
 const MUTED = "text-muted-foreground truncate";
 const ROW = "group/row relative hover:bg-app-hover aria-selected:bg-app-tint/10";
+const NO_ROWS: readonly FoldedRow[] = [];
 const PICK = "relative z-1 w-10 pe-0";
 const CAPTION = "text-muted-foreground text-app-caption block truncate font-normal";
 const ENTRY_COLUMNS: readonly Column[] = [
@@ -65,6 +67,7 @@ interface LedgerTableProps {
     rows: readonly FoldedRow[];
     selected: string | null;
     transfers: boolean;
+    upcoming?: readonly FoldedRow[];
 }
 
 export function LedgerTable({
@@ -81,6 +84,7 @@ export function LedgerTable({
     rows,
     selected,
     transfers,
+    upcoming = NO_ROWS,
 }: LedgerTableProps) {
     const { ledger } = useDashboard();
     const words = useIntlayer("dashboard-ledger");
@@ -218,7 +222,7 @@ export function LedgerTable({
             </Table.Row>
         );
     };
-    const entryRow = (row: FoldedRow & LedgerRow) => {
+    const entryRow = (row: FoldedRow & LedgerRow, planned = false) => {
         const raw = list.catalog.transaction(row.id);
         const figure = figureOf(ledger, row);
         const name = list.names.merchant(row);
@@ -243,7 +247,12 @@ export function LedgerTable({
             account: <span className="truncate">{list.names.account(row.accountId)}</span>,
             amount: renderAmount(
                 row,
-                <span className={row.income ? "text-app-income" : undefined}>
+                <span
+                    className={cn(
+                        row.income && "text-app-income",
+                        planned && "underline decoration-dashed underline-offset-4"
+                    )}
+                >
                     {money(
                         row.income ? figure.amount : -figure.amount,
                         ledger.currency,
@@ -252,7 +261,7 @@ export function LedgerTable({
                 </span>
             ),
             category: fee ? null : renderCategory(row, category),
-            date: date.day(row.day),
+            date: planned ? words.upcoming.due({ day: date.day(row.day) }) : date.day(row.day),
             merchant: (
                 <span className="relative flex min-w-0 items-center gap-3 font-medium">
                     {reviewing ? (
@@ -295,8 +304,12 @@ export function LedgerTable({
             ),
         };
         return (
-            <Table.Row aria-selected={picking.ids.has(row.id) || selected === row.id} className={ROW} key={row.id}>
-                {pickCell(row, name)}
+            <Table.Row
+                aria-selected={planned ? selected === row.id : picking.ids.has(row.id) || selected === row.id}
+                className={cn(ROW, planned && "bg-app-tint/5")}
+                key={row.id}
+            >
+                {planned ? <Table.Cell className={PICK} /> : pickCell(row, name)}
                 {columns.map((column) => (
                     <Table.Cell
                         align={column === "amount" ? "end" : "start"}
@@ -351,7 +364,27 @@ export function LedgerTable({
                     <Table.Head className="w-10" />
                 </Table.Row>
             </Table.Header>
-            <Table.Body>{rows.map((row) => ("fromId" in row ? transferRow(row) : entryRow(row)))}</Table.Body>
+            <Table.Body>
+                {transfers || upcoming.length === 0 ? null : (
+                    <Table.Row className="bg-app-hover hover:bg-app-hover">
+                        <Table.Cell className="text-app-label py-2" colSpan={columns.length + 2}>
+                            <span className="flex items-center justify-between gap-3">
+                                <span className="flex items-baseline gap-2">
+                                    <span className="font-semibold">{words.upcoming.title}</span>
+                                    <span className="text-muted-foreground font-mono tabular-nums">
+                                        {upcoming.length}
+                                    </span>
+                                </span>
+                                <span className="text-muted-foreground text-app-caption">
+                                    {words.upcoming.notCounted}
+                                </span>
+                            </span>
+                        </Table.Cell>
+                    </Table.Row>
+                )}
+                {transfers ? null : upcoming.map((row) => ("fromId" in row ? transferRow(row) : entryRow(row, true)))}
+                {rows.map((row) => ("fromId" in row ? transferRow(row) : entryRow(row)))}
+            </Table.Body>
         </Table>
     );
 }

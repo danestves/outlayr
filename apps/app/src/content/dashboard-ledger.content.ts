@@ -1455,6 +1455,46 @@ const dashboardLedger = {
                 ko: "{{from}}~{{to}}",
             })
         ),
+        upcoming: {
+            due: insert(
+                t({
+                    en: "Due {{day}}",
+                    de: "Fällig {{day}}",
+                    es: "Vence {{day}}",
+                    fr: "Échéance {{day}}",
+                    pt: "Vence {{day}}",
+                    "pt-PT": "Vence {{day}}",
+                    it: "Scade {{day}}",
+                    nl: "Vervalt {{day}}",
+                    ja: "{{day}}に予定",
+                    ko: "{{day}} 예정",
+                })
+            ),
+            notCounted: t({
+                en: "Not in totals",
+                de: "Nicht in den Summen",
+                es: "No suma en los totales",
+                fr: "Hors totaux",
+                pt: "Fora dos totais",
+                "pt-PT": "Fora dos totais",
+                it: "Fuori dai totali",
+                nl: "Niet in totalen",
+                ja: "合計には含まれません",
+                ko: "합계에 포함되지 않음",
+            }),
+            title: t({
+                en: "Upcoming",
+                de: "Kommend",
+                es: "Próximos",
+                fr: "À venir",
+                pt: "Próximos",
+                "pt-PT": "A chegar",
+                it: "In arrivo",
+                nl: "Binnenkort",
+                ja: "予定",
+                ko: "예정",
+            }),
+        },
         views: {
             cancel: t({
                 en: "Cancel",

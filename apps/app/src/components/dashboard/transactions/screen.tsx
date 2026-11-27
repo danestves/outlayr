@@ -21,7 +21,7 @@ import { authorBucket, FORMER_AUTHORS } from "@/lib/profile-authors";
 import { useProfileMembers } from "@/lib/profile-sharing";
 
 import { useDateFormat } from "../home/format";
-import { figureOf } from "../home/rows";
+import { figureOf, foldFees } from "../home/rows";
 import type { FoldedRow } from "../home/rows";
 import { QuietTable } from "../home/setup";
 import { BulkBar } from "./bulk-bar";
@@ -155,6 +155,21 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     );
     const counts = useMemo(() => tabCounts(all, list.review), [all, list.review]);
     const rows = useMemo(() => all.filter((row) => inTab(query.tab, row, list.review)), [all, list.review, query.tab]);
+    const upcomingRows = useMemo(() => {
+        const { tab } = query;
+        if (tab !== "all" && tab !== "expenses" && tab !== "income") {
+            return [];
+        }
+        const listed = list.upcoming(listParamsOf(query, filters.accounts, filters.categories));
+        const matched =
+            query.loggedBy.length === 0
+                ? listed
+                : listed.filter((row) => {
+                      const author = authors.authorOf(row);
+                      return author !== null && query.loggedBy.includes(author);
+                  });
+        return matched.filter((row) => inTab(tab, row, list.review));
+    }, [authors, filters.accounts, filters.categories, list, query]);
     const viewCounts = useMemo(
         () =>
             new Map(
@@ -210,29 +225,38 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const [dialog, setDialog] = useState<ViewDialog | null>(null);
 
     const selectedIndex = search.entry === undefined ? -1 : rows.findIndex((row) => row.id === search.entry);
-    const selected = useMemo(() => {
+    const selected = useMemo((): FoldedRow | null => {
         if (search.entry === undefined) {
             return null;
         }
+        const found = rows[selectedIndex];
+        if (found) {
+            return found;
+        }
         // A link from home can name an entry outside these filters; it still opens.
-        return (
-            rows[selectedIndex] ??
-            queryRows(
-                ledger,
-                {
-                    accounts: [],
-                    categories: [],
-                    max: null,
-                    min: null,
-                    q: "",
-                    range: null,
-                    sort: "newest",
-                    type: undefined,
-                },
-                list.text
-            ).find((row) => row.id === search.entry) ??
-            null
-        );
+        const listed = queryRows(
+            ledger,
+            {
+                accounts: [],
+                categories: [],
+                max: null,
+                min: null,
+                q: "",
+                range: null,
+                sort: "newest",
+                type: undefined,
+            },
+            list.text
+        ).find((row) => row.id === search.entry);
+        if (listed) {
+            return listed;
+        }
+        const own = ledger.upcoming.find((row) => row.id === search.entry);
+        if (own === undefined) {
+            return null;
+        }
+        const fees = ledger.upcoming.filter((row) => row.feeFor === own.id && row.id !== own.id);
+        return foldFees([own, ...fees])[0] ?? null;
     }, [ledger, list.text, rows, search.entry, selectedIndex]);
     const step = (by: 1 | -1) => {
         const next = rows[selectedIndex === -1 ? 0 : selectedIndex + by];
@@ -405,7 +429,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
         download(`${legacy.exportFile.value}-${ledger.today}.csv`, csvOf([header, ...exported]));
     };
 
-    const fresh = ledger.rows.length === 0 && ledger.transfers.length === 0;
+    const fresh = ledger.rows.length === 0 && ledger.transfers.length === 0 && ledger.upcoming.length === 0;
     const narrowedByFilter = applied.length > 0 || query.q.trim() !== "";
     const totals = tally(ledger, rows);
     const splits = useMemo(() => {
@@ -678,7 +702,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                             </div>
                         ) : null}
                         <div className="@container flex-1 border-t" data-motion="dissolve" key={view?.id ?? query.tab}>
-                            {rows.length === 0 ? (
+                            {rows.length === 0 && upcomingRows.length === 0 ? (
                                 empty()
                             ) : (
                                 <LedgerTable
@@ -779,6 +803,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                                     rows={shown}
                                     selected={selected?.id ?? null}
                                     transfers={transfers}
+                                    upcoming={page.page === 0 ? upcomingRows : []}
                                 />
                             )}
                         </div>
