@@ -2040,8 +2040,8 @@ const dashboardTransactions = {
                 pt: "De",
                 it: "Da",
                 nl: "Van",
-                ja: "出金元",
-                ko: "출금 계좌",
+                ja: "開始日",
+                ko: "시작일",
             }),
             range: t({
                 en: "Dates",
@@ -2061,9 +2061,9 @@ const dashboardTransactions = {
                 fr: "Au",
                 pt: "Até",
                 it: "A",
-                nl: "Naar",
-                ja: "入金先",
-                ko: "입금 계좌",
+                nl: "Tot",
+                ja: "終了日",
+                ko: "종료일",
             }),
         },
         today: t({

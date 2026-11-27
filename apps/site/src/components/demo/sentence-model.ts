@@ -528,7 +528,7 @@ export const CASTS = {
             ["ユニクロ", "Fashion"],
         ]),
         recentMerchants: {
-            expense: ["イオン", "JR東日本", "ユニクロ", "マツモトキヨシ", "ウーバーイーツ", "Spotify"],
+            expense: ["イオン", "JR東日本", "ユニクロ", "マツモトキヨシ", "ウーバーイーツ", "Spotify", "Amazon.com"],
             income: ["クラウドワークス", "ランサーズ"],
         },
         seedLog: [
@@ -589,7 +589,7 @@ export const CASTS = {
             ["무신사", "Fashion"],
         ]),
         recentMerchants: {
-            expense: ["이마트", "티머니", "무신사", "올리브영", "배달의민족", "멜론"],
+            expense: ["이마트", "티머니", "무신사", "올리브영", "배달의민족", "멜론", "Amazon.com"],
             income: ["크몽", "숨고"],
         },
         seedLog: [

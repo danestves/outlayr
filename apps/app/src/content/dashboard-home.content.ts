@@ -426,7 +426,7 @@ const dashboardHome = {
                     it: "{{name}} è la tua prima spesa. Dalle un limite.",
                     nl: "{{name}} is je eerste uitgave. Geef er een limiet aan.",
                     ja: "{{name}}が最初の支出です。上限を設定しましょう。",
-                    ko: "{{name}}이(가) 첫 지출이에요. 한도를 정해 보세요.",
+                    ko: "첫 지출: {{name}}. 한도를 정해 보세요.",
                 })
             ),
             budgetLine: t({
@@ -858,7 +858,7 @@ const dashboardHome = {
                     it: "{{name}} è la tua spesa maggiore. Dalle un limite.",
                     nl: "{{name}} is je grootste uitgave. Geef er een limiet aan.",
                     ja: "{{name}}が最大の支出です。上限を設定しましょう。",
-                    ko: "{{name}}이(가) 가장 큰 지출이에요. 한도를 정해 보세요.",
+                    ko: "가장 큰 지출: {{name}}. 한도를 정해 보세요.",
                 })
             ),
             details: t({

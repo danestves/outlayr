@@ -118,10 +118,10 @@ const dashboardImportMm = {
                 "Ouverts dans Money Manager",
                 "Abertas no Money Manager",
                 {
-                    it: "Apri in Money Manager",
-                    nl: "Openen in Money Manager",
-                    ja: "Money Managerで開く",
-                    ko: "Money Manager에서 열기",
+                    it: "Aperti in Money Manager",
+                    nl: "Open in Money Manager",
+                    ja: "Money Managerで表示中",
+                    ko: "Money Manager에서 표시 중",
                 }
             ),
             inMm: text(

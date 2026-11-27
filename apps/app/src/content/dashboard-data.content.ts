@@ -148,8 +148,8 @@ const dashboardData = {
                 pt: "De",
                 it: "Da",
                 nl: "Van",
-                ja: "送金元",
-                ko: "보낸 계좌",
+                ja: "開始日",
+                ko: "시작일",
             }),
             to: t({
                 en: "To",
@@ -158,9 +158,9 @@ const dashboardData = {
                 fr: "Au",
                 pt: "Até",
                 it: "A",
-                nl: "Naar",
-                ja: "送金先",
-                ko: "받는 계좌",
+                nl: "Tot",
+                ja: "終了日",
+                ko: "종료일",
             }),
             entries: plural({
                 one: insert(

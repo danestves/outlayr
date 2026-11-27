@@ -23,10 +23,10 @@ const dashboardBudgetsPlan = {
                     fr: "Vous repassez au vert en {{month}}.",
                     pt: "Em {{month}} você se recupera.",
                     "pt-PT": "Em {{month}} se recupera.",
-                    it: "Sei tornato a {{month}}.",
-                    nl: "Je bent terug in {{month}}.",
-                    ja: "{{month}}に戻りました。",
-                    ko: "{{month}} 기준으로 돌아왔어요.",
+                    it: "A {{month}} torni in positivo.",
+                    nl: "In {{month}} sta je weer positief.",
+                    ja: "{{month}}に黒字へ戻ります。",
+                    ko: "{{month}}에는 다시 플러스가 돼요.",
                 })
             ),
             covered: t({

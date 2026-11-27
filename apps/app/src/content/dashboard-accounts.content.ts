@@ -2587,10 +2587,10 @@ const dashboardAccounts = {
                 es: "Compra",
                 fr: "Achat",
                 pt: "Compra",
-                it: "Ordine",
-                nl: "Volgorde",
-                ja: "順番",
-                ko: "순서",
+                it: "Acquisto",
+                nl: "Aankoop",
+                ja: "購入",
+                ko: "구매",
             }),
             planLeft: insert(
                 t({

@@ -456,8 +456,8 @@ const dashboardBudgets = {
                 pt: "Desde",
                 it: "Da",
                 nl: "Van",
-                ja: "出金元",
-                ko: "출금 계좌",
+                ja: "開始日",
+                ko: "시작일",
             }),
             last: {
                 day: t({
@@ -780,8 +780,8 @@ const dashboardBudgets = {
                 pt: "Desde",
                 it: "Da",
                 nl: "Van",
-                ja: "出金元",
-                ko: "출금 계좌",
+                ja: "開始日",
+                ko: "시작일",
             }),
             hasLimit: t({
                 en: "Has a limit",
