@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const dashboardData = {
@@ -46,15 +46,26 @@ const dashboardData = {
             custom: t({ en: "Custom", de: "Eigener", es: "Personalizado", fr: "Personnalisé", pt: "Personalizado" }),
             from: t({ en: "From", de: "Von", es: "Desde", fr: "Du", pt: "De" }),
             to: t({ en: "To", de: "Bis", es: "Hasta", fr: "Au", pt: "Até" }),
-            entries: insert(
-                t({
-                    en: "{{count}} transactions",
-                    de: "{{count}} Einträge",
-                    es: "{{count}} transacciones",
-                    fr: "{{count}} opérations",
-                    pt: "{{count}} transações",
-                })
-            ),
+            entries: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} transaction",
+                        de: "{{count}} Eintrag",
+                        es: "{{count}} transacción",
+                        fr: "{{count}} opération",
+                        pt: "{{count}} transação",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} transactions",
+                        de: "{{count}} Einträge",
+                        es: "{{count}} transacciones",
+                        fr: "{{count}} opérations",
+                        pt: "{{count}} transações",
+                    })
+                ),
+            }),
             leftOut: t({
                 en: "Deleted transactions are left out",
                 de: "Gelöschte Einträge werden weggelassen",

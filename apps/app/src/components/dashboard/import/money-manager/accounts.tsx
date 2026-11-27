@@ -5,7 +5,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { Cell, DataTable } from "@/components/dashboard/accounts/accounts-screen";
 import { LookTile } from "@/components/ledger/tiles";
-import { money } from "@/lib/ledger";
+import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { Card, ImportPage } from "../parts";
 import { accountOf } from "./model";
@@ -22,6 +22,7 @@ interface Props {
 }
 
 export function Accounts({ draft, onBack, onChoices }: Props) {
+    const { money } = useDisplayFormat();
     const { accounts: copy, bar } = useIntlayer("dashboard-import-mm");
     const groupTitle = { deleted: copy.groupDeleted, hidden: copy.groupHidden, open: copy.groupOpen };
 

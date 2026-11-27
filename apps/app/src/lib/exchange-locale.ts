@@ -24,6 +24,12 @@ export function numberLocale(language: string, browser: readonly string[]): stri
     return region ? `${language}-${region}` : (REGIONAL_FALLBACK.get(language) ?? ENGLISH);
 }
 
+export function useNumberLocale(): string {
+    const { locale: language } = useLocale();
+    // No browser hint: the server renders with the cookie's locale, so both sides must agree.
+    return useMemo(() => numberLocale(language, []), [language]);
+}
+
 export function useExchangeLocale(): {
     currencyLabels: CurrencyInputLabels;
     labels: ExchangeLabels;

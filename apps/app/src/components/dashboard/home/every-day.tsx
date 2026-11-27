@@ -8,6 +8,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { lastMonthIn } from "@/lib/dashboard-series-period";
+import { useNumberLocale } from "@/lib/exchange-locale";
 import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
@@ -265,6 +266,7 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
     const { everyDay: copy, setup: setupCopy } = useIntlayer("dashboard-home");
     const categoryName = useCategoryName();
     const date = useDateFormat();
+    const numberLocale = useNumberLocale();
     const { money } = useDisplayFormat();
     const days = useMemo(
         () => everyDay(ledger, filters.range, { accounts: filters.accounts }, filters.categories),
@@ -280,7 +282,7 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
     if (!quiet && everyDayKind(filters.range) === "year") {
         return <EveryMonth />;
     }
-    const trimmed = (amount: number) => moneyIn(amount, ledger.currency, "auto", amount % 1 !== 0);
+    const trimmed = (amount: number) => moneyIn(amount, ledger.currency, "auto", amount % 1 !== 0, numberLocale);
     const nameOf = (id: string | null) => {
         const category = id ? ledger.categories.get(id) : undefined;
         return category ? categoryName(category) : "";

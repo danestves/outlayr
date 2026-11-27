@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const dashboardInsightsReports = {
@@ -11,15 +11,26 @@ const dashboardInsightsReports = {
                 fr: "Tous les comptes",
                 pt: "Todas as contas",
             }),
-            count: insert(
-                t({
-                    en: "{{count}} accounts",
-                    de: "{{count}} Konten",
-                    es: "{{count}} cuentas",
-                    fr: "{{count}} comptes",
-                    pt: "{{count}} contas",
-                })
-            ),
+            count: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} account",
+                        de: "{{count}} Konto",
+                        es: "{{count}} cuenta",
+                        fr: "{{count}} compte",
+                        pt: "{{count}} conta",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} accounts",
+                        de: "{{count}} Konten",
+                        es: "{{count}} cuentas",
+                        fr: "{{count}} comptes",
+                        pt: "{{count}} contas",
+                    })
+                ),
+            }),
             label: t({ en: "Accounts", de: "Konten", es: "Cuentas", fr: "Comptes", pt: "Contas" }),
         },
         bar: {
@@ -247,16 +258,28 @@ const dashboardInsightsReports = {
                 pt: "Todos os lançamentos por trás dos totais",
                 "pt-PT": "Todos os registos por trás dos totais",
             }),
-            entriesNote: insert(
-                t({
-                    en: "{{count}} entries",
-                    de: "{{count}} Einträge",
-                    es: "{{count}} movimientos",
-                    fr: "{{count}} opérations",
-                    pt: "{{count}} lançamentos",
-                    "pt-PT": "{{count}} registos",
-                })
-            ),
+            entriesNote: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} entry",
+                        de: "{{count}} Eintrag",
+                        es: "{{count}} movimiento",
+                        fr: "{{count}} opération",
+                        pt: "{{count}} lançamento",
+                        "pt-PT": "{{count}} registo",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} entries",
+                        de: "{{count}} Einträge",
+                        es: "{{count}} movimientos",
+                        fr: "{{count}} opérations",
+                        pt: "{{count}} lançamentos",
+                        "pt-PT": "{{count}} registos",
+                    })
+                ),
+            }),
             fileName: t({
                 en: "File name",
                 de: "Dateiname",
@@ -664,15 +687,26 @@ const dashboardInsightsReports = {
                 pt: "Os relatórios que você salva aparecem aqui.",
                 "pt-PT": "Os relatórios que guardada aparecem aqui.",
             }),
-            months: insert(
-                t({
-                    en: "{{count}} mo",
-                    de: "{{count}} Mon.",
-                    es: "{{count}} m",
-                    fr: "{{count}} mois",
-                    pt: "{{count}} mês",
-                })
-            ),
+            months: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} mo",
+                        de: "{{count}} Mon.",
+                        es: "{{count}} m",
+                        fr: "{{count}} mois",
+                        pt: "{{count}} mês",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} mo",
+                        de: "{{count}} Mon.",
+                        es: "{{count}} m",
+                        fr: "{{count}} mois",
+                        pt: "{{count}} meses",
+                    })
+                ),
+            }),
             title: t({
                 en: "Saved",
                 de: "Gespeichert",

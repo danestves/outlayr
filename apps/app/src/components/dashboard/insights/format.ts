@@ -6,6 +6,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { periodKindOf } from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
+import { useNumberLocale } from "@/lib/exchange-locale";
 import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
@@ -15,6 +16,7 @@ export function useInsightsFormat({
     today,
 }: Pick<Ledger, "currency" | "firstDayOfMonth" | "today">) {
     const { locale } = useLocale();
+    const numberLocale = useNumberLocale();
     const { money } = useDisplayFormat();
     const { date } = LANGUAGES[locale];
     const { range } = useIntlayer("dashboard-insights-bar");
@@ -23,12 +25,12 @@ export function useInsightsFormat({
         const dated = date === "en-GB" ? "en-US" : date;
         const dayOfMonth = new Intl.DateTimeFormat(dated, { day: "numeric", timeZone: "UTC" });
         const monthDay = new Intl.DateTimeFormat(dated, { day: "numeric", month: "short", timeZone: "UTC" });
-        const plain = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1, notation: "compact" });
+        const plain = new Intl.NumberFormat(numberLocale, { maximumFractionDigits: 1, notation: "compact" });
         const dayFormat = new Intl.DateTimeFormat(date, { day: "numeric", month: "short", timeZone: "UTC" });
         const shortMonth = new Intl.DateTimeFormat(dated, { month: "short", timeZone: "UTC" });
         const longMonth = new Intl.DateTimeFormat(date, { month: "long", timeZone: "UTC" });
         const longMonthYear = new Intl.DateTimeFormat(date, { month: "long", timeZone: "UTC", year: "numeric" });
-        const compact = new Intl.NumberFormat("en-US", {
+        const compact = new Intl.NumberFormat(numberLocale, {
             currency,
             maximumFractionDigits: 1,
             notation: "compact",
@@ -79,8 +81,8 @@ export function useInsightsFormat({
                     ? shortMonth.format(wallNoon(span.from)).replace(".", "")
                     : shortDate(span.from);
             },
-            whole: (value: number) => moneyIn(value, currency, "auto", false),
-            signedWhole: (value: number) => moneyIn(value, currency, "always", false),
+            whole: (value: number) => moneyIn(value, currency, "auto", false, numberLocale),
+            signedWhole: (value: number) => moneyIn(value, currency, "always", false, numberLocale),
             month: (key: string) => shortMonth.format(wallNoon(`${key}-15`)),
             periodName: (period: Period) => {
                 if (firstDayOfMonth !== 1) {
@@ -90,5 +92,5 @@ export function useInsightsFormat({
                 return (sameYear ? longMonth : longMonthYear).format(wallNoon(period.from));
             },
         };
-    }, [currency, date, firstDayOfMonth, money, range, today]);
+    }, [currency, date, firstDayOfMonth, money, numberLocale, range, today]);
 }

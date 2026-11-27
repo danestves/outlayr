@@ -137,7 +137,7 @@ export function SaveDialog({ currentKey, definition, name, onClose, onSave, open
                         <Summary
                             value={
                                 definition.accounts.length > 0
-                                    ? copy.accounts.count({ count: String(definition.accounts.length) }).value
+                                    ? copy.accounts.count({ count: definition.accounts.length }).value
                                     : copy.accounts.all.value
                             }
                         />
@@ -286,15 +286,11 @@ export function ExportDialog({
                             { checked: true, disabled: true }
                         )}
                         {option(exporting.averages.value, "", { checked: averages, onChange: setAverages })}
-                        {option(
-                            exporting.entries.value,
-                            exporting.entriesNote({ count: String(report.entries) }).value,
-                            {
-                                checked: entries && !pdf,
-                                disabled: pdf,
-                                onChange: setEntries,
-                            }
-                        )}
+                        {option(exporting.entries.value, exporting.entriesNote({ count: report.entries }).value, {
+                            checked: entries && !pdf,
+                            disabled: pdf,
+                            onChange: setEntries,
+                        })}
                     </div>
                     <Field className="-mt-px">
                         <Field.Label>{exporting.fileName}</Field.Label>

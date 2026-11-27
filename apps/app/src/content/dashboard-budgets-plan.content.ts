@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const dashboardBudgetsPlan = {
@@ -189,15 +189,26 @@ const dashboardBudgetsPlan = {
                     pt: "{{month}} deixa de ficar em falta.",
                 })
             ),
-            fixesMany: insert(
-                t({
-                    en: "{{count}} months stop running short.",
-                    de: "{{count}} Monate reichen dann wieder.",
-                    es: "{{count}} meses dejan de quedarse en falta.",
-                    fr: "{{count}} mois ne manquent plus.",
-                    pt: "{{count}} meses deixam de ficar em falta.",
-                })
-            ),
+            fixesMany: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} month stops running short.",
+                        de: "{{count}} Monat reicht dann wieder.",
+                        es: "{{count}} mes deja de quedarse en falta.",
+                        fr: "{{count}} mois ne manque plus.",
+                        pt: "{{count}} mês deixa de ficar em falta.",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} months stop running short.",
+                        de: "{{count}} Monate reichen dann wieder.",
+                        es: "{{count}} meses dejan de quedarse en falta.",
+                        fr: "{{count}} mois ne manquent plus.",
+                        pt: "{{count}} meses deixam de ficar em falta.",
+                    })
+                ),
+            }),
             notEnough: t({
                 en: "Not enough to cover the month.",
                 de: "Reicht nicht, um den Monat zu decken.",
@@ -370,15 +381,26 @@ const dashboardBudgetsPlan = {
                 fr: "par mois, des objectifs",
                 pt: "por mês, das metas",
             }),
-            goals: insert(
-                t({
-                    en: "{{count}} goals",
-                    de: "{{count}} Sparziele",
-                    es: "{{count}} metas",
-                    fr: "{{count}} objectifs",
-                    pt: "{{count}} metas",
-                })
-            ),
+            goals: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} goal",
+                        de: "{{count}} Sparziel",
+                        es: "{{count}} meta",
+                        fr: "{{count}} objectif",
+                        pt: "{{count}} meta",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} goals",
+                        de: "{{count}} Sparziele",
+                        es: "{{count}} metas",
+                        fr: "{{count}} objectifs",
+                        pt: "{{count}} metas",
+                    })
+                ),
+            }),
             in: t({ en: "In", de: "Rein", es: "Entra", fr: "Entrées", pt: "Entra" }),
             leftByPlan: t({
                 en: "Left by the plan",
@@ -402,15 +424,26 @@ const dashboardBudgetsPlan = {
                 fr: "1 mois à venir",
                 pt: "1 mês pela frente",
             }),
-            monthsAhead: insert(
-                t({
-                    en: "{{count}} months ahead",
-                    de: "{{count}} Monate voraus",
-                    es: "{{count}} meses por delante",
-                    fr: "{{count}} mois à venir",
-                    pt: "{{count}} meses pela frente",
-                })
-            ),
+            monthsAhead: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} month ahead",
+                        de: "{{count}} Monat voraus",
+                        es: "{{count}} mes por delante",
+                        fr: "{{count}} mois à venir",
+                        pt: "{{count}} mês pela frente",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} months ahead",
+                        de: "{{count}} Monate voraus",
+                        es: "{{count}} meses por delante",
+                        fr: "{{count}} mois à venir",
+                        pt: "{{count}} meses pela frente",
+                    })
+                ),
+            }),
             monthsPlanned: t({
                 en: "Months planned",
                 de: "Geplante Monate",

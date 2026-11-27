@@ -7,6 +7,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
 import type { LedgerCategory } from "@/lib/dashboard-series-ledger";
 import type { Period } from "@/lib/dashboard-series-period";
+import { useNumberLocale } from "@/lib/exchange-locale";
 
 const WEEKDAY_LEAD = /^([^\s,]+),?\s/;
 const SUNDAY_NOON = Date.UTC(2023, 11, 31, 12);
@@ -112,16 +113,21 @@ export function useMonthYear() {
 }
 
 export function useWholeMoney(currency: string) {
+    const numberLocale = useNumberLocale();
     return useMemo(() => {
-        const whole = new Intl.NumberFormat("en-US", { currency, maximumFractionDigits: 0, style: "currency" });
-        const compact = new Intl.NumberFormat("en-US", {
+        const whole = new Intl.NumberFormat(numberLocale, {
+            currency,
+            maximumFractionDigits: 0,
+            style: "currency",
+        });
+        const compact = new Intl.NumberFormat(numberLocale, {
             currency,
             maximumFractionDigits: 1,
             notation: "compact",
             style: "currency",
         });
         return { compact: (amount: number) => compact.format(amount), whole: (amount: number) => whole.format(amount) };
-    }, [currency]);
+    }, [currency, numberLocale]);
 }
 
 export const percentChange = (delta: number) => `${delta > 0 ? "+" : ""}${(delta * 100).toFixed(1)}%`;

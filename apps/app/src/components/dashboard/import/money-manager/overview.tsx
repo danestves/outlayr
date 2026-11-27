@@ -9,7 +9,7 @@ import { Button } from "panelui-web/button";
 import { useIntlayer } from "react-intlayer";
 
 import { useDateFormat, useMonthYear } from "@/components/dashboard/home/format";
-import { money } from "@/lib/ledger";
+import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { Card, Columns, ImportPage } from "../parts";
 import { fill, planOf, planSize } from "./model";
@@ -27,6 +27,7 @@ interface Props {
 }
 
 export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
+    const { money } = useDisplayFormat();
     const { bar, overview } = useIntlayer("dashboard-import-mm");
     const date = useDateFormat();
     const monthYear = useMonthYear();

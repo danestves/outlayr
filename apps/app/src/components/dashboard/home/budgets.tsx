@@ -17,6 +17,7 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { budgetParts, spendSeries } from "@/lib/dashboard-series";
 import type { CategoryBudget } from "@/lib/dashboard-series";
 import type { BudgetTarget } from "@/lib/dashboard-series-ledger";
+import { useNumberLocale } from "@/lib/exchange-locale";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { viewTransition } from "@/lib/motion";
@@ -31,7 +32,6 @@ const ROWS_SHOWN = 5;
 const PERCENT = 100;
 const TONE_STRENGTHS = [100, 62, 38, 24] as const;
 const NEVER_CRITICAL = 1.1;
-const USAGE_LOCALE = "en-US";
 const OVER_BADGE = "normal-nums [&>[data-slot=badge-dot]]:text-inherit";
 
 function BudgetRow({ category, standing }: { category: BudgetTarget; standing: CategoryBudget }) {
@@ -42,6 +42,7 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
     const wide = useWide();
     const { money } = useDisplayFormat();
     const { whole } = useWholeMoney(ledger.currency);
+    const numberLocale = useNumberLocale();
     const [open, setOpen] = useState(false);
     const format = useMemo(
         () => ({ currency: ledger.currency, maximumFractionDigits: 0, style: "currency" }) as const,
@@ -91,7 +92,7 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
     }
     return (
         <div className={`flex min-h-9 items-center gap-1.5 max-lg:min-h-11 ${dimmed ? "opacity-40" : ""}`}>
-            <Usage {...figures} locales={USAGE_LOCALE} onOpenChange={setOpen} open={open} value={standing.spent}>
+            <Usage {...figures} locales={numberLocale} onOpenChange={setOpen} open={open} value={standing.spent}>
                 <Usage.Trigger
                     aria-label={
                         over
@@ -104,7 +105,7 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
                     {parts.length > 0 ? (
                         <Usage
                             {...figures}
-                            locales={USAGE_LOCALE}
+                            locales={numberLocale}
                             segments={parts.map((part, index) => ({
                                 color: `color-mix(in oklab, var(--usage-tone) ${TONE_STRENGTHS[Math.min(index, TONE_STRENGTHS.length - 1)]}%, transparent)`,
                                 label:

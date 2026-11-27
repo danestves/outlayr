@@ -42,6 +42,7 @@ import {
     wallText,
 } from "@/lib/entry-writes";
 import type { Doc, EntryBase, EntryProblem, EntryValues } from "@/lib/entry-writes";
+import { useNumberLocale } from "@/lib/exchange-locale";
 import { money } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { newLink } from "@/lib/rule-writes";
@@ -335,6 +336,7 @@ function EntryFields({
     values: EntryValues;
 }) {
     const { ledger, overview } = useDashboard();
+    const numberLocale = useNumberLocale();
     const { form, kind } = useIntlayer("dashboard-transactions");
     const quiet = layout === "drawer";
     const accounts = openAccounts(ledger.books);
@@ -396,7 +398,8 @@ function EntryFields({
         />
     );
     const feeRate = parseFee(values.feeText, values.currency)?.rate;
-    const feeShown = feeRate == null ? null : money(feeOfRate(values, feeRate), values.currency);
+    const feeShown =
+        feeRate == null ? null : money(feeOfRate(values, feeRate), values.currency, "auto", true, numberLocale);
     const name = <Input onChange={(event) => onChange({ note: event.target.value })} value={values.note} />;
     return (
         <>

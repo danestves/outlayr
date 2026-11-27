@@ -18,6 +18,7 @@ import { ICON_TILE } from "@/components/dashboard/accounts/accounts-screen";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { MenuContent } from "@/components/ui/menu-content";
+import { useNumberLocale } from "@/lib/exchange-locale";
 import { money } from "@/lib/ledger";
 import { LedgerSettingsContext } from "@/lib/ledger-settings";
 import { viewTransition } from "@/lib/motion";
@@ -29,10 +30,11 @@ export const PERCENT = 100;
 
 export function useGoalMoney() {
     const { showCents } = useContext(LedgerSettingsContext);
+    const numberLocale = useNumberLocale();
     return useCallback(
         (amount: number, currency: string, sign?: "always" | "auto") =>
-            money(amount, currency, sign, showCents && Math.round(amount * PERCENT) % PERCENT !== 0),
-        [showCents]
+            money(amount, currency, sign, showCents && Math.round(amount * PERCENT) % PERCENT !== 0, numberLocale),
+        [numberLocale, showCents]
     );
 }
 

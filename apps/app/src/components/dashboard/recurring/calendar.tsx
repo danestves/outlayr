@@ -8,6 +8,7 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
 import { addDays, isActive, monthEvents, nextCharges } from "@/lib/recurring";
 import type { MonthEvent, RecurringModel } from "@/lib/recurring";
+import { weekStartIso } from "@/lib/week-start";
 
 import { Glyph } from "../accounts/glyph";
 import type { ScheduleActions } from "./menu";
@@ -36,13 +37,17 @@ const lastDayOf = (month: string) => addDays(`${shiftMonth(month, 1)}-01`, -1);
 /** Monday is 1 and Sunday 7, as the grid lays weeks out. */
 const weekdayOf = (day: string) => new Date(wallNoon(day)).getUTCDay() || SUNDAY;
 
-function gridDays(month: string) {
+const leadDays = (weekday: number, start: number) => (weekday - start + WEEK) % WEEK;
+const trailDays = (weekday: number, start: number) => (start - 1 - weekday + WEEK) % WEEK;
+
+function gridDays(month: string, firstWeekday: number) {
+    const start = weekStartIso(firstWeekday);
     const first = `${month}-01`;
     const last = lastDayOf(month);
-    const start = addDays(first, 1 - weekdayOf(first));
-    const end = addDays(last, SUNDAY - weekdayOf(last));
+    const from = addDays(first, -leadDays(weekdayOf(first), start));
+    const to = addDays(last, trailDays(weekdayOf(last), start));
     const days: string[] = [];
-    for (let day = start; day <= end; day = addDays(day, 1)) {
+    for (let day = from; day <= to; day = addDays(day, 1)) {
         days.push(day);
     }
     return days;
@@ -62,13 +67,13 @@ export interface CalendarProps {
 
 function useCalendar({ day, model, month }: Pick<CalendarProps, "day" | "model" | "month">) {
     const { ledger } = useDashboard();
-    const days = gridDays(month);
+    const days = gridDays(month, ledger.firstWeekday);
     const months = [...new Set(days.map((each) => each.slice(0, 7)))];
     const events = months.flatMap((key) => monthEvents(model, ledger, key));
     const byDay = Map.groupBy(events, (event) => event.day);
     const inMonth = events.filter((event) => event.day.startsWith(month));
     const fallback = month === ledger.today.slice(0, 7) ? ledger.today : (inMonth.at(0)?.day ?? `${month}-01`);
-    return { byDay, days, inMonth, selected: day ?? fallback };
+    return { byDay, days, firstWeekday: ledger.firstWeekday, inMonth, selected: day ?? fallback };
 }
 
 export function CalendarGrid(props: CalendarProps) {
@@ -183,17 +188,18 @@ export function CalendarSide(props: CalendarProps) {
     const cash = useChargeMoney();
     const accountName = useAccountName();
     const { actions, model, month } = props;
-    const { byDay, inMonth, selected } = useCalendar(props);
+    const { byDay, firstWeekday, inMonth, selected } = useCalendar(props);
     const events = byDay.get(selected) ?? [];
     const [only] = events.length === 1 ? events : [];
     const due = model.schedules
         .filter(isActive)
         .flatMap((schedule) => schedule.due.map((charge) => ({ charge, schedule })));
     const last = lastDayOf(month);
+    const start = weekStartIso(firstWeekday);
     const weeks: { from: string; to: string }[] = [];
     for (let from = `${month}-01`; from <= last;) {
-        const sunday = addDays(from, SUNDAY - weekdayOf(from));
-        const to = sunday < last ? sunday : last;
+        const end = addDays(from, trailDays(weekdayOf(from), start));
+        const to = end < last ? end : last;
         weeks.push({ from, to });
         from = addDays(to, 1);
     }

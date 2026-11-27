@@ -20,7 +20,8 @@ import { money } from "@/lib/ledger";
 
 import { Glyph } from "./glyph";
 
-export const amountText = (amount: number, currency: string) => money(amount, currency);
+export const amountText = (amount: number, currency: string, numberLocale?: string) =>
+    money(amount, currency, "auto", true, numberLocale);
 
 // The catalog title-cases every name, and the picker reads as a sentence: "US dollar", "Hong Kong dollar".
 const currencyName = (code: string) => {

@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const dashboardHome = {
@@ -45,16 +45,28 @@ const dashboardHome = {
                 pt: "Nada gasto ainda",
             }),
             less: t({ en: "Less", de: "Weniger", es: "Menos", fr: "Moins", pt: "Menos" }),
-            quietDays: insert(
-                t({
-                    en: "{{count}} days, no entries",
-                    de: "{{count}} Tage, keine Einträge",
-                    es: "{{count}} días, sin movimientos",
-                    fr: "{{count}} jours, aucune opération",
-                    pt: "{{count}} dias, sem lançamentos",
-                    "pt-PT": "{{count}} dias, sem registos",
-                })
-            ),
+            quietDays: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} day, no entries",
+                        de: "{{count}} Tag, keine Einträge",
+                        es: "{{count}} día, sin movimientos",
+                        fr: "{{count}} jour, aucune opération",
+                        pt: "{{count}} dia, sem lançamentos",
+                        "pt-PT": "{{count}} dia, sem registos",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} days, no entries",
+                        de: "{{count}} Tage, keine Einträge",
+                        es: "{{count}} días, sin movimientos",
+                        fr: "{{count}} jours, aucune opération",
+                        pt: "{{count}} dias, sem lançamentos",
+                        "pt-PT": "{{count}} dias, sem registos",
+                    })
+                ),
+            }),
             more: t({ en: "More", de: "Mehr", es: "Más", fr: "Plus", pt: "Mais" }),
             title: t({
                 en: "Every day",

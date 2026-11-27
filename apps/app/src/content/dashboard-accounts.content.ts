@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const dashboardAccounts = {
@@ -614,15 +614,26 @@ const dashboardAccounts = {
                     pt: "1 transferência, para {{name}}",
                 })
             ),
-            transfersIn: insert(
-                t({
-                    en: "{{count}} transfers in {{period}}",
-                    de: "{{count}} Umbuchungen in {{period}}",
-                    es: "{{count}} transferencias en {{period}}",
-                    fr: "{{count}} virements en {{period}}",
-                    pt: "{{count}} transferências em {{period}}",
-                })
-            ),
+            transfersIn: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} transfer in {{period}}",
+                        de: "{{count}} Umbuchung in {{period}}",
+                        es: "{{count}} transferencia en {{period}}",
+                        fr: "{{count}} virement en {{period}}",
+                        pt: "{{count}} transferência em {{period}}",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} transfers in {{period}}",
+                        de: "{{count}} Umbuchungen in {{period}}",
+                        es: "{{count}} transferencias en {{period}}",
+                        fr: "{{count}} virements en {{period}}",
+                        pt: "{{count}} transferências em {{period}}",
+                    })
+                ),
+            }),
             type: t({ en: "Type", de: "Typ", es: "Tipo", fr: "Type", pt: "Tipo" }),
             wentOut: t({ en: "Went out", de: "Ausgänge", es: "Salió", fr: "Sorties", pt: "Saiu" }),
         },
@@ -1386,15 +1397,26 @@ const dashboardAccounts = {
             upcoming: t({ en: "Upcoming", de: "Anstehend", es: "Próximos", fr: "À venir", pt: "Próximos" }),
         },
         net: {
-            accounts: insert(
-                t({
-                    en: "{{count}} accounts",
-                    de: "{{count}} Konten",
-                    es: "{{count}} cuentas",
-                    fr: "{{count}} comptes",
-                    pt: "{{count}} contas",
-                })
-            ),
+            accounts: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} account",
+                        de: "{{count}} Konto",
+                        es: "{{count}} cuenta",
+                        fr: "{{count}} compte",
+                        pt: "{{count}} conta",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} accounts",
+                        de: "{{count}} Konten",
+                        es: "{{count}} cuentas",
+                        fr: "{{count}} comptes",
+                        pt: "{{count}} contas",
+                    })
+                ),
+            }),
             byMonth: t({ en: "By month", de: "Nach Monat", es: "Por mes", fr: "Par mois", pt: "Por mês" }),
             change: t({ en: "Change", de: "Änderung", es: "Cambio", fr: "Variation", pt: "Variação" }),
             haveAndOwe: t({

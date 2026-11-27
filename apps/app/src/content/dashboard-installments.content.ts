@@ -1,4 +1,4 @@
-import { insert, t } from "intlayer";
+import { insert, plural, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const dashboardInstallments = {
@@ -712,17 +712,30 @@ const dashboardInstallments = {
                     pt: "{{count}} × {{amount}}",
                 })
             ),
-            mixed: insert(
-                t({
-                    en: "{{count}} installments",
-                    de: "{{count}} Raten",
-                    es: "{{count}} cuotas",
-                    "es-ES": "{{count}} plazos",
-                    fr: "{{count}} échéances",
-                    pt: "{{count}} parcelas",
-                    "pt-PT": "{{count}} prestações",
-                })
-            ),
+            mixed: plural({
+                one: insert(
+                    t({
+                        en: "{{count}} installment",
+                        de: "{{count}} Rate",
+                        es: "{{count}} cuota",
+                        "es-ES": "{{count}} plazo",
+                        fr: "{{count}} échéance",
+                        pt: "{{count}} parcela",
+                        "pt-PT": "{{count}} prestação",
+                    })
+                ),
+                other: insert(
+                    t({
+                        en: "{{count}} installments",
+                        de: "{{count}} Raten",
+                        es: "{{count}} cuotas",
+                        "es-ES": "{{count}} plazos",
+                        fr: "{{count}} échéances",
+                        pt: "{{count}} parcelas",
+                        "pt-PT": "{{count}} prestações",
+                    })
+                ),
+            }),
             upfront: t({
                 en: "Upfront",
                 de: "Anzahlung",

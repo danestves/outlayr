@@ -96,7 +96,7 @@ export function DetectedTable({
                                 {repeat.short(candidate.type, candidate.every)}
                             </Table.Cell>
                             <Table.Cell className={`${CELL} ${FIGURE} text-muted-foreground max-xl:hidden`}>
-                                {copy.detected.seen({ count: String(candidate.entries.length) })}
+                                {copy.detected.seen({ count: candidate.entries.length })}
                             </Table.Cell>
                             <Table.Cell className={`${CELL} ${FIGURE} text-muted-foreground max-sm:hidden`}>
                                 {days.day(candidate.next.day, ledger.today)}
@@ -161,7 +161,7 @@ export function CandidateDetail({ candidate }: { candidate: Candidate }) {
                     {candidate.name}
                 </Frame.Title>
                 <span className="text-muted-foreground text-app-label whitespace-nowrap max-sm:hidden">
-                    {copy.detected.matching({ count: String(entries.length) })}
+                    {copy.detected.matching({ count: entries.length })}
                 </span>
                 <span className="dash-figure text-muted-foreground text-app-label ml-auto whitespace-nowrap">
                     {copy.detected.since({
@@ -200,7 +200,7 @@ export function CandidateDetail({ candidate }: { candidate: Candidate }) {
                                     <Table.Cell className={`${CELL} ${FIGURE} text-muted-foreground`}>
                                         {before
                                             ? copy.detected.gapDays({
-                                                  count: String(daysBetween(entry.day, before.day)),
+                                                  count: daysBetween(entry.day, before.day),
                                               })
                                             : null}
                                     </Table.Cell>
