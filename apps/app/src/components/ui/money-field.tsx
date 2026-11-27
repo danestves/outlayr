@@ -3,10 +3,11 @@ import { currencyDisplayFor, decimalsFor } from "@outlayr/money/currency";
 import { CurrencyInput } from "panelui-web/currency-input";
 import type { CurrencyInputProps, CurrencyOption } from "panelui-web/currency-input";
 import { useMemo } from "react";
-import type { ClipboardEvent } from "react";
+import type { ClipboardEvent, InputEvent } from "react";
 
 import { useExchangeLocale } from "@/lib/exchange-locale";
 import { pastedAmount } from "@/lib/pasted-amount";
+import { acceptsTypedAmountCharacter, amountSeparators } from "@/lib/typed-amount";
 
 export interface MoneyFieldProps extends Omit<CurrencyInputProps, "currencies" | "labels" | "locale"> {
     codes?: readonly string[];
@@ -14,6 +15,7 @@ export interface MoneyFieldProps extends Omit<CurrencyInputProps, "currencies" |
 
 export function MoneyField({
     codes = PICKABLE_CURRENCY_CODES,
+    onBeforeInput,
     onPaste,
     onValueChange,
     value,
@@ -28,6 +30,21 @@ export function MoneyField({
             }),
         [codes]
     );
+    const separators = useMemo(() => amountSeparators(locale), [locale]);
+    const beforeInput = (event: InputEvent<HTMLDivElement>) => {
+        onBeforeInput?.(event);
+        const character = event.data;
+        if (event.defaultPrevented || !character || event.nativeEvent.isComposing) {
+            return;
+        }
+        if (event.nativeEvent.inputType !== "insertText") {
+            return;
+        }
+        const text = event.target instanceof HTMLInputElement ? event.target.value : "";
+        if (!acceptsTypedAmountCharacter(character, text, separators)) {
+            event.preventDefault();
+        }
+    };
     const paste = (event: ClipboardEvent<HTMLDivElement>) => {
         onPaste?.(event);
         if (event.defaultPrevented) {
@@ -48,6 +65,7 @@ export function MoneyField({
             currencies={currencies}
             labels={currencyLabels}
             locale={locale}
+            onBeforeInput={beforeInput}
             onPaste={paste}
             onValueChange={onValueChange}
             value={value}
