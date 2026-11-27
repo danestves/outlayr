@@ -44,11 +44,11 @@ const about = {
             }),
         },
         entity: t({
-            en: "Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC.",
-            de: "Outlayr ist ein Open-Source-Ausgaben-Tracker, eine Budget-App und ein Abo-Tracker fürs Handy, gemacht von danestves LLC.",
-            es: "Outlayr es una app móvil de código abierto para controlar tus gastos, tu presupuesto y tus suscripciones, hecha por danestves LLC.",
-            pt: "O Outlayr é um app de código aberto para controlar gastos, orçamento e assinaturas no celular, feito pela danestves LLC.",
-            fr: "Outlayr est une app mobile open source pour suivre vos dépenses, votre budget et vos abonnements, créée par danestves LLC.",
+            en: "Outlayr is an open source expense tracker, budget app, and subscription tracker for iPhone, Android and the web, made by danestves LLC.",
+            de: "Outlayr ist ein Open-Source-Ausgaben-Tracker, eine Budget-App und ein Abo-Tracker für iPhone, Android und das Web, gemacht von danestves LLC.",
+            es: "Outlayr es una app de código abierto para controlar tus gastos, tu presupuesto y tus suscripciones en iPhone, Android y la web, hecha por danestves LLC.",
+            pt: "O Outlayr é um app de código aberto para controlar gastos, orçamento e assinaturas no iPhone, Android e na web, feito pela danestves LLC.",
+            fr: "Outlayr est une app open source pour suivre vos dépenses, votre budget et vos abonnements sur iPhone, Android et le Web, créée par danestves LLC.",
         }),
         facts: [
             {
@@ -106,11 +106,11 @@ const about = {
                     fr: "Plateformes",
                 }),
                 text: t({
-                    en: "iPhone with iOS 18 or later, and Android.",
-                    de: "iPhone mit iOS 18 oder neuer und Android.",
-                    es: "iPhone con iOS 18 o posterior, y Android.",
-                    pt: "iPhone com iOS 18 ou posterior e Android.",
-                    fr: "iPhone avec iOS 18 ou plus récent, et Android.",
+                    en: "iPhone with iOS 18 or later, Android, and the web with Pro.",
+                    de: "iPhone mit iOS 18 oder neuer, Android und das Web mit Pro.",
+                    es: "iPhone con iOS 18 o posterior, Android y la web con Pro.",
+                    pt: "iPhone com iOS 18 ou posterior, Android e a web com o Pro.",
+                    fr: "iPhone avec iOS 18 ou plus récent, Android et le Web avec Pro.",
                 }),
             },
             {

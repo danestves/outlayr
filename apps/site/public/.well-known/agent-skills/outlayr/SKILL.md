@@ -1,11 +1,11 @@
 ---
 name: outlayr
-description: Prepare a CSV of transactions that Outlayr, the mobile expense tracker, imports cleanly, and look up accurate facts about Outlayr. Use when someone wants to move spending from a bank export, a spreadsheet, or another app into Outlayr, asks what Outlayr does, costs, or supports, or wants an assistant to read their Outlayr spending.
+description: Prepare a CSV of transactions that Outlayr, the expense tracker for iPhone, Android and the web, imports cleanly, and look up accurate facts about Outlayr. Use when someone wants to move spending from a bank export, a spreadsheet, or another app into Outlayr, asks what Outlayr does, costs, or supports, or wants an assistant to read their Outlayr spending.
 ---
 
 # Outlayr
 
-Outlayr is a mobile expense tracker, budget app, and subscription tracker, on the App Store for iPhone and on Google Play for Android. Entries live on the phone. There is no bank linking. History comes in by CSV import, with Pro by a bank statement PDF, and from a Notion export.
+Outlayr is an expense tracker, budget app, and subscription tracker, on the App Store for iPhone, on Google Play for Android, and on the web at https://app.tryoutlayr.com with Pro. Entries live on your device. There is no bank linking. History comes in by CSV import, with Pro by a bank statement PDF, and from a Notion export.
 
 ## Facts about Outlayr
 
