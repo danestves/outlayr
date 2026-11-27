@@ -73,13 +73,15 @@ function Figure({ color, icon, label, points, tone, trend, value }: FigureProps)
             </Kpi.Header>
             <Kpi.Content className="mt-2 items-end gap-3" layout="inline">
                 <Kpi.Stat className="min-w-0">
-                    <Kpi.Value className="dash-figure text-app-figure font-semibold wrap-anywhere">{value}</Kpi.Value>
+                    <Kpi.Value className="dash-figure text-app-figure max-sm:text-app-title font-semibold wrap-anywhere max-sm:whitespace-nowrap">
+                        {value}
+                    </Kpi.Value>
                     <Kpi.Footer className="text-app-caption mt-1 h-5">{trend}</Kpi.Footer>
                 </Kpi.Stat>
                 {points ? (
                     <Kpi.Chart
                         aria-hidden
-                        className={`h-8 w-20 shrink-0 max-sm:w-16 ${color ? LINE : `${LINE} [--pu-color:var(--muted-foreground)]`}`}
+                        className={`h-8 w-20 shrink-0 max-sm:hidden ${color ? LINE : `${LINE} [--pu-color:var(--muted-foreground)]`}`}
                         color={color}
                         data={points}
                         height={32}

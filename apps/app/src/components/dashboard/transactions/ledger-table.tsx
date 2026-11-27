@@ -26,6 +26,7 @@ const FIGURE = "font-mono tabular-nums whitespace-nowrap";
 const MUTED = "text-muted-foreground truncate";
 const ROW = "group/row relative hover:bg-app-hover aria-selected:bg-app-tint/10";
 const PICK = "relative z-1 w-10 pe-0";
+const CAPTION = "text-muted-foreground text-app-caption block truncate font-normal";
 const ENTRY_COLUMNS: readonly Column[] = [
     "merchant",
     "category",
@@ -102,6 +103,24 @@ export function LedgerTable({
             {name}
         </button>
     );
+    const caption = (day: string, category: ReactNode) => {
+        const when = layout.shown("date") ? date.day(day) : null;
+        const what = category !== null && layout.shown("category") ? category : null;
+        if (when === null && what === null) {
+            return null;
+        }
+        return (
+            <span className={`${CAPTION} @3xl:hidden`}>
+                {when}
+                {what === null ? null : (
+                    <span className="@xl:hidden">
+                        {when === null ? "" : " · "}
+                        {what}
+                    </span>
+                )}
+            </span>
+        );
+    };
     const menuCell = (row: FoldedRow) => <Table.Cell className="relative z-1 w-10 ps-0">{renderMenu(row)}</Table.Cell>;
     const transferRow = (row: FoldedRow & LedgerTransfer) => {
         const figure = figureOf(ledger, row);
@@ -116,7 +135,10 @@ export function LedgerTable({
                 merchant: (
                     <span className="flex min-w-0 items-center gap-3 font-medium">
                         {tile}
-                        {opener(row, name)}
+                        <span className="flex min-w-0 flex-col">
+                            {opener(row, name)}
+                            {caption(row.day, kind.transfer)}
+                        </span>
                     </span>
                 ),
                 notes: <span className={MUTED}>{list.transferNote(row.id)}</span>,
@@ -129,7 +151,7 @@ export function LedgerTable({
                     {columns.map((column) => (
                         <Table.Cell
                             align={column === "amount" ? "end" : "start"}
-                            className={column === "date" || column === "amount" ? FIGURE : "max-w-0"}
+                            className={`${column === "date" || column === "amount" ? FIGURE : "max-w-0"} ${NARROW[column] ?? ""}`}
                             key={column}
                         >
                             {cells[column]}
@@ -142,16 +164,24 @@ export function LedgerTable({
         return (
             <Table.Row aria-selected={picking.ids.has(row.id) || selected === row.id} className={ROW} key={row.id}>
                 {pickCell(row, name)}
-                <Table.Cell>
+                <Table.Cell className="max-w-0">
                     <span className="flex min-w-0 items-center gap-3 font-medium">
                         {tile}
-                        {opener(row, list.names.account(row.fromId))}
+                        <span className="flex min-w-0 flex-col">
+                            {opener(row, list.names.account(row.fromId))}
+                            <span className={`${CAPTION} @3xl:hidden`}>
+                                <span className="@xl:hidden">{list.names.account(row.toId)} · </span>
+                                {date.day(row.day)}
+                            </span>
+                        </span>
                     </span>
                 </Table.Cell>
-                <Table.Cell className="truncate">{list.names.account(row.toId)}</Table.Cell>
-                <Table.Cell className={MUTED}>{list.transferNote(row.id)}</Table.Cell>
-                <Table.Cell className={`${FIGURE} text-muted-foreground`}>{date.day(row.day)}</Table.Cell>
-                <Table.Cell align="end" className={`${FIGURE} text-muted-foreground`}>
+                <Table.Cell className={`max-w-0 truncate ${NARROW.to}`}>{list.names.account(row.toId)}</Table.Cell>
+                <Table.Cell className={`max-w-0 ${MUTED} ${NARROW.note}`}>{list.transferNote(row.id)}</Table.Cell>
+                <Table.Cell className={`${FIGURE} text-muted-foreground ${NARROW.date}`}>
+                    {date.day(row.day)}
+                </Table.Cell>
+                <Table.Cell align="end" className={`${FIGURE} text-muted-foreground ${NARROW.fee}`}>
                     {figure.fee === null ? "" : money(figure.fee, ledger.currency)}
                 </Table.Cell>
                 <Table.Cell align="end" className={FIGURE}>
@@ -210,7 +240,10 @@ export function LedgerTable({
                         />
                     ) : null}
                     {fee ? <FeeTile /> : <MerchantTile imageUrl={photoSrc(raw?.imageKey)} name={name} size="lg" />}
-                    {opener(row, name)}
+                    <span className="flex min-w-0 flex-col">
+                        {opener(row, name)}
+                        {caption(row.day, fee ? null : list.names.category(row.topId))}
+                    </span>
                     {(raw?.recurringType ?? 0) > 0 ? (
                         <HugeiconsIcon
                             aria-label={recurring.value}
@@ -244,7 +277,7 @@ export function LedgerTable({
                 {columns.map((column) => (
                     <Table.Cell
                         align={column === "amount" ? "end" : "start"}
-                        className={column === "date" || column === "amount" ? FIGURE : "max-w-0"}
+                        className={`${column === "date" || column === "amount" ? FIGURE : "max-w-0"} ${NARROW[column] ?? ""}`}
                         key={column}
                     >
                         {cells[column]}
@@ -281,7 +314,11 @@ export function LedgerTable({
                         />
                     </Table.Head>
                     {heads.map((head) => (
-                        <Table.Head align={head.align} className={WIDTHS[head.key]} key={head.key}>
+                        <Table.Head
+                            align={head.align}
+                            className={`${WIDTHS[head.key] ?? ""} ${NARROW[head.key] ?? ""}`}
+                            key={head.key}
+                        >
                             {head.name}
                         </Table.Head>
                     ))}
@@ -293,12 +330,26 @@ export function LedgerTable({
     );
 }
 
+const NARROW: Partial<Record<HeadKey, string>> = {
+    account: "hidden @4xl:table-cell",
+    category: "hidden @xl:table-cell",
+    date: "hidden @3xl:table-cell",
+    fee: "hidden @xl:table-cell",
+    note: "hidden @3xl:table-cell",
+    notes: "hidden @7xl:table-cell",
+    paidVia: "hidden @7xl:table-cell",
+    tags: "hidden @5xl:table-cell",
+    to: "hidden @xl:table-cell",
+};
+
 const WIDTHS: Partial<Record<HeadKey, string>> = {
     account: "w-36",
     amount: "w-32",
     category: "w-44",
     date: "w-24",
     fee: "w-24",
+    merchant: "@7xl:w-[15%]",
+    notes: "w-48",
     paidVia: "w-32",
     tags: "w-36",
 };

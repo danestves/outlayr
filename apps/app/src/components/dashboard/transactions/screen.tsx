@@ -580,7 +580,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                                 </Button>
                             </div>
                         ) : null}
-                        <div className="flex-1 border-t" data-motion="dissolve" key={view?.id ?? query.tab}>
+                        <div className="@container flex-1 border-t" data-motion="dissolve" key={view?.id ?? query.tab}>
                             {rows.length === 0 ? (
                                 empty()
                             ) : (
