@@ -134,7 +134,7 @@ export const HELP_UPDATED = new Date(Date.UTC(2026, 10, 17));
 
 export const LEGAL_DAYS = {
     "delete-account": new Date(Date.UTC(2026, 10, 9)),
-    privacy: new Date(Date.UTC(2026, 10, 27)),
+    privacy: new Date(Date.UTC(2026, 10, 28)),
     terms: new Date(Date.UTC(2026, 10, 27)),
 } as const;
 

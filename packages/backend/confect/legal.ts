@@ -19,6 +19,8 @@ export const CAPTURE_PUSH_EFFECTIVE_AT_MS = NOVEMBER_NOTICE_AT_MS;
 
 export const LATE_NOVEMBER_NOTICE_AT_MS = Date.UTC(2026, 10, 27);
 
+const US_HOSTING_AT_MS = Date.UTC(2026, 10, 28);
+
 // Nothing is received or sent for a user webhook before the privacy notice that announces them takes effect.
 export const WEBHOOKS_EFFECTIVE_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
@@ -1404,6 +1406,43 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         document: "terms",
         effectiveAtMs: PROFILES_AT_MS,
         postedAtMs: Date.UTC(2026, 10, 28),
+    },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "Our servers now run in the United States, hosted by OVHcloud, instead of Hetzner in Helsinki, Finland. They hold your account and synced data.",
+                    label: "Where your data is stored",
+                },
+            ],
+            de: [
+                {
+                    detail: "Unsere Server laufen jetzt in den Vereinigten Staaten bei OVHcloud statt bei Hetzner in Helsinki, Finnland. Dort liegen dein Konto und deine synchronisierten Daten.",
+                    label: "Wo deine Daten gespeichert sind",
+                },
+            ],
+            es: [
+                {
+                    detail: "Nuestros servidores ahora están en Estados Unidos, alojados por OVHcloud, en lugar de Hetzner en Helsinki, Finlandia. Ahí se guardan tu cuenta y tus datos sincronizados.",
+                    label: "Dónde se guardan tus datos",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Nos serveurs fonctionnent désormais aux États-Unis, hébergés par OVHcloud, au lieu de Hetzner à Helsinki, en Finlande. Ils contiennent votre compte et vos données synchronisées.",
+                    label: "Où vos données sont stockées",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Nossos servidores agora ficam nos Estados Unidos, hospedados pela OVHcloud, em vez da Hetzner em Helsinque, Finlândia. Eles guardam sua conta e seus dados sincronizados.",
+                    label: "Onde seus dados ficam guardados",
+                },
+            ],
+        },
+        document: "privacy",
+        effectiveAtMs: US_HOSTING_AT_MS,
+        postedAtMs: Date.UTC(2026, 10, 29),
     },
 ];
 
