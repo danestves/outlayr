@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { openLedger } from "./ledger-target.mjs";
-import { REGIONS } from "./seed-regions.mjs";
+import { PER_USD, REGIONS } from "./seed-regions.mjs";
 
 const [deviceTarget, ...flags] = process.argv.slice(2);
 const withSchedules = flags.includes("--subscriptions");
@@ -19,11 +19,8 @@ if (!region) {
     throw new Error(`Unknown region "${regionName}". Use one of: ${Object.keys(REGIONS).join(", ")}.`);
 }
 
-const VES_RATE = 807.3862;
 const RECURRING_MONTHLY = 3;
 const RECURRING_YEARLY = 4;
-const RATES_FROM = Date.UTC(2025, 11, 31);
-const RATES_THROUGH = Date.UTC(2026, 11, 31);
 const DAY_MS = 86_400_000;
 const RATES_PULLED_AT = new Date(2026, 8, 12, 14, 0).getTime();
 
@@ -47,6 +44,24 @@ const atMs = (y, m, d, h, min) => new Date(y, m - 1, d, h, min).getTime();
 const monthMs = (y, m) => new Date(y, m - 1, 1).getTime();
 
 const NOW = Date.now();
+// Upcoming schedules reach into next month, so the quotes run through its end.
+const RATES_THROUGH = Date.UTC(new Date(NOW).getFullYear(), new Date(NOW).getMonth() + 2, 0);
+
+// Authored as September 2026, moved to the current month with rows from mid-month so the Log shows this week.
+const SHIFT_MONTHS = (new Date(NOW).getFullYear() - 2026) * 12 + new Date(NOW).getMonth() - 8;
+// Rows run to day 11, so on day 12 or later every fixture row is already in the past.
+const SHIFT_DAYS = Math.max(0, Math.min(14, new Date(NOW).getDate() - 12));
+function shifted(year, month, day) {
+    const index = year * 12 + month - 1 + SHIFT_MONTHS;
+    const y = Math.floor(index / 12);
+    const m = (index % 12) + 1;
+    return { d: Math.min(day + SHIFT_DAYS, new Date(y, m, 0).getDate()), month: m, year: y };
+}
+const FRAME = shifted(2026, 9, 1);
+// Amazon Prime, authored for November 2025, is the earliest fixture row.
+const EARLIEST = shifted(2025, 11, 1);
+const RATES_FROM = Date.UTC(EARLIEST.year, EARLIEST.month - 1, 1);
+const TRANSFER_DAY = shifted(2026, 9, 7);
 
 // `null` keeps the category glyph, as for a merchant the app cannot resolve.
 const MERCHANTS = {
@@ -226,7 +241,12 @@ async function brandFor(domain) {
     writeFileSync(png, bytes);
 
     const jpg = join(tmp, `${domain.replaceAll(/[^a-z0-9]/gi, "-")}.jpg`);
-    await flattenToJpeg(png, bytes, jpg);
+    try {
+        await flattenToJpeg(png, bytes, jpg);
+    } catch {
+        brandCache.set(domain, null);
+        return null;
+    }
     const brand = { color: HAS_MAGICK ? dominantColorMagick(png) : await dominantColorSharp(bytes), jpg };
 
     const key = logoCacheKey(domain, domain);
@@ -395,6 +415,25 @@ if (withSchedules) {
     );
 }
 
+for (const entry of entries) {
+    Object.assign(entry, shifted(entry.year, entry.month, entry.d));
+}
+// The store card says Netflix is due tomorrow.
+if (withSchedules) {
+    const today = new Date(NOW);
+    const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const prev = new Date(tomorrow.getFullYear(), tomorrow.getMonth() - 1, 1);
+    const index = entries.findIndex(
+        (e) => e.note === "Netflix" && e.year === prev.getFullYear() && e.month === prev.getMonth() + 1
+    );
+    if (index !== -1) {
+        const [carrier] = entries.splice(index, 1);
+        carrier.d = Math.min(tomorrow.getDate(), new Date(prev.getFullYear(), prev.getMonth() + 1, 0).getDate());
+        carrier.anchor = tomorrow.getDate();
+        entries.unshift(carrier);
+    }
+}
+
 const SCHEDULE_LEADS = new Map([
     ["Amazon Prime", null],
     ["ChatGPT", null],
@@ -414,12 +453,7 @@ for (const entry of withSchedules ? entries : []) {
 
 const balanceDelta = Object.fromEntries(ACCOUNTS.map((a) => [a.id, 0]));
 
-function rateOf(currency) {
-    if (currency === "USD") {
-        return 1;
-    }
-    return currency === LEDGER_CURRENCY ? region.rate : VES_RATE;
-}
+const rateOf = (currency) => PER_USD[currency];
 
 const scaled = (account, amount) => (account.currency === LEDGER_CURRENCY ? region.scale(amount) : amount);
 const merchantOf = (slot) => region.merchants[slot] ?? MERCHANTS[slot];
@@ -449,7 +483,7 @@ for (const entry of entries) {
 
     statements.push(
         `INSERT INTO transactions (id, amount, income, currency, note, details, date, day, month, icon, emoji, customColor, imageColor, imageUri, onceRecurring, recurringType, recurringCoefficient, recurringEndDate, categoryId, updatedAt, deletedAt, amountUsd, exchangeRate, exchangeRateType, imageKey, reminderLeadDays, accountId, recurringAnchorDay, transferId)
-     VALUES (${q(randomUUID())}, ${amount}, ${income}, ${q(account.currency)}, ${q(noteOf(entry))}, ${q(region.details[entry.det] ?? entry.det ?? "")}, ${date}, ${dayMs(entry.year, entry.month, entry.d)}, ${monthMs(entry.year, entry.month)}, '', '', '', ${q(imageColor)}, ${q(imageUri)}, 0, ${schedule ? (entry.every ?? RECURRING_MONTHLY) : 0}, 1, NULL, ${q(CATEGORY[entry.cat])}, ${NOW}, NULL, ${amountUsd}, ${rate}, ${q(rateType)}, '', ${q(schedule ? SCHEDULE_LEADS.get(entry.note) : null)}, ${q(account.id)}, ${schedule ? entry.d : "NULL"}, NULL);`
+     VALUES (${q(randomUUID())}, ${amount}, ${income}, ${q(account.currency)}, ${q(noteOf(entry))}, ${q(region.details[entry.det] ?? entry.det ?? "")}, ${date}, ${dayMs(entry.year, entry.month, entry.d)}, ${monthMs(entry.year, entry.month)}, '', '', '', ${q(imageColor)}, ${q(imageUri)}, 0, ${schedule ? (entry.every ?? RECURRING_MONTHLY) : 0}, 1, NULL, ${q(CATEGORY[entry.cat])}, ${NOW}, NULL, ${amountUsd}, ${rate}, ${q(rateType)}, '', ${q(schedule ? SCHEDULE_LEADS.get(entry.note) : null)}, ${q(account.id)}, ${schedule ? (entry.anchor ?? entry.d) : "NULL"}, NULL);`
     );
 }
 
@@ -460,7 +494,7 @@ const transferRate = rateOf(transferTo.currency);
 const transferToAmount = TRANSFER_USD * transferRate;
 statements.push(
     `INSERT INTO transfers (id, date, dateCreated, day, month, deletedAt, exchangeRate, exchangeRateType, fromAccountId, fromAmount, fromAmountUsd, fromCurrency, note, toAccountId, toAmount, toAmountUsd, toCurrency, updatedAt)
-   VALUES (${q(randomUUID())}, ${atMs(2026, 9, 7, 9, 30)}, ${NOW}, ${dayMs(2026, 9, 7)}, ${monthMs(2026, 9)}, NULL, ${transferRate}, 'official', ${q(transferFrom.id)}, ${TRANSFER_USD}, ${TRANSFER_USD}, 'USD', ${q(region.transferNote)}, ${q(transferTo.id)}, ${transferToAmount}, ${TRANSFER_USD}, ${q(transferTo.currency)}, ${NOW});`
+   VALUES (${q(randomUUID())}, ${atMs(TRANSFER_DAY.year, TRANSFER_DAY.month, TRANSFER_DAY.d, 9, 30)}, ${NOW}, ${dayMs(TRANSFER_DAY.year, TRANSFER_DAY.month, TRANSFER_DAY.d)}, ${monthMs(TRANSFER_DAY.year, TRANSFER_DAY.month)}, NULL, ${transferRate}, 'official', ${q(transferFrom.id)}, ${TRANSFER_USD}, ${TRANSFER_USD}, 'USD', ${q(region.transferNote)}, ${q(transferTo.id)}, ${transferToAmount}, ${TRANSFER_USD}, ${q(transferTo.currency)}, ${NOW});`
 );
 balanceDelta[transferFrom.id] -= TRANSFER_USD;
 balanceDelta[transferTo.id] += transferToAmount;
@@ -496,7 +530,7 @@ for (const budget of BUDGETS) {
     const amount = region.scale(budget.amount);
     statements.push(
         `INSERT OR REPLACE INTO budgets (id, name, amount, type, startDate, dateCreated, green, categoryId, updatedAt, deletedAt, currency, amountUsd, rollover)
-     VALUES (${q(randomUUID())}, NULL, ${amount}, ${BUDGET_TYPE_MONTH}, ${dayMs(2026, 9, 1)}, ${dayMs(2026, 6, 1)}, 0, ${q(CATEGORY[budget.category])}, ${NOW}, NULL, ${q(LEDGER_CURRENCY)}, ${amount / region.rate}, 0);`
+     VALUES (${q(randomUUID())}, NULL, ${amount}, ${BUDGET_TYPE_MONTH}, ${monthMs(FRAME.year, FRAME.month)}, ${dayMs(2026, 6, 1)}, 0, ${q(CATEGORY[budget.category])}, ${NOW}, NULL, ${q(LEDGER_CURRENCY)}, ${amount / region.rate}, 0);`
     );
 }
 
@@ -504,7 +538,7 @@ for (const budget of BUDGETS) {
 const MAIN_BUDGET = region.scale(3900);
 statements.push(
     `INSERT OR REPLACE INTO mainBudget (id, name, amount, type, startDate, dateCreated, green, updatedAt, deletedAt, currency, amountUsd, rollover)
-   VALUES (${q(randomUUID())}, ${q(region.budgetName)}, ${MAIN_BUDGET}, ${BUDGET_TYPE_MONTH}, ${dayMs(2026, 9, 1)}, ${dayMs(2026, 6, 1)}, 0, ${NOW}, NULL, ${q(LEDGER_CURRENCY)}, ${MAIN_BUDGET / region.rate}, 0);`
+   VALUES (${q(randomUUID())}, ${q(region.budgetName)}, ${MAIN_BUDGET}, ${BUDGET_TYPE_MONTH}, ${monthMs(FRAME.year, FRAME.month)}, ${dayMs(2026, 6, 1)}, 0, ${NOW}, NULL, ${q(LEDGER_CURRENCY)}, ${MAIN_BUDGET / region.rate}, 0);`
 );
 
 const GOALS = [
@@ -537,7 +571,7 @@ for (const [index, goal] of GOALS.entries()) {
     const { rate } = region;
     statements.push(
         `INSERT OR REPLACE INTO savingsGoals (id, accountId, currency, dateCreated, deletedAt, name, sortOrder, startAmount, startAmountUsd, targetAmount, targetAmountUsd, targetDate, updatedAt, exchangeRate)
-     VALUES (${q(randomUUID())}, ${q(goal.account.id)}, ${q(goal.account.currency)}, ${dayMs(2026, 6, 1)}, NULL, ${q(goal.name)}, ${index}, ${start}, ${start / rate}, ${goalTarget}, ${goalTarget / rate}, ${goal.targetDate}, ${NOW}, ${rate === 1 ? "NULL" : rate});`
+     VALUES (${q(randomUUID())}, ${q(goal.account.id)}, ${q(goal.account.currency)}, ${monthMs(FRAME.year, FRAME.month - 2)}, NULL, ${q(goal.name)}, ${index}, ${start}, ${start / rate}, ${goalTarget}, ${goalTarget / rate}, ${goal.targetDate}, ${NOW}, ${rate === 1 ? "NULL" : rate});`
     );
 }
 
@@ -584,7 +618,7 @@ const logos = [...brandCache.values()].filter(Boolean).length;
 const GROCERIES_ID = CATEGORY.Groceries;
 const ledgerSum = `CASE WHEN currency = ${q(LEDGER_CURRENCY)} THEN amount ELSE amountUsd * ${region.rate} END`;
 const spendSummary = sqlite(
-    `SELECT printf('month spend=%.2f groceries=%.2f/%.2f', (SELECT sum(${ledgerSum}) FROM transactions WHERE income = 0 AND month = ${monthMs(2026, 9)}), (SELECT sum(${ledgerSum}) FROM transactions WHERE income = 0 AND month = ${monthMs(2026, 9)} AND categoryId = ${q(GROCERIES_ID)}), (SELECT amount FROM budgets WHERE categoryId = ${q(GROCERIES_ID)}));`
+    `SELECT printf('month spend=%.2f groceries=%.2f/%.2f', (SELECT sum(${ledgerSum}) FROM transactions WHERE income = 0 AND month = ${monthMs(FRAME.year, FRAME.month)}), (SELECT sum(${ledgerSum}) FROM transactions WHERE income = 0 AND month = ${monthMs(FRAME.year, FRAME.month)} AND categoryId = ${q(GROCERIES_ID)}), (SELECT amount FROM budgets WHERE categoryId = ${q(GROCERIES_ID)}));`
 ).trim();
 const balanceSummary = sqlite(
     `SELECT group_concat(name || ' ' || printf('%.2f', balance) || ' ' || currency, ', ') FROM (SELECT a.name, a.currency, a.initialBalance + COALESCE((SELECT sum(CASE income WHEN 1 THEN amount ELSE -amount END) FROM transactions t WHERE t.accountId = a.id), 0) + COALESCE((SELECT sum(toAmount) FROM transfers WHERE toAccountId = a.id), 0) - COALESCE((SELECT sum(fromAmount) FROM transfers WHERE fromAccountId = a.id), 0) AS balance FROM accounts a ORDER BY a.sortOrder);`

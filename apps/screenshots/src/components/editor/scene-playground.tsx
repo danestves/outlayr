@@ -133,11 +133,40 @@ export function ScenePlayground({
           <Slider label="Shadow" value={scene.shadow} min={0} max={100} unit="%" onChange={(shadow) => patch({ shadow })} />
           <Slider label="Glow" value={scene.glow} min={0} max={100} unit="%" onChange={(glow) => patch({ glow })} />
           <Slider label="Tilt" value={scene.tilt} min={-TILT_LIMIT} max={TILT_LIMIT} unit="°" onChange={(tilt) => patch({ tilt })} />
+          <Segmented
+            label="Finish"
+            value={scene.deviceFinish ?? "frame"}
+            options={[
+              { id: "frame", name: "Frame" },
+              { id: "light", name: "Light" },
+            ]}
+            onChange={(deviceFinish) => patch({ deviceFinish })}
+          />
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            Light draws a cream phone frame for iPhone and Android portraits. Other devices keep their frame.
+          </p>
           {straightDevices && (
             <p className="text-[11px] leading-relaxed text-muted-foreground">
               iPhone Duo frames stay straight: Apple's guidelines ask for straight-on product images.
             </p>
           )}
+        </Section>
+
+        <Section title="Brand">
+          <label className="flex cursor-pointer items-start gap-2 text-xs">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={scene.brandLockup ?? false}
+              onChange={(event) => patch({ brandLockup: event.target.checked })}
+            />
+            <span>
+              <span className="font-medium">App icon and name above headlines</span>
+              <span className="block text-[11px] text-muted-foreground">
+                Every screen except the feature graphic. The caption moves down to make room.
+              </span>
+            </span>
+          </label>
         </Section>
 
         <Section title="Headline">

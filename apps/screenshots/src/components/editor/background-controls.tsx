@@ -73,6 +73,92 @@ export function BackgroundControls({ slide, theme, onChange }: Props) {
           Caption text switches to a readable colour when the theme&apos;s colours would be too faint.
         </p>
       )}
+      <div className="space-y-1.5 border-t pt-2">
+        <label className="flex cursor-pointer items-start gap-2 text-xs">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={!!slide.glow}
+            onChange={(event) =>
+              onChange({
+                glow: event.target.checked
+                  ? { color: cleanHexColor(theme.accent) || "#E8C7B8", x: 0.5, y: 0.55, size: 0.8 }
+                  : undefined,
+              })
+            }
+          />
+          <span>
+            <span className="font-medium">Glow behind the phone</span>
+            <span className="block text-[11px] text-muted-foreground">
+              A soft colour on this screen only, under the device and elements.
+            </span>
+          </span>
+        </label>
+        {slide.glow && (
+          <GlowControls glow={slide.glow} fallbackColor={theme.accent} onChange={(glow) => onChange({ glow })} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GlowControls({
+  glow,
+  fallbackColor,
+  onChange,
+}: {
+  glow: NonNullable<Slide["glow"]>;
+  fallbackColor: string;
+  onChange: (glow: NonNullable<Slide["glow"]>) => void;
+}) {
+  const patch = (next: Partial<NonNullable<Slide["glow"]>>) => onChange({ ...glow, ...next });
+  return (
+    <div className="space-y-2 rounded-md border bg-muted/30 p-2">
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={cleanHexColor(glow.color) || cleanHexColor(fallbackColor) || "#E8C7B8"}
+          onChange={(event) => patch({ color: event.target.value.toUpperCase() })}
+          className="h-8 w-10 cursor-pointer rounded border bg-transparent p-0.5"
+          aria-label="Glow color"
+        />
+        <span className="text-[11px] text-muted-foreground">Glow colour</span>
+      </div>
+      <GlowSlider label="Horizontal" value={Math.round(glow.x * 100)} onChange={(v) => patch({ x: v / 100 })} />
+      <GlowSlider label="Vertical" value={Math.round(glow.y * 100)} onChange={(v) => patch({ y: v / 100 })} />
+      <GlowSlider label="Size" value={Math.round(glow.size * 100)} min={10} max={200} onChange={(v) => patch({ size: v / 100 })} />
+    </div>
+  );
+}
+
+function GlowSlider({
+  label,
+  value,
+  min = 0,
+  max = 100,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min?: number;
+  max?: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className="space-y-0.5">
+      <div className="flex items-center justify-between">
+        <Label className="text-[11px] text-muted-foreground">{label}</Label>
+        <span className="text-[11px] tabular-nums text-muted-foreground">{value}%</span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="w-full"
+        aria-label={`Glow ${label.toLowerCase()}`}
+      />
     </div>
   );
 }

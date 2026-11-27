@@ -270,6 +270,7 @@ export const SCREENSHOT_FONTS: Record<ScreenshotFontId, { name: string; family: 
   "palatino": { name: "Palatino", family: "Palatino, 'Palatino Linotype', 'Book Antiqua', serif" },
   "optima": { name: "Optima", family: "Optima, Candara, 'Segoe UI', sans-serif" },
   "american-typewriter": { name: "American Typewriter", family: '"American Typewriter", "Courier New", serif' },
+  "nunito": { name: "Nunito", family: "Nunito, ui-rounded, sans-serif" },
   // Only offered once a font has been imported; the name shown comes from the file.
   "self-hosted": { name: "Imported font", family: `"${IMPORTED_FONT_FAMILY}", sans-serif` },
 };

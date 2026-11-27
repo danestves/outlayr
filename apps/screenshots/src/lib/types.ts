@@ -47,7 +47,8 @@ export type ElementTransform = {
 export type BuiltInElementId = "caption" | "device" | "deviceSecondary" | "callout";
 export type TextElementId = `text:${string}`;
 export type ImageElementId = `image:${string}`;
-export type ElementId = BuiltInElementId | TextElementId | ImageElementId;
+export type CardElementId = `card:${string}`;
+export type ElementId = BuiltInElementId | TextElementId | ImageElementId | CardElementId;
 
 export type SelectedElement = {
   slideId: string;
@@ -90,6 +91,29 @@ export type ImageElement = {
   };
 };
 
+export type CardVariant = "stat" | "notification" | "bubble";
+
+/** A floating info card. Width comes from the transform; height grows with its text. */
+export type CardElement = {
+  id: string;
+  variant: CardVariant;
+  transform: ElementTransform;
+  label?: LocalizedText;
+  title?: LocalizedText;
+  body?: LocalizedText;
+  meta?: LocalizedText;
+  iconSrc?: string;
+  iconBackground?: string;
+};
+
+/** Soft circle of colour behind one slide's device. x/y/size are 0-1 fractions. */
+export type SlideGlow = {
+  color: string;
+  x: number;
+  y: number;
+  size: number;
+};
+
 /** Magnified loupe of the primary screenshot, placed by transforms.callout. */
 export type Callout = {
   /** Point of the screenshot to magnify, as 0–1 fractions of its width/height. */
@@ -111,10 +135,15 @@ export type Slide = {
   /** Optional relative font-size scales for built-in caption text. */
   typography?: SlideTypography;
   backgroundColor?: string;   // per-slide hex color override
+  /** Soft glow behind the device, independent of the deck's scene glow. */
+  glow?: SlideGlow;
+  /** Lines after the first newline in the headline render in this colour. */
+  headlineAccentColor?: string;
   // Per-element overrides; when present, replaces layout default placement.
   transforms?: Partial<Record<BuiltInElementId, ElementTransform>>;
   textElements?: TextElement[];
   imageElements?: ImageElement[];
+  cardElements?: CardElement[];
   callout?: Callout;
 };
 
@@ -155,6 +184,7 @@ export type ScreenshotFontId =
   | "optima"
   | "palatino"
   | "futura"
+  | "nunito"
   | "self-hosted";
 
 export type ImportedFont = {
@@ -199,6 +229,10 @@ export type Scene = {
   headlineCase: "as-typed" | "upper";
   /** "auto" keeps each layout's own alignment. */
   captionAlign: "auto" | "left" | "center";
+  /** App icon and name above every caption, except the feature graphic. */
+  brandLockup?: boolean;
+  /** "light" draws a cream phone frame instead of the PNG bezel (iPhone and Android portrait). */
+  deviceFinish?: "frame" | "light";
 };
 
 /** A complete look saved from Style Lab: palette, type, layout rhythm and scene. */

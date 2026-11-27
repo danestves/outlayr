@@ -13,6 +13,7 @@ import {
   Plus,
   RotateCcw,
   RotateCw,
+  StickyNote,
   Trash2,
   Type,
 } from "lucide-react";
@@ -42,13 +43,17 @@ import { nid } from "@/lib/defaults";
 import { img } from "@/lib/image-cache";
 import {
   isBuiltInElementId,
+  cardElementKey,
   imageElementKey,
+  isCardElementId,
   isImageElementId,
   isTextElementId,
+  toCardElementId,
   toImageElementId,
   textElementKey,
   toTextElementId,
 } from "@/lib/elements";
+import { cleanHexColor } from "@/lib/clean-hex-color";
 import { pickText, resolveScreenshot, writeLocalized } from "@/lib/locale";
 import { slideColors } from "@/lib/contrast";
 import { cn } from "@/lib/utils";
@@ -63,11 +68,15 @@ import {
 } from "@/lib/typography";
 import type {
   BuiltInElementId,
+  CardElement,
+  CardVariant,
   Device,
   ElementId,
   ElementTransform,
   ImageElement,
+  LocalizedText,
   Orientation,
+  Scene,
   Slide,
   SlideLayout,
   SlideTypography,
@@ -93,6 +102,7 @@ type Props = {
   /** Patch computed from the slide's latest state (safe after async work). */
   onUpdate: (update: (slide: Slide) => Partial<Slide>) => void;
   onSelectElement: (id: ElementId | null) => void;
+  scene?: Scene;
 };
 
 const ELEMENT_LABEL: Record<BuiltInElementId, string> = {
@@ -114,6 +124,7 @@ export function Inspector({
   onChange,
   onUpdate,
   onSelectElement,
+  scene,
 }: Props) {
   const replaceScreenshot = (key: "screenshot" | "screenshotSecondary") => (next: string) => {
     const current = slide[key];
@@ -234,12 +245,39 @@ export function Inspector({
           />
         </div>
 
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <Label className="text-[11px] text-muted-foreground">Accent line colour</Label>
+            <ResetButton
+              visible={!!slide.headlineAccentColor}
+              label="Clear headline accent"
+              onClick={() => onChange({ headlineAccentColor: undefined })}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              type="color"
+              value={cleanHexColor(slide.headlineAccentColor) || cleanHexColor(theme.accent) || "#C2371B"}
+              className="h-7 w-14 cursor-pointer p-0.5"
+              onChange={(event) => onChange({ headlineAccentColor: event.target.value.toUpperCase() })}
+              aria-label="Headline accent colour"
+            />
+            <span className="text-[11px] text-muted-foreground">
+              Lines after the first break.
+            </span>
+          </div>
+        </div>
+
         <TypographySection slide={slide} isFeatureGraphic={isFeatureGraphic} onChange={onChange} />
 
-        {!isFeatureGraphic && !isNoDevice && (
+        {!isNoDevice && (
           <div className="space-y-1.5">
             <Label className="text-xs">
-              {slide.layout === "two-devices" ? "Front device screenshot" : "Screenshot"}
+              {isFeatureGraphic
+                ? "Phone screenshot (optional)"
+                : slide.layout === "two-devices"
+                  ? "Front device screenshot"
+                  : "Screenshot"}
             </Label>
             <ScreenshotPicker
               label="Primary"
@@ -248,6 +286,11 @@ export function Inspector({
               onChange={replaceScreenshot("screenshot")}
             />
             <CaptureNote device={device} src={resolveScreenshot(slide.screenshot, locale)} />
+            {isFeatureGraphic && (
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Leave it blank for a banner with no phone.
+              </p>
+            )}
           </div>
         )}
 
@@ -278,19 +321,18 @@ export function Inspector({
           onSelectElement={onSelectElement}
         />
 
-        {!isFeatureGraphic && (
-          <ElementTransformControls
-            slide={slide}
-            defaultTextColor={slideColors(theme, slide).fg}
-            device={device}
-            orientation={orientation}
-            locale={locale}
-            selectedElementId={selectedElementId}
-            onChange={onChange}
-            onUpdate={onUpdate}
-            onSelectElement={onSelectElement}
-          />
-        )}
+        <ElementTransformControls
+          slide={slide}
+          defaultTextColor={slideColors(theme, slide).fg}
+          device={device}
+          orientation={orientation}
+          locale={locale}
+          selectedElementId={selectedElementId}
+          onChange={onChange}
+          onUpdate={onUpdate}
+          onSelectElement={onSelectElement}
+          scene={scene}
+        />
 
         {isFeatureGraphic && (
           <div className="space-y-1.5">
@@ -369,6 +411,7 @@ function ElementTransformControls({
   onChange,
   onUpdate,
   onSelectElement,
+  scene,
 }: {
   slide: Slide;
   defaultTextColor: string;
@@ -379,19 +422,22 @@ function ElementTransformControls({
   onChange: (patch: Partial<Slide>) => void;
   onUpdate: (update: (slide: Slide) => Partial<Slide>) => void;
   onSelectElement: (id: ElementId | null) => void;
+  scene?: Scene;
 }) {
+  const featureGraphic = device === "feature-graphic" || slide.layout === "feature-graphic";
   const present: ElementId[] = ["caption"];
-  if (slide.layout !== "no-device") present.push("device");
+  if (slide.layout !== "no-device" && (!featureGraphic || slide.screenshot)) present.push("device");
   if (slide.layout === "two-devices") present.push("deviceSecondary");
   if (slide.callout && calloutAvailable(slide, device)) present.push("callout");
   for (const element of slide.textElements || []) present.push(toTextElementId(element.id));
   for (const element of slide.imageElements || []) present.push(toImageElementId(element.id));
+  for (const element of slide.cardElements || []) present.push(toCardElementId(element.id));
 
   const transforms = slide.transforms || {};
   const activeId =
     selectedElementId && present.includes(selectedElementId) ? selectedElementId : null;
   const activeTransform = activeId
-    ? getElementTransform(slide, device, orientation, activeId)
+    ? getElementTransform(slide, device, orientation, activeId, scene)
     : undefined;
   const { cW, cH } = getCanvas(device, orientation);
   const activeTextElement =
@@ -402,9 +448,13 @@ function ElementTransformControls({
     activeId && isImageElementId(activeId)
       ? slide.imageElements?.find((element) => element.id === imageElementKey(activeId))
       : null;
+  const activeCardElement =
+    activeId && isCardElementId(activeId)
+      ? slide.cardElements?.find((element) => element.id === cardElementKey(activeId))
+      : null;
 
   function getTransform(id: ElementId) {
-    return getElementTransform(slide, device, orientation, id);
+    return getElementTransform(slide, device, orientation, id, scene);
   }
 
   function patchElement(id: ElementId, patch: Partial<ElementTransform>) {
@@ -426,6 +476,17 @@ function ElementTransformControls({
       onUpdate((latest) => ({
         imageElements: (latest.imageElements || []).map((element) =>
           element.id === imageId
+            ? { ...element, transform: { ...element.transform, ...patch } }
+            : element,
+        ),
+      }));
+      return;
+    }
+    if (isCardElementId(id)) {
+      const cardId = cardElementKey(id);
+      onUpdate((latest) => ({
+        cardElements: (latest.cardElements || []).map((element) =>
+          element.id === cardId
             ? { ...element, transform: { ...element.transform, ...patch } }
             : element,
         ),
@@ -494,6 +555,50 @@ function ElementTransformControls({
       return { imageElements: nextImageElements.length > 0 ? nextImageElements : undefined };
     });
     onSelectElement(null);
+  }
+
+  function patchCardElement(id: string, patch: Partial<CardElement>) {
+    onUpdate((latest) => ({
+      cardElements: (latest.cardElements || []).map((element) =>
+        element.id === id ? { ...element, ...patch } : element,
+      ),
+    }));
+  }
+
+  function setCardField(element: CardElement, key: "label" | "title" | "body" | "meta", value: string) {
+    patchCardElement(element.id, { [key]: writeLocalized(element[key], locale, value) });
+  }
+
+  function deleteCardElement(element: CardElement) {
+    const next = (slide.cardElements || []).filter((item) => item.id !== element.id);
+    onChange({ cardElements: next.length > 0 ? next : undefined });
+    onSelectElement(null);
+  }
+
+  function addCardElement() {
+    const id = nid();
+    const zIndex =
+      Math.max(
+        5,
+        ...present.map((elementId) => getTransform(elementId)?.zIndex ?? defaultZ(elementId)),
+      ) + 1;
+    const element: CardElement = {
+      id,
+      variant: "stat",
+      transform: {
+        x: cW * 0.18,
+        y: cH * 0.42,
+        width: cW * 0.64,
+        height: cH * 0.14,
+        rotation: 0,
+        zIndex,
+      },
+      label: writeLocalized({}, locale, "THIS MONTH"),
+      title: writeLocalized({}, locale, "$1,240"),
+      body: writeLocalized({}, locale, "Saved so far"),
+    };
+    onChange({ cardElements: [...(slide.cardElements || []), element] });
+    onSelectElement(toCardElementId(id));
   }
 
   function addTextElement() {
@@ -568,6 +673,10 @@ function ElementTransformControls({
       ...element,
       transform: { ...element.transform },
     }));
+    const nextCardElements = (slide.cardElements || []).map((element) => ({
+      ...element,
+      transform: { ...element.transform },
+    }));
     ranked.forEach((eid, i) => {
       const cur = getTransform(eid);
       if (!cur) return;
@@ -579,11 +688,20 @@ function ElementTransformControls({
         const imageId = imageElementKey(eid);
         const imageElement = nextImageElements.find((element) => element.id === imageId);
         if (imageElement) imageElement.transform = { ...imageElement.transform, zIndex: i + 1 };
+      } else if (isCardElementId(eid)) {
+        const cardId = cardElementKey(eid);
+        const cardElement = nextCardElements.find((element) => element.id === cardId);
+        if (cardElement) cardElement.transform = { ...cardElement.transform, zIndex: i + 1 };
       } else if (isBuiltInElementId(eid)) {
         nextTransforms[eid] = { ...cur, zIndex: i + 1 };
       }
     });
-    onChange({ transforms: nextTransforms, textElements: nextTextElements, imageElements: nextImageElements });
+    onChange({
+      transforms: nextTransforms,
+      textElements: nextTextElements,
+      imageElements: nextImageElements,
+      cardElements: nextCardElements,
+    });
   }
 
   return (
@@ -591,7 +709,7 @@ function ElementTransformControls({
       <div className="space-y-1">
         <div className="flex items-center justify-between gap-2">
           <Label className="text-xs font-semibold">Elements</Label>
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
             <Button
               type="button"
               variant="outline"
@@ -613,6 +731,17 @@ function ElementTransformControls({
               <ImagePlus className="h-3.5 w-3.5" />
               Image
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 shrink-0 px-2 text-xs"
+              onClick={addCardElement}
+              title="Add a stat, notification or speech bubble card"
+            >
+              <StickyNote className="h-3.5 w-3.5" />
+              Card
+            </Button>
           </div>
         </div>
         <p className="text-[11px] text-muted-foreground">
@@ -629,6 +758,7 @@ function ElementTransformControls({
           transform={activeTransform}
           textElement={activeTextElement || undefined}
           imageElement={activeImageElement || undefined}
+          cardElement={activeCardElement || undefined}
           locale={locale}
           canvas={{ cW, cH }}
           defaultTextColor={defaultTextColor}
@@ -652,6 +782,15 @@ function ElementTransformControls({
           onDeleteImage={() => {
             if (activeImageElement) deleteImageElement(activeImageElement);
           }}
+          onCardField={(key, value) => {
+            if (activeCardElement) setCardField(activeCardElement, key, value);
+          }}
+          onCardPatch={(patch) => {
+            if (activeCardElement) patchCardElement(activeCardElement.id, patch);
+          }}
+          onDeleteCard={() => {
+            if (activeCardElement) deleteCardElement(activeCardElement);
+          }}
         />
       ) : (
         <div className="rounded border border-dashed bg-background/40 p-4 text-center text-[11px] text-muted-foreground">
@@ -667,6 +806,7 @@ function ActiveElementPanel({
   transform,
   textElement,
   imageElement,
+  cardElement,
   locale,
   canvas,
   defaultTextColor,
@@ -678,11 +818,15 @@ function ActiveElementPanel({
   onImagePatch,
   onImageSource,
   onDeleteImage,
+  onCardField,
+  onCardPatch,
+  onDeleteCard,
 }: {
   activeId: ElementId;
   transform: ElementTransform | undefined;
   textElement?: TextElement;
   imageElement?: ImageElement;
+  cardElement?: CardElement;
   locale: string;
   canvas: { cW: number; cH: number };
   defaultTextColor: string;
@@ -694,27 +838,36 @@ function ActiveElementPanel({
   onImagePatch: (patch: Partial<ImageElement>) => void;
   onImageSource: (src: string) => void;
   onDeleteImage: () => void;
+  onCardField: (key: "label" | "title" | "body" | "meta", value: string) => void;
+  onCardPatch: (patch: Partial<CardElement>) => void;
+  onDeleteCard: () => void;
 }) {
   const engaged = !!transform;
   const rotation = transform?.rotation ?? 0;
   const label = elementLabel(activeId);
+  const deleteLabel = textElement
+    ? "Delete text element"
+    : imageElement
+      ? "Delete image element"
+      : "Delete card";
   return (
     <div className="space-y-2 rounded border bg-background/60 p-2.5">
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1 text-xs font-medium">
           {textElement && <Type className="h-3.5 w-3.5" />}
           {imageElement && <ImagePlus className="h-3.5 w-3.5" />}
+          {cardElement && <StickyNote className="h-3.5 w-3.5" />}
           {label}
         </span>
-        {textElement || imageElement ? (
+        {textElement || imageElement || cardElement ? (
           <Button
             type="button"
             variant="ghost"
             size="icon"
             className="h-6 w-6 hover:text-destructive"
-            onClick={textElement ? onDeleteText : onDeleteImage}
-            title={textElement ? "Delete text element" : "Delete image element"}
-            aria-label={textElement ? "Delete text element" : "Delete image element"}
+            onClick={textElement ? onDeleteText : imageElement ? onDeleteImage : onDeleteCard}
+            title={deleteLabel}
+            aria-label={deleteLabel}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
@@ -737,6 +890,15 @@ function ActiveElementPanel({
 
       {imageElement && (
         <ImageElementPanel element={imageElement} onPatch={onImagePatch} onSourceChange={onImageSource} />
+      )}
+
+      {cardElement && (
+        <CardElementPanel
+          element={cardElement}
+          locale={locale}
+          onField={onCardField}
+          onPatch={onCardPatch}
+        />
       )}
 
       <div className="space-y-1">
@@ -846,6 +1008,105 @@ function ImageElementPanel({
           />
         </div>
       )}
+    </div>
+  );
+}
+
+function CardElementPanel({
+  element,
+  locale,
+  onField,
+  onPatch,
+}: {
+  element: CardElement;
+  locale: string;
+  onField: (key: "label" | "title" | "body" | "meta", value: string) => void;
+  onPatch: (patch: Partial<CardElement>) => void;
+}) {
+  return (
+    <div className="space-y-2 rounded border bg-muted/30 p-2">
+      <div className="space-y-1">
+        <Label className="text-[11px] text-muted-foreground">Card</Label>
+        <Select
+          value={element.variant}
+          onValueChange={(variant) => onPatch({ variant: variant as CardVariant })}
+        >
+          <SelectTrigger className="h-8 text-xs" aria-label="Card variant">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="stat">Stat</SelectItem>
+            <SelectItem value="notification">Notification</SelectItem>
+            <SelectItem value="bubble">Speech bubble</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {element.variant === "stat" && (
+        <>
+          <CardField label="Label" field={element.label} fieldKey="label" locale={locale} onField={onField} />
+          <CardField label="Value" field={element.title} fieldKey="title" locale={locale} onField={onField} />
+          <CardField label="Caption" field={element.body} fieldKey="body" locale={locale} onField={onField} />
+        </>
+      )}
+      {element.variant === "notification" && (
+        <>
+          <CardField label="Title" field={element.title} fieldKey="title" locale={locale} onField={onField} />
+          <CardField label="Time" field={element.meta} fieldKey="meta" locale={locale} onField={onField} />
+          <CardField label="Body" field={element.body} fieldKey="body" locale={locale} onField={onField} />
+        </>
+      )}
+      {element.variant === "bubble" && (
+        <CardField label="Text" field={element.body} fieldKey="body" locale={locale} onField={onField} />
+      )}
+
+      {element.variant !== "bubble" && (
+        <div className="space-y-1">
+          <Label className="text-[11px] text-muted-foreground">Icon</Label>
+          <ScreenshotPicker
+            label="Card icon"
+            value={element.iconSrc || ""}
+            onChange={(src) => onPatch({ iconSrc: src || undefined })}
+          />
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={cleanHexColor(element.iconBackground) || "#C2371B"}
+              onChange={(event) => onPatch({ iconBackground: event.target.value.toUpperCase() })}
+              className="h-7 w-10 cursor-pointer rounded border bg-transparent p-0.5"
+              aria-label="Card icon background"
+            />
+            <span className="text-[11px] text-muted-foreground">Icon background</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CardField({
+  label,
+  field,
+  fieldKey,
+  locale,
+  onField,
+}: {
+  label: string;
+  field: LocalizedText | undefined;
+  fieldKey: "label" | "title" | "body" | "meta";
+  locale: string;
+  onField: (key: "label" | "title" | "body" | "meta", value: string) => void;
+}) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-[11px] text-muted-foreground">{label}</Label>
+      <Input
+        value={field?.[locale] ?? ""}
+        onChange={(event) => onField(fieldKey, event.target.value)}
+        placeholder={pickText(field, locale) || label}
+        className="h-8 text-xs"
+        aria-label={`Card ${label.toLowerCase()}`}
+      />
     </div>
   );
 }
@@ -1200,12 +1461,14 @@ function fitToAspect(t: ElementTransform, aspect: number, maxHeight: number): El
 function elementLabel(id: ElementId): string {
   if (isBuiltInElementId(id)) return ELEMENT_LABEL[id];
   if (isImageElementId(id)) return "Image";
+  if (isCardElementId(id)) return "Card";
   return "Text";
 }
 
 function defaultZ(id: ElementId): number {
   if (isTextElementId(id)) return 5;
   if (isImageElementId(id)) return 5;
+  if (isCardElementId(id)) return 5;
   if (id === "deviceSecondary") return 2;
   if (id === "device") return 3;
   if (id === "callout") return 5;

@@ -224,6 +224,66 @@ export function AndroidTabletL({ src, alt = "", style, hideEmpty }: FrameProps) 
   );
 }
 
+const LIGHT_SCREEN = { iphone: 1320 / 2868, android: 1080 / 2400 };
+
+// Sized from the capture so a 3% bezel on every side never crops it.
+export const LIGHT_PHONE_ASPECT = {
+  iphone: 1 / (0.94 / LIGHT_SCREEN.iphone + 0.06),
+  android: 1 / (0.94 / LIGHT_SCREEN.android + 0.06),
+};
+
+function DrawnLightPhone({ src, alt = "", style, hideEmpty, android }: FrameProps & { android?: boolean }) {
+  const resolved = img(src);
+  const screen = android ? LIGHT_SCREEN.android : LIGHT_SCREEN.iphone;
+  const aspect = android ? LIGHT_PHONE_ASPECT.android : LIGHT_PHONE_ASPECT.iphone;
+  return (
+    <div style={{ position: "relative", aspectRatio: `${aspect}`, containerType: "size", ...style }}>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          boxSizing: "border-box",
+          padding: "3%",
+          borderRadius: `17% / ${17 * aspect}%`,
+          background: "#ece8df",
+          boxShadow: "inset 0 0 0 0.46cqw #cfc8ba, inset 0 0 0 1.84cqw #f9f7f2",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            height: "100%",
+            overflow: "hidden",
+            background: "#000",
+            borderRadius: `14% / ${14 * screen}%`,
+          }}
+        >
+          {resolved ? (
+            <img
+              src={resolved}
+              alt={alt}
+              style={{ display: "block", width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }}
+              draggable={false}
+            />
+          ) : hideEmpty ? null : (
+            <EmptySlot />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function LightPhone(props: FrameProps) {
+  return <DrawnLightPhone {...props} />;
+}
+
+export function LightAndroidPhone(props: FrameProps) {
+  return <DrawnLightPhone android {...props} />;
+}
+
 // Mac window: title bar + a content area that is exactly 16:10, the Mac App
 // Store's own aspect, so a full-screen or 16:10 capture fills it uncropped.
 export function MacWindow({ src, alt = "", style, hideEmpty }: FrameProps) {

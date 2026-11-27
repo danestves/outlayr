@@ -1,5 +1,8 @@
 const EUR_PER_USD = 0.86;
 const BRL_PER_USD = 5.4;
+const MXN_PER_USD = 18;
+
+export const PER_USD = { BRL: BRL_PER_USD, EUR: EUR_PER_USD, MXN: MXN_PER_USD, USD: 1 };
 
 const BRL_PRICE_POINTS = new Map([
     [22.99, 114.9],
@@ -7,9 +10,27 @@ const BRL_PRICE_POINTS = new Map([
     [9.99, 49.9],
     [24.99, 124.9],
     [3499, 17_499],
+    // The Japan goal stays short enough that its headline fits one line in Portuguese.
+    [1200, 1800],
+    [3412.4, 5118.6],
+    [6000, 9000],
+]);
+
+const MXN_PRICE_POINTS = new Map([
+    [22.99, 299],
+    [11.99, 129],
+    [9.99, 49],
+    [24.99, 399],
+    [3499, 64_999],
+    [1200, 6000],
+    [3412.4, 17_100],
+    [6000, 30_000],
+    [8000, 12_000],
+    [15_000, 24_000],
 ]);
 
 const scaleBrl = (amount) => BRL_PRICE_POINTS.get(amount) ?? Math.round(amount * 5 * 100) / 100;
+const scaleMxn = (amount) => MXN_PRICE_POINTS.get(amount) ?? Math.round(amount * MXN_PER_USD);
 const keep = (amount) => amount;
 
 const WISE_USD = {
@@ -50,8 +71,8 @@ const US = {
     accounts: [
         account("main", "acc-chase", "Chase", "chase.com", "#1567B0", "USD", 12_480.32),
         account("savings", "acc-savings", "Ally Savings", "ally.com", "#6B4FBB", "USD", 9450, { icon: "PiggyBank" }),
-        account("goal", "acc-zinli", "Zinli", "zinli.com", "#7BD1FF", "USD", 3412.4),
-        account("fx", "acc-banesco", "Banesco", "banesco.com", "#2D7A3E", "VES", 486_000),
+        account("goal", "acc-sofi", "SoFi", "sofi.com", "#00A2C7", "USD", 3412.4),
+        account("fx", "acc-wise", "Wise EUR", "wise.com", "#9FE870", "EUR", 4850, { icon: "Wallet02" }),
         account("paypal", "acc-paypal", ...PAYPAL, "USD", 612.8, { icon: "Wallet02" }),
         account("card", "acc-apple", "Apple Card", "apple.com", "#1D1D1F", "USD", -842.15, {
             icon: "CreditCard",
@@ -69,7 +90,7 @@ const US = {
     rate: 1,
     roles: { freelance: "goal", transferFrom: "main", transferTo: "fx" },
     scale: keep,
-    transferNote: "To Banesco",
+    transferNote: "To Wise",
 };
 
 const EURO_ROLES = { freelance: "fx", transferFrom: "fx", transferTo: "main" };
@@ -227,4 +248,84 @@ const BR = {
     transferNote: "Para Nubank",
 };
 
-export const REGIONS = { br: BR, es: ES, fr: FR, pt: PT, us: US };
+// Smaller balances than the other casts: the iOS Balances header truncates long MX$ totals.
+const MX = {
+    accounts: [
+        account("main", "acc-main", "BBVA México", "bbva.mx", "#1464A5", "MXN", 900),
+        account("savings", "acc-savings", "Nu Cajita", "nu.com.mx", "#820AD1", "MXN", 600, { icon: "PiggyBank" }),
+        account("goal", "acc-mercadopago", "Mercado Pago", "mercadopago.com.mx", "#00B1EA", "MXN", 3412.4),
+        { ...WISE_USD, target: 250 },
+        account("paypal", "acc-paypal", ...PAYPAL, "MXN", 150, { icon: "Wallet02" }),
+        account("card", "acc-card", "Tarjeta Banorte", "banorte.com", "#EB0029", "MXN", -250, {
+            icon: "CreditCard",
+            kind: "liability",
+        }),
+        account("amex", "acc-amex", ...AMEX, "MXN", -200, { icon: "CreditCard", kind: "liability" }),
+        account("cash", "acc-cash", "Efectivo", null, CASH_COLOR, "MXN", 60, { icon: "Wallet01" }),
+    ],
+    budgetName: "Gasto mensual",
+    currency: "MXN",
+    details: { "August salary": "Nómina de agosto", "client retainer": "iguala mensual del cliente" },
+    goalNames: { emergency: "Fondo de emergencia", japan: "Japón, abril", macbook: "MacBook nueva" },
+    merchants: {
+        amazon: { domain: "amazon.com.mx", label: "Amazon" },
+        conedison: { domain: "cfe.mx", label: "CFE" },
+        costco: { domain: "costco.com.mx", label: "Costco" },
+        doordash: { domain: "rappi.com.mx", label: "Rappi" },
+        lyft: { domain: "didiglobal.com", label: "DiDi" },
+        nike: { domain: "liverpool.com.mx", label: "Liverpool" },
+        planetfitness: { domain: "smartfit.com.mx", label: "Smart Fit" },
+        shell: { domain: "pemex.com", label: "Pemex" },
+        target: { domain: "mercadolibre.com.mx", label: "Mercado Libre" },
+        traderjoes: { domain: "soriana.com", label: "Soriana" },
+        verizon: { domain: "telcel.com", label: "Telcel" },
+        wholefoods: { domain: "walmart.com.mx", label: "Walmart" },
+    },
+    notes: { Paycheck: "Nómina", Rent: "Renta" },
+    rate: MXN_PER_USD,
+    roles: EURO_ROLES,
+    scale: scaleMxn,
+    transferNote: "A BBVA México",
+};
+
+const DE = {
+    accounts: [
+        account("main", "acc-main", "N26", "n26.com", "#36A18B", "EUR", 12_480.32),
+        account("savings", "acc-savings", "DKB Tagesgeld", "dkb.de", "#148DEA", "EUR", 9450, { icon: "PiggyBank" }),
+        account("goal", "acc-traderepublic", "Trade Republic", "traderepublic.com", "#1D1D1F", "EUR", 3412.4),
+        WISE_USD,
+        account("paypal", "acc-paypal", ...PAYPAL, "EUR", 612.8, { icon: "Wallet02" }),
+        account("card", "acc-card", "Sparkasse Visa", "sparkasse.de", "#FF0000", "EUR", -842.15, {
+            icon: "CreditCard",
+            kind: "liability",
+        }),
+        account("amex", "acc-amex", ...AMEX, "EUR", -1240.55, { icon: "CreditCard", kind: "liability" }),
+        account("cash", "acc-cash", "Bargeld", null, CASH_COLOR, "EUR", 220, { icon: "Wallet01" }),
+    ],
+    budgetName: "Monatsausgaben",
+    currency: "EUR",
+    details: { "August salary": "Gehalt August", "client retainer": "Monatspauschale Kunde" },
+    goalNames: { emergency: "Notgroschen", japan: "Japan, April", macbook: "Neues MacBook" },
+    merchants: {
+        amazon: { domain: "amazon.de", label: "Amazon" },
+        conedison: { domain: "vattenfall.de", label: "Vattenfall" },
+        costco: { domain: "rewe.de", label: "REWE" },
+        doordash: { domain: "lieferando.de", label: "Lieferando" },
+        lyft: { domain: "bolt.eu", label: "Bolt" },
+        nike: { domain: "zalando.de", label: "Zalando" },
+        planetfitness: { domain: "mcfit.com", label: "McFIT" },
+        shell: { domain: "aral.de", label: "Aral" },
+        target: { domain: "mediamarkt.de", label: "MediaMarkt" },
+        traderjoes: { domain: "lidl.de", label: "Lidl" },
+        ubereats: { domain: "wolt.com", label: "Wolt" },
+        verizon: { domain: "telekom.de", label: "Telekom" },
+        wholefoods: { domain: "edeka.de", label: "EDEKA" },
+    },
+    notes: { Paycheck: "Gehalt", Rent: "Miete" },
+    rate: EUR_PER_USD,
+    roles: EURO_ROLES,
+    scale: keep,
+    transferNote: "An N26",
+};
+
+export const REGIONS = { br: BR, de: DE, es: ES, fr: FR, mx: MX, pt: PT, us: US };

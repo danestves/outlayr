@@ -15,7 +15,7 @@ import {
   themeById,
 } from "@/lib/constants";
 import { detectPlatform, nid } from "@/lib/defaults";
-import { imageElementKey, isBuiltInElementId, isImageElementId, isTextElementId, textElementKey } from "@/lib/elements";
+import { cardElementKey, imageElementKey, isBuiltInElementId, isCardElementId, isImageElementId, isTextElementId, textElementKey } from "@/lib/elements";
 import { renderSlide } from "@/lib/export-render";
 import { exportAssetPaths } from "@/lib/export-assets";
 import { DUO_COMPANION, duoGeometry, frameAssetPaths, isDuoDevice, setFrameAssets, type FrameFile, type MeasuredFrame } from "@/lib/frame-assets";
@@ -122,6 +122,9 @@ export function ScreenshotEditor() {
       }
       for (const imageElement of s.imageElements || []) {
         if (imageElement.src && !imageElement.src.startsWith("data:")) paths.add(imageElement.src);
+      }
+      for (const cardElement of s.cardElements || []) {
+        if (cardElement.iconSrc && !cardElement.iconSrc.startsWith("data:")) paths.add(cardElement.iconSrc);
       }
     }
     return Array.from(paths).sort();
@@ -284,6 +287,15 @@ export function ScreenshotEditor() {
                 ),
               };
             }
+            if (isCardElementId(elementId)) {
+              const cardId = cardElementKey(elementId);
+              return {
+                ...slide,
+                cardElements: (slide.cardElements || []).map((element) =>
+                  element.id === cardId ? { ...element, transform } : element,
+                ),
+              };
+            }
             if (!isBuiltInElementId(elementId)) return slide;
             return {
               ...slide,
@@ -351,6 +363,15 @@ export function ScreenshotEditor() {
           imageElements: src.imageElements?.map((element): ImageElement => ({
             ...element,
             id: nid(),
+            transform: { ...element.transform },
+          })),
+          cardElements: src.cardElements?.map((element) => ({
+            ...element,
+            id: nid(),
+            label: element.label ? { ...element.label } : undefined,
+            title: element.title ? { ...element.title } : undefined,
+            body: element.body ? { ...element.body } : undefined,
+            meta: element.meta ? { ...element.meta } : undefined,
             transform: { ...element.transform },
           })),
         };
@@ -528,9 +549,9 @@ export function ScreenshotEditor() {
       try {
         await Promise.race([
           (async () => {
-            // fonts.ready only covers faces already requested; explicitly load an
-            // imported font so a not-yet-used face can't export as the fallback.
-            if (fontId === "self-hosted") await document.fonts.load(`64px ${fontFamily}`);
+            // fonts.ready only covers faces already requested; explicitly load a
+            // file-backed font so a not-yet-used face can't export as the fallback.
+            if (fontId === "self-hosted" || fontId === "nunito") await document.fonts.load(`900 64px ${fontFamily}`);
             await document.fonts.ready;
           })(),
           new Promise<never>((_, reject) => {
@@ -815,6 +836,7 @@ export function ScreenshotEditor() {
               locale={state.locale}
               appIcon={state.appIcon}
               onAppIconChange={(appIcon) => setState((p) => ({ ...p, appIcon }))}
+              scene={state.scene}
               selectedElementId={
                 selectedElement?.slideId === activeSlide.id ? selectedElement.elementId : null
               }

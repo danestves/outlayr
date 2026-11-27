@@ -1,3 +1,4 @@
+import { cleanHexColor } from "./clean-hex-color";
 import { DEVICE_LABEL, LAYOUT_LABEL } from "./constants";
 
 const record = (value: unknown): value is Record<string, unknown> =>
@@ -47,6 +48,12 @@ export function projectValidationError(value: unknown): string | null {
       }
       if (!localized(slide.label) || !localized(slide.headline)) return `${device}: copy must be text or a locale-to-text object`;
       if (slide.inverted !== undefined && typeof slide.inverted !== "boolean") return `${device}: inverted must be a boolean`;
+      if (slide.headlineAccentColor !== undefined && !cleanHexColor(slide.headlineAccentColor)) {
+        return `${device}: headline accent must be a #RRGGBB color`;
+      }
+      if (slide.glow !== undefined && (!record(slide.glow) ||
+        !cleanHexColor(slide.glow.color) ||
+        [slide.glow.x, slide.glow.y, slide.glow.size].some(n => !finite(n)))) return `${device}: invalid glow`;
       // Missing or out-of-range magnifier values are defaulted and clamped on load.
       if (slide.callout !== undefined && (!record(slide.callout) ||
         [slide.callout.focusX, slide.callout.focusY, slide.callout.zoom].some(n => n !== undefined && !finite(n)))) return `${device}: invalid callout`;
@@ -66,6 +73,21 @@ export function projectValidationError(value: unknown): string | null {
           if (key === "textElements" && (!localized(element.text) ||
             [element.fontSize, element.fontWeight].some(n => n !== undefined && (!finite(n) || n <= 0)))) return `${device}: invalid text element`;
           if (key === "imageElements" && typeof element.src !== "string") return `${device}: image src must be a string`;
+        }
+      }
+      if (slide.cardElements !== undefined) {
+        if (!Array.isArray(slide.cardElements)) return `${device}: cardElements must be an array`;
+        const cardIds = new Set<string>();
+        for (const element of slide.cardElements) {
+          if (!record(element) || typeof element.id !== "string" || !element.id.trim() || cardIds.has(element.id)) {
+            return `${device}: cardElements must have unique non-empty ids`;
+          }
+          cardIds.add(element.id);
+          if (!transform(element.transform)) return `${device}: invalid card transform`;
+          if (!["stat", "notification", "bubble"].includes(element.variant as string)) return `${device}: invalid card variant`;
+          if (!["label", "title", "body", "meta"].every(key => localized(element[key]))) return `${device}: invalid card copy`;
+          if ((element.iconSrc !== undefined && typeof element.iconSrc !== "string") ||
+            (element.iconBackground !== undefined && typeof element.iconBackground !== "string")) return `${device}: invalid card icon`;
         }
       }
     }
