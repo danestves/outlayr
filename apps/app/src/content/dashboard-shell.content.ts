@@ -693,6 +693,10 @@ export default {
             es: "Saltar al contenido",
             fr: "Aller au contenu",
             pt: "Pular para o conteúdo",
+            it: "Vai al contenuto",
+            nl: "Naar de inhoud",
+            ja: "本文へ移動",
+            ko: "본문으로 건너뛰기",
         }),
         sync: {
             failed: insert(
