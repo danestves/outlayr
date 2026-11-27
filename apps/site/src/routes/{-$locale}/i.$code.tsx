@@ -2,6 +2,7 @@ import { formatReferralCode, normalizeReferralCode } from "@outlayr/money/contra
 import { capture } from "@outlayr/shared/analytics";
 import { localeFromParam } from "@outlayr/shared/i18n";
 import { useTimers } from "@outlayr/shared/lifecycle";
+import { APP_URL } from "@outlayr/shared/urls";
 import { createFileRoute, notFound, rootRouteId } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import { useRef, useState } from "react";
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/{-$locale}/i/$code")({
 
 function Invite() {
     const code = Route.useLoaderData();
-    const { code: label, how, lead, open, rules, title } = useIntlayer("invite");
+    const { code: label, how, lead, open, rules, title, web } = useIntlayer("invite");
     return (
         <Page lead={lead} title={title}>
             <section className="border-border mt-16 max-w-[680px] border-y py-8 delay-300" data-reveal>
@@ -43,14 +44,23 @@ function Invite() {
             </section>
             <div className="mt-10 flex flex-col items-start gap-6 delay-300" data-reveal>
                 <StoreBadges placement="invite" />
-                <a
-                    className="fluid bg-surface hover:bg-foreground/5 inline-flex items-center gap-3 rounded-full px-6 py-3 text-base font-semibold active:scale-[0.98]"
-                    href={`outlayr://i/${code.toLowerCase()}`}
-                    onClick={() => capture("invite_open_clicked")}
-                >
-                    <Icon name="device-mobile" />
-                    {open}
-                </a>
+                <div className="flex flex-wrap items-center gap-3">
+                    <a
+                        className="fluid bg-surface hover:bg-foreground/5 inline-flex items-center gap-3 rounded-full px-6 py-3 text-base font-semibold active:scale-[0.98]"
+                        href={`outlayr://i/${code.toLowerCase()}`}
+                        onClick={() => capture("invite_open_clicked")}
+                    >
+                        <Icon name="device-mobile" />
+                        {open}
+                    </a>
+                    <a
+                        className="fluid bg-surface hover:bg-foreground/5 inline-flex items-center gap-3 rounded-full px-6 py-3 text-base font-semibold active:scale-[0.98]"
+                        href={`${APP_URL}/i/${code.toLowerCase()}`}
+                    >
+                        <Icon name="arrow-up-right" />
+                        {web}
+                    </a>
+                </div>
             </div>
             <div className="text-muted mt-16 max-w-[680px] space-y-2 delay-300" data-reveal>
                 <p>{how}</p>

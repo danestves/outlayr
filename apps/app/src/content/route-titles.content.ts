@@ -157,6 +157,15 @@ const routeTitles = {
             pt: "Uso",
             "pt-PT": "Utilização",
         }),
+        invite: t({
+            en: "A month of Pro",
+            de: "Ein Monat Pro",
+            es: "Un mes de Pro",
+            "es-ES": "Un mes de Pro",
+            fr: "Un mois de Pro",
+            pt: "Um mês de Pro",
+            "pt-PT": "Um mês de Pro",
+        }),
         notFound: t({
             en: "Not found",
             de: "Nicht gefunden",

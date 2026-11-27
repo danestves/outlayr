@@ -22,6 +22,13 @@ const invite = {
             title: t({ en: "A month of Outlayr Pro, on a friend", es: "Un mes de Outlayr Pro, de un amigo" }),
         },
         open: t({ en: "Open in Outlayr", es: "Abrir en Outlayr" }),
+        web: t({
+            en: "Claim it on the web",
+            de: "Im Web einlösen",
+            es: "Reclámalo en la web",
+            fr: "Activez-le sur le web",
+            pt: "Resgate na web",
+        }),
         rules: t({
             en: "For new accounts that never had Pro. One invite per person.",
             es: "Para cuentas nuevas que nunca tuvieron Pro. Una invitación por persona.",

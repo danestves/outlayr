@@ -5,7 +5,7 @@ import { authClient } from "@/lib/auth-client";
 import { convexClient } from "@/lib/convex";
 import { currentToken, signedOut } from "@/lib/session";
 
-const ACCOUNT_PAGE = /^\/(?:login|connect)(?:\/|$)/u;
+const ACCOUNT_PAGE = /^\/(?:login|connect|i)(?:\/|$)/u;
 
 export const Route = createFileRoute("/_account")({
     beforeLoad: async ({ context, location }) => {
