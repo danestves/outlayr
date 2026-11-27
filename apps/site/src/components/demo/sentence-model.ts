@@ -953,7 +953,7 @@ export function initialState(locale: Locale): State {
         cursor: movesFor(cast, first).length - 1,
         draft: {
             account: first.account,
-            amount: first.keys.reduce(press, ""),
+            amount: first.keys.reduce((amount, key) => press(amount, key, decimalsFor(first.currency)), ""),
             category: first.category,
             categoryChosen: false,
             currency: first.currency,
