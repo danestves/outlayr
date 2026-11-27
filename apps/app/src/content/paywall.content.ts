@@ -21,11 +21,11 @@ const paywall = {
             "pt-PT": "Regista sozinho. Cada moeda. Cada prestação.",
         }),
         subhead: t({
-            en: "Everything Free does, without the limits.",
-            de: "Alles, was Gratis kann, ohne die Limits.",
-            es: "Todo lo que hace Gratis, sin los límites.",
-            fr: "Tout ce que fait Gratuit, sans les limites.",
-            pt: "Tudo o que o Grátis faz, sem os limites.",
+            en: "The web app comes with Pro. Everything Free does, without the limits.",
+            de: "Die Web-App gehört zu Pro. Alles, was Gratis kann, ohne die Limits.",
+            es: "La app web viene con Pro. Todo lo que hace Gratis, sin los límites.",
+            fr: "L'app web est incluse dans Pro. Tout ce que fait Gratuit, sans les limites.",
+            pt: "O app web vem com o Pro. Tudo o que o Grátis faz, sem os limites.",
         }),
         changes: t({
             en: "What upgrading changes",
@@ -348,6 +348,13 @@ const paywall = {
         notNow: t({ en: "Not now", de: "Nicht jetzt", es: "Ahora no", fr: "Pas maintenant", pt: "Agora não" }),
         terms: t({ en: "Terms", de: "Nutzungsbedingungen", es: "Términos", fr: "Conditions", pt: "Termos" }),
         privacy: t({ en: "Privacy", de: "Datenschutz", es: "Privacidad", fr: "Confidentialité", pt: "Privacidade" }),
+        deleteAccount: t({
+            en: "Delete account",
+            de: "Konto löschen",
+            es: "Eliminar cuenta",
+            fr: "Supprimer le compte",
+            pt: "Apagar conta",
+        }),
         tryAgain: t({
             en: "Try again",
             de: "Versuch es noch mal",

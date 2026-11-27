@@ -224,6 +224,9 @@ function Links({ onRestore, restoring = false }: { onRestore?: () => void; resto
             <SiteLink className="hover:text-foreground" to="/privacy">
                 {copy.privacy}
             </SiteLink>
+            <SiteLink className="hover:text-foreground" to="/delete-account">
+                {copy.deleteAccount}
+            </SiteLink>
         </div>
     );
 }
