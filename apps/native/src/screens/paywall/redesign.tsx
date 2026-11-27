@@ -4,7 +4,9 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Button } from "panelui-native/components/button";
+import { useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
+import type { ScrollViewInstance } from "react-native";
 
 import { MonoLabel } from "@/components/mono-label";
 import { useDatabase } from "@/contexts/local-data-context";
@@ -32,6 +34,7 @@ import { useColors } from "@/theme/use-colors";
 import { useAccountLimit } from "./account-top";
 import type { AccountTrigger } from "./account-top";
 import { BandChrome } from "./band-chrome";
+import { DayWithPro } from "./day-with-pro";
 import { ExitOfferSheet, useExitOffer } from "./exit-offer";
 import { FeatureRows } from "./feature-rows";
 import { KeepsLine } from "./keeps-line";
@@ -39,7 +42,6 @@ import { LegalRow } from "./legal-row";
 import { MonthAhead } from "./month-ahead";
 import { daysLeftInMonth } from "./month-grid";
 import { PaywallCta } from "./paywall-cta";
-import { PaywallHero } from "./paywall-hero";
 import { ctaLabel, thenLabel } from "./plan-copy";
 import { PlanPicker } from "./plan-picker";
 import { PlanRows } from "./plan-rows";
@@ -50,6 +52,8 @@ import type { TopBlock } from "./top-block";
 import { TrialTimeline } from "./trial-timeline";
 import { usePaywallFlow } from "./use-paywall-flow";
 import type { LeaveOutcome } from "./use-paywall-flow";
+
+const FOLLOW_MARGIN = 24;
 
 function statsLine(stats: LedgerStats, autologged: number, t: TranslateFn): string | null {
     if (stats.entries === 0) {
@@ -144,7 +148,7 @@ function PitchBand({
             return <ProBand subtitle={t("pro.top.sync")} title={t("pro.band.everyPhone")} />;
         }
         default: {
-            return <ProBand {...band} subtitle={t("pro.subtitle")} />;
+            return <ProBand {...band} subtitle={t("pro.subtitle")} title={t("pro.band.day")} />;
         }
     }
 }
@@ -179,14 +183,24 @@ function ProStatusBand({ confirmed, status }: { confirmed: boolean; status: ProS
     );
 }
 
-function PitchHero({ monthLabel, now, trial }: { monthLabel: string | null; now: number; trial: Plan | null }) {
+function PitchHero({
+    monthLabel,
+    now,
+    onFollow,
+    trial,
+}: {
+    monthLabel: string | null;
+    now: number;
+    onFollow: (bottom: number) => void;
+    trial: Plan | null;
+}) {
     if (monthLabel !== null) {
         return <MonthAhead label={monthLabel} now={now} />;
     }
     if (trial?.trialDays != null) {
         return <TrialTimeline price={trial.priceString} trialDays={trial.trialDays} />;
     }
-    return <PaywallHero />;
+    return <DayWithPro onFollow={onFollow} />;
 }
 
 export function PaywallRedesign({
@@ -217,6 +231,17 @@ export function PaywallRedesign({
         flow.autolog.used >= flow.autolog.cap
             ? t("pro.band.ranOut")
             : t("pro.band.freeLeft", { count: flow.autolog.cap - flow.autolog.used });
+
+    const scrollRef = useRef<ScrollViewInstance>(null);
+    const view = useRef({ content: 0, followedY: 0, following: true, heroY: 0, viewport: 0 });
+    const follow = (bottom: number) => {
+        const { content, followedY, following, heroY, viewport } = view.current;
+        const y = Math.min(content - viewport, heroY + bottom + FOLLOW_MARGIN - viewport);
+        if (following && y > followedY) {
+            view.current.followedY = y;
+            scrollRef.current?.scrollTo({ animated: true, y });
+        }
+    };
 
     const purchaseFooter = (
         <>
@@ -333,6 +358,16 @@ export function PaywallRedesign({
                     className="flex-1"
                     contentContainerClassName={largeText ? "grow pb-4" : "grow"}
                     contentInsetAdjustmentBehavior="automatic"
+                    onContentSizeChange={(_width, height) => {
+                        view.current.content = height;
+                    }}
+                    onLayout={(event) => {
+                        view.current.viewport = event.nativeEvent.layout.height;
+                    }}
+                    onScrollBeginDrag={() => {
+                        view.current.following = false;
+                    }}
+                    ref={scrollRef}
                 >
                     {flow.isPro ? (
                         <ProStatusBand confirmed={flow.isMirrored} status={status} />
@@ -346,12 +381,18 @@ export function PaywallRedesign({
                             waitingAccounts={waitingAccounts}
                         />
                     )}
-                    <View className="bg-background grow px-5 pb-4">
+                    <View
+                        className="bg-background grow px-5 pb-4"
+                        onLayout={(event) => {
+                            view.current.heroY = event.nativeEvent.layout.y;
+                        }}
+                    >
                         {listsFeatures ? <FeatureRows /> : null}
                         {listsFeatures ? null : (
                             <PitchHero
                                 monthLabel={showMonth ? monthLabel : null}
                                 now={now}
+                                onFollow={follow}
                                 trial={flow.block === "onboarding" ? flow.plan : null}
                             />
                         )}
