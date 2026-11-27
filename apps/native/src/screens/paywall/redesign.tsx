@@ -32,6 +32,7 @@ import { useColors } from "@/theme/use-colors";
 import { useAccountLimit } from "./account-top";
 import type { AccountTrigger } from "./account-top";
 import { BandChrome } from "./band-chrome";
+import { DayWithPro } from "./day-with-pro";
 import { ExitOfferSheet, useExitOffer } from "./exit-offer";
 import { FeatureRows } from "./feature-rows";
 import { KeepsLine } from "./keeps-line";
@@ -39,7 +40,6 @@ import { LegalRow } from "./legal-row";
 import { MonthAhead } from "./month-ahead";
 import { daysLeftInMonth } from "./month-grid";
 import { PaywallCta } from "./paywall-cta";
-import { PaywallHero } from "./paywall-hero";
 import { ctaLabel, thenLabel } from "./plan-copy";
 import { PlanPicker } from "./plan-picker";
 import { PlanRows } from "./plan-rows";
@@ -144,7 +144,7 @@ function PitchBand({
             return <ProBand subtitle={t("pro.top.sync")} title={t("pro.band.everyPhone")} />;
         }
         default: {
-            return <ProBand {...band} subtitle={t("pro.subtitle")} />;
+            return <ProBand {...band} subtitle={t("pro.subtitle")} title={t("pro.band.day")} />;
         }
     }
 }
@@ -186,7 +186,7 @@ function PitchHero({ monthLabel, now, trial }: { monthLabel: string | null; now:
     if (trial?.trialDays != null) {
         return <TrialTimeline price={trial.priceString} trialDays={trial.trialDays} />;
     }
-    return <PaywallHero />;
+    return <DayWithPro />;
 }
 
 export function PaywallRedesign({
