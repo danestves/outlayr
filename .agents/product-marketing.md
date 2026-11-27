@@ -1,17 +1,25 @@
 # Product Marketing Context
 
-**Document version:** v2
-**Last updated:** 2026-10-09
+**Document version:** v3
+**Last updated:** 2026-11-26
 
 ## Product Overview
 **One-liner:** An expense tracker and budget app where you log a purchase in one sentence.
-**What it does:** You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, accounts, and insights update as you log. Entries live on the phone first; sync is optional.
+**What it does:** You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, accounts, and insights update as you log. In the mobile app, entries live on the phone first and sync is optional; the web app works from the synced ledger.
 **Product category:** Expense tracker / budget app / money manager (App Store: Finance, Productivity).
-**Product type:** Consumer mobile app (Android today, iPhone coming soon).
+**Product type:** Consumer app on iPhone and Android, with a web app at app.tryoutlayr.com.
 **Business model:** Freemium. Free tracker; Outlayr Pro as monthly, yearly, or one-time purchase. Prices vary by country and are not published on the site.
 
 ## Target Audience
-**Target users:** People who want to know where their money goes but quit trackers because logging is tedious. Strong Latin American and multi-currency audience (English and Spanish).
+**Target users:** Anyone, wherever they live, who wants to know where their money goes but quit trackers because logging is tedious. Outlayr is for everyone. No market is the default.
+**Who that includes (write for all of them, not one):**
+- Students and first jobbers learning to budget on a small, irregular income.
+- Families and couples sharing a household budget.
+- Freelancers and remote workers paid in one currency and spending in another.
+- Travelers, expats and people who send money home.
+- People in cash-heavy economies, and anyone whose spending is not in a bank feed.
+- People paying in installments: Klarna, Afterpay, Affirm, meses sin intereses, Cashea.
+- Anyone drowning in subscriptions.
 **Primary use case:** Log daily spending fast enough that the habit sticks.
 **Jobs to be done:**
 - Know what is left this month before it runs out.
@@ -21,7 +29,7 @@
 - Logging a coffee in seconds by voice or one typed sentence.
 - Scanning a grocery receipt instead of typing it.
 - Tracking subscriptions and paychecks that repeat.
-- Holding accounts in different currencies (for example USD and VES).
+- Holding accounts in different currencies (for example a salary in EUR, savings in USD, a trip in JPY).
 
 ## Problems & Pain Points
 **Core problem:** Manual trackers take too long per entry, so people stop logging and lose the picture of the month.
@@ -56,9 +64,16 @@
 | Is it free? | The tracker is free; Pro raises limits and adds sync. |
 | Is my data private? | The ledger stays on the phone unless you turn on sync or use server features. No ads, never sold; usage analytics and crash reports go to PostHog, never amounts or merchants. |
 | Is it on Android? | Yes, on Google Play. |
-| Is it on iPhone? | Soon, on the App Store. |
+| Is it on iPhone? | Yes, on the App Store. |
 
 **Anti-persona:** People who want automatic bank-feed syncing.
+
+## Markets
+**Rule:** Global first. Headlines, store listings, examples and mockups speak to everyone; no single country is the frame.
+- Country-specific content is welcome as one market among many: a page about the BCV rate, meses sin intereses in Mexico, or Klarna in Germany. It lives on its own page or guide. A general listing may name a local feature in one line, never as the headline or the main example.
+- A general example rotates regions and currencies (USD, EUR, GBP, INR, BRL, MXN, JPY, NGN...). Never let one country's banks, apps or currency stand for "the user".
+- Every new content batch covers several regions. If a plan lists only one country, it is not done.
+- Venezuela, where Outlayr started, stays a supported market (BCV and Binance rates, bank texts, Cashea). It is not the positioning.
 
 ## Search Targets
 | Intent | App Store | Web |
@@ -95,10 +110,11 @@ Never target "budget app without bank linking" style queries: they can only be w
 ## Goals
 **Business goal:** Downloads on the App Store and Google Play.
 **Conversion action:** Tap a store badge.
-**Current metrics:** Live on Google Play; the App Store release waits on Apple review.
+**Current metrics:** Live on the App Store and Google Play.
 
 ## Changelog
 *Newest first. One line per revision: what changed and why.*
+- v3 (2026-11-26): Global first. The audience is everyone, a Markets section keeps any one country out of the general pitch, and the iPhone app is live.
 - v2.3 (2026-10-22): Google Play is public while Apple review is pending, so the site shows the App Store as coming soon.
 - v2.2 (2026-10-21): Android is live on Google Play, so the site and goals stop calling it coming soon.
 - v2.1 (2026-10-09): Entity sentence names the subscription tracker too, with its Spanish form, matching /about, the home FAQ, and llms.txt.
