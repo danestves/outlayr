@@ -20,6 +20,43 @@ export const liveTags = (books: TagBooks) =>
 export const findTag = (tags: readonly Tag[], name: string) =>
     tags.find((tag) => tag.deletedAt === null && tagKey(tag.name) === tagKey(name));
 
+/** The live tags on one entry, each once, in the order `liveTags` sorts them. */
+export function entryTags(books: TagBooks, entryId: string): Tag[] {
+    const live = liveTags(books);
+    const known = new Set(live.map((tag) => tag.localId));
+    const found = new Set<string>();
+    for (const link of books.links) {
+        if (link.transactionId === entryId && link.deletedAt === null && known.has(link.tagId)) {
+            found.add(link.tagId);
+        }
+    }
+    return live.filter((tag) => found.has(tag.localId));
+}
+
+interface EntryLife {
+    deletedAt: number | null;
+    localId: string;
+}
+
+/** How many live entries carry each live tag. A pair linked twice still counts once. */
+export function tagUseCounts(books: TagBooks, transactions: readonly EntryLife[]): Map<string, number> {
+    const live = new Set(liveTags(books).map((tag) => tag.localId));
+    const alive = new Set(transactions.filter((row) => row.deletedAt === null).map((row) => row.localId));
+    const entries = new Map<string, Set<string>>();
+    for (const link of books.links) {
+        if (link.deletedAt !== null || !live.has(link.tagId) || !alive.has(link.transactionId)) {
+            continue;
+        }
+        const seen = entries.get(link.tagId);
+        if (seen) {
+            seen.add(link.transactionId);
+        } else {
+            entries.set(link.tagId, new Set([link.transactionId]));
+        }
+    }
+    return new Map([...entries].map(([tagId, seen]) => [tagId, seen.size]));
+}
+
 export const createdTag = (id: string, name: string, at: number): CommitRow => ({
     deletedAt: null,
     fields: { color: null, name: normalizeTagName(name), sortOrder: 0 },
@@ -92,6 +129,15 @@ export const newLink = (transactionId: string, tagId: string, at: number): Commi
 
 type SeenLink = Pick<TagLink, "deletedAt" | "localId" | "restoredAt" | "tagId" | "transactionId" | "updatedAt">;
 
+const retiredLink = (link: SeenLink, at: number): CommitRow => ({
+    deletedAt: Math.max(at, (link.restoredAt ?? 0) + 1),
+    fields: { tagId: link.tagId, transactionId: link.transactionId },
+    localId: link.localId,
+    restoredAt: link.restoredAt ?? null,
+    table: "transactionTags",
+    updatedAt: Math.max(at, link.updatedAt + 1),
+});
+
 export function linkRows(
     links: readonly SeenLink[],
     changes: readonly { entry: Pick<RuleEntry, "id">; tagIds: readonly string[] }[],
@@ -115,6 +161,16 @@ export function linkRows(
             };
         })
     );
+}
+
+export function toggledTag(books: TagBooks, entryId: string, tagId: string, at: number): CommitRow[] {
+    const linked = books.links.filter(
+        (link) => link.transactionId === entryId && link.tagId === tagId && link.deletedAt === null
+    );
+    if (linked.length > 0) {
+        return linked.map((link) => retiredLink(link, at));
+    }
+    return linkRows(books.links, [{ entry: { id: entryId }, tagIds: [tagId] }], at);
 }
 
 export function appliedRun(
@@ -146,24 +202,6 @@ export function appliedRun(
     return { moved, rows: [...rows, ...links], tagged: links.length };
 }
 
-/** Names typed as `#trip #home` or `trip, home`; a name may hold spaces. Repeats collapse case-insensitively. */
-export function tagNamesOf(text: string): { names: string[] } | { problem: "tooLong" } {
-    const typed = text
-        .split(/[#,]/u)
-        .map((part) => part.trim().replaceAll(/\s+/gu, " "))
-        .filter((part) => part !== "");
-    if (typed.some((name) => name.length > TAG_NAME_LIMIT)) {
-        return { problem: "tooLong" };
-    }
-    const seen = new Map<string, string>();
-    for (const name of typed) {
-        if (!seen.has(tagKey(name))) {
-            seen.set(tagKey(name), name);
-        }
-    }
-    return { names: [...seen.values()] };
-}
-
 /** The rows that leave an entry tagged with exactly these names, creating the tags nobody has yet. */
 export function retagged(books: TagBooks, entryId: string, names: readonly string[], at: number): CommitRow[] {
     const live = liveTags(books);
@@ -185,14 +223,7 @@ export function retagged(books: TagBooks, entryId: string, names: readonly strin
     // A link to a deleted tag is not on screen, so leaving it out of the text never meant removing it.
     const retired = linked
         .filter((link) => shown.has(link.tagId) && !wanted.has(link.tagId))
-        .map((link): CommitRow => ({
-            deletedAt: Math.max(at, (link.restoredAt ?? 0) + 1),
-            fields: { tagId: link.tagId, transactionId: entryId },
-            localId: link.localId,
-            restoredAt: link.restoredAt ?? null,
-            table: "transactionTags",
-            updatedAt: Math.max(at, link.updatedAt + 1),
-        }));
+        .map((link) => retiredLink(link, at));
     const added = [...wanted].filter((id) => !kept.has(id));
     return [...created, ...linkRows(books.links, [{ entry: { id: entryId }, tagIds: added }], at), ...retired];
 }

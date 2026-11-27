@@ -333,7 +333,31 @@ const dashboardLedger = {
                     pt: "No máximo {{limit}} caracteres por tag",
                 })
             ),
-            tagsPlaceholder: t({ en: "#tag", de: "#tag", es: "#etiqueta", fr: "#tag", pt: "#tag" }),
+            createNamed: insert(
+                t({
+                    en: 'Add "{{name}}"',
+                    de: '"{{name}}" hinzufügen',
+                    es: 'Añadir "{{name}}"',
+                    fr: 'Ajouter "{{name}}"',
+                    pt: 'Adicionar "{{name}}"',
+                })
+            ),
+            noTagsFound: t({
+                en: "No tags found",
+                de: "Keine Tags gefunden",
+                es: "No se encontraron etiquetas",
+                fr: "Aucun tag trouvé",
+                pt: "Nenhuma tag encontrada",
+            }),
+            removeTag: insert(
+                t({
+                    en: "Remove #{{name}}",
+                    de: "#{{name}} entfernen",
+                    es: "Quitar #{{name}}",
+                    fr: "Retirer #{{name}}",
+                    pt: "Remover #{{name}}",
+                })
+            ),
             tagsSaved: t({
                 en: "Tags updated",
                 de: "Tags geändert",

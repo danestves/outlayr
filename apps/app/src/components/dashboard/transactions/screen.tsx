@@ -13,6 +13,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { IconButton } from "@/components/ui/icon-button";
+import { editableDoc } from "@/lib/bulk-writes";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { photoSrc } from "@/lib/photo-src";
 
@@ -26,7 +27,7 @@ import { ExportDialog } from "./export-dialog";
 import type { ExportOptions } from "./export-dialog";
 import { FilterRow, useAmountLabel } from "./filter-row";
 import type { PickOption } from "./filter-row";
-import { InlineCell, amountDraft, useInlineWrites } from "./inline-edit";
+import { CellButton, InlineCell, amountDraft, useInlineWrites } from "./inline-edit";
 import type { Editing, InlineField } from "./inline-edit";
 import { LedgerTable } from "./ledger-table";
 import { MerchantDialog } from "./merchant-dialog";
@@ -39,6 +40,7 @@ import { appliedPatch, useSavedViews, viewParams } from "./saved-views";
 import type { SavedView } from "./saved-views";
 import { merchantParam, pageQueryOf, patched } from "./search";
 import type { PageQuery, PageSearch, SearchPatch } from "./search";
+import { TagPicker } from "./tag-picker";
 import { useDeleteEntries } from "./use-delete";
 import { useLedgerList } from "./use-ledger-list";
 import type { ListParams } from "./use-ledger-list";
@@ -156,6 +158,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const pinKey = `${filterKey}#${page.page}#${ledger.rows.length + ledger.transfers.length}`;
     const [pinned, setPinned] = useState<{ ids: readonly string[]; key: string } | null>(null);
     const [editingAt, setEditing] = useState<Editing | null>(null);
+    const [tagFocus, setTagFocus] = useState<string | null>(null);
     const holding = pinned?.key === pinKey;
     const editing = holding ? editingAt : null;
     const shown = useMemo(() => {
@@ -608,25 +611,38 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                                             </InlineCell>
                                         );
                                     }}
-                                    renderTags={(row, content) => (
-                                        <InlineCell
-                                            addon={null}
-                                            align="start"
-                                            editing={isEditing("tags", row.id)}
-                                            initial={list
-                                                .tagsOf(row.id)
-                                                .map((tag) => `#${tag.name}`)
-                                                .join(" ")}
-                                            label={words.inline.editTags({ name: list.names.merchant(row) }).value}
-                                            numeric={false}
-                                            onCommit={(text) => inline.tags(row, text)}
-                                            onEnd={() => setEditing(null)}
-                                            onStart={() => startEdit("tags", row.id)}
-                                            placeholder={words.inline.tagsPlaceholder.value}
-                                        >
-                                            {content}
-                                        </InlineCell>
-                                    )}
+                                    renderTags={(row, content) => {
+                                        if (editableDoc(ledger.books, row.id) === undefined) {
+                                            return content;
+                                        }
+                                        return isEditing("tags", row.id) ? (
+                                            <TagPicker
+                                                defaultOpen
+                                                editable
+                                                entryId={row.id}
+                                                onDismiss={() => setEditing(null)}
+                                                onEscape={() => {
+                                                    setTagFocus(row.id);
+                                                    setEditing(null);
+                                                }}
+                                                triggerLabel={
+                                                    words.inline.editTags({ name: list.names.merchant(row) }).value
+                                                }
+                                            />
+                                        ) : (
+                                            <CellButton
+                                                align="start"
+                                                autoFocus={tagFocus === row.id}
+                                                label={words.inline.editTags({ name: list.names.merchant(row) }).value}
+                                                onFocus={() =>
+                                                    setTagFocus((current) => (current === row.id ? null : current))
+                                                }
+                                                onStart={() => startEdit("tags", row.id)}
+                                            >
+                                                {content}
+                                            </CellButton>
+                                        );
+                                    }}
                                     renderCategory={(row, content) => (
                                         <CategoryPicker row={row} writes={writes}>
                                             {content}
