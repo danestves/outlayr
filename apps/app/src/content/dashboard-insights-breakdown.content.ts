@@ -479,7 +479,7 @@ const dashboardInsightsBreakdown = {
             ),
             ofTotal: t({ en: "Of total", de: "Vom Gesamten", es: "Del total", fr: "Du total", pt: "Do total" }),
             percent: t({ en: "%", de: "%", es: "%", fr: "%", pt: "%" }),
-            share: t({ en: "Share", de: "Anteil", es: "Proporción", fr: "Partager", pt: "Compartilhar" }),
+            share: t({ en: "Share", de: "Anteil", es: "Proporción", fr: "Part", pt: "Proporção" }),
             subcategory: t({
                 en: "Subcategory",
                 de: "Unterkategorie",

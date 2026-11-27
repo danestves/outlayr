@@ -413,7 +413,7 @@ const dashboardInsightsRecap = {
                 fr: "Des dépenses",
                 pt: "Das despesas",
             }),
-            share: t({ en: "Share", de: "Anteil", es: "Proporción", fr: "Partager", pt: "Compartilhar" }),
+            share: t({ en: "Share", de: "Anteil", es: "Proporción", fr: "Part", pt: "Proporção" }),
             spent: t({ en: "Spent", de: "Ausgegeben", es: "Gastado", fr: "Dépensé", pt: "Gasto" }),
             title: t({
                 en: "Where it went",

@@ -1,3 +1,4 @@
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import type { Locale } from "@outlayr/shared/i18n";
 import { createIsomorphicFn, createServerFn } from "@tanstack/react-start";
 import { getCookie, getRequestHeader, setCookie } from "@tanstack/react-start/server";
@@ -10,6 +11,7 @@ const LEGACY_KEY = "outlayr-dashboard-locale";
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 const listeners = new Set<() => void>();
 let chosen: Locale | null = null;
+let persisting: Promise<unknown> = Promise.resolve();
 
 export { locales as DASHBOARD_LOCALES } from "intlayer";
 
@@ -37,6 +39,9 @@ const readLegacyLocale = (): Locale | null => {
     }
 };
 
+const paintedLocale = (): Locale =>
+    locales.find((locale) => LANGUAGES[locale].lang === document.documentElement.lang) ?? defaultLocale;
+
 export function readDashboardLocale(fallback: Locale = defaultLocale): Locale {
     return chosen ?? readCookieLocale() ?? fallback;
 }
@@ -55,7 +60,7 @@ export const requestDashboardLocale = createIsomorphicFn()
         }
         return matchAcceptLanguage(getRequestHeader("accept-language"), locales) ?? defaultLocale;
     })
-    .client(() => readDashboardLocale());
+    .client(() => readDashboardLocale(paintedLocale()));
 
 export function subscribeDashboardLocale(listener: () => void) {
     listeners.add(listener);
@@ -66,7 +71,7 @@ export function subscribeDashboardLocale(listener: () => void) {
 
 export function chooseDashboardLocale(locale: Locale) {
     chosen = locale;
-    persistDashboardLocale({ data: locale }).catch(() => undefined);
+    persisting = persisting.then(() => persistDashboardLocale({ data: locale })).catch(() => undefined);
     for (const listener of listeners) {
         listener();
     }

@@ -561,7 +561,7 @@ const dashboardHome = {
                     pt: "Acabou em {{day}}, 1 dia antes.",
                 })
             ),
-            share: t({ en: "Share", de: "Anteil", es: "Parte", fr: "Partager", pt: "Compartilhar" }),
+            share: t({ en: "Share", de: "Anteil", es: "Parte", fr: "Part", pt: "Proporção" }),
             upcoming: t({ en: "Upcoming", de: "Anstehend", es: "Próximos", fr: "À venir", pt: "Próximos" }),
             versus: t({
                 en: "vs last 3 months",
