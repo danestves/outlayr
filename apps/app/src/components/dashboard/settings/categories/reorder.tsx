@@ -74,11 +74,14 @@ export function ReorderList({ tree }: { tree: readonly CategoryNode[] }) {
     const shown = (scope: string, ids: readonly string[]) => (drag?.scope === scope ? drag.order : ids);
 
     const start = (event: PointerEvent<HTMLButtonElement>, id: string, scope: string) => {
-        const handle = event.currentTarget;
-        handle.setPointerCapture(event.pointerId);
+        const { pointerId } = event;
+        event.currentTarget.setPointerCapture(pointerId);
         let order = orderFor(scope);
         setDrag({ id, order, scope });
         const onMove = (move: globalThis.PointerEvent) => {
+            if (move.pointerId !== pointerId) {
+                return;
+            }
             const over = document
                 .elementFromPoint(move.clientX, move.clientY)
                 ?.closest<HTMLElement>(`[data-reorder-scope="${scope}"]`);
@@ -90,18 +93,25 @@ export function ReorderList({ tree }: { tree: readonly CategoryNode[] }) {
             setDrag({ id, order, scope });
         };
         const stop = () => {
-            handle.removeEventListener("pointermove", onMove);
-            handle.removeEventListener("pointerup", onUp);
-            handle.removeEventListener("pointercancel", stop);
+            window.removeEventListener("pointermove", onMove);
+            window.removeEventListener("pointerup", onUp);
+            window.removeEventListener("pointercancel", onCancel);
             setDrag(null);
         };
-        function onUp() {
-            stop();
-            writes.reorder(order);
+        function onUp(up: globalThis.PointerEvent) {
+            if (up.pointerId === pointerId) {
+                stop();
+                writes.reorder(order);
+            }
         }
-        handle.addEventListener("pointermove", onMove);
-        handle.addEventListener("pointerup", onUp);
-        handle.addEventListener("pointercancel", stop);
+        function onCancel(cancel: globalThis.PointerEvent) {
+            if (cancel.pointerId === pointerId) {
+                stop();
+            }
+        }
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup", onUp);
+        window.addEventListener("pointercancel", onCancel);
     };
 
     const keyMove = (id: string, scope: string, delta: number) => {
