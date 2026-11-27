@@ -139,7 +139,7 @@ function App() {
         return (
             <Toast.Provider position="bottom-right">
                 <LostProfile profileId={lostProfileId} />
-                <ProfileLostNotice />
+                {lostProfileId === null ? <ProfileLostNotice /> : null}
                 <Suspense fallback={null}>
                     <Paywall />
                 </Suspense>
