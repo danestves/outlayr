@@ -25,6 +25,8 @@ const MXN_PRICE_POINTS = new Map([
     [1200, 6000],
     [3412.4, 17_100],
     [6000, 30_000],
+    [8000, 12_000],
+    [15_000, 24_000],
 ]);
 
 const scaleBrl = (amount) => BRL_PRICE_POINTS.get(amount) ?? Math.round(amount * 5 * 100) / 100;
