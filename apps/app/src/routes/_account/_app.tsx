@@ -84,7 +84,6 @@ export const Route = createFileRoute("/_account/_app")({
     pendingComponent: Pending,
     pendingMinMs: 0,
     pendingMs: 0,
-    head: () => ({ meta: [{ title: "Outlayr" }] }),
 });
 
 function App() {

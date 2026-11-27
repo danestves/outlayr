@@ -2,7 +2,7 @@ import type { ConvexQueryClient } from "@convex-dev/react-query";
 import geist from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import { startAnalytics } from "@outlayr/shared/analytics";
 import { LANGUAGES } from "@outlayr/shared/i18n";
-import { useLayoutMirror, useMirror } from "@outlayr/shared/lifecycle";
+import { useLayoutMirror, useMirror, useOnMount } from "@outlayr/shared/lifecycle";
 import { THEME_SCRIPT, paintTheme, readTheme } from "@outlayr/shared/theme";
 import type { DbClient } from "@tanstack/react-db";
 import type { QueryClient } from "@tanstack/react-query";
@@ -18,7 +18,12 @@ import { AppConsentBanner } from "@/components/consent-banner";
 import { NotFound } from "@/components/not-found";
 import { ENV } from "@/env";
 import { convexUrlsScript } from "@/lib/convex";
-import { readDashboardLocale, serverDashboardLocale, subscribeDashboardLocale } from "@/lib/dashboard-locale";
+import {
+    migrateDashboardLocale,
+    readDashboardLocale,
+    requestDashboardLocale,
+    subscribeDashboardLocale,
+} from "@/lib/dashboard-locale";
 import type { Session } from "@/lib/session";
 
 import appCss from "../index.css?url";
@@ -63,15 +68,23 @@ export const Route = createRootRouteWithContext<{
         ],
         scripts: [{ children: THEME_SCRIPT }, { children: convexUrlsScript() }],
     }),
-    loader: () => visitorCountry(),
+    loader: async () => ({ country: await visitorCountry(), locale: requestDashboardLocale() }),
     notFoundComponent: NotFound,
     shellComponent: RootDocument,
     staleTime: Number.POSITIVE_INFINITY,
 });
 
 function RootDocument({ children }: { children: ReactNode }) {
-    const locale = useSyncExternalStore(subscribeDashboardLocale, readDashboardLocale, serverDashboardLocale);
-    const country = Route.useLoaderData();
+    const { country, locale: requestLocale } = Route.useLoaderData();
+    const locale = useSyncExternalStore(
+        subscribeDashboardLocale,
+        () => readDashboardLocale(requestLocale),
+        () => requestLocale
+    );
+    useOnMount(() => {
+        migrateDashboardLocale();
+        return () => undefined;
+    });
     useMirror([country], () => {
         Effect.runFork(startAnalytics(ANALYTICS_TOKEN, country).pipe(Effect.ignoreCause));
     });

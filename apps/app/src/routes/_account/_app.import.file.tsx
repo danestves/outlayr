@@ -2,8 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { FileImport } from "@/components/dashboard/import/file-import";
 import { importSearch } from "@/components/dashboard/import/search";
+import { pageHead } from "@/lib/route-title";
 
-export const Route = createFileRoute("/_account/_app/import/file")({ component: File, validateSearch: importSearch });
+export const Route = createFileRoute("/_account/_app/import/file")({
+    head: pageHead("import"),
+    component: File,
+    validateSearch: importSearch,
+});
 
 function File() {
     const { kind } = Route.useSearch();

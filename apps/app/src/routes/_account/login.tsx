@@ -10,11 +10,10 @@ import { SignInFlow } from "@/components/account/sign-in-flow";
 import { safeRedirect } from "@/lib/account";
 import { settleFinishedDeletion } from "@/lib/account-deletion";
 import { convexUrls } from "@/lib/convex";
+import { localizedText } from "@/lib/route-title";
 import { announceSessionChange } from "@/lib/session";
 import { forgetLedger } from "@/lib/unsent";
 
-const TITLE = "Sign in to Outlayr";
-const DESCRIPTION = "Sign in or create an account to track your expenses, budgets and accounts on the web.";
 const CANONICAL = `${APP_URL}/login`;
 
 export const Route = createFileRoute("/_account/login")({
@@ -24,24 +23,28 @@ export const Route = createFileRoute("/_account/login")({
         }
     },
     component: Login,
-    head: () => ({
-        links: [{ href: CANONICAL, rel: "canonical" }],
-        meta: [
-            { title: TITLE },
-            { content: DESCRIPTION, name: "description" },
-            { content: "index, follow", name: "robots" },
-            { content: "Outlayr", property: "og:site_name" },
-            { content: "website", property: "og:type" },
-            { content: TITLE, property: "og:title" },
-            { content: DESCRIPTION, property: "og:description" },
-            { content: CANONICAL, property: "og:url" },
-            { content: `${SITE_URL}${LANGUAGES.en.image}`, property: "og:image" },
-            { content: "1200", property: "og:image:width" },
-            { content: "630", property: "og:image:height" },
-            { content: "summary_large_image", name: "twitter:card" },
-            { content: "@tryoutlayr", name: "twitter:site" },
-        ],
-    }),
+    head: ({ matches }) => {
+        const title = localizedText("signIn", matches);
+        const description = localizedText("signInDescription", matches);
+        return {
+            links: [{ href: CANONICAL, rel: "canonical" }],
+            meta: [
+                { title },
+                { content: description, name: "description" },
+                { content: "index, follow", name: "robots" },
+                { content: "Outlayr", property: "og:site_name" },
+                { content: "website", property: "og:type" },
+                { content: title, property: "og:title" },
+                { content: description, property: "og:description" },
+                { content: CANONICAL, property: "og:url" },
+                { content: `${SITE_URL}${LANGUAGES.en.image}`, property: "og:image" },
+                { content: "1200", property: "og:image:width" },
+                { content: "630", property: "og:image:height" },
+                { content: "summary_large_image", name: "twitter:card" },
+                { content: "@tryoutlayr", name: "twitter:site" },
+            ],
+        };
+    },
     validateSearch: Schema.toStandardSchemaV1(Schema.Struct({ redirect: Schema.optional(Schema.String) })),
 });
 

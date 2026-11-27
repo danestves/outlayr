@@ -5,7 +5,7 @@ const config: IntlayerConfig = {
     internationalization: {
         defaultLocale: Locales.ENGLISH,
         locales: [Locales.ENGLISH, Locales.SPANISH, Locales.PORTUGUESE, Locales.FRENCH, Locales.GERMAN],
-        requiredLocales: [Locales.ENGLISH, Locales.SPANISH],
+        requiredLocales: [Locales.ENGLISH, Locales.SPANISH, Locales.PORTUGUESE, Locales.FRENCH, Locales.GERMAN],
         strictMode: "strict",
     },
     routing: {

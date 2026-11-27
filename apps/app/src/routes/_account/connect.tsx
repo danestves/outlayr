@@ -3,6 +3,7 @@ import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import { ConnectFlow } from "@/components/account/connect-flow";
+import { pageHead } from "@/lib/route-title";
 
 const RequestId = Schema.Union([Schema.String, Schema.Finite]).pipe(
     Schema.decodeTo(
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/_account/connect")({
         }
     },
     component: Connect,
-    head: () => ({ meta: [{ title: "Connect · Outlayr" }] }),
+    head: pageHead("connect"),
     validateSearch: Schema.toStandardSchemaV1(Schema.Struct({ request: Schema.optional(RequestId) })),
 });
 

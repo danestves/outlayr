@@ -5,8 +5,10 @@ import { TransactionsScreen } from "@/components/dashboard/transactions/screen";
 import { patched, transactionsSearch } from "@/components/dashboard/transactions/search";
 import type { SearchPatch } from "@/components/dashboard/transactions/search";
 import { deleteToasts } from "@/components/dashboard/transactions/use-delete";
+import { pageHead } from "@/lib/route-title";
 
 export const Route = createFileRoute("/_account/_app/transactions")({
+    head: pageHead("transactions"),
     component: Transactions,
     validateSearch: transactionsSearch,
 });
