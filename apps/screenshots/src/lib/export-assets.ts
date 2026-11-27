@@ -1,13 +1,14 @@
 import { isCreative } from "./constants";
 import { frameAssetPaths } from "./frame-assets";
 import { resolveScreenshot } from "./locale";
+import { sceneOf } from "./scene";
 import type { ProjectState } from "./types";
 
 /** Only assets used by the deck being exported; inactive decks may be unfinished. */
 export function exportAssetPaths(state: ProjectState): string[] {
   const paths = new Set<string>();
   const add = (path: string | undefined) => { if (path) paths.add(path); };
-  add(state.appIcon);
+  if (sceneOf(state.scene).brandLockup) add(state.appIcon);
   for (const slide of state.slidesByDevice[state.device] || []) {
     if (state.device === "feature-graphic" || slide.layout === "feature-graphic") {
       add(state.appIcon);

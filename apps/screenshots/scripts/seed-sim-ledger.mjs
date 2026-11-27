@@ -22,7 +22,6 @@ if (!region) {
 const RECURRING_MONTHLY = 3;
 const RECURRING_YEARLY = 4;
 const RATES_FROM = Date.UTC(2025, 11, 31);
-const RATES_THROUGH = Date.UTC(2026, 11, 31);
 const DAY_MS = 86_400_000;
 const RATES_PULLED_AT = new Date(2026, 8, 12, 14, 0).getTime();
 
@@ -46,6 +45,8 @@ const atMs = (y, m, d, h, min) => new Date(y, m - 1, d, h, min).getTime();
 const monthMs = (y, m) => new Date(y, m - 1, 1).getTime();
 
 const NOW = Date.now();
+// Upcoming schedules reach into next month, so the quotes run through its end.
+const RATES_THROUGH = Date.UTC(new Date(NOW).getFullYear(), new Date(NOW).getMonth() + 2, 0);
 
 // Authored as September 2026, moved to the current month with rows from mid-month so the Log shows this week.
 const SHIFT_MONTHS = (new Date(NOW).getFullYear() - 2026) * 12 + new Date(NOW).getMonth() - 8;

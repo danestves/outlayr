@@ -1,3 +1,4 @@
+import { cleanHexColor } from "./clean-hex-color";
 import { DEVICE_LABEL, LAYOUT_LABEL } from "./constants";
 
 const record = (value: unknown): value is Record<string, unknown> =>
@@ -47,11 +48,11 @@ export function projectValidationError(value: unknown): string | null {
       }
       if (!localized(slide.label) || !localized(slide.headline)) return `${device}: copy must be text or a locale-to-text object`;
       if (slide.inverted !== undefined && typeof slide.inverted !== "boolean") return `${device}: inverted must be a boolean`;
-      if (slide.headlineAccentColor !== undefined && typeof slide.headlineAccentColor !== "string") {
-        return `${device}: headline accent must be a color string`;
+      if (slide.headlineAccentColor !== undefined && !cleanHexColor(slide.headlineAccentColor)) {
+        return `${device}: headline accent must be a #RRGGBB color`;
       }
       if (slide.glow !== undefined && (!record(slide.glow) ||
-        typeof slide.glow.color !== "string" ||
+        !cleanHexColor(slide.glow.color) ||
         [slide.glow.x, slide.glow.y, slide.glow.size].some(n => !finite(n)))) return `${device}: invalid glow`;
       // Missing or out-of-range magnifier values are defaulted and clamped on load.
       if (slide.callout !== undefined && (!record(slide.callout) ||

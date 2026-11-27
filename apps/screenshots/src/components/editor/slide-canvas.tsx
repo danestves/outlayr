@@ -358,7 +358,7 @@ function HeadlineText({
         onChange={onChange ? (next) => onChange(`${next}\n${rest}`) : undefined}
         onFocus={onFocus}
         placeholder={placeholder}
-        style={style}
+        style={{ ...style, whiteSpace: "pre-wrap" }}
       />
       <EditableText
         value={rest}
