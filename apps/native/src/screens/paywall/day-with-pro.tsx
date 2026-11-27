@@ -2,9 +2,10 @@ import FlashIcon from "@hugeicons-pro/core-solid-rounded/FlashIcon";
 import Mic01Icon from "@hugeicons-pro/core-solid-rounded/Mic01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { PRO_CAPTURES } from "@outlayr/money/capture-allowance";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
+import type { LayoutChangeEvent } from "react-native";
 import Animated, {
     Easing,
     useAnimatedStyle,
@@ -95,8 +96,8 @@ function Stop({ at, children, next, time }: { at: number; children: ReactNode; n
     const railStyle = useAnimatedStyle(() => ({ transform: [{ scaleY: rail.get() }] }));
     return (
         <View className="flex-row gap-3">
-            <View className="w-[62px] pt-0.5">
-                <MonoLabel numberOfLines={1}>{time}</MonoLabel>
+            <View className="min-w-[76px] pt-0.5">
+                <MonoLabel>{time}</MonoLabel>
             </View>
             <View className="w-3 items-center pt-[3px]">
                 <View className="border-separator size-3 items-center justify-center rounded-full border-2">
@@ -118,11 +119,10 @@ function Stop({ at, children, next, time }: { at: number; children: ReactNode; n
 
 function StopHead({ label, value }: { label: string; value: string }) {
     return (
-        <View className="flex-row items-center justify-between gap-2">
-            <MonoLabel numberOfLines={1}>{label}</MonoLabel>
-            <MonoLabel className="text-income" numberOfLines={1}>
-                {value}
-            </MonoLabel>
+        <View className="flex-row flex-wrap items-center gap-x-1.5">
+            <MonoLabel>{label}</MonoLabel>
+            <MonoLabel>·</MonoLabel>
+            <MonoLabel className="text-income">{value}</MonoLabel>
         </View>
     );
 }
@@ -335,10 +335,29 @@ function NetStop({ time }: { time: string }) {
     );
 }
 
-export function DayWithPro() {
+const FOLLOW = [BEAT.receipt, BEAT.voice, BEAT.net] as const;
+
+/** `onFollow` gets the bottom of each stop as it starts playing, so the screen can scroll it into view. */
+export function DayWithPro({ onFollow }: { onFollow?: (bottom: number) => void }) {
     const t = useTranslation();
     const { language } = useLanguage();
     const { use24Hour } = useDisplaySettings().state;
+    const reduced = useReducedMotion();
+    const timers = useTimers();
+    const bottoms = useRef<number[]>([]);
+    useOnMount(() => {
+        if (reduced || onFollow === undefined) {
+            return undefined;
+        }
+        for (const [index, at] of FOLLOW.entries()) {
+            timers.after(at, () => onFollow(bottoms.current[index + 1] ?? 0));
+        }
+        return undefined;
+    });
+    const measure = (index: number) => (event: LayoutChangeEvent) => {
+        const { height, y } = event.nativeEvent.layout;
+        bottoms.current[index] = y + height;
+    };
     const time = ([hours, minutes]: readonly [number, number]) =>
         formatTime(new Date(2026, 0, 1, hours, minutes), use24Hour, language);
     const label = t("pro.day.a11y", {
@@ -349,10 +368,18 @@ export function DayWithPro() {
     });
     return (
         <View accessibilityLabel={label} accessible className="pt-5">
-            <BankStop time={time(TIMES.bank)} />
-            <ReceiptStop time={time(TIMES.receipt)} />
-            <VoiceStop time={time(TIMES.voice)} />
-            <NetStop time={time(TIMES.net)} />
+            <View onLayout={measure(0)}>
+                <BankStop time={time(TIMES.bank)} />
+            </View>
+            <View onLayout={measure(1)}>
+                <ReceiptStop time={time(TIMES.receipt)} />
+            </View>
+            <View onLayout={measure(2)}>
+                <VoiceStop time={time(TIMES.voice)} />
+            </View>
+            <View onLayout={measure(3)}>
+                <NetStop time={time(TIMES.net)} />
+            </View>
         </View>
     );
 }
