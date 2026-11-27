@@ -17,7 +17,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { NavRail, useNavRail } from "panelui-web/nav-rail";
 import { useIntlayer } from "react-intlayer";
 
-import { LogoMark } from "@/components/logo-mark";
+import { ProfileSwitcher } from "@/components/dashboard/profile/switcher";
 
 import { UserMenu } from "./account-menu";
 import { setPaletteOpen } from "./palette-open";
@@ -107,15 +107,7 @@ export function Sidebar() {
             className="app-shell ph-no-capture max-lg:not-data-mobile:hidden lg:my-2 lg:ms-2 lg:h-auto"
         >
             <NavRail.Header>
-                <NavRail.Brand
-                    href="/"
-                    icon={<LogoMark />}
-                    label={nav.home.value}
-                    onClick={close}
-                    render={<Link to="/" />}
-                >
-                    Outlayr
-                </NavRail.Brand>
+                <ProfileSwitcher />
                 <Fold />
             </NavRail.Header>
             <NavRail.Content>

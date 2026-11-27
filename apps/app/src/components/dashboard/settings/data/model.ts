@@ -90,6 +90,8 @@ export function eraseRows(rows: readonly PulledRow[], scope: EraseScope, now: nu
 
 const isErased = (row: PulledRow) => row.fields.date === ERASED_DAY;
 
+const LEDGER_TABLES = SYNCED_TABLES.filter((table) => table !== "profiles");
+
 export function deletedEntries(rows: readonly PulledRow[], deletedAccounts: ReadonlySet<string>) {
     const byId = new Map(rows.map((row) => [`${row.table}:${row.localId}`, row]));
     return rows
@@ -187,10 +189,9 @@ export function parseArchive(text: string): ArchiveDocument | null {
             format: ARCHIVE_FORMAT,
             photos: {},
             // SAFETY: the map walks every SyncedTable, so each key is present.
-            tables: Object.fromEntries(SYNCED_TABLES.map((table) => [table, parsed.tables[table] ?? []])) as Record<
-                SyncedTable,
-                readonly ArchiveRow[]
-            >,
+            tables: Object.fromEntries(
+                SYNCED_TABLES.map((table) => [table, table === "profiles" ? [] : (parsed.tables[table] ?? [])])
+            ) as Record<SyncedTable, readonly ArchiveRow[]>,
             version: parsed.version,
         };
     } catch {
@@ -199,7 +200,7 @@ export function parseArchive(text: string): ArchiveDocument | null {
 }
 
 export const archiveRowCount = (document: ArchiveDocument) =>
-    SYNCED_TABLES.reduce((total, table) => total + document.tables[table].length, 0);
+    LEDGER_TABLES.reduce((total, table) => total + document.tables[table].length, 0);
 
 const keyColumn = (table: SyncedTable) => (table === "appMeta" ? "key" : "id");
 
@@ -210,6 +211,9 @@ export function buildArchive(rows: readonly PulledRow[], now: number): ArchiveDo
         ArchiveRow[]
     >;
     for (const row of rows) {
+        if (row.table === "profiles") {
+            continue;
+        }
         // SAFETY: a pulled row's fields are wire values, the same primitives an archive carries.
         const fields = row.fields as Record<string, WireValue>;
         tables[row.table].push(
@@ -264,9 +268,11 @@ function deletionStamps(document: ArchiveDocument, held: ReadonlyMap<string, Pul
     const groups = new Map<number, { changed: boolean; newest: number }>();
     let next = now;
     for (const row of held.values()) {
-        next = Math.max(next, era(row) + 1);
+        if (row.table !== "profiles") {
+            next = Math.max(next, era(row) + 1);
+        }
     }
-    for (const table of SYNCED_TABLES) {
+    for (const table of LEDGER_TABLES) {
         for (const row of table === "appMeta" ? [] : document.tables[table]) {
             const instant = instantOf(row.deletedAt);
             if (instant !== null) {
@@ -356,7 +362,7 @@ export function archivePushes(document: ArchiveDocument, server: readonly Pulled
     const stamps = deletionStamps(document, held, now);
     const kept = new Set<string>();
     const pushes: PushRow[] = [];
-    for (const table of SYNCED_TABLES) {
+    for (const table of LEDGER_TABLES) {
         for (const row of document.tables[table]) {
             const localId = row[keyColumn(table)];
             if (!isId(localId)) {
@@ -371,6 +377,9 @@ export function archivePushes(document: ArchiveDocument, server: readonly Pulled
         }
     }
     for (const row of server) {
+        if (row.table === "profiles") {
+            continue;
+        }
         const push = kept.has(`${row.table}:${row.localId}`) ? null : absentPush(row, now);
         if (push) {
             pushes.push(push);

@@ -22,6 +22,7 @@ import { Skeleton } from "skullet/react";
 import { pushConfigQuery } from "@/lib/account-state";
 
 const SECTIONS = [
+    { icon: UserIcon, key: "profile", to: "/settings/profile" },
     { icon: UserIcon, key: "account", to: "/settings/account" },
     { icon: CheckmarkBadge01Icon, key: "plan", to: "/settings/plan" },
     { icon: PreferenceHorizontalIcon, key: "preferences", to: "/settings/preferences" },

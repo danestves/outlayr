@@ -42,6 +42,17 @@ A load of `/`, `/accounts` or `/transactions` with no search params does not pul
 - A screen's pending state is that same screen inside skullet's `<Skeleton loading>`, fed by `sampleDashboard`, so it cannot drift from the real layout. It shows only on a client navigation into `_app`. Leave the live screens unwrapped: their `MutationObserver` serializes the DOM after every chart hover.
 - The onboarding gate (`Ledgered` in `routes/_account/_app.tsx`) runs in render, over the books and the device's progress in `localStorage` (`lib/onboarding.ts`). It must stay out of the loader. Progress is written before the step's first ledger write, because that write alone makes the ledger look set up and would end the flow.
 
+## Profiles
+
+A profile is a whole ledger. The web app opens one profile per page load, never two in one document.
+
+- The cookie `outlayr-profile` names it, so the loader knows the ledger before it reads it. `serverLedger`, `pullRecent`, `pullSince`, `currentSeq`, `push` and `ledgerCells.build` all take the id. Personal is the absence of an id.
+- The registry is the synced `profiles` table in Personal's ledger. A load reads it first, with no profile, and falls back to Personal when the cookie names a profile that is gone. The switcher reads the same rows as a live query, so a rename lands without a reload.
+- The active profile is on the `DbClient` under the `PROFILE` dependency, which is how `pushRows` and `ledgerSync` scope their calls. Client code never reads the cookie: the page's first `<head>` script sets `window.__OUTLAYR_PROFILE__` to the validated id, and every collection and store opened after it is that profile's.
+- Switching writes the cookie through a server function and reloads the page, as the phone reloads. Nothing of the old ledger survives with the new id: unsent rows, onboarding progress, import drafts and saved reports are keyed per profile, and signing out still clears every unsent key.
+- Profile rows are written straight to Personal (`push` with no `profileId`), never through the active ledger's committer, so creating or renaming one while another profile is open cannot land in that profile.
+- Notion imports and the MCP assistant still read Personal only. Sharing is not on the web yet.
+
 ## Data that is not a ledger row
 
 The plan, usage limits, the profile, sessions, sign-in methods, connections, referrals, shared links and push settings are account state. They are TanStack Query answers, not collections.

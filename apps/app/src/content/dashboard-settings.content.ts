@@ -22,6 +22,7 @@ const dashboardSettings = {
         }),
         sections: {
             account: t({ en: "Account", de: "Konto", es: "Cuenta", fr: "Compte", pt: "Conta" }),
+            profile: t({ en: "Profile", de: "Profil", es: "Perfil", fr: "Profil", pt: "Perfil" }),
             plan: t({ en: "Plan", de: "Plan", es: "Plan", fr: "Forfait", pt: "Plano" }),
             categories: t({ en: "Categories", de: "Kategorien", es: "Categorías", fr: "Catégories", pt: "Categorias" }),
             preferences: t({

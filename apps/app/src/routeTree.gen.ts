@@ -58,6 +58,7 @@ import { Route as AccountAppSettingsInviteRouteImport } from './routes/_account/
 import { Route as AccountAppSettingsNotificationsRouteImport } from './routes/_account/_app.settings.notifications'
 import { Route as AccountAppSettingsPlanRouteImport } from './routes/_account/_app.settings.plan'
 import { Route as AccountAppSettingsPreferencesRouteImport } from './routes/_account/_app.settings.preferences'
+import { Route as AccountAppSettingsProfileRouteImport } from './routes/_account/_app.settings.profile'
 import { Route as AccountAppSettingsSyncRouteImport } from './routes/_account/_app.settings.sync'
 import { Route as AccountAppSettingsTimeRouteImport } from './routes/_account/_app.settings.time'
 import { Route as AccountAppSettingsUsageRouteImport } from './routes/_account/_app.settings.usage'
@@ -327,6 +328,12 @@ const AccountAppSettingsPreferencesRoute =
     path: '/preferences',
     getParentRoute: () => AccountAppSettingsRoute,
   } as any)
+const AccountAppSettingsProfileRoute =
+  AccountAppSettingsProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AccountAppSettingsRoute,
+  } as any)
 const AccountAppSettingsSyncRoute = AccountAppSettingsSyncRouteImport.update({
   id: '/sync',
   path: '/sync',
@@ -413,6 +420,7 @@ export interface FileRoutesByFullPath {
   '/settings/notifications': typeof AccountAppSettingsNotificationsRoute
   '/settings/plan': typeof AccountAppSettingsPlanRoute
   '/settings/preferences': typeof AccountAppSettingsPreferencesRoute
+  '/settings/profile': typeof AccountAppSettingsProfileRoute
   '/settings/sync': typeof AccountAppSettingsSyncRoute
   '/settings/time': typeof AccountAppSettingsTimeRoute
   '/settings/usage': typeof AccountAppSettingsUsageRoute
@@ -467,6 +475,7 @@ export interface FileRoutesByTo {
   '/settings/notifications': typeof AccountAppSettingsNotificationsRoute
   '/settings/plan': typeof AccountAppSettingsPlanRoute
   '/settings/preferences': typeof AccountAppSettingsPreferencesRoute
+  '/settings/profile': typeof AccountAppSettingsProfileRoute
   '/settings/sync': typeof AccountAppSettingsSyncRoute
   '/settings/time': typeof AccountAppSettingsTimeRoute
   '/settings/usage': typeof AccountAppSettingsUsageRoute
@@ -527,6 +536,7 @@ export interface FileRoutesById {
   '/_account/_app/settings/notifications': typeof AccountAppSettingsNotificationsRoute
   '/_account/_app/settings/plan': typeof AccountAppSettingsPlanRoute
   '/_account/_app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
+  '/_account/_app/settings/profile': typeof AccountAppSettingsProfileRoute
   '/_account/_app/settings/sync': typeof AccountAppSettingsSyncRoute
   '/_account/_app/settings/time': typeof AccountAppSettingsTimeRoute
   '/_account/_app/settings/usage': typeof AccountAppSettingsUsageRoute
@@ -586,6 +596,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/plan'
     | '/settings/preferences'
+    | '/settings/profile'
     | '/settings/sync'
     | '/settings/time'
     | '/settings/usage'
@@ -640,6 +651,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/plan'
     | '/settings/preferences'
+    | '/settings/profile'
     | '/settings/sync'
     | '/settings/time'
     | '/settings/usage'
@@ -699,6 +711,7 @@ export interface FileRouteTypes {
     | '/_account/_app/settings/notifications'
     | '/_account/_app/settings/plan'
     | '/_account/_app/settings/preferences'
+    | '/_account/_app/settings/profile'
     | '/_account/_app/settings/sync'
     | '/_account/_app/settings/time'
     | '/_account/_app/settings/usage'
@@ -1069,6 +1082,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppSettingsPreferencesRouteImport
       parentRoute: typeof AccountAppSettingsRoute
     }
+    '/_account/_app/settings/profile': {
+      id: '/_account/_app/settings/profile'
+      path: '/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof AccountAppSettingsProfileRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
     '/_account/_app/settings/sync': {
       id: '/_account/_app/settings/sync'
       path: '/sync'
@@ -1175,6 +1195,7 @@ interface AccountAppSettingsRouteChildren {
   AccountAppSettingsNotificationsRoute: typeof AccountAppSettingsNotificationsRoute
   AccountAppSettingsPlanRoute: typeof AccountAppSettingsPlanRoute
   AccountAppSettingsPreferencesRoute: typeof AccountAppSettingsPreferencesRoute
+  AccountAppSettingsProfileRoute: typeof AccountAppSettingsProfileRoute
   AccountAppSettingsSyncRoute: typeof AccountAppSettingsSyncRoute
   AccountAppSettingsTimeRoute: typeof AccountAppSettingsTimeRoute
   AccountAppSettingsUsageRoute: typeof AccountAppSettingsUsageRoute
@@ -1195,6 +1216,7 @@ const AccountAppSettingsRouteChildren: AccountAppSettingsRouteChildren = {
   AccountAppSettingsNotificationsRoute: AccountAppSettingsNotificationsRoute,
   AccountAppSettingsPlanRoute: AccountAppSettingsPlanRoute,
   AccountAppSettingsPreferencesRoute: AccountAppSettingsPreferencesRoute,
+  AccountAppSettingsProfileRoute: AccountAppSettingsProfileRoute,
   AccountAppSettingsSyncRoute: AccountAppSettingsSyncRoute,
   AccountAppSettingsTimeRoute: AccountAppSettingsTimeRoute,
   AccountAppSettingsUsageRoute: AccountAppSettingsUsageRoute,

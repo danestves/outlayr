@@ -1,0 +1,73 @@
+import { CATEGORY_PALETTE } from "@outlayr/money/category-rules";
+
+export const PROFILE_COLORS = [
+    CATEGORY_PALETTE[0],
+    CATEGORY_PALETTE[3],
+    CATEGORY_PALETTE[7],
+    CATEGORY_PALETTE[10],
+    CATEGORY_PALETTE[13],
+    CATEGORY_PALETTE[17],
+] as const;
+
+export const PROFILE_ICON_KEYS = [
+    "Home01",
+    "Briefcase01",
+    "Building01",
+    "Bank",
+    "Wallet01",
+    "PiggyBank",
+    "Coins01",
+    "MoneyBag01",
+    "Safe",
+    "Target01",
+    "ChartUp",
+    "Developer",
+    "Laptop",
+    "GraduationScroll",
+    "Health",
+    "HeartCheck",
+    "BabyBed01",
+    "Kid",
+    "Star",
+    "Favourite",
+    "Book01",
+    "Coffee02",
+    "Restaurant01",
+    "Dumbbell01",
+    "Mountain",
+    "Beach02",
+    "Car01",
+    "Store01",
+    "Plant01",
+    "Sun03",
+] as const;
+
+export const PROFILE_EMOJI = [
+    "🏠",
+    "💼",
+    "🏢",
+    "🌱",
+    "✈️",
+    "🚗",
+    "🏖️",
+    "🎓",
+    "📚",
+    "💡",
+    "🎨",
+    "🎮",
+    "☕️",
+    "🍽️",
+    "🛒",
+    "💳",
+    "💰",
+    "🐶",
+    "🐱",
+    "👶",
+    "👨‍👩‍👧",
+    "❤️",
+    "⭐️",
+    "🌍",
+] as const;
+
+export const [DEFAULT_PROFILE_COLOR] = PROFILE_COLORS;
+export const DEFAULT_PROFILE_ICON = "Home01";

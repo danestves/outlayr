@@ -2,6 +2,8 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { useCallback, useSyncExternalStore } from "react";
 
+import { scopedStorageKey } from "@/lib/profile";
+
 export const ImportSource = Schema.Literals(["csv", "pdf", "notion", "moneyManager"]);
 export type ImportSource = typeof ImportSource.Type;
 
@@ -42,7 +44,7 @@ function readStored(key: string): readonly ImportRecord[] {
 }
 
 function storeFor(userId: string) {
-    const key = `${KEY}:${userId}`;
+    const key = scopedStorageKey(`${KEY}:${userId}`);
     const listeners = new Set<() => void>();
     let current: readonly ImportRecord[] | null = null;
     const snapshot = () => (current ??= readStored(key));

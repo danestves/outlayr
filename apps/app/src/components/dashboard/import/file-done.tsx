@@ -37,6 +37,7 @@ import {
 } from "./file-review";
 import { HEAD, useRecordDay, useSeeEntries } from "./history";
 import type { FileModel } from "./model";
+import { useNotionAllowed } from "./notion";
 import { Banner, Card, Columns, ImportBar, ImportPage, NOTE } from "./parts";
 import { useImportHistory } from "./store";
 import type { ImportRecord } from "./store";
@@ -81,11 +82,15 @@ export function useRunImport() {
     const committer = useLedgerCommitter();
     const records = useImportStore();
     const currencyOf = useAccountCurrency();
+    const notionAllowed = useNotionAllowed();
     return (
         draft: Draft,
         model: FileModel,
         on: { failed: (retry: () => void) => void; saved: (finished: Finished) => void }
     ) => {
+        if (draft.source === "notion" && !notionAllowed) {
+            return;
+        }
         const rows = importable(model);
         const accountChoices = new Map(model.accounts.map((account) => [account.value, account.choice]));
         const { entryOf, plan } = planOf({

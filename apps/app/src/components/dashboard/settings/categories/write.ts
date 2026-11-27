@@ -16,6 +16,7 @@ import {
 } from "@/lib/category-writes";
 import type { CategoryDraft, PlanRow } from "@/lib/category-writes";
 import { convexClient } from "@/lib/convex";
+import { currentProfileId, profileArgs } from "@/lib/profile";
 
 import type { Category } from "./model";
 
@@ -25,11 +26,12 @@ export const settingsNotices: ToastSurface = { holdMs: 10_000, toasts: settingsT
 
 async function budgetPlansOf(categoryId: string) {
     const plans: PlanRow[] = [];
+    const scope = profileArgs(currentProfileId());
     let cursor = 0;
     let more = true;
     while (more) {
         // oxlint-disable-next-line no-await-in-loop -- each page starts at the previous page's cursor.
-        const page = await convexClient().query(api.sync.pullSince, { cursor, tables: ["budgetPlans"] });
+        const page = await convexClient().query(api.sync.pullSince, { cursor, tables: ["budgetPlans"], ...scope });
         for (const row of page.rows) {
             if (row.deletedAt === null && row.fields.categoryId === categoryId) {
                 plans.push({

@@ -384,8 +384,10 @@ const pullRecent = FunctionImpl.make(
         function* pullRecent(args) {
             const ctx = yield* QueryCtx;
             const reader = yield* DatabaseReader;
-            const userId = yield* requireUserId(ctx);
-            yield* requirePro(ctx, userId);
+            const accountId = yield* requireUserId(ctx);
+            const ledger = yield* resolveLedger(accountId, args.profileId);
+            yield* requirePro(ctx, ledger.ownerId);
+            const userId = ledger.key;
             const since = utcDayStart(args.since);
             const opening = yield* openingBefore(userId, since);
             if (opening === null) {
@@ -432,7 +434,11 @@ const pullRecent = FunctionImpl.make(
                 since,
             };
         },
-        Effect.catchTags({ ProRequired: dieAsConvexError, Unauthenticated: dieAsConvexError }),
+        Effect.catchTags({
+            NotProfileMember: dieNotProfileMember,
+            ProRequired: dieAsConvexError,
+            Unauthenticated: dieAsConvexError,
+        }),
         Effect.orDie
     )
 );

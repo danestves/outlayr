@@ -2,6 +2,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type { LedgerBooks } from "./ledger-books";
+import { browserProfileId, scopedStorageKey } from "./profile";
 
 export const ONBOARDING_STEPS = ["currency", "auto-log", "rhythm", "first-entry"] as const;
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
@@ -58,7 +59,8 @@ export const isFreshLedger = (books: GateBooks) =>
 export const onboardingDue = (progress: OnboardingProgress | null, books: GateBooks) =>
     progress === null ? isFreshLedger(books) : !progress.finished;
 
-const keyOf = (userId: string | undefined) => `outlayr.onboarding.${userId ?? "signed-out"}`;
+const keyOf = (userId: string | undefined) =>
+    scopedStorageKey(`outlayr.onboarding.${userId ?? "signed-out"}`, browserProfileId());
 const CHANGED = "outlayr:onboarding";
 
 // Private mode refuses the write, and the flow must still reach its end from memory.
@@ -73,12 +75,15 @@ function storedRaw(key: string) {
 }
 
 // useSyncExternalStore needs the same object back until the stored text changes.
+let cachedKey: string | null = null;
 let cachedRaw: string | null = null;
 let cachedProgress: OnboardingProgress | null = null;
 
 export function readProgress(userId: string | undefined): OnboardingProgress | null {
-    const raw = storedRaw(keyOf(userId));
-    if (raw !== cachedRaw) {
+    const key = keyOf(userId);
+    const raw = storedRaw(key);
+    if (raw !== cachedRaw || key !== cachedKey) {
+        cachedKey = key;
         cachedRaw = raw;
         cachedProgress = raw === null ? null : Option.getOrNull(decodeProgress(raw));
     }

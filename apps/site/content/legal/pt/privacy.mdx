@@ -126,7 +126,7 @@ A sincronização faz parte do Outlayr Pro. Quando você está conectado com o P
 ### O que é sincronizado
 
 - Lançamentos, transferências, contas, orçamentos, metas de economia, categorias, tags e os valores, moedas, datas, estabelecimentos, notas e taxas de câmbio deles.
-- Os perfis que você cria com o Outlayr Pro: o nome, o ícone e a cor de cada um, e o registro próprio dele, que sincroniza como o resto desta lista. O app web e um assistente de IA conectado veem só o seu perfil Pessoal, e as importações do Notion também vão para ele.
+- Os perfis que você cria com o Outlayr Pro: o nome, o ícone e a cor de cada um, e o registro próprio dele, que sincroniza como o resto desta lista. O app web pode abrir todos os perfis. Um assistente de IA conectado e as importações do Notion usam só o seu perfil Pessoal.
 - As regras que você cria na web para classificar lançamentos: o nome, o estabelecimento, a descrição ou o valor que procuram, e a categoria e as tags que atribuem.
 - As cobranças recorrentes que você pausa na web, até quando, e os estabelecimentos repetidos que você marca como não recorrentes.
 - Fotos anexadas a lançamentos e imagens definidas em contas, enviadas para o nosso armazenamento de arquivos na Cloudflare R2. Cada conta tem um limite de 2 GB para fotos.
@@ -347,7 +347,7 @@ Este site usa o PostHog para entender como as pessoas o usam. Enquanto você nav
 
 Se você iniciar sessão neste site, para conectar um assistente de IA ou abrir seus lançamentos, ele guarda sua sessão em cookies para que você continue conectado. Esses cookies são necessários para o início de sessão e não são usados para análises.
 
-Com o Outlayr Pro, nosso servidor lê seus lançamentos e o que as suas páginas de Ajustes mostram, e monta cada página antes de enviá-la, para que ela chegue completa. Seu navegador não guarda nada disso entre uma visita e outra, e as páginas são marcadas para que nenhum cache as armazene. Um lançamento que você salva espera no armazenamento do seu navegador só até nosso servidor confirmá-lo, para que fechar a página não o perca. Sair da conta neste site apaga daquele navegador os lançamentos em espera.
+Com o Outlayr Pro, nosso servidor lê seus lançamentos e o que as suas páginas de Ajustes mostram, e monta cada página antes de enviá-la, para que ela chegue completa. Seu navegador não guarda nada disso entre uma visita e outra, e as páginas são marcadas para que nenhum cache as armazene. Um lançamento que você salva espera no armazenamento do seu navegador só até nosso servidor confirmá-lo, para que fechar a página não o perca. Sair da conta neste site apaga daquele navegador os lançamentos em espera. O site também guarda um cookie `outlayr-profile` que lembra qual perfil este navegador abre. Os rascunhos e relatórios que ele mantém no seu navegador ficam separados por perfil.
 
 A partir dos seus lançamentos neste site, você pode compartilhar um relatório com um link. Quando você ativa um link, seu navegador nos envia uma cópia desse relatório: o nome, os nomes das linhas e colunas, como categorias, estabelecimentos ou contas, e os totais. Se você ocultar os valores, a cópia leva porcentagens e nenhum valor. Qualquer pessoa com o link pode abrir essa cópia sem entrar na conta, então envie-o apenas para quem você quer que a veja. A página pede aos buscadores que não a listem. A cópia só muda quando você abre de novo as opções de compartilhamento do relatório, e nada mais dos seus lançamentos é enviado.
 

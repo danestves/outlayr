@@ -41,6 +41,9 @@ import { serverLedger } from "@/lib/ledger-server";
 import { lightPathOf, viewCovered } from "@/lib/light-views";
 import { viewTransition } from "@/lib/motion";
 import { onboardingDue, readProgress, subscribeProgress } from "@/lib/onboarding";
+import { currentProfileId, profileScript } from "@/lib/profile";
+import { activeProfileOf, profilesOf, profilesQuery } from "@/lib/profile-registry";
+import { removeProfileAndSwitch } from "@/lib/profile-switch";
 import { currentToken, onSessionChange, userOf } from "@/lib/session";
 import { watchSync } from "@/lib/sync-status";
 import { dropOldCopy, forgetLedger } from "@/lib/unsent";
@@ -63,27 +66,34 @@ export const Route = createFileRoute("/_account/_app")({
         }
         context.session.token = token;
         const userId = userOf(token);
+        const requestedProfileId = currentProfileId();
+        let activeProfileId = requestedProfileId;
         let opening: LedgerOpening | null = null;
         try {
             if (import.meta.env.SSR) {
                 const path = lightPathOf(location.pathname, location.searchStr);
-                const seed = await serverLedger(token, path ? { asOf, path } : null);
+                const seed = await serverLedger(token, path ? { asOf, path } : null, requestedProfileId);
                 ({ opening } = seed);
+                activeProfileId = seed.profileId;
                 context.dbClient.hydrate({ collections: seed.collections });
                 offerProfile(context.queryClient, seed.profile);
+                context.queryClient.setQueryData(profilesQuery.queryKey, seed.profiles);
             }
             await preloadLedger(context.dbClient);
         } catch (error) {
             if (error instanceof Error && proRequired(error)) {
-                return { asOf, opening: null, synced: false, userId };
+                return { asOf, opening: null, profileId: activeProfileId, synced: false, userId };
             }
             throw error;
         }
-        return { asOf, opening, synced: true, userId };
+        return { asOf, opening, profileId: activeProfileId, synced: true, userId };
     },
     pendingComponent: Pending,
     pendingMinMs: 0,
     pendingMs: 0,
+    head: ({ loaderData }) => ({
+        scripts: [{ children: profileScript(loaderData?.profileId ?? null) }],
+    }),
 });
 
 function App() {
@@ -102,11 +112,11 @@ const onOnboarding = (pathname: string) => pathname.startsWith("/onboarding");
 const noProgress = () => null;
 
 function Ledgered() {
-    const { userId } = Route.useLoaderData();
+    const { profileId, userId } = Route.useLoaderData();
     const books = useLedgerBooks();
     const progress = useSyncExternalStore(subscribeProgress, () => readProgress(userId), noProgress);
     const onboarding = useLocation({ select: (location) => onOnboarding(location.pathname) });
-    const due = onboardingDue(progress, books);
+    const due = profileId === null && onboardingDue(progress, books);
     if (due && !onboarding) {
         return <Navigate replace search to="/onboarding" />;
     }
@@ -164,9 +174,11 @@ function Pending() {
         return null;
     }
     return (
-        <DashboardShell>
-            <DashboardPending />
-        </DashboardShell>
+        <Toast.Provider position="bottom-right">
+            <DashboardShell>
+                <DashboardPending />
+            </DashboardShell>
+        </Toast.Provider>
     );
 }
 
@@ -236,6 +248,14 @@ function useLiveLedger(userId: string | undefined, onLanded: (outcome: "landed" 
 
 function LiveDashboard({ bare, books, children }: { bare: boolean; books: LedgerBooks; children: ReactNode }) {
     const loaded = Route.useLoaderData();
+    const registry = useQuery(profilesQuery);
+    const profiles = useMemo(() => profilesOf(registry.data), [registry.data]);
+    const active = activeProfileOf(profiles, loaded.profileId);
+    useMirror([active, loaded.profileId, registry.isSuccess], () => {
+        if (registry.isSuccess && loaded.profileId !== null && active === null) {
+            void removeProfileAndSwitch(loaded.profileId);
+        }
+    });
     const search = Route.useSearch();
     const navigate = useNavigate();
     const [asOf, setAsOf] = useState(loaded.asOf);

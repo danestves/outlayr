@@ -5,7 +5,7 @@ import { convexTest } from "convex-test";
 import type { TestConvex } from "convex-test";
 import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
@@ -23,6 +23,8 @@ function harness() {
 const modules = import.meta.glob("../convex/**/*.ts");
 
 type TestClient = TestConvex<typeof schema>;
+
+const settle = (t: TestClient) => t.finishAllScheduledFunctions(vi.runAllTimers);
 
 type PushRows = FunctionArgs<typeof api.sync.push>["rows"];
 type Arm<T extends PushRows[number]["table"]> = Extract<PushRows[number], { table: T }>;
@@ -211,18 +213,44 @@ describe("profiles", () => {
         const t = harness();
         const owner = await seedProUser(t);
         const stranger = await seedProUser(t);
+        const ownerClient = authenticatedAs(t, owner);
+        const strangerClient = authenticatedAs(t, stranger);
 
-        await authenticatedAs(t, owner).mutation(api.sync.push, {
+        await ownerClient.mutation(api.sync.push, {
             deviceId: DEVICE_A,
             profileId: PROFILE_WORK,
             rows: [transactionRow("work-row", 200)],
         });
 
-        const page = await authenticatedAs(t, stranger).query(api.sync.pullSince, {
+        const page = await strangerClient.query(api.sync.pullSince, {
             cursor: 0,
             profileId: PROFILE_WORK,
         });
         expect(page.rows).toHaveLength(0);
+
+        vi.useFakeTimers();
+        try {
+            await ownerClient.mutation(api.ledgerCells.build, { profileId: PROFILE_WORK });
+            await settle(t);
+            await strangerClient.mutation(api.ledgerCells.build, { profileId: PROFILE_WORK });
+            await settle(t);
+        } finally {
+            vi.useRealTimers();
+        }
+
+        const recent = await ownerClient.query(api.sync.pullRecent, {
+            profileId: PROFILE_WORK,
+            since: 0,
+            tables: ["transactions"],
+        });
+        expect(recent?.rows.map((row) => row.localId)).toContain("work-row");
+
+        const strangerRecent = await strangerClient.query(api.sync.pullRecent, {
+            profileId: PROFILE_WORK,
+            since: 0,
+            tables: ["transactions"],
+        });
+        expect(strangerRecent?.rows).toHaveLength(0);
     });
 
     it("refuses a profile id that is not a UUID, so it cannot reach into another owner's range", async () => {

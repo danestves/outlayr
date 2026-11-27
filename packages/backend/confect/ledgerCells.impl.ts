@@ -8,6 +8,7 @@ import spec from "./ledgerCells.spec";
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
 import { rebuildCells, refreshDays, startCells } from "./lib/ledgerCells";
+import { dieNotProfileMember, resolveLedger } from "./lib/profileLedger";
 import { refuseWhileDeleting } from "./lib/syncGuards";
 import { requirePro } from "./revenuecat";
 
@@ -16,16 +17,21 @@ const build = FunctionImpl.make(
     spec,
     "build",
     Effect.fn("LedgerCells.build")(
-        function* build() {
+        function* build(args) {
             const ctx = yield* MutationCtx;
-            const userId = yield* requireUserId(ctx);
-            yield* requirePro(ctx, userId);
-            yield* refuseWhileDeleting(userId);
-            yield* startCells(userId);
+            const accountId = yield* requireUserId(ctx);
+            const ledger = yield* resolveLedger(accountId, args.profileId);
+            yield* requirePro(ctx, ledger.ownerId);
+            yield* refuseWhileDeleting(accountId);
+            if (ledger.joined) {
+                yield* refuseWhileDeleting(ledger.ownerId);
+            }
+            yield* startCells(ledger.key);
             return null;
         },
         Effect.catchTags({
             AccountDeleting: dieAsConvexError,
+            NotProfileMember: dieNotProfileMember,
             ProRequired: dieAsConvexError,
             Unauthenticated: dieAsConvexError,
         }),

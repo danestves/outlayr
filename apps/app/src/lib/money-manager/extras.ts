@@ -1,6 +1,8 @@
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
+import { scopedStorageKey } from "@/lib/profile";
+
 import type { MoneyManagerImported } from "./writes";
 
 const Ids = Schema.Array(Schema.String);
@@ -24,7 +26,7 @@ const decode = Schema.decodeUnknownOption(Imported);
 /** `ImportRecord` has no room for budgets, transfers or renames, so Undo reads them back from here. */
 export function keepImported(recordId: string, imported: MoneyManagerImported) {
     try {
-        globalThis.localStorage?.setItem(`${KEY}:${recordId}`, JSON.stringify(imported));
+        globalThis.localStorage?.setItem(scopedStorageKey(`${KEY}:${recordId}`), JSON.stringify(imported));
     } catch {
         // Undo then falls back to the entries and accounts the record itself lists.
     }
@@ -32,7 +34,7 @@ export function keepImported(recordId: string, imported: MoneyManagerImported) {
 
 export function keptImported(recordId: string): MoneyManagerImported | null {
     try {
-        const raw = globalThis.localStorage?.getItem(`${KEY}:${recordId}`);
+        const raw = globalThis.localStorage?.getItem(scopedStorageKey(`${KEY}:${recordId}`));
         return raw ? Option.getOrNull(decode(JSON.parse(raw))) : null;
     } catch {
         return null;

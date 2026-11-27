@@ -1,11 +1,13 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import * as Schema from "effect/Schema";
 
+import { ProfileId } from "./sync";
+
 export default GroupSpec.make()
     .addFunction(
         FunctionSpec.publicMutation({
             name: "build",
-            args: () => ({}),
+            args: () => ({ profileId: Schema.optional(ProfileId) }),
             returns: () => Schema.Null,
         })
     )

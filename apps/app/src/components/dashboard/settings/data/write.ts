@@ -3,16 +3,18 @@ import type { SyncedTable } from "@outlayr/backend/confect/lib/syncTables";
 import { api } from "@outlayr/backend/convex/_generated/api";
 
 import { convexClient } from "@/lib/convex";
+import { currentProfileId, profileArgs } from "@/lib/profile";
 
 import type { PulledRow } from "./model";
 
 export async function pullRows(tables: readonly SyncedTable[] = SYNCED_TABLES) {
     const rows: PulledRow[] = [];
+    const scope = profileArgs(currentProfileId());
     let cursor = 0;
     let more = true;
     while (more) {
         // oxlint-disable-next-line no-await-in-loop -- each page starts at the previous page's cursor.
-        const page = await convexClient().query(api.sync.pullSince, { cursor, tables: [...tables] });
+        const page = await convexClient().query(api.sync.pullSince, { cursor, tables: [...tables], ...scope });
         rows.push(...page.rows);
         ({ cursor } = page);
         more = page.hasMore;
