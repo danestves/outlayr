@@ -224,12 +224,13 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const clearPicked = () => setPickedIds(new Set());
     const [dialog, setDialog] = useState<ViewDialog | null>(null);
 
-    const selectedIndex = search.entry === undefined ? -1 : rows.findIndex((row) => row.id === search.entry);
+    const browsed = useMemo(() => [...upcomingRows, ...rows], [rows, upcomingRows]);
+    const selectedIndex = search.entry === undefined ? -1 : browsed.findIndex((row) => row.id === search.entry);
     const selected = useMemo((): FoldedRow | null => {
         if (search.entry === undefined) {
             return null;
         }
-        const found = rows[selectedIndex];
+        const found = browsed[selectedIndex];
         if (found) {
             return found;
         }
@@ -252,9 +253,9 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
             return listed;
         }
         return rowOf({ rows: ledger.upcoming, transfers: [] }, search.entry);
-    }, [ledger, list.text, rows, search.entry, selectedIndex]);
+    }, [browsed, ledger, list.text, search.entry, selectedIndex]);
     const step = (by: 1 | -1) => {
-        const next = rows[selectedIndex === -1 ? 0 : selectedIndex + by];
+        const next = browsed[selectedIndex === -1 ? 0 : selectedIndex + by];
         if (next) {
             setSearch({ entry: next.id }, { replace: true });
         }
