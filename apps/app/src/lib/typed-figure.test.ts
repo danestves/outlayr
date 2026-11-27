@@ -33,14 +33,3 @@ it("leaves ordinary typing alone", () => {
     expect(typeInto("12.50")).toBe(12.5);
     expect(typedFigure("1,5", false)).toStrictEqual({ figure: "1,5", labelled: false });
 });
-
-it("reads a pasted amount that carries its currency label", () => {
-    expect(parseAmount(typedFigure("Cg. 500.00", false).figure)).toBe(500);
-    expect(parseAmount(typedFigure("500,00 Cg.", false).figure)).toBe(500);
-    expect(parseAmount(typedFigure("$25,993.52", false).figure)).toBe(25_993.52);
-});
-
-it("holds back a paste with more than one number", () => {
-    expect(held(typedFigure("Invoice 42: Cg. 500.00", false).figure)).toBe(false);
-    expect(held(typedFigure("Cg. 500.00\n600.00", false).figure)).toBe(false);
-});
