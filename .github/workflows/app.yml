@@ -9,7 +9,11 @@ on:
             - deploy/self-hosting/app.Dockerfile
             - deploy/self-hosting/app.Dockerfile.dockerignore
             - apps/app/**
-            - apps/native/**
+            - apps/native/package.json
+            - apps/native/.env.schema
+            - apps/native/src/screens/settings/licenses.json
+            - apps/site/package.json
+            - apps/site/.env.schema
             - packages/**
             - patches/**
             - .npmrc
