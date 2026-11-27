@@ -7,12 +7,16 @@ import type { ProjectState } from "./types";
 export function exportAssetPaths(state: ProjectState): string[] {
   const paths = new Set<string>();
   const add = (path: string | undefined) => { if (path) paths.add(path); };
+  add(state.appIcon);
   for (const slide of state.slidesByDevice[state.device] || []) {
     if (state.device === "feature-graphic" || slide.layout === "feature-graphic") {
       add(state.appIcon);
-      continue;
-    }
-    if (slide.layout !== "no-device" || slide.transforms?.device || slide.transforms?.deviceSecondary) {
+      if (slide.screenshot) {
+        // The banner's phone frame is the iPhone mockup.
+        add("/mockup.png");
+        for (const locale of state.locales) add(resolveScreenshot(slide.screenshot, locale));
+      }
+    } else if (slide.layout !== "no-device" || slide.transforms?.device || slide.transforms?.deviceSecondary) {
       // Creatives draw the iPhone frame too.
       if (state.device === "iphone" || isCreative(state.device)) add("/mockup.png");
       for (const path of frameAssetPaths(state.device)) add(path);
@@ -24,6 +28,7 @@ export function exportAssetPaths(state: ProjectState): string[] {
       }
     }
     for (const image of slide.imageElements || []) add(image.src);
+    for (const card of slide.cardElements || []) add(card.iconSrc);
   }
   return [...paths];
 }

@@ -7,6 +7,10 @@ const BRL_PRICE_POINTS = new Map([
     [9.99, 49.9],
     [24.99, 124.9],
     [3499, 17_499],
+    // The Japan goal stays short enough that its headline fits one line in Portuguese.
+    [1200, 1800],
+    [3412.4, 5118.6],
+    [6000, 9000],
 ]);
 
 const scaleBrl = (amount) => BRL_PRICE_POINTS.get(amount) ?? Math.round(amount * 5 * 100) / 100;

@@ -4,6 +4,7 @@ import { Rnd } from "react-rnd";
 import { RotateCw } from "lucide-react";
 import type {
   BuiltInElementId,
+  CardElement,
   Device,
   ElementId,
   ElementTransform,
@@ -37,7 +38,7 @@ import {
   tvW,
   watchW,
 } from "@/lib/constants";
-import { imageElementKey, isImageElementId, toImageElementId, toTextElementId } from "@/lib/elements";
+import { cardElementKey, imageElementKey, isCardElementId, isImageElementId, toCardElementId, toImageElementId, toTextElementId } from "@/lib/elements";
 import { img } from "@/lib/image-cache";
 import { pickText, resolveScreenshot } from "@/lib/locale";
 import { relativeLuminance, slideColors } from "@/lib/contrast";
@@ -54,9 +55,13 @@ import {
   AndroidTabletL,
   AndroidTabletP,
   IPad,
+  LightAndroidPhone,
+  LightPhone,
+  LIGHT_PHONE_ASPECT,
   MacWindow,
   Phone,
 } from "./device-frames";
+import { CardElementCanvas } from "./card-element-canvas";
 import { ImageElementCanvas } from "./image-element-canvas";
 import { CalloutLoupe, DeviceDepth, SceneBackdrop, shade } from "./scene-layers";
 
@@ -310,6 +315,63 @@ function EditableText({
   );
 }
 
+// ---------- Headline with an accent colour after the first line ----------
+
+function HeadlineText({
+  value,
+  accentColor,
+  editable,
+  onChange,
+  onFocus,
+  placeholder,
+  style,
+}: {
+  value: string;
+  accentColor?: string;
+  editable?: boolean;
+  onChange?: (v: string) => void;
+  onFocus?: () => void;
+  placeholder?: string;
+  style: React.CSSProperties;
+}) {
+  const splitAt = accentColor ? value.indexOf("\n") : -1;
+  if (splitAt < 0) {
+    return (
+      <EditableText
+        value={value}
+        editable={editable}
+        multiline
+        onChange={onChange}
+        onFocus={onFocus}
+        placeholder={placeholder}
+        style={style}
+      />
+    );
+  }
+  const first = value.slice(0, splitAt);
+  const rest = value.slice(splitAt + 1);
+  return (
+    <div>
+      <EditableText
+        value={first}
+        editable={editable}
+        onChange={onChange ? (next) => onChange(`${next}\n${rest}`) : undefined}
+        onFocus={onFocus}
+        placeholder={placeholder}
+        style={style}
+      />
+      <EditableText
+        value={rest}
+        editable={editable}
+        multiline
+        onChange={onChange ? (next) => onChange(`${first}\n${next}`) : undefined}
+        onFocus={onFocus}
+        style={{ ...style, color: accentColor }}
+      />
+    </div>
+  );
+}
+
 // ---------- Caption (label + headline) ----------
 
 function Caption({
@@ -318,6 +380,8 @@ function Caption({
   slide,
   theme,
   locale,
+  appName,
+  appIcon,
   editable,
   edit,
   align = "center",
@@ -331,6 +395,8 @@ function Caption({
   slide: Slide;
   theme: Theme;
   locale: string;
+  appName?: string;
+  appIcon?: string;
   editable?: boolean;
   edit?: EditHandlers;
   align?: "center" | "left";
@@ -348,28 +414,55 @@ function Caption({
   return (
     // "start" rather than "left" so a left-set caption hugs the right edge in RTL.
     <div style={{ textAlign: align === "left" ? "start" : align, position: "relative", width: "100%" }}>
-      <EditableText
-        value={pickText(slide.label, locale)}
-        editable={editable}
-        onChange={edit?.onLabelChange}
-        onFocus={onFocus}
-        placeholder="LABEL"
-        style={{
-          // Floor keeps the label legible on the 422×514 Apple Watch canvas;
-          // the per-slide scale is applied on top of the floored base.
-          fontSize: Math.max(unit * 0.028, 16) * labelScale,
-          fontWeight: 600,
-          letterSpacing: Math.max(unit * 0.0015, 0.8) * labelScale,
-          color: accent,
-          textTransform: "uppercase",
-          marginBottom: unit * 0.018,
-          minHeight: unit * 0.03,
-        }}
-      />
-      <EditableText
+      {scene.brandLockup && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: align === "left" ? "flex-start" : "center",
+            gap: cW * 0.022,
+            marginBottom: unit * 0.032,
+          }}
+        >
+          <BrandIcon src={appIcon} size={cW * 0.06} accent={accent} fg={fg} fallback={appName} />
+          <span
+            style={{
+              fontSize: cW * 0.042,
+              fontWeight: 900,
+              lineHeight: 1.1,
+              color: fg,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {appName || "App"}
+          </span>
+        </div>
+      )}
+      {/* The lockup takes an empty label's slot, so it never pushes the headline down. */}
+      {!(scene.brandLockup && !pickText(slide.label, locale)) && (
+        <EditableText
+          value={pickText(slide.label, locale)}
+          editable={editable}
+          onChange={edit?.onLabelChange}
+          onFocus={onFocus}
+          placeholder="LABEL"
+          style={{
+            // Floor keeps the label legible on the 422×514 Apple Watch canvas;
+            // the per-slide scale is applied on top of the floored base.
+            fontSize: Math.max(unit * 0.028, 16) * labelScale,
+            fontWeight: 600,
+            letterSpacing: Math.max(unit * 0.0015, 0.8) * labelScale,
+            color: accent,
+            textTransform: "uppercase",
+            marginBottom: unit * 0.018,
+            minHeight: unit * 0.03,
+          }}
+        />
+      )}
+      <HeadlineText
         value={pickText(slide.headline, locale)}
+        accentColor={slide.headlineAccentColor}
         editable={editable}
-        multiline
         onChange={edit?.onHeadlineChange}
         onFocus={onFocus}
         placeholder="Headline goes here"
@@ -382,6 +475,49 @@ function Caption({
           color: fg,
         }}
       />
+    </div>
+  );
+}
+
+function BrandIcon({
+  src,
+  size,
+  accent,
+  fg,
+  fallback,
+}: {
+  src?: string;
+  size: number;
+  accent: string;
+  fg: string;
+  fallback?: string;
+}) {
+  const source = src ? img(src) : undefined;
+  return (
+    <div
+      aria-hidden
+      style={{
+        width: size,
+        height: size,
+        flexShrink: 0,
+        borderRadius: size * 0.23,
+        overflow: "hidden",
+        background: source ? undefined : `linear-gradient(135deg, ${accent}55, ${accent})`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: fg,
+        fontWeight: 800,
+        fontSize: size * 0.5,
+        lineHeight: 1,
+      }}
+    >
+      {source ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={source} alt="" draggable={false} style={{ display: "block", width: "100%", height: "100%" }} />
+      ) : (
+        (fallback || "A").slice(0, 1).toUpperCase()
+      )}
     </div>
   );
 }
@@ -421,6 +557,40 @@ function Blob({
   );
 }
 
+// ---------- Per-slide device glow ----------
+
+function SlideGlow({
+  glow,
+  cW,
+  cH,
+  screenX = 0,
+}: {
+  glow: Slide["glow"];
+  cW: number;
+  cH: number;
+  screenX?: number;
+}) {
+  if (!glow) return null;
+  const diameter = glow.size * cW;
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: "absolute",
+        left: screenX + glow.x * cW - diameter / 2,
+        top: glow.y * cH - diameter / 2,
+        width: diameter,
+        height: diameter,
+        borderRadius: "50%",
+        background: glow.color,
+        filter: `blur(${diameter * 0.15}px)`,
+        pointerEvents: "none",
+        zIndex: 0,
+      }}
+    />
+  );
+}
+
 // ---------- Default element rects per layout ----------
 
 type Rect = { x: number; y: number; width: number; height: number };
@@ -430,6 +600,21 @@ type LayoutRects = {
   deviceSecondary?: Rect;
   callout?: Rect;
 };
+
+export function isFeatureGraphicSlide(slide: Slide, device: Device) {
+  return device === "feature-graphic" || slide.layout === "feature-graphic";
+}
+
+/** The feature graphic phone is drawn as a light or iPhone frame, never the deck's device. */
+export function featureGraphicDeviceAspect(scene: Scene) {
+  return scene.deviceFinish === "light" ? LIGHT_PHONE_ASPECT.iphone : MK_RATIO;
+}
+
+/** Only placement for the banner's phone: right of the copy, near the top. */
+export function featureGraphicDeviceRect(cW: number, cH: number, aspect: number): Rect {
+  const width = cW * 0.24;
+  return { x: cW * 0.64, y: cH * 0.08, width, height: width / aspect };
+}
 
 function getDefaultRects(
   layout: Slide["layout"],
@@ -716,6 +901,7 @@ export function getElementTransform(
   device: Device,
   orientation: Orientation,
   id: ElementId,
+  scene?: Scene,
 ): ElementTransform | undefined {
   if (id.startsWith("text:")) {
     const textId = id.slice("text:".length);
@@ -726,8 +912,16 @@ export function getElementTransform(
     const imageId = imageElementKey(id);
     return slide.imageElements?.find((element) => element.id === imageId)?.transform;
   }
-  const { defaults } = getSlideGeometry(slide, device, orientation);
-  const rect = rectFor(id as BuiltInElementId, slide, defaults);
+  if (isCardElementId(id)) {
+    const cardId = cardElementKey(id);
+    return slide.cardElements?.find((element) => element.id === cardId)?.transform;
+  }
+  const { cW, cH, defaults } = getSlideGeometry(slide, device, orientation);
+  const rectDefaults =
+    isFeatureGraphicSlide(slide, device) && id === "device"
+      ? { device: featureGraphicDeviceRect(cW, cH, featureGraphicDeviceAspect(sceneOf(scene))) }
+      : defaults;
+  const rect = rectFor(id as BuiltInElementId, slide, rectDefaults);
   if (!rect) return undefined;
   const saved = slide.transforms?.[id as BuiltInElementId];
   return {
@@ -776,12 +970,17 @@ export function SlideCanvas({
         <FeatureGraphicCanvas
           slide={slide}
           cW={cW}
+          cH={cH}
           theme={theme}
           locale={locale}
           appName={appName}
           appIcon={appIcon}
           editable={editable}
           edit={edit}
+          selectedElementId={selectedElementId}
+          previewScale={previewScale}
+          hideEmpty={hideEmpty}
+          scene={scene}
         />
       </div>
     );
@@ -812,6 +1011,8 @@ export function SlideCanvas({
         orientation={orientation}
         theme={theme}
         locale={locale}
+        appName={appName}
+        appIcon={appIcon}
         editable={editable}
         edit={edit}
         selectedElementId={selectedElementId}
@@ -867,11 +1068,27 @@ export function DeckCanvas({
         const screenX = index * cW;
         const active = activeSlideId === slide.id;
         if (slide.layout === "feature-graphic" || device === "feature-graphic") {
+          const fgSelectedId =
+            selectedElement?.slideId === slide.id ? selectedElement.elementId : null;
+          const fgEdit: EditHandlers | undefined = editable
+            ? {
+                onLabelChange: (v) => edit?.onLabelChange?.(slide.id, v),
+                onHeadlineChange: (v) => edit?.onHeadlineChange?.(slide.id, v),
+                onTextElementTextChange: (id, v) => edit?.onTextElementTextChange?.(slide.id, id, v),
+                onElementChange: (id, t) => edit?.onElementChange?.(slide.id, id, t),
+                onSelectElement: (id) => {
+                  edit?.onSelectScreen?.(slide.id);
+                  edit?.onSelectElement?.(id ? { slideId: slide.id, elementId: id } : null);
+                },
+              }
+            : undefined;
           return (
             <div
               key={`${slide.id}-feature`}
               onMouseDown={(e) => {
                 if (!editable || e.defaultPrevented) return;
+                // An element inside the banner (the phone, text, images) selects itself.
+                if ((e.target as HTMLElement).closest(".rnd-editable")) return;
                 edit?.onSelectScreen?.(slide.id);
                 edit?.onSelectElement?.(null);
               }}
@@ -887,15 +1104,17 @@ export function DeckCanvas({
               <FeatureGraphicCanvas
                 slide={slide}
                 cW={cW}
+                cH={cH}
                 theme={theme}
                 locale={locale}
                 appName={appName}
                 appIcon={appIcon}
                 editable={editable}
-                edit={{
-                  onHeadlineChange: (v) => edit?.onHeadlineChange?.(slide.id, v),
-                  onSelectElement: () => edit?.onSelectScreen?.(slide.id),
-                }}
+                edit={fgEdit}
+                selectedElementId={fgSelectedId}
+                previewScale={previewScale}
+                hideEmpty={hideEmpty}
+                scene={scene}
               />
               {showGuides && <ScreenGuide cW={cW} cH={cH} index={index} active={active} />}
             </div>
@@ -950,6 +1169,8 @@ export function DeckCanvas({
             orientation={orientation}
             theme={theme}
             locale={locale}
+            appName={appName}
+            appIcon={appIcon}
             editable={editable}
             edit={perSlideEdit}
             selectedElementId={selectedElementId}
@@ -1155,26 +1376,65 @@ function ScreenGuide({
 function FeatureGraphicCanvas({
   slide,
   cW,
+  cH,
   theme,
   locale,
   appName,
   appIcon,
   editable,
   edit,
+  selectedElementId = null,
+  previewScale = 1,
+  hideEmpty,
+  scene,
 }: {
   slide: Slide;
   cW: number;
+  cH: number;
   theme: Theme;
   locale: string;
   appName?: string;
   appIcon?: string;
   editable?: boolean;
   edit?: EditHandlers;
+  selectedElementId?: ElementId | null;
+  previewScale?: number;
+  hideEmpty?: boolean;
+  scene: Scene;
 }) {
   const { headlineScale, appNameScale } = slideFontScales(slide);
   const inverted = slide.inverted ?? true;
   const bg = inverted ? theme.bgAlt : theme.bg;
   const colors = slideColors(theme, { ...slide, inverted });
+  const screenshot = resolveScreenshot(slide.screenshot, locale);
+  const frameAspect = featureGraphicDeviceAspect(scene);
+  const deviceRect = screenshot
+    ? rectFor("device", slide, { device: featureGraphicDeviceRect(cW, cH, frameAspect) })
+    : undefined;
+  const savedDevice = slide.transforms?.device;
+  const deviceRotation = savedDevice?.rotation ?? 0;
+  const deviceZ = savedDevice?.zIndex ?? 3;
+  const DeviceFrame = scene.deviceFinish === "light" ? LightPhone : Phone;
+  // An accent-coloured second line reads as a display headline, not a tagline.
+  const displayHeadline = !!slide.headlineAccentColor;
+  const headline = (
+    <HeadlineText
+      value={pickText(slide.headline, locale)}
+      accentColor={slide.headlineAccentColor}
+      editable={editable}
+      onChange={edit?.onHeadlineChange}
+      onFocus={() => edit?.onSelectElement?.("caption")}
+      style={{
+        fontSize: cW * 0.028 * headlineScale,
+        color: colors.fg,
+        fontWeight: scene.headlineWeight,
+        opacity: displayHeadline ? 1 : 0.85,
+        marginTop: cW * 0.012,
+        lineHeight: displayHeadline ? 1.02 : 1.25,
+        letterSpacing: displayHeadline ? "-0.02em" : undefined,
+      }}
+    />
+  );
   return (
     <div
       style={{
@@ -1189,58 +1449,101 @@ function FeatureGraphicCanvas({
         color: colors.fg,
       }}
     >
-      <Blob cW={cW} color={theme.accent} x={70} y={20} size={50} opacity={0.45} />
-      <div style={{ display: "flex", alignItems: "center", gap: cW * 0.03, zIndex: 2 }}>
-        {appIcon && img(appIcon) ? (
-          <img
-            src={img(appIcon)}
-            alt=""
-            style={{
-              width: cW * 0.13,
-              height: cW * 0.13,
-              borderRadius: cW * 0.022,
-              boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
-            }}
-            draggable={false}
-          />
-        ) : (
-          <div
-            aria-hidden
-            style={{
-              width: cW * 0.13,
-              height: cW * 0.13,
-              borderRadius: cW * 0.022,
-              background: `linear-gradient(135deg, ${theme.accent}55, ${theme.accent})`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: colors.fg,
-              fontWeight: 800,
-              fontSize: cW * 0.07,
-              boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
-            }}
-          >
-            {(appName || "A").slice(0, 1).toUpperCase()}
+      <SlideGlow glow={slide.glow} cW={cW} cH={cH} />
+      {scene.decoration !== "none" && (
+        <Blob cW={cW} color={theme.accent} x={70} y={20} size={50} opacity={0.45} />
+      )}
+      {displayHeadline ? (
+        <div style={{ zIndex: 2 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: cW * 0.012, marginBottom: cW * 0.035 }}>
+            <BrandIcon src={appIcon} size={cW * 0.044} accent={theme.accent} fg={colors.fg} fallback={appName} />
+            <span style={{ fontSize: cW * 0.026 * appNameScale, fontWeight: 900, lineHeight: 1.1 }}>{appName || "App"}</span>
           </div>
-        )}
-        <div>
-          <div style={{ fontSize: cW * 0.06 * appNameScale, fontWeight: 800, lineHeight: 1.05 }}>{appName || "App"}</div>
-          <EditableText
-            value={pickText(slide.headline, locale)}
-            editable={editable}
-            multiline
-            onChange={edit?.onHeadlineChange}
-            onFocus={() => edit?.onSelectElement?.("caption")}
-            style={{
-              fontSize: cW * 0.028 * headlineScale,
-              color: colors.fg,
-              opacity: 0.85,
-              marginTop: cW * 0.012,
-              lineHeight: 1.25,
-            }}
-          />
+          {headline}
         </div>
-      </div>
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", gap: cW * 0.03, zIndex: 2 }}>
+          {appIcon && img(appIcon) ? (
+            <img
+              src={img(appIcon)}
+              alt=""
+              style={{
+                width: cW * 0.13,
+                height: cW * 0.13,
+                borderRadius: cW * 0.022,
+                boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
+              }}
+              draggable={false}
+            />
+          ) : (
+            <div
+              aria-hidden
+              style={{
+                width: cW * 0.13,
+                height: cW * 0.13,
+                borderRadius: cW * 0.022,
+                background: `linear-gradient(135deg, ${theme.accent}55, ${theme.accent})`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: colors.fg,
+                fontWeight: 800,
+                fontSize: cW * 0.07,
+                boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
+              }}
+            >
+              {(appName || "A").slice(0, 1).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <div style={{ fontSize: cW * 0.06 * appNameScale, fontWeight: scene.brandLockup ? 900 : 800, lineHeight: 1.05 }}>
+              {appName || "App"}
+            </div>
+            {headline}
+          </div>
+        </div>
+      )}
+      {deviceRect && (
+        <Movable
+          rect={deviceRect}
+          boundsW={cW}
+          boundsH={cH}
+          editable={editable}
+          previewScale={previewScale}
+          rotation={deviceRotation}
+          onChange={(t) =>
+            edit?.onElementChange?.("device", {
+              ...t,
+              rotation: t.rotation ?? deviceRotation,
+              zIndex: t.zIndex ?? deviceZ,
+            })
+          }
+          lockAspectRatio={frameAspect}
+          zIndex={deviceZ}
+          allowOverflow
+          selected={selectedElementId === "device"}
+          onSelect={() => edit?.onSelectElement?.("device")}
+        >
+          <DeviceDepth scene={scene} cW={cW} accent={theme.accent}>
+            <DeviceFrame src={screenshot} hideEmpty={hideEmpty} style={{ width: "100%", height: "100%" }} />
+          </DeviceDepth>
+        </Movable>
+      )}
+      <OverlayElements
+        slide={slide}
+        locale={locale}
+        editable={editable}
+        edit={edit}
+        selectedElementId={selectedElementId}
+        previewScale={previewScale}
+        screenX={0}
+        boundsW={cW}
+        boundsH={cH}
+        allowCrossScreen
+        cW={cW}
+        cH={cH}
+        textColor={colors.fg}
+      />
     </div>
   );
 }
@@ -1252,6 +1555,8 @@ function SlideElements({
   orientation,
   theme,
   locale,
+  appName,
+  appIcon,
   editable,
   edit,
   selectedElementId,
@@ -1268,6 +1573,8 @@ function SlideElements({
   orientation: Orientation;
   theme: Theme;
   locale: string;
+  appName?: string;
+  appIcon?: string;
   editable?: boolean;
   edit?: EditHandlers;
   selectedElementId: ElementId | null;
@@ -1310,6 +1617,8 @@ function SlideElements({
         slide={slide}
         theme={theme}
         locale={locale}
+        appName={appName}
+        appIcon={appIcon}
         editable={editable}
         edit={edit}
         align={scene.captionAlign === "auto" ? captionRect.align || "center" : scene.captionAlign}
@@ -1355,8 +1664,25 @@ function SlideElements({
   const companion = isDuoDevice(device) ? DUO_COMPANION[device] : null;
 
   function renderDevice(id: "device" | "deviceSecondary", rect: Rect, src: string, extraStyle?: React.CSSProperties) {
-    const DeviceFrame = id === "deviceSecondary" && companion ? DUO_FRAMES[companion] : Frame;
-    const aspect = id === "deviceSecondary" && companion ? duoGeometry(companion).aspect : frameAspect;
+    const lightFinish =
+      scene.deviceFinish === "light" &&
+      orientation === "portrait" &&
+      !companion &&
+      (device === "iphone" || device === "android");
+    const DeviceFrame =
+      id === "deviceSecondary" && companion
+        ? DUO_FRAMES[companion]
+        : lightFinish
+          ? device === "android"
+            ? LightAndroidPhone
+            : LightPhone
+          : Frame;
+    const aspect =
+      id === "deviceSecondary" && companion
+        ? duoGeometry(companion).aspect
+        : lightFinish
+          ? LIGHT_PHONE_ASPECT[device === "android" ? "android" : "iphone"]
+          : frameAspect;
     const saved = slide.transforms?.[id];
     const rotation = saved?.rotation ?? 0;
     const zIndex = saved?.zIndex ?? (id === "deviceSecondary" ? 2 : 3);
@@ -1432,12 +1758,88 @@ function SlideElements({
     );
   }
 
+  return (
+    <>
+      <SlideGlow glow={slide.glow} cW={cW} cH={cH} screenX={screenX} />
+      {secondaryRect &&
+        (companion
+          // Another display's capture can't stand in for the companion's own.
+          ? renderDevice("deviceSecondary", secondaryRect, screenshotSecondary)
+          : renderDevice(
+              "deviceSecondary",
+              secondaryRect,
+              screenshotSecondary || screenshot,
+              { opacity: 0.85 },
+            ))}
+      {deviceRect && renderDevice("device", deviceRect, screenshot)}
+      {renderCaption()}
+      {calloutRect && deviceRect && renderCallout(calloutRect, deviceRect.width)}
+      <OverlayElements
+        slide={slide}
+        locale={locale}
+        editable={editable}
+        edit={edit}
+        selectedElementId={selectedElementId}
+        previewScale={previewScale}
+        screenX={screenX}
+        boundsW={boundsW}
+        boundsH={boundsH}
+        allowCrossScreen={allowCrossScreen}
+        cW={cW}
+        cH={cH}
+        textColor={colors.fg}
+        dark={colors.dark}
+      />
+    </>
+  );
+}
+
+// Text, image and card overlays shared by the screenshot layouts and the
+// feature graphic, so all three behave the same on either canvas.
+function OverlayElements({
+  slide,
+  locale,
+  editable,
+  edit,
+  selectedElementId,
+  previewScale,
+  screenX,
+  boundsW,
+  boundsH,
+  allowCrossScreen,
+  cW,
+  cH,
+  textColor,
+  dark,
+}: {
+  slide: Slide;
+  locale: string;
+  editable?: boolean;
+  edit?: EditHandlers;
+  selectedElementId: ElementId | null;
+  previewScale: number;
+  screenX: number;
+  boundsW: number;
+  boundsH: number;
+  allowCrossScreen: boolean;
+  cW: number;
+  cH: number;
+  textColor: string;
+  dark?: boolean;
+}) {
+  function toGlobal(rect: Rect): Rect {
+    return { ...rect, x: rect.x + screenX };
+  }
+
+  function toLocal(t: ElementTransform): ElementTransform {
+    return { ...t, x: t.x - screenX };
+  }
+
   function renderTextElement(textElement: TextElement, index: number) {
     const elementId = toTextElementId(textElement.id);
     const rect = textElement.transform;
     const rotation = rect.rotation ?? 0;
     const zIndex = rect.zIndex ?? 5 + index;
-    const textColor = textElement.color || colors.fg;
     return (
       <Movable
         key={textElement.id}
@@ -1486,12 +1888,12 @@ function SlideElements({
             placeholder="Text"
             style={{
               width: "100%",
-              color: textColor,
+              color: textElement.color || textColor,
               fontSize: textElement.fontSize ?? defaultTextElementFontSize(cW, cH),
               fontWeight: textElement.fontWeight ?? 700,
               lineHeight: 1.05,
               textAlign: textElement.align ?? "center",
-              textShadow: colors.dark ? "0 2px 18px rgba(0,0,0,0.22)" : "0 2px 18px rgba(255,255,255,0.2)",
+              textShadow: dark ? "0 2px 18px rgba(0,0,0,0.22)" : "0 2px 18px rgba(255,255,255,0.2)",
             }}
           />
         </div>
@@ -1533,23 +1935,45 @@ function SlideElements({
     );
   }
 
+  function renderCardElement(card: CardElement, index: number) {
+    const elementId = toCardElementId(card.id);
+    const rect = card.transform;
+    const rotation = rect.rotation ?? 0;
+    const zIndex = rect.zIndex ?? 5 + index;
+    return (
+      <Movable
+        key={card.id}
+        rect={toGlobal(rect)}
+        boundsW={boundsW}
+        boundsH={boundsH}
+        editable={editable}
+        previewScale={previewScale}
+        rotation={rotation}
+        onChange={(t) =>
+          edit?.onElementChange?.(
+            elementId,
+            toLocal({
+              ...t,
+              rotation: t.rotation ?? rotation,
+              zIndex: t.zIndex ?? zIndex,
+            }),
+          )
+        }
+        zIndex={zIndex}
+        selected={selectedElementId === elementId}
+        onSelect={() => edit?.onSelectElement?.(elementId)}
+        allowOverflow={allowCrossScreen}
+      >
+        <CardElementCanvas element={card} locale={locale} cW={cW} />
+      </Movable>
+    );
+  }
+
   return (
     <>
-      {secondaryRect &&
-        (companion
-          // Another display's capture can't stand in for the companion's own.
-          ? renderDevice("deviceSecondary", secondaryRect, screenshotSecondary)
-          : renderDevice(
-              "deviceSecondary",
-              secondaryRect,
-              screenshotSecondary || screenshot,
-              { opacity: 0.85 },
-            ))}
-      {deviceRect && renderDevice("device", deviceRect, screenshot)}
-      {renderCaption()}
-      {calloutRect && deviceRect && renderCallout(calloutRect, deviceRect.width)}
       {(slide.imageElements || []).map(renderImageElement)}
       {(slide.textElements || []).map(renderTextElement)}
+      {(slide.cardElements || []).map(renderCardElement)}
     </>
   );
 }

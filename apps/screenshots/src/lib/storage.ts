@@ -8,7 +8,7 @@ import { coerceLocalized } from "./locale";
 import { projectValidationError } from "./project-validation";
 import { cleanCallout, cleanLook, cleanScene } from "./scene";
 import { cleanTypography } from "./typography";
-import type { Device, ElementTransform, ImageElement, Look, ProjectState, ScreenshotFontId, Slide, TextElement } from "./types";
+import type { CardElement, Device, ElementTransform, ImageElement, Look, ProjectState, ScreenshotFontId, Slide, SlideGlow, TextElement } from "./types";
 
 const HISTORY_LIMIT = 50;
 // Coalesce rapid edits (typing, slider drags) into a single undo step.
@@ -84,6 +84,37 @@ function cleanImageElement(value: unknown): ImageElement | undefined {
   };
 }
 
+function cleanCardElement(value: unknown): CardElement | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const raw = value as Partial<CardElement>;
+  if (typeof raw.id !== "string" || !raw.id.trim()) return undefined;
+  const transform = cleanTransform(raw.transform);
+  if (!transform) return undefined;
+  if (raw.variant !== "stat" && raw.variant !== "notification" && raw.variant !== "bubble") return undefined;
+  return {
+    id: raw.id,
+    variant: raw.variant,
+    transform,
+    ...(raw.label !== undefined ? { label: coerceLocalized(raw.label as unknown) } : {}),
+    ...(raw.title !== undefined ? { title: coerceLocalized(raw.title as unknown) } : {}),
+    ...(raw.body !== undefined ? { body: coerceLocalized(raw.body as unknown) } : {}),
+    ...(raw.meta !== undefined ? { meta: coerceLocalized(raw.meta as unknown) } : {}),
+    ...(typeof raw.iconSrc === "string" ? { iconSrc: raw.iconSrc } : {}),
+    ...(typeof raw.iconBackground === "string" ? { iconBackground: raw.iconBackground } : {}),
+  };
+}
+
+function cleanSlideGlow(value: unknown): SlideGlow | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const raw = value as Partial<SlideGlow>;
+  const color = typeof raw.color === "string" ? cleanHexColor(raw.color) : undefined;
+  if (!color) return undefined;
+  const x = typeof raw.x === "number" && Number.isFinite(raw.x) ? Math.min(1, Math.max(0, raw.x)) : 0.5;
+  const y = typeof raw.y === "number" && Number.isFinite(raw.y) ? Math.min(1, Math.max(0, raw.y)) : 0.5;
+  const size = typeof raw.size === "number" && Number.isFinite(raw.size) ? Math.min(2, Math.max(0.05, raw.size)) : 0.8;
+  return { color, x, y, size };
+}
+
 // Early builds had a "Classic Serif" that rendered exactly like Georgia.
 const LEGACY_FONT_IDS: Record<string, ScreenshotFontId> = { "classic-serif": "template-serif" };
 
@@ -113,6 +144,11 @@ function migrateSlide(slide: Slide): Slide {
   const imageElements = Array.isArray(slide.imageElements)
     ? slide.imageElements.map(cleanImageElement).filter((image): image is ImageElement => !!image)
     : undefined;
+  const cardElements = Array.isArray(slide.cardElements)
+    ? slide.cardElements.map(cleanCardElement).filter((card): card is CardElement => !!card)
+    : undefined;
+  const glow = cleanSlideGlow(slide.glow);
+  const headlineAccentColor = cleanHexColor(slide.headlineAccentColor);
   const callout = cleanCallout(slide.callout);
 
   return {
@@ -121,9 +157,12 @@ function migrateSlide(slide: Slide): Slide {
     headline: coerceLocalized(slide.headline as unknown),
     typography: cleanTypography(slide.typography),
     ...(backgroundColor ? { backgroundColor } : { backgroundColor: undefined }),
+    ...(glow ? { glow } : { glow: undefined }),
+    ...(headlineAccentColor ? { headlineAccentColor } : { headlineAccentColor: undefined }),
     ...(transforms && Object.keys(transforms).length > 0 ? { transforms } : { transforms: undefined }),
     ...(textElements && textElements.length > 0 ? { textElements } : { textElements: undefined }),
     ...(imageElements && imageElements.length > 0 ? { imageElements } : { imageElements: undefined }),
+    ...(cardElements && cardElements.length > 0 ? { cardElements } : { cardElements: undefined }),
     ...(callout ? { callout } : { callout: undefined }),
   };
 }

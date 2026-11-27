@@ -14,6 +14,8 @@ export const DEFAULT_SCENE: Scene = {
   headlineScale: 1,
   headlineCase: "as-typed",
   captionAlign: "auto",
+  brandLockup: false,
+  deviceFinish: "frame",
 };
 
 export const BACKDROPS: { id: SceneBackdrop; name: string }[] = [
@@ -72,6 +74,8 @@ export function cleanScene(value: unknown): Scene | undefined {
     headlineScale: Math.round(clampNumber(value.headlineScale, 0.5, 2, DEFAULT_SCENE.headlineScale) * 20) / 20,
     headlineCase: value.headlineCase === "upper" ? "upper" : "as-typed",
     captionAlign: value.captionAlign === "left" || value.captionAlign === "center" ? value.captionAlign : "auto",
+    brandLockup: value.brandLockup === true,
+    deviceFinish: value.deviceFinish === "light" ? "light" : "frame",
   };
 }
 

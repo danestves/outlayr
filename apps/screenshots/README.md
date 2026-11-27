@@ -135,7 +135,17 @@ The toolbar font menu sets the typeface of the screenshot canvas and exports (no
 
 ### Image overlays
 
-In the inspector's **Elements** card, click **Image**, then **Pick** (or drop) a PNG/JPG. Uploads go through `/api/upload` into `public/screenshots/uploaded/`, like screenshots. The first image sizes the overlay frame to its aspect ratio; after that you can drag, resize, rotate (canvas handle or slider), restack, choose **Fill frame** (crop) or **Whole image**, and fade one edge into the background. In Connected mode overlays can cross screen edges like other elements. Overlays are saved per screen as `imageElements`, and the exporter waits for them to paint just like device screenshots. The Play Store feature graphic has a fixed icon + name + tagline layout, so it doesn't take overlays or text elements.
+In the inspector's **Elements** card, click **Image**, then **Pick** (or drop) a PNG/JPG. Uploads go through `/api/upload` into `public/screenshots/uploaded/`, like screenshots. The first image sizes the overlay frame to its aspect ratio; after that you can drag, resize, rotate (canvas handle or slider), restack, choose **Fill frame** (crop) or **Whole image**, and fade one edge into the background. In Connected mode overlays can cross screen edges like other elements. Overlays are saved per screen as `imageElements`, and the exporter waits for them to paint just like device screenshots. The Play Store feature graphic keeps its fixed icon + name + tagline layout and also accepts image overlays, text elements, cards and a screen glow.
+
+### Store style: glow, accent, lockup, cards and frames
+
+These controls build the cream store look. Every one stays off unless you turn it on, so decks made before them render exactly as before.
+
+- **Screen glow**: each screen's **Background** section has **Glow behind the phone**, with a colour and Horizontal, Vertical and Size sliders. The glow sits above the background and below that screen's device and elements, independent of the deck's scene glow.
+- **Headline accent**: **Accent line colour** under the headline paints every line after the first newline in that colour; the first line keeps the headline colour, and the clear button removes the accent. The feature graphic tagline follows the same rule.
+- **Brand lockup**: **Scene → Brand → App icon and name above headlines** draws the project icon and app name above every caption except the feature graphic. The lockup follows the caption's alignment and the caption moves down instead of overlapping it.
+- **Cards**: **Elements → Card** adds a stat, notification or speech bubble card. Pick the variant, fill the per-language copy, choose an icon and its background colour. Cards drag, resize, rotate, restack and cross screen edges like text and images, and are saved per screen as `cardElements`. The exporter waits for a card icon to paint like any other image.
+- **Light device finish**: **Scene → Device depth → Finish → Light** draws iPhone and Android portrait phones as a cream frame with inset silver rings instead of the PNG bezel. Other devices and orientations keep their frame, and the scene shadow still applies.
 
 ### Style Lab
 

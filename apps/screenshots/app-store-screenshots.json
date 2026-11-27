@@ -2,8 +2,8 @@
   "schemaVersion": 3,
   "appName": "Outlayr",
   "themeId": "outlayr-paper",
-  "fontId": "template-default",
-  "connectedCanvas": true,
+  "fontId": "nunito",
+  "connectedCanvas": false,
   "locales": [
     "en",
     "es",
@@ -13,565 +13,1513 @@
     "pt-PT",
     "de"
   ],
-  "locale": "de",
-  "device": "android",
+  "locale": "fr",
+  "device": "feature-graphic",
   "orientation": "portrait",
   "appIcon": "/app-icon.png",
   "slidesByDevice": {
     "iphone": [
       {
-        "id": "s1-hero",
-        "layout": "hero",
+        "id": "g-log",
+        "layout": "device-bottom",
         "label": {
-          "en": "OUTLAYR",
-          "es": "OUTLAYR",
-          "es-ES": "OUTLAYR",
-          "fr": "OUTLAYR",
-          "pt-BR": "OUTLAYR",
-          "pt-PT": "OUTLAYR",
-          "de": "OUTLAYR"
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
         },
         "headline": {
-          "en": "Every account.\nOne page.",
-          "es": "Tus cuentas.\nUna sola vista.",
-          "es-ES": "Todas tus cuentas.\nEn una sola vista.",
-          "fr": "Tous vos comptes.\nUne seule page.",
-          "pt-BR": "Todas as contas.\nNuma tela só.",
-          "pt-PT": "Todas as contas.\nNum só ecrã.",
-          "de": "Jedes Konto.\nEine Seite."
+          "en": "All your money.\nOne calm place.",
+          "es": "Todo tu dinero.\nEn un solo lugar.",
+          "es-ES": "Todo tu dinero.\nEn un solo sitio.",
+          "fr": "Tout votre argent.\nUn seul endroit.",
+          "pt-BR": "Todo seu dinheiro.\nEm um só lugar.",
+          "pt-PT": "Todo o dinheiro.\nNum só lugar.",
+          "de": "Dein ganzes Geld.\nAn einem Ort."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/01.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 1.06
+        },
+        "glow": {
+          "color": "#FFC9B3",
+          "x": 0.5758,
+          "y": 0.5997,
+          "size": 0.7879
+        },
         "transforms": {
-          "device": {
-            "x": 153.18,
-            "y": 745.68,
-            "width": 1013.64,
-            "height": 2064.96
-          }
-        }
-      },
-      {
-        "id": "s9-subscriptions",
-        "layout": "hero",
-        "label": {
-          "en": "SUBSCRIPTIONS",
-          "es": "SUSCRIPCIONES",
-          "es-ES": "SUSCRIPCIONES",
-          "fr": "ABONNEMENTS",
-          "pt-BR": "ASSINATURAS",
-          "pt-PT": "SUBSCRIÇÕES",
-          "de": "ABOS"
-        },
-        "headline": {
-          "en": "Each subscription.\nOne monthly total.",
-          "es": "Tus suscripciones.\nUn total al mes.",
-          "es-ES": "Tus suscripciones.\nUn total al mes.",
-          "fr": "Vos abonnements.\nUn total par mois.",
-          "pt-BR": "Cada assinatura.\nUm total por mês.",
-          "pt-PT": "Cada subscrição.\nUm total por mês.",
-          "de": "Jedes Abo.\nEine Summe."
-        },
-        "screenshot": "/screenshots/apple/iphone/{locale}/10.png",
-        "transforms": {
-          "device": {
-            "x": 153.18,
-            "y": 745.68,
-            "width": 1013.64,
-            "height": 2064.96
-          }
-        }
-      },
-      {
-        "id": "s2-sentence",
-        "layout": "device-bottom",
-        "label": {
-          "en": "THE ENTRY",
-          "es": "EL REGISTRO",
-          "es-ES": "EL REGISTRO",
-          "fr": "LA SAISIE",
-          "pt-BR": "O LANÇAMENTO",
-          "pt-PT": "O REGISTO",
-          "de": "DER EINTRAG"
-        },
-        "headline": {
-          "en": "Log it in\none sentence.",
-          "es": "Anótalo en\nuna frase.",
-          "es-ES": "Apúntalo en\nuna frase.",
-          "fr": "Notez-le en\nune phrase.",
-          "pt-BR": "Anote em\numa frase.",
-          "pt-PT": "Registe-o\nnuma frase.",
-          "de": "Ein Satz\ngenügt."
-        },
-        "screenshot": "/screenshots/apple/iphone/{locale}/02.png"
-      },
-      {
-        "id": "s3-pace",
-        "layout": "hero",
-        "label": {
-          "en": "PACE",
-          "es": "RITMO",
-          "es-ES": "RITMO",
-          "fr": "RYTHME",
-          "pt-BR": "RITMO",
-          "pt-PT": "RITMO",
-          "de": "TEMPO"
-        },
-        "headline": {
-          "en": "You'll end the\nmonth $516 short.",
-          "es": "Este mes te\nvan a faltar $516.",
-          "es-ES": "Este mes te\nvan a faltar €516.",
-          "fr": "Il vous manquera\n€516 ce mois-ci.",
-          "pt-BR": "Vai faltar R$2.579\nno fim do mês.",
-          "pt-PT": "Vão faltar €516\neste mês.",
-          "de": "Der Monat endet\n$516 zu knapp."
-        },
-        "screenshot": "/screenshots/apple/iphone/{locale}/04.png",
-        "transforms": {
-          "device": {
-            "x": 153.18,
-            "y": 745.68,
-            "width": 1013.64,
-            "height": 2064.96
-          }
-        }
-      },
-      {
-        "id": "s4-widgets",
-        "layout": "device-bottom",
-        "label": {
-          "en": "WIDGETS",
-          "es": "WIDGETS",
-          "es-ES": "WIDGETS",
-          "fr": "WIDGETS",
-          "pt-BR": "WIDGETS",
-          "pt-PT": "WIDGETS",
-          "de": "WIDGETS"
-        },
-        "headline": {
-          "en": "Without opening\nthe app.",
-          "es": "Sin siquiera\nabrir la app.",
-          "es-ES": "Sin abrir\nsiquiera la app.",
-          "fr": "Sans même\nouvrir l'app.",
-          "pt-BR": "Sem nem\nabrir o app.",
-          "pt-PT": "Sem sequer\nabrir a app.",
-          "de": "Ohne die App\nzu öffnen."
-        },
-        "screenshot": "/screenshots/apple/iphone/{locale}/09.png"
-      },
-      {
-        "id": "s5-insights",
-        "layout": "device-top",
-        "label": {
-          "en": "INSIGHTS",
-          "es": "ANÁLISIS",
-          "es-ES": "ESTADÍSTICAS",
-          "fr": "STATISTIQUES",
-          "pt-BR": "ESTATÍSTICAS",
-          "pt-PT": "ESTATÍSTICAS",
-          "de": "AUSWERTUNGEN"
-        },
-        "headline": {
-          "en": "Where the week\nactually went.",
-          "es": "A dónde se fue\ntu semana.",
-          "es-ES": "En qué se te ha\nido la semana.",
-          "fr": "Où est passée\nvotre semaine.",
-          "pt-BR": "Para onde foi\nsua semana.",
-          "pt-PT": "Para onde foi\na sua semana.",
-          "de": "Wohin die Woche\nwirklich ging."
-        },
-        "screenshot": "/screenshots/apple/iphone/{locale}/05.png",
-        "transforms": {
-          "device": {
-            "x": 103.3,
-            "y": -144,
-            "width": 1113.4,
-            "height": 2268
-          },
           "caption": {
-            "x": 105.6,
-            "y": 2316,
-            "width": 1108.8,
-            "height": 560
+            "x": 88,
+            "y": 96,
+            "width": 1192,
+            "height": 600
+          },
+          "device": {
+            "x": 224,
+            "y": 1000,
+            "width": 944,
+            "height": 1984.6,
+            "rotation": -5
           }
-        }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-happy.png",
+            "transform": {
+              "x": 739.2,
+              "y": 744,
+              "width": 649.6,
+              "height": 590
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-us",
+            "src": "/flags/us.png",
+            "transform": {
+              "x": -39.5,
+              "y": 912.3,
+              "width": 351,
+              "height": 351,
+              "rotation": -10
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-eu",
+            "src": "/flags/eu.png",
+            "transform": {
+              "x": -36.5,
+              "y": 1893.2,
+              "width": 297,
+              "height": 297
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-ve",
+            "src": "/flags/ve.png",
+            "transform": {
+              "x": 992.5,
+              "y": 1728.3,
+              "width": 351,
+              "height": 351
+            },
+            "fit": "contain"
+          }
+        ]
       },
       {
-        "id": "s6-accounts",
+        "id": "g-autolog",
         "layout": "device-bottom",
         "label": {
-          "en": "ACCOUNTS",
-          "es": "CUENTAS",
-          "es-ES": "CUENTAS",
-          "fr": "COMPTES",
-          "pt-BR": "CONTAS",
-          "pt-PT": "CONTAS",
-          "de": "KONTEN"
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
         },
         "headline": {
-          "en": "Two currencies.\nOne ledger.",
-          "es": "Dos monedas.\nUn solo registro.",
-          "es-ES": "Dos monedas.\nUn solo registro.",
-          "fr": "Deux devises.\nUn seul registre.",
-          "pt-BR": "Duas moedas.\nUm só controle.",
-          "pt-PT": "Duas moedas.\nUm só registo.",
-          "de": "Zwei Währungen.\nEin Kassenbuch."
+          "en": "Tap. Pay.\nAlready logged.",
+          "es": "Toca. Paga.\nYa quedó anotado.",
+          "es-ES": "Toca. Paga.\nYa está apuntado.",
+          "fr": "Payez.\nC'est déjà noté.",
+          "pt-BR": "Aproxime. Pague.\nJá foi anotado.",
+          "pt-PT": "Aproxime. Pague.\nJá está registado.",
+          "de": "Bezahlen.\nSchon erfasst."
         },
-        "screenshot": "/screenshots/apple/iphone/{locale}/06.png"
-      },
-      {
-        "id": "s7-goals",
-        "layout": "hero",
-        "label": {
-          "en": "GOALS",
-          "es": "METAS",
-          "es-ES": "METAS",
-          "fr": "OBJECTIFS",
-          "pt-BR": "METAS",
-          "pt-PT": "OBJETIVOS",
-          "de": "SPARZIELE"
+        "screenshot": "/screenshots/apple/iphone/{locale}/12.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 1.06
         },
-        "headline": {
-          "en": "Japan in April.\nYou're on pace.",
-          "es": "Japón en abril.\nVas a buen ritmo.",
-          "es-ES": "Japón en abril.\nVas a buen ritmo.",
-          "fr": "Japon en avril.\nDans les temps.",
-          "pt-BR": "Japão em abril.\nNo ritmo certo.",
-          "pt-PT": "Japão em abril.\nEstá no ritmo.",
-          "de": "Japan im April.\nDu bist im Plan."
+        "glow": {
+          "color": "#FFE29A",
+          "x": 0.5455,
+          "y": 0.5579,
+          "size": 0.8485
         },
-        "screenshot": "/screenshots/apple/iphone/{locale}/08.png",
         "transforms": {
+          "caption": {
+            "x": 88,
+            "y": 96,
+            "width": 1192,
+            "height": 600
+          },
           "device": {
-            "x": 153.18,
-            "y": 745.68,
-            "width": 1013.64,
-            "height": 2064.96
+            "x": 280,
+            "y": 840,
+            "width": 944,
+            "height": 1984.6,
+            "rotation": 4
           }
-        }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-point.png",
+            "transform": {
+              "x": -180.8,
+              "y": 2126,
+              "width": 881.6,
+              "height": 744.1
+            },
+            "fit": "contain"
+          }
+        ]
       },
       {
-        "id": "s8-capture",
-        "layout": "device-top",
+        "id": "g-voice",
+        "layout": "device-bottom",
         "label": {
-          "en": "FIVE WAYS IN",
-          "es": "CINCO MANERAS",
-          "es-ES": "CINCO FORMAS",
-          "fr": "CINQ FAÇONS",
-          "pt-BR": "CINCO JEITOS",
-          "pt-PT": "CINCO FORMAS",
-          "de": "FÜNF WEGE"
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
+        },
+        "headline": {
+          "en": "Talk to it.\nIt listens.",
+          "es": "Háblale.\nTe escucha.",
+          "es-ES": "Háblale.\nTe escucha.",
+          "fr": "Parlez-lui.\nIl vous écoute.",
+          "pt-BR": "Fale com ele.\nEle escuta.",
+          "pt-PT": "Fale com ele.\nEle ouve.",
+          "de": "Sag es einfach.\nEs hört zu."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/02.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 1.06
+        },
+        "glow": {
+          "color": "#BFE6CC",
+          "x": 0.4545,
+          "y": 0.516,
+          "size": 0.9091
+        },
+        "transforms": {
+          "caption": {
+            "x": 88,
+            "y": 96,
+            "width": 1192,
+            "height": 600
+          },
+          "device": {
+            "x": 480,
+            "y": 1200,
+            "width": 944,
+            "height": 1984.6,
+            "rotation": 6
+          }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-mic.png",
+            "transform": {
+              "x": -126.4,
+              "y": 1200,
+              "width": 1020.7,
+              "height": 816.5
+            },
+            "fit": "contain"
+          }
+        ],
+        "cardElements": [
+          {
+            "id": "card-voice",
+            "variant": "bubble",
+            "transform": {
+              "x": 480,
+              "y": 744,
+              "width": 600,
+              "height": 208
+            },
+            "body": {
+              "en": "“Coffee 4.50\nand a cab 12”",
+              "es": "“Café 4.50\ny un taxi 12”",
+              "es-ES": "“Café 4,50\ny un taxi 12”",
+              "fr": "« Café 4,50\net un taxi 12 »",
+              "pt-BR": "“Café 4,50\ne um táxi 12”",
+              "pt-PT": "“Café 4,50\ne um táxi 12”",
+              "de": "„Kaffee 4,50\nund Taxi 12“"
+            }
+          }
+        ]
+      },
+      {
+        "id": "g-capture",
+        "layout": "device-bottom",
+        "label": {
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
         },
         "headline": {
           "en": "Type it, say it,\nor snap it.",
-          "es": "Escríbelo, dilo\no tómale una foto.",
+          "es": "Escríbelo, dilo\no tómale foto.",
           "es-ES": "Escríbelo, dilo\no hazle una foto.",
           "fr": "Tapez, dictez\nou photographiez.",
-          "pt-BR": "Digite, fale\nou tire uma foto.",
-          "pt-PT": "Escreva, diga\nou tire uma foto.",
-          "de": "Tippen, sagen,\nabfotografieren."
+          "pt-BR": "Digite, fale\nou fotografe.",
+          "pt-PT": "Escreva, diga\nou fotografe.",
+          "de": "Tippen, sagen\noder knipsen."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/03.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 1.06
+        },
+        "glow": {
+          "color": "#FFC9B3",
+          "x": 0.5152,
+          "y": 0.5579,
+          "size": 0.8485
+        },
         "transforms": {
-          "device": {
-            "x": 103.3,
-            "y": -144,
-            "width": 1113.4,
-            "height": 2268
-          },
           "caption": {
-            "x": 105.6,
-            "y": 2316,
-            "width": 1108.8,
-            "height": 560
+            "x": 88,
+            "y": 96,
+            "width": 1192,
+            "height": 600
+          },
+          "device": {
+            "x": 184,
+            "y": 880,
+            "width": 944,
+            "height": 1984.6,
+            "rotation": -4
           }
-        }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-celebrating.png",
+            "transform": {
+              "x": 638.4,
+              "y": 2138.8,
+              "width": 835.2,
+              "height": 765.2
+            },
+            "fit": "contain"
+          }
+        ]
       },
       {
-        "id": "s10-reminders",
-        "layout": "device-top",
+        "id": "g-insights",
+        "layout": "device-bottom",
         "label": {
-          "en": "REMINDERS",
-          "es": "AVISOS",
-          "es-ES": "AVISOS",
-          "fr": "RAPPELS",
-          "pt-BR": "LEMBRETES",
-          "pt-PT": "LEMBRETES",
-          "de": "ERINNERUNGEN"
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
         },
         "headline": {
-          "en": "A reminder before\neach charge.",
-          "es": "Un aviso antes\nde cada cobro.",
-          "es-ES": "Un aviso antes\nde cada cargo.",
-          "fr": "Un rappel avant\nchaque paiement.",
-          "pt-BR": "Um aviso antes\nde cada cobrança.",
-          "pt-PT": "Um aviso antes\nde cada cobrança.",
-          "de": "Ein Hinweis vor\njeder Abbuchung."
+          "en": "See the month\nbefore it ends.",
+          "es": "Mira el mes\nantes del final.",
+          "es-ES": "Mira el mes\nantes del final.",
+          "fr": "Voyez le mois\navant la fin.",
+          "pt-BR": "Veja o mês\nantes do fim.",
+          "pt-PT": "Veja o mês\nantes de acabar.",
+          "de": "Sieh den Monat,\nbevor er endet."
         },
-        "screenshot": "/screenshots/apple/iphone/{locale}/11.png",
+        "screenshot": "/screenshots/apple/iphone/{locale}/05.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 1.06
+        },
+        "glow": {
+          "color": "#D8CCF5",
+          "x": 0.5152,
+          "y": 0.5579,
+          "size": 0.8485
+        },
         "transforms": {
-          "device": {
-            "x": 103.3,
-            "y": -144,
-            "width": 1113.4,
-            "height": 2268
-          },
           "caption": {
-            "x": 105.6,
-            "y": 2316,
-            "width": 1108.8,
-            "height": 560
+            "x": 88,
+            "y": 96,
+            "width": 1192,
+            "height": 600
+          },
+          "device": {
+            "x": 184,
+            "y": 880,
+            "width": 944,
+            "height": 1984.6,
+            "rotation": -4
           }
-        }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-idea.png",
+            "transform": {
+              "x": -56.1,
+              "y": 2291.8,
+              "width": 464.1,
+              "height": 611.6
+            },
+            "fit": "contain"
+          }
+        ],
+        "cardElements": [
+          {
+            "id": "card-insights",
+            "variant": "stat",
+            "transform": {
+              "x": 732,
+              "y": 1720,
+              "width": 540,
+              "height": 240,
+              "rotation": 4
+            },
+            "label": {
+              "en": "ON PACE",
+              "es": "VAS BIEN",
+              "es-ES": "VAS BIEN",
+              "fr": "DANS LES CLOUS",
+              "pt-BR": "NO RITMO",
+              "pt-PT": "NO RITMO",
+              "de": "IM PLAN"
+            },
+            "title": {
+              "en": "$1,018",
+              "es": "$1,018",
+              "es-ES": "€1018",
+              "fr": "€1 018",
+              "pt-BR": "R$5.093",
+              "pt-PT": "€1018",
+              "de": "$1.018"
+            },
+            "body": {
+              "en": "left this month",
+              "es": "te quedan este mes",
+              "es-ES": "te quedan este mes",
+              "fr": "restants ce mois-ci",
+              "pt-BR": "sobrando este mês",
+              "pt-PT": "livres este mês",
+              "de": "übrig diesen Monat"
+            }
+          }
+        ]
+      },
+      {
+        "id": "g-pace",
+        "layout": "device-bottom",
+        "label": {
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
+        },
+        "headline": {
+          "en": "Every category.\nIts own pace.",
+          "es": "Cada categoría.\nA su ritmo.",
+          "es-ES": "Cada categoría.\nA su ritmo.",
+          "fr": "Chaque catégorie.\nSon rythme.",
+          "pt-BR": "Cada categoria.\nNo seu ritmo.",
+          "pt-PT": "Cada categoria.\nAo seu ritmo.",
+          "de": "Jede Kategorie.\nIhr eigenes Tempo."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/04.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 1.06
+        },
+        "glow": {
+          "color": "#BFE6CC",
+          "x": 0.5,
+          "y": 0.537,
+          "size": 0.8788
+        },
+        "transforms": {
+          "caption": {
+            "x": 88,
+            "y": 96,
+            "width": 1192,
+            "height": 600
+          },
+          "device": {
+            "x": 240,
+            "y": 880,
+            "width": 944,
+            "height": 1984.6,
+            "rotation": 4
+          }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-thinking.png",
+            "transform": {
+              "x": 689.6,
+              "y": 2197.6,
+              "width": 788.8,
+              "height": 750.5
+            },
+            "fit": "contain"
+          }
+        ],
+        "cardElements": [
+          {
+            "id": "card-pace",
+            "variant": "stat",
+            "transform": {
+              "x": 40,
+              "y": 1880,
+              "width": 472,
+              "height": 240,
+              "rotation": -4
+            },
+            "label": {
+              "en": "A DAY",
+              "es": "AL DÍA",
+              "es-ES": "AL DÍA",
+              "fr": "PAR JOUR",
+              "pt-BR": "POR DIA",
+              "pt-PT": "POR DIA",
+              "de": "PRO TAG"
+            },
+            "title": {
+              "en": "$204",
+              "es": "$204",
+              "es-ES": "€204",
+              "fr": "€204",
+              "pt-BR": "R$1.019",
+              "pt-PT": "€204",
+              "de": "$204"
+            },
+            "body": {
+              "en": "to stay on pace",
+              "es": "para ir a buen ritmo",
+              "es-ES": "para ir a buen ritmo",
+              "fr": "pour garder le rythme",
+              "pt-BR": "para manter o ritmo",
+              "pt-PT": "para manter o ritmo",
+              "de": "um im Plan zu bleiben"
+            }
+          }
+        ]
+      },
+      {
+        "id": "g-widgets",
+        "layout": "device-bottom",
+        "label": {
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
+        },
+        "headline": {
+          "en": "Your balance,\nat a glance.",
+          "es": "Tu saldo,\nde un vistazo.",
+          "es-ES": "Tu saldo,\nde un vistazo.",
+          "fr": "Votre solde,\nen un coup d'œil.",
+          "pt-BR": "Seu saldo,\nnum relance.",
+          "pt-PT": "O seu saldo,\nnum relance.",
+          "de": "Dein Saldo,\nauf einen Blick."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/09.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 1.06
+        },
+        "glow": {
+          "color": "#FFE29A",
+          "x": 0.5152,
+          "y": 0.53,
+          "size": 0.8485
+        },
+        "transforms": {
+          "caption": {
+            "x": 88,
+            "y": 96,
+            "width": 1192,
+            "height": 600
+          },
+          "device": {
+            "x": 192,
+            "y": 880,
+            "width": 944,
+            "height": 1984.6,
+            "rotation": -4
+          }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-wave.png",
+            "transform": {
+              "x": 644,
+              "y": 2147.2,
+              "width": 812,
+              "height": 737.5
+            },
+            "fit": "contain"
+          }
+        ]
+      },
+      {
+        "id": "g-currencies",
+        "layout": "device-bottom",
+        "label": {
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
+        },
+        "headline": {
+          "en": "Every currency.\nOne total.",
+          "es": "Cada moneda.\nUn solo total.",
+          "es-ES": "Cada moneda.\nUn solo total.",
+          "fr": "Toutes les devises.\nUn seul total.",
+          "pt-BR": "Toda moeda.\nUm só total.",
+          "pt-PT": "Todas as moedas.\nUm só total.",
+          "de": "Jede Währung.\nEine Summe."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/06.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 1.06
+        },
+        "glow": {
+          "color": "#BFDBF5",
+          "x": 0.5,
+          "y": 0.537,
+          "size": 0.8788
+        },
+        "transforms": {
+          "caption": {
+            "x": 88,
+            "y": 96,
+            "width": 1192,
+            "height": 600
+          },
+          "device": {
+            "x": 240,
+            "y": 1000,
+            "width": 944,
+            "height": 1984.6,
+            "rotation": 4
+          }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-proud.png",
+            "transform": {
+              "x": 668,
+              "y": 2243.7,
+              "width": 812,
+              "height": 707.6
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-us",
+            "src": "/flags/us.png",
+            "transform": {
+              "x": -15.5,
+              "y": 752.3,
+              "width": 351,
+              "height": 351
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-eu",
+            "src": "/flags/eu.png",
+            "transform": {
+              "x": 259.5,
+              "y": 709.2,
+              "width": 297,
+              "height": 297
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-mx",
+            "src": "/flags/mx.png",
+            "transform": {
+              "x": 936.8,
+              "y": 772,
+              "width": 310.5,
+              "height": 310.5
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-ve",
+            "src": "/flags/ve.png",
+            "transform": {
+              "x": -39.5,
+              "y": 1568.3,
+              "width": 351,
+              "height": 351
+            },
+            "fit": "contain"
+          }
+        ]
+      },
+      {
+        "id": "g-upcoming",
+        "layout": "device-bottom",
+        "label": {
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
+        },
+        "headline": {
+          "en": "Bills coming?\nYou'll know.",
+          "es": "¿Viene un cobro?\nTe enteras antes.",
+          "es-ES": "¿Llega un cargo?\nLo sabrás antes.",
+          "fr": "Un prélèvement ?\nVous le saurez.",
+          "pt-BR": "Vem cobrança?\nVocê fica sabendo.",
+          "pt-PT": "Vem cobrança?\nVai saber antes.",
+          "de": "Abbuchung fällig?\nDu weißt Bescheid."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/10.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 1.06
+        },
+        "glow": {
+          "color": "#D8CCF5",
+          "x": 0.5,
+          "y": 0.537,
+          "size": 0.8788
+        },
+        "transforms": {
+          "caption": {
+            "x": 88,
+            "y": 96,
+            "width": 1192,
+            "height": 600
+          },
+          "device": {
+            "x": 240,
+            "y": 880,
+            "width": 944,
+            "height": 1984.6,
+            "rotation": 4
+          }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-sleepy.png",
+            "transform": {
+              "x": 689.6,
+              "y": 2226.1,
+              "width": 788.8,
+              "height": 722
+            },
+            "fit": "contain"
+          }
+        ],
+        "cardElements": [
+          {
+            "id": "card-upcoming",
+            "variant": "stat",
+            "transform": {
+              "x": 40,
+              "y": 2080,
+              "width": 820,
+              "height": 240,
+              "rotation": -4
+            },
+            "label": {
+              "en": "TOMORROW",
+              "es": "MAÑANA",
+              "es-ES": "MAÑANA",
+              "fr": "DEMAIN",
+              "pt-BR": "AMANHÃ",
+              "pt-PT": "AMANHÃ",
+              "de": "MORGEN"
+            },
+            "title": {
+              "en": "Netflix $22.99",
+              "es": "Netflix $22.99",
+              "es-ES": "Netflix €22,99",
+              "fr": "Netflix €22,99",
+              "pt-BR": "Netflix R$114,90",
+              "pt-PT": "Netflix €22,99",
+              "de": "Netflix $22,99"
+            },
+            "iconSrc": "/icons/netflix.png",
+            "iconBackground": "#000000"
+          }
+        ]
+      },
+      {
+        "id": "g-goals",
+        "layout": "device-bottom",
+        "label": {
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
+        },
+        "headline": {
+          "en": "Goals that\nactually happen.",
+          "es": "Metas que\nsí se cumplen.",
+          "es-ES": "Metas que\nsí se cumplen.",
+          "fr": "Des objectifs\nvraiment atteints.",
+          "pt-BR": "Metas que\nviram realidade.",
+          "pt-PT": "Metas que\nse concretizam.",
+          "de": "Ziele, die du\nwirklich erreichst."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/08.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 1.06
+        },
+        "glow": {
+          "color": "#FFC9B3",
+          "x": 0.5152,
+          "y": 0.53,
+          "size": 0.8485
+        },
+        "transforms": {
+          "caption": {
+            "x": 88,
+            "y": 96,
+            "width": 1192,
+            "height": 600
+          },
+          "device": {
+            "x": 192,
+            "y": 880,
+            "width": 944,
+            "height": 1984.6,
+            "rotation": -4
+          }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-cheer.png",
+            "transform": {
+              "x": 563,
+              "y": 2083.6,
+              "width": 882.1,
+              "height": 785.7
+            },
+            "fit": "contain"
+          }
+        ]
       }
     ],
     "android": [
       {
-        "id": "de-log",
-        "layout": "hero",
+        "id": "g-log",
+        "layout": "device-bottom",
         "label": {
-          "en": "OUTLAYR",
-          "es": "OUTLAYR",
-          "es-ES": "OUTLAYR",
-          "fr": "OUTLAYR",
-          "pt-BR": "OUTLAYR",
-          "pt-PT": "OUTLAYR",
-          "de": "OUTLAYR"
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
         },
         "headline": {
-          "en": "Every account.\nOne page.",
-          "es": "Tus cuentas.\nUna sola vista.",
-          "es-ES": "Todas tus cuentas.\nEn una sola vista.",
-          "fr": "Tous vos comptes.\nUne seule page.",
-          "pt-BR": "Todas as contas.\nNuma tela só.",
-          "pt-PT": "Todas as contas.\nNum só ecrã.",
-          "de": "Jedes Konto.\nEine Seite."
+          "en": "All your money.\nOne calm place.",
+          "es": "Todo tu dinero.\nEn un solo lugar.",
+          "es-ES": "Todo tu dinero.\nEn un solo sitio.",
+          "fr": "Tout votre argent.\nUn seul endroit.",
+          "pt-BR": "Todo seu dinheiro.\nEm um só lugar.",
+          "pt-PT": "Todo o dinheiro.\nNum só lugar.",
+          "de": "Dein ganzes Geld.\nAn einem Ort."
         },
         "screenshot": "/screenshots/android/phone/{locale}/01-log.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 0.99
+        },
+        "glow": {
+          "color": "#FFC9B3",
+          "x": 0.5757,
+          "y": 0.613,
+          "size": 0.6981
+        },
         "transforms": {
+          "caption": {
+            "x": 72,
+            "y": 69.6,
+            "width": 975.3,
+            "height": 435
+          },
           "device": {
-            "x": 145,
-            "y": 539,
-            "width": 790,
-            "height": 1756
+            "x": 227.3,
+            "y": 655,
+            "width": 684.4,
+            "height": 1470.7,
+            "rotation": -5
           }
-        }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-happy.png",
+            "transform": {
+              "x": 635.1,
+              "y": 469.4,
+              "width": 471,
+              "height": 427.8
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-us",
+            "src": "/flags/us.png",
+            "transform": {
+              "x": -16,
+              "y": 591.4,
+              "width": 254.5,
+              "height": 254.5,
+              "rotation": -10
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-eu",
+            "src": "/flags/eu.png",
+            "transform": {
+              "x": -16,
+              "y": 1302.6,
+              "width": 215.3,
+              "height": 215.3
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-ve",
+            "src": "/flags/ve.png",
+            "transform": {
+              "x": 828.4,
+              "y": 1183,
+              "width": 254.5,
+              "height": 254.5
+            },
+            "fit": "contain"
+          }
+        ]
       },
       {
-        "id": "de-add-menu",
-        "layout": "device-top",
+        "id": "g-autolog",
+        "layout": "device-bottom",
         "label": {
-          "en": "FIVE WAYS IN",
-          "es": "CINCO MANERAS",
-          "es-ES": "CINCO FORMAS",
-          "fr": "CINQ FAÇONS",
-          "pt-BR": "CINCO JEITOS",
-          "pt-PT": "CINCO FORMAS",
-          "de": "FÜNF WEGE"
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
+        },
+        "headline": {
+          "en": "Bank alert?\nAlready logged.",
+          "es": "¿Alerta del banco?\nYa quedó anotado.",
+          "es-ES": "¿Aviso del banco?\nYa está apuntado.",
+          "fr": "Alerte bancaire ?\nC'est déjà noté.",
+          "pt-BR": "Alerta do banco?\nJá foi anotado.",
+          "pt-PT": "Alerta do banco?\nJá está registado.",
+          "de": "Bank-Push?\nSchon erfasst."
+        },
+        "screenshot": "/screenshots/android/phone/{locale}/10-notification.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 0.99
+        },
+        "glow": {
+          "color": "#FFE29A",
+          "x": 0.5455,
+          "y": 0.5677,
+          "size": 0.7519
+        },
+        "transforms": {
+          "caption": {
+            "x": 72,
+            "y": 69.6,
+            "width": 975.3,
+            "height": 435
+          },
+          "device": {
+            "x": 273.1,
+            "y": 539,
+            "width": 684.4,
+            "height": 1470.7,
+            "rotation": 4
+          }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-point.png",
+            "transform": {
+              "x": -106.9,
+              "y": 1449.5,
+              "width": 639.2,
+              "height": 539.5
+            },
+            "fit": "contain"
+          }
+        ]
+      },
+      {
+        "id": "g-voice",
+        "layout": "device-bottom",
+        "label": {
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
+        },
+        "headline": {
+          "en": "Talk to it.\nIt listens.",
+          "es": "Háblale.\nTe escucha.",
+          "es-ES": "Háblale.\nTe escucha.",
+          "fr": "Parlez-lui.\nIl vous écoute.",
+          "pt-BR": "Fale com ele.\nEle escuta.",
+          "pt-PT": "Fale com ele.\nEle ouve.",
+          "de": "Sag es einfach.\nEs hört zu."
+        },
+        "screenshot": "/screenshots/android/phone/{locale}/04-entry.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 0.99
+        },
+        "glow": {
+          "color": "#BFE6CC",
+          "x": 0.4545,
+          "y": 0.5224,
+          "size": 0.8056
+        },
+        "transforms": {
+          "caption": {
+            "x": 72,
+            "y": 69.6,
+            "width": 975.3,
+            "height": 435
+          },
+          "device": {
+            "x": 436.7,
+            "y": 800,
+            "width": 684.4,
+            "height": 1470.7,
+            "rotation": 6
+          }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-mic.png",
+            "transform": {
+              "x": -55.8,
+              "y": 800,
+              "width": 740,
+              "height": 591.9
+            },
+            "fit": "contain"
+          }
+        ],
+        "cardElements": [
+          {
+            "id": "card-voice",
+            "variant": "bubble",
+            "transform": {
+              "x": 392.7,
+              "y": 469.4,
+              "width": 490.9,
+              "height": 150.8
+            },
+            "body": {
+              "en": "“Coffee 4.50\nand a cab 12”",
+              "es": "“Café 4.50\ny un taxi 12”",
+              "es-ES": "“Café 4,50\ny un taxi 12”",
+              "fr": "« Café 4,50\net un taxi 12 »",
+              "pt-BR": "“Café 4,50\ne um táxi 12”",
+              "pt-PT": "“Café 4,50\ne um táxi 12”",
+              "de": "„Kaffee 4,50\nund Taxi 12“"
+            }
+          }
+        ]
+      },
+      {
+        "id": "g-capture",
+        "layout": "device-bottom",
+        "label": {
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
         },
         "headline": {
           "en": "Type it, say it,\nor snap it.",
-          "es": "Escríbelo, dilo\no tómale una foto.",
+          "es": "Escríbelo, dilo\no tómale foto.",
           "es-ES": "Escríbelo, dilo\no hazle una foto.",
           "fr": "Tapez, dictez\nou photographiez.",
-          "pt-BR": "Digite, fale\nou tire uma foto.",
-          "pt-PT": "Escreva, diga\nou tire uma foto.",
-          "de": "Tippen, sagen,\nabfotografieren."
+          "pt-BR": "Digite, fale\nou fotografe.",
+          "pt-PT": "Escreva, diga\nou fotografe.",
+          "de": "Tippen, sagen\noder knipsen."
         },
         "screenshot": "/screenshots/android/phone/{locale}/02-add-menu.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 0.99
+        },
+        "glow": {
+          "color": "#FFC9B3",
+          "x": 0.5152,
+          "y": 0.5677,
+          "size": 0.7519
+        },
         "transforms": {
+          "caption": {
+            "x": 72,
+            "y": 69.6,
+            "width": 975.3,
+            "height": 435
+          },
           "device": {
-            "x": 145,
-            "y": -516,
-            "width": 790,
-            "height": 1756
+            "x": 194.5,
+            "y": 568,
+            "width": 684.4,
+            "height": 1470.7,
+            "rotation": -4
           }
-        }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-celebrating.png",
+            "transform": {
+              "x": 561.2,
+              "y": 1429.6,
+              "width": 605.5,
+              "height": 554.7
+            },
+            "fit": "contain"
+          }
+        ]
       },
       {
-        "id": "de-insights",
-        "layout": "hero",
+        "id": "g-insights",
+        "layout": "device-bottom",
         "label": {
-          "en": "INSIGHTS",
-          "es": "ANÁLISIS",
-          "es-ES": "ESTADÍSTICAS",
-          "fr": "STATISTIQUES",
-          "pt-BR": "ESTATÍSTICAS",
-          "pt-PT": "ESTATÍSTICAS",
-          "de": "AUSWERTUNGEN"
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
         },
         "headline": {
-          "en": "Where the week\nactually went.",
-          "es": "A dónde se fue\ntu semana.",
-          "es-ES": "En qué se te ha\nido la semana.",
-          "fr": "Où est passée\nvotre semaine.",
-          "pt-BR": "Para onde foi\nsua semana.",
-          "pt-PT": "Para onde foi\na sua semana.",
-          "de": "Wohin die Woche\nwirklich ging."
+          "en": "See the month\nbefore it ends.",
+          "es": "Mira el mes\nantes del final.",
+          "es-ES": "Mira el mes\nantes del final.",
+          "fr": "Voyez le mois\navant la fin.",
+          "pt-BR": "Veja o mês\nantes do fim.",
+          "pt-PT": "Veja o mês\nantes de acabar.",
+          "de": "Sieh den Monat,\nbevor er endet."
         },
         "screenshot": "/screenshots/android/phone/{locale}/03-insights.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 0.99
+        },
+        "glow": {
+          "color": "#D8CCF5",
+          "x": 0.5152,
+          "y": 0.5677,
+          "size": 0.7519
+        },
         "transforms": {
+          "caption": {
+            "x": 72,
+            "y": 69.6,
+            "width": 975.3,
+            "height": 435
+          },
           "device": {
-            "x": 145,
-            "y": 539,
-            "width": 790,
-            "height": 1756
+            "x": 194.5,
+            "y": 568,
+            "width": 684.4,
+            "height": 1470.7,
+            "rotation": -4
           }
-        }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-idea.png",
+            "transform": {
+              "x": -24.2,
+              "y": 1503.9,
+              "width": 336.5,
+              "height": 443.4
+            },
+            "fit": "contain"
+          }
+        ],
+        "cardElements": [
+          {
+            "id": "card-insights",
+            "variant": "stat",
+            "transform": {
+              "x": 598.9,
+              "y": 1008.8,
+              "width": 441.8,
+              "height": 174,
+              "rotation": 4
+            },
+            "label": {
+              "en": "ON PACE",
+              "es": "VAS BIEN",
+              "es-ES": "VAS BIEN",
+              "fr": "DANS LES CLOUS",
+              "pt-BR": "NO RITMO",
+              "pt-PT": "NO RITMO",
+              "de": "IM PLAN"
+            },
+            "title": {
+              "en": "$1,018",
+              "es": "$1,018",
+              "es-ES": "€1018",
+              "fr": "€1 018",
+              "pt-BR": "R$5.093",
+              "pt-PT": "€1018",
+              "de": "$1.018"
+            },
+            "body": {
+              "en": "left this month",
+              "es": "te quedan este mes",
+              "es-ES": "te quedan este mes",
+              "fr": "restants ce mois-ci",
+              "pt-BR": "sobrando este mês",
+              "pt-PT": "livres este mês",
+              "de": "übrig diesen Monat"
+            }
+          }
+        ]
       },
       {
-        "id": "de-entry",
-        "layout": "hero",
+        "id": "g-currencies",
+        "layout": "device-bottom",
         "label": {
-          "en": "THE ENTRY",
-          "es": "EL REGISTRO",
-          "es-ES": "EL REGISTRO",
-          "fr": "LA SAISIE",
-          "pt-BR": "O LANÇAMENTO",
-          "pt-PT": "O REGISTO",
-          "de": "DER EINTRAG"
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
         },
         "headline": {
-          "en": "Log it in\none sentence.",
-          "es": "Anótalo en\nuna frase.",
-          "es-ES": "Apúntalo en\nuna frase.",
-          "fr": "Notez-le en\nune phrase.",
-          "pt-BR": "Anote em\numa frase.",
-          "pt-PT": "Registe-o\nnuma frase.",
-          "de": "Ein Satz genügt."
+          "en": "Every currency.\nOne total.",
+          "es": "Cada moneda.\nUn solo total.",
+          "es-ES": "Cada moneda.\nUn solo total.",
+          "fr": "Toutes les devises.\nUn seul total.",
+          "pt-BR": "Toda moeda.\nUm só total.",
+          "pt-PT": "Todas as moedas.\nUm só total.",
+          "de": "Jede Währung.\nEine Summe."
         },
-        "screenshot": "/screenshots/android/phone/{locale}/04-entry.png",
+        "screenshot": "/screenshots/android/phone/{locale}/09-accounts.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 0.99
+        },
+        "glow": {
+          "color": "#BFDBF5",
+          "x": 0.5,
+          "y": 0.5451,
+          "size": 0.7787
+        },
         "transforms": {
+          "caption": {
+            "x": 72,
+            "y": 69.6,
+            "width": 975.3,
+            "height": 435
+          },
           "device": {
-            "x": 145,
-            "y": 539,
-            "width": 790,
-            "height": 1756
+            "x": 240.3,
+            "y": 655,
+            "width": 684.4,
+            "height": 1470.7,
+            "rotation": 4
           }
-        }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-proud.png",
+            "transform": {
+              "x": 584.4,
+              "y": 1469,
+              "width": 588.7,
+              "height": 513
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-us",
+            "src": "/flags/us.png",
+            "transform": {
+              "x": 3.7,
+              "y": 475.4,
+              "width": 254.5,
+              "height": 254.5
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-eu",
+            "src": "/flags/eu.png",
+            "transform": {
+              "x": 226.2,
+              "y": 444.2,
+              "width": 215.3,
+              "height": 215.3
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-mx",
+            "src": "/flags/mx.png",
+            "transform": {
+              "x": 780.9,
+              "y": 489.7,
+              "width": 225.1,
+              "height": 225.1
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "flag-ve",
+            "src": "/flags/ve.png",
+            "transform": {
+              "x": -16,
+              "y": 1067,
+              "width": 254.5,
+              "height": 254.5
+            },
+            "fit": "contain"
+          }
+        ]
       },
       {
-        "id": "de-pace",
-        "layout": "hero",
+        "id": "g-upcoming",
+        "layout": "device-bottom",
         "label": {
-          "en": "PACE",
-          "es": "RITMO",
-          "es-ES": "RITMO",
-          "fr": "RYTHME",
-          "pt-BR": "RITMO",
-          "pt-PT": "RITMO",
-          "de": "TEMPO"
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
         },
         "headline": {
-          "en": "You'll end the\nmonth $516 short.",
-          "es": "Este mes te\nvan a faltar $516.",
-          "es-ES": "Este mes te\nvan a faltar €516.",
-          "fr": "Il vous manquera\n€516 ce mois-ci.",
-          "pt-BR": "Vai faltar R$2.579\nno fim do mês.",
-          "pt-PT": "Vão faltar €516\neste mês.",
-          "de": "Der Monat endet\n$516 zu knapp."
-        },
-        "screenshot": "/screenshots/android/phone/{locale}/05-pace.png",
-        "transforms": {
-          "device": {
-            "x": 145,
-            "y": 539,
-            "width": 790,
-            "height": 1756
-          }
-        }
-      },
-      {
-        "id": "de-budgets",
-        "layout": "hero",
-        "label": {
-          "en": "LIMITS",
-          "es": "LÍMITES",
-          "es-ES": "LÍMITES",
-          "fr": "LIMITES",
-          "pt-BR": "LIMITES",
-          "pt-PT": "LIMITES",
-          "de": "LIMITS"
-        },
-        "headline": {
-          "en": "Every category.\nIts own limit.",
-          "es": "Cada categoría.\nSu propio límite.",
-          "es-ES": "Cada categoría.\nSu propio límite.",
-          "fr": "Chaque catégorie.\nSa propre limite.",
-          "pt-BR": "Cada categoria.\nSeu próprio limite.",
-          "pt-PT": "Cada categoria.\nO seu limite.",
-          "de": "Jede Kategorie.\nIhr eigenes Limit."
-        },
-        "screenshot": "/screenshots/android/phone/{locale}/06-budgets.png",
-        "transforms": {
-          "device": {
-            "x": 145,
-            "y": 539,
-            "width": 790,
-            "height": 1756
-          }
-        }
-      },
-      {
-        "id": "de-goals",
-        "layout": "hero",
-        "label": {
-          "en": "GOALS",
-          "es": "METAS",
-          "es-ES": "METAS",
-          "fr": "OBJECTIFS",
-          "pt-BR": "METAS",
-          "pt-PT": "OBJETIVOS",
-          "de": "SPARZIELE"
-        },
-        "headline": {
-          "en": "Japan in April.\nYou're on pace.",
-          "es": "Japón en abril.\nVas a buen ritmo.",
-          "es-ES": "Japón en abril.\nVas a buen ritmo.",
-          "fr": "Japon en avril.\nDans les temps.",
-          "pt-BR": "Japão em abril.\nNo ritmo certo.",
-          "pt-PT": "Japão em abril.\nEstá no ritmo.",
-          "de": "Japan im April.\nDu bist im Plan."
-        },
-        "screenshot": "/screenshots/android/phone/{locale}/07-goals.png",
-        "transforms": {
-          "device": {
-            "x": 145,
-            "y": 539,
-            "width": 790,
-            "height": 1756
-          }
-        }
-      },
-      {
-        "id": "de-subscriptions",
-        "layout": "hero",
-        "label": {
-          "en": "SUBSCRIPTIONS",
-          "es": "SUSCRIPCIONES",
-          "es-ES": "SUSCRIPCIONES",
-          "fr": "ABONNEMENTS",
-          "pt-BR": "ASSINATURAS",
-          "pt-PT": "SUBSCRIÇÕES",
-          "de": "ABOS"
-        },
-        "headline": {
-          "en": "Each subscription.\nOne monthly total.",
-          "es": "Tus suscripciones.\nUn total al mes.",
-          "es-ES": "Tus suscripciones.\nUn total al mes.",
-          "fr": "Vos abonnements.\nUn total par mois.",
-          "pt-BR": "Cada assinatura.\nUm total por mês.",
-          "pt-PT": "Cada subscrição.\nUm total por mês.",
-          "de": "Jedes Abo.\nEine Summe."
+          "en": "Bills coming?\nYou'll know.",
+          "es": "¿Viene un cobro?\nTe enteras antes.",
+          "es-ES": "¿Llega un cargo?\nLo sabrás antes.",
+          "fr": "Un prélèvement ?\nVous le saurez.",
+          "pt-BR": "Vem cobrança?\nVocê fica sabendo.",
+          "pt-PT": "Vem cobrança?\nVai saber antes.",
+          "de": "Abbuchung fällig?\nDu weißt Bescheid."
         },
         "screenshot": "/screenshots/android/phone/{locale}/08-upcoming.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 0.99
+        },
+        "glow": {
+          "color": "#D8CCF5",
+          "x": 0.5,
+          "y": 0.5451,
+          "size": 0.7787
+        },
         "transforms": {
+          "caption": {
+            "x": 72,
+            "y": 69.6,
+            "width": 975.3,
+            "height": 435
+          },
           "device": {
-            "x": 145,
-            "y": 539,
-            "width": 790,
-            "height": 1756
+            "x": 240.3,
+            "y": 568,
+            "width": 684.4,
+            "height": 1470.7,
+            "rotation": 4
           }
-        }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-sleepy.png",
+            "transform": {
+              "x": 601,
+              "y": 1456.2,
+              "width": 571.9,
+              "height": 523.5
+            },
+            "fit": "contain"
+          }
+        ],
+        "cardElements": [
+          {
+            "id": "card-upcoming",
+            "variant": "stat",
+            "transform": {
+              "x": 32.7,
+              "y": 1438,
+              "width": 670.9,
+              "height": 174,
+              "rotation": -4
+            },
+            "label": {
+              "en": "TOMORROW",
+              "es": "MAÑANA",
+              "es-ES": "MAÑANA",
+              "fr": "DEMAIN",
+              "pt-BR": "AMANHÃ",
+              "pt-PT": "AMANHÃ",
+              "de": "MORGEN"
+            },
+            "title": {
+              "en": "Netflix $22.99",
+              "es": "Netflix $22.99",
+              "es-ES": "Netflix €22,99",
+              "fr": "Netflix €22,99",
+              "pt-BR": "Netflix R$114,90",
+              "pt-PT": "Netflix €22,99",
+              "de": "Netflix $22,99"
+            },
+            "iconSrc": "/icons/netflix.png",
+            "iconBackground": "#000000"
+          }
+        ]
+      },
+      {
+        "id": "g-goals",
+        "layout": "device-bottom",
+        "label": {
+          "en": "",
+          "es": "",
+          "es-ES": "",
+          "fr": "",
+          "pt-BR": "",
+          "pt-PT": "",
+          "de": ""
+        },
+        "headline": {
+          "en": "Goals that\nactually happen.",
+          "es": "Metas que\nsí se cumplen.",
+          "es-ES": "Metas que\nsí se cumplen.",
+          "fr": "Des objectifs\nvraiment atteints.",
+          "pt-BR": "Metas que\nviram realidade.",
+          "pt-PT": "Metas que\nse concretizam.",
+          "de": "Ziele, die du\nwirklich erreichst."
+        },
+        "screenshot": "/screenshots/android/phone/{locale}/07-goals.png",
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 0.99
+        },
+        "glow": {
+          "color": "#FFC9B3",
+          "x": 0.5152,
+          "y": 0.5375,
+          "size": 0.7519
+        },
+        "transforms": {
+          "caption": {
+            "x": 72,
+            "y": 69.6,
+            "width": 975.3,
+            "height": 435
+          },
+          "device": {
+            "x": 201.1,
+            "y": 568,
+            "width": 684.4,
+            "height": 1470.7,
+            "rotation": -4
+          }
+        },
+        "imageElements": [
+          {
+            "id": "ori-0",
+            "src": "/mascot/ori-cheer.png",
+            "transform": {
+              "x": 501.7,
+              "y": 1419.7,
+              "width": 639.5,
+              "height": 569.7
+            },
+            "fit": "contain"
+          }
+        ]
       }
     ],
     "ipad": [
@@ -842,11 +1790,71 @@
         "layout": "feature-graphic",
         "label": {},
         "headline": {
-          "de": "Jedes Abo.\nEine Summe im Monat."
+          "en": "All your money.\nOne calm place.",
+          "es": "Todo tu dinero.\nEn un solo lugar.",
+          "es-ES": "Todo tu dinero.\nEn un solo sitio.",
+          "fr": "Tout votre argent.\nUn seul endroit.",
+          "pt-BR": "Todo seu dinheiro.\nEm um só lugar.",
+          "pt-PT": "Todo o dinheiro.\nNum só lugar.",
+          "de": "Dein ganzes Geld.\nAn einem Ort."
         },
-        "screenshot": "",
+        "screenshot": "/screenshots/apple/iphone/{locale}/01.png",
         "inverted": false,
-        "backgroundColor": "#F2F1EC"
+        "backgroundColor": "#F7F2E9",
+        "headlineAccentColor": "#C2371B",
+        "typography": {
+          "headlineScale": 1.9
+        },
+        "glow": {
+          "color": "#FFC9B3",
+          "x": 0.71,
+          "y": 0.5,
+          "size": 0.44
+        },
+        "transforms": {
+          "device": {
+            "x": 669,
+            "y": 57,
+            "width": 230,
+            "height": 483.5,
+            "rotation": 0
+          }
+        },
+        "imageElements": [
+          {
+            "id": "ori-happy",
+            "src": "/mascot/ori-happy.png",
+            "transform": {
+              "x": 836.6,
+              "y": -6,
+              "width": 164.7,
+              "height": 149.6
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "ori-mic",
+            "src": "/mascot/ori-mic.png",
+            "transform": {
+              "x": 484.8,
+              "y": 318,
+              "width": 220.4,
+              "height": 176.3
+            },
+            "fit": "contain"
+          },
+          {
+            "id": "ori-cheer",
+            "src": "/mascot/ori-cheer.png",
+            "transform": {
+              "x": 861.2,
+              "y": 336,
+              "width": 155.5,
+              "height": 138.5
+            },
+            "fit": "contain"
+          }
+        ]
       }
     ],
     "duo-outer": [
@@ -1095,12 +2103,14 @@
     "backdrop": "solid",
     "span": false,
     "decoration": "none",
-    "shadow": 0,
+    "shadow": 30,
     "glow": 0,
     "tilt": 0,
-    "headlineWeight": 700,
+    "headlineWeight": 900,
     "headlineScale": 1,
     "headlineCase": "as-typed",
-    "captionAlign": "auto"
+    "captionAlign": "left",
+    "brandLockup": true,
+    "deviceFinish": "light"
   }
 }
