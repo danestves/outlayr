@@ -1,5 +1,6 @@
 import { NavRail } from "panelui-web/nav-rail";
 import type { ReactNode } from "react";
+import { useIntlayer } from "react-intlayer";
 
 import { accentCss } from "@/lib/accent";
 import { useProfileMirror } from "@/lib/account-state";
@@ -25,6 +26,7 @@ function forwardScrollKeys(content: HTMLDivElement | null) {
 /** `bare` drops the sidebar and the scroll pane: onboarding owns the whole window. */
 export function DashboardShell({ bare = false, children }: { bare?: boolean; children: ReactNode }) {
     const settings = useLedgerSettings();
+    const { skip } = useIntlayer("dashboard-shell");
     useProfileMirror();
     if (bare) {
         return (
@@ -44,10 +46,17 @@ export function DashboardShell({ bare = false, children }: { bare?: boolean; chi
                 mobileBreakpoint="64rem"
                 storageKey="outlayr-nav-rail"
             >
+                <a
+                    className="bg-foreground text-background focus:rounded-app-lg fixed top-3 left-3 z-50 -translate-y-24 px-3 py-2 text-sm font-semibold focus:translate-y-0"
+                    href="#main"
+                >
+                    {skip}
+                </a>
                 <Sidebar />
                 <div
                     className="min-w-0 flex-1 [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto overscroll-contain outline-none"
                     data-scroll-restoration-id="dashboard-content"
+                    id="main"
                     ref={forwardScrollKeys}
                     tabIndex={-1}
                 >

@@ -37,6 +37,9 @@ import { Fragment, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { DebtFlowsProvider } from "@/components/dashboard/debts/debt-flows";
+import { useDebtFlows } from "@/components/dashboard/debts/flow-context";
+import { takesPayoffPlan } from "@/components/dashboard/debts/model";
 import { Empty } from "@/components/dashboard/home/empty";
 import { timeOfDay, titled, useDateFormat, useMonthYear, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -86,7 +89,7 @@ import {
     statementOf,
 } from "./model";
 import type { AccountEntry, AccountRow, WorthRange } from "./model";
-import { KpiBand, KpiCell, Meter, PhoneAction, PhoneItem, Segments, Trend, useCheckedText } from "./parts";
+import { KpiBand, KpiCell, Meter, PhoneItem, Segments, Trend, useCheckedText } from "./parts";
 import { WorthChart } from "./worth-chart";
 
 const DETAIL_CHART = 778 / 172;
@@ -114,6 +117,7 @@ function DetailBar({ row }: { row: AccountRow }) {
     const { ledger } = useDashboard();
     const { actions, detail, flows } = useIntlayer("dashboard-accounts");
     const { open } = useAccountFlows();
+    const { open: openDebt } = useDebtFlows();
     const card = isCard(row);
     return (
         <AccountsBar
@@ -177,10 +181,12 @@ function DetailBar({ row }: { row: AccountRow }) {
                                 <Glyph icon={ImageAdd01Icon} size={16} />
                                 {actions.importScreenshot}
                             </Menu.Item>
-                            <PhoneItem>
-                                <Glyph icon={Flag01Icon} size={16} />
-                                {actions.payOffBy}
-                            </PhoneItem>
+                            {takesPayoffPlan(row) ? (
+                                <Menu.Item onClick={() => openDebt({ accountId: row.id, kind: "plan" })}>
+                                    <Glyph icon={Flag01Icon} size={16} />
+                                    {actions.payOffBy}
+                                </Menu.Item>
+                            ) : null}
                         </>
                     ) : (
                         <Menu.Item onClick={() => open({ accountId: row.id, kind: "check" })}>
@@ -785,10 +791,15 @@ function EmptyEntries({ accountId }: { accountId: string }) {
                             <Glyph icon={Add01Icon} size={16} />
                             {detail.addEntry}
                         </Button>
-                        <PhoneAction size="sm">
+                        <Button
+                            nativeButton={false}
+                            render={<Link to="/import" viewTransition={viewTransition("push-left")} />}
+                            size="sm"
+                            variant="outline"
+                        >
                             <Glyph icon={Upload04Icon} className="text-muted-foreground" size={16} />
                             {detail.importEntries}
-                        </PhoneAction>
+                        </Button>
                     </>
                 }
                 icon={TransactionHistoryIcon}
@@ -1059,28 +1070,30 @@ export function AccountDetail({ accountId }: { accountId: string }) {
     const empty = flowsOf(ledger, row.id).length === 0;
     return (
         <Toast.Provider position="bottom-center" toastManager={deleteToasts}>
-            <main className="@container flex min-h-dvh min-w-0 flex-col px-4 pb-5 sm:px-6">
-                <DetailBar row={row} />
-                {isCard(row) ? <CardKpis row={row} /> : <BankKpis row={row} />}
-                <div className="mt-4 grid flex-1 grid-cols-1 gap-4 @5xl:grid-cols-[minmax(0,1fr)_332px]">
-                    <div className="flex min-w-0 flex-col gap-4">
-                        {empty ? (
-                            <EmptyEntries accountId={row.id} />
-                        ) : (
-                            <>
-                                <HistoryCard row={row} />
-                                <TransactionsCard key={row.id} row={row} />
-                            </>
-                        )}
+            <DebtFlowsProvider>
+                <main className="@container flex min-h-dvh min-w-0 flex-col px-4 pb-5 sm:px-6">
+                    <DetailBar row={row} />
+                    {isCard(row) ? <CardKpis row={row} /> : <BankKpis row={row} />}
+                    <div className="mt-4 grid flex-1 grid-cols-1 gap-4 @5xl:grid-cols-[minmax(0,1fr)_332px]">
+                        <div className="flex min-w-0 flex-col gap-4">
+                            {empty ? (
+                                <EmptyEntries accountId={row.id} />
+                            ) : (
+                                <>
+                                    <HistoryCard row={row} />
+                                    <TransactionsCard key={row.id} row={row} />
+                                </>
+                            )}
+                        </div>
+                        <div className="flex min-w-0 flex-col gap-4">
+                            <CheckCard row={row} />
+                            <UpcomingCard accountId={row.id} showEmpty={!empty} />
+                            {isCard(row) ? <InstallmentsCard row={row} /> : <SpentCard row={row} />}
+                            <DetailsCard row={row} />
+                        </div>
                     </div>
-                    <div className="flex min-w-0 flex-col gap-4">
-                        <CheckCard row={row} />
-                        <UpcomingCard accountId={row.id} showEmpty={!empty} />
-                        {isCard(row) ? <InstallmentsCard row={row} /> : <SpentCard row={row} />}
-                        <DetailsCard row={row} />
-                    </div>
-                </div>
-            </main>
+                </main>
+            </DebtFlowsProvider>
         </Toast.Provider>
     );
 }

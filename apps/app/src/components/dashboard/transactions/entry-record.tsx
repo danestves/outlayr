@@ -55,10 +55,9 @@ function Dot({ color }: { color: string | undefined }) {
     return <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />;
 }
 
-/** The split, files and history under an entry, read from the synced record tables. */
+/** The split and files under an entry, read from the synced record tables. */
 export function EntryRecord({ editable, entry: doc, merchant }: { editable: boolean; entry: Doc; merchant: string }) {
     const { ledger } = useDashboard();
-    const { record } = useIntlayer("dashboard-transactions");
     const { columns } = useIntlayer("dashboard-ledger");
     const entry: Entry = { ...doc, currency: doc.currency ?? ledger.currency };
     const books = useRecordBooks();
@@ -82,8 +81,6 @@ export function EntryRecord({ editable, entry: doc, merchant }: { editable: bool
                 merchant={merchant}
                 receipt={unattached}
             />
-            <Heading>{record.history}</Heading>
-            <p className="text-muted-foreground text-app-body">{record.historyComing}</p>
         </div>
     );
 }

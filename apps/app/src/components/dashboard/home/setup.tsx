@@ -78,7 +78,6 @@ export function SetupHero({ setup }: { setup: SetupState }) {
     );
 }
 
-// Creating things on web isn't built yet, so setup's calls to action say where to go instead of opening a form.
 export function PhoneButton(button: ComponentProps<typeof Button>) {
     const { phoneHint } = useIntlayer("dashboard-home").setup;
     return <Button aria-disabled title={phoneHint.value} {...button} />;

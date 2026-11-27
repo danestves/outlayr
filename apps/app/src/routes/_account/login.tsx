@@ -44,6 +44,9 @@ export const Route = createFileRoute("/_account/login")({
                 { content: "630", property: "og:image:height" },
                 { content: "summary_large_image", name: "twitter:card" },
                 { content: "@tryoutlayr", name: "twitter:site" },
+                { content: title, name: "twitter:title" },
+                { content: description, name: "twitter:description" },
+                { content: `${SITE_URL}${LANGUAGES.en.image}`, name: "twitter:image" },
             ],
         };
     },

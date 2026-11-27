@@ -42,6 +42,7 @@ export const Route = createRootRouteWithContext<{
         links: [
             { href: appCss, rel: "stylesheet" },
             { as: "font", crossOrigin: "anonymous", href: geist, rel: "preload", type: "font/woff2" },
+            { href: "/manifest.webmanifest", rel: "manifest" },
             { href: "/favicon.svg", rel: "icon", type: "image/svg+xml" },
             {
                 href: "/favicon-light.png",
@@ -100,6 +101,7 @@ function RootDocument({ children }: { children: ReactNode }) {
     return (
         <html lang={LANGUAGES[locale].lang} suppressHydrationWarning>
             <head>
+                <meta content="#131209" media="(prefers-color-scheme: dark)" name="theme-color" />
                 <HeadContent />
             </head>
             <body className="flex min-h-dvh flex-col">

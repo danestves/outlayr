@@ -373,6 +373,13 @@ export default {
                 pt: "Sessão expirada",
             }),
         },
+        skip: t({
+            en: "Skip to content",
+            de: "Zum Inhalt springen",
+            es: "Saltar al contenido",
+            fr: "Aller au contenu",
+            pt: "Pular para o conteúdo",
+        }),
         sync: {
             failed: insert(
                 t({
