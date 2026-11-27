@@ -3,7 +3,7 @@ import PencilEdit02Icon from "@hugeicons/core-free-icons/PencilEdit02Icon";
 import UserSearch01Icon from "@hugeicons/core-free-icons/UserSearch01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { Avatar } from "panelui-web/avatar";
 import { Button } from "panelui-web/button";
 import { useState } from "react";
@@ -85,6 +85,10 @@ export const Route = createFileRoute("/_account/join/$code")({
 
 function TopActions() {
     const { account } = useIntlayer("dashboard");
+    const signedIn = useRouteContext({ from: "/_account", select: (context) => context.token !== null });
+    if (!signedIn) {
+        return null;
+    }
     return (
         <span className="flex items-center gap-2">
             <SessionEmail />
@@ -104,6 +108,7 @@ const Perk = ({ children, icon }: { children: ReactNode; icon: ReactNode }) => (
 
 function JoinSheet({ code, invite }: { code: string; invite: NonNullable<ProfileInvite> }) {
     const copy = useIntlayer("profile-sharing");
+    const signedIn = useRouteContext({ from: "/_account", select: (context) => context.token !== null });
     const [busy, setBusy] = useState(false);
     const [refusal, setRefusal] = useState<JoinKind | null>(null);
     const look = inviteLook(invite.look) ?? PERSONAL_LOOK;
@@ -116,6 +121,10 @@ function JoinSheet({ code, invite }: { code: string; invite: NonNullable<Profile
     }
 
     const join = async () => {
+        if (!signedIn) {
+            window.location.assign(`/login?redirect=${encodeURIComponent(`/join/${code}`)}`);
+            return;
+        }
         if (busy) {
             return;
         }
