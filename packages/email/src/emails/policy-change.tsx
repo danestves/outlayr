@@ -25,7 +25,7 @@ interface PolicyChangeCopy {
     both: Announcement;
     documents: Record<LegalDocument, Announcement & { intro: string }>;
     footer: (email: string) => string;
-    keepUsing: (date: string) => string;
+    keepUsing: string;
     link: string;
     preview: string;
     reply: string;
@@ -36,132 +36,139 @@ const COPY = {
     en: {
         after: "There's nothing you need to do. You can export your data or delete your account at any time in Settings.",
         both: {
-            lead: (date) => `Our Privacy Policy and Terms of Use change on ${date}.`,
+            lead: (date) => `Our Privacy Policy and Terms of Use have changed. The new versions apply from ${date}.`,
             subject: "Updates to our Privacy Policy and Terms of Use",
         },
         documents: {
             privacy: {
-                intro: "What changes in the Privacy Policy:",
-                lead: (date) => `Our Privacy Policy changes on ${date}.`,
+                intro: "What changed in the Privacy Policy:",
+                lead: (date) => `Our Privacy Policy has changed. The new version applies from ${date}.`,
                 subject: "Updates to our Privacy Policy",
             },
             terms: {
-                intro: "What changes in the Terms of Use:",
-                lead: (date) => `Our Terms of Use change on ${date}.`,
+                intro: "What changed in the Terms of Use:",
+                lead: (date) => `Our Terms of Use have changed. The new version applies from ${date}.`,
                 subject: "Updates to our Terms of Use",
             },
         },
         footer: (email) => `A service notice sent to ${email} and every other Outlayr account.`,
-        keepUsing: (date) =>
-            `By using Outlayr on or after ${date}, you accept the new Terms of Use and Privacy Policy. If you don't agree, cancel any subscription and delete your account before then.`,
+        keepUsing:
+            "By continuing to use Outlayr, you accept the new Terms of Use and Privacy Policy. If you don't agree, cancel any subscription and delete your account.",
         link: "Read the new version",
-        preview: "What changes, and when.",
+        preview: "What changed, and from when.",
         reply: "Questions? Reply to this email.",
-        takesEffect: "Takes effect",
+        takesEffect: "In effect from",
     },
     de: {
         after: "Du musst nichts tun. Du kannst jederzeit in den Einstellungen deine Daten exportieren oder dein Konto löschen.",
         both: {
-            lead: (date) => `Unsere Datenschutzerklärung und unsere Nutzungsbedingungen ändern sich am ${date}.`,
+            lead: (date) =>
+                `Wir haben unsere Datenschutzerklärung und unsere Nutzungsbedingungen geändert. Die neuen Fassungen gelten ab dem ${date}.`,
             subject: "Änderungen an unserer Datenschutzerklärung und unseren Nutzungsbedingungen",
         },
         documents: {
             privacy: {
-                intro: "Was sich in der Datenschutzerklärung ändert:",
-                lead: (date) => `Unsere Datenschutzerklärung ändert sich am ${date}.`,
+                intro: "Was sich in der Datenschutzerklärung geändert hat:",
+                lead: (date) => `Wir haben unsere Datenschutzerklärung geändert. Die neue Fassung gilt ab dem ${date}.`,
                 subject: "Änderungen an unserer Datenschutzerklärung",
             },
             terms: {
-                intro: "Was sich in den Nutzungsbedingungen ändert:",
-                lead: (date) => `Unsere Nutzungsbedingungen ändern sich am ${date}.`,
+                intro: "Was sich in den Nutzungsbedingungen geändert hat:",
+                lead: (date) => `Wir haben unsere Nutzungsbedingungen geändert. Die neue Fassung gilt ab dem ${date}.`,
                 subject: "Änderungen an unseren Nutzungsbedingungen",
             },
         },
         footer: (email) => `Ein Servicehinweis, gesendet an ${email} und an alle anderen Outlayr-Konten.`,
-        keepUsing: (date) =>
-            `Wenn du Outlayr am ${date} oder danach nutzt, akzeptierst du die neuen Nutzungsbedingungen und die neue Datenschutzerklärung. Wenn du nicht einverstanden bist, kündige vorher jedes Abo und lösche dein Konto.`,
+        keepUsing:
+            "Wenn du Outlayr weiter nutzt, akzeptierst du die neuen Nutzungsbedingungen und die neue Datenschutzerklärung. Wenn du nicht einverstanden bist, kündige jedes Abo und lösche dein Konto.",
         link: "Neue Fassung lesen",
-        preview: "Was sich ändert und ab wann.",
+        preview: "Was sich geändert hat und ab wann.",
         reply: "Fragen? Antworte auf diese E-Mail.",
-        takesEffect: "Tritt in Kraft",
+        takesEffect: "Gilt ab",
     },
     es: {
         after: "No tienes que hacer nada. Puedes exportar tus datos o eliminar tu cuenta cuando quieras en Configuración.",
         both: {
-            lead: (date) => `Nuestra Política de privacidad y nuestros Términos de uso cambian el ${date}.`,
+            lead: (date) =>
+                `Actualizamos nuestra Política de privacidad y nuestros Términos de uso. Las nuevas versiones aplican desde el ${date}.`,
             subject: "Cambios en nuestra Política de privacidad y nuestros Términos de uso",
         },
         documents: {
             privacy: {
-                intro: "Qué cambia en la Política de privacidad:",
-                lead: (date) => `Nuestra Política de privacidad cambia el ${date}.`,
+                intro: "Qué cambió en la Política de privacidad:",
+                lead: (date) =>
+                    `Actualizamos nuestra Política de privacidad. La nueva versión aplica desde el ${date}.`,
                 subject: "Cambios en nuestra Política de privacidad",
             },
             terms: {
-                intro: "Qué cambia en los Términos de uso:",
-                lead: (date) => `Nuestros Términos de uso cambian el ${date}.`,
+                intro: "Qué cambió en los Términos de uso:",
+                lead: (date) => `Actualizamos nuestros Términos de uso. La nueva versión aplica desde el ${date}.`,
                 subject: "Cambios en nuestros Términos de uso",
             },
         },
         footer: (email) => `Aviso de servicio enviado a ${email} y a todas las cuentas de Outlayr.`,
-        keepUsing: (date) =>
-            `Si usas Outlayr a partir del ${date}, aceptas los nuevos Términos de uso y la nueva Política de privacidad. Si no estás de acuerdo, cancela cualquier suscripción y elimina tu cuenta antes de esa fecha.`,
+        keepUsing:
+            "Si sigues usando Outlayr, aceptas los nuevos Términos de uso y la nueva Política de privacidad. Si no estás de acuerdo, cancela cualquier suscripción y elimina tu cuenta.",
         link: "Leer la nueva versión",
-        preview: "Qué cambia y desde cuándo.",
+        preview: "Qué cambió y desde cuándo.",
         reply: "¿Preguntas? Responde a este correo.",
-        takesEffect: "Entra en vigor",
+        takesEffect: "Vigente desde",
     },
     fr: {
         after: "Vous n'avez rien à faire. Vous pouvez exporter vos données ou supprimer votre compte à tout moment dans Réglages.",
         both: {
-            lead: (date) => `Notre politique de confidentialité et nos conditions d'utilisation changent le ${date}.`,
+            lead: (date) =>
+                `Nous avons mis à jour notre politique de confidentialité et nos conditions d'utilisation. Les nouvelles versions s'appliquent à partir du ${date}.`,
             subject: "Mise à jour de notre politique de confidentialité et de nos conditions d'utilisation",
         },
         documents: {
             privacy: {
-                intro: "Ce qui change dans la politique de confidentialité :",
-                lead: (date) => `Notre politique de confidentialité change le ${date}.`,
+                intro: "Ce qui a changé dans la politique de confidentialité :",
+                lead: (date) =>
+                    `Nous avons mis à jour notre politique de confidentialité. La nouvelle version s'applique à partir du ${date}.`,
                 subject: "Mise à jour de notre politique de confidentialité",
             },
             terms: {
-                intro: "Ce qui change dans les conditions d'utilisation :",
-                lead: (date) => `Nos conditions d'utilisation changent le ${date}.`,
+                intro: "Ce qui a changé dans les conditions d'utilisation :",
+                lead: (date) =>
+                    `Nous avons mis à jour nos conditions d'utilisation. La nouvelle version s'applique à partir du ${date}.`,
                 subject: "Mise à jour de nos conditions d'utilisation",
             },
         },
         footer: (email) => `Avis de service envoyé à ${email} et à tous les comptes Outlayr.`,
-        keepUsing: (date) =>
-            `En utilisant Outlayr à partir du ${date}, vous acceptez les nouvelles Conditions d'utilisation et la nouvelle Politique de confidentialité. Si vous ne les acceptez pas, résiliez tout abonnement et supprimez votre compte avant cette date.`,
+        keepUsing:
+            "En continuant à utiliser Outlayr, vous acceptez les nouvelles Conditions d'utilisation et la nouvelle Politique de confidentialité. Si vous ne les acceptez pas, résiliez tout abonnement et supprimez votre compte.",
         link: "Lire la nouvelle version",
-        preview: "Ce qui change, et à partir de quand.",
+        preview: "Ce qui a changé, et à partir de quand.",
         reply: "Des questions ? Répondez à cet e-mail.",
-        takesEffect: "Entrée en vigueur",
+        takesEffect: "En vigueur depuis",
     },
     pt: {
         after: "Você não precisa fazer nada. Pode exportar seus dados ou apagar sua conta quando quiser em Ajustes.",
         both: {
-            lead: (date) => `Nossa Política de Privacidade e nossos Termos de Uso mudam em ${date}.`,
+            lead: (date) =>
+                `Atualizamos nossa Política de Privacidade e nossos Termos de Uso. As novas versões valem a partir de ${date}.`,
             subject: "Mudanças na nossa Política de Privacidade e nos nossos Termos de Uso",
         },
         documents: {
             privacy: {
-                intro: "O que muda na Política de Privacidade:",
-                lead: (date) => `Nossa Política de Privacidade muda em ${date}.`,
+                intro: "O que mudou na Política de Privacidade:",
+                lead: (date) => `Atualizamos nossa Política de Privacidade. A nova versão vale a partir de ${date}.`,
                 subject: "Mudanças na nossa Política de Privacidade",
             },
             terms: {
-                intro: "O que muda nos Termos de Uso:",
-                lead: (date) => `Nossos Termos de Uso mudam em ${date}.`,
+                intro: "O que mudou nos Termos de Uso:",
+                lead: (date) => `Atualizamos nossos Termos de Uso. A nova versão vale a partir de ${date}.`,
                 subject: "Mudanças nos nossos Termos de Uso",
             },
         },
         footer: (email) => `Aviso de serviço enviado para ${email} e todas as contas do Outlayr.`,
-        keepUsing: (date) =>
-            `Ao usar o Outlayr a partir de ${date}, você aceita os novos Termos de uso e a nova Política de privacidade. Se não concordar, cancele qualquer assinatura e apague sua conta antes dessa data.`,
+        keepUsing:
+            "Ao continuar usando o Outlayr, você aceita os novos Termos de uso e a nova Política de privacidade. Se não concordar, cancele qualquer assinatura e apague sua conta.",
         link: "Ler a nova versão",
-        preview: "O que muda e a partir de quando.",
+        preview: "O que mudou e a partir de quando.",
         reply: "Dúvidas? Responda a este e-mail.",
-        takesEffect: "Entra em vigor",
+        takesEffect: "Em vigor desde",
     },
 } satisfies Record<Language, PolicyChangeCopy>;
 
@@ -182,7 +189,7 @@ export default function PolicyChangeEmail({
     const date = formatDate(effectiveAtMs, language, timeZone);
     return (
         <Note
-            after={[copy.after, copy.keepUsing(date), copy.reply].join(" ")}
+            after={[copy.after, copy.keepUsing, copy.reply].join(" ")}
             facts={[[copy.takesEffect, date]]}
             footer={copy.footer(email)}
             language={language}

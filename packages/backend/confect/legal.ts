@@ -17,25 +17,25 @@ export const NOVEMBER_NOTICE_AT_MS = Date.UTC(2026, 10, 19);
 
 export const CAPTURE_PUSH_EFFECTIVE_AT_MS = NOVEMBER_NOTICE_AT_MS;
 
-export const JANUARY_NOTICE_AT_MS = Date.UTC(2027, 0, 1);
+export const LATE_NOVEMBER_NOTICE_AT_MS = Date.UTC(2026, 10, 27);
 
 // Nothing is received or sent for a user webhook before the privacy notice that announces them takes effect.
-export const WEBHOOKS_EFFECTIVE_AT_MS = JANUARY_NOTICE_AT_MS;
+export const WEBHOOKS_EFFECTIVE_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
-export const REMINDER_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
+export const REMINDER_ANALYTICS_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
-export const VOICE_KEYTERMS_AT_MS = JANUARY_NOTICE_AT_MS;
+export const VOICE_KEYTERMS_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
-export const TOUR_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
+export const TOUR_ANALYTICS_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
-export const AUTOLOG_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
+export const AUTOLOG_ANALYTICS_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
-export const ONBOARDING_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
+export const ONBOARDING_ANALYTICS_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
-export const WEB_ANALYTICS_AT_MS = JANUARY_NOTICE_AT_MS;
+export const WEB_ANALYTICS_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
 const GUEST_PURCHASE_AT_MS = Date.UTC(2026, 10, 21);
-const PROFILES_AT_MS = JANUARY_NOTICE_AT_MS;
+const PROFILES_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
 export const POLICY_NOTICES: readonly PolicyNotice[] = [
     {
@@ -1165,6 +1165,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "We no longer email you before a Pro free trial you started on the web turns paid.",
                     label: "A reminder before a trial ends",
                 },
+                {
+                    detail: "A change that needs notice takes effect the day we email you about it.",
+                    label: "How we tell you about changes",
+                },
             ],
             de: [
                 {
@@ -1206,6 +1210,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Wir senden dir keine E-Mail mehr, bevor eine im Web gestartete kostenlose Pro-Testphase kostenpflichtig wird.",
                     label: "Eine Erinnerung vor dem Ende einer Testphase",
+                },
+                {
+                    detail: "Eine Änderung, die eine Mitteilung erfordert, tritt an dem Tag in Kraft, an dem wir dir die E-Mail dazu senden.",
+                    label: "Wie wir dich über Änderungen informieren",
                 },
             ],
             es: [
@@ -1249,6 +1257,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Ya no te enviamos un correo antes de que una prueba gratis de Pro que empezaste en la web pase a ser de pago.",
                     label: "Un recordatorio antes de que termine la prueba",
                 },
+                {
+                    detail: "Un cambio que requiere aviso entra en vigor el día en que te enviamos el correo sobre ese cambio.",
+                    label: "Cómo te avisamos de los cambios",
+                },
             ],
             fr: [
                 {
@@ -1290,6 +1302,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Nous ne vous envoyons plus d'e-mail avant qu'un essai gratuit de Pro commencé sur le web devienne payant.",
                     label: "Un rappel avant la fin de l'essai",
+                },
+                {
+                    detail: "Une modification soumise à préavis entre en vigueur le jour où nous vous envoyons l'e-mail qui l'annonce.",
+                    label: "Comment nous vous informons des modifications",
                 },
             ],
             pt: [
@@ -1333,10 +1349,14 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Não enviamos mais um e-mail antes de um teste grátis do Pro iniciado na web passar a ser pago.",
                     label: "Um lembrete antes do fim do teste",
                 },
+                {
+                    detail: "Uma mudança que exige aviso entra em vigor no dia em que enviamos o e-mail sobre ela.",
+                    label: "Como avisamos sobre mudanças",
+                },
             ],
         },
         document: "privacy",
-        effectiveAtMs: JANUARY_NOTICE_AT_MS,
+        effectiveAtMs: LATE_NOVEMBER_NOTICE_AT_MS,
         postedAtMs: Date.UTC(2026, 10, 28),
     },
     {
@@ -1346,11 +1366,15 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     label: "Shared profiles: everyone in one can change its ledger, only the owner invites or removes people, members can leave once their changes sync, and it is deleted from our servers if the owner deletes their account.",
                 },
+                { label: "A material change takes effect the day we email you about it." },
             ],
             de: [
                 { label: "Profile gehören zu Pro. Der kostenlose Plan behält ein Haushaltsbuch." },
                 {
                     label: "Geteilte Profile: Alle darin können das Haushaltsbuch ändern, nur der Eigentümer lädt ein oder entfernt Personen, Mitglieder können austreten, sobald ihre Änderungen synchronisiert sind, und es wird von unseren Servern gelöscht, wenn der Eigentümer sein Konto löscht.",
+                },
+                {
+                    label: "Eine wesentliche Änderung tritt an dem Tag in Kraft, an dem wir dir die E-Mail dazu senden.",
                 },
             ],
             es: [
@@ -1358,11 +1382,15 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     label: "Perfiles compartidos: todos en uno pueden cambiar su registro, solo el propietario invita o quita personas, los miembros pueden salirse cuando sus cambios se sincronicen, y se elimina de nuestros servidores si el propietario elimina su cuenta.",
                 },
+                { label: "Un cambio sustancial entra en vigor el día en que te enviamos el correo sobre ese cambio." },
             ],
             fr: [
                 { label: "Les profils font partie de Pro. L'offre gratuite garde un registre." },
                 {
                     label: "Profils partagés : tous les membres peuvent modifier le registre, seul le propriétaire invite ou retire des personnes, les membres peuvent partir une fois leurs modifications synchronisées, et il est supprimé de nos serveurs si le propriétaire supprime son compte.",
+                },
+                {
+                    label: "Une modification importante entre en vigueur le jour où nous vous envoyons l'e-mail qui l'annonce.",
                 },
             ],
             pt: [
@@ -1370,11 +1398,12 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     label: "Perfis compartilhados: todos nele podem alterar o registro, só o proprietário convida ou remove pessoas, os membros podem sair quando as alterações sincronizarem, e ele é excluído dos nossos servidores se o proprietário excluir a conta.",
                 },
+                { label: "Uma mudança relevante entra em vigor no dia em que enviamos o e-mail sobre ela." },
             ],
         },
         document: "terms",
         effectiveAtMs: PROFILES_AT_MS,
-        postedAtMs: Date.UTC(2026, 10, 26),
+        postedAtMs: Date.UTC(2026, 10, 28),
     },
 ];
 
