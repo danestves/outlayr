@@ -17,7 +17,7 @@ export function unitOf(plan: Plan, t: TranslateFn): string | null {
 
 export function noteOf(plan: Plan, t: TranslateFn): string | null {
     if (plan.firstYear !== null) {
-        return t("pro.exit.eyebrow", { percent: plan.firstYear.percentOff });
+        return `${t("pro.exit.eyebrow", { percent: plan.firstYear.percentOff })} · ${t("pro.cta.thenYearly", { price: plan.priceString })}`;
     }
     const parts = [
         plan.trialDays === null ? null : t("pro.plan.trial", { days: plan.trialDays }),
