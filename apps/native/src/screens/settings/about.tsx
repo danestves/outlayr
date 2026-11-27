@@ -15,6 +15,7 @@ import { openStoreReviewCommand } from "@/state/link-commands";
 import { fireAtomCommand } from "@/state/use-atom-action";
 
 const WEBSITE = "https://tryoutlayr.com";
+const WEB_APP = "https://app.tryoutlayr.com";
 const X_PROFILE = "https://x.com/tryoutlayr";
 const OUTLAYR_REPO = "https://github.com/danestves/outlayr";
 const DIME_REPO = "https://github.com/rafsoh/dimeApp";
@@ -48,6 +49,7 @@ export function About() {
                     }}
                     title={t("settings.row.share")}
                 />
+                <LinkRow icon="Globe" onPress={() => openWebLink(WEB_APP)} title={t("settings.row.useWeb")} />
                 <LinkRow icon="NewTwitter" onPress={() => openWebLink(X_PROFILE)} title={t("settings.row.followX")} />
             </SettingsSection>
 

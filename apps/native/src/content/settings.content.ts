@@ -639,6 +639,15 @@ const settings = {
             pt: "Próximos lançamentos",
             "pt-PT": "Próximos registos",
         }),
+        "settings.row.useWeb": t({
+            en: "Use Outlayr on the web",
+            de: "Outlayr im Web nutzen",
+            es: "Usa Outlayr en la web",
+            "es-ES": "Usa Outlayr en la web",
+            fr: "Utiliser Outlayr sur le web",
+            pt: "Use o Outlayr na web",
+            "pt-PT": "Utilizar o Outlayr na web",
+        }),
         "settings.screenTitle": t({
             en: "Settings",
             de: "Einstellungen",
