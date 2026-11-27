@@ -1,3 +1,4 @@
+import { foldText } from "@outlayr/money/merchant-key";
 import { MERCHANT_NAMES_KEY, merchantNamesOf } from "@outlayr/money/merchant-names";
 import { useMemo } from "react";
 
@@ -64,14 +65,6 @@ export interface FileModel {
     statement: ReturnType<typeof statementOf>;
 }
 
-const fold = (text: string) =>
-    text
-        .normalize("NFKD")
-        .replaceAll(/[̀-ͯ]/g, "")
-        .toLowerCase()
-        .replaceAll(/[^a-z0-9]+/g, " ")
-        .trim();
-
 function autoCategory(group: LabelGroup, categoryId: string | null): CategoryChoice {
     if (categoryId !== null) {
         return { id: categoryId, kind: "existing" };
@@ -89,13 +82,13 @@ export function knownCategories(books: Ledger["books"]): KnownCategory[] {
 
 /** An account-column value finds the open account whose name it contains or that contains it. */
 export function accountFor(value: string, accounts: readonly { localId: string; name: string }[]) {
-    const wanted = fold(value);
+    const wanted = foldText(value);
     if (wanted === "") {
         return null;
     }
-    const exact = accounts.find((row) => fold(row.name) === wanted);
+    const exact = accounts.find((row) => foldText(row.name) === wanted);
     const loose = accounts.find((row) => {
-        const name = fold(row.name);
+        const name = foldText(row.name);
         return name !== "" && (wanted.includes(name) || name.includes(wanted));
     });
     return (exact ?? loose)?.localId ?? null;

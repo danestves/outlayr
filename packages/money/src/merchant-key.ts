@@ -1,12 +1,17 @@
-export function merchantKey(raw: string): string {
+// Unicode marks the kana voiced marks and ー as diacritics; stripping them makes ドトール and トトール one key.
+const DIACRITIC_EXCEPT_KANA_MARKS = /(?![゙゚ー])\p{Diacritic}/gu;
+
+export function foldText(raw: string): string {
     return raw
-        .normalize("NFD")
-        .replaceAll(/\p{Diacritic}/gu, "")
+        .normalize("NFKD")
+        .replaceAll(DIACRITIC_EXCEPT_KANA_MARKS, "")
+        .normalize("NFC")
         .toLocaleLowerCase()
         .replaceAll(/[^\p{L}\p{N}]+/gu, " ")
-        .trim()
-        .replaceAll(/\s+/g, " ");
+        .trim();
 }
+
+export const merchantKey = foldText;
 
 // `merchantKey` can never emit this, so a merchant named "Acme EUR" and "Acme" in EUR stay two keys.
 const KNOWLEDGE_KEY_DELIMITER = "|";
@@ -68,6 +73,13 @@ export function descriptorKey(raw: string): string {
 }
 
 const MIN_KEY_LENGTH = 3;
+// A two-character Han, kana or Hangul name still names a business, e.g. 無印.
+const MIN_CJK_KEY_LENGTH = 2;
+const CJK_SCRIPT = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+
+function minimumKeyLength(key: string): number {
+    return CJK_SCRIPT.test(key) ? MIN_CJK_KEY_LENGTH : MIN_KEY_LENGTH;
+}
 
 export function knowledgeKeys(
     name: string,
@@ -75,7 +87,7 @@ export function knowledgeKeys(
     merchantName?: string | null
 ): string[] {
     const keys = [merchantKey(name), descriptorKey(name), merchantKey(merchantName ?? "")]
-        .filter((key) => key.length >= MIN_KEY_LENGTH)
+        .filter((key) => key.length >= minimumKeyLength(key))
         .map((key) => (currency ? `${key}${KNOWLEDGE_KEY_DELIMITER}${currency.toLowerCase()}` : key));
     return [...new Set(keys)];
 }

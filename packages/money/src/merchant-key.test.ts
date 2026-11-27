@@ -16,6 +16,21 @@ describe(merchantKey, () => {
     });
 });
 
+describe("merchantKey across scripts", () => {
+    it("keeps voiced marks and long vowels apart", () => {
+        expect(merchantKey("ドトール")).not.toBe(merchantKey("トトール"));
+        expect(merchantKey("ドトール")).not.toBe(merchantKey("トトル"));
+    });
+
+    it("folds halfwidth katakana to the fullwidth form", () => {
+        expect(merchantKey("ﾄﾞﾄｰﾙ")).toBe(merchantKey("ドトール"));
+    });
+
+    it("recomposes decomposed Hangul into syllables", () => {
+        expect(merchantKey("쿠팡".normalize("NFD"))).toBe("쿠팡");
+    });
+});
+
 describe(descriptorKey, () => {
     it.each([
         ["AIRBNB * HMASFW2JP2", "airbnb"],
@@ -44,5 +59,10 @@ describe(knowledgeKeys, () => {
     it("drops duplicates and keys too short to mean anything", () => {
         expect(knowledgeKeys("Airbnb", undefined, "Airbnb")).toStrictEqual(["airbnb"]);
         expect(knowledgeKeys("AB", undefined)).toStrictEqual([]);
+    });
+
+    it("keeps two-character CJK names but not two-letter Latin ones", () => {
+        expect(knowledgeKeys("無印", "JPY")).toStrictEqual(["無印|jpy"]);
+        expect(knowledgeKeys("ab", "USD")).toStrictEqual([]);
     });
 });
