@@ -11,15 +11,14 @@ This is an engineering checklist, not legal advice. When a case isn't clearly co
 
 ## What we promised
 
-From 1 January 2027, Privacy `## Changes` and Terms `## Changes to these terms` promise:
+Since 27 November 2026, Privacy `## Changes` and Terms `## Changes to these terms` promise:
 
-- **Notice:** a change to what we already collect, who receives it, how we use it, how long we keep it, or people's rights and obligations gets at least 30 days' notice in the app and by email. Privacy also caps these emails at one a month, unless a change can't wait.
+- **Notice:** a change to what we already collect, who receives it, how we use it, how long we keep it, or people's rights and obligations is shown in the app and emailed, and takes effect the day the email goes out. There is no notice window. Privacy caps these emails at one a month, unless a change can't wait, such as a security problem or a legal requirement.
 - **New optional features:** described in the policy from the day they ship, explained in the app on first use, and listed in the next email.
 - **A different use of existing data:** ask in the app first.
-- **Can't wait:** a security problem or a legal requirement can have shorter notice.
 - **Corrections:** a fix to a wrong statement applies right away and is listed in the next email.
 
-Until then, the 9 November 2026 wording applies: every material change, meaning anything affecting those same things, needs an email before its effective date. Hold such changes for the December email where you can. Breaking a promise to announce changes is what the FTC called deceptive in Gateway Learning. If those lines are reworded, update this skill in the same PR.
+Breaking a promise to announce changes is what the FTC called deceptive in Gateway Learning, so a change that needs notice never ships live before its email. If those lines are reworded, update this skill in the same PR.
 
 ## 1. Look at the change
 
@@ -48,8 +47,8 @@ Take the first row that matches:
 | **DOCS MISSING** | Any question above is yes, but the documents don't say it yet. | Update privacy or terms in en, de, es, fr and pt, then check again. |
 | **CONSENT, THEN EMAIL** | Data goes to a new third party or AI provider, or data already collected gets a materially different use. New features sending a new kind of data to an allowed AI provider: ask Daniel whether the existing permission covers it. | Ask in the app before the data flows, and don't apply the change to old data without that permission. Email alone isn't enough. Then follow **EMAIL**. |
 | **ADVANCE NOTICE** | Pro loses something material (Terms: "in advance"), or Outlayr or Pro is shutting down (Terms: try for 30 days). | Tell Daniel the required lead time before scheduling. Then follow **EMAIL**. |
-| **EMAIL** | Any other change that needs notice under the promises above. | Add a `POLICY_NOTICES` entry to the next monthly email, dated at least 30 days after it, and follow [the runbook](../../../docs/operations/policy-change.md). |
-| **NEXT EMAIL** | From 1 January 2027: a new optional feature, or a fix to a wrong statement. A serious correction goes to **ASK DANIEL**. | Update the documents and `LEGAL_DAYS` now, and add it to the next monthly email. Don't send one for it alone. |
+| **EMAIL** | Any other change that needs notice under the promises above. | Add a `POLICY_NOTICES` entry to the next monthly email, dated the UTC day it goes out, and follow [the runbook](../../../docs/operations/policy-change.md). |
+| **NEXT EMAIL** | A new optional feature, or a fix to a wrong statement. A serious correction goes to **ASK DANIEL**. | Update the documents and `LEGAL_DAYS` now, and add it to the next monthly email. Don't send one for it alone. |
 | **SITE ONLY** | A change with a new effective date that isn't material, such as clearer wording that changes no practice, or a better free plan. If in doubt, it's **EMAIL**. | Update the date in the documents and `LEGAL_DAYS`, with no `POLICY_NOTICES` entry. |
 | **NOTHING** | Typos, formatting, or a translation fix with the same meaning, or no effect on either document. | Keep the effective date as it is. Say why in the PR's legal line. |
 
@@ -59,7 +58,7 @@ A store-managed price rise on an existing subscription is handled by the store, 
 
 These traps come from how the notice code works:
 
-- **The email must arrive at least 30 days before the effective date.** `effectiveAtMs` is UTC midnight, and Caracas evenings are already the next day in UTC, so count from the UTC day of the send. A shorter gap needs Daniel's go-ahead and a reason that can't wait. If the send can't finish in time, ask Daniel before anything goes out, and move the date if nothing has.
+- **The effective date is the send day.** `effectiveAtMs` is UTC midnight of the UTC day the send starts, and Caracas evenings are already the next day in UTC. The gates only read the clock, and the web app deploys on merge, so merge after that midnight, then deploy the backend and run the send right away. Merging earlier opens the gates at midnight, before the email. If the send slips to another day, move the date before anything goes out. **ADVANCE NOTICE** is the one exception: its email goes out ahead, with the later effective date it promises.
 - **One email a month.** Check `mailState.notices` or ask Daniel when the last one went out. A second email inside a month needs a reason that can't wait.
 - **A date freezes once it's emailed.** Emails dedupe on `<document>:<effectiveAtMs>`, and the sheet compares dates. Anything added to a sent notice misses everyone already emailed and everyone who tapped Got it, so it needs a new date.
 - **Only the latest day gets emailed.** `notifyPolicy` sends only notices with the newest `effectiveAtMs`. Dating a newer notice first means an unsent older one never goes out, so send it first or move its changes into the newer one.

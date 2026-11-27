@@ -10,7 +10,7 @@ sheet show nothing until they update.
    `apps/site/src/lib/site.ts`.
 2. Append a notice to `POLICY_NOTICES` in `packages/backend/confect/legal.ts`: the document,
    `effectiveAtMs` as UTC midnight of that day, and the changes in en, de, es, fr and pt, one short
-   label each with an optional detail. Use a day at least 30 days after the email, because the documents promise that much notice. A change that can't wait may use less, with Daniel's go-ahead. If the PR waits, update the date before merging. Once a date has been emailed, new changes need a new date.
+   label each with an optional detail. Use the UTC day the email goes out, because the documents say a change takes effect the day we email it, and merge only after that day's UTC midnight so nothing opens before the email. If the send moves, update the date first. Pro losing something material, or Outlayr shutting down, still gets the lead time the terms promise: the email goes out first and the notice carries the later date. Once a date has been emailed, new changes need a new date.
 3. Merge, then run **Deploy the backend** for `production`. Once it is live, the app shows the
    sheet on its next launch to anyone who installed before that day, until they tap Got it.
 4. With Daniel's go-ahead, email the account holders. Production is self-hosted, and `--prod` targets an empty cloud project. Get the admin key from Daniel as a file, so it stays out of shell history, then run this from a scratch directory whose `package.json` lists `convex`, because `packages/backend` picks up the local `.env.local`:
