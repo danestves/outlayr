@@ -311,7 +311,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     }, [all, list, words.filters.noTag.value]);
     const merchantOptions = useMemo((): PickOption[] => {
         const seen = new Map<string, PickOption>();
-        for (const row of all) {
+        for (const row of [...all, ...upcomingRows]) {
             if (!("fromId" in row) && row.feeFor === null) {
                 const name = list.names.merchant(row);
                 const known = seen.get(name);
@@ -324,7 +324,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
             }
         }
         return [...seen.values()].toSorted((left, right) => right.count - left.count);
-    }, [all, list]);
+    }, [all, list, upcomingRows]);
     const personOptions = useMemo((): PickOption[] => {
         const byPerson = new Map<string, number>();
         for (const row of queried) {
