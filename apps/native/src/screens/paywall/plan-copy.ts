@@ -3,6 +3,9 @@ import type { TranslationKey } from "@/i18n/catalog";
 import type { TranslateFn } from "@/i18n/context";
 
 export function unitOf(plan: Plan, t: TranslateFn): string | null {
+    if (plan.firstYear !== null) {
+        return t("pro.plan.perYearBare");
+    }
     if (plan.kind === "lifetime") {
         return t("pro.plan.once");
     }
@@ -13,6 +16,9 @@ export function unitOf(plan: Plan, t: TranslateFn): string | null {
 }
 
 export function noteOf(plan: Plan, t: TranslateFn): string | null {
+    if (plan.firstYear !== null) {
+        return `${t("pro.exit.eyebrow", { percent: plan.firstYear.percentOff })} · ${t("pro.cta.thenYearly", { price: plan.priceString })}`;
+    }
     const parts = [
         plan.trialDays === null ? null : t("pro.plan.trial", { days: plan.trialDays }),
         plan.savingsPercent === null ? null : t("pro.plan.save", { percent: plan.savingsPercent }),
@@ -36,13 +42,23 @@ export function ctaLabel(plan: Plan | null, t: TranslateFn): string {
     if (plan === null) {
         return t("pro.cta.continue");
     }
+    if (plan.firstYear !== null) {
+        return t("pro.exit.title", { price: plan.firstYear.price });
+    }
     if (plan.trialDays === null) {
         return t(BUY_LABEL[plan.kind], { price: plan.priceString });
     }
     return t("pro.cta.start", { days: plan.trialDays });
 }
 
-/** What the first charge will be, for a plan that starts free. */
+/** What the plan renews at, for a plan that starts free or at a first-year price. */
 export function thenLabel(plan: Plan | null, t: TranslateFn): string | null {
-    return plan === null || plan.trialDays === null ? null : t(THEN_LABEL[plan.kind], { price: plan.priceString });
+    if (plan === null || (plan.trialDays === null && plan.firstYear === null)) {
+        return null;
+    }
+    return t(THEN_LABEL[plan.kind], { price: plan.priceString });
+}
+
+export function shownPrice(plan: Plan): string {
+    return plan.firstYear?.price ?? plan.priceString;
 }

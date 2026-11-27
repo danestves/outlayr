@@ -18,7 +18,7 @@ function offer({ type, price, perMonth = null, intro }: FakeOffer): PurchasesPac
         packageType: type,
         product: {
             identifier: type,
-            introPrice: intro ?? null,
+            introPrice: intro == null ? null : { ...intro, priceString: `$${intro.price.toFixed(2)}` },
             price,
             pricePerMonthString: perMonth,
             priceString: `$${price.toFixed(2)}`,
@@ -98,6 +98,16 @@ describe("readPlans", () => {
             type: "ANNUAL",
         });
         expect(readPlans([discounted], new Set(["ANNUAL"]))[0]?.trialDays).toBeNull();
+    });
+
+    it("shows a first-year price only to a customer the store will sell it to", () => {
+        const sale = offer({
+            intro: { cycles: 1, periodNumberOfUnits: 1, periodUnit: "YEAR", price: 47.99 },
+            price: 59.99,
+            type: "ANNUAL",
+        });
+        expect(readPlans([sale], new Set(["ANNUAL"]))[0]?.firstYear).toStrictEqual({ percentOff: 20, price: "$47.99" });
+        expect(readPlans([sale], new Set())[0]?.firstYear).toBeNull();
     });
 });
 

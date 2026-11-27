@@ -4,7 +4,14 @@ import type { PurchasesPackage } from "react-native-purchases";
 
 import { trialEligible } from "./trial-eligibility";
 
+/** A paid first year the store will charge this customer before the plan renews at `priceString`. */
+export interface FirstYear {
+    percentOff: number;
+    price: string;
+}
+
 export interface Plan {
+    firstYear: FirstYear | null;
     kind: PlanKind;
     offer: PurchasesPackage;
     perMonth: string | null;
@@ -68,6 +75,7 @@ export function readPlans(
         }
         return [
             {
+                firstYear: kind === "annual" ? firstYearOf(offer, eligibleForTrial) : null,
                 kind,
                 offer,
                 perMonth: offer.product.pricePerMonthString,
@@ -79,7 +87,7 @@ export function readPlans(
     });
 }
 
-// The sheet says "first year", so a monthly intro repeated for a few cycles must not qualify.
+// The paywall says "first year", so a monthly intro repeated for a few cycles must not qualify.
 function coversOneYear({
     cycles,
     periodNumberOfUnits,
@@ -90,6 +98,15 @@ function coversOneYear({
         cycles === 1 &&
         ((unit === "YEAR" && periodNumberOfUnits === 1) || (unit === "MONTH" && periodNumberOfUnits === 12))
     );
+}
+
+function firstYearOf(offer: PurchasesPackage, eligible: ReadonlySet<string>): FirstYear | null {
+    const intro = offer.product.introPrice;
+    if (intro == null || intro.price <= 0 || !coversOneYear(intro) || !trialEligible(offer, eligible)) {
+        return null;
+    }
+    const percentOff = Math.round((1 - intro.price / offer.product.price) * 100);
+    return percentOff > 0 ? { percentOff, price: intro.priceString } : null;
 }
 
 /** A paid first year on the annual plan, sold once to someone about to leave the paywall. */
@@ -104,18 +121,10 @@ export function readExitOffer(
     eligibleForIntro: ReadonlySet<string>
 ): ExitOffer | null {
     const plan = readPlans(packages, eligibleForIntro).find((candidate) => candidate.kind === "annual");
-    const intro = plan?.offer.product.introPrice;
-    if (
-        plan === undefined ||
-        intro == null ||
-        intro.price <= 0 ||
-        !coversOneYear(intro) ||
-        !trialEligible(plan.offer, eligibleForIntro)
-    ) {
+    if (plan?.firstYear == null) {
         return null;
     }
-    const percentOff = Math.round((1 - intro.price / plan.offer.product.price) * 100);
-    return percentOff > 0 ? { firstYear: intro.priceString, percentOff, plan } : null;
+    return { firstYear: plan.firstYear.price, percentOff: plan.firstYear.percentOff, plan };
 }
 
 export interface ProCost {
