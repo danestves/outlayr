@@ -11,7 +11,6 @@ import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { FREE_CAPTURES, PRO_CAPTURES } from "@outlayr/money/capture-allowance";
-import { TRIAL_REMINDER_LEAD_MS, TRIAL_REMINDERS_FROM_MS } from "@outlayr/money/contract";
 import type { ProPlan } from "@outlayr/money/pro-prices";
 import { useOnMount } from "@outlayr/shared/lifecycle";
 import { SUPPORT_EMAIL } from "@outlayr/shared/urls";
@@ -42,9 +41,6 @@ import { switchToProfile } from "@/lib/profile-switch";
 import { currentToken } from "@/lib/session";
 
 const TRIAL_DAYS = 3;
-const DAY_MS = 86_400_000;
-const REMINDER_DAY = TRIAL_DAYS - TRIAL_REMINDER_LEAD_MS / DAY_MS;
-const remindsBeforeCharge = (now: number) => now + REMINDER_DAY * DAY_MS >= TRIAL_REMINDERS_FROM_MS;
 const PLANS = ["annual", "monthly", "lifetime"] as const;
 const TABLE = [
     { free: "30", key: "autoLog", pro: "infinity" },
@@ -297,7 +293,6 @@ function Offer({
         next.setMonth(next.getMonth() + 1);
         return next.toLocaleDateString(locale, { day: "numeric", month: "short" });
     });
-    const [reminds] = useState(() => remindsBeforeCharge(Date.now()));
     const ctaLabel = (() => {
         if (busy) {
             return copy.unlocking;
@@ -353,7 +348,6 @@ function Offer({
                         <Timeline
                             rows={[
                                 [copy.today, copy.proUnlocks],
-                                ...(reminds ? [[copy.dayN({ day: REMINDER_DAY }), copy.weRemindYou] as const] : []),
                                 [copy.dayN({ day: TRIAL_DAYS }), copy.firstCharge],
                             ]}
                         />

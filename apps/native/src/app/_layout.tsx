@@ -53,7 +53,6 @@ import { usePostHogIdentity } from "@/lib/posthog-identity";
 import { GROUP_ENTRY, ROOT_STACK, SUGGEST_SCREEN } from "@/lib/root-stack";
 import type { RootScreen } from "@/lib/root-stack";
 import { identityPickerDetent, LARGE_ONLY } from "@/lib/sheet-detents";
-import { TrialReminderSync } from "@/lib/trial-reminder";
 import { useAccountOffer } from "@/lib/use-account-offer";
 import { useCatchUpPaywall } from "@/lib/use-catch-up-paywall";
 import { useSubscriptionReminderTaps } from "@/lib/use-subscription-reminder-taps";
@@ -100,7 +99,6 @@ function CloudRuntimeProvider({ children }: { children: ReactNode }) {
     return (
         <AuthSessionProvider>
             <RevenueCatSession />
-            <TrialReminderSync />
             <ActivatedCloudRuntime>{children}</ActivatedCloudRuntime>
         </AuthSessionProvider>
     );

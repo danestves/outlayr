@@ -12,7 +12,6 @@ import { getTransactionById, transactionsRepo } from "@/data/transactions-core";
 import { cardAccount, cardStillAsks, fileWaitingPurchases } from "@/data/wallet-state-core";
 import type { Database } from "@/db/client";
 import type { NotificationDebt } from "@/domain/meta-values";
-import { paywallHref } from "@/domain/paywall-trigger";
 
 import type { ChargeAction } from "./charge-actions";
 import { warnAndContinue } from "./warn-and-continue";
@@ -31,7 +30,6 @@ const ReminderTap = Schema.Union([
     Schema.Struct({ open: Schema.Literal("installment"), plan: Schema.String }),
     Schema.Struct({ account: Schema.String, open: Schema.Literal("account") }),
     Schema.Struct({ month: Schema.String, open: Schema.Literal("recap") }),
-    Schema.Struct({ open: Schema.Literal("pro") }),
 ]);
 const WalletPushTap = Schema.Struct({
     card: Schema.optional(Schema.String),
@@ -93,8 +91,6 @@ export const resolveReminderTap = Effect.fn("NotificationTaps.resolveReminder")(
         target = `/accounts/${tap.account}`;
     } else if (tap.open === "recap") {
         target = { params: { month: tap.month }, pathname: "/recap" };
-    } else if (tap.open === "pro") {
-        target = paywallHref("trial_reminder");
     } else if (tap.open === "create") {
         target = yield* createTarget(db, tap);
     }

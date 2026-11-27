@@ -26,7 +26,6 @@ import { Reminders } from "@/lib/reminders";
 import { proTerm } from "@/lib/revenuecat";
 import { RevenueCat } from "@/lib/revenuecat-service";
 import { appRuntime } from "@/lib/runtime";
-import { syncTrialReminder } from "@/lib/trial-reminder";
 import { openWalletShortcut } from "@/lib/wallet-shortcut";
 
 import { createCommand, createRuntimeCommand, tapFailure } from "./atom-command";
@@ -183,10 +182,6 @@ export const buyPlanCommand = revenueCatFlow(
     ) {
         const accountId = yield* billedAccount(input);
         const outcome = yield* revenueCat.purchase(accountId, input.offer);
-        if (outcome === "pro") {
-            // Detached: the permission prompt must not hold the paywall open after the store sheet closes.
-            yield* Effect.forkDetach(syncTrialReminder(true));
-        }
         const mirrored = outcome !== "pro" || (yield* revenueCat.mirror(accountId));
         const trial =
             outcome === "pro" &&

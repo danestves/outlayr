@@ -21,13 +21,6 @@ export default GroupSpec.makeNode()
     )
     .addFunction(
         FunctionSpec.internalNodeAction({
-            name: "sendTrialReminder",
-            args: () => ({ userId: Schema.String }),
-            returns: () => Schema.Null,
-        })
-    )
-    .addFunction(
-        FunctionSpec.internalNodeAction({
             name: "notifyPolicy",
             args: () => ({ cursor: Schema.optional(Schema.String) }),
             returns: () => Schema.Struct({ failed: Schema.Number, sent: Schema.Number }),

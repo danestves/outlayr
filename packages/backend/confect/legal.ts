@@ -1161,6 +1161,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "With Pro, a profile's owner can invite up to 5 people to share it. Everyone in it sees and can change its ledger and photos, and sees the first names of the people in it, including on the entries they logged.",
                     label: "Shared profiles",
                 },
+                {
+                    detail: "We no longer email you before a Pro free trial you started on the web turns paid.",
+                    label: "No reminder before a web trial ends",
+                },
             ],
             de: [
                 {
@@ -1198,6 +1202,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Mit Pro kann der Eigentümer eines Profils bis zu 5 Personen einladen, es zu teilen. Alle darin sehen sein Haushaltsbuch und seine Fotos und können sie ändern, und sie sehen die Vornamen der Mitglieder, auch bei den Einträgen, die sie erfasst haben.",
                     label: "Geteilte Profile",
+                },
+                {
+                    detail: "Wir senden dir keine E-Mail mehr, bevor eine im Web gestartete kostenlose Pro-Testphase kostenpflichtig wird.",
+                    label: "Keine Erinnerung vor dem Ende einer Web-Testphase",
                 },
             ],
             es: [
@@ -1237,6 +1245,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Con Pro, el propietario de un perfil puede invitar hasta 5 personas a compartirlo. Todos en él ven y pueden cambiar su registro y sus fotos, y ven el nombre de pila de quienes están en él, también en las entradas que registraron.",
                     label: "Perfiles compartidos",
                 },
+                {
+                    detail: "Ya no te enviamos un correo antes de que una prueba gratis de Pro que empezaste en la web pase a ser de pago.",
+                    label: "Sin recordatorio antes de que termine una prueba en la web",
+                },
             ],
             fr: [
                 {
@@ -1274,6 +1286,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Avec Pro, le propriétaire d'un profil peut inviter jusqu'à 5 personnes à le partager. Tous ses membres voient et peuvent modifier son registre et ses photos, et voient le prénom des membres, y compris sur les opérations qu'ils ont saisies.",
                     label: "Profils partagés",
+                },
+                {
+                    detail: "Nous ne vous envoyons plus d'e-mail avant qu'un essai gratuit de Pro commencé sur le web devienne payant.",
+                    label: "Plus de rappel avant la fin d'un essai sur le web",
                 },
             ],
             pt: [
@@ -1313,11 +1329,15 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Com o Pro, o proprietário de um perfil pode convidar até 5 pessoas para compartilhá-lo. Todos nele veem e podem alterar o registro e as fotos, e veem o primeiro nome de quem participa, inclusive nos lançamentos que registrou.",
                     label: "Perfis compartilhados",
                 },
+                {
+                    detail: "Não enviamos mais um e-mail antes de um teste grátis do Pro iniciado na web passar a ser pago.",
+                    label: "Sem lembrete antes do fim de um teste na web",
+                },
             ],
         },
         document: "privacy",
         effectiveAtMs: JANUARY_NOTICE_AT_MS,
-        postedAtMs: Date.UTC(2026, 10, 27),
+        postedAtMs: Date.UTC(2026, 10, 28),
     },
     {
         changes: {
