@@ -1,6 +1,6 @@
 import { parseAmount } from "./account-writes";
 
-const LABELLED_FIGURE = /^[^\d]*\d[\d\s.,]*[^\d]*$/u;
+const LABELLED_FIGURE = /^[^\d\n\r]*\d[\d .,\u00A0\u202F]*[^\d\n\r]*$/u;
 const NOT_A_FIGURE = /[^\d\s.,-]/u;
 
 export const pastedAmount = (text: string, decimals: number): number | null =>

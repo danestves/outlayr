@@ -20,3 +20,7 @@ it("leaves a plain number to the field so it can insert at the caret", () => {
 it("refuses text holding more than one number", () => {
     expect(pastedAmount("Invoice 42: Cg. 500.00", 2)).toBeNull();
 });
+
+it("refuses two amounts on separate lines", () => {
+    expect(pastedAmount("Cg. 500.00\n600.00", 2)).toBeNull();
+});
