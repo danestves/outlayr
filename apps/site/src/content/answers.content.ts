@@ -784,8 +784,8 @@ const SPENDEE = {
             label: LABELS.price,
             source: "https://www.spendee.com/pricing",
             text: t({
-                en: "Free Basic plan with 1 cash wallet and 1 budget. Plus $1.99 a month or $14.99 a year, Premium $5.99 a month or $35.99 a year, after a 7-day trial. Prices vary by country",
-                es: "Plan Basic gratis con 1 billetera de efectivo y 1 presupuesto. Plus US$1.99 al mes o US$14.99 al año, Premium US$5.99 al mes o US$35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
+                en: "Free Basic plan with 1 cash wallet and 1 budget. Plus $3.99 a month or $27.99 a year, Premium $7.99 a month or $44.99 a year, after a 7-day trial. Prices vary by country",
+                es: "Plan Basic gratis con 1 billetera de efectivo y 1 presupuesto. Plus US$3.99 al mes o US$27.99 al año, Premium US$7.99 al mes o US$44.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
                 fr: "Offre Basic gratuite avec 1 portefeuille d'espèces et 1 budget. Plus à 1,99 $ US par mois ou 14,99 $ US par an, Premium à 5,99 $ US par mois ou 35,99 $ US par an, après un essai de 7 jours. Les prix varient selon le pays",
             }),
         },
@@ -3170,9 +3170,9 @@ const answers = {
                         label: LABELS.price,
                         outlayr: OUTLAYR.price,
                         rival: t({
-                            en: "Free basic plan with 1 wallet and 1 budget. Plus $1.99 a month or $14.99 a year, Premium $5.99 a month or $35.99 a year, after a 7-day trial. Prices vary by country",
+                            en: "Free basic plan with 1 wallet and 1 budget. Plus $3.99 a month or $27.99 a year, Premium $7.99 a month or $44.99 a year, after a 7-day trial. Prices vary by country",
                             de: "Kostenloser Basis-Plan mit 1 Wallet und 1 Budget. Plus 1,99 $ im Monat oder 14,99 $ im Jahr, Premium 5,99 $ im Monat oder 35,99 $ im Jahr, nach einer 7-tägigen Testphase. Die Preise unterscheiden sich je nach Land",
-                            es: "Plan básico gratis con 1 billetera y 1 presupuesto. Plus US$1.99 al mes o US$14.99 al año, Premium US$5.99 al mes o US$35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
+                            es: "Plan básico gratis con 1 billetera y 1 presupuesto. Plus US$3.99 al mes o US$27.99 al año, Premium US$7.99 al mes o US$44.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
                             pt: "Plano básico grátis com 1 carteira e 1 orçamento. Plus a US$ 1,99 por mês ou US$ 14,99 por ano, Premium a US$ 5,99 por mês ou US$ 35,99 por ano, após 7 dias de teste. Os preços variam por país",
                             fr: "Offre de base gratuite avec 1 portefeuille et 1 budget. Plus coûte 1,99 $ US par mois ou 14,99 $ US par an, Premium 5,99 $ US par mois ou 35,99 $ US par an, après un essai de 7 jours. Les prix varient selon le pays",
                         }),
@@ -4892,9 +4892,9 @@ const answers = {
                                 label: LABELS.price,
                                 source: "https://www.spendee.com/pricing",
                                 text: t({
-                                    en: "Free basic plan with 1 wallet and 1 budget. Plus $1.99 a month or $14.99 a year, Premium $5.99 a month or $35.99 a year, after a 7-day trial. Prices vary by country",
+                                    en: "Free basic plan with 1 wallet and 1 budget. Plus $3.99 a month or $27.99 a year, Premium $7.99 a month or $44.99 a year, after a 7-day trial. Prices vary by country",
                                     de: "Kostenloser Basis-Plan mit 1 Wallet und 1 Budget. Plus 1,99 $ im Monat oder 14,99 $ im Jahr, Premium 5,99 $ im Monat oder 35,99 $ im Jahr, nach einer 7-tägigen Testphase. Die Preise unterscheiden sich je nach Land",
-                                    es: "Plan básico gratis con 1 billetera y 1 presupuesto. Plus US$1.99 al mes o US$14.99 al año, Premium US$5.99 al mes o US$35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
+                                    es: "Plan básico gratis con 1 billetera y 1 presupuesto. Plus US$3.99 al mes o US$27.99 al año, Premium US$7.99 al mes o US$44.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
                                     pt: "Plano básico grátis com 1 carteira e 1 orçamento. Plus a US$ 1,99 por mês ou US$ 14,99 por ano, Premium a US$ 5,99 por mês ou US$ 35,99 por ano, após 7 dias de teste. Os preços variam por país",
                                     fr: "Offre de base gratuite avec 1 portefeuille et 1 budget. Plus coûte 1,99 $ US par mois ou 14,99 $ US par an, Premium 5,99 $ US par mois ou 35,99 $ US par an, après un essai de 7 jours. Les prix varient selon le pays",
                                 }),
@@ -5459,8 +5459,8 @@ const answers = {
                                 label: LABELS.price,
                                 source: "https://www.spendee.com/pricing",
                                 text: t({
-                                    en: "Free Basic plan. Plus $1.99 a month or $14.99 a year, Premium $5.99 a month or $35.99 a year, after a 7-day trial. Prices vary by country",
-                                    es: "Plan Basic gratis. Plus US$1.99 al mes o US$14.99 al año, Premium US$5.99 al mes o US$35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
+                                    en: "Free Basic plan. Plus $3.99 a month or $27.99 a year, Premium $7.99 a month or $44.99 a year, after a 7-day trial. Prices vary by country",
+                                    es: "Plan Basic gratis. Plus US$3.99 al mes o US$27.99 al año, Premium US$7.99 al mes o US$44.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
                                 }),
                             },
                             {
@@ -5664,6 +5664,26 @@ const answers = {
                             es: "¿Qué app para controlar gastos sirve si pago en efectivo?",
                         }),
                     },
+                    {
+                        answer: t({
+                            en: "All seven are free to start. Among the annual prices published in US dollars, Money Manager's sync is $19.99, Finy Plus $24.99, Spendee Plus $27.99, and Outlayr Pro $59.99 in the US. For Mobills, Monefy, and Wallet, and for any price in pesos, check your app store in Mexico.",
+                            es: "Las siete son gratis para empezar. Entre los precios anuales publicados en dólares, la sincronización de Money Manager cuesta US$19.99, Finy Plus US$24.99, Spendee Plus US$27.99 y Outlayr Pro US$59.99 en Estados Unidos. Para Mobills, Monefy y Wallet, y para ver cualquier precio en pesos, revisa tu tienda de apps en México.",
+                        }),
+                        question: t({
+                            en: "How much does expense management software cost in Mexico?",
+                            es: "¿Cuánto cuesta un software de gestión de gastos en México?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "These seven track spending for a person or an owner-run business. A startup that hands out company cards and needs approvals and accounting per entity needs a corporate spend platform. If you're the founder paying from your own cards in pesos and dollars, pick one of the apps above that handles both currencies.",
+                            es: "Estas siete llevan los gastos de una persona o de un negocio que maneja su dueño. Una startup que reparte tarjetas corporativas y necesita aprobaciones y contabilidad por razón social necesita una plataforma de gastos corporativos. Si eres el fundador y pagas con tus tarjetas en pesos y dólares, elige una de las apps de arriba que maneje las dos monedas.",
+                        }),
+                        question: t({
+                            en: "What about a startup or a company with several entities?",
+                            es: "¿Y para una startup o una empresa con varias razones sociales?",
+                        }),
+                    },
                     COST_FAQ,
                     RATE_FAQ,
                     {
@@ -5746,8 +5766,8 @@ const answers = {
                     }),
                 ],
                 title: t({
-                    en: "The best expense tracker apps in Argentina, Mexico, and the rest of Latin America",
-                    es: "La mejor app para controlar gastos en Argentina, México y el resto de Latinoamérica",
+                    en: "The best expense management apps in Mexico, Argentina, and Latin America",
+                    es: "Las mejores apps de gestión de gastos en México, Argentina y Latinoamérica",
                 }),
             },
             "best-expense-tracker-apps-brazil": {
@@ -8184,8 +8204,8 @@ const answers = {
                         es: "Seis apps de suscripciones comparadas: para quién es cada una, si hay que vincular el banco, precio y privacidad. Outlayr es nuestra.",
                     }),
                     title: t({
-                        en: "Best Subscription Tracker Apps (2026), Free and Paid",
-                        es: "Mejores apps de suscripciones (2026), gratis y de pago",
+                        en: "Best Subscription Tracker Apps (2026), With or Without a Bank Link",
+                        es: "Mejores apps para controlar suscripciones (2026), con o sin vincular tu banco",
                     }),
                 },
                 more: [
