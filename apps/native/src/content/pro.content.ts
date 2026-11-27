@@ -331,13 +331,6 @@ const pro = {
             fr: "Net du jour",
             pt: "Líquido de hoje",
         }),
-        "pro.day.perMonth": t({
-            en: "{count} a month",
-            de: "{count} im Monat",
-            es: "{count} al mes",
-            fr: "{count} par mois",
-            pt: "{count} por mês",
-        }),
         "pro.day.rate": t({
             en: "{codes} at today's rate",
             de: "{codes} zum heutigen Kurs",

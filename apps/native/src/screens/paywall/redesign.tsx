@@ -233,14 +233,12 @@ export function PaywallRedesign({
             : t("pro.band.freeLeft", { count: flow.autolog.cap - flow.autolog.used });
 
     const scrollRef = useRef<ScrollViewInstance>(null);
-    const view = useRef({ content: 0, following: true, heroY: 0, viewport: 0 });
+    const view = useRef({ content: 0, followedY: 0, following: true, heroY: 0, viewport: 0 });
     const follow = (bottom: number) => {
-        const { content, following, heroY, viewport } = view.current;
-        if (!following) {
-            return;
-        }
+        const { content, followedY, following, heroY, viewport } = view.current;
         const y = Math.min(content - viewport, heroY + bottom + FOLLOW_MARGIN - viewport);
-        if (y > 0) {
+        if (following && y > followedY) {
+            view.current.followedY = y;
             scrollRef.current?.scrollTo({ animated: true, y });
         }
     };

@@ -1,7 +1,6 @@
 import FlashIcon from "@hugeicons-pro/core-solid-rounded/FlashIcon";
 import Mic01Icon from "@hugeicons-pro/core-solid-rounded/Mic01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { PRO_CAPTURES } from "@outlayr/money/capture-allowance";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
@@ -36,10 +35,10 @@ const EUR = "EUR";
 const EUR_IN_USD = 1.08;
 
 const CAFE = { amount: 4.5, color: "#AB723A", icon: "Coffee02" } as const;
-const MARKET = { amount: 23.4, color: "#4B9263", icon: "ShoppingBasket01" } as const;
+const MARKET_USD = 23.4;
 const METRO_EUR = 2.5;
 const RECEIPT_LINES = [2.49, 3.8, 4.2, 8.9, 3.1, 0.91] as const;
-const NET = Math.round((CAFE.amount + MARKET.amount + METRO_EUR * EUR_IN_USD) * 100) / 100;
+const NET = Math.round((CAFE.amount + MARKET_USD + METRO_EUR * EUR_IN_USD) * 100) / 100;
 const ENTRIES = 3;
 
 // One scripted pass, then it holds: a loop would repaint the paywall for as long as it stays open.
@@ -205,7 +204,7 @@ function Receipt() {
             <View className="border-separator mt-1.5 flex-row justify-between border-t border-dashed pt-1">
                 <Text className="text-foreground font-mono text-[8px] uppercase">{t("pro.day.total")}</Text>
                 <Text className="text-foreground font-mono text-[8px]">
-                    {formatAmount(MARKET.amount, USD, true, language)}
+                    {formatAmount(MARKET_USD, USD, true, language)}
                 </Text>
             </View>
             <Corner className="top-1 left-1 rounded-tl-[3px] border-t-2 border-l-2" />
@@ -223,21 +222,18 @@ function ReceiptStop({ time }: { time: string }) {
     const read = useRise(useBeat(BEAT.read));
     return (
         <Stop at={BEAT.receipt} next={BEAT.voice} time={time}>
-            <StopHead label={t("pro.day.receipt")} value={t("pro.day.perMonth", { count: PRO_CAPTURES })} />
+            <StopHead label={t("pro.day.receipt")} value={t("pro.feature.captures")} />
             <View className="flex-row items-center gap-3.5">
                 <Animated.View style={shown}>
                     <Receipt />
                 </Animated.View>
                 <Animated.View className="flex-1 gap-1" style={read}>
-                    <View className="flex-row items-center gap-2">
-                        <CategoryIconTile color={MARKET.color} icon={MARKET.icon} size={28} />
-                        <Text className="text-foreground text-headline font-sans-semibold flex-1" numberOfLines={1}>
-                            {t("pro.hero.market")}
-                        </Text>
-                    </View>
+                    <Text className="text-foreground text-headline font-sans-semibold" numberOfLines={2}>
+                        {t("pro.hero.market")}
+                    </Text>
                     <MonoLabel>{t("pro.day.items", { count: RECEIPT_LINES.length })}</MonoLabel>
                     <View className="flex-row">
-                        <RowAmount amount={MARKET.amount} code={USD} income={false} isFuture={false} />
+                        <RowAmount amount={MARKET_USD} code={USD} income={false} isFuture={false} />
                     </View>
                 </Animated.View>
             </View>
@@ -283,7 +279,7 @@ function VoiceStop({ time }: { time: string }) {
     const spoken = useCue(BEAT.sentence);
     return (
         <Stop at={BEAT.voice} next={BEAT.net} time={time}>
-            <StopHead label={t("pro.day.voice")} value={t("pro.day.perMonth", { count: PRO_CAPTURES })} />
+            <StopHead label={t("pro.day.voice")} value={t("pro.feature.captures")} />
             <Animated.View className="flex-row items-center gap-3" style={mic}>
                 <View className="bg-foreground size-11 items-center justify-center rounded-full">
                     <HugeiconsIcon color={colors.background} icon={Mic01Icon} size={20} />
@@ -335,7 +331,14 @@ function NetStop({ time }: { time: string }) {
     );
 }
 
-const FOLLOW = [BEAT.receipt, BEAT.voice, BEAT.net] as const;
+// The voice stop grows when its sentence writes in, so it is followed again once that has laid out.
+const FOLLOW = [
+    [0, BEAT.alert],
+    [1, BEAT.receipt],
+    [2, BEAT.voice],
+    [2, BEAT.sentence + 400],
+    [3, BEAT.net],
+] as const;
 
 /** `onFollow` gets the bottom of each stop as it starts playing, so the screen can scroll it into view. */
 export function DayWithPro({ onFollow }: { onFollow?: (bottom: number) => void }) {
@@ -349,8 +352,8 @@ export function DayWithPro({ onFollow }: { onFollow?: (bottom: number) => void }
         if (reduced || onFollow === undefined) {
             return undefined;
         }
-        for (const [index, at] of FOLLOW.entries()) {
-            timers.after(at, () => onFollow(bottoms.current[index + 1] ?? 0));
+        for (const [index, at] of FOLLOW) {
+            timers.after(at, () => onFollow(bottoms.current[index] ?? 0));
         }
         return undefined;
     });
@@ -362,9 +365,9 @@ export function DayWithPro({ onFollow }: { onFollow?: (bottom: number) => void }
         formatTime(new Date(2026, 0, 1, hours, minutes), use24Hour, language);
     const label = t("pro.day.a11y", {
         cafe: formatAmount(CAFE.amount, USD, true, language),
-        market: formatAmount(MARKET.amount, USD, true, language),
+        market: formatAmount(MARKET_USD, USD, true, language),
         metro: formatAmount(METRO_EUR, EUR, true, language),
-        net: formatAmount(NET, USD, true, language),
+        net: `-${formatAmount(NET, USD, true, language)}`,
     });
     return (
         <View accessibilityLabel={label} accessible className="pt-5">
