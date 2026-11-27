@@ -103,8 +103,8 @@
             "fit": "contain"
           },
           {
-            "id": "flag-ve",
-            "src": "/flags/ve.png",
+            "id": "flag-gb",
+            "src": "/flags/gb.png",
             "transform": {
               "x": 992.5,
               "y": 1728.3,
@@ -388,9 +388,9 @@
             "id": "card-insights",
             "variant": "stat",
             "transform": {
-              "x": 732,
+              "x": 560,
               "y": 1720,
-              "width": 540,
+              "width": 712,
               "height": 240,
               "rotation": 4
             },
@@ -405,12 +405,12 @@
             },
             "title": {
               "en": "$1,018",
-              "es": "$1,018",
+              "es": "MX$18,667",
               "es-ES": "€1018",
               "fr": "€1 018",
               "pt-BR": "R$5.093",
               "pt-PT": "€1018",
-              "de": "$1.018"
+              "de": "€1.018"
             },
             "body": {
               "en": "left this month",
@@ -492,7 +492,7 @@
             "transform": {
               "x": 40,
               "y": 1880,
-              "width": 472,
+              "width": 640,
               "height": 240,
               "rotation": -4
             },
@@ -507,12 +507,12 @@
             },
             "title": {
               "en": "$204",
-              "es": "$204",
+              "es": "MX$3,733",
               "es-ES": "€204",
               "fr": "€204",
               "pt-BR": "R$1.019",
               "pt-PT": "€204",
-              "de": "$204"
+              "de": "€204"
             },
             "body": {
               "en": "to stay on pace",
@@ -682,8 +682,8 @@
             "fit": "contain"
           },
           {
-            "id": "flag-ve",
-            "src": "/flags/ve.png",
+            "id": "flag-jp",
+            "src": "/flags/jp.png",
             "transform": {
               "x": -39.5,
               "y": 1568.3,
@@ -777,12 +777,12 @@
             },
             "title": {
               "en": "Netflix $22.99",
-              "es": "Netflix $22.99",
+              "es": "Netflix MX$299.00",
               "es-ES": "Netflix €22,99",
               "fr": "Netflix €22,99",
               "pt-BR": "Netflix R$114,90",
               "pt-PT": "Netflix €22,99",
-              "de": "Netflix $22,99"
+              "de": "Netflix €22,99"
             },
             "iconSrc": "/icons/netflix.png",
             "iconBackground": "#000000"
@@ -937,8 +937,8 @@
             "fit": "contain"
           },
           {
-            "id": "flag-ve",
-            "src": "/flags/ve.png",
+            "id": "flag-gb",
+            "src": "/flags/gb.png",
             "transform": {
               "x": 828.4,
               "y": 1183,
@@ -1222,9 +1222,9 @@
             "id": "card-insights",
             "variant": "stat",
             "transform": {
-              "x": 598.9,
+              "x": 458.2,
               "y": 1008.8,
-              "width": 441.8,
+              "width": 582.5,
               "height": 174,
               "rotation": 4
             },
@@ -1239,12 +1239,12 @@
             },
             "title": {
               "en": "$1,018",
-              "es": "$1,018",
+              "es": "MX$18,667",
               "es-ES": "€1018",
               "fr": "€1 018",
               "pt-BR": "R$5.093",
               "pt-PT": "€1018",
-              "de": "$1.018"
+              "de": "€1.018"
             },
             "body": {
               "en": "left this month",
@@ -1352,8 +1352,8 @@
             "fit": "contain"
           },
           {
-            "id": "flag-ve",
-            "src": "/flags/ve.png",
+            "id": "flag-jp",
+            "src": "/flags/jp.png",
             "transform": {
               "x": -16,
               "y": 1067,
@@ -1447,12 +1447,12 @@
             },
             "title": {
               "en": "Netflix $22.99",
-              "es": "Netflix $22.99",
+              "es": "Netflix MX$299.00",
               "es-ES": "Netflix €22,99",
               "fr": "Netflix €22,99",
               "pt-BR": "Netflix R$114,90",
               "pt-PT": "Netflix €22,99",
-              "de": "Netflix $22,99"
+              "de": "Netflix €22,99"
             },
             "iconSrc": "/icons/netflix.png",
             "iconBackground": "#000000"

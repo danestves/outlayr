@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { openLedger } from "./ledger-target.mjs";
-import { REGIONS } from "./seed-regions.mjs";
+import { PER_USD, REGIONS } from "./seed-regions.mjs";
 
 const [deviceTarget, ...flags] = process.argv.slice(2);
 const withSchedules = flags.includes("--subscriptions");
@@ -19,7 +19,6 @@ if (!region) {
     throw new Error(`Unknown region "${regionName}". Use one of: ${Object.keys(REGIONS).join(", ")}.`);
 }
 
-const VES_RATE = 807.3862;
 const RECURRING_MONTHLY = 3;
 const RECURRING_YEARLY = 4;
 const RATES_FROM = Date.UTC(2025, 11, 31);
@@ -451,12 +450,7 @@ for (const entry of withSchedules ? entries : []) {
 
 const balanceDelta = Object.fromEntries(ACCOUNTS.map((a) => [a.id, 0]));
 
-function rateOf(currency) {
-    if (currency === "USD") {
-        return 1;
-    }
-    return currency === LEDGER_CURRENCY ? region.rate : VES_RATE;
-}
+const rateOf = (currency) => PER_USD[currency];
 
 const scaled = (account, amount) => (account.currency === LEDGER_CURRENCY ? region.scale(amount) : amount);
 const merchantOf = (slot) => region.merchants[slot] ?? MERCHANTS[slot];
