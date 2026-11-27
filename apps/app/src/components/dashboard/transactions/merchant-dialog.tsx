@@ -186,12 +186,13 @@ function MerchantForm({ doc, onDone, onSaved }: MerchantFormProps) {
     };
 
     const onFile = async (event: ChangeEvent<HTMLInputElement>) => {
-        const [file] = event.target.files ?? [];
-        event.target.value = "";
+        const input = event.target;
+        const [file] = input.files ?? [];
         if (!file) {
             return;
         }
         if (!navigator.onLine) {
+            input.value = "";
             setTrouble("offline");
             return;
         }
@@ -199,6 +200,7 @@ function MerchantForm({ doc, onDone, onSaved }: MerchantFormProps) {
         try {
             setPhoto(await upload(file));
         } catch (error) {
+            input.value = "";
             setTrouble(error instanceof Error ? photoTrouble(error) : "failed");
         }
     };
