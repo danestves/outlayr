@@ -357,7 +357,7 @@ export function LedgerTable({
                     {heads.map((head) => (
                         <Table.Head
                             align={head.align}
-                            className={`${WIDTHS[head.key] ?? ""} ${NARROW[head.key] ?? ""}`}
+                            className={`${head.key === "date" && upcoming.length > 0 ? "w-36" : (WIDTHS[head.key] ?? "")} ${NARROW[head.key] ?? ""}`}
                             key={head.key}
                         >
                             {head.name}
@@ -369,19 +369,23 @@ export function LedgerTable({
             <Table.Body>
                 {transfers || upcoming.length === 0 ? null : (
                     <Table.Row className="bg-app-hover hover:bg-app-hover">
-                        <Table.Cell className="text-app-label py-2" colSpan={columns.length + 2}>
-                            <span className="flex items-center justify-between gap-3">
-                                <span className="flex items-baseline gap-2">
-                                    <span className="font-semibold">{words.upcoming.title}</span>
-                                    <span className="text-muted-foreground font-mono tabular-nums">
-                                        {upcoming.length}
+                        <Table.Cell className={PICK} />
+                        {columns.map((column) => (
+                            <Table.Cell className={`max-w-0 ${NARROW[column] ?? ""}`} key={column}>
+                                {column === "merchant" ? (
+                                    <span className="text-app-label flex min-w-0 items-baseline gap-2">
+                                        <span className="font-semibold">{words.upcoming.title}</span>
+                                        <span className="text-muted-foreground font-mono tabular-nums">
+                                            {upcoming.length}
+                                        </span>
+                                        <span className="text-muted-foreground text-app-caption truncate">
+                                            {words.upcoming.notCounted}
+                                        </span>
                                     </span>
-                                </span>
-                                <span className="text-muted-foreground text-app-caption">
-                                    {words.upcoming.notCounted}
-                                </span>
-                            </span>
-                        </Table.Cell>
+                                ) : null}
+                            </Table.Cell>
+                        ))}
+                        <Table.Cell className="w-10" />
                     </Table.Row>
                 )}
                 {transfers ? null : upcoming.map((row) => ("fromId" in row ? transferRow(row) : entryRow(row, true)))}
