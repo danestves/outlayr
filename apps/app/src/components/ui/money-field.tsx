@@ -2,25 +2,19 @@ import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 import { currencyDisplayFor, decimalsFor } from "@outlayr/money/currency";
 import { CurrencyInput } from "panelui-web/currency-input";
 import type { CurrencyInputProps, CurrencyOption } from "panelui-web/currency-input";
-import { useMemo } from "react";
-import type { ClipboardEvent, FocusEvent } from "react";
+import { useMemo, useRef } from "react";
+import type { ChangeEvent } from "react";
 
 import { useExchangeLocale } from "@/lib/exchange-locale";
-import { labelledAmount } from "@/lib/labelled-amount";
+import { typedFigure } from "@/lib/typed-figure";
 
 export interface MoneyFieldProps extends Omit<CurrencyInputProps, "currencies" | "labels" | "locale"> {
     codes?: readonly string[];
 }
 
-export function MoneyField({
-    codes = PICKABLE_CURRENCY_CODES,
-    onBlur,
-    onPaste,
-    onValueChange,
-    value,
-    ...props
-}: MoneyFieldProps) {
+export function MoneyField({ codes = PICKABLE_CURRENCY_CODES, onChangeCapture, ...props }: MoneyFieldProps) {
     const { currencyLabels, locale } = useExchangeLocale();
+    const labelled = useRef(false);
     const currencies = useMemo(
         () =>
             codes.map((code): CurrencyOption => {
@@ -29,42 +23,24 @@ export function MoneyField({
             }),
         [codes]
     );
-    const blur = (event: FocusEvent<HTMLDivElement>) => {
-        onBlur?.(event);
+    const dropLabel = (event: ChangeEvent<HTMLDivElement>) => {
+        onChangeCapture?.(event);
         const { target } = event;
-        const amountInput = target instanceof HTMLInputElement && target.dataset.slot === "currency-input-amount";
-        if (value === undefined || onValueChange === undefined || !amountInput) {
+        if (!(target instanceof HTMLInputElement) || target.dataset.slot !== "currency-input-amount") {
             return;
         }
-        const amount = labelledAmount(target.value, decimalsFor(value.code));
-        if (amount !== null && amount !== value.amount) {
-            onValueChange({ amount, code: value.code });
+        const typed = typedFigure(target.value, labelled.current);
+        labelled.current = typed.labelled;
+        if (typed.figure !== target.value) {
+            target.value = typed.figure;
         }
-    };
-    const paste = (event: ClipboardEvent<HTMLDivElement>) => {
-        onPaste?.(event);
-        if (event.defaultPrevented) {
-            return;
-        }
-        if (value === undefined || onValueChange === undefined) {
-            return;
-        }
-        const amount = labelledAmount(event.clipboardData.getData("text"), decimalsFor(value.code));
-        if (amount === null) {
-            return;
-        }
-        event.preventDefault();
-        onValueChange({ amount, code: value.code });
     };
     return (
         <CurrencyInput
             currencies={currencies}
             labels={currencyLabels}
             locale={locale}
-            onBlur={blur}
-            onPaste={paste}
-            onValueChange={onValueChange}
-            value={value}
+            onChangeCapture={dropLabel}
             {...props}
         />
     );
