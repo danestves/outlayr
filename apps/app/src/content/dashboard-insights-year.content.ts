@@ -9,8 +9,22 @@ const dashboardInsightsYear = {
             es: "Categoría más grande",
             fr: "Plus grande catégorie",
             pt: "Maior categoria",
+            it: "Categoria più grande",
+            nl: "Grootste categorie",
+            ja: "最大のカテゴリ",
+            ko: "가장 큰 카테고리",
         }),
-        budgeted: t({ en: "Budgeted", de: "Budgetiert", es: "Presupuestado", fr: "Budgété", pt: "Orçado" }),
+        budgeted: t({
+            en: "Budgeted",
+            de: "Budgetiert",
+            es: "Presupuestado",
+            fr: "Budgété",
+            pt: "Orçado",
+            it: "Previsto in budget",
+            nl: "Begroot",
+            ja: "予算",
+            ko: "예산 책정",
+        }),
         card: {
             below: t({
                 en: "Below your average",
@@ -18,6 +32,10 @@ const dashboardInsightsYear = {
                 es: "Bajo tu promedio",
                 fr: "En dessous de votre moyenne",
                 pt: "Abaixo da sua média",
+                it: "Sotto la tua media",
+                nl: "Onder je gemiddelde",
+                ja: "平均より少ない",
+                ko: "평균보다 적은",
             }),
             highs: t({
                 en: "Highs and lows",
@@ -25,8 +43,22 @@ const dashboardInsightsYear = {
                 es: "Máximos y mínimos",
                 fr: "Hauts et bas",
                 pt: "Altos e baixos",
+                it: "Massimi e minimi",
+                nl: "Pieken en dalen",
+                ja: "最高と最低",
+                ko: "최고와 최저",
             }),
-            kept: t({ en: "Kept", de: "Übrig", es: "Ahorrado", fr: "Épargné", pt: "Guardado" }),
+            kept: t({
+                en: "Kept",
+                de: "Übrig",
+                es: "Ahorrado",
+                fr: "Épargné",
+                pt: "Guardado",
+                it: "Rimasto",
+                nl: "Overgehouden",
+                ja: "手元に残った額",
+                ko: "남은 금액",
+            }),
             manage: t({
                 en: "Manage plan",
                 de: "Plan verwalten",
@@ -34,8 +66,22 @@ const dashboardInsightsYear = {
                 fr: "Gérer le forfait",
                 pt: "Gerenciar plano",
                 "pt-PT": "Gerir plano",
+                it: "Gestisci piano",
+                nl: "Abonnement beheren",
+                ja: "プランの管理",
+                ko: "플랜 관리",
             }),
-            pro: t({ en: "Pro", de: "Pro", es: "Pro", fr: "Pro", pt: "Pro" }),
+            pro: t({
+                en: "Pro",
+                de: "Pro",
+                es: "Pro",
+                fr: "Pro",
+                pt: "Pro",
+                it: "Pro",
+                nl: "Pro",
+                ja: "Pro",
+                ko: "Pro",
+            }),
             proEnds: insert(
                 t({
                     en: "Pro ends {{date}}.",
@@ -43,6 +89,10 @@ const dashboardInsightsYear = {
                     es: "Pro termina el {{date}}.",
                     fr: "Le Pro se termine le {{date}}.",
                     pt: "O Pro termina em {{date}}.",
+                    it: "Pro termina il {{date}}.",
+                    nl: "Pro eindigt op {{date}}.",
+                    ja: "Proは{{date}}に終了します。",
+                    ko: "Pro는 {{date}}에 종료돼요.",
                 })
             ),
             month: t({
@@ -51,6 +101,10 @@ const dashboardInsightsYear = {
                 es: "Mes a mes",
                 fr: "Mois par mois",
                 pt: "Mês a mês",
+                it: "Mese per mese",
+                nl: "Maand voor maand",
+                ja: "月ごとの推移",
+                ko: "월별 추이",
             }),
             where: t({
                 en: "Where it went",
@@ -58,6 +112,10 @@ const dashboardInsightsYear = {
                 es: "A dónde se fue",
                 fr: "Où c'est allé",
                 pt: "Para onde foi",
+                it: "Dove sono finiti",
+                nl: "Waar het naartoe ging",
+                ja: "お金の行き先",
+                ko: "어디에 썼는지",
             }),
         },
         chartLabel: t({
@@ -66,6 +124,10 @@ const dashboardInsightsYear = {
             es: "Gasto de cada mes",
             fr: "Dépenses de chaque mois",
             pt: "Despesas em cada mês",
+            it: "Spesa in ogni mese",
+            nl: "Uitgaven in elke maand",
+            ja: "各月の支出",
+            ko: "월별 지출",
         }),
         empty: {
             line: insert(
@@ -76,6 +138,10 @@ const dashboardInsightsYear = {
                     fr: "Revenez après 3 mois d'opérations. Vous en avez {{count}}.",
                     pt: "Volte depois de 3 meses de lançamentos. Você tem {{count}}.",
                     "pt-PT": "Volte depois de 3 meses de registos. tem {{count}}.",
+                    it: "Torna dopo 3 mesi di movimenti. Per ora ne hai {{count}}.",
+                    nl: "Kom terug na 3 maanden aan transacties. Je hebt er nu {{count}}.",
+                    ja: "記録が3か月分たまったら、また見に来てください。今は{{count}}か月分です。",
+                    ko: "기록이 3개월 쌓이면 다시 오세요. 지금은 {{count}}개월이에요.",
                 })
             ),
             title: t({
@@ -84,6 +150,10 @@ const dashboardInsightsYear = {
                 es: "Es pronto para un año.",
                 fr: "Trop tôt pour une année.",
                 pt: "Muito cedo para um ano.",
+                it: "Troppo presto per un anno.",
+                nl: "Te vroeg voor een heel jaar.",
+                ja: "1年分を見るにはまだ早いです。",
+                ko: "1년을 보기에는 아직 일러요.",
             }),
         },
         highest: t({
@@ -92,6 +162,10 @@ const dashboardInsightsYear = {
             es: "Mes más alto",
             fr: "Mois le plus élevé",
             pt: "Mês mais alto",
+            it: "Mese più alto",
+            nl: "Hoogste maand",
+            ja: "最も多かった月",
+            ko: "가장 많았던 달",
         }),
         kpi: {
             entries: t({
@@ -101,6 +175,10 @@ const dashboardInsightsYear = {
                 fr: "Opérations enregistrées",
                 pt: "Lançamentos registrados",
                 "pt-PT": "Registos registados",
+                it: "Movimenti registrati",
+                nl: "Transacties vastgelegd",
+                ja: "記録した件数",
+                ko: "기록한 수",
             }),
             kept: t({
                 en: "Kept under your budgets",
@@ -108,6 +186,10 @@ const dashboardInsightsYear = {
                 es: "Ahorrado bajo tus presupuestos",
                 fr: "Respecté dans vos budgets",
                 pt: "Mantido dentro dos orçamentos",
+                it: "Entro i tuoi budget",
+                nl: "Binnen je budgetten gebleven",
+                ja: "予算の範囲内",
+                ko: "예산 이내로 지킨",
             }),
             months: t({
                 en: "Months under budget",
@@ -115,6 +197,10 @@ const dashboardInsightsYear = {
                 es: "Meses bajo presupuesto",
                 fr: "Mois sous le budget",
                 pt: "Meses abaixo do orçamento",
+                it: "Mesi sotto budget",
+                nl: "Maanden onder budget",
+                ja: "予算内だった月",
+                ko: "예산 이내였던 달",
             }),
             monthsLogged: t({
                 en: "Months logged",
@@ -123,9 +209,33 @@ const dashboardInsightsYear = {
                 fr: "Mois enregistrés",
                 pt: "Meses registrados",
                 "pt-PT": "Meses registados",
+                it: "Mesi registrati",
+                nl: "Maanden bijgehouden",
+                ja: "記録した月数",
+                ko: "기록한 달",
             }),
-            soFar: t({ en: "So far", de: "Bisher", es: "Hasta ahora", fr: "Jusqu'ici", pt: "Até agora" }),
-            year: t({ en: "Your year", de: "Dein Jahr", es: "Tu año", fr: "Votre année", pt: "Seu ano" }),
+            soFar: t({
+                en: "So far",
+                de: "Bisher",
+                es: "Hasta ahora",
+                fr: "Jusqu'ici",
+                pt: "Até agora",
+                it: "Finora",
+                nl: "Tot nu toe",
+                ja: "ここまで",
+                ko: "지금까지",
+            }),
+            year: t({
+                en: "Your year",
+                de: "Dein Jahr",
+                es: "Tu año",
+                fr: "Votre année",
+                pt: "Seu ano",
+                it: "Il tuo anno",
+                nl: "Jouw jaar",
+                ja: "この1年",
+                ko: "나의 1년",
+            }),
         },
         legend: {
             average: insert(
@@ -135,6 +245,10 @@ const dashboardInsightsYear = {
                     es: "Promedio {{amount}}",
                     fr: "Moyenne de {{amount}}",
                     pt: "Média de {{amount}}",
+                    it: "Media {{amount}}",
+                    nl: "Gemiddeld {{amount}}",
+                    ja: "平均 {{amount}}",
+                    ko: "평균 {{amount}}",
                 })
             ),
             over: t({
@@ -143,6 +257,10 @@ const dashboardInsightsYear = {
                 es: "Sobre presupuesto",
                 fr: "Au-dessus du budget",
                 pt: "Acima do orçamento",
+                it: "Sopra il budget",
+                nl: "Boven budget",
+                ja: "予算超過",
+                ko: "예산 초과",
             }),
             under: t({
                 en: "Under budget",
@@ -150,6 +268,10 @@ const dashboardInsightsYear = {
                 es: "Bajo presupuesto",
                 fr: "Sous le budget",
                 pt: "Abaixo do orçamento",
+                it: "Sotto il budget",
+                nl: "Onder budget",
+                ja: "予算内",
+                ko: "예산 이내",
             }),
         },
         lowest: t({
@@ -158,6 +280,10 @@ const dashboardInsightsYear = {
             es: "Mes más bajo",
             fr: "Mois le plus bas",
             pt: "Mês mais baixo",
+            it: "Mese più basso",
+            nl: "Laagste maand",
+            ja: "最も少なかった月",
+            ko: "가장 적었던 달",
         }),
         monthAverage: t({
             en: "Average month",
@@ -165,6 +291,10 @@ const dashboardInsightsYear = {
             es: "Mes promedio",
             fr: "Mois moyen",
             pt: "Mês médio",
+            it: "Mese medio",
+            nl: "Gemiddelde maand",
+            ja: "月平均",
+            ko: "월 평균",
         }),
         monthsOver: t({
             en: "Months over budget",
@@ -172,6 +302,10 @@ const dashboardInsightsYear = {
             es: "Meses sobre presupuesto",
             fr: "Mois au-dessus du budget",
             pt: "Meses acima do orçamento",
+            it: "Mesi sopra il budget",
+            nl: "Maanden boven budget",
+            ja: "予算を超えた月",
+            ko: "예산을 넘은 달",
         }),
         noBudgets: t({
             en: "No budgets",
@@ -179,6 +313,10 @@ const dashboardInsightsYear = {
             es: "Sin presupuestos",
             fr: "Aucun budget",
             pt: "Sem orçamentos",
+            it: "Nessun budget",
+            nl: "Geen budgetten",
+            ja: "予算なし",
+            ko: "예산 없음",
         }),
         ofTotal: insert(
             t({
@@ -187,16 +325,34 @@ const dashboardInsightsYear = {
                 es: "{{count}} de {{total}}",
                 fr: "{{count}} sur {{total}}",
                 pt: "{{count}} de {{total}}",
+                it: "{{count}} su {{total}}",
+                nl: "{{count}} van {{total}}",
+                ja: "{{total}}件中{{count}}件",
+                ko: "{{total}}개 중 {{count}}개",
             })
         ),
         seg: {
-            label: t({ en: "Year", de: "Jahr", es: "Año", fr: "Année", pt: "Ano" }),
+            label: t({
+                en: "Year",
+                de: "Jahr",
+                es: "Año",
+                fr: "Année",
+                pt: "Ano",
+                it: "Anno",
+                nl: "Jaar",
+                ja: "年",
+                ko: "연",
+            }),
             recent: t({
                 en: "Last 12 months",
                 de: "Letzte 12 Monate",
                 es: "Últimos 12 meses",
                 fr: "12 derniers mois",
                 pt: "Últimos 12 meses",
+                it: "Ultimi 12 mesi",
+                nl: "Laatste 12 maanden",
+                ja: "直近12か月",
+                ko: "최근 12개월",
             }),
         },
         sub: {
@@ -207,6 +363,10 @@ const dashboardInsightsYear = {
                     es: "{{amount}} menos que los últimos 12 meses",
                     fr: "{{amount}} de moins que les 12 derniers mois",
                     pt: "{{amount}} menos que os últimos 12 meses",
+                    it: "{{amount}} in meno rispetto agli ultimi 12 mesi",
+                    nl: "{{amount}} minder dan de laatste 12 maanden",
+                    ja: "直近12か月より{{amount}}少ない",
+                    ko: "최근 12개월보다 {{amount}} 적음",
                 })
             ),
             keptMore: insert(
@@ -216,6 +376,10 @@ const dashboardInsightsYear = {
                     es: "{{amount}} más que los últimos 12 meses",
                     fr: "{{amount}} de plus que les 12 derniers mois",
                     pt: "{{amount}} mais que os últimos 12 meses",
+                    it: "{{amount}} in più rispetto agli ultimi 12 mesi",
+                    nl: "{{amount}} meer dan de laatste 12 maanden",
+                    ja: "直近12か月より{{amount}}多い",
+                    ko: "최근 12개월보다 {{amount}} 많음",
                 })
             ),
             proTimes: insert(
@@ -225,6 +389,10 @@ const dashboardInsightsYear = {
                     es: "{{times}}x lo que cuesta Pro",
                     fr: "{{times}}x le coût du Pro",
                     pt: "{{times}}x o custo do Pro",
+                    it: "{{times}} volte quanto costa Pro",
+                    nl: "{{times}}x wat Pro kost",
+                    ja: "Proの費用の{{times}}倍",
+                    ko: "Pro 비용의 {{times}}배",
                 })
             ),
             budgeted: insert(
@@ -234,6 +402,10 @@ const dashboardInsightsYear = {
                     es: "de {{amount}} presupuestado",
                     fr: "sur {{amount}} budgétés",
                     pt: "de {{amount}} orçados",
+                    it: "di {{amount}} in budget",
+                    nl: "van {{amount}} begroot",
+                    ja: "予算{{amount}}のうち",
+                    ko: "예산 {{amount}} 중",
                 })
             ),
             aMonth: insert(
@@ -243,6 +415,10 @@ const dashboardInsightsYear = {
                     es: "Cerca de {{count}} al mes",
                     fr: "Environ {{count}} par mois",
                     pt: "Cerca de {{count}} por mês",
+                    it: "Circa {{count}} al mese",
+                    nl: "Ongeveer {{count}} per maand",
+                    ja: "月に約{{count}}件",
+                    ko: "월 약 {{count}}개",
                 })
             ),
             pair: insert(
@@ -252,6 +428,10 @@ const dashboardInsightsYear = {
                     es: "{{from}} y {{to}} {{year}}",
                     fr: "{{from}} et {{to}} {{year}}",
                     pt: "{{from}} e {{to}} de {{year}}",
+                    it: "{{from}} e {{to}} {{year}}",
+                    nl: "{{from}} en {{to}} {{year}}",
+                    ja: "{{year}}年{{from}}と{{to}}",
+                    ko: "{{year}}년 {{from}}·{{to}}",
                 })
             ),
             range: insert(
@@ -261,6 +441,10 @@ const dashboardInsightsYear = {
                     es: "{{from}} a {{to}}",
                     fr: "de {{from}} à {{to}}",
                     pt: "{{from}} a {{to}}",
+                    it: "da {{from}} a {{to}}",
+                    nl: "{{from}} tot {{to}}",
+                    ja: "{{from}}〜{{to}}",
+                    ko: "{{from}}~{{to}}",
                 })
             ),
             started: insert(
@@ -270,6 +454,10 @@ const dashboardInsightsYear = {
                     es: "Desde {{month}}",
                     fr: "Commencé en {{month}}",
                     pt: "Começou em {{month}}",
+                    it: "Iniziato a {{month}}",
+                    nl: "Begonnen in {{month}}",
+                    ja: "{{month}}に開始",
+                    ko: "{{month}}에 시작",
                 })
             ),
             vs: insert(
@@ -279,13 +467,37 @@ const dashboardInsightsYear = {
                     es: "{{span}}, vs {{year}}",
                     fr: "{{span}}, vs {{year}}",
                     pt: "{{span}}, vs {{year}}",
+                    it: "{{span}}, vs {{year}}",
+                    nl: "{{span}}, t.o.v. {{year}}",
+                    ja: "{{span}}（{{year}}年と比較）",
+                    ko: "{{span}}, {{year}}년 대비",
                 })
             ),
         },
         tip: {
-            budget: t({ en: "Budgets", de: "Budgets", es: "Presupuestos", fr: "Budgets", pt: "Orçamentos" }),
+            budget: t({
+                en: "Budgets",
+                de: "Budgets",
+                es: "Presupuestos",
+                fr: "Budgets",
+                pt: "Orçamentos",
+                it: "Budget",
+                nl: "Budgetten",
+                ja: "予算",
+                ko: "예산",
+            }),
         },
-        twelveMonths: t({ en: "12 months", de: "12 Monate", es: "12 meses", fr: "12 mois", pt: "12 meses" }),
+        twelveMonths: t({
+            en: "12 months",
+            de: "12 Monate",
+            es: "12 meses",
+            fr: "12 mois",
+            pt: "12 meses",
+            it: "12 mesi",
+            nl: "12 maanden",
+            ja: "12か月",
+            ko: "12개월",
+        }),
         monthsCount: plural({
             one: insert(
                 t({
@@ -294,6 +506,10 @@ const dashboardInsightsYear = {
                     es: "{{count}} mes",
                     fr: "{{count}} mois",
                     pt: "{{count}} mês",
+                    it: "__TODO_ONE__",
+                    nl: "__TODO_ONE__",
+                    ja: "{{count}}か月",
+                    ko: "{{count}}개월",
                 })
             ),
             other: insert(
@@ -303,6 +519,10 @@ const dashboardInsightsYear = {
                     es: "{{count}} meses",
                     fr: "{{count}} mois",
                     pt: "{{count}} meses",
+                    it: "{{count}} mesi",
+                    nl: "{{count}} maanden",
+                    ja: "{{count}}か月",
+                    ko: "{{count}}개월",
                 })
             ),
         }),

@@ -6,11 +6,12 @@ import { meterToLevel } from "./voice-entry";
 export const SCRIBE_SAMPLE_RATE = 16_000;
 // apps/voice-relay forwards the socket so ElevenLabs never sees the browser, as the privacy policy says of the phone.
 const SCRIBE_RELAY = "wss://voice.tryoutlayr.com";
-const SCRIBE_LANGUAGES = ["en", "de", "es", "fr", "pt"];
+const SCRIBE_LANGUAGES = ["en", "de", "es", "fr", "it", "ja", "ko", "nl", "pt"];
 const CURRENCY_KEYTERMS = [
     "dollars",
     "dólares",
     "bucks",
+    "euro",
     "euros",
     "pounds",
     "Pfund",
@@ -19,6 +20,9 @@ const CURRENCY_KEYTERMS = [
     "bolívares",
     "bolivars",
     "pesos",
+    "yen",
+    "円",
+    "원",
 ];
 const CHUNKS_PER_SECOND = 10;
 const PCM16_MAX = 32_767;

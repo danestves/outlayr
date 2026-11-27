@@ -1,3 +1,4 @@
+import { decimalsFor } from "@outlayr/money/currency";
 import type { Locale } from "@outlayr/shared/i18n";
 
 import { HOME_CURRENCY } from "@/lib/money";
@@ -15,7 +16,7 @@ const GUIDED = ["amount", "merchant", "category", "account"] as const;
 type GuidedStep = (typeof GUIDED)[number];
 const GUIDED_INDEX = new Map<Step, number>(GUIDED.map((step, index) => [step, index]));
 
-export const CURRENCY_CODES = ["USD", "EUR", "BRL", "MXN", "COP"] as const satisfies readonly Currency[];
+export const CURRENCY_CODES = ["USD", "EUR", "BRL", "MXN", "COP", "JPY", "KRW"] as const satisfies readonly Currency[];
 export const WHEN_OPTIONS = ["today", "yesterday"] as const satisfies readonly When[];
 export const CATEGORIES = {
     expense: [
@@ -351,6 +352,252 @@ export const CASTS = {
             { amount: 4, category: "Subscriptions", currency: "EUR", id: 1, income: false, merchant: "Spotify" },
         ],
     },
+    it: {
+        accounts: ["Intesa Sanpaolo", "Satispay", "Fineco", "Wise", "Contanti", "Conto deposito"],
+        currency: HOME_CURRENCY.it,
+        entries: [
+            {
+                account: "Intesa Sanpaolo",
+                category: "Groceries",
+                currency: "EUR",
+                keys: ["4", "2"],
+                kind: "expense",
+                merchant: "Esselunga",
+                when: "today",
+            },
+            {
+                account: "Satispay",
+                category: "Transport",
+                currency: "EUR",
+                keys: ["1", "4", ".", "6"],
+                kind: "expense",
+                merchant: "Trenitalia",
+                when: "today",
+            },
+            {
+                account: "Wise",
+                category: "Freelance",
+                currency: "USD",
+                keys: ["1", "4", "5", "0"],
+                kind: "income",
+                merchant: "Upwork",
+                when: "yesterday",
+            },
+            {
+                account: "Fineco",
+                category: "Fashion",
+                currency: "EUR",
+                keys: ["8", "9"],
+                kind: "expense",
+                merchant: "Zara",
+                when: "today",
+            },
+        ],
+        knownMerchants: new Map([
+            ["esselunga", "Groceries"],
+            ["coop", "Groceries"],
+            ["illy caffè", "Coffee"],
+            ["just eat", "Dining Out"],
+            ["tigotà", "Shopping"],
+            ["netflix", "Subscriptions"],
+            ["trenitalia", "Transport"],
+            ["spotify", "Subscriptions"],
+            ["zara", "Fashion"],
+        ]),
+        recentMerchants: {
+            expense: ["Esselunga", "Trenitalia", "Zara", "Tigotà", "Just Eat", "Spotify"],
+            income: ["Upwork", "Deel"],
+        },
+        seedLog: [
+            { amount: 15, category: "Subscriptions", currency: "EUR", id: 3, income: false, merchant: "Netflix" },
+            { amount: 54.28, category: "Shopping", currency: "EUR", id: 2, income: false, merchant: "Tigotà" },
+            { amount: 4, category: "Subscriptions", currency: "EUR", id: 1, income: false, merchant: "Spotify" },
+        ],
+    },
+    nl: {
+        accounts: ["ING", "Rabobank", "bunq", "Wise", "Contant", "Spaarrekening"],
+        currency: HOME_CURRENCY.nl,
+        entries: [
+            {
+                account: "ING",
+                category: "Groceries",
+                currency: "EUR",
+                keys: ["4", "2"],
+                kind: "expense",
+                merchant: "Albert Heijn",
+                when: "today",
+            },
+            {
+                account: "bunq",
+                category: "Transport",
+                currency: "EUR",
+                keys: ["1", "4", ".", "6"],
+                kind: "expense",
+                merchant: "NS",
+                when: "today",
+            },
+            {
+                account: "Wise",
+                category: "Freelance",
+                currency: "USD",
+                keys: ["1", "4", "5", "0"],
+                kind: "income",
+                merchant: "Upwork",
+                when: "yesterday",
+            },
+            {
+                account: "Rabobank",
+                category: "Fashion",
+                currency: "EUR",
+                keys: ["8", "9"],
+                kind: "expense",
+                merchant: "Zalando",
+                when: "today",
+            },
+        ],
+        knownMerchants: new Map([
+            ["albert heijn", "Groceries"],
+            ["jumbo", "Groceries"],
+            ["coffee company", "Coffee"],
+            ["thuisbezorgd", "Dining Out"],
+            ["kruidvat", "Shopping"],
+            ["netflix", "Subscriptions"],
+            ["ns", "Transport"],
+            ["spotify", "Subscriptions"],
+            ["zalando", "Fashion"],
+        ]),
+        recentMerchants: {
+            expense: ["Albert Heijn", "NS", "Zalando", "Kruidvat", "Thuisbezorgd", "Spotify"],
+            income: ["Upwork", "Deel"],
+        },
+        seedLog: [
+            { amount: 15, category: "Subscriptions", currency: "EUR", id: 3, income: false, merchant: "Netflix" },
+            { amount: 54.28, category: "Shopping", currency: "EUR", id: 2, income: false, merchant: "Kruidvat" },
+            { amount: 4, category: "Subscriptions", currency: "EUR", id: 1, income: false, merchant: "Spotify" },
+        ],
+    },
+    ja: {
+        accounts: ["三菱UFJ銀行", "楽天カード", "PayPay", "Wise", "現金", "ゆうちょ銀行"],
+        currency: HOME_CURRENCY.ja,
+        entries: [
+            {
+                account: "楽天カード",
+                category: "Groceries",
+                currency: "JPY",
+                keys: ["4", "2", "0", "0"],
+                kind: "expense",
+                merchant: "イオン",
+                when: "today",
+            },
+            {
+                account: "PayPay",
+                category: "Transport",
+                currency: "JPY",
+                keys: ["1", "4", "6", "0"],
+                kind: "expense",
+                merchant: "JR東日本",
+                when: "today",
+            },
+            {
+                account: "三菱UFJ銀行",
+                category: "Freelance",
+                currency: "JPY",
+                keys: ["1", "4", "5", "0", "0", "0"],
+                kind: "income",
+                merchant: "クラウドワークス",
+                when: "yesterday",
+            },
+            {
+                account: "楽天カード",
+                category: "Shopping",
+                currency: "USD",
+                keys: ["8", "9"],
+                kind: "expense",
+                merchant: "Amazon.com",
+                when: "today",
+            },
+        ],
+        knownMerchants: new Map([
+            ["イオン", "Groceries"],
+            ["ドトール", "Coffee"],
+            ["ウーバーイーツ", "Dining Out"],
+            ["マツモトキヨシ", "Shopping"],
+            ["netflix", "Subscriptions"],
+            ["jr東日本", "Transport"],
+            ["spotify", "Subscriptions"],
+            ["ユニクロ", "Fashion"],
+        ]),
+        recentMerchants: {
+            expense: ["イオン", "JR東日本", "ユニクロ", "マツモトキヨシ", "ウーバーイーツ", "Spotify"],
+            income: ["クラウドワークス", "ランサーズ"],
+        },
+        seedLog: [
+            { amount: 1490, category: "Subscriptions", currency: "JPY", id: 3, income: false, merchant: "Netflix" },
+            { amount: 5428, category: "Shopping", currency: "JPY", id: 2, income: false, merchant: "マツモトキヨシ" },
+            { amount: 980, category: "Subscriptions", currency: "JPY", id: 1, income: false, merchant: "Spotify" },
+        ],
+    },
+    ko: {
+        accounts: ["카카오뱅크", "토스뱅크", "신한카드", "Wise", "현금", "적금"],
+        currency: HOME_CURRENCY.ko,
+        entries: [
+            {
+                account: "신한카드",
+                category: "Groceries",
+                currency: "KRW",
+                keys: ["4", "2", "0", "0", "0"],
+                kind: "expense",
+                merchant: "이마트",
+                when: "today",
+            },
+            {
+                account: "카카오뱅크",
+                category: "Transport",
+                currency: "KRW",
+                keys: ["1", "5", "5", "0"],
+                kind: "expense",
+                merchant: "티머니",
+                when: "today",
+            },
+            {
+                account: "토스뱅크",
+                category: "Freelance",
+                currency: "KRW",
+                keys: ["1", "4", "5", "0", "0", "0", "0"],
+                kind: "income",
+                merchant: "크몽",
+                when: "yesterday",
+            },
+            {
+                account: "신한카드",
+                category: "Shopping",
+                currency: "USD",
+                keys: ["8", "9"],
+                kind: "expense",
+                merchant: "Amazon.com",
+                when: "today",
+            },
+        ],
+        knownMerchants: new Map([
+            ["이마트", "Groceries"],
+            ["스타벅스", "Coffee"],
+            ["배달의민족", "Dining Out"],
+            ["올리브영", "Shopping"],
+            ["넷플릭스", "Subscriptions"],
+            ["티머니", "Transport"],
+            ["멜론", "Subscriptions"],
+            ["무신사", "Fashion"],
+        ]),
+        recentMerchants: {
+            expense: ["이마트", "티머니", "무신사", "올리브영", "배달의민족", "멜론"],
+            income: ["크몽", "숨고"],
+        },
+        seedLog: [
+            { amount: 17_000, category: "Subscriptions", currency: "KRW", id: 3, income: false, merchant: "넷플릭스" },
+            { amount: 54_280, category: "Shopping", currency: "KRW", id: 2, income: false, merchant: "올리브영" },
+            { amount: 10_900, category: "Subscriptions", currency: "KRW", id: 1, income: false, merchant: "멜론" },
+        ],
+    },
     pt: {
         accounts: ["Nubank", "Itaú", "Inter", "Wise", "Cash", "Caixa"],
         currency: HOME_CURRENCY.pt,
@@ -432,6 +679,10 @@ export const BLANKS = {
     en: blank(CASTS.en.currency),
     es: blank(CASTS.es.currency),
     fr: blank(CASTS.fr.currency),
+    it: blank(CASTS.it.currency),
+    ja: blank(CASTS.ja.currency),
+    ko: blank(CASTS.ko.currency),
+    nl: blank(CASTS.nl.currency),
     pt: blank(CASTS.pt.currency),
 } as const satisfies Record<Locale, Draft>;
 
@@ -445,22 +696,30 @@ const PACE = {
     when: 700,
 } as const satisfies Record<Move["type"], number>;
 
-export function press(current: string, key: Key): string {
+export function press(current: string, key: Key, decimals: number): string {
     if (key === "back") {
         return current.slice(0, -1);
     }
     if (key === ".") {
-        if (current.includes(".")) {
+        if (decimals === 0 || current.includes(".")) {
             return current;
         }
         return current === "" ? "0." : `${current}.`;
     }
     const [integer = "", fraction] = current.split(".");
     if (fraction !== undefined) {
-        return fraction.length >= 2 ? current : `${current}${key}`;
+        return fraction.length >= decimals ? current : `${current}${key}`;
     }
     const next = integer === "0" ? key : `${integer}${key}`;
     return next.length > MAX_INTEGER_DIGITS ? current : next;
+}
+
+function fitDecimals(amount: string, decimals: number): string {
+    const [integer = "", fraction] = amount.split(".");
+    if (fraction === undefined) {
+        return amount;
+    }
+    return decimals === 0 ? integer : `${integer}.${fraction.slice(0, decimals)}`;
 }
 
 export function amountOf(draft: Draft): number {
@@ -559,13 +818,17 @@ function apply(previous: State, action: VisitorAction): State {
             return { ...state, step: action.step };
         }
         case "key": {
-            return { ...state, draft: { ...draft, amount: press(draft.amount, action.key) } };
+            return {
+                ...state,
+                draft: { ...draft, amount: press(draft.amount, action.key, decimalsFor(draft.currency)) },
+            };
         }
         case "name": {
             return { ...state, draft: named(CASTS[state.locale], draft, action.value) };
         }
         case "currency": {
-            return { ...state, draft: { ...draft, currency: action.value }, step: "amount" };
+            const amount = fitDecimals(draft.amount, decimalsFor(action.value));
+            return { ...state, draft: { ...draft, amount, currency: action.value }, step: "amount" };
         }
         case "when": {
             return advance(state, { ...draft, when: action.value }, "when");
@@ -623,6 +886,10 @@ const SCRIPTS = {
     de: scriptOf(CASTS.de),
     es: scriptOf(CASTS.es),
     fr: scriptOf(CASTS.fr),
+    it: scriptOf(CASTS.it),
+    ja: scriptOf(CASTS.ja),
+    ko: scriptOf(CASTS.ko),
+    nl: scriptOf(CASTS.nl),
     pt: scriptOf(CASTS.pt),
 } satisfies Record<Locale, ReturnType<typeof scriptOf>>;
 

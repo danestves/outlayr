@@ -3,13 +3,27 @@ import type { Dictionary } from "intlayer";
 
 const dashboardEmail = {
     content: {
-        address: t({ en: "Address", de: "Adresse", es: "Dirección", fr: "Adresse", pt: "Endereço" }),
+        address: t({
+            en: "Address",
+            de: "Adresse",
+            es: "Dirección",
+            fr: "Adresse",
+            pt: "Endereço",
+            it: "Indirizzo",
+            nl: "Adres",
+            ja: "アドレス",
+            ko: "주소",
+        }),
         alwaysSent: t({
             en: "Always sent",
             de: "Wird immer gesendet",
             es: "Siempre se envían",
             fr: "Toujours envoyés",
             pt: "Sempre enviados",
+            it: "Sempre inviate",
+            nl: "Altijd verstuurd",
+            ja: "常に送信",
+            ko: "항상 발송",
         }),
         signIn: t({
             en: "Sign-in codes",
@@ -17,6 +31,10 @@ const dashboardEmail = {
             es: "Códigos de acceso",
             fr: "Codes de connexion",
             pt: "Códigos de acesso",
+            it: "Codici di accesso",
+            nl: "Inlogcodes",
+            ja: "ログインコード",
+            ko: "로그인 코드",
         }),
         welcome: t({
             en: "Welcome note",
@@ -24,6 +42,10 @@ const dashboardEmail = {
             es: "Nota de bienvenida",
             fr: "Message de bienvenue",
             pt: "Nota de boas-vindas",
+            it: "Nota di benvenuto",
+            nl: "Welkomstbericht",
+            ja: "ウェルカムメッセージ",
+            ko: "환영 메시지",
         }),
         billing: t({
             en: "Pro and billing",
@@ -31,6 +53,10 @@ const dashboardEmail = {
             es: "Pro y facturación",
             fr: "Pro et facturation",
             pt: "Pro e cobrança",
+            it: "Pro e fatturazione",
+            nl: "Pro en facturering",
+            ja: "Proと請求",
+            ko: "Pro 및 결제",
         }),
         policy: t({
             en: "Policy changes",
@@ -38,6 +64,10 @@ const dashboardEmail = {
             es: "Cambios en las políticas",
             fr: "Changements de politique",
             pt: "Mudanças nas políticas",
+            it: "Modifiche alle informative",
+            nl: "Wijzigingen in ons beleid",
+            ja: "ポリシーの変更",
+            ko: "정책 변경",
         }),
     },
     key: "dashboard-email",

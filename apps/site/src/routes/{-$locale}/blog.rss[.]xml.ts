@@ -1,4 +1,4 @@
-import { LANGUAGES, localeFromParam, pageUrl } from "@outlayr/shared/i18n";
+import { isPublished, LANGUAGES, localeFromParam, pageUrl } from "@outlayr/shared/i18n";
 import type { Locale } from "@outlayr/shared/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer, validatePrefix } from "intlayer";
@@ -69,10 +69,11 @@ export const Route = createFileRoute("/{-$locale}/blog/rss.xml")({
         handlers: {
             GET: async ({ params }) => {
                 const { isValid, localePrefix } = validatePrefix(params.locale);
-                if (!isValid || localePrefix !== params.locale) {
+                const locale = localeFromParam(params.locale);
+                if (!isValid || localePrefix !== params.locale || !isPublished("/blog", locale)) {
                     return new Response("Not found", { status: 404 });
                 }
-                return new Response(await feed(localeFromParam(params.locale)), {
+                return new Response(await feed(locale), {
                     headers: {
                         "cache-control": "public, max-age=3600",
                         "content-type": "application/rss+xml; charset=utf-8",

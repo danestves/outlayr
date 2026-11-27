@@ -7,6 +7,7 @@ Using the app: guides and answers live on [tryoutlayr.com](https://tryoutlayr.co
 Start with the [README](../README.md). Internal notes keep decisions, constraints and traps the source does not explain. Follow the [documentation rules](../AGENTS.md#documentation) before adding one.
 
 - [Glossary](../GLOSSARY.md)
+- [Translation glossary](./internals/i18n-glossary.md)
 - [Convex sync](./internals/convex-sync.md)
 - [Ledger cells](./internals/ledger-cells.md)
 - [Confect backend layout](./internals/confect.md)

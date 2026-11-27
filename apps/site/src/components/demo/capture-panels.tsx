@@ -17,13 +17,36 @@ export const COFFEE_SHOP = {
     de: "Balzac Coffee",
     es: "Juan Valdez",
     fr: "Columbus Café",
+    it: "Illy Caffè",
+    ja: "ドトール",
+    ko: "스타벅스",
+    nl: "Coffee Company",
     pt: "Starbucks",
 } as const satisfies Record<Locale, string>;
 
-const STORE = { en: "Target", de: "dm", es: "Walmart", fr: "Monoprix", pt: "Drogasil" } as const satisfies Record<
-    Locale,
-    string
->;
+const AMOUNTS = {
+    en: { coffee: 12.5, total: 54.28 },
+    de: { coffee: 12.5, total: 54.28 },
+    es: { coffee: 12.5, total: 54.28 },
+    fr: { coffee: 12.5, total: 54.28 },
+    it: { coffee: 4.5, total: 54.28 },
+    ja: { coffee: 820, total: 5428 },
+    ko: { coffee: 4500, total: 54_280 },
+    nl: { coffee: 6.5, total: 54.28 },
+    pt: { coffee: 12.5, total: 54.28 },
+} as const satisfies Record<Locale, { coffee: number; total: number }>;
+
+const STORE = {
+    en: "Target",
+    de: "dm",
+    es: "Walmart",
+    fr: "Monoprix",
+    it: "Tigotà",
+    ja: "マツモトキヨシ",
+    ko: "올리브영",
+    nl: "Kruidvat",
+    pt: "Drogasil",
+} as const satisfies Record<Locale, string>;
 
 const RECEIPT = {
     en: [
@@ -74,6 +97,54 @@ const RECEIPT = {
         { left: "TOTAL", mark: 3, right: "54,28" },
         { left: "CB", mark: null, right: "•••• 1008" },
     ],
+    it: [
+        { left: "TIGOTÀ", mark: 1, right: "" },
+        { left: "MILANO MI", mark: null, right: "" },
+        { left: "21/09/2026", mark: 2, right: "14:32" },
+        { left: "ROTOLI CUCINA", mark: null, right: "19,99" },
+        { left: "DETERSIVO CAPSULE", mark: null, right: "14,30" },
+        { left: "TELO BAGNO", mark: null, right: "19,99" },
+        { left: "IMPONIBILE", mark: null, right: "44,49" },
+        { left: "IVA 22%", mark: null, right: "9,79" },
+        { left: "TOTALE EURO", mark: 3, right: "54,28" },
+        { left: "BANCOMAT", mark: null, right: "•••• 1008" },
+    ],
+    ja: [
+        { left: "マツモトキヨシ", mark: 1, right: "" },
+        { left: "新宿東口店", mark: null, right: "" },
+        { left: "2026/09/21", mark: 2, right: "14:32" },
+        { left: "キッチンペーパー", mark: null, right: "¥1,980" },
+        { left: "洗濯洗剤", mark: null, right: "¥1,498" },
+        { left: "バスタオル", mark: null, right: "¥1,950" },
+        { left: "小計", mark: null, right: "¥5,428" },
+        { left: "内消費税10%", mark: null, right: "¥493" },
+        { left: "合計", mark: 3, right: "¥5,428" },
+        { left: "クレジット", mark: null, right: "•••• 1008" },
+    ],
+    ko: [
+        { left: "올리브영", mark: 1, right: "" },
+        { left: "강남역점", mark: null, right: "" },
+        { left: "2026-09-21", mark: 2, right: "14:32" },
+        { left: "키친타월", mark: null, right: "17,900" },
+        { left: "세탁세제", mark: null, right: "16,900" },
+        { left: "목욕수건", mark: null, right: "19,480" },
+        { left: "과세물품가액", mark: null, right: "49,345" },
+        { left: "부가세", mark: null, right: "4,935" },
+        { left: "합계", mark: 3, right: "54,280" },
+        { left: "신한카드", mark: null, right: "•••• 1008" },
+    ],
+    nl: [
+        { left: "KRUIDVAT", mark: 1, right: "" },
+        { left: "FILIAAL 214", mark: null, right: "" },
+        { left: "21-09-2026", mark: 2, right: "14:32" },
+        { left: "KEUKENROL", mark: null, right: "19,99" },
+        { left: "WASCAPSULES", mark: null, right: "14,30" },
+        { left: "BADHANDDOEK", mark: null, right: "19,99" },
+        { left: "SUBTOTAAL", mark: null, right: "54,28" },
+        { left: "WAARVAN BTW", mark: null, right: "9,42" },
+        { left: "TOTAAL", mark: 3, right: "54,28" },
+        { left: "PINPAS", mark: null, right: "•••• 1008" },
+    ],
     pt: [
         { left: "DROGASIL", mark: 1, right: "" },
         { left: "LOJA 214", mark: null, right: "" },
@@ -93,6 +164,10 @@ const CSV_FILE = {
     de: "sparkasse-umsaetze.csv",
     es: "bbva-movimientos.csv",
     fr: "boursorama-releve.csv",
+    it: "intesa-movimenti.csv",
+    ja: "rakuten-meisai.csv",
+    ko: "shinhan-card.csv",
+    nl: "ing-afschrift.csv",
     pt: "nubank-extrato.csv",
 } as const satisfies Record<Locale, string>;
 
@@ -124,6 +199,34 @@ const CSV_ROWS = {
         { amount: "-4,00", category: "Subscriptions", date: "20/09", label: "SPOTIFY", matchedAt: 1 },
         { amount: "-6,25", category: "Coffee", date: "21/09", label: "COLUMBUS CAFE 0412", matchedAt: 2 },
         { amount: "-38,90", category: "Dining Out", date: "22/09", label: "DELIVEROO*RESTAURANT", matchedAt: 2 },
+    ],
+    it: [
+        { amount: "-142,18", category: "Shopping", date: "18/09", label: "AMAZON.IT*MKTP", matchedAt: 1 },
+        { amount: "-18,40", category: "Transport", date: "19/09", label: "TRENITALIA SPA", matchedAt: 1 },
+        { amount: "-4,00", category: "Subscriptions", date: "20/09", label: "SPOTIFY", matchedAt: 1 },
+        { amount: "-4,50", category: "Coffee", date: "21/09", label: "ILLYCAFFE 0412", matchedAt: 2 },
+        { amount: "-38,90", category: "Dining Out", date: "22/09", label: "JUST EAT*RISTORANTE", matchedAt: 2 },
+    ],
+    ja: [
+        { amount: "-3,980", category: "Shopping", date: "09/18", label: "AMAZON.CO.JP", matchedAt: 1 },
+        { amount: "-1,460", category: "Transport", date: "09/19", label: "ﾓﾊﾞｲﾙSUICA", matchedAt: 1 },
+        { amount: "-980", category: "Subscriptions", date: "09/20", label: "SPOTIFY", matchedAt: 1 },
+        { amount: "-820", category: "Coffee", date: "09/21", label: "ﾄﾞﾄｰﾙ 0412", matchedAt: 2 },
+        { amount: "-2,980", category: "Dining Out", date: "09/22", label: "ｳｰﾊﾞｰｲｰﾂ", matchedAt: 2 },
+    ],
+    ko: [
+        { amount: "-38,900", category: "Shopping", date: "09.18", label: "쿠팡(주)", matchedAt: 1 },
+        { amount: "-1,550", category: "Transport", date: "09.19", label: "티머니", matchedAt: 1 },
+        { amount: "-10,900", category: "Subscriptions", date: "09.20", label: "SPOTIFY", matchedAt: 1 },
+        { amount: "-4,500", category: "Coffee", date: "09.21", label: "스타벅스 강남R점", matchedAt: 2 },
+        { amount: "-23,900", category: "Dining Out", date: "09.22", label: "배달의민족", matchedAt: 2 },
+    ],
+    nl: [
+        { amount: "-142,18", category: "Shopping", date: "18-09", label: "BOL.COM*BESTELLING", matchedAt: 1 },
+        { amount: "-18,40", category: "Transport", date: "19-09", label: "NS GROEP IZ NS REIZIGERS", matchedAt: 1 },
+        { amount: "-4,00", category: "Subscriptions", date: "20-09", label: "SPOTIFY", matchedAt: 1 },
+        { amount: "-6,50", category: "Coffee", date: "21-09", label: "COFFEE COMPANY 0412", matchedAt: 2 },
+        { amount: "-38,90", category: "Dining Out", date: "22-09", label: "THUISBEZORGD.NL*RESTAURANT", matchedAt: 2 },
     ],
     pt: [
         { amount: "-142,18", category: "Shopping", date: "18/09", label: "MERCADOLIVRE*COMPRA", matchedAt: 1 },
@@ -216,7 +319,7 @@ export function SayPanel({ frame }: PanelProps) {
                 {heard ? (
                     <div className={FADE_IN}>
                         <p className="text-4xl font-semibold tracking-tight tabular-nums">
-                            {formatMoney(12.5, HOME_CURRENCY[locale], locale)}
+                            {formatMoney(AMOUNTS[locale].coffee, HOME_CURRENCY[locale], locale)}
                         </p>
                         <p className="mt-1 text-lg">
                             <span className="text-muted">{voiceAt}</span> {shop}
@@ -248,7 +351,7 @@ export function SayPanel({ frame }: PanelProps) {
                     ) : null}
                 </ol>
             ) : null}
-            {frame >= 6 ? <Logged amount={12.5} category="Coffee" merchant={shop} /> : null}
+            {frame >= 6 ? <Logged amount={AMOUNTS[locale].coffee} category="Coffee" merchant={shop} /> : null}
         </Frame>
     );
 }
@@ -279,7 +382,12 @@ export function ScanPanel({ frame }: PanelProps) {
     const fields = [
         { id: "store", label: scan.store, shownAt: 1, value: STORE[locale] },
         { id: "date", label: scan.date, shownAt: 2, value: scan.dateValue },
-        { id: "total", label: scan.total, shownAt: 3, value: formatMoney(54.28, HOME_CURRENCY[locale], locale) },
+        {
+            id: "total",
+            label: scan.total,
+            shownAt: 3,
+            value: formatMoney(AMOUNTS[locale].total, HOME_CURRENCY[locale], locale),
+        },
         { id: "category", label: scan.category, shownAt: 4, value: nameOf("Shopping") },
     ];
     return (
@@ -314,7 +422,7 @@ export function ScanPanel({ frame }: PanelProps) {
                     ))}
                 </dl>
             </div>
-            {frame >= 5 ? <Logged amount={54.28} category="Shopping" merchant={STORE[locale]} /> : null}
+            {frame >= 5 ? <Logged amount={AMOUNTS[locale].total} category="Shopping" merchant={STORE[locale]} /> : null}
         </Frame>
     );
 }

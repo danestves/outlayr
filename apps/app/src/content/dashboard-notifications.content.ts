@@ -9,6 +9,10 @@ const dashboardNotifications = {
             es: "Permitidas en este navegador",
             fr: "Autorisées dans ce navigateur",
             pt: "Permitidas neste navegador",
+            it: "Consentite in questo browser",
+            nl: "Toegestaan in deze browser",
+            ja: "このブラウザで許可されています",
+            ko: "이 브라우저에서 허용됨",
         }),
         notAllowed: t({
             en: "Not allowed in this browser",
@@ -16,6 +20,10 @@ const dashboardNotifications = {
             es: "No permitidas en este navegador",
             fr: "Non autorisées dans ce navigateur",
             pt: "Não permitidas neste navegador",
+            it: "Non consentite in questo browser",
+            nl: "Niet toegestaan in deze browser",
+            ja: "このブラウザでは許可されていません",
+            ko: "이 브라우저에서 허용되지 않음",
         }),
         offTitle: t({
             en: "Notifications are off",
@@ -23,6 +31,10 @@ const dashboardNotifications = {
             es: "Las notificaciones están desactivadas",
             fr: "Les notifications sont désactivées",
             pt: "As notificações estão desativadas",
+            it: "Le notifiche sono disattivate",
+            nl: "Meldingen staan uit",
+            ja: "通知はオフです",
+            ko: "알림이 꺼져 있어요",
         }),
         offBody: t({
             en: "Outlayr cannot ask again once you have declined. Allow them in your browser's site settings.",
@@ -32,6 +44,10 @@ const dashboardNotifications = {
             pt: "O Outlayr não pode perguntar de novo depois de recusadas. Permita nas configurações do site no navegador.",
             "pt-PT":
                 "O Outlayr não pode perguntar de novo depois de recusadas. Permita nas definições do site no navegador.",
+            it: "Outlayr non può chiedere di nuovo dopo un rifiuto. Consentile nelle impostazioni del sito del tuo browser.",
+            nl: "Outlayr kan het niet opnieuw vragen nadat je hebt geweigerd. Sta ze toe in de site-instellingen van je browser.",
+            ja: "一度拒否すると、Outlayrから再度確認することはできません。ブラウザのサイト設定で許可してください。",
+            ko: "한 번 거부하면 Outlayr에서 다시 물어볼 수 없어요. 브라우저의 사이트 설정에서 허용해 주세요.",
         }),
         unsupportedTitle: t({
             en: "This browser can't show reminders",
@@ -39,6 +55,10 @@ const dashboardNotifications = {
             es: "Este navegador no puede mostrar recordatorios",
             fr: "Ce navigateur ne peut pas afficher de rappels",
             pt: "Este navegador não pode mostrar lembretes",
+            it: "Questo browser non può mostrare promemoria",
+            nl: "Deze browser kan geen herinneringen tonen",
+            ja: "このブラウザではリマインダーを表示できません",
+            ko: "이 브라우저에서는 리마인더를 표시할 수 없어요",
         }),
         unsupportedBody: t({
             en: "Reminders on your phone are set in the Outlayr app.",
@@ -48,6 +68,10 @@ const dashboardNotifications = {
             fr: "Les rappels sur votre téléphone se règlent dans l'app Outlayr.",
             pt: "Os lembretes do celular são definidos no app Outlayr.",
             "pt-PT": "Os lembretes do telemóvel são definidos na app Outlayr.",
+            it: "I promemoria sul telefono si impostano nell'app Outlayr.",
+            nl: "Herinneringen op je telefoon stel je in de Outlayr-app in.",
+            ja: "スマートフォンのリマインダーはOutlayrアプリで設定します。",
+            ko: "휴대폰 리마인더는 Outlayr 앱에서 설정해요.",
         }),
         checkAgain: t({
             en: "Check again",
@@ -55,6 +79,10 @@ const dashboardNotifications = {
             es: "Comprobar de nuevo",
             fr: "Vérifier à nouveau",
             pt: "Verificar de novo",
+            it: "Controlla di nuovo",
+            nl: "Opnieuw controleren",
+            ja: "再確認",
+            ko: "다시 확인",
         }),
         daily: t({
             en: "Daily reminder",
@@ -62,6 +90,10 @@ const dashboardNotifications = {
             es: "Recordatorio diario",
             fr: "Rappel quotidien",
             pt: "Lembrete diário",
+            it: "Promemoria giornaliero",
+            nl: "Dagelijkse herinnering",
+            ja: "毎日のリマインダー",
+            ko: "매일 리마인더",
         }),
         remind: t({
             en: "Remind me to log",
@@ -70,6 +102,10 @@ const dashboardNotifications = {
             fr: "Me rappeler de saisir",
             pt: "Lembrar de registrar",
             "pt-PT": "Lembrar de registar",
+            it: "Ricordami di registrare",
+            nl: "Herinner me eraan om vast te leggen",
+            ja: "記録を促す",
+            ko: "기록하도록 알려주기",
         }),
         remindHint: t({
             en: "Only on days with nothing logged.",
@@ -78,6 +114,10 @@ const dashboardNotifications = {
             fr: "Seulement les jours sans saisie.",
             pt: "Só nos dias sem registros.",
             "pt-PT": "Só nos dias sem registos.",
+            it: "Solo nei giorni senza movimenti.",
+            nl: "Alleen op dagen zonder transacties.",
+            ja: "記録がない日だけ届きます。",
+            ko: "기록이 없는 날에만 보내요.",
         }),
         morning: t({
             en: "Every morning",
@@ -86,6 +126,10 @@ const dashboardNotifications = {
             fr: "Chaque matin",
             pt: "Toda manhã",
             "pt-PT": "Todas as manhãs",
+            it: "Ogni mattina",
+            nl: "Elke ochtend",
+            ja: "毎朝",
+            ko: "매일 아침",
         }),
         morningHint: insert(
             t({
@@ -94,6 +138,10 @@ const dashboardNotifications = {
                 es: "Un aviso a las {{time}}, antes de que el día gaste algo.",
                 fr: "Un rappel à {{time}}, avant les dépenses du jour.",
                 pt: "Um aviso às {{time}}, antes de o dia gastar algo.",
+                it: "Un promemoria alle {{time}}, prima che la giornata abbia speso qualcosa.",
+                nl: "Een herinnering om {{time}}, voordat er die dag iets is uitgegeven.",
+                ja: "{{time}}にお知らせします。まだ何も使っていない時間帯です。",
+                ko: "{{time}}에 알려드려요. 아직 하루가 시작되기 전이에요.",
             })
         ),
         evening: t({
@@ -103,6 +151,10 @@ const dashboardNotifications = {
             fr: "Chaque soir",
             pt: "Toda noite",
             "pt-PT": "Todas as noites",
+            it: "Ogni sera",
+            nl: "Elke avond",
+            ja: "毎晩",
+            ko: "매일 저녁",
         }),
         eveningHint: insert(
             t({
@@ -111,9 +163,23 @@ const dashboardNotifications = {
                 es: "Un aviso a las {{time}}, cuando el día casi termina.",
                 fr: "Un rappel à {{time}}, quand la journée touche à sa fin.",
                 pt: "Um aviso às {{time}}, quando o dia está quase no fim.",
+                it: "Un promemoria alle {{time}}, quando la giornata è quasi finita.",
+                nl: "Een herinnering om {{time}}, als de dag bijna voorbij is.",
+                ja: "{{time}}にお知らせします。一日の終わりごろです。",
+                ko: "{{time}}에 알려드려요. 하루가 거의 끝나는 시간이에요.",
             })
         ),
-        custom: t({ en: "Custom time", de: "Eigene Uhrzeit", es: "Otra hora", fr: "Autre heure", pt: "Outro horário" }),
+        custom: t({
+            en: "Custom time",
+            de: "Eigene Uhrzeit",
+            es: "Otra hora",
+            fr: "Autre heure",
+            pt: "Outro horário",
+            it: "Orario personalizzato",
+            nl: "Eigen tijd",
+            ja: "時刻を指定",
+            ko: "시간 직접 설정",
+        }),
         next: insert(
             t({
                 en: "Next reminder at {{time}}.",
@@ -121,6 +187,10 @@ const dashboardNotifications = {
                 es: "Próximo recordatorio a las {{time}}.",
                 fr: "Prochain rappel à {{time}}.",
                 pt: "Próximo lembrete às {{time}}.",
+                it: "Prossimo promemoria alle {{time}}.",
+                nl: "Volgende herinnering om {{time}}.",
+                ja: "次のリマインダーは{{time}}です。",
+                ko: "다음 리마인더는 {{time}}이에요.",
             })
         ),
         none: t({
@@ -129,6 +199,10 @@ const dashboardNotifications = {
             es: "No llegarán recordatorios.",
             fr: "Aucun rappel n'arrivera.",
             pt: "Nenhum lembrete chegará.",
+            it: "Non arriveranno promemoria.",
+            nl: "Je krijgt geen herinneringen.",
+            ja: "リマインダーは届きません。",
+            ko: "리마인더가 오지 않아요.",
         }),
         failed: t({
             en: "Couldn't save that. Try again.",
@@ -137,6 +211,10 @@ const dashboardNotifications = {
             fr: "Enregistrement impossible. Réessayez.",
             pt: "Não foi possível salvar. Tente de novo.",
             "pt-PT": "Não foi possível guardar. Tente de novo.",
+            it: "Impossibile salvare. Riprova.",
+            nl: "Opslaan is niet gelukt. Probeer het opnieuw.",
+            ja: "保存できませんでした。もう一度お試しください。",
+            ko: "저장하지 못했어요. 다시 시도해 주세요.",
         }),
     },
     key: "dashboard-notifications",

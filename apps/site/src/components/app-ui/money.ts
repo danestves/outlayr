@@ -7,6 +7,10 @@ const NUMBERS = {
     en: { decimal: ".", group: "," },
     es: { decimal: ".", group: "," },
     fr: { decimal: ",", group: "\u202F" },
+    it: { decimal: ",", group: "." },
+    ja: { decimal: ".", group: "," },
+    ko: { decimal: ".", group: "," },
+    nl: { decimal: ",", group: "." },
     pt: { decimal: ",", group: "." },
 } as const satisfies Record<Locale, { decimal: string; group: string }>;
 

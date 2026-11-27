@@ -8,6 +8,10 @@ const REGIONAL_FALLBACK = new Map([
     ["es", "es-419"],
     ["fr", "fr-FR"],
     ["de", "de-DE"],
+    ["it", "it-IT"],
+    ["ja", "ja-JP"],
+    ["ko", "ko-KR"],
+    ["nl", "nl-NL"],
     ["pt", "pt-BR"],
 ]);
 

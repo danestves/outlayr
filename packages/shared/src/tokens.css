@@ -91,6 +91,22 @@
 }
 
 @layer base {
+    /* Geist has no CJK glyphs; naming the system faces keeps Windows off its bitmap-era defaults. */
+    :root:lang(ja) {
+        --font-sans:
+            "Geist Variable", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, "Noto Sans JP",
+            sans-serif;
+        --font-app-sans: var(--font-sans);
+        line-break: strict;
+    }
+
+    :root:lang(ko) {
+        --font-sans: "Geist Variable", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+        --font-app-sans: var(--font-sans);
+        word-break: keep-all;
+        overflow-wrap: break-word;
+    }
+
     /* The phone's dark palette, which apps/site's app mockups draw with. The web app reads its own inside the shell, below. */
     :root[data-theme="dark"] {
         color-scheme: dark;
