@@ -24,6 +24,7 @@ import { Route as AccountAppRecurringRouteImport } from './routes/_account/_app.
 import { Route as AccountAppRulesRouteImport } from './routes/_account/_app.rules'
 import { Route as AccountAppSettingsRouteImport } from './routes/_account/_app.settings'
 import { Route as AccountAppTransactionsRouteImport } from './routes/_account/_app.transactions'
+import { Route as AccountICodeRouteImport } from './routes/_account/i.$code'
 import { Route as AccountJoinCodeRouteImport } from './routes/_account/join.$code'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AccountAppAccountsIndexRouteImport } from './routes/_account/_app.accounts.index'
@@ -66,6 +67,7 @@ import { Route as AccountAppBudgetsPlanIndexRouteImport } from './routes/_accoun
 import { Route as AccountAppBudgetsPlanMonthRouteImport } from './routes/_account/_app.budgets.plan.$month'
 import { Route as AccountAppSettingsCategoriesIndexRouteImport } from './routes/_account/_app.settings.categories.index'
 import { Route as AccountAppSettingsCategoriesCategoryIdRouteImport } from './routes/_account/_app.settings.categories.$categoryId'
+import { Route as AccountAppSettingsConnectionsWebhooksRouteImport } from './routes/_account/_app.settings.connections_.webhooks'
 
 const AccountRoute = AccountRouteImport.update({
   id: '/_account',
@@ -139,6 +141,11 @@ const AccountAppTransactionsRoute = AccountAppTransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
   getParentRoute: () => AccountAppRoute,
+} as any)
+const AccountICodeRoute = AccountICodeRouteImport.update({
+  id: '/i/$code',
+  path: '/i/$code',
+  getParentRoute: () => AccountRoute,
 } as any)
 const AccountJoinCodeRoute = AccountJoinCodeRouteImport.update({
   id: '/join/$code',
@@ -372,6 +379,12 @@ const AccountAppSettingsCategoriesCategoryIdRoute =
     path: '/categories/$categoryId',
     getParentRoute: () => AccountAppSettingsRoute,
   } as any)
+const AccountAppSettingsConnectionsWebhooksRoute =
+  AccountAppSettingsConnectionsWebhooksRouteImport.update({
+    id: '/connections_/webhooks',
+    path: '/connections/webhooks',
+    getParentRoute: () => AccountAppSettingsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AccountAppIndexRoute
@@ -387,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/rules': typeof AccountAppRulesRoute
   '/settings': typeof AccountAppSettingsRouteWithChildren
   '/transactions': typeof AccountAppTransactionsRoute
+  '/i/$code': typeof AccountICodeRoute
   '/join/$code': typeof AccountJoinCodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
@@ -427,6 +441,7 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AccountAppSettingsIndexRoute
   '/budgets/plan/$month': typeof AccountAppBudgetsPlanMonthRoute
   '/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
+  '/settings/connections/webhooks': typeof AccountAppSettingsConnectionsWebhooksRoute
   '/budgets/plan/': typeof AccountAppBudgetsPlanIndexRoute
   '/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
 }
@@ -441,6 +456,7 @@ export interface FileRoutesByTo {
   '/recurring': typeof AccountAppRecurringRoute
   '/rules': typeof AccountAppRulesRoute
   '/transactions': typeof AccountAppTransactionsRoute
+  '/i/$code': typeof AccountICodeRoute
   '/join/$code': typeof AccountJoinCodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
@@ -481,6 +497,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AccountAppSettingsIndexRoute
   '/budgets/plan/$month': typeof AccountAppBudgetsPlanMonthRoute
   '/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
+  '/settings/connections/webhooks': typeof AccountAppSettingsConnectionsWebhooksRoute
   '/budgets/plan': typeof AccountAppBudgetsPlanIndexRoute
   '/settings/categories': typeof AccountAppSettingsCategoriesIndexRoute
 }
@@ -500,6 +517,7 @@ export interface FileRoutesById {
   '/_account/_app/rules': typeof AccountAppRulesRoute
   '/_account/_app/settings': typeof AccountAppSettingsRouteWithChildren
   '/_account/_app/transactions': typeof AccountAppTransactionsRoute
+  '/_account/i/$code': typeof AccountICodeRoute
   '/_account/join/$code': typeof AccountJoinCodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_account/_app/': typeof AccountAppIndexRoute
@@ -541,6 +559,7 @@ export interface FileRoutesById {
   '/_account/_app/settings/': typeof AccountAppSettingsIndexRoute
   '/_account/_app/budgets/plan/$month': typeof AccountAppBudgetsPlanMonthRoute
   '/_account/_app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
+  '/_account/_app/settings/connections_/webhooks': typeof AccountAppSettingsConnectionsWebhooksRoute
   '/_account/_app/budgets/plan/': typeof AccountAppBudgetsPlanIndexRoute
   '/_account/_app/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
 }
@@ -560,6 +579,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/settings'
     | '/transactions'
+    | '/i/$code'
     | '/join/$code'
     | '/api/auth/$'
     | '/accounts/$accountId'
@@ -600,6 +620,7 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/budgets/plan/$month'
     | '/settings/categories/$categoryId'
+    | '/settings/connections/webhooks'
     | '/budgets/plan/'
     | '/settings/categories/'
   fileRoutesByTo: FileRoutesByTo
@@ -614,6 +635,7 @@ export interface FileRouteTypes {
     | '/recurring'
     | '/rules'
     | '/transactions'
+    | '/i/$code'
     | '/join/$code'
     | '/api/auth/$'
     | '/accounts/$accountId'
@@ -654,6 +676,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/budgets/plan/$month'
     | '/settings/categories/$categoryId'
+    | '/settings/connections/webhooks'
     | '/budgets/plan'
     | '/settings/categories'
   id:
@@ -672,6 +695,7 @@ export interface FileRouteTypes {
     | '/_account/_app/rules'
     | '/_account/_app/settings'
     | '/_account/_app/transactions'
+    | '/_account/i/$code'
     | '/_account/join/$code'
     | '/api/auth/$'
     | '/_account/_app/'
@@ -713,6 +737,7 @@ export interface FileRouteTypes {
     | '/_account/_app/settings/'
     | '/_account/_app/budgets/plan/$month'
     | '/_account/_app/settings/categories/$categoryId'
+    | '/_account/_app/settings/connections_/webhooks'
     | '/_account/_app/budgets/plan/'
     | '/_account/_app/settings/categories/'
   fileRoutesById: FileRoutesById
@@ -830,6 +855,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/transactions'
       preLoaderRoute: typeof AccountAppTransactionsRouteImport
       parentRoute: typeof AccountAppRoute
+    }
+    '/_account/i/$code': {
+      id: '/_account/i/$code'
+      path: '/i/$code'
+      fullPath: '/i/$code'
+      preLoaderRoute: typeof AccountICodeRouteImport
+      parentRoute: typeof AccountRoute
     }
     '/_account/join/$code': {
       id: '/_account/join/$code'
@@ -1125,6 +1157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppSettingsCategoriesCategoryIdRouteImport
       parentRoute: typeof AccountAppSettingsRoute
     }
+    '/_account/_app/settings/connections_/webhooks': {
+      id: '/_account/_app/settings/connections_/webhooks'
+      path: '/connections/webhooks'
+      fullPath: '/settings/connections/webhooks'
+      preLoaderRoute: typeof AccountAppSettingsConnectionsWebhooksRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
   }
 }
 
@@ -1181,6 +1220,7 @@ interface AccountAppSettingsRouteChildren {
   AccountAppSettingsUsageRoute: typeof AccountAppSettingsUsageRoute
   AccountAppSettingsIndexRoute: typeof AccountAppSettingsIndexRoute
   AccountAppSettingsCategoriesCategoryIdRoute: typeof AccountAppSettingsCategoriesCategoryIdRoute
+  AccountAppSettingsConnectionsWebhooksRoute: typeof AccountAppSettingsConnectionsWebhooksRoute
   AccountAppSettingsCategoriesIndexRoute: typeof AccountAppSettingsCategoriesIndexRoute
 }
 
@@ -1202,6 +1242,8 @@ const AccountAppSettingsRouteChildren: AccountAppSettingsRouteChildren = {
   AccountAppSettingsIndexRoute: AccountAppSettingsIndexRoute,
   AccountAppSettingsCategoriesCategoryIdRoute:
     AccountAppSettingsCategoriesCategoryIdRoute,
+  AccountAppSettingsConnectionsWebhooksRoute:
+    AccountAppSettingsConnectionsWebhooksRoute,
   AccountAppSettingsCategoriesIndexRoute:
     AccountAppSettingsCategoriesIndexRoute,
 }
@@ -1269,6 +1311,7 @@ interface AccountRouteChildren {
   AccountAppRoute: typeof AccountAppRouteWithChildren
   AccountConnectRoute: typeof AccountConnectRoute
   AccountLoginRoute: typeof AccountLoginRoute
+  AccountICodeRoute: typeof AccountICodeRoute
   AccountJoinCodeRoute: typeof AccountJoinCodeRoute
 }
 
@@ -1276,6 +1319,7 @@ const AccountRouteChildren: AccountRouteChildren = {
   AccountAppRoute: AccountAppRouteWithChildren,
   AccountConnectRoute: AccountConnectRoute,
   AccountLoginRoute: AccountLoginRoute,
+  AccountICodeRoute: AccountICodeRoute,
   AccountJoinCodeRoute: AccountJoinCodeRoute,
 }
 
