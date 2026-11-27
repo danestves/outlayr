@@ -130,6 +130,40 @@ const connect = {
             pt: "não verificado",
         }),
         anAgent: t({ en: "an agent", de: "einen Agenten", es: "un agente", fr: "un agent", pt: "um agente" }),
+        scopes: {
+            "ledger:read": {
+                title: t({
+                    en: "Read your ledger",
+                    de: "Dein Haushaltsbuch lesen",
+                    es: "Leer tus finanzas",
+                    fr: "Lire vos comptes",
+                    pt: "Ler suas finanças",
+                }),
+                description: t({
+                    en: "Read your accounts, balances, budgets and entries",
+                    de: "Deine Konten, Salden, Budgets und Einträge lesen",
+                    es: "Leer tus cuentas, saldos, presupuestos y movimientos",
+                    fr: "Lire vos comptes, soldes, budgets et opérations",
+                    pt: "Ler suas contas, saldos, orçamentos e lançamentos",
+                }),
+            },
+            "ledger:write": {
+                title: t({
+                    en: "Log entries",
+                    de: "Einträge erfassen",
+                    es: "Registrar movimientos",
+                    fr: "Saisir des opérations",
+                    pt: "Registrar lançamentos",
+                }),
+                description: t({
+                    en: "Add expenses and income for you",
+                    de: "Ausgaben und Einnahmen für dich hinzufügen",
+                    es: "Agregar gastos e ingresos por ti",
+                    fr: "Ajouter des dépenses et des revenus pour vous",
+                    pt: "Adicionar despesas e receitas para você",
+                }),
+            },
+        },
     },
     key: "connect",
 } satisfies Dictionary;
