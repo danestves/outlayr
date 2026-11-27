@@ -14,7 +14,6 @@ export interface MoneyFieldProps extends Omit<CurrencyInputProps, "currencies" |
 
 export function MoneyField({
     codes = PICKABLE_CURRENCY_CODES,
-    defaultValue,
     onPaste,
     onValueChange,
     value,
@@ -34,21 +33,19 @@ export function MoneyField({
         if (event.defaultPrevented) {
             return;
         }
-        const code = value?.code ?? defaultValue?.code;
-        if (code === undefined) {
+        if (value === undefined || onValueChange === undefined) {
             return;
         }
-        const amount = pastedAmount(event.clipboardData.getData("text"), decimalsFor(code));
-        if (amount === null || onValueChange === undefined) {
+        const amount = pastedAmount(event.clipboardData.getData("text"), decimalsFor(value.code));
+        if (amount === null) {
             return;
         }
         event.preventDefault();
-        onValueChange({ amount, code });
+        onValueChange({ amount, code: value.code });
     };
     return (
         <CurrencyInput
             currencies={currencies}
-            defaultValue={defaultValue}
             labels={currencyLabels}
             locale={locale}
             onPaste={paste}

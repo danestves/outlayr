@@ -40,10 +40,3 @@ export function rateCursors(quotes: Iterable<string>): readonly number[] {
         ),
     ];
 }
-
-export function missingRateQuotes(
-    books: Pick<LedgerBooks, "accounts" | "appMeta" | "exchangeRates">
-): readonly string[] {
-    const present = new Set(books.exchangeRates.map((row) => row.quote));
-    return quotedCurrencies(books).filter((code) => !present.has(code));
-}

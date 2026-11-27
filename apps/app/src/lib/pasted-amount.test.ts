@@ -11,3 +11,8 @@ it("reads a pasted amount that carries its currency symbol", () => {
 it("ignores a paste with no figure", () => {
     expect(pastedAmount("Cg.", 2)).toBeNull();
 });
+
+it("leaves a plain number to the field so it can insert at the caret", () => {
+    expect(pastedAmount("9", 2)).toBeNull();
+    expect(pastedAmount("1,234.50", 2)).toBeNull();
+});

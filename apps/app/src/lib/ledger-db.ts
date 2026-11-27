@@ -26,7 +26,7 @@ import { profileOf, pushRows } from "./ledger-write";
 import { browserRatesPublic } from "./profile";
 import { noteProfileLost, profileLossCode } from "./profile-loss";
 import { removeProfileAndSwitch } from "./profile-switch";
-import { missingRateQuotes, publicRateRow, quotedCurrencies, rateCursors, rateWindowAt } from "./public-rates";
+import { publicRateRow, quotedCurrencies, rateCursors, rateWindowAt } from "./public-rates";
 
 const convexOf = (db: DbClient) => db.requireDependency<LedgerConvex>(CONVEX);
 const onServer = (db: DbClient) => db.getDependency<boolean>(SERVER) === true;
@@ -277,45 +277,8 @@ export const ledgerCollections = {
 
 export type ExchangeRate = LedgerBooks["exchangeRates"][number];
 
-const requestedRateQuotes = new Set<string>();
-
-const addMissingRates = async (db: DbClient, books: LedgerBooks) => {
-    if (!browserRatesPublic()) {
-        return;
-    }
-    const missing = missingRateQuotes(books).filter((quote) => !requestedRateQuotes.has(quote));
-    if (missing.length === 0) {
-        return;
-    }
-    for (const quote of missing) {
-        requestedRateQuotes.add(quote);
-    }
-    const at = rateWindowAt();
-    const wanted = new Set(missing);
-    const pages = await Promise.all(
-        rateCursors(missing).map((cursor) =>
-            convexClient()
-                .query(api.exchangeRates.pullRates, { at, cursor })
-                .catch(() => null)
-        )
-    );
-    const rows = pages
-        .flatMap((page) => page?.rows ?? [])
-        .filter((row) => row.rateType === "official" && wanted.has(row.quote))
-        .map((row) => {
-            const rate = publicRateRow(row);
-            return { key: rate._id, value: rate };
-        });
-    if (rows.length > 0) {
-        db.applyCollectionChunk({ collectionId: ledgerCollections.exchangeRates.id, rows });
-    }
-};
-
 export function useMissingRates(books: LedgerBooks) {
     const db = useDbClient();
-    useMirror([db, books], () => {
-        addMissingRates(db, books).catch(() => undefined);
-    });
     const quoteKey = useMemo(() => quotedCurrencies(books).join("|"), [books]);
     useMirror([db, quoteKey], () => {
         if (!browserRatesPublic()) {
@@ -326,7 +289,12 @@ export function useMissingRates(books: LedgerBooks) {
         const stops = rateCursors(wanted).map((cursor) => {
             const watch = convexClient().watchQuery(api.exchangeRates.pullRates, { at, cursor });
             const apply = () => {
-                const page = watch.localQueryResult();
+                let page: ReturnType<typeof watch.localQueryResult>;
+                try {
+                    page = watch.localQueryResult();
+                } catch {
+                    return;
+                }
                 if (page === undefined) {
                     return;
                 }
