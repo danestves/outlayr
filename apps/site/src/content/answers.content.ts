@@ -3,13 +3,7 @@ import type { Dictionary } from "intlayer";
 
 import type { PageRef } from "@/lib/site";
 
-import {
-    ACCOUNTS_SCREEN_ALT,
-    BUDGETS_SCREEN_ALT,
-    OPEN_SOURCE_ANSWER,
-    OPEN_SOURCE_QUESTION,
-    RECEIPT_SCAN_ANSWER,
-} from "./shared";
+import { BUDGETS_SCREEN_ALT, OPEN_SOURCE_ANSWER, OPEN_SOURCE_QUESTION, RECEIPT_SCAN_ANSWER } from "./shared";
 
 const OUTLAYR_LEAD = {
     en: "Outlayr is an open source expense tracker you fill in by sentence, voice, or receipt, free to start.",
@@ -4111,10 +4105,6 @@ const answers = {
                         title: t({ en: "What happens after a tap", es: "Qué pasa después de pagar" }),
                     },
                 ],
-                plateAlt: t({
-                    en: "Outlayr Log showing a $42.00 Costco purchase logged today, above the entries from earlier days.",
-                    es: "Registro de Outlayr con una compra de $42.00 en Costco registrada hoy, arriba de los registros de días anteriores.",
-                }),
                 related: [
                     "/guides/voice-expense-tracker",
                     "/guides/receipt-scanner",
@@ -12123,7 +12113,6 @@ const answers = {
                         title: t({ en: "On a trip", es: "De viaje" }),
                     },
                 ],
-                plateAlt: ACCOUNTS_SCREEN_ALT,
                 related: [
                     "/guides/expense-tracker-venezuela",
                     "/compare/spendee",

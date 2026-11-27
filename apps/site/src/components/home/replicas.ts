@@ -1,5 +1,10 @@
 export { DemoCastContext } from "@/components/app-ui/canvas";
-export { AccountRowFragment, AccountsListFragment, DebtRowFragment } from "@/components/app-ui/accounts";
+export {
+    AccountRowFragment,
+    AccountsListFragment,
+    AccountsScreen,
+    DebtRowFragment,
+} from "@/components/app-ui/accounts";
 export { SayFilm, SnapFilm, TypeFilm } from "@/components/app-ui/capture";
 export { BudgetLeftFragment, BudgetsScreen, PaceChartFragment, PaceVerdictFragment } from "@/components/app-ui/budgets";
 export { InsightsScreen } from "@/components/app-ui/insights";

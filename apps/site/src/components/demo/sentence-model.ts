@@ -15,7 +15,7 @@ const GUIDED = ["amount", "merchant", "category", "account"] as const;
 type GuidedStep = (typeof GUIDED)[number];
 const GUIDED_INDEX = new Map<Step, number>(GUIDED.map((step, index) => [step, index]));
 
-export const CURRENCY_CODES = ["USD", "EUR", "BRL", "MXN", "VES"] as const satisfies readonly Currency[];
+export const CURRENCY_CODES = ["USD", "EUR", "BRL", "MXN", "COP"] as const satisfies readonly Currency[];
 export const WHEN_OPTIONS = ["today", "yesterday"] as const satisfies readonly When[];
 export const CATEGORIES = {
     expense: [
@@ -107,7 +107,7 @@ interface Cast {
 
 export const CASTS = {
     en: {
-        accounts: ["Chase", "Apple Card", "Amex Gold", "Zinli", "Cash", "Ally Savings"],
+        accounts: ["Chase", "Apple Card", "Amex Gold", "PayPal", "Cash", "Ally Savings"],
         currency: HOME_CURRENCY.en,
         entries: [
             {
@@ -129,7 +129,7 @@ export const CASTS = {
                 when: "today",
             },
             {
-                account: "Zinli",
+                account: "PayPal",
                 category: "Freelance",
                 currency: "USD",
                 keys: ["1", "4", "5", "0"],
@@ -167,29 +167,38 @@ export const CASTS = {
         ],
     },
     es: {
-        accounts: ["BBVA", "Mercado Pago", "Nu", "Zinli", "Cash", "Banesco"],
+        accounts: ["Nu", "Nequi", "CaixaBank", "Chase", "Cash", "Mercado Pago"],
         currency: HOME_CURRENCY.es,
         entries: [
             {
-                account: "BBVA",
-                category: "Shopping",
-                currency: "USD",
+                account: "Nu",
+                category: "Groceries",
+                currency: "MXN",
+                keys: ["1", "8", "9"],
+                kind: "expense",
+                merchant: "Oxxo",
+                when: "today",
+            },
+            {
+                account: "Nequi",
+                category: "Dining Out",
+                currency: "COP",
+                keys: ["3", "8", "0", "0", "0"],
+                kind: "expense",
+                merchant: "Rappi",
+                when: "today",
+            },
+            {
+                account: "CaixaBank",
+                category: "Groceries",
+                currency: "EUR",
                 keys: ["4", "2"],
                 kind: "expense",
-                merchant: "Mercado Libre",
+                merchant: "Mercadona",
                 when: "today",
             },
             {
-                account: "Mercado Pago",
-                category: "Transport",
-                currency: "USD",
-                keys: ["1", "4", ".", "6"],
-                kind: "expense",
-                merchant: "DiDi",
-                when: "today",
-            },
-            {
-                account: "Zinli",
+                account: "Chase",
                 category: "Freelance",
                 currency: "USD",
                 keys: ["1", "4", "5", "0"],
@@ -197,33 +206,26 @@ export const CASTS = {
                 merchant: "Upwork",
                 when: "yesterday",
             },
-            {
-                account: "Nu",
-                category: "Fashion",
-                currency: "EUR",
-                keys: ["8", "9"],
-                kind: "expense",
-                merchant: "Zara",
-                when: "today",
-            },
         ],
         knownMerchants: new Map([
             ["didi", "Transport"],
             ["juan valdez", "Coffee"],
-            ["farmatodo", "Shopping"],
             ["mercado libre", "Shopping"],
+            ["mercadona", "Groceries"],
             ["netflix", "Subscriptions"],
+            ["oxxo", "Groceries"],
             ["rappi", "Dining Out"],
             ["spotify", "Subscriptions"],
+            ["walmart", "Shopping"],
             ["zara", "Fashion"],
         ]),
         recentMerchants: {
-            expense: ["Mercado Libre", "DiDi", "Zara", "Farmatodo", "Rappi", "Spotify"],
+            expense: ["Oxxo", "Rappi", "Mercadona", "Walmart", "Mercado Libre", "Spotify"],
             income: ["Upwork", "Deel"],
         },
         seedLog: [
             { amount: 15, category: "Subscriptions", currency: "USD", id: 3, income: false, merchant: "Netflix" },
-            { amount: 54.28, category: "Shopping", currency: "USD", id: 2, income: false, merchant: "Farmatodo" },
+            { amount: 54.28, category: "Shopping", currency: "USD", id: 2, income: false, merchant: "Walmart" },
             { amount: 4, category: "Subscriptions", currency: "USD", id: 1, income: false, merchant: "Spotify" },
         ],
     },

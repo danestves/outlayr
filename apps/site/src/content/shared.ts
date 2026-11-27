@@ -40,14 +40,6 @@ export const BUDGETS_SCREEN_ALT = t({
     fr: "Écran Budgets d'Outlayr : 1 018,59 $ restants ce mois-ci, une courbe de dépenses projetée au-delà de la limite, et la mention qu'à ce rythme la période se termine avec 319 $ de manque.",
 });
 
-export const ACCOUNTS_SCREEN_ALT = t({
-    en: "Outlayr Accounts screen listing eight accounts, including Banesco in bolívares and an Apple Card with a negative balance, above a Transfer button.",
-    de: "Outlayr-Bildschirm „Konten“ mit acht Konten, darunter Banesco in Bolívar und eine Apple Card mit negativem Kontostand, über einer Schaltfläche „Umbuchung“.",
-    es: "Pantalla de cuentas de Outlayr: tienes $26,175.52 y debes $2,082.70, con seis cuentas, entre ellas Banesco en bolívares, y dos tarjetas, Amex Gold y Apple Card.",
-    pt: "Tela de Contas do Outlayr com oito contas, entre elas o Banesco em bolívares e um Apple Card com saldo negativo, acima de um botão Transferência.",
-    fr: "Écran Comptes d'Outlayr listant huit comptes, dont Banesco en bolivars et une Apple Card au solde négatif, au-dessus d'un bouton Virement.",
-});
-
 export const APPEARANCE_EXTRA = {
     label: t({ en: "Appearance", de: "Darstellung", es: "Apariencia", pt: "Aparência", fr: "Apparence" }),
     text: t({

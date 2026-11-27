@@ -9,7 +9,7 @@ import type { Locale } from "@outlayr/shared/i18n";
 import { getIntlayer } from "intlayer";
 import type { ReactNode } from "react";
 
-import { AppFragment, SCREEN, useReplica } from "./canvas";
+import { AppFragment, SCREEN, useCast, useReplica } from "./canvas";
 import type { AppTheme, CanvasProps } from "./canvas";
 import { SystemText } from "./chrome";
 import { LogScreen } from "./log";
@@ -22,7 +22,6 @@ const CHEVRON_END = 27.33;
 const LABEL = { leading: 20, size: 17 } as const;
 const HINT = { leading: 18.33, lift: -1.33, size: 13, sink: 1 } as const;
 const NAMED_APPS = 3;
-const REGION = { de: "DE", en: "US", es: "VE", fr: "FR", pt: "BR" } as const satisfies Record<Locale, string>;
 const STACK = { display: "grid" } as const;
 const LAYER = { gridArea: "1 / 1" } as const;
 
@@ -89,9 +88,9 @@ const huge = (icon: IconSvgElement) => (
     <HugeiconsIcon color="currentColor" icon={icon} size={ICON.size} strokeWidth={ICON.stroke} />
 );
 
-function menuRows(locale: Locale): MenuRow[] {
+function menuRows(locale: Locale, country: string): MenuRow[] {
     const t = appTranslator(locale);
-    const apps = installmentAppsIn(installmentRegion(REGION[locale]))
+    const apps = installmentAppsIn(installmentRegion(country))
         .slice(0, NAMED_APPS)
         .map((app) => app.label);
     return [
@@ -205,7 +204,8 @@ function AddMenu({ rows }: { rows: readonly MenuRow[] }) {
 }
 
 export function AddMenuScreen({ className, ...canvas }: CanvasProps) {
-    const rows = menuRows(canvas.locale);
+    const { country } = useCast();
+    const rows = menuRows(canvas.locale, country);
     const label = interpolate(getIntlayer("appUi", canvas.locale).labels.entryAddMenu, {
         items: rows.map((row) => row.label).join(", "),
     });

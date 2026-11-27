@@ -9,17 +9,6 @@ import { insightsCopy, insightsLabels } from "./app-ui/insights";
 
 const appUi = {
     content: {
-        accounts: {
-            cash: t({ en: "Cash", de: "Bargeld", es: "Efectivo", pt: "Dinheiro", fr: "Espèces" }),
-            label: t({
-                en: "Eight accounts: Chase, Ally Savings, Zinli, PayPal, Apple Card, Amex Gold, and cash in dollars, Banesco in bolívares.",
-                de: "Acht Konten: Chase, Ally Savings, Zinli, PayPal, Apple Card, Amex Gold, Bargeld in Dollar und Banesco in Bolívar.",
-                es: "Ocho cuentas: Chase, Ally Savings, Zinli, PayPal, Apple Card, Amex Gold y efectivo en dólares, Banesco en bolívares.",
-                pt: "Oito contas: Chase, Ally Savings, Zinli, PayPal, Apple Card, Amex Gold e dinheiro em dólares, Banesco em bolívares.",
-                fr: "Huit comptes : Chase, Ally Savings, Zinli, PayPal, Apple Card, Amex Gold, et des espèces en dollars, Banesco en bolivars.",
-            }),
-            transfer: t({ en: "Transfer", de: "Umbuchung", es: "Transferencia", pt: "Transferência", fr: "Virement" }),
-        },
         days: [
             t({ en: "S", de: "S", es: "D", pt: "D", fr: "D" }),
             t({ en: "M", de: "M", es: "L", pt: "S", fr: "L" }),

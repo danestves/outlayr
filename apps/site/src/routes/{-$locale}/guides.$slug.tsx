@@ -20,7 +20,9 @@ import type { ArticleSection } from "@/components/answers/article";
 import { CanadaPlate, CasheaPlate, CouplesPlate } from "@/components/answers/guide-plates";
 import { SayPanel, ScanPanel } from "@/components/demo/capture-panels";
 import { screenSources } from "@/components/home/media";
+import { CastContext, Replica, loadReplicas } from "@/components/home/replica";
 import { Icon } from "@/components/icon";
+import { getPlateCast } from "@/lib/demo-cast";
 import { hasKey } from "@/lib/has-key";
 import { answerTrail, article, faqPage, itemList, ldJson, pageMeta, webPage } from "@/lib/seo";
 import { GUIDES_PUBLISHED, guideUpdated, listChecked, longDate } from "@/lib/site";
@@ -29,7 +31,7 @@ type GuideSlug = keyof ReturnType<typeof getIntlayer<"answers">>["guides"];
 
 const PLATES = {
     "ai-expense-tracker": "say",
-    "apple-pay-expense-tracker": "log-an-expense",
+    "apple-pay-expense-tracker": "log",
     "best-budget-apps": null,
     "best-budget-apps-canada": "canada",
     "best-budget-apps-france": null,
@@ -51,7 +53,7 @@ const PLATES = {
     "how-to-pay-cashea": "cashea",
     "how-to-track-expenses": null,
     "mint-alternative": null,
-    "multi-currency-expense-tracker": "06",
+    "multi-currency-expense-tracker": "accounts",
     "receipt-scanner": "scan",
     "subscription-tracker": "10",
     "how-to-cancel-a-subscription": null,
@@ -63,6 +65,8 @@ const PLATES = {
     "ynab-alternatives": null,
 } as const satisfies Record<GuideSlug, string | null>;
 
+const REPLICA_PLATES = { accounts: true, log: true } as const;
+
 const PANELS = {
     canada: () => <CanadaPlate />,
     cashea: () => <CasheaPlate />,
@@ -71,16 +75,29 @@ const PANELS = {
     scan: () => <ScanPanel frame={5} />,
 } as const;
 
+function replicaPlate(slug: GuideSlug) {
+    const plate = PLATES[slug];
+    return plate !== null && hasKey(REPLICA_PLATES, plate) ? plate : null;
+}
+
 function plateImage(slug: GuideSlug, locale: Locale) {
     const plate = PLATES[slug];
-    return plate === null || hasKey(PANELS, plate) ? null : screenSources(plate, locale);
+    if (plate === null || hasKey(PANELS, plate) || hasKey(REPLICA_PLATES, plate)) {
+        return null;
+    }
+    return screenSources(plate, locale);
 }
 
 const LABEL = "text-muted font-mono text-xs";
 
 export const Route = createFileRoute("/{-$locale}/guides/$slug")({
+    beforeLoad: ({ params }) => {
+        if (hasKey(PLATES, params.slug) && replicaPlate(params.slug) !== null) {
+            return loadReplicas();
+        }
+    },
     component: Guide,
-    loader: ({ params }) => {
+    loader: async ({ params }) => {
         const { slug } = params;
         if (!hasKey(getIntlayer("answers").guides, slug)) {
             throw notFound({ routeId: rootRouteId });
@@ -91,6 +108,7 @@ export const Route = createFileRoute("/{-$locale}/guides/$slug")({
         const url = pageUrl(path, locale);
         const updated = guideUpdated(slug);
         const plate = plateImage(slug, locale);
+        const cast = replicaPlate(slug) ? await getPlateCast({ data: locale }) : null;
         const head = {
             links: plate
                 ? [
@@ -142,10 +160,34 @@ export const Route = createFileRoute("/{-$locale}/guides/$slug")({
                     : []),
             ],
         };
-        return { head, slug };
+        return { cast, head, slug };
     },
     head: ({ loaderData }) => loaderData?.head ?? {},
 });
+
+function ReplicaPlate({ plate }: { plate: keyof typeof REPLICA_PLATES }) {
+    return (
+        <figure className="bg-surface mx-auto w-full max-w-sm rounded-3xl p-2 lg:max-w-xs">
+            <div className="aspect-2/3 overflow-hidden rounded-2xl lg:aspect-auto">
+                <Replica>
+                    {(replicas, locale) =>
+                        plate === "accounts" ? (
+                            <>
+                                <replicas.AccountsScreen className="light-only" fit locale={locale} theme="light" />
+                                <replicas.AccountsScreen className="dark-only" fit locale={locale} theme="dark" />
+                            </>
+                        ) : (
+                            <>
+                                <replicas.LogScreen className="light-only" fit locale={locale} theme="light" />
+                                <replicas.LogScreen className="dark-only" fit locale={locale} theme="dark" />
+                            </>
+                        )
+                    }
+                </Replica>
+            </div>
+        </figure>
+    );
+}
 
 function GuidePlate({ alt, locale, plate }: { alt: string; locale: Locale; plate: string }) {
     if (!hasKey(PANELS, plate)) {
@@ -190,11 +232,12 @@ function textOf(facts: readonly { label: { value: string }; text: { value: strin
 }
 
 function Guide() {
-    const { slug } = Route.useLoaderData();
+    const { cast, slug } = Route.useLoaderData();
     const { compare, guides, labels } = useIntlayer("answers");
     const { locale } = useLocale();
     const guide = guides[slug];
     const plate = PLATES[slug];
+    const replica = replicaPlate(slug);
     const sections: ArticleSection[] = [];
     if ("picked" in guide) {
         sections.push({
@@ -308,14 +351,20 @@ function Guide() {
                 <p className="text-muted mt-4 text-sm">{guide.table.caption}</p>
             </>
         ) : null;
+    let aside: ReactNode = null;
+    if (replica !== null && cast !== null) {
+        aside = (
+            <CastContext value={cast}>
+                <ReplicaPlate key={replica} plate={replica} />
+            </CastContext>
+        );
+    } else if (plate !== null && "plateAlt" in guide) {
+        aside = <GuidePlate alt={guide.plateAlt.value} locale={locale} plate={plate} />;
+    }
     return (
         <Article
             actions={downloads}
-            aside={
-                plate !== null && "plateAlt" in guide ? (
-                    <GuidePlate alt={guide.plateAlt.value} locale={locale} plate={plate} />
-                ) : null
-            }
+            aside={aside}
             dated={{ day: guideUpdated(slug), label: "updatedOn" }}
             hub="/guides"
             intro={"takeaways" in guide ? <Takeaways items={guide.takeaways} /> : null}

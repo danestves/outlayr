@@ -4426,6 +4426,14 @@ export const COUNTRY_CASTS = {
     },
 } satisfies Partial<Record<PriceCountry, CastRow>>;
 
+export const US_HISPANIC: CastRow = {
+    ...COUNTRY_CASTS.US,
+    accounts: {
+        ...COUNTRY_CASTS.US.accounts,
+        foreign: { name: "Wise", logo: "wise.com", currency: "MXN" },
+    },
+};
+
 export const USD_RATES = {
     AED: 3.6725,
     ALL: 82.33211,

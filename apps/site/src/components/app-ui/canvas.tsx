@@ -28,12 +28,16 @@ const ReplicaContext = createContext<Replica | null>(null);
 
 export const DemoCastContext = createContext<DemoCast | null>(null);
 
-export function useLedger(): Ledger {
+export function useCast(): DemoCast {
     const cast = use(DemoCastContext);
     if (!cast) {
         throw new Error("App replicas render inside a DemoCastContext.");
     }
-    return ledgerFor(cast);
+    return cast;
+}
+
+export function useLedger(): Ledger {
+    return ledgerFor(useCast());
 }
 
 export function useReplica(): Replica {

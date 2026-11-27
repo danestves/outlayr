@@ -54,6 +54,13 @@ const demo = {
                 pt: "Real brasileiro",
                 fr: "Réal brésilien",
             }),
+            COP: t({
+                en: "Colombian Peso",
+                de: "Kolumbianischer Peso",
+                es: "Peso colombiano",
+                pt: "Peso colombiano",
+                fr: "Peso colombien",
+            }),
             EUR: t({ en: "Euro", de: "Euro", es: "Euro", pt: "Euro", fr: "Euro" }),
             MXN: t({
                 en: "Mexican Peso",
@@ -68,13 +75,6 @@ const demo = {
                 es: "Dólar estadounidense",
                 pt: "Dólar americano",
                 fr: "Dollar américain",
-            }),
-            VES: t({
-                en: "Venezuelan Bolívar",
-                de: "Venezolanischer Bolívar",
-                es: "Bolívar venezolano",
-                pt: "Bolívar venezuelano",
-                fr: "Bolivar vénézuélien",
             }),
         },
         currency: insert(
@@ -249,7 +249,7 @@ const demo = {
             ),
         },
         sizer: t({
-            en: "Received $1,450.00 USD from Upwork for Freelance into Zinli yesterday.",
+            en: "Received $1,450.00 USD from Upwork for Freelance into PayPal yesterday.",
             de: "Ausgegeben 1.450,00 $ USD bei einem Händler für eine Kategorie mit einem Konto heute.",
             es: "Recibí $1,450.00 USD de un comercio para una categoría en una cuenta ayer.",
             pt: "Recebi $ 1.450,00 USD de um estabelecimento para uma categoria em uma conta ontem.",
