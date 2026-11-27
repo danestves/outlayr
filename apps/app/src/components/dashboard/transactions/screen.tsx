@@ -35,7 +35,7 @@ import { CellButton, InlineCell, amountDraft, useInlineWrites } from "./inline-e
 import type { Editing, InlineField } from "./inline-edit";
 import { LedgerTable } from "./ledger-table";
 import { MerchantDialog } from "./merchant-dialog";
-import { NO_TAG, csvOf, exportLines, inTab, pageOf, queryRows, tabCounts, tally } from "./model";
+import { NO_TAG, csvOf, exportLines, inTab, pageOf, queryRows, rowOf, tabCounts, tally } from "./model";
 import type { Tab } from "./model";
 import { PageBar } from "./page-bar";
 import { usePeriodChoice } from "./period-chip";
@@ -155,6 +155,21 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     );
     const counts = useMemo(() => tabCounts(all, list.review), [all, list.review]);
     const rows = useMemo(() => all.filter((row) => inTab(query.tab, row, list.review)), [all, list.review, query.tab]);
+    const upcomingRows = useMemo(() => {
+        const { tab } = query;
+        if (tab !== "all" && tab !== "expenses" && tab !== "income") {
+            return [];
+        }
+        const listed = list.upcoming(listParamsOf(query, filters.accounts, filters.categories));
+        const matched =
+            query.loggedBy.length === 0
+                ? listed
+                : listed.filter((row) => {
+                      const author = authors.authorOf(row);
+                      return author !== null && query.loggedBy.includes(author);
+                  });
+        return matched.filter((row) => inTab(tab, row, list.review));
+    }, [authors, filters.accounts, filters.categories, list, query]);
     const viewCounts = useMemo(
         () =>
             new Map(
@@ -209,33 +224,38 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const clearPicked = () => setPickedIds(new Set());
     const [dialog, setDialog] = useState<ViewDialog | null>(null);
 
-    const selectedIndex = search.entry === undefined ? -1 : rows.findIndex((row) => row.id === search.entry);
-    const selected = useMemo(() => {
+    const browsed = useMemo(() => [...upcomingRows, ...rows], [rows, upcomingRows]);
+    const selectedIndex = search.entry === undefined ? -1 : browsed.findIndex((row) => row.id === search.entry);
+    const selected = useMemo((): FoldedRow | null => {
         if (search.entry === undefined) {
             return null;
         }
+        const found = browsed[selectedIndex];
+        if (found) {
+            return found;
+        }
         // A link from home can name an entry outside these filters; it still opens.
-        return (
-            rows[selectedIndex] ??
-            queryRows(
-                ledger,
-                {
-                    accounts: [],
-                    categories: [],
-                    max: null,
-                    min: null,
-                    q: "",
-                    range: null,
-                    sort: "newest",
-                    type: undefined,
-                },
-                list.text
-            ).find((row) => row.id === search.entry) ??
-            null
-        );
-    }, [ledger, list.text, rows, search.entry, selectedIndex]);
+        const listed = queryRows(
+            ledger,
+            {
+                accounts: [],
+                categories: [],
+                max: null,
+                min: null,
+                q: "",
+                range: null,
+                sort: "newest",
+                type: undefined,
+            },
+            list.text
+        ).find((row) => row.id === search.entry);
+        if (listed) {
+            return listed;
+        }
+        return rowOf({ rows: ledger.upcoming, transfers: [] }, search.entry);
+    }, [browsed, ledger, list.text, search.entry, selectedIndex]);
     const step = (by: 1 | -1) => {
-        const next = rows[selectedIndex === -1 ? 0 : selectedIndex + by];
+        const next = browsed[selectedIndex === -1 ? 0 : selectedIndex + by];
         if (next) {
             setSearch({ entry: next.id }, { replace: true });
         }
@@ -292,7 +312,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     }, [all, list, words.filters.noTag.value]);
     const merchantOptions = useMemo((): PickOption[] => {
         const seen = new Map<string, PickOption>();
-        for (const row of all) {
+        for (const row of [...all, ...upcomingRows]) {
             if (!("fromId" in row) && row.feeFor === null) {
                 const name = list.names.merchant(row);
                 const known = seen.get(name);
@@ -305,7 +325,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
             }
         }
         return [...seen.values()].toSorted((left, right) => right.count - left.count);
-    }, [all, list]);
+    }, [all, list, upcomingRows]);
     const personOptions = useMemo((): PickOption[] => {
         const byPerson = new Map<string, number>();
         for (const row of queried) {
@@ -405,7 +425,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
         download(`${legacy.exportFile.value}-${ledger.today}.csv`, csvOf([header, ...exported]));
     };
 
-    const fresh = ledger.rows.length === 0 && ledger.transfers.length === 0;
+    const fresh = ledger.rows.length === 0 && ledger.transfers.length === 0 && ledger.upcoming.length === 0;
     const narrowedByFilter = applied.length > 0 || query.q.trim() !== "";
     const totals = tally(ledger, rows);
     const splits = useMemo(() => {
@@ -678,7 +698,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                             </div>
                         ) : null}
                         <div className="@container flex-1 border-t" data-motion="dissolve" key={view?.id ?? query.tab}>
-                            {rows.length === 0 ? (
+                            {rows.length === 0 && upcomingRows.length === 0 ? (
                                 empty()
                             ) : (
                                 <LedgerTable
@@ -779,6 +799,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                                     rows={shown}
                                     selected={selected?.id ?? null}
                                     transfers={transfers}
+                                    upcoming={page.page === 0 ? upcomingRows : []}
                                 />
                             )}
                         </div>

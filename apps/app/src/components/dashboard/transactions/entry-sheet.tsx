@@ -282,7 +282,7 @@ function DeleteDialog({
             name,
         }).value;
         const account = shown.accountId === null ? undefined : ledger.accounts.get(shown.accountId)?.name;
-        if (account === undefined) {
+        if (account === undefined || shown.at > ledger.now) {
             return summary;
         }
         const balance = shown.income ? copy.balanceDown({ account }) : copy.balanceUp({ account });

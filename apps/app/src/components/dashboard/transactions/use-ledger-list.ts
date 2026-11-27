@@ -91,6 +91,28 @@ export function useLedgerList() {
         [catalog, names, tagsOf, transferNotes]
     );
     const liveTagIds = useMemo(() => new Set(tags.map((tag) => tag.localId)), [tags]);
+    const refine = useMemo(
+        () => (params: ListParams, found: readonly FoldedRow[], sort: Sort) => {
+            const kept = narrowed(found, {
+                merchantOf: names.merchant,
+                merchants: params.merchants,
+                tagged: taggedIds(
+                    tagBooks.links,
+                    liveTagIds,
+                    params.tags,
+                    found.map((row) => row.id)
+                ),
+            });
+            return sortedRows(
+                ledger,
+                kept,
+                sort,
+                { category: (row) => ("fromId" in row ? "" : names.category(row.topId)), merchant: names.merchant },
+                locale
+            );
+        },
+        [ledger, liveTagIds, locale, names, tagBooks.links]
+    );
     const rows = useMemo(
         () => (params: ListParams) => {
             const range = rangeOf(
@@ -111,28 +133,34 @@ export function useLedgerList() {
                 },
                 text
             );
-            const kept = narrowed(listed, {
-                merchantOf: names.merchant,
-                merchants: params.merchants,
-                tagged: taggedIds(
-                    tagBooks.links,
-                    liveTagIds,
-                    params.tags,
-                    listed.map((row) => row.id)
-                ),
-            });
-            return sortedRows(
-                ledger,
-                kept,
-                params.sort,
-                { category: (row) => ("fromId" in row ? "" : names.category(row.topId)), merchant: names.merchant },
-                locale
-            );
+            return refine(params, listed, params.sort);
         },
-        [filters.period.key, ledger, liveTagIds, locale, names, tagBooks.links, text]
+        [filters.period.key, ledger, refine, text]
+    );
+    const upcoming = useMemo(
+        () => (params: ListParams) =>
+            refine(
+                params,
+                queryRows(
+                    { ...ledger, rows: ledger.upcoming, transfers: [] },
+                    {
+                        accounts: params.accounts,
+                        categories: params.categories,
+                        max: params.max,
+                        min: params.min,
+                        q: params.q,
+                        range: null,
+                        sort: "oldest",
+                        type: undefined,
+                    },
+                    text
+                ),
+                "oldest"
+            ),
+        [ledger, refine, text]
     );
     const transferNote = (id: string) => transferNotes.get(id) ?? "";
-    return { catalog, names, review, rows, tags, tagsOf, text, transferNote };
+    return { catalog, names, review, rows, tags, tagsOf, text, transferNote, upcoming };
 }
 
 export type LedgerList = ReturnType<typeof useLedgerList>;

@@ -70,6 +70,7 @@ export interface Ledger {
     rows: readonly LedgerRow[];
     today: string;
     transfers: readonly LedgerTransfer[];
+    upcoming: readonly LedgerRow[];
 }
 
 /** Live and not archived, in the user's order: the accounts that count toward net worth and fill pickers. */
@@ -89,9 +90,18 @@ export function prepareLedger(books: LedgerBooks, now: number, opening: LedgerOp
     const { currency } = settings;
     const offsetAt = zoneOf(settings.timeZone, books.transactions, now);
     const rates = rateTableOf(books.exchangeRates);
-    const happened = books.transactions.filter((row) => row.deletedAt === null && row.date <= now).toSorted(bySeq);
+    const live = books.transactions.filter((row) => row.deletedAt === null).toSorted(bySeq);
+    const happened = live.filter((row) => row.date <= now);
+    const later = live
+        .filter((row) => row.date > now && (row.transferId ?? null) === null)
+        .toSorted((a, b) => a.date - b.date || a.seq - b.seq);
     const values = valueDatedRowsIn(
         happened.map((row) => ({ ...row, date: new Date(row.date) })),
+        currency,
+        rates
+    );
+    const laterValues = valueDatedRowsIn(
+        later.map((row) => ({ ...row, date: new Date(row.date) })),
         currency,
         rates
     );
@@ -99,7 +109,7 @@ export function prepareLedger(books: LedgerBooks, now: number, opening: LedgerOp
     const categories = new Map<string, LedgerCategory>([
         [UNCATEGORIZED_ID, { color: NEUTRAL_COLOR, id: UNCATEGORIZED_ID, name: UNCATEGORIZED_NAME }],
     ]);
-    const rows = happened.map((row, index): LedgerRow => {
+    const mapRow = (row: (typeof live)[number], amount: number): LedgerRow => {
         const category = row.categoryId ? filed.get(row.categoryId) : undefined;
         const top = category?.parentId ? filed.get(category.parentId) : category;
         if (top && !categories.has(top.localId)) {
@@ -111,7 +121,7 @@ export function prepareLedger(books: LedgerBooks, now: number, opening: LedgerOp
         }
         return {
             accountId: row.accountId ?? null,
-            amount: values[index] ?? 0,
+            amount,
             at: row.date,
             categoryId: row.categoryId,
             day: isoDay(row.date, offsetAt(row.date)),
@@ -123,7 +133,9 @@ export function prepareLedger(books: LedgerBooks, now: number, opening: LedgerOp
             parentId: category?.parentId ?? null,
             topId: top?.localId ?? UNCATEGORIZED_ID,
         };
-    });
+    };
+    const rows = happened.map((row, index) => mapRow(row, values[index] ?? 0));
+    const upcoming = later.map((row, index) => mapRow(row, laterValues[index] ?? 0));
     const moved = books.transfers.filter((row) => row.deletedAt === null && row.date <= now).toSorted(bySeq);
     const movedValues = valueDatedRowsIn(
         moved.map((row) => ({
@@ -210,6 +222,7 @@ export function prepareLedger(books: LedgerBooks, now: number, opening: LedgerOp
         rows,
         today: isoDay(now, offsetAt(now)),
         transfers,
+        upcoming,
     };
 }
 
