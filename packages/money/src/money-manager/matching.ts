@@ -1,5 +1,6 @@
 import type { AccountKind } from "../account-kind";
 import { CATEGORY_PALETTE, SUGGESTED_CATEGORY_PRESETS } from "../category-rules";
+import { foldText } from "../merchant-key";
 
 const FALLBACK_ICON = "MoreHorizontalCircle01";
 
@@ -256,16 +257,7 @@ const LIABILITY_ICONS = new Set(["card", "cards", "credit_card"]);
 
 const paletteHue = CATEGORY_PALETTE.map((hex) => hueOf(hex));
 
-export function normalizeLabel(raw: string): string {
-    return raw
-        .trim()
-        .normalize("NFD")
-        .replaceAll(/[\u0300-\u036F]/g, "")
-        .toLowerCase()
-        .replaceAll(/[^a-z0-9]+/g, " ")
-        .trim()
-        .replaceAll(/ +/g, " ");
-}
+export const normalizeLabel = foldText;
 
 export function outlayrIconFor(mmIcon: string | null): string {
     if (mmIcon == null || mmIcon.trim() === "") {

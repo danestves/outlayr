@@ -1,7 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { route } from "@outlayr/model-router/route";
 import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
-import { knowledgeKeys } from "@outlayr/money/merchant-key";
+import { isMatchableKey, knowledgeKeys, merchantKey } from "@outlayr/money/merchant-key";
 import { MERCHANT_NAMES_KEY, merchantNamesOf, renameFor } from "@outlayr/money/merchant-names";
 import type { UserIdentity } from "convex/server";
 import * as Clock from "effect/Clock";
@@ -20,7 +20,6 @@ import {
     GROUNDED_LOOKUP_META_KEY,
     MAX_NAME_LENGTH,
     maybeScheduleGrounded,
-    MIN_NAME_LENGTH,
     needsGroundedLookup,
     rateLimiter,
     runSuggest,
@@ -36,7 +35,7 @@ import { isForbiddenLogoOrigin } from "./groundedLookup";
 import { openAiGateFor, withinLimit } from "./lib/aiGate";
 import { liveIdentity, optionalBillingId, optionalUserId } from "./lib/auth";
 import { outboundHttp } from "./lib/http";
-import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
+import { CANONICAL_CATEGORIES, isKnowledgeKey } from "./lib/merchantTrust";
 import { isPro } from "./revenuecat";
 
 const MERCHANT_LOGOS_ORIGIN = "https://logos.tryoutlayr.com/merchants";
@@ -144,7 +143,7 @@ const suggest = FunctionImpl.make(
             }
 
             const trimmedName = args.name.trim();
-            if (trimmedName.length < MIN_NAME_LENGTH || trimmedName.length > MAX_NAME_LENGTH) {
+            if ([...trimmedName].length > MAX_NAME_LENGTH || !isMatchableKey(merchantKey(trimmedName))) {
                 return EMPTY;
             }
 
@@ -252,13 +251,13 @@ const submitWebsite = FunctionImpl.make(
             identity === null ||
             domain === null ||
             isForbiddenLogoOrigin(domain) ||
-            name.length < MIN_NAME_LENGTH ||
-            name.length > MAX_NAME_LENGTH
+            [...name].length > MAX_NAME_LENGTH ||
+            !isMatchableKey(merchantKey(name))
         ) {
             return null;
         }
         const currency = sanitizeCurrencyCode(args.currency);
-        const keys = knowledgeKeys(name, currency).filter((key) => KEY_PATTERN.test(key));
+        const keys = knowledgeKeys(name, currency).filter(isKnowledgeKey);
         if (keys.length === 0) {
             return null;
         }

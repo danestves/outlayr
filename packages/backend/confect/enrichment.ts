@@ -16,7 +16,6 @@ import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { fixedBurst } from "./lib/limits";
 import { DOMAIN_PATTERN, MAX_DOMAIN_LENGTH, MAX_TAG_LENGTH, MAX_TAGS, PICTOGRAPHIC } from "./lib/sanitizeLimits";
 
-export const MIN_NAME_LENGTH = 3;
 export const MAX_NAME_LENGTH = 64;
 const MAX_KNOWN_CATEGORY_NAMES = 60;
 /** The action's own budget under the client's 9s `Promise.race` abort. */
@@ -117,7 +116,7 @@ export function sanitizeDomain(domain: string | null): string | null {
 
 export function sanitizeMerchantName(name: string | null): string | null {
     const trimmed = name?.trim() ?? "";
-    return trimmed.length === 0 || trimmed.length > MAX_NAME_LENGTH ? null : trimmed;
+    return trimmed.length === 0 || [...trimmed].length > MAX_NAME_LENGTH ? null : trimmed;
 }
 
 const REGION_CODE_PATTERN = /^[A-Z]{2}$/;

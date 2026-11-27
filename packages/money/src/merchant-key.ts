@@ -1,12 +1,26 @@
-export function merchantKey(raw: string): string {
-    return raw
-        .normalize("NFD")
-        .replaceAll(/\p{Diacritic}/gu, "")
-        .toLocaleLowerCase()
-        .replaceAll(/[^\p{L}\p{N}]+/gu, " ")
-        .trim()
-        .replaceAll(/\s+/g, " ");
+// Unicode marks the kana voiced marks and ー as diacritics; stripping them makes ドトール and トトール one key.
+const DIACRITIC_EXCEPT_KANA_MARKS = /(?![゙゚ー])\p{Diacritic}/gu;
+// NFKC on the whole string folds superscripts too, so "Coffee²" would collide with "Coffee2".
+const HALFWIDTH_FULLWIDTH = /[\uFF00-\uFFEF]+/gu;
+// Variation selectors and Hangul fillers are letters or marks to Unicode, so a run of them would pass as a name.
+const INVISIBLE = /\p{Default_Ignorable_Code_Point}/gu;
+
+function narrowWidths(raw: string): string {
+    return raw.replaceAll(HALFWIDTH_FULLWIDTH, (run) => run.normalize("NFKC"));
 }
+
+export function foldText(raw: string): string {
+    return narrowWidths(raw)
+        .normalize("NFD")
+        .replaceAll(DIACRITIC_EXCEPT_KANA_MARKS, "")
+        .normalize("NFC")
+        .replaceAll(INVISIBLE, "")
+        .toLocaleLowerCase()
+        .replaceAll(/[^\p{L}\p{M}\p{N}]+/gu, " ")
+        .trim();
+}
+
+export const merchantKey = foldText;
 
 // `merchantKey` can never emit this, so a merchant named "Acme EUR" and "Acme" in EUR stay two keys.
 const KNOWLEDGE_KEY_DELIMITER = "|";
@@ -57,8 +71,9 @@ const REFERENCE_CODE = /^(?=[a-z]*\d)[a-z0-9]{5,}$|^\d+$/;
 const GLUED_SUFFIX = /(\p{Ll})(\p{Lu}{2,})/gu;
 
 export function descriptorKey(raw: string): string {
-    const star = raw.indexOf("*");
-    const body = star !== -1 && PROCESSORS.has(merchantKey(raw.slice(0, star))) ? raw.slice(star + 1) : raw;
+    const text = narrowWidths(raw);
+    const star = text.indexOf("*");
+    const body = star !== -1 && PROCESSORS.has(merchantKey(text.slice(0, star))) ? text.slice(star + 1) : text;
     const [first = "", ...rest] = merchantKey(body.replaceAll(GLUED_SUFFIX, "$1 $2")).split(" ");
     const kept = [first, ...rest.filter((token) => !REFERENCE_CODE.test(token))];
     while (kept.length > 1 && LEGAL_SUFFIXES.has(kept.at(-1) ?? "")) {
@@ -68,6 +83,13 @@ export function descriptorKey(raw: string): string {
 }
 
 const MIN_KEY_LENGTH = 3;
+// A two-character Han, kana or Hangul name still names a business, e.g. 無印.
+const MIN_CJK_KEY_LENGTH = 2;
+const CJK_SCRIPT = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+
+export function isMatchableKey(key: string): boolean {
+    return [...key].length >= (CJK_SCRIPT.test(key) ? MIN_CJK_KEY_LENGTH : MIN_KEY_LENGTH);
+}
 
 export function knowledgeKeys(
     name: string,
@@ -75,7 +97,7 @@ export function knowledgeKeys(
     merchantName?: string | null
 ): string[] {
     const keys = [merchantKey(name), descriptorKey(name), merchantKey(merchantName ?? "")]
-        .filter((key) => key.length >= MIN_KEY_LENGTH)
+        .filter(isMatchableKey)
         .map((key) => (currency ? `${key}${KNOWLEDGE_KEY_DELIMITER}${currency.toLowerCase()}` : key));
     return [...new Set(keys)];
 }

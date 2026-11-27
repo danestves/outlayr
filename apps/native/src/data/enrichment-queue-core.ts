@@ -1,5 +1,5 @@
 import type { EnrichmentResult } from "@outlayr/backend/confect/lib/enrichmentResult";
-import { merchantKey } from "@outlayr/money/merchant-key";
+import { isMatchableKey, merchantKey } from "@outlayr/money/merchant-key";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -47,7 +47,6 @@ export interface ApplyDeps<E = never> {
     persist: (bytes: Uint8Array, domain: string) => Effect.Effect<{ imageColor: string | null; imageUri: string }, E>;
 }
 
-export const MIN_KEY_LENGTH = 3;
 const MAX_OUTBOX = 100;
 
 const EnrichmentQueueOperation = Schema.Literals(["apply", "send"]);
@@ -127,7 +126,7 @@ export const sendQueuedEnrichment = Effect.fn("EnrichmentQueue.sendQueuedEnrichm
     // A failed send means the device is offline or signed out, and every later send would fail the same way.
     for (const id of queued) {
         const row = rows.find((candidate) => candidate.id === id);
-        if (row == null || row.deletedAt != null || merchantKey(row.note).length < MIN_KEY_LENGTH) {
+        if (row == null || row.deletedAt != null || !isMatchableKey(merchantKey(row.note))) {
             settled.add(id);
             continue;
         }

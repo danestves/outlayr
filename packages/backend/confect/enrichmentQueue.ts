@@ -19,11 +19,10 @@ import { applyToTree, BACKGROUND_REQUEST_TIMEOUT_MS, rateLimiter, runSuggest } f
 import { groundedAnswer } from "./groundedLookup";
 import { traceModel } from "./lib/aiTracing";
 import type { EnrichmentResult } from "./lib/enrichmentResult";
-import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
+import { CANONICAL_CATEGORIES, isKnowledgeKey } from "./lib/merchantTrust";
 import { runEdge, runTransactionEdge } from "./lib/runEdge";
 import { budgetConfig, estimateMicros } from "./lib/spend";
 
-export const MIN_NAME_LENGTH = 3;
 export const MAX_ACK_IDS = 100;
 export const MAX_RESULTS = 50;
 
@@ -56,7 +55,7 @@ export const share = Effect.fn("EnrichmentQueue.share")(function* share(
             categoryName,
             domain,
             emoji: answer.emoji,
-            keys: knowledgeKeys(row.name, row.currency, merchantName).filter((key) => KEY_PATTERN.test(key)),
+            keys: knowledgeKeys(row.name, row.currency, merchantName).filter(isKnowledgeKey),
             merchantName,
             modelId,
             parentCategoryName: null,

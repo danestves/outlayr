@@ -1,5 +1,5 @@
 import { institutionCurrency } from "@outlayr/money/institution-map";
-import { merchantKey } from "@outlayr/money/merchant-key";
+import { isMatchableKey, merchantKey } from "@outlayr/money/merchant-key";
 import { anchorDayOf, nextDate, RECURRING_TYPE } from "@outlayr/money/recurrence";
 
 import { holdsAutolog } from "@/domain/autolog-cap";
@@ -24,7 +24,6 @@ import type { NotificationReads } from "@/lib/notification-read";
 import { autologSourceOf, WALLET_DEDUPE_WINDOW_MS } from "@/lib/queue-file";
 import type { AutologSource, PendingWrite } from "@/lib/queue-file";
 
-import { MIN_KEY_LENGTH } from "./enrichment-queue-core";
 import { cardStatus } from "./wallet-state-core";
 
 export { WALLET_DEDUPE_WINDOW_MS } from "@/lib/queue-file";
@@ -378,7 +377,7 @@ export function decidePendingWrite(write: PendingWrite, facts: PendingWriteFacts
     }
     const { fallback, known, lookups } = facts.category;
     const captured = write.captureId != null && facts.captured?.has(write.captureId) === true;
-    const lookup = known == null && !captured && lookups && merchantKey(write.note).length >= MIN_KEY_LENGTH;
+    const lookup = known == null && !captured && lookups && isMatchableKey(merchantKey(write.note));
     const categoryId = known ?? (lookup || captured ? null : fallback);
     if (categoryId == null && !lookup && !captured) {
         return { kind: "drop" };

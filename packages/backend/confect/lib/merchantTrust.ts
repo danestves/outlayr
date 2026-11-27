@@ -1,8 +1,21 @@
 import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
+import { isMatchableKey, merchantKey } from "@outlayr/money/merchant-key";
 
 import { DOMAIN_PATTERN, MAX_DOMAIN_LENGTH, MAX_TAG_LENGTH, MAX_TAGS, PICTOGRAPHIC } from "./sanitizeLimits";
 
-export const KEY_PATTERN = /^[a-z0-9 ]{3,64}(\|[a-z]{3})?$/;
+const KNOWLEDGE_KEY_CURRENCY = /^[a-z]{3}$/;
+const MAX_KNOWLEDGE_KEY_LENGTH = 64;
+
+export function isKnowledgeKey(key: string): boolean {
+    const [body = "", ...currencies] = key.split("|");
+    return (
+        [...body].length <= MAX_KNOWLEDGE_KEY_LENGTH &&
+        merchantKey(body) === body &&
+        isMatchableKey(body) &&
+        currencies.length <= 1 &&
+        currencies.every((currency) => KNOWLEDGE_KEY_CURRENCY.test(currency))
+    );
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const MODEL_TTL_MS = 30 * DAY_MS;
@@ -69,7 +82,7 @@ export function shouldPublish(candidate: KnowledgeCandidate, sources: readonly {
     if (candidate.categoryName === null || !CANONICAL_CATEGORIES.has(candidate.categoryName)) {
         return false;
     }
-    if (!KEY_PATTERN.test(candidate.key)) {
+    if (!isKnowledgeKey(candidate.key)) {
         return false;
     }
     if (!tagsAreSanitized(candidate.tags)) {

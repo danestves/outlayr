@@ -1,4 +1,4 @@
-import { merchantKey } from "@outlayr/money/merchant-key";
+import { isMatchableKey, merchantKey } from "@outlayr/money/merchant-key";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
@@ -95,7 +95,6 @@ const DEBOUNCE_MS = 600;
 const GROUNDED_IDLE_MS = 1800;
 const GROUNDED_RECHECK_MS = 8000;
 const GROUNDED_RECHECK_RETRY_MS = 12_000;
-const MIN_KEY_LENGTH = 3;
 
 const settledResult = (call: Effect.Effect<RemoteEnrichmentResult, CloudError>) =>
     call.pipe(Effect.catchCause(() => Effect.succeed(null)));
@@ -456,7 +455,7 @@ const runLookup = Effect.fn("TransactionEnrichment.run")(function* runLookup(por
     const force = forceRef.current;
     forceRef.current = false;
     const key = merchantKey(nameRef.current);
-    if (key.length < MIN_KEY_LENGTH) {
+    if (!isMatchableKey(key)) {
         supersedeInFlight(ports);
         rememberedRef.current = null;
         emitNothing(ports);
@@ -630,7 +629,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             supersedeInFlight(ports);
             lastRemoteOutcomeRef.current = null;
             const key = merchantKey(nameRef.current);
-            if (key.length >= MIN_KEY_LENGTH) {
+            if (isMatchableKey(key)) {
                 const last = lastEmittedRef.current;
                 if (last != null && last.key === key && last.suggestion.domain != null) {
                     emit(ports, { ...last.suggestion, domain: null });
@@ -641,7 +640,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         if (enabled && incomeChanged) {
             supersedeInFlight(ports);
             lastRemoteOutcomeRef.current = null;
-            if (merchantKey(nameRef.current).length >= MIN_KEY_LENGTH) {
+            if (isMatchableKey(merchantKey(nameRef.current))) {
                 onNameChange(nameRef.current);
             }
         }
