@@ -347,6 +347,7 @@ export function DayWithPro({ onFollow }: { onFollow?: (bottom: number) => void }
     const reduced = useReducedMotion();
     const timers = useTimers();
     const stops = useRef<{ bottom: number; height: number }[]>([]);
+    const spoken = useRef(false);
     const follow = reduced ? undefined : onFollow;
     useOnMount(() => {
         if (follow === undefined) {
@@ -355,14 +356,15 @@ export function DayWithPro({ onFollow }: { onFollow?: (bottom: number) => void }
         for (const [index, at] of FOLLOW) {
             timers.after(at, () => follow(stops.current[index]?.bottom ?? 0));
         }
+        timers.after(BEAT.sentence, () => (spoken.current = true));
         return undefined;
     });
     const measure = (index: number) => (event: LayoutChangeEvent) => {
         const { height, y } = event.nativeEvent.layout;
         const before = stops.current[index];
         stops.current[index] = { bottom: y + height, height };
-        // Only the sentence writing in grows the voice stop, after its timed follow already ran.
-        if (index === VOICE_STOP && before !== undefined && height > before.height) {
+        // The sentence writing in grows the voice stop after its timed follow already ran.
+        if (index === VOICE_STOP && spoken.current && before !== undefined && height > before.height) {
             follow?.(y + height);
         }
     };
