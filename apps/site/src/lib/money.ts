@@ -6,6 +6,10 @@ export const HOME_CURRENCY = {
     en: "USD",
     es: "USD",
     fr: "EUR",
+    it: "EUR",
+    ja: "JPY",
+    ko: "KRW",
+    nl: "EUR",
     pt: "BRL",
 } as const satisfies Record<Locale, string>;
 

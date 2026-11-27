@@ -61,7 +61,10 @@ const SERIF: CustomStyle = {
     fontFamily: '"App Serif", serif',
 };
 const FRAGMENT_PAD = 20;
-const VERDICT_LINES = { de: 3, en: 2, es: 2, fr: 3, pt: 2 } as const satisfies Record<Locale, number>;
+const VERDICT_LINES = { de: 3, en: 2, es: 2, fr: 3, it: 3, ja: 2, ko: 2, nl: 3, pt: 2 } as const satisfies Record<
+    Locale,
+    number
+>;
 const VERDICT_LINE = 27.5;
 
 export type BalancesView = "accounts" | "categories";

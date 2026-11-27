@@ -3,7 +3,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { BLANKS, CASTS, CATEGORIES, initialState, press, reduce } from "./sentence-model";
 import type { Key, State } from "./sentence-model";
 
-const typed = (keys: readonly Key[]) => keys.reduce(press, "");
+const typed = (keys: readonly Key[], decimals = 2) => keys.reduce((amount, key) => press(amount, key, decimals), "");
 
 describe("press", () => {
     it.each([
@@ -15,9 +15,13 @@ describe("press", () => {
         { amount: "1234567", keys: ["1", "2", "3", "4", "5", "6", "7", "8"] },
         { amount: "4", keys: ["4", "2", "back"] },
         { amount: "", keys: ["back"] },
-    ] satisfies { amount: string; keys: Key[] }[])("$keys -> $amount", ({ amount, keys }) => {
-        expect(typed(keys)).toBe(amount);
-    });
+        { amount: "125", decimals: 0, keys: ["1", "2", ".", "5"] },
+    ] satisfies { amount: string; decimals?: number; keys: Key[] }[])(
+        "$keys -> $amount",
+        ({ amount, decimals, keys }) => {
+            expect(typed(keys, decimals)).toBe(amount);
+        }
+    );
 });
 
 describe("reduce", () => {
@@ -61,7 +65,7 @@ describe("reduce", () => {
     });
 });
 
-describe.each(["en", "de", "es", "fr", "pt"] as const)("the %s autoplay", (locale) => {
+describe.each(["en", "de", "es", "fr", "it", "nl", "ja", "ko", "pt"] as const)("the %s autoplay", (locale) => {
     it("picks only options the stage shows and files each entry as scripted", () => {
         const { accounts, entries, recentMerchants } = CASTS[locale];
         for (const entry of entries) {

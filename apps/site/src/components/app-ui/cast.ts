@@ -10,6 +10,10 @@ export const LOCALE_MARKET = {
     en: "US",
     es: "MX",
     fr: "FR",
+    it: "IT",
+    ja: "JP",
+    ko: "KR",
+    nl: "NL",
     pt: "BR",
 } as const satisfies Record<Locale, keyof typeof COUNTRY_CASTS>;
 

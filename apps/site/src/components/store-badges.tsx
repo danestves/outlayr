@@ -8,6 +8,10 @@ const APP_STORE_BADGE = {
     de: "/badges/app-store-de.svg",
     es: "/badges/app-store-es.svg",
     fr: "/badges/app-store-fr.svg",
+    it: "/badges/app-store-it.svg",
+    ja: "/badges/app-store-ja.svg",
+    ko: "/badges/app-store-ko.svg",
+    nl: "/badges/app-store-nl.svg",
     pt: "/badges/app-store-pt.svg",
 } as const satisfies Record<Locale, string>;
 
@@ -16,6 +20,10 @@ const GOOGLE_PLAY_BADGE = {
     de: "/badges/google-play-de",
     es: "/badges/google-play-es",
     fr: "/badges/google-play-fr",
+    it: "/badges/google-play-it",
+    ja: "/badges/google-play-ja",
+    ko: "/badges/google-play-ko",
+    nl: "/badges/google-play-nl",
     pt: "/badges/google-play-pt",
 } as const satisfies Record<Locale, string>;
 

@@ -10,14 +10,32 @@ const dashboardInsightsOverview = {
                 es: "Todas las categorías",
                 fr: "Toutes les catégories",
                 pt: "Todas as categorias",
+                it: "Tutte le categorie",
+                nl: "Alle categorieën",
+                ja: "すべてのカテゴリ",
+                ko: "모든 카테고리",
             }),
-            byDay: t({ en: "By day", de: "Nach Tag", es: "Por día", fr: "Par jour", pt: "Por dia" }),
+            byDay: t({
+                en: "By day",
+                de: "Nach Tag",
+                es: "Por día",
+                fr: "Par jour",
+                pt: "Por dia",
+                it: "Per giorno",
+                nl: "Per dag",
+                ja: "日別",
+                ko: "일별",
+            }),
             incomeAndNet: t({
                 en: "Income and net",
                 de: "Einnahmen und Netto",
                 es: "Ingresos y neto",
                 fr: "Revenus et net",
                 pt: "Receitas e líquido",
+                it: "Entrate e netto",
+                nl: "Inkomsten en netto",
+                ja: "収入と収支",
+                ko: "수입과 수지",
             }),
             netWorth: t({
                 en: "Net worth",
@@ -26,6 +44,10 @@ const dashboardInsightsOverview = {
                 fr: "Patrimoine",
                 pt: "Patrimônio",
                 "pt-PT": "Património",
+                it: "Patrimonio netto",
+                nl: "Nettovermogen",
+                ja: "純資産",
+                ko: "순자산",
             }),
             perDay: insert(
                 t({
@@ -34,6 +56,10 @@ const dashboardInsightsOverview = {
                     es: "{{amount}} al día",
                     fr: "{{amount}} par jour",
                     pt: "{{amount}} por dia",
+                    it: "{{amount}} al giorno",
+                    nl: "{{amount}} per dag",
+                    ja: "1日あたり{{amount}}",
+                    ko: "하루 {{amount}}",
                 })
             ),
             title: t({
@@ -42,6 +68,10 @@ const dashboardInsightsOverview = {
                 es: "Todo lo demás",
                 fr: "Tout le reste",
                 pt: "Todo o resto",
+                it: "Tutto il resto",
+                nl: "Al het overige",
+                ja: "その他すべて",
+                ko: "나머지 전부",
             }),
             plan: insert(
                 t({
@@ -50,6 +80,10 @@ const dashboardInsightsOverview = {
                     es: "Plan {{year}}",
                     fr: "Forfait {{year}}",
                     pt: "Plano {{year}}",
+                    it: "Piano {{year}}",
+                    nl: "Plan {{year}}",
+                    ja: "{{year}}年の計画",
+                    ko: "{{year}}년 계획",
                 })
             ),
         },
@@ -62,6 +96,10 @@ const dashboardInsightsOverview = {
                     fr: "{{count}} opérations",
                     pt: "{{count}} lançamentos",
                     "pt-PT": "{{count}} registos",
+                    it: "{{count}} movimenti",
+                    nl: "{{count}} transacties",
+                    ja: "記録{{count}}件",
+                    ko: "기록 {{count}}개",
                 })
             ),
             entry: t({
@@ -71,6 +109,10 @@ const dashboardInsightsOverview = {
                 fr: "1 opération",
                 pt: "1 lançamento",
                 "pt-PT": "1 registo",
+                it: "1 movimento",
+                nl: "1 transactie",
+                ja: "記録1件",
+                ko: "기록 1개",
             }),
             month: t({
                 en: "Pace, usual spending and answers start after 3 months.",
@@ -78,6 +120,10 @@ const dashboardInsightsOverview = {
                 es: "El ritmo, el gasto normal y las respuestas empiezan a los 3 meses.",
                 fr: "Le rythme, les dépenses habituelles et les réponses commencent après 3 mois.",
                 pt: "Ritmo, gasto habitual e respostas começam depois de 3 meses.",
+                it: "Ritmo, spesa abituale e risposte partono dopo 3 mesi.",
+                nl: "Tempo, gebruikelijke uitgaven en antwoorden beginnen na 3 maanden.",
+                ja: "ペース、普段の支出、答えは3か月後から表示されます。",
+                ko: "속도, 평소 지출, 답변은 3개월 후부터 표시돼요.",
             }),
             title: t({
                 en: "Not enough history",
@@ -85,6 +131,10 @@ const dashboardInsightsOverview = {
                 es: "Falta historial",
                 fr: "Historique insuffisant",
                 pt: "Histórico insuficiente",
+                it: "Cronologia insufficiente",
+                nl: "Niet genoeg geschiedenis",
+                ja: "履歴が足りません",
+                ko: "내역이 충분하지 않아요",
             }),
             week: t({
                 en: "Pace, usual spending and answers start after 3 weeks.",
@@ -92,6 +142,10 @@ const dashboardInsightsOverview = {
                 es: "El ritmo, el gasto normal y las respuestas empiezan a las 3 semanas.",
                 fr: "Le rythme, les dépenses habituelles et les réponses commencent après 3 semaines.",
                 pt: "Ritmo, gasto habitual e respostas começam depois de 3 semanas.",
+                it: "Ritmo, spesa abituale e risposte partono dopo 3 settimane.",
+                nl: "Tempo, gebruikelijke uitgaven en antwoorden beginnen na 3 weken.",
+                ja: "ペース、普段の支出、答えは3週間後から表示されます。",
+                ko: "속도, 평소 지출, 답변은 3주 후부터 표시돼요.",
             }),
             year: t({
                 en: "Pace, usual spending and answers start after 3 years.",
@@ -99,10 +153,24 @@ const dashboardInsightsOverview = {
                 es: "El ritmo, el gasto normal y las respuestas empiezan a los 3 años.",
                 fr: "Le rythme, les dépenses habituelles et les réponses commencent après 3 ans.",
                 pt: "Ritmo, gasto habitual e respostas começam depois de 3 anos.",
+                it: "Ritmo, spesa abituale e risposte partono dopo 3 anni.",
+                nl: "Tempo, gebruikelijke uitgaven en antwoorden beginnen na 3 jaar.",
+                ja: "ペース、普段の支出、答えは3年後から表示されます。",
+                ko: "속도, 평소 지출, 답변은 3년 후부터 표시돼요.",
             }),
         },
         kpi: {
-            byDay: t({ en: "By day", de: "Nach Tag", es: "Por día", fr: "Par jour", pt: "Por dia" }),
+            byDay: t({
+                en: "By day",
+                de: "Nach Tag",
+                es: "Por día",
+                fr: "Par jour",
+                pt: "Por dia",
+                it: "Per giorno",
+                nl: "Per dag",
+                ja: "日別",
+                ko: "일별",
+            }),
             days: insert(
                 t({
                     en: "{{count}} days",
@@ -110,6 +178,10 @@ const dashboardInsightsOverview = {
                     es: "{{count}} días",
                     fr: "{{count}} jours",
                     pt: "{{count}} dias",
+                    it: "{{count}} giorni",
+                    nl: "{{count}} dagen",
+                    ja: "{{count}}日間",
+                    ko: "{{count}}일",
                 })
             ),
             entries: insert(
@@ -120,6 +192,10 @@ const dashboardInsightsOverview = {
                     fr: "{{count}} opérations",
                     pt: "{{count}} lançamentos",
                     "pt-PT": "{{count}} registos",
+                    it: "{{count}} movimenti",
+                    nl: "{{count}} transacties",
+                    ja: "記録{{count}}件",
+                    ko: "기록 {{count}}개",
                 })
             ),
             entry: t({
@@ -129,6 +205,10 @@ const dashboardInsightsOverview = {
                 fr: "1 opération",
                 pt: "1 lançamento",
                 "pt-PT": "1 registo",
+                it: "1 movimento",
+                nl: "1 transactie",
+                ja: "記録1件",
+                ko: "기록 1개",
             }),
             first: {
                 month: t({
@@ -138,6 +218,10 @@ const dashboardInsightsOverview = {
                     fr: "Votre premier mois",
                     pt: "Seu primeiro mês",
                     "pt-PT": "O seu primeiro mês",
+                    it: "Il tuo primo mese",
+                    nl: "Je eerste maand",
+                    ja: "最初の月",
+                    ko: "첫 번째 달",
                 }),
                 week: t({
                     en: "Your first week",
@@ -146,6 +230,10 @@ const dashboardInsightsOverview = {
                     fr: "Votre première semaine",
                     pt: "Sua primeira semana",
                     "pt-PT": "A sua primeira semana",
+                    it: "La tua prima settimana",
+                    nl: "Je eerste week",
+                    ja: "最初の週",
+                    ko: "첫 번째 주",
                 }),
                 year: t({
                     en: "Your first year",
@@ -154,18 +242,56 @@ const dashboardInsightsOverview = {
                     fr: "Votre première année",
                     pt: "Seu primeiro ano",
                     "pt-PT": "O seu primeiro ano",
+                    it: "Il tuo primo anno",
+                    nl: "Je eerste jaar",
+                    ja: "最初の年",
+                    ko: "첫 번째 해",
                 }),
             },
-            income: t({ en: "Income", de: "Einnahmen", es: "Ingresos", fr: "Revenus", pt: "Receitas" }),
-            kept: t({ en: "Kept", de: "Übrig", es: "Ahorrado", fr: "Épargné", pt: "Guardado" }),
+            income: t({
+                en: "Income",
+                de: "Einnahmen",
+                es: "Ingresos",
+                fr: "Revenus",
+                pt: "Receitas",
+                it: "Entrate",
+                nl: "Inkomsten",
+                ja: "収入",
+                ko: "수입",
+            }),
+            kept: t({
+                en: "Kept",
+                de: "Übrig",
+                es: "Ahorrado",
+                fr: "Épargné",
+                pt: "Guardado",
+                it: "Rimasto",
+                nl: "Overgehouden",
+                ja: "手元に残った額",
+                ko: "남은 금액",
+            }),
             ofIncome: t({
                 en: "of income",
                 de: "der Einnahmen",
                 es: "del ingreso",
                 fr: "des revenus",
                 pt: "das receitas",
+                it: "delle entrate",
+                nl: "van de inkomsten",
+                ja: "収入に対して",
+                ko: "수입 대비",
             }),
-            spent: t({ en: "Spent", de: "Ausgegeben", es: "Gastado", fr: "Dépensé", pt: "Gasto" }),
+            spent: t({
+                en: "Spent",
+                de: "Ausgegeben",
+                es: "Gastado",
+                fr: "Dépensé",
+                pt: "Gasto",
+                it: "Speso",
+                nl: "Uitgegeven",
+                ja: "支出",
+                ko: "지출",
+            }),
             versus: insert(
                 t({
                     en: "vs {{period}}",
@@ -173,6 +299,10 @@ const dashboardInsightsOverview = {
                     es: "vs {{period}}",
                     fr: "vs {{period}}",
                     pt: "vs {{period}}",
+                    it: "vs {{period}}",
+                    nl: "t.o.v. {{period}}",
+                    ja: "{{period}}と比較",
+                    ko: "{{period}} 대비",
                 })
             ),
         },
@@ -184,6 +314,10 @@ const dashboardInsightsOverview = {
                     es: "{{spent}} hasta ahora. El mayor, {{name}} el {{date}}, fue de {{amount}}.",
                     fr: "{{spent}} jusqu'ici. La plus grosse, {{name}} le {{date}}, était {{amount}}.",
                     pt: "{{spent}} até agora. A maior, {{name}} em {{date}}, foi {{amount}}.",
+                    it: "{{spent}} finora. La spesa più grande, {{name}} il {{date}}, è stata di {{amount}}.",
+                    nl: "{{spent}} tot nu toe. De grootste, {{name}} op {{date}}, was {{amount}}.",
+                    ja: "ここまでで{{spent}}。最大は{{date}}の{{name}}で{{amount}}でした。",
+                    ko: "지금까지 {{spent}}. 가장 큰 지출: {{date}} {{name}}의 {{amount}}.",
                 })
             ),
             biggestClosed: insert(
@@ -193,6 +327,10 @@ const dashboardInsightsOverview = {
                     es: "{{spent}} en total. El mayor, {{name}} el {{date}}, fue de {{amount}}.",
                     fr: "{{spent}} au total. La plus grosse, {{name}} le {{date}}, était {{amount}}.",
                     pt: "{{spent}} no total. A maior, {{name}} em {{date}}, foi {{amount}}.",
+                    it: "{{spent}} in tutto. La spesa più grande, {{name}} il {{date}}, è stata di {{amount}}.",
+                    nl: "{{spent}} in totaal. De grootste, {{name}} op {{date}}, was {{amount}}.",
+                    ja: "合計{{spent}}。最大は{{date}}の{{name}}で{{amount}}でした。",
+                    ko: "총 {{spent}}. 가장 큰 지출: {{date}} {{name}}의 {{amount}}.",
                 })
             ),
             biggestUnnamed: insert(
@@ -202,6 +340,10 @@ const dashboardInsightsOverview = {
                     es: "{{spent}} hasta ahora. El mayor, el {{date}}, fue de {{amount}}.",
                     fr: "{{spent}} jusqu'ici. La plus grosse, le {{date}}, était {{amount}}.",
                     pt: "{{spent}} até agora. A maior, em {{date}}, foi {{amount}}.",
+                    it: "{{spent}} finora. La spesa più grande, il {{date}}, è stata di {{amount}}.",
+                    nl: "{{spent}} tot nu toe. De grootste, op {{date}}, was {{amount}}.",
+                    ja: "ここまでで{{spent}}。最大は{{date}}の{{amount}}でした。",
+                    ko: "지금까지 {{spent}}. 가장 큰 지출: {{date}}의 {{amount}}.",
                 })
             ),
             biggestUnnamedClosed: insert(
@@ -211,6 +353,10 @@ const dashboardInsightsOverview = {
                     es: "{{spent}} en total. El mayor, el {{date}}, fue de {{amount}}.",
                     fr: "{{spent}} au total. La plus grosse, le {{date}}, était {{amount}}.",
                     pt: "{{spent}} no total. A maior, em {{date}}, foi {{amount}}.",
+                    it: "{{spent}} in tutto. La spesa più grande, il {{date}}, è stata di {{amount}}.",
+                    nl: "{{spent}} in totaal. De grootste, op {{date}}, was {{amount}}.",
+                    ja: "合計{{spent}}。最大は{{date}}の{{amount}}でした。",
+                    ko: "총 {{spent}}. 가장 큰 지출: {{date}}의 {{amount}}.",
                 })
             ),
             chart: insert(
@@ -220,9 +366,23 @@ const dashboardInsightsOverview = {
                     es: "{{category}} por mes frente a su límite",
                     fr: "{{category}} par mois par rapport à sa limite",
                     pt: "{{category}} por mês frente ao limite",
+                    it: "{{category}} per mese rispetto al suo limite",
+                    nl: "{{category}} per maand t.o.v. de limiet",
+                    ja: "{{category}}の月別の支出と上限",
+                    ko: "{{category}} 월별 지출과 한도",
                 })
             ),
-            over: t({ en: "Over", de: "Drüber", es: "Excedido", fr: "Au-dessus", pt: "Acima" }),
+            over: t({
+                en: "Over",
+                de: "Drüber",
+                es: "Excedido",
+                fr: "Au-dessus",
+                pt: "Acima",
+                it: "Oltre",
+                nl: "Over",
+                ja: "超過",
+                ko: "초과",
+            }),
             statement: insert(
                 t({
                     en: "{{category}} passed its {{limit}} limit",
@@ -230,6 +390,10 @@ const dashboardInsightsOverview = {
                     es: "{{category}} pasó su límite de {{limit}}",
                     fr: "{{category}} a dépassé sa limite de {{limit}}",
                     pt: "{{category}} passou do limite de {{limit}}",
+                    it: "{{category}} ha superato il suo limite di {{limit}}",
+                    nl: "{{category}} ging over de limiet van {{limit}}",
+                    ja: "{{category}}が上限の{{limit}}を超えました",
+                    ko: "{{category}} 한도({{limit}})를 넘었어요",
                 })
             ),
         },
@@ -241,6 +405,10 @@ const dashboardInsightsOverview = {
                 fr: "Vous dépensez comme d'habitude",
                 pt: "Você está gastando como de costume",
                 "pt-PT": "Está a gastar como de costume",
+                it: "Stai spendendo più o meno come al solito",
+                nl: "Je geeft ongeveer evenveel uit als gebruikelijk",
+                ja: "支出は普段とほぼ同じペースです",
+                ko: "평소와 비슷하게 쓰고 있어요",
             }),
             chart: t({
                 en: "Spending added up by day",
@@ -248,6 +416,10 @@ const dashboardInsightsOverview = {
                 es: "Gasto acumulado por día",
                 fr: "Dépenses cumulées par jour",
                 pt: "Despesas somadas por dia",
+                it: "Spesa sommata per giorno",
+                nl: "Uitgaven opgeteld per dag",
+                ja: "日ごとの支出の累計",
+                ko: "일별 누적 지출",
             }),
             closedAsUsual: t({
                 en: "You spent about as usual",
@@ -256,6 +428,10 @@ const dashboardInsightsOverview = {
                 fr: "Vous avez dépensé comme d'habitude",
                 pt: "Você gastou como de costume",
                 "pt-PT": "Gastou como de costume",
+                it: "Hai speso più o meno come al solito",
+                nl: "Je gaf ongeveer evenveel uit als gebruikelijk",
+                ja: "支出は普段とほぼ同じでした",
+                ko: "평소와 비슷하게 썼어요",
             }),
             closedLess: t({
                 en: "You spent less than usual",
@@ -264,6 +440,10 @@ const dashboardInsightsOverview = {
                 fr: "Vous avez dépensé moins que d'habitude",
                 pt: "Você gastou menos que o habitual",
                 "pt-PT": "Gastou menos que o habitual",
+                it: "Hai speso meno del solito",
+                nl: "Je gaf minder uit dan gebruikelijk",
+                ja: "支出は普段より少なめでした",
+                ko: "평소보다 적게 썼어요",
             }),
             closedLine: insert(
                 t({
@@ -273,6 +453,10 @@ const dashboardInsightsOverview = {
                     fr: "{{amount}} en {{period}}. Vous dépensez habituellement {{usual}}.",
                     pt: "{{amount}} em {{period}}. Você costuma gastar {{usual}}.",
                     "pt-PT": "{{amount}} em {{period}}. costuma gastar {{usual}}.",
+                    it: "{{amount}} in {{period}}. Di solito spendi {{usual}}.",
+                    nl: "{{amount}} in {{period}}. Meestal geef je {{usual}} uit.",
+                    ja: "{{period}}は{{amount}}。普段は{{usual}}使っています。",
+                    ko: "{{period}}에 {{amount}}. 보통은 {{usual}} 정도 써요.",
                 })
             ),
             closedMore: t({
@@ -282,6 +466,10 @@ const dashboardInsightsOverview = {
                 fr: "Vous avez dépensé plus que d'habitude",
                 pt: "Você gastou mais que o habitual",
                 "pt-PT": "Gastou mais que o habitual",
+                it: "Hai speso più del solito",
+                nl: "Je gaf meer uit dan gebruikelijk",
+                ja: "支出は普段より多めでした",
+                ko: "평소보다 많이 썼어요",
             }),
             closedPlain: insert(
                 t({
@@ -291,6 +479,10 @@ const dashboardInsightsOverview = {
                     fr: "Vous avez dépensé {{amount}}",
                     pt: "Você gastou {{amount}}",
                     "pt-PT": "Gastou {{amount}}",
+                    it: "Hai speso {{amount}}",
+                    nl: "Je gaf {{amount}} uit",
+                    ja: "{{amount}}使いました",
+                    ko: "{{amount}} 썼어요",
                 })
             ),
             course: insert(
@@ -301,6 +493,10 @@ const dashboardInsightsOverview = {
                     fr: "Vous êtes en voie de terminer près de {{amount}}. Vous dépensez habituellement {{usual}} à ce stade.",
                     pt: "Você está no ritmo de terminar perto de {{amount}}. Normalmente gasta {{usual}} até agora.",
                     "pt-PT": "Está no ritmo de terminar perto de {{amount}}. Normalmente gasta {{usual}} até agora.",
+                    it: "Il trend ti porta a chiudere vicino a {{amount}}. Di solito a questo punto spendi {{usual}}.",
+                    nl: "Je eindigt op dit tempo rond {{amount}}. Meestal geef je op dit moment {{usual}} uit.",
+                    ja: "このままだと{{amount}}前後で終わりそうです。この時点では普段{{usual}}使っています。",
+                    ko: "이 속도라면 {{amount}} 근처에서 끝나요. 이맘때는 보통 {{usual}} 정도 써요.",
                 })
             ),
             faster: t({
@@ -310,6 +506,10 @@ const dashboardInsightsOverview = {
                 fr: "Vous dépensez plus vite que d'habitude",
                 pt: "Você está gastando mais rápido que o habitual",
                 "pt-PT": "Está a gastar mais rápido que o habitual",
+                it: "Stai spendendo più in fretta del solito",
+                nl: "Je geeft sneller uit dan gebruikelijk",
+                ja: "普段より速いペースで使っています",
+                ko: "평소보다 빠르게 쓰고 있어요",
             }),
             noUsual: t({
                 en: "No usual to compare with yet.",
@@ -317,6 +517,10 @@ const dashboardInsightsOverview = {
                 es: "Aún no hay un gasto normal con qué comparar.",
                 fr: "Pas encore d'habitude à comparer.",
                 pt: "Ainda não há habitual para comparar.",
+                it: "Non c'è ancora un solito con cui confrontare.",
+                nl: "Er is nog geen gebruikelijk bedrag om mee te vergelijken.",
+                ja: "比べる「普段」の値がまだありません。",
+                ko: "비교할 평소 값이 아직 없어요.",
             }),
             nothing: t({
                 en: "Nothing spent yet",
@@ -324,6 +528,10 @@ const dashboardInsightsOverview = {
                 es: "Aún no hay gastos",
                 fr: "Aucune dépense pour l'instant",
                 pt: "Nada gasto ainda",
+                it: "Ancora nessuna spesa",
+                nl: "Nog niets uitgegeven",
+                ja: "まだ支出はありません",
+                ko: "아직 지출이 없어요",
             }),
             plain: insert(
                 t({
@@ -333,6 +541,10 @@ const dashboardInsightsOverview = {
                     fr: "Vous avez dépensé {{amount}} jusqu'ici",
                     pt: "Você gastou {{amount}} até agora",
                     "pt-PT": "Gastou {{amount}} até agora",
+                    it: "Finora hai speso {{amount}}",
+                    nl: "Je hebt tot nu toe {{amount}} uitgegeven",
+                    ja: "ここまでの支出は{{amount}}",
+                    ko: "지금까지 {{amount}} 썼어요",
                 })
             ),
             slower: t({
@@ -342,6 +554,10 @@ const dashboardInsightsOverview = {
                 fr: "Vous dépensez plus lentement que d'habitude",
                 pt: "Você está gastando mais devagar que o habitual",
                 "pt-PT": "Está a gastar mais devagar que o habitual",
+                it: "Stai spendendo più lentamente del solito",
+                nl: "Je geeft langzamer uit dan gebruikelijk",
+                ja: "普段より遅いペースで使っています",
+                ko: "평소보다 느리게 쓰고 있어요",
             }),
             today: insert(
                 t({
@@ -350,9 +566,23 @@ const dashboardInsightsOverview = {
                     es: "Hoy {{amount}}",
                     fr: "Aujourd'hui {{amount}}",
                     pt: "Hoje {{amount}}",
+                    it: "Oggi {{amount}}",
+                    nl: "Vandaag {{amount}}",
+                    ja: "今日 {{amount}}",
+                    ko: "오늘 {{amount}}",
                 })
             ),
-            usual: t({ en: "Usual", de: "Üblich", es: "Lo normal", fr: "Habituel", pt: "Habitual" }),
+            usual: t({
+                en: "Usual",
+                de: "Üblich",
+                es: "Lo normal",
+                fr: "Habituel",
+                pt: "Habitual",
+                it: "Solito",
+                nl: "Gebruikelijk",
+                ja: "普段",
+                ko: "평소",
+            }),
         },
         quiet: {
             line: t({
@@ -361,6 +591,10 @@ const dashboardInsightsOverview = {
                 es: "Cada categoría está cerca de lo normal.",
                 fr: "Chaque catégorie est proche de son niveau habituel.",
                 pt: "Cada categoria está perto do habitual.",
+                it: "Ogni categoria è vicina al suo livello abituale.",
+                nl: "Elke categorie zit dicht bij het gebruikelijke niveau.",
+                ja: "どのカテゴリも普段に近い水準です。",
+                ko: "모든 카테고리가 평소 수준에 가까워요.",
             }),
             title: t({
                 en: "Nothing stands out",
@@ -368,10 +602,24 @@ const dashboardInsightsOverview = {
                 es: "Nada destaca",
                 fr: "Rien ne ressort",
                 pt: "Nada se destaca",
+                it: "Non spicca nulla",
+                nl: "Er valt niets op",
+                ja: "目立つものはありません",
+                ko: "눈에 띄는 게 없어요",
             }),
         },
         sample: {
-            badge: t({ en: "Sample", de: "Beispiel", es: "Ejemplo", fr: "Exemple", pt: "Exemplo" }),
+            badge: t({
+                en: "Sample",
+                de: "Beispiel",
+                es: "Ejemplo",
+                fr: "Exemple",
+                pt: "Exemplo",
+                it: "Esempio",
+                nl: "Voorbeeld",
+                ja: "サンプル",
+                ko: "샘플",
+            }),
             categories: {
                 dining: t({
                     en: "Dining Out",
@@ -379,6 +627,10 @@ const dashboardInsightsOverview = {
                     es: "Restaurantes",
                     fr: "Restaurants",
                     pt: "Restaurantes",
+                    it: "Ristoranti",
+                    nl: "Uit eten",
+                    ja: "外食",
+                    ko: "외식",
                 }),
                 groceries: t({
                     en: "Groceries",
@@ -387,9 +639,34 @@ const dashboardInsightsOverview = {
                     fr: "Courses",
                     pt: "Mercado",
                     "pt-PT": "Supermercado",
+                    it: "Spesa alimentare",
+                    nl: "Boodschappen",
+                    ja: "食料品",
+                    ko: "식료품",
                 }),
-                rent: t({ en: "Rent", de: "Miete", es: "Alquiler", fr: "Loyer", pt: "Aluguel", "pt-PT": "Renda" }),
-                shopping: t({ en: "Shopping", de: "Shopping", es: "Compras", fr: "Achats", pt: "Compras" }),
+                rent: t({
+                    en: "Rent",
+                    de: "Miete",
+                    es: "Alquiler",
+                    fr: "Loyer",
+                    pt: "Aluguel",
+                    "pt-PT": "Renda",
+                    it: "Affitto",
+                    nl: "Huur",
+                    ja: "家賃",
+                    ko: "월세",
+                }),
+                shopping: t({
+                    en: "Shopping",
+                    de: "Shopping",
+                    es: "Compras",
+                    fr: "Achats",
+                    pt: "Compras",
+                    it: "Shopping",
+                    nl: "Winkelen",
+                    ja: "ショッピング",
+                    ko: "쇼핑",
+                }),
                 subscriptions: t({
                     en: "Subscriptions",
                     de: "Abos",
@@ -397,6 +674,10 @@ const dashboardInsightsOverview = {
                     fr: "Abonnements",
                     pt: "Assinaturas",
                     "pt-PT": "Subscrições",
+                    it: "Abbonamenti",
+                    nl: "Abonnementen",
+                    ja: "サブスク",
+                    ko: "구독",
                 }),
                 transport: t({
                     en: "Transport",
@@ -405,6 +686,10 @@ const dashboardInsightsOverview = {
                     fr: "Transport",
                     pt: "Transporte",
                     "pt-PT": "Transportes",
+                    it: "Trasporti",
+                    nl: "Vervoer",
+                    ja: "交通",
+                    ko: "교통",
                 }),
             },
             cta: t({
@@ -414,6 +699,10 @@ const dashboardInsightsOverview = {
                 fr: "Enregistrez votre première dépense",
                 pt: "Registre sua primeira despesa",
                 "pt-PT": "Registe a sua primeira despesa",
+                it: "Registra la tua prima spesa",
+                nl: "Leg je eerste uitgave vast",
+                ja: "最初の支出を記録しましょう",
+                ko: "첫 지출을 기록해 보세요",
             }),
             gaveBack: insert(
                 t({
@@ -422,6 +711,10 @@ const dashboardInsightsOverview = {
                     es: "Solo {{category}} devolvió {{amount}}.",
                     fr: "Seul {{category}} a rendu {{amount}}.",
                     pt: "Só {{category}} devolveu {{amount}}.",
+                    it: "{{category}} da sola ha restituito {{amount}}.",
+                    nl: "{{category}} gaf alleen al {{amount}} terug.",
+                    ja: "{{category}}だけで{{amount}}戻りました。",
+                    ko: "{{category}}만으로 {{amount}}만큼 돌아왔어요.",
                 })
             ),
             less: insert(
@@ -431,6 +724,10 @@ const dashboardInsightsOverview = {
                     es: "{{amount}} menos que en {{period}}",
                     fr: "{{amount}} de moins que {{period}}",
                     pt: "{{amount}} menos que {{period}}",
+                    it: "{{amount}} in meno rispetto a {{period}}",
+                    nl: "{{amount}} minder dan {{period}}",
+                    ja: "{{period}}より{{amount}}少ない",
+                    ko: "{{period}}보다 {{amount}} 적음",
                 })
             ),
             line: t({
@@ -440,6 +737,10 @@ const dashboardInsightsOverview = {
                 fr: "Le vôtre commence à se remplir dès votre première opération.",
                 pt: "O seu começa a se preencher com o primeiro lançamento.",
                 "pt-PT": "O seu começa a preencher-se com o primeiro registo.",
+                it: "Il tuo inizia a riempirsi dal tuo primo movimento.",
+                nl: "Die van jou begint zich te vullen vanaf je eerste transactie.",
+                ja: "最初の記録から、こちらにも表示されていきます。",
+                ko: "첫 기록부터 내 데이터가 채워지기 시작해요.",
             }),
             title: t({
                 en: "This is what a month looks like",
@@ -447,6 +748,10 @@ const dashboardInsightsOverview = {
                 es: "Así se ve un mes",
                 fr: "Voici à quoi ressemble un mois",
                 pt: "É assim que um mês se parece",
+                it: "Ecco come appare un mese",
+                nl: "Zo ziet een maand eruit",
+                ja: "1か月分の表示例です",
+                ko: "한 달은 이렇게 보여요",
             }),
         },
         see: insert(
@@ -456,6 +761,10 @@ const dashboardInsightsOverview = {
                 es: "Ver {{category}}",
                 fr: "Voir {{category}}",
                 pt: "Ver {{category}}",
+                it: "Vedi {{category}}",
+                nl: "Bekijk {{category}}",
+                ja: "{{category}}を見る",
+                ko: "{{category}} 보기",
             })
         ),
         subscriptions: {
@@ -466,6 +775,10 @@ const dashboardInsightsOverview = {
                     es: "{{amount}} al año. Próximo cobro: {{name}} el {{date}}.",
                     fr: "{{amount}} par an. Prochain prélèvement : {{name}} le {{date}}.",
                     pt: "{{amount}} por ano. Próxima cobrança: {{name}} em {{date}}.",
+                    it: "{{amount}} all'anno. Prossimo addebito: {{name}} il {{date}}.",
+                    nl: "{{amount}} per jaar. Volgende afschrijving: {{name}} op {{date}}.",
+                    ja: "年間{{amount}}。次回の請求は{{date}}の{{name}}です。",
+                    ko: "연 {{amount}}. 다음 결제: {{date}} {{name}}",
                 })
             ),
             one: insert(
@@ -476,9 +789,23 @@ const dashboardInsightsOverview = {
                     fr: "1 abonnement vous coûte {{amount}} par mois",
                     pt: "1 assinatura custa {{amount}} por mês",
                     "pt-PT": "1 subscrição custa {{amount}} por mês",
+                    it: "1 abbonamento ti costa {{amount}} al mese",
+                    nl: "1 abonnement kost je {{amount}} per maand",
+                    ja: "サブスク1件で月{{amount}}かかっています",
+                    ko: "구독 1개에 월 {{amount}}의 비용이 들어요",
                 })
             ),
-            seeAll: t({ en: "See all", de: "Alle anzeigen", es: "Ver todas", fr: "Tout voir", pt: "Ver todos" }),
+            seeAll: t({
+                en: "See all",
+                de: "Alle anzeigen",
+                es: "Ver todas",
+                fr: "Tout voir",
+                pt: "Ver todos",
+                it: "Vedi tutto",
+                nl: "Alles bekijken",
+                ja: "すべて表示",
+                ko: "모두 보기",
+            }),
             statement: insert(
                 t({
                     en: "{{count}} subscriptions cost you {{amount}} a month",
@@ -487,12 +814,36 @@ const dashboardInsightsOverview = {
                     fr: "{{count}} abonnements vous coûtent {{amount}} par mois",
                     pt: "{{count}} assinaturas custam {{amount}} por mês",
                     "pt-PT": "{{count}} subscrições custam {{amount}} por mês",
+                    it: "{{count}} abbonamenti ti costano {{amount}} al mese",
+                    nl: "{{count}} abonnementen kosten je {{amount}} per maand",
+                    ja: "サブスク{{count}}件で月{{amount}}かかっています",
+                    ko: "구독 {{count}}개에 월 {{amount}}의 비용이 들어요",
                 })
             ),
         },
         versus: {
-            above: t({ en: "Above", de: "Darüber", es: "Por encima", fr: "Au-dessus", pt: "Acima" }),
-            below: t({ en: "Below", de: "Darunter", es: "Por debajo", fr: "En dessous", pt: "Abaixo" }),
+            above: t({
+                en: "Above",
+                de: "Darüber",
+                es: "Por encima",
+                fr: "Au-dessus",
+                pt: "Acima",
+                it: "Sopra",
+                nl: "Boven",
+                ja: "上",
+                ko: "위",
+            }),
+            below: t({
+                en: "Below",
+                de: "Darunter",
+                es: "Por debajo",
+                fr: "En dessous",
+                pt: "Abaixo",
+                it: "Sotto",
+                nl: "Onder",
+                ja: "下",
+                ko: "아래",
+            }),
             closedOver: insert(
                 t({
                     en: "{{category}} ended {{amount}} over its usual",
@@ -500,6 +851,10 @@ const dashboardInsightsOverview = {
                     es: "{{category}} cerró {{amount}} por encima de lo normal",
                     fr: "{{category}} a terminé {{amount}} au-dessus de son habitude",
                     pt: "{{category}} terminou {{amount}} acima do habitual",
+                    it: "{{category}} ha chiuso con {{amount}} sopra il suo livello abituale",
+                    nl: "{{category}} eindigde {{amount}} boven het gebruikelijke niveau",
+                    ja: "{{category}}は普段より{{amount}}多く終わりました",
+                    ko: "{{category}}은(는) 평소보다 {{amount}} 많게 끝났어요",
                 })
             ),
             closedUnder: insert(
@@ -509,6 +864,10 @@ const dashboardInsightsOverview = {
                     es: "{{category}} cerró {{amount}} por debajo de lo normal",
                     fr: "{{category}} a terminé {{amount}} en dessous de son habitude",
                     pt: "{{category}} terminou {{amount}} abaixo do habitual",
+                    it: "{{category}} ha chiuso con {{amount}} sotto il suo livello abituale",
+                    nl: "{{category}} eindigde {{amount}} onder het gebruikelijke niveau",
+                    ja: "{{category}}は普段より{{amount}}少なく終わりました",
+                    ko: "{{category}}은(는) 평소보다 {{amount}} 적게 끝났어요",
                 })
             ),
             over: insert(
@@ -519,6 +878,10 @@ const dashboardInsightsOverview = {
                     fr: "{{category}} est {{amount}} au-dessus de votre niveau habituel à ce stade",
                     pt: "{{category}} está {{amount}} acima de onde você costuma estar até agora",
                     "pt-PT": "{{category}} está {{amount}} acima de onde costuma estar até agora",
+                    it: "{{category}} è {{amount}} sopra dove di solito sei a questo punto",
+                    nl: "{{category}} zit {{amount}} boven waar je op dit moment meestal zit",
+                    ja: "{{category}}は、この時点の普段より{{amount}}多くなっています",
+                    ko: "{{category}}은(는) 이맘때 평소보다 {{amount}} 많아요",
                 })
             ),
             under: insert(
@@ -529,9 +892,23 @@ const dashboardInsightsOverview = {
                     fr: "{{category}} est {{amount}} en dessous de votre niveau habituel à ce stade",
                     pt: "{{category}} está {{amount}} abaixo de onde você costuma estar até agora",
                     "pt-PT": "{{category}} está {{amount}} abaixo de onde costuma estar até agora",
+                    it: "{{category}} è {{amount}} sotto dove di solito sei a questo punto",
+                    nl: "{{category}} zit {{amount}} onder waar je op dit moment meestal zit",
+                    ja: "{{category}}は、この時点の普段より{{amount}}少なくなっています",
+                    ko: "{{category}}은(는) 이맘때 평소보다 {{amount}} 적어요",
                 })
             ),
-            usual: t({ en: "Usual", de: "Üblich", es: "Lo normal", fr: "Habituel", pt: "Habitual" }),
+            usual: t({
+                en: "Usual",
+                de: "Üblich",
+                es: "Lo normal",
+                fr: "Habituel",
+                pt: "Habitual",
+                it: "Solito",
+                nl: "Gebruikelijk",
+                ja: "普段",
+                ko: "평소",
+            }),
             usualBy: insert(
                 t({
                     en: "Usual by {{date}}",
@@ -539,6 +916,10 @@ const dashboardInsightsOverview = {
                     es: "Lo normal al {{date}}",
                     fr: "Habituel au {{date}}",
                     pt: "Habitual até {{date}}",
+                    it: "Solito entro il {{date}}",
+                    nl: "Gebruikelijk op {{date}}",
+                    ja: "{{date}}までの普段の額",
+                    ko: "{{date}}까지의 평소 금액",
                 })
             ),
         },
@@ -550,6 +931,10 @@ const dashboardInsightsOverview = {
                 fr: "Répartition",
                 pt: "Detalhamento",
                 "pt-PT": "Detalhe",
+                it: "Ripartizione",
+                nl: "Uitsplitsing",
+                ja: "内訳",
+                ko: "세부 분류",
             }),
             title: t({
                 en: "Where it went",
@@ -557,6 +942,10 @@ const dashboardInsightsOverview = {
                 es: "En qué se fue",
                 fr: "Où c'est allé",
                 pt: "Para onde foi",
+                it: "Dove sono finiti",
+                nl: "Waar het naartoe ging",
+                ja: "お金の行き先",
+                ko: "어디에 썼는지",
             }),
         },
     },

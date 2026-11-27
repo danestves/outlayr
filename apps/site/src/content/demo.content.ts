@@ -62,6 +62,20 @@ const demo = {
                 fr: "Peso colombien",
             }),
             EUR: t({ en: "Euro", de: "Euro", es: "Euro", pt: "Euro", fr: "Euro" }),
+            JPY: t({
+                en: "Japanese Yen",
+                de: "Japanischer Yen",
+                es: "Yen japonés",
+                pt: "Iene japonês",
+                fr: "Yen japonais",
+            }),
+            KRW: t({
+                en: "South Korean Won",
+                de: "Südkoreanischer Won",
+                es: "Won surcoreano",
+                pt: "Won sul-coreano",
+                fr: "Won sud-coréen",
+            }),
             MXN: t({
                 en: "Mexican Peso",
                 de: "Mexikanischer Peso",

@@ -3,7 +3,26 @@ import type { Locale } from "@outlayr/shared/i18n";
 
 import type { AppKey, AppT } from "./strings";
 
-const TWELVE_HOUR = { de: false, en: true, es: true, fr: false, pt: false } as const satisfies Record<Locale, boolean>;
+const TWELVE_HOUR = {
+    de: false,
+    en: true,
+    es: true,
+    fr: false,
+    it: false,
+    ja: false,
+    ko: true,
+    nl: false,
+    pt: false,
+} as const satisfies Record<Locale, boolean>;
+
+const UNIT_DATE = {
+    ja: { day: "日", dayGap: "", weekdayGap: "", yearGap: "年" },
+    ko: { day: "일", dayGap: " ", weekdayGap: " ", yearGap: "년 " },
+} as const;
+
+type UnitDateLocale = keyof typeof UNIT_DATE;
+
+const isUnitDate = (locale: Locale): locale is UnitDateLocale => locale === "ja" || locale === "ko";
 
 export const SUNDAY = 1;
 
@@ -67,11 +86,22 @@ export const MONTHS_LONG = [
     "dates.monthLong.11",
 ] as const satisfies readonly AppKey[];
 
+const unitMonthDay = (date: Date, t: AppT, style: (typeof UNIT_DATE)[UnitDateLocale]) =>
+    `${t(MONTHS[date.getMonth()] ?? "dates.month.0")}${style.dayGap}${date.getDate()}${style.day}`;
+
+const unitTitle = (day: Date, now: Date, locale: UnitDateLocale, t: AppT) => {
+    const style = UNIT_DATE[locale];
+    const base = `${unitMonthDay(day, t, style)}${style.weekdayGap}(${t(WEEKDAYS[day.getDay()] ?? "dates.weekday.0")})`;
+    return day.getFullYear() < now.getFullYear() ? `${day.getFullYear()}${style.yearGap}${base}` : base;
+};
+
 export const dayOfMonth = (date: Date, locale: Locale) =>
     locale === "de" ? `${date.getDate()}.` : String(date.getDate());
 
 export const dayMonth = (date: Date, locale: Locale, t: AppT) =>
-    `${dayOfMonth(date, locale)} ${t(MONTHS[date.getMonth()] ?? "dates.month.0")}`;
+    isUnitDate(locale)
+        ? unitMonthDay(date, t, UNIT_DATE[locale])
+        : `${dayOfMonth(date, locale)} ${t(MONTHS[date.getMonth()] ?? "dates.month.0")}`;
 
 export const monthLongTitle = (date: Date, t: AppT) => t(MONTHS_LONG[date.getMonth()] ?? "dates.monthLong.0");
 
@@ -82,6 +112,9 @@ export function formatDayTitle(day: Date, now: Date, locale: Locale, t: AppT): s
     }
     if (target === startOfDay(addDays(now, -1)).getTime()) {
         return t("common.yesterday");
+    }
+    if (isUnitDate(locale)) {
+        return unitTitle(day, now, locale, t);
     }
     const base = `${t(WEEKDAYS[day.getDay()] ?? "dates.weekday.0")}, ${dayOfMonth(day, locale)} ${t(MONTHS[day.getMonth()] ?? "dates.month.0")}`;
     return day.getFullYear() < now.getFullYear() ? `${base} '${String(day.getFullYear()).slice(-2)}` : base;
@@ -94,10 +127,14 @@ export function formatTime(date: Date, locale: Locale, t: AppT): string {
         return `${String(hours).padStart(2, "0")}:${mm}`;
     }
     const hour12 = hours % 12 === 0 ? 12 : hours % 12;
-    return `${hour12}:${mm} ${t(hours >= 12 ? "dates.meridiem.pm" : "dates.meridiem.am")}`;
+    const meridiem = t(hours >= 12 ? "dates.meridiem.pm" : "dates.meridiem.am");
+    return locale === "ko" ? `${meridiem} ${hour12}:${mm}` : `${hour12}:${mm} ${meridiem}`;
 }
 
 export function formatDateHeader(day: Date, now: Date, locale: Locale, t: AppT): string {
+    if (isUnitDate(locale)) {
+        return unitTitle(day, now, locale, t);
+    }
     const base = `${t(WEEKDAYS[day.getDay()] ?? "dates.weekday.0").toUpperCase()}, ${dayOfMonth(day, locale)} ${t(MONTHS[day.getMonth()] ?? "dates.month.0").toUpperCase()}`;
     return day.getFullYear() < now.getFullYear() ? `${base} '${String(day.getFullYear()).slice(-2)}` : base;
 }

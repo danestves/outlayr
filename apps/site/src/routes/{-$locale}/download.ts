@@ -1,3 +1,4 @@
+import { linkPrefix, localeFromParam } from "@outlayr/shared/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { validatePrefix } from "intlayer";
 
@@ -14,7 +15,8 @@ export const Route = createFileRoute("/{-$locale}/download")({
                     return new Response(null, { status: 404 });
                 }
                 const { searchParams } = new URL(request.url);
-                const home = params.locale === undefined ? "/" : `/${params.locale}`;
+                const prefix = linkPrefix("/", localeFromParam(params.locale));
+                const home = prefix === undefined ? "/" : `/${prefix}`;
                 const location = downloadTarget(request.headers.get("user-agent") ?? "", searchParams, home);
                 return new Response(null, { headers: { ...HEADERS, location }, status: 302 });
             },

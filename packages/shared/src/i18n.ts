@@ -23,6 +23,10 @@ const BASE_LANGUAGES = {
     es: { date: "es-419", hreflang: "es", image: "/og/es.png?v=2", lang: "es-419", name: "Español", og: "es_LA" },
     pt: { date: "pt-BR", hreflang: "pt", image: "/og/pt.png", lang: "pt-BR", name: "Português", og: "pt_BR" },
     fr: { date: "fr-FR", hreflang: "fr", image: "/og/fr.png", lang: "fr", name: "Français", og: "fr_FR" },
+    it: { date: "it-IT", hreflang: "it", image: "/og/it.png", lang: "it", name: "Italiano", og: "it_IT" },
+    nl: { date: "nl-NL", hreflang: "nl", image: "/og/nl.png", lang: "nl", name: "Nederlands", og: "nl_NL" },
+    ja: { date: "ja-JP", hreflang: "ja", image: "/og/ja.png", lang: "ja", name: "日本語", og: "ja_JP" },
+    ko: { date: "ko-KR", hreflang: "ko", image: "/og/ko.png", lang: "ko", name: "한국어", og: "ko_KR" },
 } as const satisfies Record<BaseLocale, LanguageMeta>;
 
 export const LANGUAGES = {
@@ -67,7 +71,7 @@ export function sitePageUrl(path: string, locale: Locale): string {
     return `${SITE_URL}${localized}${hash === undefined ? "" : `#${hash}`}`;
 }
 
-// German, Portuguese and French serve only the pages translated so far, so no English text sits under /de, /pt or /fr.
+// Every language but English and Spanish serves only its translated pages, so no English sits under its prefix.
 const TOOL_PATHS = [
     "/tools",
     "/tools/50-30-20-budget-calculator",
@@ -112,6 +116,10 @@ export const TRANSLATED: Partial<Record<Locale, ReadonlySet<string>>> = {
     de: new Set(PAGE_PATHS),
     fr: new Set([...PAGE_PATHS, "/guides/best-budget-apps-canada", "/guides/best-budget-apps-france"]),
     pt: new Set([...PAGE_PATHS, "/guides/best-expense-tracker-apps-brazil"]),
+    it: new Set(),
+    nl: new Set(),
+    ja: new Set(),
+    ko: new Set(),
 };
 
 const TRAILING_SLASH = /(?<=.)\/$/u;
