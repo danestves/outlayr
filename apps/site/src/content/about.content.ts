@@ -116,11 +116,11 @@ const about = {
             {
                 label: t({ en: "Languages", de: "Sprachen", es: "Idiomas", pt: "Idiomas", fr: "Langues" }),
                 text: t({
-                    en: "English, Spanish from Latin America and from Spain, Portuguese from Brazil and from Portugal, French, and German.",
-                    de: "Englisch, Spanisch aus Lateinamerika und aus Spanien, Portugiesisch aus Brasilien und aus Portugal, Französisch und Deutsch.",
-                    es: "Inglés, español de Latinoamérica y de España, portugués de Brasil y de Portugal, francés y alemán.",
-                    pt: "Inglês, espanhol da América Latina e da Espanha, português do Brasil e de Portugal, francês e alemão.",
-                    fr: "Anglais, espagnol d'Amérique latine et d'Espagne, portugais du Brésil et du Portugal, français et allemand.",
+                    en: "English, Spanish from Latin America and from Spain, Portuguese from Brazil and from Portugal, French, and German. On the web, also Italian, Dutch, Japanese, and Korean.",
+                    de: "Englisch, Spanisch aus Lateinamerika und aus Spanien, Portugiesisch aus Brasilien und aus Portugal, Französisch und Deutsch. Im Web zusätzlich Italienisch, Niederländisch, Japanisch und Koreanisch.",
+                    es: "Inglés, español de Latinoamérica y de España, portugués de Brasil y de Portugal, francés y alemán. En la web, además, italiano, neerlandés, japonés y coreano.",
+                    pt: "Inglês, espanhol da América Latina e da Espanha, português do Brasil e de Portugal, francês e alemão. Na web, também italiano, neerlandês, japonês e coreano.",
+                    fr: "Anglais, espagnol d'Amérique latine et d'Espagne, portugais du Brésil et du Portugal, français et allemand. Sur le Web, aussi l'italien, le néerlandais, le japonais et le coréen.",
                 }),
             },
             {

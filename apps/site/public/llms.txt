@@ -1,6 +1,6 @@
 # Outlayr
 
-> Outlayr is an open source expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log. Available on the App Store for iPhone (iOS 18 or later), on Google Play for Android, and on the web at https://app.tryoutlayr.com with Pro. English, Spanish, Portuguese, French, and German.
+> Outlayr is an open source expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log. Available on the App Store for iPhone (iOS 18 or later), on Google Play for Android, and on the web at https://app.tryoutlayr.com with Pro. English, Spanish, Portuguese, French, and German, plus Italian, Dutch, Japanese, and Korean on the web.
 
 ## Key facts
 
@@ -10,7 +10,7 @@
 - Currencies: 165. Totals convert to your main currency at the rate from the day of each purchase.
 - Bank connection: none. Outlayr never links bank accounts or asks for a bank login.
 - Open source: the app is GPL-3.0 and the server is AGPL-3.0, at https://github.com/danestves/outlayr
-- Languages: English, Spanish, Portuguese, French, and German.
+- Languages: English, Spanish, Portuguese, French, and German, plus Italian, Dutch, Japanese, and Korean on the web.
 - Maker: danestves LLC, founded by Daniel Esteves.
 
 Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr.com), a payments company.
@@ -104,7 +104,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - [How to cancel an App Store subscription](https://tryoutlayr.com/guides/cancel-app-store-subscription): Settings, your name, Subscriptions on iPhone and iPad; the App Store on Mac; Apple Music or Apple TV on Windows; account.apple.com on the web or Android; no Cancel button means already canceled; apple.com/bill on statements, per Apple Support
 - [How to cancel a ChatGPT subscription](https://tryoutlayr.com/guides/cancel-chatgpt-subscription): cancel where you subscribed: chatgpt.com (Settings, Billing, Cancel plan), the App Store, or Google Play; at least 24 hours before the next billing date; uninstalling the app never cancels it, and deleting the account cancels only a plan billed by OpenAI, not one billed by the App Store or Google Play, per OpenAI's help center
 - [Expense tracker template](https://tryoutlayr.com/guides/expense-tracker-template): a free Excel workbook (Transactions, a Summary with income, spending, and net for the month and currency you pick, spending against a budget per category, and a chart, and How to import) and a plain CSV, both with the columns Outlayr's CSV import reads; rows whose category matches one of yours by name import on any plan, and Outlayr Pro matches the rest with AI, up to 5,000 rows and 2 MB a file. The Spanish page offers a Spanish file: https://tryoutlayr.com/es/guides/expense-tracker-template
-- [Voice expense tracker](https://tryoutlayr.com/guides/voice-expense-tracker): saying a purchase in English, Spanish, Portuguese, French, or German, what voice entry fills in, how spoken corrections work, and the 30 free captures every 30 days
+- [Voice expense tracker](https://tryoutlayr.com/guides/voice-expense-tracker): saying a purchase in English, Spanish, Portuguese, French, or German, what voice entry fills in, how spoken corrections work, and the 30 free captures every 30 days. The web app also takes voice entry in Italian, Dutch, Japanese, or Korean
 
 ## Build log
 
