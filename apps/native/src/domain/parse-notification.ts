@@ -86,11 +86,12 @@ const PROMO_AFTER = new RegExp(
     "iu"
 );
 // "Si gastas más de $1,000" and "spend $50, get a $10 reward" name a limit or a reward, not a charge. They stay on the
-// amount's line, since a Wallet merchant line like "GAME OVER" sits above it, and "you get $12 back" is a refund.
+// amount's line, since a Wallet merchant line like "GAME OVER" sits above it. Java and ICU let "$" match before a
+// final newline, so the end is (?![\s\S]).
 const THRESHOLD = String.raw`m[aá]s\s+de|more\s+than|over|up\s+to|hasta|desde|a\s+partir\s+de|à\s+partir\s+de|from|minimum|m[ií]nimo|mais\s+de|acima\s+de|até|plus\s+de|dès|at\s+least|al\s+menos|pelo\s+menos|au\s+moins`;
-const OFFER = String.raw`spend|gast(?:a|as|e|es|en|ar)|dépensez|(?<!you\s)get|earn|win|gana|gane|ganá|ganar|ganhe|gagnez|recibe|reciba|receba|recevez|obt[eé]n|obtenga|obtenez|regala|regalamos`;
+const OFFER = String.raw`spend|gast(?:a|as|e|es|en|ar)|dépensez|get|earn|win|gana|gane|ganá|ganar|ganhe|gagnez|recibe|reciba|receba|recevez|obt[eé]n|obtenga|obtenez|regala|regalamos`;
 const PROMO_BEFORE = new RegExp(
-    String.raw`(?<![A-Za-z])(?:save|ahorra|ahorrá|économisez|poupa|poupe|discount|descuento|desconto|rebaja|remise|réduction)\s*(?:of|de)?\s*[:=-]?\s*$|(?<![A-Za-z])(?:${THRESHOLD}|${OFFER})(?:[^\S\n]+(?:of|de|a|an|un|una|um|uma))?[^\S\n]*[:=-]?[^\S\n]*$`,
+    String.raw`(?<![A-Za-z])(?:save|ahorra|ahorrá|économisez|poupa|poupe|discount|descuento|desconto|rebaja|remise|réduction)\s*(?:of|de)?\s*[:=-]?\s*$|(?<![A-Za-z])(?:${THRESHOLD}|${OFFER})(?:[^\S\n]+(?:of|de|a|an|un|una|um|uma))?[^\S\n]*[:=-]?[^\S\n]*(?![\s\S])`,
     "iu"
 );
 const BALANCE_AFTER = new RegExp(String.raw`^[^\S\n]*(?:available|balance|saldo|solde|dispon[íi]ve(?:is|l))\b`, "iu");
