@@ -43,7 +43,7 @@ Take the first row that matches:
 
 | Verdict | When | Do |
 | --- | --- | --- |
-| **ASK DANIEL** | The change could alter the operator, sell or transfer data, or reach someone under the age limit, or you can't tell which row fits. | Stop before merging and name the question. |
+| **ASK DANIEL** | The change could alter the operator, sell or transfer data (moving hosts with the same data and purpose is **EMAIL**), or reach someone under the age limit, or you can't tell which row fits. | Stop before merging and name the question. |
 | **DOCS MISSING** | Any question above is yes, but the documents don't say it yet. | Update privacy or terms in en, de, es, fr and pt, then check again. |
 | **CONSENT, THEN EMAIL** | Data goes to a new third party or AI provider, or data already collected gets a materially different use. New features sending a new kind of data to an allowed AI provider: ask Daniel whether the existing permission covers it. A new host or other processor taking over an existing job, with the same data and purpose, is **EMAIL** instead. | Ask in the app before the data flows, and don't apply the change to old data without that permission. Email alone isn't enough. Then follow **EMAIL**. |
 | **ADVANCE NOTICE** | Pro loses something material (Terms: "in advance"), or Outlayr or Pro is shutting down (Terms: try for 30 days). | Tell Daniel the required lead time before scheduling. Then follow **EMAIL**. |
