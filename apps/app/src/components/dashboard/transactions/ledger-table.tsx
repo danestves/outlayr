@@ -116,8 +116,10 @@ export function LedgerTable({
             {name}
         </button>
     );
-    const caption = (day: string, category: ReactNode) => {
-        const when = layout.shown("date") ? date.day(day) : null;
+    const dueDay = (day: string) => (day.slice(0, 4) === ledger.today.slice(0, 4) ? date.day(day) : date.full(day));
+    const caption = (day: string, category: ReactNode, planned = false) => {
+        const dayOf = planned ? dueDay : date.day;
+        const when = layout.shown("date") ? dayOf(day) : null;
         const what = category !== null && layout.shown("category") ? category : null;
         if (when === null && what === null) {
             return null;
@@ -261,7 +263,7 @@ export function LedgerTable({
                 </span>
             ),
             category: fee ? null : renderCategory(row, category),
-            date: planned ? words.upcoming.due({ day: date.day(row.day) }) : date.day(row.day),
+            date: planned ? words.upcoming.due({ day: dueDay(row.day) }) : date.day(row.day),
             merchant: (
                 <span className="relative flex min-w-0 items-center gap-3 font-medium">
                     {reviewing ? (
@@ -273,7 +275,7 @@ export function LedgerTable({
                     {fee ? <FeeTile /> : <MerchantTile imageUrl={photoSrc(raw?.imageKey)} name={name} size="lg" />}
                     <span className="flex min-w-0 flex-col">
                         {opener(row, name)}
-                        {caption(row.day, fee ? null : list.names.category(row.topId))}
+                        {caption(row.day, fee ? null : list.names.category(row.topId), planned)}
                     </span>
                     {(raw?.recurringType ?? 0) > 0 ? (
                         <HugeiconsIcon

@@ -21,7 +21,7 @@ import { authorBucket, FORMER_AUTHORS } from "@/lib/profile-authors";
 import { useProfileMembers } from "@/lib/profile-sharing";
 
 import { useDateFormat } from "../home/format";
-import { figureOf, foldFees } from "../home/rows";
+import { figureOf } from "../home/rows";
 import type { FoldedRow } from "../home/rows";
 import { QuietTable } from "../home/setup";
 import { BulkBar } from "./bulk-bar";
@@ -35,7 +35,7 @@ import { CellButton, InlineCell, amountDraft, useInlineWrites } from "./inline-e
 import type { Editing, InlineField } from "./inline-edit";
 import { LedgerTable } from "./ledger-table";
 import { MerchantDialog } from "./merchant-dialog";
-import { NO_TAG, csvOf, exportLines, inTab, pageOf, queryRows, tabCounts, tally } from "./model";
+import { NO_TAG, csvOf, exportLines, inTab, pageOf, queryRows, rowOf, tabCounts, tally } from "./model";
 import type { Tab } from "./model";
 import { PageBar } from "./page-bar";
 import { usePeriodChoice } from "./period-chip";
@@ -251,12 +251,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
         if (listed) {
             return listed;
         }
-        const own = ledger.upcoming.find((row) => row.id === search.entry);
-        if (own === undefined) {
-            return null;
-        }
-        const fees = ledger.upcoming.filter((row) => row.feeFor === own.id && row.id !== own.id);
-        return foldFees([own, ...fees])[0] ?? null;
+        return rowOf({ rows: ledger.upcoming, transfers: [] }, search.entry);
     }, [ledger, list.text, rows, search.entry, selectedIndex]);
     const step = (by: 1 | -1) => {
         const next = rows[selectedIndex === -1 ? 0 : selectedIndex + by];
