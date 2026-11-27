@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { corroborates, shouldPublish } from "./merchantTrust";
+import { corroborates, isKnowledgeKey, shouldPublish } from "./merchantTrust";
 import { MAX_DOMAIN_LENGTH, MAX_TAG_LENGTH, MAX_TAGS } from "./sanitizeLimits";
 
 const BASE_CANDIDATE = {
@@ -27,6 +27,13 @@ describe(corroborates, () => {
 
     it("rejects an unparseable url", () => {
         expect(corroborates("farmatodo.com", "not a url")).toBeFalsy();
+    });
+});
+
+describe(isKnowledgeKey, () => {
+    it("accepts a CJK key knowledgeKeys can emit and refuses a two-letter Latin one", () => {
+        expect(isKnowledgeKey("ドトール|jpy")).toBeTruthy();
+        expect(isKnowledgeKey("ab|usd")).toBeFalsy();
     });
 });
 

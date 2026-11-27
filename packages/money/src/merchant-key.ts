@@ -1,13 +1,16 @@
 // Unicode marks the kana voiced marks and ー as diacritics; stripping them makes ドトール and トトール one key.
 const DIACRITIC_EXCEPT_KANA_MARKS = /(?![゙゚ー])\p{Diacritic}/gu;
+// NFKC on the whole string folds superscripts too, so "Coffee²" would collide with "Coffee2".
+const HALFWIDTH_FULLWIDTH = /[\uFF00-\uFFEF]+/gu;
 
 export function foldText(raw: string): string {
     return raw
-        .normalize("NFKD")
+        .replaceAll(HALFWIDTH_FULLWIDTH, (run) => run.normalize("NFKC"))
+        .normalize("NFD")
         .replaceAll(DIACRITIC_EXCEPT_KANA_MARKS, "")
         .normalize("NFC")
         .toLocaleLowerCase()
-        .replaceAll(/[^\p{L}\p{N}]+/gu, " ")
+        .replaceAll(/[^\p{L}\p{M}\p{N}]+/gu, " ")
         .trim();
 }
 
@@ -77,8 +80,8 @@ const MIN_KEY_LENGTH = 3;
 const MIN_CJK_KEY_LENGTH = 2;
 const CJK_SCRIPT = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
 
-function minimumKeyLength(key: string): number {
-    return CJK_SCRIPT.test(key) ? MIN_CJK_KEY_LENGTH : MIN_KEY_LENGTH;
+export function isMatchableKey(key: string): boolean {
+    return [...key].length >= (CJK_SCRIPT.test(key) ? MIN_CJK_KEY_LENGTH : MIN_KEY_LENGTH);
 }
 
 export function knowledgeKeys(
@@ -87,7 +90,7 @@ export function knowledgeKeys(
     merchantName?: string | null
 ): string[] {
     const keys = [merchantKey(name), descriptorKey(name), merchantKey(merchantName ?? "")]
-        .filter((key) => key.length >= minimumKeyLength(key))
+        .filter(isMatchableKey)
         .map((key) => (currency ? `${key}${KNOWLEDGE_KEY_DELIMITER}${currency.toLowerCase()}` : key));
     return [...new Set(keys)];
 }

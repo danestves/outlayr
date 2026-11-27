@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { descriptorKey, knowledgeKeys, merchantKey } from "./merchant-key";
+import { descriptorKey, isMatchableKey, knowledgeKeys, merchantKey } from "./merchant-key";
 
 describe(merchantKey, () => {
     it("lowercases, trims, and collapses whitespace", () => {
@@ -28,6 +28,22 @@ describe("merchantKey across scripts", () => {
 
     it("recomposes decomposed Hangul into syllables", () => {
         expect(merchantKey("쿠팡".normalize("NFD"))).toBe("쿠팡");
+    });
+
+    it("keeps compatibility characters that are not fullwidth forms", () => {
+        expect(merchantKey("Coffee²")).not.toBe(merchantKey("Coffee2"));
+    });
+
+    it("keeps a combining mark Unicode cannot compose", () => {
+        expect(merchantKey("セ゚・マート")).not.toBe(merchantKey("セ・マート"));
+    });
+});
+
+describe(isMatchableKey, () => {
+    it("counts code points and lets two-character CJK keys through", () => {
+        expect(isMatchableKey("쿠팡")).toBeTruthy();
+        expect(isMatchableKey("ab")).toBeFalsy();
+        expect(isMatchableKey("無印")).toBeTruthy();
     });
 });
 

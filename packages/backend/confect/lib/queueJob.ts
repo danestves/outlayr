@@ -1,4 +1,5 @@
 import type { WorkId } from "@convex-dev/workpool";
+import { isMatchableKey, merchantKey } from "@outlayr/money/merchant-key";
 import * as Effect from "effect/Effect";
 
 import { internal } from "../../convex/_generated/api";
@@ -13,7 +14,7 @@ import {
     sanitizeLocale,
     sanitizeRegionCode,
 } from "../enrichment";
-import { MIN_NAME_LENGTH, pool } from "../enrichmentQueue";
+import { pool } from "../enrichmentQueue";
 import { isPro } from "../revenuecat";
 import { hasAiConsent } from "./aiGate";
 import { authComponent } from "./betterAuth";
@@ -37,7 +38,7 @@ export interface JobArgs {
 export const insertJob = Effect.fn("EnrichmentQueue.insertJob")(function* insertJob(userId: string, args: JobArgs) {
     const ctx = yield* MutationCtx;
     const name = args.name.trim();
-    if (!hasAiConsent(args) || name.length < MIN_NAME_LENGTH || name.length > MAX_NAME_LENGTH) {
+    if (!hasAiConsent(args) || name.length > MAX_NAME_LENGTH || !isMatchableKey(merchantKey(name))) {
         return null;
     }
     const [user, pro] = yield* Effect.all([

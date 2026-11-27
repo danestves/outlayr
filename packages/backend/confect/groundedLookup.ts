@@ -25,7 +25,7 @@ import {
 import { traceModel } from "./lib/aiTracing";
 import { categoryChoiceLines, sanitizeCategoryName } from "./lib/categoryChoice";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
-import { CANONICAL_CATEGORIES, KEY_PATTERN, shouldPublish } from "./lib/merchantTrust";
+import { CANONICAL_CATEGORIES, isKnowledgeKey, shouldPublish } from "./lib/merchantTrust";
 import type { KnowledgeCandidate } from "./lib/merchantTrust";
 import { budgetConfig, estimateMicros, measureMicros, WORST_CASE_SEARCH_CALLS } from "./lib/spend";
 
@@ -288,9 +288,7 @@ export const groundedAnswer: (
                 emoji: candidate.emoji,
                 keys: [
                     candidate.key,
-                    ...knowledgeKeys(args.name, args.currency, candidate.merchantName).filter((key) =>
-                        KEY_PATTERN.test(key)
-                    ),
+                    ...knowledgeKeys(args.name, args.currency, candidate.merchantName).filter(isKnowledgeKey),
                 ],
                 merchantName: candidate.merchantName ?? undefined,
                 modelId,
