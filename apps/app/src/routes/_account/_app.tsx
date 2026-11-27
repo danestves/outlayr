@@ -1,7 +1,7 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { ledgerGlance } from "@outlayr/money/ledger-view";
 import type { LedgerOpening } from "@outlayr/money/ledger-view";
-import { useEventListener, useMirror, useTimers } from "@outlayr/shared/lifecycle";
+import { useEventListener, useMirror, useOnMount, useTimers } from "@outlayr/shared/lifecycle";
 import { useQuery } from "@tanstack/react-query";
 import {
     Navigate,
@@ -30,23 +30,26 @@ import type { FilterPatch } from "@/components/dashboard/shell/filters";
 import { NoticesProvider } from "@/components/dashboard/shell/notifications";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
 import { SessionExpired, SyncCard, leaveSession } from "@/components/dashboard/shell/status";
-import { offerProfile, warmAccountState } from "@/lib/account-state";
+import { offerProfile, joinedProfilesQuery, profileMembersQuery, warmAccountState } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { watchKeyboardInset } from "@/lib/keyboard-inset";
 import type { LedgerBooks } from "@/lib/ledger-books";
 import { ledgerCommitter } from "@/lib/ledger-committer";
-import { ledgerSync, markLanded, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
+import { ledgerSync, markLanded, preloadLedger, useLedgerBooks, useMissingRates } from "@/lib/ledger-db";
 import { serverLedger } from "@/lib/ledger-server";
 import { lightPathOf, viewCovered } from "@/lib/light-views";
 import { viewTransition } from "@/lib/motion";
 import { onboardingDue, readProgress, subscribeProgress } from "@/lib/onboarding";
 import { currentProfileId, profileScript } from "@/lib/profile";
+import { forgetProfileCookie } from "@/lib/profile-cookie";
+import { noteProfileLost, profileLossCode, takeDeletedProfile, takeProfileLost } from "@/lib/profile-loss";
 import { activeProfileOf, profilesOf, profilesQuery } from "@/lib/profile-registry";
+import { joinedProfileOf } from "@/lib/profile-sharing";
 import { removeProfileAndSwitch } from "@/lib/profile-switch";
 import { currentToken, onSessionChange, userOf } from "@/lib/session";
 import { watchSync } from "@/lib/sync-status";
-import { dropOldCopy, forgetLedger } from "@/lib/unsent";
+import { forgetProfileUnsent, dropOldCopy, forgetLedger } from "@/lib/unsent";
 
 const Paywall = lazy(async () => {
     const { Paywall: page } = await import("@/components/dashboard/paywall/paywall");
@@ -68,41 +71,78 @@ export const Route = createFileRoute("/_account/_app")({
         const userId = userOf(token);
         const requestedProfileId = currentProfileId();
         let activeProfileId = requestedProfileId;
+        let lostProfileId: string | null = null;
         let opening: LedgerOpening | null = null;
+        let ratesPublic = false;
         try {
             if (import.meta.env.SSR) {
                 const path = lightPathOf(location.pathname, location.searchStr);
                 const seed = await serverLedger(token, path ? { asOf, path } : null, requestedProfileId);
-                ({ opening } = seed);
-                activeProfileId = seed.profileId;
+                ({ opening, profileId: activeProfileId, lostProfileId, ratesPublic } = seed);
+                if (seed.paywalled) {
+                    return {
+                        asOf,
+                        lostProfileId,
+                        opening: null,
+                        profileId: activeProfileId,
+                        ratesPublic,
+                        synced: false,
+                        userId,
+                    };
+                }
                 context.dbClient.hydrate({ collections: seed.collections });
                 offerProfile(context.queryClient, seed.profile);
                 context.queryClient.setQueryData(profilesQuery.queryKey, seed.profiles);
+                if (seed.joined !== null) {
+                    context.queryClient.setQueryData(joinedProfilesQuery.queryKey, seed.joined);
+                }
+                if (seed.profileId !== null && seed.members !== null) {
+                    context.queryClient.setQueryData(profileMembersQuery(seed.profileId).queryKey, seed.members);
+                }
             }
             await preloadLedger(context.dbClient);
         } catch (error) {
             if (error instanceof Error && proRequired(error)) {
-                return { asOf, opening: null, profileId: activeProfileId, synced: false, userId };
+                return {
+                    asOf,
+                    lostProfileId,
+                    opening: null,
+                    profileId: activeProfileId,
+                    ratesPublic: false,
+                    synced: false,
+                    userId,
+                };
             }
             throw error;
         }
-        return { asOf, opening, profileId: activeProfileId, synced: true, userId };
+        return {
+            asOf,
+            lostProfileId,
+            opening,
+            profileId: activeProfileId,
+            ratesPublic,
+            synced: true,
+            userId,
+        };
     },
     pendingComponent: Pending,
     pendingMinMs: 0,
     pendingMs: 0,
     head: ({ loaderData }) => ({
-        scripts: [{ children: profileScript(loaderData?.profileId ?? null) }],
+        scripts: [{ children: profileScript(loaderData?.profileId ?? null, loaderData?.ratesPublic ?? false) }],
     }),
 });
 
 function App() {
-    const { synced } = Route.useLoaderData();
+    const { lostProfileId, synced } = Route.useLoaderData();
     if (!synced) {
         return (
-            <Suspense fallback={null}>
-                <Paywall />
-            </Suspense>
+            <Toast.Provider position="bottom-right">
+                <LostProfile profileId={lostProfileId} />
+                <Suspense fallback={null}>
+                    <Paywall />
+                </Suspense>
+            </Toast.Provider>
         );
     }
     return <Ledgered />;
@@ -225,7 +265,9 @@ function useLiveLedger(userId: string | undefined, onLanded: (outcome: "landed" 
         landing.catch(async (error) => {
             // Only a refusal reloads: a server that stays busy past the retries leaves the rendered rows on screen.
             if (error instanceof ConvexError) {
-                await router.invalidate();
+                if (profileLossCode(error) === null) {
+                    await router.invalidate();
+                }
                 return;
             }
             onLanded(error instanceof Error ? error : new Error("The ledger did not land", { cause: error }));
@@ -246,13 +288,57 @@ function useLiveLedger(userId: string | undefined, onLanded: (outcome: "landed" 
     });
 }
 
+function LostProfile({ profileId }: { profileId: string | null }) {
+    const toast = useToast();
+    const { removed } = useIntlayer("profile-sharing");
+    const { deleted } = useIntlayer("profiles");
+    useOnMount(() => {
+        const deletedId = takeDeletedProfile(profileId);
+        const lostId = deletedId ?? profileId;
+        if (lostId === null) {
+            return;
+        }
+        if (deletedId !== null) {
+            takeProfileLost();
+        }
+        forgetProfileUnsent(lostId);
+        forgetProfileCookie({ data: { profileId: lostId } }).catch(() => undefined);
+        toast.add({
+            title: deletedId === null ? removed.value : deleted.value,
+            type: deletedId === null ? "destructive" : "success",
+        });
+    });
+    return null;
+}
+
+function ProfileLostNotice() {
+    const toast = useToast();
+    const { removed } = useIntlayer("profile-sharing");
+    useOnMount(() => {
+        if (takeProfileLost()) {
+            toast.add({ title: removed.value, type: "destructive" });
+        }
+    });
+    return null;
+}
+
 function LiveDashboard({ bare, books, children }: { bare: boolean; books: LedgerBooks; children: ReactNode }) {
     const loaded = Route.useLoaderData();
+    useMissingRates(books);
     const registry = useQuery(profilesQuery);
+    const joined = useQuery(joinedProfilesQuery);
     const profiles = useMemo(() => profilesOf(registry.data), [registry.data]);
     const active = activeProfileOf(profiles, loaded.profileId);
-    useMirror([active, loaded.profileId, registry.isSuccess], () => {
-        if (registry.isSuccess && loaded.profileId !== null && active === null) {
+    const joinedActive = joinedProfileOf(joined.data ?? [], loaded.profileId);
+    useMirror([active, joined.data, joined.isSuccess, joinedActive, loaded.profileId, registry.isSuccess], () => {
+        if (
+            registry.isSuccess &&
+            joined.isSuccess &&
+            loaded.profileId !== null &&
+            active === null &&
+            joinedActive === null
+        ) {
+            noteProfileLost();
             void removeProfileAndSwitch(loaded.profileId);
         }
     });
@@ -302,6 +388,8 @@ function LiveDashboard({ bare, books, children }: { bare: boolean; books: Ledger
                             <CommandPalette />
                             <SyncCard />
                             <SessionExpired />
+                            <LostProfile profileId={loaded.lostProfileId} />
+                            <ProfileLostNotice />
                         </AccountFlowsProvider>
                     </DashboardShell>
                 </NoticesProvider>

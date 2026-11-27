@@ -3,7 +3,17 @@ import * as Schema from "effect/Schema";
 import type { TableDensity } from "panelui-web/table";
 import { useSyncExternalStore } from "react";
 
-export const COLUMNS = ["merchant", "category", "tags", "account", "date", "amount", "notes", "paidVia"] as const;
+export const COLUMNS = [
+    "merchant",
+    "category",
+    "tags",
+    "account",
+    "loggedBy",
+    "date",
+    "amount",
+    "notes",
+    "paidVia",
+] as const;
 export type Column = (typeof COLUMNS)[number];
 
 export const Layout = Schema.Struct({

@@ -60,6 +60,7 @@ export function useLedgerCommitter(surface?: ToastSurface) {
             host
         ),
         current: (): Ledger => ({ ...ledger, books: ledgerBooks(db) }),
+        flushAll: committer.flushAll,
         notify: host.show,
         resume: committer.resume,
     };

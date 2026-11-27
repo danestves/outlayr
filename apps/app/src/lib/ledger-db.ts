@@ -1,5 +1,6 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import type { Doc } from "@outlayr/backend/convex/_generated/dataModel";
+import { useMirror } from "@outlayr/shared/lifecycle";
 import { convexCollectionOptions } from "@tanstack/convex-db-collection";
 import { collectionOptions, useDbClient } from "@tanstack/react-db";
 import type {
@@ -15,12 +16,17 @@ import type {
 import { ConvexError } from "convex/values";
 import { useMemo, useSyncExternalStore } from "react";
 
+import { convexClient } from "./convex";
 import { CONVEX, SERVER } from "./db";
 import type { LedgerConvex } from "./db";
-import type { LedgerBooks } from "./ledger-books";
+import type { LedgerBooks, RateRow } from "./ledger-books";
 import { createLedgerSync, isSavedCursor } from "./ledger-sync";
 import type { LedgerSync, PulledRow } from "./ledger-sync";
 import { profileOf, pushRows } from "./ledger-write";
+import { browserRatesPublic } from "./profile";
+import { noteProfileLost, profileLossCode } from "./profile-loss";
+import { removeProfileAndSwitch } from "./profile-switch";
+import { missingRateQuotes, publicRateRow, rateCursors, rateWindowAt } from "./public-rates";
 
 const convexOf = (db: DbClient) => db.requireDependency<LedgerConvex>(CONVEX);
 const onServer = (db: DbClient) => db.getDependency<boolean>(SERVER) === true;
@@ -114,6 +120,12 @@ export function ledgerSync(db: DbClient) {
     const scope = profileId === null ? {} : { profileId };
     const engine = createLedgerSync({
         onStale: () => window.location.reload(),
+        onStopped: (error) => {
+            if (profileId !== null && profileLossCode(error) !== null) {
+                noteProfileLost();
+                void removeProfileAndSwitch(profileId);
+            }
+        },
         source: {
             head: () => convex.watchQuery(api.sync.currentSeq, scope),
             pull: (cursor) => convex.watchQuery(api.sync.pullSince, { cursor, tables: syncedTables, ...scope }),
@@ -235,13 +247,13 @@ export const ledgerCollections = {
     budgets: ledgerTable(docs("budgets")),
     categories: ledgerTable(docs("categories")),
     exchangeRates: collectionOptions("ledger.exchangeRates", (db) =>
-        onServer(db)
+        onServer(db) || browserRatesPublic()
             ? {
                   getKey: (row: ExchangeRate) => row._id,
                   id: "ledger.exchangeRates",
                   sync: serverSync<ExchangeRate>(),
               }
-            : convexCollectionOptions({
+            : convexCollectionOptions<typeof api.ledger.exchangeRates, RateRow>({
                   client: convexOf(db),
                   getKey: (row) => row._id,
                   queryArgs: {},
@@ -264,6 +276,47 @@ export const ledgerCollections = {
 } satisfies Record<keyof LedgerBooks | RecordTable | TagTable, { id: string }>;
 
 export type ExchangeRate = LedgerBooks["exchangeRates"][number];
+
+const requestedRateQuotes = new Set<string>();
+
+const addMissingRates = async (db: DbClient, books: LedgerBooks) => {
+    if (!browserRatesPublic()) {
+        return;
+    }
+    const missing = missingRateQuotes(books).filter((quote) => !requestedRateQuotes.has(quote));
+    if (missing.length === 0) {
+        return;
+    }
+    for (const quote of missing) {
+        requestedRateQuotes.add(quote);
+    }
+    const at = rateWindowAt();
+    const wanted = new Set(missing);
+    const pages = await Promise.all(
+        rateCursors(missing).map((cursor) =>
+            convexClient()
+                .query(api.exchangeRates.pullRates, { at, cursor })
+                .catch(() => null)
+        )
+    );
+    const rows = pages
+        .flatMap((page) => page?.rows ?? [])
+        .filter((row) => row.rateType === "official" && wanted.has(row.quote))
+        .map((row) => {
+            const rate = publicRateRow(row);
+            return { key: rate._id, value: rate };
+        });
+    if (rows.length > 0) {
+        db.applyCollectionChunk({ collectionId: ledgerCollections.exchangeRates.id, rows });
+    }
+};
+
+export function useMissingRates(books: LedgerBooks) {
+    const db = useDbClient();
+    useMirror([db, books], () => {
+        addMissingRates(db, books).catch(() => undefined);
+    });
+}
 
 export const syncedTableNames = (): readonly SyncedTable[] => syncedTables;
 

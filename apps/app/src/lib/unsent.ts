@@ -11,6 +11,8 @@ const OLD_COPY_DATABASE = "outlayr-ledger";
 const OLD_COPY_COOKIE = "ledger_copy";
 
 let forgotten = false;
+let sendsStopped = false;
+const stops = new Set<() => void>();
 
 // Sign-out's navigation fires a pagehide, which pushes a held commit after forgetLedger has run.
 export function keepUnsent(key: string, value: string) {
@@ -21,6 +23,23 @@ export function keepUnsent(key: string, value: string) {
         localStorage.setItem(key, value);
     } catch {
         // Storage is off or full: the push is still the normal path.
+    }
+}
+
+export function onUnsentStop(stop: () => void) {
+    stops.add(stop);
+    return () => {
+        stops.delete(stop);
+    };
+}
+
+export const unsentWritesStopped = () => sendsStopped;
+
+export function stopUnsentWrites() {
+    forgotten = true;
+    sendsStopped = true;
+    for (const stop of stops) {
+        stop();
     }
 }
 

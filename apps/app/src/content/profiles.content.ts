@@ -1,4 +1,4 @@
-import { t } from "intlayer";
+import { insert, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const profiles = {
@@ -12,6 +12,15 @@ const profiles = {
         }),
         cancel: t({ en: "Cancel", de: "Abbrechen", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
         color: t({ en: "Color", de: "Farbe", es: "Color", fr: "Couleur", pt: "Cor" }),
+        colorSwatch: insert(
+            t({
+                en: "Color {{position}} of {{total}}",
+                de: "Farbe {{position}} von {{total}}",
+                es: "Color {{position}} de {{total}}",
+                fr: "Couleur {{position}} sur {{total}}",
+                pt: "Cor {{position}} de {{total}}",
+            })
+        ),
         create: t({
             en: "Create profile",
             de: "Profil erstellen",
@@ -48,11 +57,80 @@ const profiles = {
             fr: "Supprimer ce profil ?",
             pt: "Apagar este perfil?",
         }),
+        deleted: t({
+            en: "Profile deleted",
+            de: "Profil gelöscht",
+            es: "Perfil eliminado",
+            fr: "Profil supprimé",
+            pt: "Perfil excluído",
+        }),
         details: t({ en: "Details", de: "Details", es: "Detalles", fr: "Détails", pt: "Detalhes" }),
         edit: t({ en: "Edit", de: "Bearbeiten", es: "Editar", fr: "Modifier", pt: "Editar" }),
         emoji: t({ en: "Emoji", de: "Emoji", es: "Emoji", fr: "Émoji", pt: "Emoji" }),
         entries: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
         icon: t({ en: "Icon", de: "Symbol", es: "Ícono", fr: "Icône", pt: "Ícone" }),
+        iconNames: {
+            BabyBed01: t({ en: "Crib", de: "Babybett", es: "Cuna", fr: "Lit bébé", pt: "Berço" }),
+            Bank: t({ en: "Bank", de: "Bank", es: "Banco", fr: "Banque", pt: "Banco" }),
+            Beach02: t({ en: "Beach", de: "Strand", es: "Playa", fr: "Plage", pt: "Praia" }),
+            Book01: t({ en: "Book", de: "Buch", es: "Libro", fr: "Livre", pt: "Livro" }),
+            Briefcase01: t({
+                en: "Briefcase",
+                de: "Aktentasche",
+                es: "Maletín",
+                fr: "Portefeuille",
+                pt: "Pasta",
+            }),
+            Building01: t({ en: "Building", de: "Gebäude", es: "Edificio", fr: "Immeuble", pt: "Prédio" }),
+            Car01: t({ en: "Car", de: "Auto", es: "Auto", fr: "Voiture", pt: "Carro" }),
+            ChartUp: t({ en: "Chart", de: "Diagramm", es: "Gráfico", fr: "Graphique", pt: "Gráfico" }),
+            Coffee02: t({ en: "Coffee", de: "Kaffee", es: "Café", fr: "Café", pt: "Café" }),
+            Coins01: t({ en: "Coins", de: "Münzen", es: "Monedas", fr: "Pièces", pt: "Moedas" }),
+            Developer: t({ en: "Code", de: "Code", es: "Código", fr: "Code", pt: "Código" }),
+            Dumbbell01: t({ en: "Gym", de: "Fitness", es: "Gimnasio", fr: "Sport", pt: "Academia" }),
+            Favourite: t({ en: "Favourite", de: "Favorit", es: "Favorito", fr: "Favori", pt: "Favorito" }),
+            GraduationScroll: t({
+                en: "Graduation",
+                de: "Abschluss",
+                es: "Graduación",
+                fr: "Diplôme",
+                pt: "Formatura",
+            }),
+            Health: t({ en: "Health", de: "Gesundheit", es: "Salud", fr: "Santé", pt: "Saúde" }),
+            HeartCheck: t({ en: "Heart", de: "Herz", es: "Corazón", fr: "Cœur", pt: "Coração" }),
+            Home01: t({ en: "Home", de: "Zuhause", es: "Casa", fr: "Maison", pt: "Casa" }),
+            Kid: t({ en: "Kid", de: "Kind", es: "Niño", fr: "Enfant", pt: "Criança" }),
+            Laptop: t({
+                en: "Laptop",
+                de: "Laptop",
+                es: "Portátil",
+                fr: "Ordinateur portable",
+                pt: "Notebook",
+            }),
+            MoneyBag01: t({
+                en: "Money bag",
+                de: "Geldsack",
+                es: "Bolsa de dinero",
+                fr: "Sac d'argent",
+                pt: "Saco de dinheiro",
+            }),
+            Mountain: t({ en: "Mountain", de: "Berg", es: "Montaña", fr: "Montagne", pt: "Montanha" }),
+            PiggyBank: t({ en: "Piggy bank", de: "Sparschwein", es: "Alcancía", fr: "Tirelire", pt: "Cofrinho" }),
+            Plant01: t({ en: "Plant", de: "Pflanze", es: "Planta", fr: "Plante", pt: "Planta" }),
+            Restaurant01: t({
+                en: "Restaurant",
+                de: "Restaurant",
+                es: "Restaurante",
+                fr: "Restaurant",
+                pt: "Restaurante",
+            }),
+            Safe: t({ en: "Safe", de: "Tresor", es: "Caja fuerte", fr: "Coffre-fort", pt: "Cofre" }),
+            Star: t({ en: "Star", de: "Stern", es: "Estrella", fr: "Étoile", pt: "Estrela" }),
+            Store01: t({ en: "Store", de: "Geschäft", es: "Tienda", fr: "Magasin", pt: "Loja" }),
+            Sun03: t({ en: "Sun", de: "Sonne", es: "Sol", fr: "Soleil", pt: "Sol" }),
+            Target01: t({ en: "Target", de: "Ziel", es: "Objetivo", fr: "Objectif", pt: "Meta" }),
+            Wallet01: t({ en: "Wallet", de: "Brieftasche", es: "Cartera", fr: "Portefeuille", pt: "Carteira" }),
+        },
         name: t({ en: "Name", de: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
         namePlaceholder: t({
             en: "Work",

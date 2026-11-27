@@ -90,6 +90,13 @@ const dashboardLedger = {
             fee: t({ en: "Fee", de: "Gebühr", es: "Comisión", fr: "Frais", pt: "Tarifa", "pt-PT": "Comissão" }),
             from: t({ en: "From", de: "Von", es: "Desde", fr: "De", pt: "De" }),
             label: t({ en: "Columns", de: "Spalten", es: "Columnas", fr: "Colonnes", pt: "Colunas" }),
+            loggedBy: t({
+                en: "Logged by",
+                de: "Erfasst von",
+                es: "Registrado por",
+                fr: "Saisi par",
+                pt: "Registrado por",
+            }),
             merchant: t({ en: "Merchant", de: "Händler", es: "Comercio", fr: "Commerçant", pt: "Estabelecimento" }),
             note: t({ en: "Note", de: "Notiz", es: "Nota", fr: "Note", pt: "Nota" }),
             notes: t({ en: "Notes", de: "Notizen", es: "Notas", fr: "Notes", pt: "Notas" }),
@@ -234,6 +241,13 @@ const dashboardLedger = {
                 pt: "Limpar tudo",
             }),
             date: t({ en: "Date", de: "Datum", es: "Fecha", fr: "Date", pt: "Data" }),
+            loggedBy: t({
+                en: "Logged by",
+                de: "Erfasst von",
+                es: "Registrado por",
+                fr: "Saisi par",
+                pt: "Registrado por",
+            }),
             max: t({ en: "Max", de: "Max.", es: "Máx.", fr: "Max.", pt: "Máx." }),
             maxBelowMin: t({
                 en: "Max must be above min",
@@ -260,6 +274,13 @@ const dashboardLedger = {
                 fr: "Chercher un commerçant",
                 pt: "Buscar estabelecimentos",
                 "pt-PT": "Pesquisar estabelecimentos",
+            }),
+            searchPeople: t({
+                en: "Search people",
+                de: "Personen suchen",
+                es: "Buscar personas",
+                fr: "Chercher des personnes",
+                pt: "Buscar pessoas",
             }),
             searchTags: t({
                 en: "Search tags",

@@ -1,13 +1,17 @@
 import type { Doc } from "@outlayr/backend/convex/_generated/dataModel";
 import type { LedgerRows } from "@outlayr/money/ledger-view";
 
+export type RateRow = Omit<Doc<"exchangeRates">, "_id"> & {
+    _id: string;
+};
+
 export interface LedgerBooks extends LedgerRows {
     accounts: readonly Doc<"accounts">[];
     appMeta: readonly Pick<Doc<"appMeta">, "key" | "value">[];
     budgetPlans: readonly Doc<"budgetPlans">[];
     budgets: readonly Doc<"budgets">[];
     categories: readonly Doc<"categories">[];
-    exchangeRates: readonly Doc<"exchangeRates">[];
+    exchangeRates: readonly RateRow[];
     installmentPlans: readonly Doc<"installmentPlans">[];
     installments: readonly Doc<"installments">[];
     mainBudget: readonly Doc<"mainBudget">[];

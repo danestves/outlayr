@@ -8,6 +8,7 @@ import { ledgerCommitter } from "./ledger-committer";
 import { ledgerBooks, preloadLedger } from "./ledger-db";
 import type { LedgerPusher } from "./ledger-write";
 import { fakeConvex } from "./test-convex";
+import { forgetLedger, stopUnsentWrites } from "./unsent";
 
 const HOLD_MS = 60_000;
 const answered = { accepted: 1, nextSeq: 1, skipped: 0 };
@@ -182,6 +183,32 @@ describe("ledger committer", () => {
         expect(await held.settled).toStrictEqual({ status: "saved" });
     });
 
+    it("flushes every held commit before a leave", async () => {
+        const push = vi.fn<Push>(() => Promise.resolve(answered));
+        const committer = ledgerCommitter(await openTab(push), "owner");
+        committer.commit([entry("a")], { holdMs: HOLD_MS });
+        expect(storedRows()).toHaveLength(0);
+
+        expect(await committer.flushAll()).toBe(true);
+        expect(sentIds(push)).toStrictEqual([["a"]]);
+        expect(storedRows()).toHaveLength(0);
+    });
+
+    it("says a write failed so a leave does not revoke access first", async () => {
+        const committer = ledgerCommitter(await openTab(() => Promise.reject(new Error("refused"))), "owner");
+        committer.commit([entry("a")], { holdMs: HOLD_MS });
+
+        expect(await committer.flushAll()).toBe(false);
+    });
+
+    it("lets a leave through once a failed commit has already rolled back", async () => {
+        const committer = ledgerCommitter(await openTab(() => Promise.reject(new Error("refused"))), "owner");
+
+        expect(await committer.commit([entry("a")]).settled).toMatchObject({ status: "failed" });
+        expect(committer.getSnapshot()).toStrictEqual({ failed: 1, held: 0, sending: 0 });
+        expect(await committer.flushAll()).toBe(true);
+    });
+
     it("reverts rows added to a held commit with the same undo", async () => {
         const db = await openTab(unanswered);
         const held = ledgerCommitter(db, "owner").commit([entry("a")], { holdMs: HOLD_MS });
@@ -270,5 +297,26 @@ describe("ledger committer", () => {
         expect(push).not.toHaveBeenCalled();
         expect(storedRows()).toHaveLength(1);
         expect(committer.getSnapshot()).toStrictEqual({ failed: 0, held: 0, sending: 0 });
+    });
+
+    it("still sends a commit after sign-out forgets the ledger", async () => {
+        const push = vi.fn<Push>(() => Promise.resolve(answered));
+        const committer = ledgerCommitter(await openTab(push), "owner");
+        await forgetLedger();
+
+        expect(await committer.commit([entry("a")]).settled).toStrictEqual({ status: "saved" });
+
+        expect(sentIds(push)).toStrictEqual([["a"]]);
+    });
+
+    it("stops sending for a profile whose removal has started", async () => {
+        const push = vi.fn<Push>(() => Promise.resolve(answered));
+        const committer = ledgerCommitter(await openTab(push), "owner");
+        stopUnsentWrites();
+
+        expect(await committer.commit([entry("a")]).settled).toStrictEqual({ status: "undone" });
+
+        expect(push).not.toHaveBeenCalled();
+        expect(storedRows()).toHaveLength(0);
     });
 });

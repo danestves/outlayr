@@ -6,6 +6,7 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { authClient } from "./auth-client";
 import { convexClient } from "./convex";
+import { currentProfileId } from "./profile";
 import { profilesQuery } from "./profile-registry";
 import { currentPush } from "./web-push";
 import { webhooksOpen } from "./webhooks";
@@ -23,6 +24,13 @@ export const connectionsQuery = { ...convexQuery(api.mcp.listConnections, {}), .
 export const sharedLinksQuery = { ...convexQuery(api.sharedReports.mine, {}), ...kept };
 export const pushConfigQuery = { ...convexQuery(api.webPush.config, {}), ...kept };
 export const webhooksQuery = { ...convexQuery(api.webhooks.status, {}), ...kept };
+export const joinedProfilesQuery = { ...convexQuery(api.profileSharing.joined, {}), ...kept };
+export const profileSharingEnabledQuery = { ...convexQuery(api.profileSharing.enabled, {}), ...kept };
+
+export const profileMembersQuery = (profileId: string | null) => ({
+    ...convexQuery(api.profileSharing.members, profileId === null ? "skip" : { profileId }),
+    ...kept,
+});
 
 export const reminderQuery = (endpoint: string | null | undefined) => ({
     ...convexQuery(api.webPush.mine, endpoint ? { endpoint } : "skip"),
@@ -148,6 +156,12 @@ export function warmAccountState(client: QueryClient) {
     void client.prefetchQuery({ ...pushConfigQuery, ...unlessKnown });
     if (webhooksOpen(Date.now())) {
         void client.prefetchQuery({ ...webhooksQuery, ...unlessKnown });
+    }
+    void client.prefetchQuery({ ...joinedProfilesQuery, ...unlessKnown });
+    void client.prefetchQuery({ ...profileSharingEnabledQuery, ...unlessKnown });
+    const profileId = currentProfileId();
+    if (profileId !== null) {
+        void client.prefetchQuery({ ...profileMembersQuery(profileId), ...unlessKnown });
     }
     void client.prefetchQuery({ ...planQuery, ...unlessKnown });
     void client.prefetchQuery({ ...profilesQuery, ...unlessKnown });

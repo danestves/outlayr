@@ -2,6 +2,7 @@ import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
 import Settings02Icon from "@hugeicons/core-free-icons/Settings02Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
+import UserAdd01Icon from "@hugeicons/core-free-icons/UserAdd01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMatch, useNavigate } from "@tanstack/react-router";
@@ -15,6 +16,9 @@ import { MenuContent } from "@/components/ui/menu-content";
 import { planQuery } from "@/lib/account-state";
 import { HELD_STATES } from "@/lib/billing";
 import { activeProfileOf, profileLook, profilesOf, profilesQuery } from "@/lib/profile-registry";
+import type { LedgerProfile, ProfileLook } from "@/lib/profile-registry";
+import { joinedLook, joinedProfileOf, useJoinedProfiles, useProfileSharingEnabled } from "@/lib/profile-sharing";
+import type { JoinedProfile } from "@/lib/profile-sharing";
 import { switchToProfile } from "@/lib/profile-switch";
 import { cn } from "@/lib/utils";
 
@@ -23,8 +27,19 @@ import { PERSONAL_LOOK, ProfileTile } from "./tile";
 
 const proState = (state: string) => HELD_STATES.has(state) || state === "granted";
 
+const lookOf = (active: LedgerProfile | null, joined: JoinedProfile | null): ProfileLook => {
+    if (active !== null) {
+        return profileLook(active);
+    }
+    if (joined !== null) {
+        return joinedLook(joined);
+    }
+    return PERSONAL_LOOK;
+};
+
 export function ProfileSwitcher() {
     const copy = useIntlayer("profiles");
+    const shareCopy = useIntlayer("profile-sharing");
     const loaded = useMatch({ from: "/_account/_app", select: (match) => match.loaderData, shouldThrow: false });
     const profileId = loaded?.profileId ?? null;
     const registry = useQuery(profilesQuery);
@@ -34,9 +49,12 @@ export function ProfileSwitcher() {
     const navigate = useNavigate();
     const toast = useToast();
     const { collapsed } = useNavRail();
+    const joinedProfiles = useJoinedProfiles();
+    const joined = joinedProfileOf(joinedProfiles, profileId);
+    const sharing = useProfileSharingEnabled();
     const [creating, setCreating] = useState(false);
-    const name = active?.name ?? copy.personal.value;
-    const look = active ? profileLook(active) : PERSONAL_LOOK;
+    const name = active?.name ?? joined?.look.name ?? copy.personal.value;
+    const look = lookOf(active, joined);
 
     const switchTo = async (next: string | null) => {
         if (next === profileId) {
@@ -98,11 +116,44 @@ export function ProfileSwitcher() {
                             </Menu.Item>
                         ))}
                     </Menu.Group>
+                    {joinedProfiles.length > 0 ? (
+                        <>
+                            <Menu.Separator />
+                            <Menu.Group>
+                                <Menu.GroupLabel>{shareCopy.sharedWithYou}</Menu.GroupLabel>
+                                {joinedProfiles.map((profile) => (
+                                    <Menu.Item
+                                        key={profile.profileId}
+                                        onClick={() => switchTo(profile.profileId).catch(() => undefined)}
+                                    >
+                                        <ProfileTile look={joinedLook(profile)} size="sm" />
+                                        <span className="flex min-w-0 flex-1 flex-col">
+                                            <span className="truncate">{profile.look.name}</span>
+                                            {profile.ownerName === null ? null : (
+                                                <span className="text-muted-foreground truncate text-xs">
+                                                    {shareCopy.ownerOf({ name: profile.ownerName })}
+                                                </span>
+                                            )}
+                                        </span>
+                                        {profile.profileId === profileId ? (
+                                            <HugeiconsIcon icon={Tick02Icon} size={15} />
+                                        ) : null}
+                                    </Menu.Item>
+                                ))}
+                            </Menu.Group>
+                        </>
+                    ) : null}
                     <Menu.Separator />
                     <Menu.Item onClick={newProfile}>
                         <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />
                         {copy.newProfile}
                     </Menu.Item>
+                    {sharing && active ? (
+                        <Menu.Item onClick={() => navigate({ to: "/settings/profile" }).catch(() => undefined)}>
+                            <HugeiconsIcon icon={UserAdd01Icon} strokeWidth={2} />
+                            {shareCopy.inviteTo({ name: active.name })}
+                        </Menu.Item>
+                    ) : null}
                     <Menu.Item onClick={() => navigate({ to: "/settings/profile" }).catch(() => undefined)}>
                         <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} />
                         {copy.profileSettings}

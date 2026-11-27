@@ -9,6 +9,7 @@ import { useId, useState } from "react";
 import type { FormEvent } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { usePresetLabel } from "@/components/dashboard/settings/categories/preset-label";
 import { Choice, Swatches } from "@/components/dashboard/settings/parts";
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -30,13 +31,14 @@ const CELL =
     "grid size-8 place-items-center rounded-app-sm border text-app-body transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none";
 
 function IconGrid({ onPick, selected }: { onPick: (key: string) => void; selected: string | null }) {
+    const copy = useIntlayer("profiles");
     return (
         <div className="grid grid-cols-10 gap-1">
             {PROFILE_ICON_KEYS.map((key) => {
                 const glyph = CATEGORY_ICONS.get(key) ?? CATEGORY_ICONS.get(DEFAULT_PROFILE_ICON);
                 return (
                     <button
-                        aria-label={key}
+                        aria-label={copy.iconNames[key].value}
                         aria-pressed={selected === key}
                         className={cn(
                             CELL,
@@ -94,6 +96,7 @@ export function ProfileEditor({
     const copy = useIntlayer("profiles");
     const toast = useToast();
     const { currency } = useLedgerSettings();
+    const categoryLabel = usePresetLabel();
     const formId = useId();
     const [name, setName] = useState(target?.name ?? "");
     const [color, setColor] = useState(target?.customColor ?? DEFAULT_PROFILE_COLOR);
@@ -123,7 +126,7 @@ export function ProfileEditor({
         const identity = { color, emoji, icon };
         try {
             if (target === null) {
-                const id = await createProfile(profiles, { currency, identity, name: trimmed });
+                const id = await createProfile(profiles, { categoryLabel, currency, identity, name: trimmed });
                 onClose();
                 onCreated?.(id);
             } else {
@@ -181,9 +184,12 @@ export function ProfileEditor({
                                 className="grid grid-cols-6 gap-2"
                                 label={copy.color.value}
                                 onChange={setColor}
-                                options={PROFILE_COLORS.map((value) => ({
+                                options={PROFILE_COLORS.map((value, index) => ({
                                     color: value,
-                                    label: value,
+                                    label: copy.colorSwatch({
+                                        position: String(index + 1),
+                                        total: String(PROFILE_COLORS.length),
+                                    }).value,
                                     value,
                                 }))}
                                 value={color}

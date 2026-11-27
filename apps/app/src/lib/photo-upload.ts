@@ -1,5 +1,7 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
-import { useRouteContext } from "@tanstack/react-router";
+import { useMatch, useRouteContext } from "@tanstack/react-router";
+
+import { profileArgs } from "./profile";
 
 const EXTENSIONS = { "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png" } as const;
 
@@ -8,6 +10,11 @@ export type UploadType = keyof typeof EXTENSIONS;
 /** Puts the bytes in the visitor's photo store and answers the key a ledger row names them by. */
 export function useUploadPhoto() {
     const convex = useRouteContext({ from: "/_account/_app", select: (context) => context.convexQueryClient });
+    const profileId = useMatch({
+        from: "/_account/_app",
+        select: (match) => match.loaderData?.profileId ?? null,
+        shouldThrow: false,
+    });
     return async (body: Blob, type: UploadType) => {
         if (!convex) {
             throw new Error("Photos need a connection");
@@ -15,6 +22,7 @@ export function useUploadPhoto() {
         const client = convex.convexClient;
         const { key, method, url } = await client.mutation(api.photos.requestUpload, {
             name: `web-${crypto.randomUUID()}.${EXTENSIONS[type]}`,
+            ...profileArgs(profileId ?? null),
         });
         // Convex file storage takes only POST, a bucket url only PUT; an older bucket server sends no method.
         const response = await fetch(url, { body, headers: { "Content-Type": type }, method: method ?? "PUT" });

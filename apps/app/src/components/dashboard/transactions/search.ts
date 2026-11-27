@@ -11,6 +11,7 @@ const Param = Schema.UndefinedOr(Schema.String).pipe(
 );
 
 const Search = Schema.Struct({
+    by: Schema.optional(Param),
     entry: Schema.optional(Param),
     from: Schema.optional(Param),
     max: Schema.optional(Param),
@@ -44,6 +45,7 @@ const amountOf = (value: string | undefined) => {
 
 export interface PageQuery extends Omit<LedgerQuery, "accounts" | "categories" | "range" | "sort" | "type"> {
     custom: Partial<Range>;
+    loggedBy: readonly string[];
     merchants: readonly string[];
     sort: Sort;
     span: Span | undefined;
@@ -75,6 +77,7 @@ export function pageQueryOf(search: PageSearch): PageQuery {
     const to = dayOf(search.to);
     return {
         custom: { ...(from !== undefined && { from }), ...(to !== undefined && { to }) },
+        loggedBy: listOf(search.by),
         max: amountOf(search.max),
         min: amountOf(search.min),
         merchants: listOf(search.merchant).map(decoded),
