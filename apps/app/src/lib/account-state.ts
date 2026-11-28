@@ -21,6 +21,7 @@ export const limitsQuery = { ...convexQuery(api.limits.mine, {}), ...kept };
 export const notionQuery = { ...convexQuery(api.notion.connected, {}), ...kept };
 export const referralsQuery = { ...convexQuery(api.referrals.overview, {}), ...kept };
 export const connectionsQuery = { ...convexQuery(api.mcp.listConnections, {}), ...kept };
+export const bankOverviewQuery = { ...convexQuery(api.banking.overview, {}), ...kept };
 export const sharedLinksQuery = { ...convexQuery(api.sharedReports.mine, {}), ...kept };
 export const pushConfigQuery = { ...convexQuery(api.webPush.config, {}), ...kept };
 export const webhooksQuery = { ...convexQuery(api.webhooks.status, {}), ...kept };
@@ -34,6 +35,11 @@ export const profileMembersQuery = (profileId: string | null) => ({
 
 export const reminderQuery = (endpoint: string | null | undefined) => ({
     ...convexQuery(api.webPush.mine, endpoint ? { endpoint } : "skip"),
+    ...kept,
+});
+
+export const bankSearchQuery = (q: string, region: string | null) => ({
+    ...convexQuery(api.banking.searchInstitutions, { q, region }),
     ...kept,
 });
 
@@ -152,6 +158,7 @@ export function warmAccountState(client: QueryClient) {
     void client.prefetchQuery({ ...notionQuery, ...unlessKnown });
     void client.prefetchQuery({ ...referralsQuery, ...unlessKnown });
     void client.prefetchQuery({ ...connectionsQuery, ...unlessKnown });
+    void client.prefetchQuery({ ...bankOverviewQuery, ...unlessKnown });
     void client.prefetchQuery({ ...sharedLinksQuery, ...unlessKnown });
     void client.prefetchQuery({ ...pushConfigQuery, ...unlessKnown });
     if (webhooksOpen(Date.now())) {
