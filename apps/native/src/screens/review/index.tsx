@@ -42,7 +42,6 @@ export function Review() {
     const amountsHidden = useSetting("hideAmounts");
     const accountNames = new Map(useAccounts(db).map((account) => [account.id, account.name]));
 
-    // A second tap would pop past the tabs once the first back lands.
     const [closing, setClosing] = useState(false);
 
     // Closing on the emptied queue, not per call, covers swipes that overlap before the list re-renders.
@@ -55,11 +54,11 @@ export function Review() {
 
     const confirm = async (ids: readonly string[]) => {
         const result = await markReviewed({ db, ids });
+        setClosing(false);
         if (AsyncResult.isSuccess(result)) {
             setConfirmed(true);
             return;
         }
-        setClosing(false);
         // A toast would sit under this modal sheet.
         Alert.alert(t("log.review.confirmFailed"));
     };

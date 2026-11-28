@@ -25,7 +25,7 @@ import { posthog } from "@/lib/posthog";
 import { Reminders } from "@/lib/reminders";
 import { proTerm } from "@/lib/revenuecat";
 import { RevenueCat } from "@/lib/revenuecat-service";
-import { setReviewAlerts, syncReviewPush } from "@/lib/review-push";
+import { reviewRemovals, setReviewAlerts, syncReviewPush } from "@/lib/review-push";
 import { appRuntime } from "@/lib/runtime";
 import { openWalletShortcut } from "@/lib/wallet-shortcut";
 
@@ -150,6 +150,7 @@ export const setReviewAlertsCommand = createRuntimeCommand(appRuntime, {
         next: boolean;
         onDenied: () => void;
     }) {
+        const started = reviewRemovals();
         if (input.next) {
             const reminders = yield* Reminders;
             const existing = yield* reminders.permission();
@@ -158,7 +159,8 @@ export const setReviewAlertsCommand = createRuntimeCommand(appRuntime, {
                 return;
             }
             const granted = existing === "granted" ? existing : yield* reminders.request();
-            if (granted !== "granted") {
+            // An opt-out or sign-out while the permission prompt was up outranks this enable.
+            if (granted !== "granted" || reviewRemovals() !== started) {
                 return;
             }
         }

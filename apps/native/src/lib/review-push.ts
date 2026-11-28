@@ -25,6 +25,8 @@ type Store = NonNullable<typeof sharedStore>;
 // Opt-out and sign-out bump it, so a registration still waiting on APNs can't land after them.
 let removals = 0;
 
+export const reviewRemovals = (): number => removals;
+
 export const reviewAlertsOn = (): boolean => sharedStore === null || sharedStore.get(REVIEW_ALERTS_OFF_KEY) === null;
 
 export const setReviewAlerts = (on: boolean): void => {

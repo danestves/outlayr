@@ -996,10 +996,11 @@ const linkEntry = Effect.fn("Banking.linkEntry")(function* linkEntry(
         return;
     }
     if (attach !== undefined) {
+        // Two ticks, as in rewriteRow: a confirm made on the unlinked row ties at one and would drop the link.
         yield* (yield* DatabaseWriter).table("transactions").patch(row._id, {
             accountId: attach,
             seq: filing.seq + filing.filed.written,
-            updatedAt: row.updatedAt + 1,
+            updatedAt: row.updatedAt + 2,
         });
         filing.filed.written += 1;
         filing.filed.instants.push(row.date);
@@ -1206,11 +1207,17 @@ const alertReviewQueue = Effect.fn("Banking.alertReviewQueue")(function* alertRe
         .table("reviewPushTargets")
         .index("by_user_and_device", (q) => q.eq("userId", userId))
         .take(REVIEW_TARGET_PAGE);
+    const writer = yield* DatabaseWriter;
+    // A switched-off row only holds the throttle, so once its day is up it goes and stops filling the page.
+    for (const target of targets) {
+        if (target.token === undefined && needsReviewAlert(target.alertedAt, now)) {
+            yield* writer.table("reviewPushTargets").delete(target._id);
+        }
+    }
     const due = targets.filter((target) => target.token !== undefined && needsReviewAlert(target.alertedAt, now));
     if (due.length === 0) {
         return;
     }
-    const writer = yield* DatabaseWriter;
     for (const target of due) {
         yield* writer.table("reviewPushTargets").patch(target._id, { alertedAt: now });
     }
