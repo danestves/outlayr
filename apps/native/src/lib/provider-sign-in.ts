@@ -7,6 +7,7 @@ import type { AppleSignInCredential } from "./apple-sign-in";
 import type { authClient } from "./auth-client";
 import type { useAuthSession } from "./auth-session";
 import { persistProviderBinding } from "./provider-revocation";
+import { trackUsage } from "./usage-events";
 
 type AuthClient = NonNullable<typeof authClient>;
 
@@ -115,6 +116,7 @@ export const completeAppleSignIn = Effect.fn("ProviderSignIn.completeApple")(fun
             providerSubject: credential.providerSubject,
         });
         activation.activate();
+        yield* Effect.sync(() => trackUsage("signed_in", { method: "apple" }));
     }).pipe(
         Effect.tapError(() =>
             Effect.gen(function* cleanup() {
@@ -152,6 +154,7 @@ export const completeGoogleSignIn = Effect.fn("ProviderSignIn.completeGoogle")(f
         try: () => googleProviderSubject(identityToken),
     });
     yield* persistProviderBinding({ betterAuthUserId: userId, provider: "google", providerSubject });
+    yield* Effect.sync(() => trackUsage("signed_in", { method: "google" }));
 });
 
 export const signInWithProvider = Effect.fn("ProviderSignIn.start")(function* signInWithProvider(input: {

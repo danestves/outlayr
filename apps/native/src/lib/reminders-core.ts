@@ -3,6 +3,7 @@ import * as Schema from "effect/Schema";
 import type { NotificationPermissionsStatus } from "expo-notifications";
 
 import type { ReminderPermission } from "@/domain/reminder";
+import { trackUsage } from "@/lib/usage-events";
 
 const RemindersOperation = Schema.Literals(["cancel", "pending", "permission", "request", "schedule"]);
 
@@ -24,6 +25,12 @@ export function toPermission(result: NotificationPermissionsStatus): ReminderPer
     }
     return result.canAskAgain ? "undetermined" : "denied";
 }
+
+/** "unknown" means the ask threw, so no outcome was reached to report. */
+export const trackPermissionRequest = (permission: ReminderPermission): Effect.Effect<void> =>
+    permission === "unknown"
+        ? Effect.void
+        : Effect.sync(() => trackUsage("notification_permission", { granted: permission === "granted" }));
 
 export interface DatedReminder {
     body: string;

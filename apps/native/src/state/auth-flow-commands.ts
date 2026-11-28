@@ -4,6 +4,7 @@ import * as Schema from "effect/Schema";
 import type { authClient } from "@/lib/auth-client";
 import { persistProviderBinding } from "@/lib/provider-revocation";
 import { appRuntime } from "@/lib/runtime";
+import { trackUsage } from "@/lib/usage-events";
 
 import { createRuntimeCommand } from "./atom-command";
 
@@ -54,6 +55,7 @@ export const signInEmailCommand = createRuntimeCommand(appRuntime, {
         }
         const { user } = yield* unwrap(result);
         yield* bindPassword(user);
+        yield* Effect.sync(() => trackUsage("signed_in", { method: "email" }));
         return "signed-in" as const;
     }),
     label: "auth-flow:sign-in-email",
@@ -77,6 +79,7 @@ export const verifyEmailCommand = createRuntimeCommand(appRuntime, {
         const { client, email, fetchOptions, otp } = input;
         const { user } = yield* request(() => client.emailOtp.verifyEmail({ email, fetchOptions, otp }));
         yield* bindPassword(user);
+        yield* Effect.sync(() => trackUsage("signed_in", { method: "email" }));
     }),
     label: "auth-flow:verify-email",
 });
@@ -122,6 +125,7 @@ export const resetPasswordCommand = createRuntimeCommand(appRuntime, {
         yield* request(() => client.emailOtp.resetPassword({ email, fetchOptions, otp, password }));
         const { user } = yield* request(() => client.signIn.email({ email, fetchOptions, password }));
         yield* bindPassword(user);
+        yield* Effect.sync(() => trackUsage("signed_in", { method: "email" }));
     }),
     label: "auth-flow:reset-password",
 });

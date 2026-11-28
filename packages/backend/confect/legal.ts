@@ -41,6 +41,8 @@ export const WEB_ANALYTICS_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
 export const BANK_ANALYTICS_AT_MS = DECEMBER_NOTICE_AT_MS;
 
+export const USAGE_ANALYTICS_AT_MS = DECEMBER_NOTICE_AT_MS;
+
 const GUEST_PURCHASE_AT_MS = Date.UTC(2026, 10, 21);
 const PROFILES_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
@@ -1480,6 +1482,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "With Share analytics on: when you try to link a bank, whether it worked, you canceled, or it failed, whether you were signing in to a bank again, and how many accounts it added. Never which bank or anything about its accounts.",
                     label: "Bank linking in analytics",
                 },
+                {
+                    detail: "With Share analytics on: when you sign in and whether you used email, Google, or Apple, when you delete an entry, transfer, account, category, budget, savings goal, or installment purchase, or stop a recurring entry, and whether you allow notifications when the app asks. Never what you deleted.",
+                    label: "Sign-ins, deletes and notifications in analytics",
+                },
             ],
             de: [
                 {
@@ -1489,6 +1495,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Mit eingeschaltetem „Analysedaten teilen“: wann du versuchst, eine Bank zu verknüpfen, ob es geklappt hat, ob du abgebrochen hast oder ob es fehlgeschlagen ist, ob du versucht hast, dich erneut bei einer Bank anzumelden, und wie viele Konten dazugekommen sind. Nie welche Bank oder etwas über ihre Konten.",
                     label: "Bankverknüpfung in Analysen",
+                },
+                {
+                    detail: "Mit eingeschaltetem „Analysedaten teilen“: wann du dich anmeldest und ob per E-Mail, Google oder Apple, wann du einen Eintrag, eine Umbuchung, ein Konto, eine Kategorie, ein Budget, ein Sparziel oder einen Ratenkauf löschst oder einen wiederkehrenden Eintrag beendest, und ob du Mitteilungen erlaubst, wenn die App danach fragt. Nie, was du gelöscht hast.",
+                    label: "Anmeldungen, Löschungen und Mitteilungen in Analysen",
                 },
             ],
             es: [
@@ -1500,6 +1510,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Con Compartir analíticas activado: cuándo intentas vincular un banco, si funcionó, si lo cancelaste o si falló, si estabas volviendo a iniciar sesión en un banco y cuántas cuentas agregó. Nunca qué banco ni nada sobre sus cuentas.",
                     label: "Vincular bancos en analíticas",
                 },
+                {
+                    detail: "Con Compartir analíticas activado: cuándo inicias sesión y si usaste correo, Google o Apple, cuándo borras una entrada, transferencia, cuenta, categoría, presupuesto, meta de ahorro o compra en cuotas, o detienes una entrada recurrente, y si permites las notificaciones cuando la app te lo pide. Nunca lo que borraste.",
+                    label: "Inicios de sesión, borrados y notificaciones en analíticas",
+                },
             ],
             fr: [
                 {
@@ -1510,6 +1524,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Avec Partager les données d'analyse activé : quand vous essayez de lier une banque, si cela a fonctionné, si vous avez annulé ou si cela a échoué, si vous vous reconnectiez à une banque et combien de comptes ont été ajoutés. Jamais quelle banque ni rien sur ses comptes.",
                     label: "Liaison bancaire dans les analyses",
                 },
+                {
+                    detail: "Avec Partager les données d'analyse activé : quand vous vous connectez et si vous avez utilisé l'e-mail, Google ou Apple, quand vous supprimez une opération, un virement, un compte, une catégorie, un budget, un objectif d'épargne ou un achat en plusieurs fois, ou arrêtez une opération récurrente, et si vous autorisez les notifications quand l'app le demande. Jamais ce que vous avez supprimé.",
+                    label: "Connexions, suppressions et notifications dans les analyses",
+                },
             ],
             pt: [
                 {
@@ -1519,6 +1537,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Com Compartilhar análises ativado: quando você tenta vincular um banco, se deu certo, se você cancelou ou se falhou, se você estava entrando de novo em um banco e quantas contas foram adicionadas. Nunca qual banco nem nada sobre as contas dele.",
                     label: "Vínculo de bancos nas análises",
+                },
+                {
+                    detail: "Com Compartilhar análises ativado: quando você entra e se usou e-mail, Google ou Apple, quando você apaga um lançamento, transferência, conta, categoria, orçamento, meta de economia ou compra parcelada, ou encerra um lançamento recorrente, e se você permite notificações quando o app pede. Nunca o que você apagou.",
+                    label: "Entradas, exclusões e notificações nas análises",
                 },
             ],
         },
