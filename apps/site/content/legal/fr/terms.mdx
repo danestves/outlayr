@@ -39,11 +39,11 @@ Vous ne pouvez pas utiliser Outlayr si la loi américaine vous interdit de le re
 
 ## Ce qu’est Outlayr, et ce qu’il n’est pas
 
-Outlayr est un outil pour enregistrer et examiner votre propre argent : dépenses, revenus, virements entre vos comptes, budgets, objectifs et prélèvements récurrents. Il fonctionne à partir de ce que vous tapez, dictez, scannez, importez ou saisissez depuis Wallet sur iPhone.
+Outlayr est un outil pour enregistrer et examiner votre propre argent : dépenses, revenus, virements entre vos comptes, budgets, objectifs et prélèvements récurrents. Il fonctionne à partir de ce que vous tapez, dictez, scannez, importez ou saisissez depuis Wallet sur iPhone, et des comptes bancaires que vous choisissez de lier.
 
 Outlayr n’est pas :
 
-- une banque, un service de paiement ou un service de transfert d’argent. Il ne se connecte pas à votre banque, ne détient pas de fonds et n’effectue pas de paiements. Enregistrer un virement entre comptes dans Outlayr ne déplace aucun argent.
+- une banque, un service de paiement ou un service de transfert d’argent. Il ne détient pas de fonds et n’effectue pas de paiements, et ne fait que lire les comptes bancaires que vous liez. Enregistrer un virement entre comptes dans Outlayr ne déplace aucun argent.
 - un conseiller financier, en investissement, fiscal, comptable ou juridique. Rien dans Outlayr ne constitue une recommandation sur ce que vous devez faire de votre argent.
 - un document officiel. Comparez-le à vos relevés et à vos tickets avant de l’utiliser pour vos impôts, des audits ou des questions juridiques.
 
@@ -56,7 +56,8 @@ Vous pouvez utiliser la plupart des fonctions d’Outlayr sans compte. Votre jou
 Vous avez besoin d’un compte pour :
 
 - synchroniser votre journal entre vos appareils ;
-- utiliser la saisie vocale, le scan de tickets, l’import d’échéanciers, les suggestions de commerçants et l’association par IA à l’import, sauf si vous avez acheté Outlayr Pro sans compte.
+- utiliser la saisie vocale, le scan de tickets, l’import d’échéanciers, les suggestions de commerçants et l’association par IA à l’import, sauf si vous avez acheté Outlayr Pro sans compte ;
+- lier des comptes bancaires.
 
 Vous créez un compte en vous connectant avec Apple ou Google, ou avec une adresse e-mail et un mot de passe. La connexion ne modifie pas votre journal. Vous choisissez de synchroniser ou non.
 
@@ -85,6 +86,7 @@ Outlayr est gratuit à télécharger et à utiliser. Outlayr Pro lève les limit
 | Association par IA à l’import CSV                                      | Non     | Oui          |
 | Recherche web des commerçants                                          | Non     | Oui          |
 | Connexion Notion                                                       | Non     | Oui          |
+| Banques liées aux États-Unis et au Canada                              | Non     | Oui          |
 | Icônes d’app                                                           | 1       | Toutes       |
 
 La limite de Pro sur les saisies vocales et les scans de tickets est une limite d’usage raisonnable. Les suggestions de commerçants sont disponibles dans les deux formules.
@@ -184,6 +186,14 @@ Un achat à vie est lié à votre compte Outlayr, ou au compte anonyme jusqu’�
 - Si le propriétaire supprime son compte, le profil est supprimé de nos serveurs pour tout le monde. Les copies déjà présentes sur les appareils des membres, et les exports qu’ils ont faits, peuvent subsister.
 - Le propriétaire est responsable des personnes qu’il invite, et chacun de ce qu’il ajoute.
 
+## Banques liées
+
+- Avec Pro et la synchronisation activée, vous pouvez lier des comptes de banques aux États-Unis et au Canada via Stripe Financial Connections. Certaines banques et certains comptes ne peuvent pas être liés.
+- Vous vous connectez à votre banque sur l’écran de Stripe, jamais dans Outlayr. Les conditions de Stripe pour Financial Connections, affichées à cet endroit, s’appliquent aussi.
+- Les nouvelles transactions d’un compte lié deviennent des opérations, y compris les débits en attente, mis à jour quand ils sont comptabilisés. Un débit annulé retire l’opération ajoutée par la banque, jamais celle que vous avez saisie vous-même. Les données de votre banque peuvent être en retard, incomplètes ou erronées. Vérifiez vos opérations comme pour tout import.
+- Vous pouvez retirer le lien d’un compte à tout moment dans l’app. Les opérations déjà enregistrées restent.
+- Si votre abonnement prend fin, nous déconnectons vos comptes liés. Supprimer votre compte les déconnecte tous.
+
 ## Résilier et se faire rembourser
 
 ### Résilier
@@ -208,6 +218,7 @@ Lorsqu’un abonnement expire ou qu’un achat est remboursé, votre compte revi
 - La synchronisation s’arrête. Votre journal reste complet sur votre téléphone, et les nouvelles modifications y attendent jusqu’à ce que Pro soit de nouveau actif. Ce qui était déjà synchronisé reste dans votre compte jusqu’à ce que vous le supprimiez.
 - Les nouvelles photos de tickets ne sont plus sauvegardées.
 - Un profil que vous partagez cesse de se synchroniser pour tout le monde.
+- Les comptes bancaires liés sont déconnectés. Les opérations déjà enregistrées restent.
 - Le quota de captures gratuit s’applique, et l’association par IA à l’import ainsi que la recherche web des commerçants sont désactivées.
 
 ## Fonctionnalités d’IA
@@ -304,6 +315,7 @@ Nous prenons un soin raisonnable des données sur nos serveurs, mais aucun syst�
 
 - Dans l’app, ouvrez Réglages, puis Compte, puis Supprimer le compte. Il peut vous être demandé de vous reconnecter pour confirmer.
 - Cela supprime définitivement de nos serveurs votre compte et tout ce qui y est synchronisé, y compris les photos de tickets sauvegardées. C’est irréversible.
+- Les comptes bancaires liés sont déconnectés chez Stripe.
 - Les profils que vous partagez sont supprimés de nos serveurs pour tout le monde. Dans un profil partagé par quelqu’un d’autre, les opérations que vous avez ajoutées restent, et les photos que vous avez ajoutées sont supprimées de nos serveurs.
 - Le journal sur votre téléphone reste, sauf si vous choisissez Supprimer le compte et effacer cet appareil. Si vous le gardez et vous reconnectez plus tard, le nouveau compte le reprend.
 - Supprimer votre compte ne résilie pas un abonnement souscrit dans une boutique d’applications. Résiliez-le d’abord auprès de la boutique. Cela résilie en revanche un abonnement acheté sur le web.
@@ -342,12 +354,13 @@ Si vous trouvez un problème de sécurité, écrivez à [support@tryoutlayr.com]
 
 ## Services tiers
 
-Outlayr dépend de services exploités par d’autres, notamment Apple (l’App Store, Se connecter avec Apple, Wallet, Raccourcis et les notifications), Google (Google Play, la connexion et les logos), nos fournisseurs d’IA, un service de logos et des sources de taux de change, ainsi que Notion si vous le connectez. La [Politique de confidentialité](/fr/privacy) nomme les prestataires qui reçoivent vos données.
+Outlayr dépend de services exploités par d’autres, notamment Apple (l’App Store, Se connecter avec Apple, Wallet, Raccourcis et les notifications), Google (Google Play, la connexion et les logos), nos fournisseurs d’IA, un service de logos et des sources de taux de change, ainsi que Notion ou Stripe Financial Connections si vous les connectez. La [Politique de confidentialité](/fr/privacy) nomme les prestataires qui reçoivent vos données.
 
 - Votre utilisation de ces services est également régie par leurs propres conditions.
 - Nous ne les contrôlons pas. Une modification ou une panne de leur côté peut modifier ou interrompre une fonctionnalité d’Outlayr.
 - Vous êtes responsable des éventuels frais de données ou d’opérateur liés à l’utilisation d’Outlayr.
 - Une connexion Notion ne lit que les pages que vous partagez avec Outlayr dans Notion, et dure jusqu’à ce que vous la déconnectiez, retiriez Outlayr dans Notion ou supprimiez votre compte. Importer à partir de celle-ci nécessite Outlayr Pro. Il vous appartient de vérifier ce que vous importez, comme pour tout import.
+- Une banque liée ne fonctionne que tant que votre banque et Stripe maintiennent la connexion. L’une ou l’autre peut la modifier ou y mettre fin, et vous devrez peut-être vous reconnecter à votre banque.
 
 ## Suspension et fin du contrat
 

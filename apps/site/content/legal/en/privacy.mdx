@@ -14,6 +14,7 @@ intro: "This policy explains what Outlayr collects, where it goes, how long it s
 - The app sends usage analytics and crash reports to PostHog: which screens you open, which features you use, and errors. Never amounts, merchants, notes, or names. It starts off if your device’s region is in the EEA or UK, and on everywhere else. Change it in **Settings › Share analytics**. Our server also tells PostHog the size, cost, and speed of each request to Anthropic, never what it contained, and links it to your account only while Share analytics is on.
 - This website uses PostHog too, with a cookie. If you’re in the EEA or UK, it asks first. Change your answer in the footer under **Cookies**.
 - With Outlayr Pro you can connect Notion to import expenses from your Notion databases. We keep Notion’s access key encrypted on our servers so you can import again, until you disconnect Notion or delete your account. What we read from Notion passes through our server to your device and isn’t stored.
+- With Outlayr Pro, you can link accounts at banks in the US and Canada through Stripe. You sign in to your bank on Stripe’s screen, and we never see your bank login. Our server files their transactions into your synced ledger as entries.
 - You can connect an AI assistant such as Claude to your account. Once you approve it, it can read what your devices synced, and with Outlayr Pro add entries. What it reads is handled under that assistant’s privacy policy. Our server tells PostHog which tool it used and how long it took, never what it read.
 - If you invite friends, each one sees your first name on your invite, and you see their first name, whether they bought Pro, and when. Never what they logged or what they paid.
 - With Outlayr Pro you can share a profile with up to 5 people. Everyone in it sees and can change that profile’s ledger and photos, and sees the first names of the people in it, including on the entries they logged.
@@ -51,6 +52,10 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | A PDF statement you choose, and its text | Bank statement PDF import | Our servers, Anthropic (Pro) | Deleted after reading, at most about 75 minutes if the import never finishes |
 | Notion access key (encrypted), Notion user ID | Connect Notion (Pro) | Our servers | Until you disconnect Notion or delete your account |
 | Names, columns, and rows of the Notion databases you pick | Notion import (Pro) | Notion, our servers, your device | Not kept on our servers |
+| Bank name, account name, last 4 digits, account type, link status, when it was linked and last refreshed, Stripe customer and account IDs | Link a bank (Pro) | Our servers, Stripe | Until you unlink the account or delete your account. Stripe: its policy |
+| Bank transactions: amount, currency, description, date, status | Link a bank (Pro) | Stripe, our servers, your devices | On our servers, as entries in your synced ledger, until you delete them or your account. Stripe: its policy |
+| Your bank login | Link a bank (Pro) | Stripe and your bank | Never reaches us |
+| What you type to find your bank, and your phone’s region | Link a bank (Pro) | Our servers | Not kept |
 | Merchant name, a web address you add, a general category | Add website | Our servers, shared with everyone | Refreshed after 90 days. Not linked to you |
 | Web address, IP address | Logos | Our servers (Cloudflare) | Web address stored with the logo; IP address not kept |
 | Image link, the image | Icon picker | Our servers (Cloudflare), shared with everyone | Kept with the image until removed; IP address not kept. Not linked to you |
@@ -174,6 +179,20 @@ When you import, our server uses the key to read the databases you pick: their n
 - Deleting your account revokes and deletes the key.
 
 Notion Labs, Inc. handles your workspace under [its own privacy policy](https://www.notion.com/trust/privacy-policy). It learns that your workspace is connected to Outlayr, and when our server reads from it.
+
+## Linking a bank
+
+With Outlayr Pro, you can link accounts at banks in the United States and Canada. It isn’t part of the free plan, and it needs sync on. Nothing is linked until you start it in the app.
+
+Linking runs through Stripe Financial Connections. You find your bank by searching in the app: what you type and your phone’s region go to our server to pick matching banks, and we don’t keep them. Then you sign in to your bank on Stripe’s screen, so your bank login goes to your bank and Stripe, never to us. Stripe shows its own terms there, and handles your bank connection and what it reads from your bank under [its privacy policy](https://stripe.com/privacy).
+
+For each account you link, our server keeps the bank’s name, the account’s name, its last 4 digits, its type (checking or savings, credit, investment, or other), whether the link works, when you linked it and when it was last refreshed, and the IDs Stripe gives the account and you as its customer. We also keep, for each transaction, what the bank last sent and which entry it filed into, so a later update changes the right entry.
+
+When Stripe has new transactions, our server reads each one’s amount, currency, description, date, and whether it’s pending, posted, or voided, and files it into your Personal ledger as an entry, which syncs to your devices like any other. A pending charge is updated when it posts. If it’s voided, an entry the bank added is removed, and an entry you logged yourself stays. If you changed an entry’s amount, date, or note, your change stays. If you already logged the same charge, by hand, from Wallet, or from a notification, with the same amount within a few days, the bank transaction is attached to that entry instead of adding a second one, and a subscription you track is marked as charged at the price the bank shows. Each linked account files into an account in your ledger: one whose name matches, or a new one named after the bank account, which you can change.
+
+- **Unlink** any account in the app. Our server disconnects it at Stripe and deletes its record. Entries already filed stay.
+- If your Pro ends, we disconnect your accounts at Stripe, and nothing new arrives.
+- Deleting your account disconnects every account at Stripe and deletes your Stripe customer.
 
 ## Suggestions, voice, and receipts
 
@@ -325,7 +344,7 @@ These companies help run Outlayr. Each receives only what its job needs.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** tracks subscription status. It receives an anonymous ID, or your account ID, name, and email once you sign in, and your purchase records.
 - **[Apple](https://www.apple.com/legal/privacy/)** provides Sign in with Apple, App Store payments, and iOS features such as Siri and Shortcuts, under its own policy. Its push service delivers the Apple Pay suggestions above and receives your iPhone’s push address and an encrypted message it can’t read.
 - **[Google](https://policies.google.com/privacy)** provides Sign in with Google and Google Play payments, under its own policy.
-- **[Stripe](https://stripe.com/privacy)** processes purchases on the web, and its Link service sells them. It receives your name, email, account ID, the plan you chose, and the payment details and billing address you enter at checkout.
+- **[Stripe](https://stripe.com/privacy)** processes purchases on the web, and its Link service sells them. It receives your name, email, account ID, the plan you chose, and the payment details and billing address you enter at checkout. If you link a bank, Stripe Financial Connections connects to it: it receives your bank login and the data your bank shares, and sends us the account details and transactions described in [Linking a bank](#linking-a-bank).
 - **[Expo](https://expo.dev/privacy)** delivers app updates. It receives a random install ID, the app version, your IP address, and update error messages.
 - **Your browser’s push service**, run by your browser’s maker such as Google, Apple, Mozilla, or Microsoft, delivers the daily web reminder if you turn it on. It receives your browser’s push address and an encrypted message it can’t read.
 - **[PostHog](https://posthog.com/privacy)** provides usage analytics and crash reports, from servers in the United States. It receives the events described in [What the app sends even without an account](#what-the-app-sends-even-without-an-account), a random install ID, and your account ID once you sign in, plus the [records of AI requests](#records-of-ai-requests) and [AI assistant tool calls](#ai-assistants) our server sends. It also receives this website’s analytics, described in [This website](#this-website).
@@ -362,7 +381,7 @@ If you’re in the European Economic Area or the United Kingdom, we rely on thes
 
 | Purpose | Legal basis |
 | --- | --- |
-| Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, bank statement PDF import, the Notion connection, the daily web reminder, Pro, invites, shared profiles, AI assistant connections, and webhooks | Contract: we need this data to provide what you ask for. |
+| Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, bank statement PDF import, linked banks, the Notion connection, the daily web reminder, Pro, invites, shared profiles, AI assistant connections, and webhooks | Contract: we need this data to provide what you ask for. |
 | The welcome and Pro notes, and notice of changes to this policy or our Terms | Contract: they’re part of the account and subscription you asked for. |
 | Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, PDF statements, notification text, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
 | Merchant suggestions, notification reading, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster and more accurate to file. Suggestions, notification reading, and web lookups reach Anthropic only once you allow it, and turning off Smart fill is how you object. |
@@ -383,6 +402,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Recordings pass through our server to ElevenLabs, and receipt photos, installment plan screenshots, and notification text to Anthropic. We don’t store any of them.
 - The Notion access key and your Notion user ID are kept until you disconnect Notion or delete your account. Rows read from Notion aren’t kept on our servers.
 - AI assistant connections (the assistant’s name and address, your approval, and its access keys) are kept until you delete your account. Access keys stop working after an hour, or after 30 days without renewal.
+- A linked bank account’s record is kept until you unlink it or delete your account, and your Stripe customer ID until you delete your account. Bank transactions become entries in your synced ledger and are kept until you delete them or your account; what the bank last sent for each one is kept until you unlink the account or delete your account.
 - Webhook tokens and addresses are kept until you remove them or delete your account. A received entry waits until one of your devices collects it, and an entry to send waits until it’s delivered or about 9 hours of retries run out.
 - Merchant suggestion requests aren’t kept once answered. Ones queued in the background wait on our server until your device collects the answer.
 - Your app language and the record of which welcome, Pro, and change notices you got are deleted with your account.
@@ -394,7 +414,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Analytics events linked to your account are deleted with it. PostHog erases them in a later batch, so they can remain for a while after the app reports the deletion finished. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry a random ID instead of your account ID, plus the conversation ID for voice entry, and are kept the same way, as are AI assistant tool calls, which carry a connection ID instead.
 - Website events carry a random browser ID, or a code that changes daily if you declined cookies, and are kept under PostHog’s retention policy.
 - The copy of a report you share is deleted when you turn its link off, within a day of the link expiring, when you delete the report on this site, or when you delete your account.
-- Our providers, including Anthropic, ElevenLabs, Apple, Google, and Expo, and Notion if you connect it, keep the data they receive under their own retention policies.
+- Our providers, including Anthropic, ElevenLabs, Apple, Google, and Expo, and Notion or Stripe if you connect them, keep the data they receive under their own retention policies.
 
 ## Deleting and exporting
 
@@ -404,6 +424,7 @@ Open **Settings › Account › Delete account**. You may be asked to sign in ag
 
 - Outlayr’s access to your Apple or Google sign-in is revoked. For Apple, our server asks Apple to revoke it. For Google, the app does.
 - If you connected Notion, our server asks Notion to revoke Outlayr’s access key.
+- If you linked banks, our server disconnects each account at Stripe and deletes your Stripe customer, then deletes our records of them, including what the bank last sent for each transaction.
 - Your webhook token, addresses, and entries waiting to be received or sent are deleted, so nothing new is sent. A delivery already under way can still finish.
 - Your synced ledger, deletion records, backed-up photos, and pending suggestion requests are deleted from our servers. That includes the ledger of profiles you share, and photos you added to profiles others share. Entries you added to someone else’s profile stay there without your name. Copies on other members’ devices, and exports they made, can remain.
 - Your customer records at RevenueCat and Stripe and our copy of your subscription status are deleted.
@@ -451,11 +472,12 @@ If you live in California or another US state with a privacy law, this is what w
 | --- | --- |
 | **Identifiers:** name, email, account ID, install ID, IP address | OVHcloud, Hetzner, RevenueCat, Stripe, Expo, PostHog, Google, Cloudflare (email, logos), Anthropic (whatever a bank statement you import shows) |
 | **Commercial information:** subscription and purchase records | Apple, Google, Stripe, RevenueCat, OVHcloud, Hetzner |
+| **Financial information:** linked bank account names and last 4 digits, bank transactions | Stripe, OVHcloud |
 | **Audio and visual information:** voice clips, receipt scans, installment plan screenshots, attached photos | ElevenLabs (clips), Anthropic (scans), Cloudflare (photos, clips in transit) |
 | **Internet or network activity:** IP address, user agent, request logs, app and website usage, crash reports | OVHcloud, Hetzner, Expo, PostHog |
 | **Records you create:** synced entries, amounts, merchants, notes, budgets | OVHcloud, Hetzner; merchant, category, and account names to Anthropic; category and account names to ElevenLabs |
 
-It comes from you, your device, Apple, and Google, and we use it for the purposes described in this policy. We keep it for the periods in [Data at a glance](#data-at-a-glance).
+It comes from you, your device, Apple, Google, and Stripe for banks you link, and we use it for the purposes described in this policy. We keep it for the periods in [Data at a glance](#data-at-a-glance).
 
 We don’t sell personal information or share it for cross-context behavioral advertising, and we haven’t in the past 12 months. We don’t use sensitive personal information to infer anything about you.
 
@@ -468,6 +490,7 @@ Because we don’t sell or share, there is nothing for a Global Privacy Control 
 - Traffic between the app, our servers, and our providers travels over encrypted HTTPS connections.
 - Every request for your data is tied to your signed-in session, and our server decides whose data a request can touch. One account can’t read or write another’s ledger or photos.
 - Sign-in refresh tokens and the Notion access key are encrypted before we store them.
+- We never receive your bank login. Linking a bank happens on Stripe’s screen.
 - Requests to Anthropic and ElevenLabs carry no name, email, or account ID, apart from what a bank statement you import shows.
 - You can lock Outlayr behind your device’s biometric lock (Face ID or Touch ID on iPhone).
 

@@ -14,6 +14,7 @@ intro: "Esta política explica o que o Outlayr coleta, para onde vai, por quanto
 - O app envia análises de uso e relatórios de falhas ao PostHog: quais telas você abre, quais recursos usa e erros. Nunca valores, estabelecimentos, notas ou nomes. Começa desativado se a região do seu dispositivo estiver no EEE ou no Reino Unido, e ativado em todos os outros lugares. Altere em **Ajustes › Compartilhar análises**. Nosso servidor também informa ao PostHog o tamanho, o custo e a velocidade de cada solicitação à Anthropic, nunca o que ela continha, e só a vincula à sua conta enquanto Compartilhar análises estiver ativado.
 - Este site também usa o PostHog, com um cookie. Se você estiver no EEE ou no Reino Unido, ele pergunta antes. Altere sua resposta no rodapé, em **Cookies**.
 - Com o Outlayr Pro, você pode conectar o Notion para importar despesas dos seus bancos de dados do Notion. Guardamos a chave de acesso do Notion criptografada nos nossos servidores para que você possa importar de novo, até você desconectar o Notion ou apagar sua conta. O que lemos do Notion passa pelo nosso servidor até o seu dispositivo e não é guardado.
+- Com o Outlayr Pro, você pode vincular contas de bancos dos EUA e do Canadá pela Stripe. Você entra no seu banco na tela da Stripe, e nunca vemos seus dados de acesso ao banco. Nosso servidor registra as transações delas como lançamentos no seu registro sincronizado.
 - Você pode conectar um assistente de IA, como o Claude, à sua conta. Depois que você o aprova, ele pode ler o que seus dispositivos sincronizaram e, com o Outlayr Pro, adicionar lançamentos. O que ele lê é tratado conforme a política de privacidade desse assistente. Nosso servidor informa ao PostHog qual ferramenta ele usou e quanto tempo levou, nunca o que ele leu.
 - Se você convidar amigos, cada um vê seu primeiro nome no seu convite, e você vê o primeiro nome deles, se compraram o Pro e quando. Nunca o que eles registraram nem quanto pagaram.
 - Com o Outlayr Pro, você pode compartilhar um perfil com até 5 pessoas. Todos nele veem e podem alterar o registro e as fotos desse perfil, e veem os primeiros nomes das pessoas nele, inclusive nos lançamentos que elas fizeram.
@@ -51,6 +52,10 @@ Todo tipo de dado que o Outlayr trata, em um só lugar. As seções abaixo expli
 | Um extrato em PDF que você escolhe, e o texto dele | Importação de extrato bancário em PDF | Nossos servidores, Anthropic (Pro) | Apagado após a leitura, no máximo cerca de 75 minutos se a importação nunca terminar |
 | Chave de acesso do Notion (criptografada), ID de usuário do Notion | Conectar o Notion (Pro) | Nossos servidores | Até você desconectar o Notion ou apagar sua conta |
 | Nomes, colunas e linhas dos bancos de dados do Notion que você escolhe | Importação do Notion (Pro) | Notion, nossos servidores, seu dispositivo | Não guardados nos nossos servidores |
+| Nome do banco, nome da conta, últimos 4 dígitos, tipo de conta, status do vínculo, quando foi vinculada e atualizada pela última vez, IDs de cliente e de conta da Stripe | Vincular um banco (Pro) | Nossos servidores, Stripe | Até você desvincular a conta ou apagar sua conta. Stripe: a política dela |
+| Transações bancárias: valor, moeda, descrição, data, status | Vincular um banco (Pro) | Stripe, nossos servidores, seus dispositivos | Nos nossos servidores, como lançamentos no seu registro sincronizado, até você apagá-las ou apagar sua conta. Stripe: a política dela |
+| Seus dados de acesso ao banco | Vincular um banco (Pro) | Stripe e seu banco | Nunca chegam até nós |
+| O que você digita para procurar seu banco, e a região do seu celular | Vincular um banco (Pro) | Nossos servidores | Não guardados |
 | Nome do estabelecimento, um endereço web que você adiciona, uma categoria geral | Adicionar site | Nossos servidores, compartilhado com todos | Atualizado após 90 dias. Não vinculado a você |
 | Endereço web, endereço IP | Logos | Nossos servidores (Cloudflare) | Endereço web guardado com o logo; endereço IP não guardado |
 | Link de imagem, a imagem | Seletor de ícone | Nossos servidores (Cloudflare), compartilhado com todos | Guardado com a imagem até ser removido; endereço IP não guardado. Não vinculado a você |
@@ -174,6 +179,20 @@ Quando você importa, nosso servidor usa a chave para ler os bancos de dados que
 - Apagar sua conta revoga e apaga a chave.
 
 A Notion Labs, Inc. trata seu espaço de trabalho conforme a [própria política de privacidade](https://www.notion.com/trust/privacy-policy). Ela fica sabendo que seu espaço de trabalho está conectado ao Outlayr, e quando nosso servidor lê dados dele.
+
+## Vincular um banco
+
+Com o Outlayr Pro, você pode vincular contas de bancos dos Estados Unidos e do Canadá. Isso não faz parte do plano grátis, e exige a sincronização ativada. Nada é vinculado até você começar pelo app.
+
+O vínculo é feito pela Stripe Financial Connections. Você procura seu banco no app: o que você digita e a região do seu celular vão para o nosso servidor para encontrar os bancos correspondentes, e não os guardamos. Depois, você entra no seu banco na tela da Stripe, então seus dados de acesso vão para o seu banco e para a Stripe, nunca para nós. A Stripe mostra ali os próprios termos e trata a conexão com o seu banco e o que lê dele conforme a [política de privacidade dela](https://stripe.com/br/privacy).
+
+Para cada conta que você vincula, nosso servidor guarda o nome do banco, o nome da conta, os últimos 4 dígitos, o tipo (corrente ou poupança, crédito, investimento ou outro), se o vínculo funciona, quando você o fez e quando foi atualizado pela última vez, e os IDs que a Stripe dá à conta e a você como cliente. Também guardamos, para cada transação, o que o banco enviou por último e em qual lançamento ela foi registrada, para que uma atualização posterior altere o lançamento certo.
+
+Quando a Stripe tem transações novas, nosso servidor lê de cada uma o valor, a moeda, a descrição, a data e se está pendente, lançada ou cancelada, e a registra como um lançamento no seu perfil Pessoal, que sincroniza com seus dispositivos como qualquer outro. Uma cobrança pendente é atualizada quando é lançada. Se for cancelada, o lançamento que o banco adicionou é removido, e um que você registrou fica. Se você alterou o valor, a data ou a nota de um lançamento, sua alteração é mantida. Se você já registrou a mesma cobrança, à mão, pelo Wallet ou por uma notificação, com o mesmo valor em poucos dias, a transação bancária é anexada a esse lançamento em vez de adicionar um segundo, e uma assinatura que você acompanha é marcada como cobrada pelo preço que o banco mostra. Cada conta vinculada registra em uma conta do seu registro: uma com o nome correspondente, ou uma nova com o nome da conta bancária, que você pode mudar.
+
+- **Desvincule** qualquer conta pelo app. Nosso servidor a desconecta na Stripe e apaga o registro dela. Os lançamentos já registrados continuam.
+- Se o seu Pro terminar, desconectamos suas contas na Stripe, e nada novo chega.
+- Apagar sua conta desconecta todas as contas na Stripe e apaga seu cadastro de cliente na Stripe.
 
 ## Sugestões, voz e recibos
 
@@ -325,7 +344,7 @@ Estas empresas ajudam a operar o Outlayr. Cada uma recebe apenas o que o trabalh
 - **[RevenueCat](https://www.revenuecat.com/privacy)** acompanha o status das assinaturas. Ela recebe um ID anônimo, ou seu ID de conta, nome e e-mail depois que você inicia sessão, e seus registros de compras.
 - **[Apple](https://www.apple.com/legal/privacy/)** fornece o Iniciar sessão com a Apple, os pagamentos da App Store e recursos do iOS como a Siri e o Atalhos, conforme a própria política. O serviço push dela entrega as sugestões do Apple Pay descritas acima e recebe o endereço push do seu iPhone e uma mensagem criptografada que não consegue ler.
 - **[Google](https://policies.google.com/privacy)** fornece o Fazer login com o Google e os pagamentos do Google Play, conforme a própria política.
-- **[Stripe](https://stripe.com/br/privacy)** processa as compras na web, e o serviço Link dela as vende. Ela recebe seu nome, e-mail, ID de conta, o plano escolhido e os dados de pagamento e o endereço de cobrança que você informa ao pagar.
+- **[Stripe](https://stripe.com/br/privacy)** processa as compras na web, e o serviço Link dela as vende. Ela recebe seu nome, e-mail, ID de conta, o plano escolhido e os dados de pagamento e o endereço de cobrança que você informa ao pagar. Se você vincular um banco, a Stripe Financial Connections se conecta a ele: ela recebe seus dados de acesso ao banco e os dados que o seu banco compartilha, e nos envia os dados da conta e as transações descritos em [Vincular um banco](#vincular-um-banco).
 - **[Expo](https://expo.dev/privacy)** entrega as atualizações do app. Ela recebe um ID de instalação aleatório, a versão do app, seu endereço IP e mensagens de erro de atualização.
 - **O serviço push do seu navegador**, operado pelo fabricante, como Google, Apple, Mozilla ou Microsoft, entrega o lembrete diário na web se você ativar. Ele recebe o endereço push do seu navegador e uma mensagem criptografada que não consegue ler.
 - **[PostHog](https://posthog.com/privacy)** fornece análises de uso e relatórios de falhas, a partir de servidores nos Estados Unidos. Ele recebe os eventos descritos em [O que o app envia mesmo sem conta](#o-que-o-app-envia-mesmo-sem-conta), um ID de instalação aleatório e seu ID de conta depois que você inicia sessão, além dos [registros de solicitações de IA](#registros-de-solicitações-de-ia) e das [chamadas de ferramentas de assistentes de IA](#assistentes-de-ia) que nosso servidor envia. Ele também recebe as análises deste site, descritas em [Este site](#este-site).
@@ -362,7 +381,7 @@ Se você estiver no Espaço Econômico Europeu ou no Reino Unido, usamos estas b
 
 | Finalidade | Base legal |
 | --- | --- |
-| Sua conta, sincronização, armazenamento de fotos, lançamento por voz, escaneamentos de recibos, importações de parcelamentos, importação de CSV, importação de extratos bancários em PDF, a conexão com o Notion, o lembrete diário na web, o Pro, os convites, os perfis compartilhados, as conexões com assistentes de IA e os webhooks | Contrato: precisamos desses dados para fornecer o que você pede. |
+| Sua conta, sincronização, armazenamento de fotos, lançamento por voz, escaneamentos de recibos, importações de parcelamentos, importação de CSV, importação de extratos bancários em PDF, os bancos vinculados, a conexão com o Notion, o lembrete diário na web, o Pro, os convites, os perfis compartilhados, as conexões com assistentes de IA e os webhooks | Contrato: precisamos desses dados para fornecer o que você pede. |
 | As mensagens de boas-vindas e do Pro, e os avisos de mudanças nesta política ou nos nossos Termos | Contrato: elas fazem parte da conta e da assinatura que você pediu. |
 | Envio de lançamentos por voz, fotos de recibos, capturas de tela de parcelamentos, descrições de CSV, extratos em PDF, texto de notificações e nomes de estabelecimentos à Anthropic e à ElevenLabs | Seu consentimento, dado com Permitir quando o app pergunta e retirado em **Ajustes › Enviar dados a provedores de IA**. |
 | Sugestões de estabelecimentos, leitura de notificações, buscas na web, a lista compartilhada de estabelecimentos e os logos | Interesses legítimos: tornar os lançamentos mais rápidos e mais precisos de classificar. Sugestões, leitura de notificações e buscas na web só chegam à Anthropic depois que você permite, e desativar o Preenchimento inteligente é a forma de se opor. |
@@ -383,6 +402,7 @@ A [tabela acima](#dados-em-resumo) lista por quanto tempo cada tipo de dado é g
 - As gravações passam pelo nosso servidor até a ElevenLabs, e as fotos de recibos, as capturas de tela de parcelamentos e o texto de notificações até a Anthropic. Não guardamos nenhum deles.
 - A chave de acesso do Notion e seu ID de usuário do Notion são guardados até você desconectar o Notion ou apagar sua conta. As linhas lidas do Notion não são guardadas nos nossos servidores.
 - As conexões com assistentes de IA (o nome e o endereço do assistente, sua aprovação e as chaves de acesso dele) são guardadas até você apagar sua conta. As chaves de acesso deixam de funcionar após uma hora, ou após 30 dias sem renovação.
+- O registro de uma conta bancária vinculada é guardado até você desvinculá-la ou apagar sua conta, e seu ID de cliente da Stripe até você apagar sua conta. As transações bancárias viram lançamentos no seu registro sincronizado e ficam guardadas até você apagá-las ou apagar sua conta; o que o banco enviou por último para cada uma fica guardado até você desvincular a conta ou apagar sua conta.
 - Tokens e endereços de webhooks ficam guardados até você removê-los ou apagar sua conta. Um lançamento recebido espera até um dos seus dispositivos buscá-lo, e um a enviar, até ser entregue ou acabarem cerca de 9 horas de novas tentativas.
 - As solicitações de sugestão de estabelecimentos não são guardadas depois de respondidas. As que ficam na fila em segundo plano esperam no nosso servidor até o seu dispositivo buscar a resposta.
 - O idioma do seu app e o registro de quais avisos de boas-vindas, do Pro e de mudanças você recebeu são apagados junto com sua conta.
@@ -394,7 +414,7 @@ A [tabela acima](#dados-em-resumo) lista por quanto tempo cada tipo de dado é g
 - Os eventos de análise vinculados à sua conta são apagados junto com ela. O PostHog os apaga em um lote posterior, então eles podem continuar lá por um tempo depois que o app informar que a exclusão terminou. Os eventos de uma instalação que nunca iniciou sessão levam apenas um ID de instalação aleatório e são guardados conforme a política de retenção do PostHog. Os registros de solicitações de IA enviados enquanto Compartilhar análises estava desativado levam um ID aleatório em vez do seu ID de conta, além do ID da conversa no lançamento por voz, e são guardados da mesma forma, assim como as chamadas de ferramentas de assistentes de IA, que levam um ID da conexão no lugar.
 - Os eventos do site levam um ID aleatório do navegador, ou um código que muda diariamente se você recusou os cookies, e são guardados conforme a política de retenção do PostHog.
 - A cópia de um relatório que você compartilha é apagada quando você desativa o link, até um dia depois de ele expirar, quando você exclui o relatório neste site ou quando exclui sua conta.
-- Nossos provedores, incluindo a Anthropic, a ElevenLabs, a Apple, o Google e a Expo, e o Notion se você o conectar, guardam os dados que recebem conforme as próprias políticas de retenção.
+- Nossos provedores, incluindo a Anthropic, a ElevenLabs, a Apple, o Google e a Expo, e o Notion ou a Stripe se você os conectar, guardam os dados que recebem conforme as próprias políticas de retenção.
 
 ## Apagar e exportar
 
@@ -404,6 +424,7 @@ Abra **Ajustes › Conta › Apagar conta**. Talvez você precise iniciar sessã
 
 - O acesso do Outlayr ao seu início de sessão com a Apple ou o Google é revogado. No caso da Apple, nosso servidor pede à Apple que o revogue. No caso do Google, o app faz isso.
 - Se você conectou o Notion, nosso servidor pede ao Notion que revogue a chave de acesso do Outlayr.
+- Se você vinculou bancos, nosso servidor desconecta cada conta na Stripe e apaga seu cadastro de cliente na Stripe, depois apaga nossos registros delas, incluindo o que o banco enviou por último para cada transação.
 - Seu token de webhook, seus endereços e os lançamentos aguardando recebimento ou envio são apagados, para que nada novo seja enviado. Uma entrega já em andamento ainda pode ser concluída.
 - Seus lançamentos sincronizados, os registros de exclusão, as fotos com backup e as solicitações de sugestão pendentes são apagados dos nossos servidores. Isso inclui o registro dos perfis que você compartilha e as fotos que você adicionou a perfis compartilhados por outras pessoas. Os lançamentos que você adicionou ao perfil de outra pessoa continuam lá, sem o seu nome. As cópias nos dispositivos de outros membros, e as exportações que eles fizeram, podem permanecer.
 - Seus registros de cliente na RevenueCat e na Stripe e nossa cópia do status da sua assinatura são apagados.
@@ -451,11 +472,12 @@ Se você mora na Califórnia ou em outro estado dos EUA com uma lei de privacida
 | --- | --- |
 | **Identificadores:** nome, e-mail, ID de conta, ID de instalação, endereço IP | OVHcloud, Hetzner, RevenueCat, Stripe, Expo, PostHog, Google, Cloudflare (e-mail, logos), Anthropic (o que mostrar um extrato que você importar) |
 | **Informações comerciais:** registros de assinaturas e compras | Apple, Google, Stripe, RevenueCat, OVHcloud, Hetzner |
+| **Informações financeiras:** nomes e últimos 4 dígitos das contas bancárias vinculadas, transações bancárias | Stripe, OVHcloud |
 | **Informações de áudio e visuais:** áudios de voz, escaneamentos de recibos, capturas de tela de parcelamentos, fotos anexadas | ElevenLabs (áudios), Anthropic (escaneamentos), Cloudflare (fotos, áudios em trânsito) |
 | **Atividade na internet ou em outras redes:** endereço IP, agente de usuário, registros de solicitações, uso do app e do site, relatórios de falhas | OVHcloud, Hetzner, Expo, PostHog |
 | **Registros que você cria:** lançamentos sincronizados, valores, estabelecimentos, notas, orçamentos | OVHcloud, Hetzner; nomes de estabelecimentos, categorias e contas para a Anthropic; nomes de categorias e contas para a ElevenLabs |
 
-Essas informações vêm de você, do seu dispositivo, da Apple e do Google, e as usamos para as finalidades descritas nesta política. Nós as guardamos pelos prazos indicados em [Dados em resumo](#dados-em-resumo).
+Essas informações vêm de você, do seu dispositivo, da Apple, do Google e, para os bancos que você vincula, da Stripe, e as usamos para as finalidades descritas nesta política. Nós as guardamos pelos prazos indicados em [Dados em resumo](#dados-em-resumo).
 
 Não vendemos informações pessoais nem as compartilhamos para publicidade comportamental entre contextos, e não fizemos isso nos últimos 12 meses. Não usamos informações pessoais sensíveis para inferir nada sobre você.
 
@@ -468,6 +490,7 @@ Como não vendemos nem compartilhamos, não há nada de que um sinal de Global P
 - O tráfego entre o app, nossos servidores e nossos provedores passa por conexões HTTPS criptografadas.
 - Cada solicitação dos seus dados está ligada à sua sessão iniciada, e nosso servidor decide em quais dados uma solicitação pode tocar. Uma conta não pode ler nem gravar os lançamentos ou as fotos de outra.
 - Os tokens de atualização de início de sessão e a chave de acesso do Notion são criptografados antes de serem guardados.
+- Nunca recebemos seus dados de acesso ao banco. Vincular um banco acontece na tela da Stripe.
 - As solicitações à Anthropic e à ElevenLabs não levam nome, e-mail nem ID de conta, exceto o que mostrar um extrato que você importar.
 - Você pode proteger o Outlayr com o bloqueio biométrico do seu dispositivo (Face ID ou Touch ID no iPhone).
 

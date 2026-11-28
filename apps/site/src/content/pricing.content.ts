@@ -4,11 +4,11 @@ import type { Dictionary } from "intlayer";
 const pricing = {
     content: {
         bank: t({
-            en: "Outlayr never links your bank, on any plan.",
-            de: "Outlayr verbindet nie dein Bankkonto, in keinem Plan.",
-            es: "Outlayr nunca se conecta a tu banco, en ningún plan.",
-            pt: "O Outlayr nunca se conecta ao seu banco, em nenhum plano.",
-            fr: "Outlayr ne se connecte jamais à votre banque, quelle que soit l'offre.",
+            en: "Linking a bank is optional, and Outlayr never sees your bank login.",
+            de: "Eine Bank zu verknüpfen ist optional, und Outlayr sieht deinen Bank-Login nie.",
+            es: "Vincular un banco es opcional, y Outlayr nunca ve tus datos de acceso al banco.",
+            pt: "Vincular um banco é opcional, e o Outlayr nunca vê o login do seu banco.",
+            fr: "Lier une banque est facultatif, et Outlayr ne voit jamais vos identifiants bancaires.",
         }),
         cancel: t({
             en: "Cancel anytime from your app store, or buy it once.",
@@ -32,11 +32,11 @@ const pricing = {
             fr: "Ce sont les prix aux États-Unis. Votre boutique d'applications affiche le prix final de votre pays avant l'achat.",
         }),
         lead: t({
-            en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-            de: "Outlayr ist der Ausgaben-Tracker, der nie dein Bankkonto verbindet: Erfasse per Satz, Sprache, Beleg oder Apple Pay, in jeder von 165 Währungen.",
-            es: "Outlayr es la app de gastos que nunca se conecta a tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
-            pt: "O Outlayr é o app de gastos que nunca se conecta ao seu banco: registre por frase, voz, recibo ou Apple Pay, em qualquer uma de 165 moedas.",
-            fr: "Outlayr est l'app de suivi des dépenses qui ne se connecte jamais à votre banque : saisissez par phrase, voix, ticket ou Apple Pay, dans l'une des 165 devises.",
+            en: "Outlayr is the expense tracker that doesn't need your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
+            de: "Outlayr ist der Ausgaben-Tracker, der dein Bankkonto nicht braucht: Erfasse per Satz, Sprache, Beleg oder Apple Pay, in jeder von 165 Währungen.",
+            es: "Outlayr es la app de gastos que no necesita tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+            pt: "O Outlayr é o app de gastos que não precisa do seu banco: registre por frase, voz, recibo ou Apple Pay, em qualquer uma de 165 moedas.",
+            fr: "Outlayr est l'app de suivi des dépenses qui n'a pas besoin de votre banque : saisissez par phrase, voix, ticket ou Apple Pay, dans l'une des 165 devises.",
         }),
         meta: {
             description: insert(

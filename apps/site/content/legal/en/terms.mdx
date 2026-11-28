@@ -39,11 +39,11 @@ You may not use Outlayr if US law prohibits you from receiving it. See [export c
 
 ## What Outlayr is, and is not
 
-Outlayr is a tool for recording and reviewing your own money: expenses, income, transfers between your accounts, budgets, goals, and recurring charges. It works from what you type, speak, scan, import, or log from Wallet on iPhone.
+Outlayr is a tool for recording and reviewing your own money: expenses, income, transfers between your accounts, budgets, goals, and recurring charges. It works from what you type, speak, scan, import, or log from Wallet on iPhone, and from bank accounts you choose to link.
 
 Outlayr is not:
 
-- a bank, payment service, or money transmitter. It does not connect to your bank, hold funds, or make payments. Recording a transfer between accounts in Outlayr moves no money.
+- a bank, payment service, or money transmitter. It does not hold funds or make payments, and it only reads the bank accounts you link. Recording a transfer between accounts in Outlayr moves no money.
 - a financial, investment, tax, accounting, or legal adviser. Nothing in Outlayr is a recommendation about what to do with your money.
 - an official record. Check it against your statements and receipts before you use it for taxes, audits, or legal matters.
 
@@ -56,7 +56,8 @@ You can use most of Outlayr without an account. Your ledger stays on your phone,
 You need an account to:
 
 - sync your ledger across devices;
-- use voice entry, receipt scanning, installment plan import, merchant suggestions, and AI matching on import, unless you bought Outlayr Pro without one.
+- use voice entry, receipt scanning, installment plan import, merchant suggestions, and AI matching on import, unless you bought Outlayr Pro without one;
+- link bank accounts.
 
 You create an account by signing in with Apple or Google, or with an email and password. Signing in does not change your ledger. You choose whether to sync.
 
@@ -85,6 +86,7 @@ Outlayr is free to download and use. Outlayr Pro lifts the free limits and adds 
 | AI matching on CSV import                              | No   | Yes        |
 | Web merchant lookup                                    | No   | Yes        |
 | Notion connection                                      | No   | Yes        |
+| Linked banks in the US and Canada                      | No   | Yes        |
 | App icons                                              | 1    | All        |
 
 Pro’s limit on voice entries and receipt scans is a fair-use limit. Merchant suggestions are available on both plans.
@@ -184,6 +186,14 @@ A lifetime purchase is linked to your Outlayr account, or to the anonymous accou
 - If the owner deletes their account, the profile is deleted from our servers for everyone in it. Copies already on members’ devices, and exports they made, can remain.
 - The owner is responsible for who they invite, and each person for what they add.
 
+## Linked banks
+
+- With Pro and sync on, you can link accounts at banks in the United States and Canada through Stripe Financial Connections. Some banks and accounts can’t be linked.
+- You sign in to your bank on Stripe’s screen, never in Outlayr. Stripe’s terms for Financial Connections, shown there, also apply.
+- New transactions from a linked account become entries, including pending charges, which are updated when they post. A voided charge removes an entry the bank added, never one you logged yourself. Your bank’s data can be late, incomplete, or wrong. Check your entries as you would any import.
+- You can unlink an account at any time in the app. Entries already filed stay.
+- If your subscription ends, we disconnect your linked accounts. Deleting your account disconnects them all.
+
 ## Cancelling and refunds
 
 ### Cancelling
@@ -208,6 +218,7 @@ When a subscription runs out or a purchase is refunded, your account returns to 
 - Sync stops. Your ledger stays complete on your phone, and new changes wait there until Pro is active again. What was already synced stays in your account until you delete it.
 - New receipt photos are no longer backed up.
 - A profile you share stops syncing for everyone in it.
+- Linked bank accounts are disconnected. Entries already filed stay.
 - The free capture allowance applies, and AI matching on import and web merchant lookup turn off.
 
 ## AI features
@@ -304,6 +315,7 @@ We take reasonable care with data on our servers, but no system is free of failu
 
 - In the app, open Settings, then Account, then Delete account. You may be asked to sign in again to confirm.
 - This permanently removes your account and everything synced to it from our servers, including backed-up receipt photos. It cannot be undone.
+- Linked bank accounts are disconnected at Stripe.
 - Profiles you share are deleted from our servers for everyone in them. In a profile someone else shares, entries you added stay, and photos you added are deleted from our servers.
 - The ledger on your phone stays unless you choose Delete account and erase this device. If you keep it and sign in again later, the new account adopts it.
 - Deleting your account does not cancel an app store subscription. Cancel it with the store first. It does cancel a subscription you bought on the web.
@@ -342,12 +354,13 @@ If you find a security problem, email [support@tryoutlayr.com](mailto:support@tr
 
 ## Third-party services
 
-Outlayr depends on services run by others, including Apple (the App Store, Sign in with Apple, Wallet, Shortcuts, and notifications), Google (Google Play, sign-in, and logos), our AI providers, a logo service, and exchange-rate sources, and Notion if you connect it. The [Privacy Policy](/privacy) names the providers that receive your data.
+Outlayr depends on services run by others, including Apple (the App Store, Sign in with Apple, Wallet, Shortcuts, and notifications), Google (Google Play, sign-in, and logos), our AI providers, a logo service, and exchange-rate sources, and Notion or Stripe Financial Connections if you connect them. The [Privacy Policy](/privacy) names the providers that receive your data.
 
 - Your use of those services is also governed by their own terms.
 - We do not control them. A change or outage on their side can change or stop an Outlayr feature.
 - You are responsible for any data or carrier charges for using Outlayr.
 - A Notion connection reads only the pages you share with Outlayr in Notion, and lasts until you disconnect it, remove Outlayr in Notion, or delete your account. Importing from it needs Outlayr Pro. What you import is yours to check, as with any import.
+- A linked bank works only while your bank and Stripe keep the connection open. Either can change or end it, and you may need to sign in to your bank again.
 
 ## Suspension and termination
 

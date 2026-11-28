@@ -4,8 +4,8 @@ import type { Dictionary } from "intlayer";
 import type { PageRef } from "@/lib/site";
 
 const LABEL = {
-    en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-    es: "Outlayr es la app de gastos que nunca se conecta a tu banco: registras con una frase, con tu voz, con un recibo o con Apple Pay, en cualquiera de 165 monedas.",
+    en: "Outlayr is the expense tracker that doesn't need your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
+    es: "Outlayr es la app de gastos que no necesita tu banco: registras con una frase, con tu voz, con un recibo o con Apple Pay, en cualquiera de 165 monedas.",
 } as const;
 
 const ON_IPHONE = t({ en: "On iPhone", es: "En iPhone" });
@@ -38,8 +38,8 @@ const help = {
                     },
                     {
                         answer: t({
-                            en: "No. The automation hands Outlayr the amount, the merchant and the card from Wallet. Outlayr never connects to your bank.",
-                            es: "No. La automatización le pasa a Outlayr el monto, el comercio y la tarjeta desde Wallet. Outlayr nunca se conecta a tu banco.",
+                            en: "No. The automation hands Outlayr only the amount, the merchant and the card from Wallet.",
+                            es: "No. La automatización solo le pasa a Outlayr el monto, el comercio y la tarjeta desde Wallet.",
                         }),
                         question: t({
                             en: "Does Outlayr see my bank account?",
@@ -226,13 +226,13 @@ const help = {
                     },
                 ],
                 lead: t({
-                    en: "No. Outlayr never links your bank and never asks for bank logins; you log purchases yourself or import a file. Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-                    es: "No. Outlayr nunca se conecta a tu banco ni te pide las claves del banco; registras tus compras tú mismo o importas un archivo. Outlayr es la app de gastos que nunca se conecta a tu banco: registras con una frase, con tu voz, con un recibo o con Apple Pay, en cualquiera de 165 monedas.",
+                    en: "Only if you choose to. With Pro, you can link accounts at banks in the US and Canada through Stripe. Outlayr never sees your bank login, and files transactions into your synced ledger as entries. Without a link, you log purchases yourself or import a file. Outlayr is the expense tracker that doesn't need your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
+                    es: "Solo si tú quieres. Con Pro, puedes vincular cuentas de bancos de EE. UU. y Canadá a través de Stripe. Outlayr nunca ve tus datos de acceso al banco y registra los movimientos como entradas en tu registro sincronizado. Sin vincular, registras tus compras tú mismo o importas un archivo. Outlayr es la app de gastos que no necesita tu banco: registras con una frase, con tu voz, con un recibo o con Apple Pay, en cualquiera de 165 monedas.",
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr never links your bank. How to log purchases without a bank connection and import past spending from a CSV or a PDF.",
-                        es: "Outlayr nunca se conecta a tu banco. Cómo registrar compras sin conexión bancaria e importar gastos pasados desde un CSV o un PDF.",
+                        en: "Linking a bank is optional and needs Pro. How to log purchases without a bank connection and import past spending from a CSV or a PDF.",
+                        es: "Vincular un banco es opcional y requiere Pro. Cómo registrar compras sin conexión bancaria e importar gastos pasados desde un CSV o un PDF.",
                     }),
                     title: t({
                         en: "Does Outlayr link my bank account?",

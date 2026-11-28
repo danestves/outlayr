@@ -1467,6 +1467,75 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         effectiveAtMs: US_HOSTING_AT_MS,
         postedAtMs: Date.UTC(2026, 10, 29),
     },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "With Pro, link accounts at banks in the US and Canada through Stripe. You sign in on Stripe's screen, and we never see your bank login. What you type to find your bank and your phone's region go to our server and aren't kept. We keep each account's bank, name, and last 4 digits until you unlink it, and file its transactions into your synced ledger as entries, until you delete them or your account.",
+                    label: "Linking a bank",
+                },
+            ],
+            de: [
+                {
+                    detail: "Mit Pro verknüpfst du Konten bei Banken in den USA und Kanada über Stripe. Du meldest dich auf dem Bildschirm von Stripe an, und wir sehen deine Bank-Zugangsdaten nie. Was du zur Banksuche eintippst und die Region deines Handys gehen an unseren Server und werden nicht gespeichert. Bank, Name und letzte 4 Ziffern jedes Kontos speichern wir, bis du die Verknüpfung aufhebst, und legen seine Umsätze als Einträge in deinem synchronisierten Haushaltsbuch ab, bis du sie oder dein Konto löschst.",
+                    label: "Bank verknüpfen",
+                },
+            ],
+            es: [
+                {
+                    detail: "Con Pro, vincula cuentas de bancos de Estados Unidos y Canadá a través de Stripe. Inicias sesión en la pantalla de Stripe, y nunca vemos tus datos de acceso al banco. Lo que escribes para buscar tu banco y la región de tu teléfono van a nuestro servidor y no se guardan. Guardamos el banco, el nombre y los últimos 4 dígitos de cada cuenta hasta que la desvincules, y registramos sus movimientos como entradas en tu registro sincronizado, hasta que las borres o borres tu cuenta.",
+                    label: "Vincular un banco",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Avec Pro, liez des comptes de banques aux États-Unis et au Canada via Stripe. Vous vous connectez sur l'écran de Stripe, et nous ne voyons jamais vos identifiants bancaires. Ce que vous tapez pour trouver votre banque et la région de votre téléphone vont à notre serveur et ne sont pas conservés. Nous gardons la banque, le nom et les 4 derniers chiffres de chaque compte jusqu'à ce que vous retiriez le lien, et enregistrons ses transactions comme opérations dans votre registre synchronisé, jusqu'à ce que vous les supprimiez ou supprimiez votre compte.",
+                    label: "Lier une banque",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Com o Pro, vincule contas de bancos dos EUA e do Canadá pela Stripe. Você entra na tela da Stripe, e nunca vemos seus dados de acesso ao banco. O que você digita para procurar seu banco e a região do seu celular vão para o nosso servidor e não são guardados. Guardamos o banco, o nome e os últimos 4 dígitos de cada conta até você desvinculá-la, e registramos as transações como lançamentos no seu registro sincronizado, até você apagá-las ou apagar sua conta.",
+                    label: "Vincular um banco",
+                },
+            ],
+        },
+        document: "privacy",
+        effectiveAtMs: BANKING_EFFECTIVE_AT_MS,
+        postedAtMs: Date.UTC(2026, 10, 29),
+    },
+    {
+        changes: {
+            en: [
+                {
+                    label: "Linked banks need Pro. They are disconnected when it ends, and entries already filed stay.",
+                },
+            ],
+            de: [
+                {
+                    label: "Verknüpfte Banken brauchen Pro. Endet es, werden sie getrennt, und bereits erfasste Einträge bleiben.",
+                },
+            ],
+            es: [
+                {
+                    label: "Los bancos vinculados requieren Pro. Se desconectan cuando termina, y las entradas ya guardadas se quedan.",
+                },
+            ],
+            fr: [
+                {
+                    label: "Les banques liées nécessitent Pro. Elles sont déconnectées quand il prend fin, et les opérations déjà enregistrées restent.",
+                },
+            ],
+            pt: [
+                {
+                    label: "Bancos vinculados exigem o Pro. Eles são desconectados quando ele termina, e os lançamentos já registrados continuam.",
+                },
+            ],
+        },
+        document: "terms",
+        effectiveAtMs: BANKING_EFFECTIVE_AT_MS,
+        postedAtMs: Date.UTC(2026, 10, 29),
+    },
 ];
 
 export const noticeKey = ({ document, effectiveAtMs }: Pick<PolicyNotice, "document" | "effectiveAtMs">) =>

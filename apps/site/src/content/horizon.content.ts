@@ -24,11 +24,11 @@ const horizon = {
                 {
                     label: t({ en: "Bank", de: "Bank", es: "Banco", pt: "Banco", fr: "Banque" }),
                     text: t({
-                        en: "Outlayr never links your bank or asks for a bank login.",
-                        de: "Outlayr verknüpft nie dein Bankkonto und fragt nie nach deinem Bank-Login.",
-                        es: "Outlayr nunca conecta tu banco ni te pide tu usuario del banco.",
-                        pt: "O Outlayr nunca conecta seu banco nem pede o login do banco.",
-                        fr: "Outlayr ne connecte jamais votre banque et ne demande jamais vos identifiants bancaires.",
+                        en: "Linking a bank is optional, and Outlayr never sees your bank login.",
+                        de: "Eine Bank zu verknüpfen ist optional, und Outlayr sieht deinen Bank-Login nie.",
+                        es: "Vincular un banco es opcional, y Outlayr nunca ve tus datos de acceso al banco.",
+                        pt: "Vincular um banco é opcional, e o Outlayr nunca vê o login do seu banco.",
+                        fr: "Lier une banque est facultatif, et Outlayr ne voit jamais vos identifiants bancaires.",
                     }),
                 },
                 {

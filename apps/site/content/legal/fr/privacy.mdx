@@ -14,6 +14,7 @@ intro: "Cette politique explique ce qu’Outlayr collecte, où cela va, combien 
 - L’app envoie des statistiques d’utilisation et des rapports de plantage à PostHog : les écrans que vous ouvrez, les fonctionnalités que vous utilisez et les erreurs. Jamais les montants, les commerçants, les notes ou les noms. Cet envoi est désactivé au départ si la région de votre appareil se trouve dans l’EEE ou au Royaume-Uni, et activé partout ailleurs. Modifiez-le dans **Réglages › Partager les données d’analyse**. Notre serveur indique aussi à PostHog la taille, le coût et la vitesse de chaque requête envoyée à Anthropic, jamais son contenu, et ne la relie à votre compte que tant que Partager les données d’analyse est activé.
 - Ce site web utilise aussi PostHog, avec un cookie. Si vous êtes dans l’EEE ou au Royaume-Uni, il vous demande d’abord votre accord. Modifiez votre réponse dans le pied de page, sous **Cookies**.
 - Avec Outlayr Pro, vous pouvez connecter Notion pour importer des dépenses depuis vos bases de données Notion. Nous conservons la clé d’accès de Notion chiffrée sur nos serveurs afin que vous puissiez importer à nouveau, jusqu’à ce que vous déconnectiez Notion ou supprimiez votre compte. Ce que nous lisons dans Notion transite par notre serveur jusqu’à votre appareil et n’est pas conservé.
+- Avec Outlayr Pro, vous pouvez lier des comptes de banques aux États-Unis et au Canada via Stripe. Vous vous connectez à votre banque sur l’écran de Stripe, et nous ne voyons jamais vos identifiants bancaires. Notre serveur enregistre leurs transactions comme opérations dans votre registre synchronisé.
 - Vous pouvez connecter à votre compte un assistant IA comme Claude. Une fois que vous l’avez approuvé, il peut lire ce que vos appareils ont synchronisé et, avec Outlayr Pro, ajouter des opérations. Ce qu’il lit est traité selon la politique de confidentialité de cet assistant. Notre serveur indique à PostHog quel outil il a utilisé et combien de temps cela a pris, jamais ce qu’il a lu.
 - Si vous invitez des amis, chacun voit votre prénom sur votre invitation, et vous voyez son prénom, s’il a acheté Pro et quand. Jamais ce qu’il a saisi ni ce qu’il a payé.
 - Avec Outlayr Pro, vous pouvez partager un profil avec jusqu’à 5 personnes. Tous ceux qui s’y trouvent voient et peuvent modifier le journal et les photos de ce profil, et voient les prénoms des personnes du profil, y compris sur les opérations qu’elles ont saisies.
@@ -51,6 +52,10 @@ Chaque type de données traité par Outlayr, au même endroit. Les sections ci-d
 | Un relevé PDF que vous choisissez, et son texte | Import de relevé bancaire PDF | Nos serveurs, Anthropic (Pro) | Supprimés après lecture, au plus tard environ 75 minutes après si l’import n’aboutit jamais |
 | Clé d’accès Notion (chiffrée), identifiant utilisateur Notion | Connexion de Notion (Pro) | Nos serveurs | Jusqu’à ce que vous déconnectiez Notion ou supprimiez votre compte |
 | Noms, colonnes et lignes des bases de données Notion que vous choisissez | Import Notion (Pro) | Notion, nos serveurs, votre appareil | Non conservés sur nos serveurs |
+| Nom de la banque, nom du compte, 4 derniers chiffres, type de compte, état du lien, date du lien et de la dernière actualisation, identifiants client et de compte Stripe | Lier une banque (Pro) | Nos serveurs, Stripe | Jusqu’à ce que vous retiriez le lien ou supprimiez votre compte. Stripe : sa politique |
+| Transactions bancaires : montant, devise, description, date, état | Lier une banque (Pro) | Stripe, nos serveurs, vos appareils | Sur nos serveurs, comme opérations dans votre registre synchronisé, jusqu’à ce que vous les supprimiez ou supprimiez votre compte. Stripe : sa politique |
+| Vos identifiants bancaires | Lier une banque (Pro) | Stripe et votre banque | Ne nous parviennent jamais |
+| Ce que vous tapez pour trouver votre banque, et la région de votre téléphone | Lier une banque (Pro) | Nos serveurs | Non conservés |
 | Nom du commerçant, une adresse web que vous ajoutez, une catégorie générale | Ajout d’un site web | Nos serveurs, partagés avec tout le monde | Actualisés après 90 jours. Non liés à vous |
 | Adresse web, adresse IP | Logos | Nos serveurs (Cloudflare) | Adresse web stockée avec le logo ; adresse IP non conservée |
 | Lien d’image, l’image | Sélecteur d’icône | Nos serveurs (Cloudflare), partagé avec tout le monde | Conservé avec l’image jusqu’à sa suppression ; adresse IP non conservée. Non lié à vous |
@@ -174,6 +179,20 @@ Lorsque vous importez, notre serveur utilise la clé pour lire les bases de donn
 - Supprimer votre compte révoque et supprime la clé.
 
 Notion Labs, Inc. traite votre espace de travail selon [sa propre politique de confidentialité](https://www.notion.com/trust/privacy-policy). Il apprend que votre espace de travail est connecté à Outlayr, et quand notre serveur y lit des données.
+
+## Lier une banque
+
+Avec Outlayr Pro, vous pouvez lier des comptes de banques aux États-Unis et au Canada. Ce n’est pas inclus dans l’offre gratuite, et la synchronisation doit être activée. Rien n’est lié tant que vous ne le lancez pas dans l’app.
+
+Le lien passe par Stripe Financial Connections. Vous trouvez votre banque en la cherchant dans l’app : ce que vous tapez et la région de votre téléphone vont à notre serveur pour trouver les banques correspondantes, et nous ne les conservons pas. Ensuite, vous vous connectez à votre banque sur l’écran de Stripe : vos identifiants vont à votre banque et à Stripe, jamais à nous. Stripe y affiche ses propres conditions, et traite la connexion à votre banque et ce qu’il y lit selon [sa politique de confidentialité](https://stripe.com/fr/privacy).
+
+Pour chaque compte lié, notre serveur conserve le nom de la banque, le nom du compte, ses 4 derniers chiffres, son type (courant ou épargne, crédit, placement ou autre), si le lien fonctionne, quand vous l’avez créé et quand il a été actualisé pour la dernière fois, ainsi que les identifiants que Stripe donne au compte et à vous en tant que client. Pour chaque transaction, nous conservons aussi ce que la banque a envoyé en dernier et l’opération dans laquelle elle a été enregistrée, afin qu’une mise à jour ultérieure modifie la bonne opération.
+
+Quand Stripe a de nouvelles transactions, notre serveur lit pour chacune le montant, la devise, la description, la date et si elle est en attente, comptabilisée ou annulée, et l’enregistre comme opération dans votre profil Personnel, qui se synchronise sur vos appareils comme les autres. Un débit en attente est mis à jour quand il est comptabilisé. S’il est annulé, l’opération ajoutée par la banque est retirée, et celle que vous avez saisie vous-même reste. Si vous avez modifié le montant, la date ou la note d’une opération, votre modification est conservée. Si vous avez déjà enregistré le même débit, à la main, depuis Wallet ou depuis une notification, avec le même montant à quelques jours d’intervalle, la transaction bancaire est rattachée à cette opération au lieu d’en ajouter une seconde, et un abonnement que vous suivez est marqué comme débité au prix indiqué par la banque. Chaque compte lié enregistre ses transactions dans un compte de votre registre : un compte dont le nom correspond, ou un nouveau nommé d’après le compte bancaire, que vous pouvez modifier.
+
+- **Retirer le lien** d’un compte se fait dans l’app. Notre serveur le déconnecte chez Stripe et supprime son enregistrement. Les opérations déjà enregistrées restent.
+- Si votre Pro prend fin, nous déconnectons vos comptes chez Stripe, et plus rien n’arrive.
+- Supprimer votre compte déconnecte tous les comptes chez Stripe et supprime votre fiche client Stripe.
 
 ## Suggestions, voix et tickets
 
@@ -325,7 +344,7 @@ Ces sociétés aident à faire fonctionner Outlayr. Chacune ne reçoit que ce do
 - **[RevenueCat](https://www.revenuecat.com/privacy)** suit le statut des abonnements. Il reçoit un identifiant anonyme, ou votre identifiant de compte, votre nom et votre adresse e-mail une fois que vous êtes connecté, ainsi que l’historique de vos achats.
 - **[Apple](https://www.apple.com/legal/privacy/)** fournit Se connecter avec Apple, les paiements de l’App Store et des fonctionnalités d’iOS comme Siri et Raccourcis, selon sa propre politique. Son service push délivre les suggestions Apple Pay décrites plus haut et reçoit l’adresse push de votre iPhone et un message chiffré qu’il ne peut pas lire.
 - **[Google](https://policies.google.com/privacy)** fournit la connexion avec Google et les paiements Google Play, selon sa propre politique.
-- **[Stripe](https://stripe.com/fr/privacy)** traite les achats sur le web, et son service Link les vend. Il reçoit votre nom, votre adresse e-mail, votre identifiant de compte, la formule choisie, ainsi que les données de paiement et l’adresse de facturation que vous saisissez au paiement.
+- **[Stripe](https://stripe.com/fr/privacy)** traite les achats sur le web, et son service Link les vend. Il reçoit votre nom, votre adresse e-mail, votre identifiant de compte, la formule choisie, ainsi que les données de paiement et l’adresse de facturation que vous saisissez au paiement. Si vous liez une banque, Stripe Financial Connections s’y connecte : il reçoit vos identifiants bancaires et les données que votre banque partage, et nous envoie les informations de compte et les transactions décrites dans [Lier une banque](#lier-une-banque).
 - **[Expo](https://expo.dev/privacy)** distribue les mises à jour de l’app. Il reçoit un identifiant d’installation aléatoire, la version de l’app, votre adresse IP et les messages d’erreur de mise à jour.
 - **Le service push de votre navigateur**, géré par son éditeur, comme Google, Apple, Mozilla ou Microsoft, délivre le rappel quotidien sur le web si vous l’activez. Il reçoit l’adresse push de votre navigateur et un message chiffré qu’il ne peut pas lire.
 - **[PostHog](https://posthog.com/privacy)** fournit les statistiques d’utilisation et les rapports de plantage, depuis des serveurs situés aux États-Unis. Il reçoit les événements décrits dans [Ce que l’app envoie même sans compte](#ce-que-lapp-envoie-même-sans-compte), un identifiant d’installation aléatoire et votre identifiant de compte une fois que vous êtes connecté, ainsi que les [enregistrements des requêtes d’IA](#enregistrements-des-requêtes-dia) et les [appels d’outils des assistants IA](#assistants-ia) que notre serveur envoie. Il reçoit aussi les statistiques de ce site web, décrites dans [Ce site web](#ce-site-web).
@@ -362,7 +381,7 @@ Si vous êtes dans l’Espace économique européen ou au Royaume-Uni, nous nous
 
 | Finalité | Base juridique |
 | --- | --- |
-| Votre compte, la synchronisation, le stockage des photos, la saisie vocale, le scan de tickets, l’import d’échéanciers, l’import CSV, l’import de relevé bancaire PDF, la connexion Notion, le rappel quotidien sur le web, Pro, les invitations, les profils partagés, les connexions d’assistants IA et les webhooks | Contrat : nous avons besoin de ces données pour fournir ce que vous demandez. |
+| Votre compte, la synchronisation, le stockage des photos, la saisie vocale, le scan de tickets, l’import d’échéanciers, l’import CSV, l’import de relevé bancaire PDF, les banques liées, la connexion Notion, le rappel quotidien sur le web, Pro, les invitations, les profils partagés, les connexions d’assistants IA et les webhooks | Contrat : nous avons besoin de ces données pour fournir ce que vous demandez. |
 | Les messages de bienvenue et de Pro, et le préavis de modification de cette politique ou de nos Conditions | Contrat : ils font partie du compte et de l’abonnement que vous avez demandés. |
 | L’envoi des saisies vocales, des photos de tickets, des captures d’écran d’échéanciers, des libellés CSV, des relevés PDF, du texte des notifications et des noms de commerçants à Anthropic et ElevenLabs | Votre consentement, donné avec Autoriser lorsque l’app le demande et retiré dans **Réglages › Envoyer les données aux fournisseurs d’IA**. |
 | Les suggestions de commerçants, la lecture des notifications, les recherches web, la liste partagée des commerçants et les logos | Intérêts légitimes : rendre les opérations plus rapides à saisir et mieux classées. Les suggestions, la lecture des notifications et les recherches web ne parviennent à Anthropic qu’une fois que vous l’avez autorisé, et désactiver le Remplissage intelligent est la façon de vous y opposer. |
@@ -383,6 +402,7 @@ Le [tableau ci-dessus](#aperçu-des-données) indique combien de temps chaque ty
 - Les enregistrements transitent par notre serveur jusqu’à ElevenLabs, et les photos de tickets, les captures d’écran d’échéanciers et le texte des notifications jusqu’à Anthropic. Nous n’en conservons aucun.
 - La clé d’accès Notion et votre identifiant utilisateur Notion sont conservés jusqu’à ce que vous déconnectiez Notion ou supprimiez votre compte. Les lignes lues dans Notion ne sont pas conservées sur nos serveurs.
 - Les connexions d’assistants IA (le nom et l’adresse de l’assistant, votre approbation et ses clés d’accès) sont conservées jusqu’à ce que vous supprimiez votre compte. Les clés d’accès cessent de fonctionner au bout d’une heure, ou après 30 jours sans renouvellement.
+- L’enregistrement d’un compte bancaire lié est conservé jusqu’à ce que vous retiriez le lien ou supprimiez votre compte, et votre identifiant client Stripe jusqu’à la suppression de votre compte. Les transactions bancaires deviennent des opérations dans votre registre synchronisé et sont conservées jusqu’à ce que vous les supprimiez ou supprimiez votre compte ; ce que la banque a envoyé en dernier pour chacune est conservé jusqu’à ce que vous retiriez le lien du compte ou supprimiez votre compte.
 - Les jetons et adresses de webhooks sont conservés jusqu’à ce que vous les retiriez ou supprimiez votre compte. Une opération reçue attend qu’un de vos appareils la récupère, et une opération à envoyer attend sa livraison ou la fin d’environ 9 heures de nouvelles tentatives.
 - Les demandes de suggestion de commerçant ne sont pas conservées une fois la réponse donnée. Celles mises en file d’attente en arrière-plan attendent sur notre serveur jusqu’à ce que votre appareil récupère la réponse.
 - La langue de votre app et la trace des messages de bienvenue, de Pro et de préavis de modification que vous avez reçus sont supprimées avec votre compte.
@@ -394,7 +414,7 @@ Le [tableau ci-dessus](#aperçu-des-données) indique combien de temps chaque ty
 - Les événements d’analyse liés à votre compte sont supprimés avec celui-ci. PostHog les efface lors d’un traitement ultérieur, ils peuvent donc subsister un moment après que l’app a indiqué la fin de la suppression. Les événements d’une installation qui ne s’est jamais connectée ne contiennent qu’un identifiant d’installation aléatoire et sont conservés selon la politique de conservation de PostHog. Les enregistrements des requêtes d’IA envoyés alors que Partager les données d’analyse était désactivé contiennent un identifiant aléatoire au lieu de votre identifiant de compte, plus l’identifiant de conversation pour la saisie vocale, et sont conservés de la même façon, tout comme les appels d’outils des assistants IA, qui contiennent un identifiant de connexion à la place.
 - Les événements du site web contiennent un identifiant de navigateur aléatoire, ou un code qui change chaque jour si vous avez refusé les cookies, et sont conservés selon la politique de conservation de PostHog.
 - La copie d’un rapport que vous partagez est supprimée quand vous désactivez son lien, dans la journée qui suit son expiration, quand vous supprimez le rapport sur ce site ou quand vous supprimez votre compte.
-- Nos prestataires, dont Anthropic, ElevenLabs, Apple, Google et Expo, ainsi que Notion si vous le connectez, conservent les données qu’ils reçoivent selon leurs propres politiques de conservation.
+- Nos prestataires, dont Anthropic, ElevenLabs, Apple, Google et Expo, ainsi que Notion ou Stripe si vous les connectez, conservent les données qu’ils reçoivent selon leurs propres politiques de conservation.
 
 ## Suppression et exportation
 
@@ -404,6 +424,7 @@ Ouvrez **Réglages › Compte › Supprimer le compte**. Il peut vous être dema
 
 - L’accès d’Outlayr à votre connexion Apple ou Google est révoqué. Pour Apple, notre serveur demande à Apple de le révoquer. Pour Google, c’est l’app qui le fait.
 - Si vous avez connecté Notion, notre serveur demande à Notion de révoquer la clé d’accès d’Outlayr.
+- Si vous avez lié des banques, notre serveur déconnecte chaque compte chez Stripe et supprime votre fiche client Stripe, puis nos enregistrements de ces comptes, y compris ce que la banque a envoyé en dernier pour chaque transaction.
 - Votre jeton de webhook, vos adresses et les opérations en attente de réception ou d’envoi sont supprimés, afin que rien de nouveau ne soit envoyé. Une livraison déjà en cours peut encore aboutir.
 - Votre journal synchronisé, les traces de suppression, les photos sauvegardées et les demandes de suggestion en attente sont supprimés de nos serveurs. Cela comprend le journal des profils que vous partagez et les photos que vous avez ajoutées aux profils partagés par d’autres. Les opérations que vous avez ajoutées au profil de quelqu’un d’autre y restent, sans votre nom. Les copies sur les appareils des autres membres, et les exports qu’ils ont faits, peuvent subsister.
 - Vos fiches client chez RevenueCat et Stripe et notre copie du statut de votre abonnement sont supprimées.
@@ -451,11 +472,12 @@ Si vous vivez en Californie ou dans un autre État américain doté d’une loi 
 | --- | --- |
 | **Identifiants :** nom, adresse e-mail, identifiant de compte, identifiant d’installation, adresse IP | OVHcloud, Hetzner, RevenueCat, Stripe, Expo, PostHog, Google, Cloudflare (e-mail, logos), Anthropic (ce que montre un relevé que vous importez) |
 | **Informations commerciales :** historique des abonnements et des achats | Apple, Google, Stripe, RevenueCat, OVHcloud, Hetzner |
+| **Informations financières :** noms et 4 derniers chiffres des comptes bancaires liés, transactions bancaires | Stripe, OVHcloud |
 | **Informations audio et visuelles :** extraits vocaux, scans de tickets, captures d’écran d’échéanciers, photos jointes | ElevenLabs (extraits), Anthropic (scans), Cloudflare (photos, extraits en transit) |
 | **Activité sur Internet ou le réseau :** adresse IP, agent utilisateur, journaux de requêtes, utilisation de l’app et du site web, rapports de plantage | OVHcloud, Hetzner, Expo, PostHog |
 | **Données que vous créez :** opérations synchronisées, montants, commerçants, notes, budgets | OVHcloud, Hetzner ; noms de commerçants, de catégories et de comptes à Anthropic ; noms de catégories et de comptes à ElevenLabs |
 
-Ces informations proviennent de vous, de votre appareil, d’Apple et de Google, et nous les utilisons aux fins décrites dans cette politique. Nous les conservons pendant les durées indiquées dans l’[Aperçu des données](#aperçu-des-données).
+Ces informations proviennent de vous, de votre appareil, d’Apple, de Google et, pour les banques que vous liez, de Stripe, et nous les utilisons aux fins décrites dans cette politique. Nous les conservons pendant les durées indiquées dans l’[Aperçu des données](#aperçu-des-données).
 
 Nous ne vendons pas d’informations personnelles et ne les partageons pas à des fins de publicité comportementale intercontextuelle, et ne l’avons pas fait au cours des 12 derniers mois. Nous n’utilisons pas d’informations personnelles sensibles pour déduire quoi que ce soit à votre sujet.
 
@@ -468,6 +490,7 @@ Comme nous ne vendons ni ne partageons, un signal Global Privacy Control n’a r
 - Les échanges entre l’app, nos serveurs et nos prestataires passent par des connexions HTTPS chiffrées.
 - Chaque requête portant sur vos données est liée à votre session connectée, et notre serveur décide à quelles données une requête peut accéder. Un compte ne peut ni lire ni modifier le journal ou les photos d’un autre.
 - Les jetons d’actualisation de connexion et la clé d’accès Notion sont chiffrés avant d’être stockés.
+- Nous ne recevons jamais vos identifiants bancaires. Lier une banque se fait sur l’écran de Stripe.
 - Les requêtes envoyées à Anthropic et ElevenLabs ne contiennent ni nom, ni adresse e-mail, ni identifiant de compte, sauf ce que montre un relevé que vous importez.
 - Vous pouvez protéger Outlayr par le verrouillage biométrique de votre appareil (Face ID ou Touch ID sur iPhone).
 
