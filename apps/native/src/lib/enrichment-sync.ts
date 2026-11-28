@@ -113,17 +113,12 @@ export const make = Effect.gen(function* make() {
                         appStates(watchAppState, "background"),
                         signals(subscribeCloudAuthenticated),
                         signals((listener) =>
-                            subscribeToSettingChanges(db, listener, [
-                                "aiConsentV2",
-                                "aiEnrichment",
-                                "groundedLookup",
-                                "reviewAlerts",
-                            ])
+                            subscribeToSettingChanges(db, listener, ["aiConsentV2", "aiEnrichment", "groundedLookup"])
                         ),
                     ],
                     { concurrency: "unbounded" }
                 ).pipe(
-                    Stream.runForEach(() => Effect.all([syncCaptureLookup(db), syncReviewPush(db)], { discard: true }))
+                    Stream.runForEach(() => Effect.all([syncCaptureLookup(db), syncReviewPush()], { discard: true }))
                 ),
             ],
             { concurrency: "unbounded", discard: true }

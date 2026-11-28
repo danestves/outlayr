@@ -928,11 +928,12 @@ describe("transactionsRepo.markReviewed", () => {
     it("moves the logo candidate with the review, so the backfill still paints the entry", async () => {
         const db = makeDb();
         const id = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, unreviewed: true }));
-        const later = new Date(Date.now() + 60_000);
+        const [created] = await db.select({ updatedAt: transactions.updatedAt }).from(transactions);
+        const next = (created?.updatedAt.getTime() ?? 0) + 1;
 
-        const [reviewed] = await Effect.runPromise(transactionsRepo.markReviewed(db, [id], later));
+        const [reviewed] = await Effect.runPromise(transactionsRepo.markReviewed(db, [id]));
 
-        expect(reviewed?.updatedAt).toStrictEqual(later);
-        expect((await Effect.runPromise(candidateLogoIds(db))).get(id)).toBe(later.getTime());
+        expect(reviewed?.updatedAt.getTime()).toBe(next);
+        expect((await Effect.runPromise(candidateLogoIds(db))).get(id)).toBe(next);
     });
 });

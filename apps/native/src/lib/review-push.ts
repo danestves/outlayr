@@ -4,9 +4,6 @@ import * as Effect from "effect/Effect";
 import { getIosPushNotificationServiceEnvironmentAsync } from "expo-application";
 import { Platform } from "react-native";
 
-import { Meta } from "@/data/app-meta-core";
-import type { Database } from "@/db/client";
-
 import { captureDeviceLabel } from "./capture-lookup";
 import { cloudMutation, cloudQuery, isCloudAccount } from "./convex";
 import { sharedStore } from "./shared-store";
@@ -15,12 +12,28 @@ const REVIEW_PUSH_KEY = "reviewPush";
 
 const REVIEW_PUSH_DEVICE_KEY = "reviewPushDevice";
 
+// The target is this install's APNs token, so the opt-out has to outlive every ledger on the phone.
+const REVIEW_ALERTS_OFF_KEY = "reviewAlertsOff";
+
 // APNs registration never settles on a phone that can't reach Apple.
 const TOKEN_WAIT = Duration.seconds(10);
 
 const clearTarget = (deviceId: string) => cloudMutation(api.reviewPush.clearTarget, { deviceId });
 
 type Store = NonNullable<typeof sharedStore>;
+
+export const reviewAlertsOn = (): boolean => sharedStore === null || sharedStore.get(REVIEW_ALERTS_OFF_KEY) === null;
+
+export const setReviewAlerts = (on: boolean): void => {
+    if (sharedStore === null) {
+        return;
+    }
+    if (on) {
+        sharedStore.remove(REVIEW_ALERTS_OFF_KEY);
+        return;
+    }
+    sharedStore.set(REVIEW_ALERTS_OFF_KEY, "1");
+};
 
 const registeredElsewhere = (store: Store, address: string, deviceId: string) =>
     store.get(REVIEW_PUSH_KEY) !== address || store.get(REVIEW_PUSH_DEVICE_KEY) !== deviceId;
@@ -39,15 +52,14 @@ const clearRegistered = Effect.fn("ReviewPush.clearRegistered")(function* clearR
  * bank still linked. Any other state clears a target it once set.
  */
 export const syncReviewPush = Effect.fn("ReviewPush.sync")(
-    function* syncReviewPush(db: Database) {
+    function* syncReviewPush() {
         // Per install, not the ledger's sync id: a profile switch must not leave a second target behind.
         const deviceId = Platform.OS === "ios" ? captureDeviceLabel() : undefined;
         if (sharedStore === null || deviceId === undefined) {
             return;
         }
         const store = sharedStore;
-        const enabled = yield* Meta.get(db, "reviewAlerts");
-        if (!(isCloudAccount() && enabled)) {
+        if (!(isCloudAccount() && reviewAlertsOn())) {
             yield* clearRegistered(store);
             return;
         }
@@ -87,15 +99,19 @@ export const syncReviewPush = Effect.fn("ReviewPush.sync")(
 /** Before sign-out, while the session can still clear the target server side. */
 export const forgetReviewPush = Effect.fn("ReviewPush.forget")(
     function* forgetReviewPush() {
-        if (sharedStore === null) {
+        const store = sharedStore;
+        if (store === null) {
             return;
         }
-        const store = sharedStore;
-        const deviceId = store.get(REVIEW_PUSH_DEVICE_KEY);
+        const cached = store.get(REVIEW_PUSH_DEVICE_KEY);
+        // The keys go first so a later account on this phone registers again instead of inheriting the old target.
         store.remove(REVIEW_PUSH_KEY);
         store.remove(REVIEW_PUSH_DEVICE_KEY);
-        if (deviceId !== null) {
-            yield* clearTarget(deviceId);
+        const installId = Platform.OS === "ios" ? captureDeviceLabel() : undefined;
+        for (const deviceId of new Set([cached, installId])) {
+            if (deviceId) {
+                yield* clearTarget(deviceId);
+            }
         }
     },
     Effect.catchCause((cause) => Effect.logWarning("[outlayr] review push target not cleared", cause))

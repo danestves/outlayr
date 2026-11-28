@@ -477,7 +477,7 @@ describe("bank filing", () => {
             day: at("2027-01-04T00:00:00Z"),
             month: at("2027-01-01T00:00:00Z"),
             seq: 1001,
-            updatedAt: 501,
+            updatedAt: 502,
         });
         expect((await nextSeqOf(t, "user-1"))?.nextSeq).toBe(1002);
     });
@@ -500,7 +500,7 @@ describe("bank filing", () => {
             amount: 10,
             amountUsd: 10,
             date: at("2027-01-04T15:00:00Z"),
-            updatedAt: 601,
+            updatedAt: 602,
         });
     });
 
@@ -569,7 +569,7 @@ describe("bank filing", () => {
             exchangeRate: 10,
             exchangeRateType: "custom",
             note: "Coffee Shop",
-            updatedAt: 401,
+            updatedAt: 402,
         });
     });
 
@@ -726,6 +726,60 @@ describe("bank filing", () => {
         });
 
         await expect(storedEntry(t, owner.userId, localId)).resolves.toMatchObject({ amount: 99, deviceId: "phone" });
+    });
+
+    it("keeps the posted amount when a phone confirms the pending row it never refreshed", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        await seedLedger(t, owner.userId);
+        const id = await insertBank(t, owner.userId);
+        const lease = await claimLease(t, id);
+        await file(t, id, lease, [bank({ amountMinor: -1000, status: "pending" })]);
+        const localId = await localIdOf(owner.userId, "bank:stripe:tx_1");
+        const first = await storedEntry(t, owner.userId, localId);
+        if (!first) {
+            throw new Error("expected the bank entry");
+        }
+        await file(t, id, lease, [bank({ amountMinor: -1200 })]);
+
+        await authenticatedAs(t, owner).mutation(api.sync.push, {
+            deviceId: "phone",
+            rows: [
+                {
+                    deletedAt: null,
+                    fields: {
+                        accountId: first.accountId ?? null,
+                        amount: first.amount,
+                        amountUsd: first.amountUsd,
+                        categoryId: first.categoryId,
+                        currency: "USD",
+                        customColor: null,
+                        date: first.date,
+                        day: first.day,
+                        details: null,
+                        emoji: null,
+                        exchangeRate: 1,
+                        exchangeRateType: null,
+                        icon: null,
+                        imageColor: null,
+                        imageKey: null,
+                        income: false,
+                        month: first.month,
+                        note: "Coffee",
+                        onceRecurring: false,
+                        recurringCoefficient: 1,
+                        recurringEndDate: null,
+                        recurringType: 0,
+                        unreviewed: false,
+                    },
+                    localId,
+                    table: "transactions",
+                    updatedAt: first.updatedAt + 1,
+                },
+            ],
+        });
+
+        await expect(storedEntry(t, owner.userId, localId)).resolves.toMatchObject({ amount: 12, deviceId: "bank" });
     });
 });
 
@@ -937,7 +991,7 @@ describe("bank transaction linking", () => {
             month: at("2027-01-01T00:00:00Z"),
             note: "Streaming",
             seq: 1000,
-            updatedAt: 8,
+            updatedAt: 9,
         });
         await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
             amount: 12.99,
@@ -1094,7 +1148,7 @@ describe("bank transaction linking", () => {
             date: at("2027-01-02T15:00:00Z"),
             day: at("2027-01-02T00:00:00Z"),
             seq: 1000,
-            updatedAt: 2,
+            updatedAt: 3,
         });
         await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
             amount: 15,

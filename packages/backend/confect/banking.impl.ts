@@ -868,8 +868,8 @@ const rewriteRow = Effect.fn("Banking.rewriteRow")(function* rewriteRow(
         }
     );
     const seq = filing.seq + filing.filed.written;
-    // Ahead of the row the user edited, behind their next edit, so a whole-row sync edit still wins.
-    const updatedAt = existing.updatedAt + 1;
+    // Two ticks: past a review confirmed on the stale row (one tick), behind the user's next clock-stamped edit.
+    const updatedAt = existing.updatedAt + 2;
     // A note-only change keeps the frozen rate and the calendar fields, which have not moved.
     const fields =
         next.amount === existing.amount && next.date === existing.date

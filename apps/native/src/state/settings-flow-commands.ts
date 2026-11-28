@@ -25,6 +25,7 @@ import { posthog } from "@/lib/posthog";
 import { Reminders } from "@/lib/reminders";
 import { proTerm } from "@/lib/revenuecat";
 import { RevenueCat } from "@/lib/revenuecat-service";
+import { setReviewAlerts, syncReviewPush } from "@/lib/review-push";
 import { appRuntime } from "@/lib/runtime";
 import { openWalletShortcut } from "@/lib/wallet-shortcut";
 
@@ -144,7 +145,7 @@ export const setRemindersCommand = createRuntimeCommand(appRuntime, {
 });
 
 export const setReviewAlertsCommand = createRuntimeCommand(appRuntime, {
-    execute: Effect.fn("Settings.setReviewAlerts")(function* setReviewAlerts(input: {
+    execute: Effect.fn("Settings.setReviewAlerts")(function* saveReviewAlerts(input: {
         db: Database;
         next: boolean;
         onDenied: () => void;
@@ -161,7 +162,8 @@ export const setReviewAlertsCommand = createRuntimeCommand(appRuntime, {
                 return;
             }
         }
-        yield* Meta.set(input.db, "reviewAlerts", input.next);
+        setReviewAlerts(input.next);
+        yield* syncReviewPush();
     }),
     label: "settings:set-review-alerts",
 });

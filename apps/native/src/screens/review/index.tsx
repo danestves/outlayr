@@ -3,9 +3,10 @@ import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AmountsHiddenContext } from "@/components/amount-text";
 import { EditorCta } from "@/components/editor-cta";
 import { MonoLabel } from "@/components/mono-label";
-import { useDisplaySettings } from "@/contexts/display-settings-context";
+import { useDisplaySettings, useSetting } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAccounts } from "@/data/accounts";
 import { goesWithPendingDelete } from "@/data/card-fees-core";
@@ -36,6 +37,7 @@ export function Review() {
     const openRowActions = useTransactionRowActions(nowMs, requestDelete);
     const rows = useReviewQueue(db).filter((row) => !goesWithPendingDelete(row, pendingId));
     const { authorOf } = useEntryAuthors(rows);
+    const amountsHidden = useSetting("hideAmounts");
     const accountNames = new Map(useAccounts(db).map((account) => [account.id, account.name]));
 
     // A second tap would pop past the tabs once the first back lands.
@@ -51,49 +53,51 @@ export function Review() {
     };
 
     return (
-        <View className="bg-background flex-1">
-            <ScrollView
-                className="flex-1"
-                contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: 20 }}
-                contentInsetAdjustmentBehavior="automatic"
-            >
-                {groupByAccount(rows).map((group) => (
-                    <View className="pt-5" key={group.accountId ?? "none"}>
-                        <GroupHeader
-                            accountId={group.accountId}
-                            name={(group.accountId && accountNames.get(group.accountId)) || t("log.review.unfiled")}
-                            nowMs={nowMs}
+        <AmountsHiddenContext value={amountsHidden}>
+            <View className="bg-background flex-1">
+                <ScrollView
+                    className="flex-1"
+                    contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: 20 }}
+                    contentInsetAdjustmentBehavior="automatic"
+                >
+                    {groupByAccount(rows).map((group) => (
+                        <View className="pt-5" key={group.accountId ?? "none"}>
+                            <GroupHeader
+                                accountId={group.accountId}
+                                name={(group.accountId && accountNames.get(group.accountId)) || t("log.review.unfiled")}
+                                nowMs={nowMs}
+                            />
+                            {group.rows.map((row, index) => (
+                                <View key={row.id}>
+                                    {index > 0 ? <View className="bg-border ml-11 h-px" /> : null}
+                                    <SwipeableTransactionRow
+                                        author={authorOf(row.createdBy, row.unsent)}
+                                        currency={currency}
+                                        dated
+                                        menuItems={openRowActions(row, false)}
+                                        onConfirm={(id) => markReviewed({ db, ids: [id] })}
+                                        onDelete={requestDelete}
+                                        onPress={(id) => router.push(`/transactions/${id}`)}
+                                        rates={rates}
+                                        transaction={row}
+                                    />
+                                </View>
+                            ))}
+                        </View>
+                    ))}
+                </ScrollView>
+                {rows.length > 0 ? (
+                    <View className="px-5 pt-2" style={{ paddingBottom: insets.bottom + 8 }}>
+                        <EditorCta
+                            busy={closing}
+                            canSave
+                            label={t("log.review.confirmAll", { count: rows.length })}
+                            onPress={confirmAll}
                         />
-                        {group.rows.map((row, index) => (
-                            <View key={row.id}>
-                                {index > 0 ? <View className="bg-border ml-11 h-px" /> : null}
-                                <SwipeableTransactionRow
-                                    author={authorOf(row.createdBy, row.unsent)}
-                                    currency={currency}
-                                    dated
-                                    menuItems={openRowActions(row, false)}
-                                    onConfirm={(id) => markReviewed({ db, ids: [id] })}
-                                    onDelete={requestDelete}
-                                    onPress={(id) => router.push(`/transactions/${id}`)}
-                                    rates={rates}
-                                    transaction={row}
-                                />
-                            </View>
-                        ))}
                     </View>
-                ))}
-            </ScrollView>
-            {rows.length > 0 ? (
-                <View className="px-5 pt-2" style={{ paddingBottom: insets.bottom + 8 }}>
-                    <EditorCta
-                        busy={closing}
-                        canSave
-                        label={t("log.review.confirmAll", { count: rows.length })}
-                        onPress={confirmAll}
-                    />
-                </View>
-            ) : null}
-        </View>
+                ) : null}
+            </View>
+        </AmountsHiddenContext>
     );
 }
 

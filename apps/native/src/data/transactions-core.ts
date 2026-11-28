@@ -339,11 +339,7 @@ export const transactionsRepo = {
         return id;
     }),
 
-    markReviewed: Effect.fn("Transactions.markReviewed")(function* markReviewed(
-        db: Database,
-        ids: readonly string[],
-        now: Date = new Date()
-    ) {
+    markReviewed: Effect.fn("Transactions.markReviewed")(function* markReviewed(db: Database, ids: readonly string[]) {
         if (ids.length === 0) {
             return [];
         }
@@ -358,9 +354,8 @@ export const transactionsRepo = {
                 );
                 const reviewed: { from: Date; id: string; updatedAt: Date }[] = [];
                 for (const row of flagged) {
-                    const updatedAt = DateTime.toDate(
-                        DateTime.makeUnsafe(Math.max(now.getTime(), row.updatedAt.getTime() + 1))
-                    );
+                    // One tick, not the clock: a bank rewrite this phone hasn't pulled sits two ahead and must win.
+                    const updatedAt = DateTime.toDate(DateTime.makeUnsafe(row.updatedAt.getTime() + 1));
                     yield* refreshLogoCandidate(db, row.id, updatedAt.getTime());
                     const written = yield* query("update", () =>
                         db
