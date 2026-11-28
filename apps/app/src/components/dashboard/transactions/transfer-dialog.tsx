@@ -33,7 +33,7 @@ import {
 } from "@/lib/transfer-create";
 import type { NewTransferProblem, NewTransferValues } from "@/lib/transfer-create";
 
-import { DateRow, focusAmount, Pick, Slot } from "./entry-form";
+import { DateRow, focusAmount, KindTabs, Pick, Slot } from "./entry-form";
 import { TransferExchange } from "./transfer-exchange";
 
 function Balance({ children }: { children: ReactNode }) {
@@ -66,10 +66,12 @@ export function useAddTransfer() {
 export function TransferDialog({
     accountId,
     onClose,
+    onKind,
     seed,
 }: {
     accountId: string;
     onClose: () => void;
+    onKind?: (income: boolean) => void;
     seed?: NewTransferValues;
 }) {
     const { ledger, overview } = useDashboard();
@@ -141,6 +143,9 @@ export function TransferDialog({
                         submit(false);
                     }}
                 >
+                    {onKind ? (
+                        <KindTabs onPick={(next) => onKind(next === "income")} transfer value="transfer" wide />
+                    ) : null}
                     {crossed ? (
                         <>
                             <TransferExchange
@@ -278,13 +283,24 @@ export function TransferDialog({
     );
 }
 
-export function TransferNoAccounts({ onClose, onCreate }: { onClose: () => void; onCreate: () => void }) {
+export function TransferNoAccounts({
+    onClose,
+    onCreate,
+    onKind,
+}: {
+    onClose: () => void;
+    onCreate: () => void;
+    onKind?: (income: boolean) => void;
+}) {
     const { flows } = useIntlayer("dashboard-accounts");
     const { form } = useIntlayer("dashboard-transactions");
     const { transfer } = useIntlayer("dashboard-shell");
     return (
         <FlowDialog label={flows.newTransfer}>
-            <Dialog.Body>
+            <Dialog.Body className="flex flex-col gap-3.5">
+                {onKind ? (
+                    <KindTabs onPick={(next) => onKind(next === "income")} transfer value="transfer" wide />
+                ) : null}
                 <p className="border-border text-app-label text-muted-foreground rounded-app-md border px-3 py-2.5">
                     {transfer.intro}
                 </p>
