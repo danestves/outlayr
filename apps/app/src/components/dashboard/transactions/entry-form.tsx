@@ -1,7 +1,11 @@
+import { Combobox } from "@base-ui/react/combobox";
+import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
+import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 import { decimalsFor } from "@outlayr/money/currency";
@@ -25,7 +29,7 @@ import { FlowDialog, QUIET_ROW } from "@/components/dashboard/accounts/fields";
 import type { AccountFlow } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
+import { AccountTile, LookTile, MerchantTile } from "@/components/ledger/tiles";
 import { MoneyField } from "@/components/ui/money-field";
 import { parseAmount } from "@/lib/account-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
@@ -65,10 +69,6 @@ const REPEATS = [
 const POPUP = "app-shell z-60";
 const NO_ACCOUNT = "none";
 export const QUIET_INPUT = "border-transparent! bg-transparent! text-right shadow-none! focus-visible:border-ring!";
-
-function Dot({ color }: { color: string | null | undefined }) {
-    return <i className="size-2 flex-none rounded-full" style={{ backgroundColor: color ?? undefined }} />;
-}
 
 export function Slot({
     children,
@@ -149,6 +149,97 @@ export function Pick({
     );
 }
 
+function SearchPick({
+    invalid,
+    onPick,
+    options,
+    placeholder,
+    quiet,
+    searchLabel,
+    triggerRef,
+    value,
+}: {
+    invalid?: boolean;
+    onPick: (value: string) => void;
+    options: readonly PickOption[];
+    placeholder?: string;
+    quiet: boolean;
+    searchLabel: string;
+    triggerRef?: RefObject<HTMLButtonElement | null>;
+    value: string | null;
+}) {
+    const { palette } = useIntlayer("dashboard-shell");
+    const selected = options.find((option) => option.value === value) ?? null;
+    return (
+        <Combobox.Root
+            autoHighlight
+            isItemEqualToValue={(item, choice) => item.value === choice.value}
+            items={options}
+            itemToStringLabel={(item) => item.label}
+            itemToStringValue={(item) => item.value}
+            onValueChange={(next) => next !== null && onPick(next.value)}
+            value={selected}
+        >
+            <Combobox.Trigger
+                aria-invalid={invalid || undefined}
+                ref={triggerRef}
+                render={
+                    <Button
+                        className={
+                            quiet
+                                ? "text-muted-foreground data-popup-open:bg-accent data-popup-open:text-accent-foreground -me-2 ml-auto min-w-0 px-3 font-normal active:not-disabled:scale-100"
+                                : "aria-invalid:border-destructive data-popup-open:border-ring w-full min-w-0 justify-start font-normal"
+                        }
+                        variant={quiet ? "ghost" : "outline"}
+                    />
+                }
+            >
+                {selected?.icon}
+                <span
+                    className="data-placeholder:text-muted-foreground/80 truncate"
+                    data-placeholder={selected === null || value === NO_ACCOUNT ? "" : undefined}
+                >
+                    <Combobox.Value placeholder={placeholder} />
+                </span>
+                <HugeiconsIcon className="text-muted-foreground ms-auto shrink-0" icon={ArrowDown01Icon} size={16} />
+            </Combobox.Trigger>
+            <Combobox.Portal>
+                <Combobox.Positioner align={quiet ? "end" : "start"} className={POPUP} sideOffset={6}>
+                    <Combobox.Popup className="ph-no-capture bg-popover text-popover-foreground rounded-app-lg flex max-h-(--available-height) w-[max(var(--anchor-width),14rem)] max-w-(--available-width) flex-col border p-1 shadow-(--shadow-app-popover) outline-none">
+                        <div className="border-input rounded-app-sm focus-within:border-ring flex shrink-0 items-center gap-2 border px-2">
+                            <HugeiconsIcon className="text-muted-foreground shrink-0" icon={Search01Icon} size={15} />
+                            <Combobox.Input
+                                aria-label={searchLabel}
+                                aria-labelledby={undefined}
+                                className="placeholder:text-muted-foreground text-app-label h-8 min-w-0 flex-1 outline-none pointer-coarse:text-base"
+                                placeholder={searchLabel}
+                            />
+                        </div>
+                        <Combobox.Empty className="text-muted-foreground text-app-label not-empty:px-2 not-empty:py-2">
+                            {palette.noMatches}
+                        </Combobox.Empty>
+                        <Combobox.List className="mt-1 max-h-64 min-h-0 overflow-y-auto overscroll-contain">
+                            {(option: PickOption) => (
+                                <Combobox.Item
+                                    className="data-highlighted:bg-accent data-highlighted:text-accent-foreground rounded-app-sm text-app-body flex min-h-8 cursor-default items-center gap-2 px-2 outline-none select-none"
+                                    key={option.value}
+                                    value={option}
+                                >
+                                    {option.icon}
+                                    <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                                    <Combobox.ItemIndicator className="text-app-tint flex shrink-0">
+                                        <HugeiconsIcon icon={Tick02Icon} size={16} />
+                                    </Combobox.ItemIndicator>
+                                </Combobox.Item>
+                            )}
+                        </Combobox.List>
+                    </Combobox.Popup>
+                </Combobox.Positioner>
+            </Combobox.Portal>
+        </Combobox.Root>
+    );
+}
+
 /** No PanelUI part picks a date and time, so the browser's picker opens under this text. */
 export function DateRow({ onChange, quiet, text }: { onChange: (text: string) => void; quiet: boolean; text: string }) {
     const { form } = useIntlayer("dashboard-transactions");
@@ -198,13 +289,21 @@ export function useRepeatNames() {
 }
 
 /** Parents, each with its children under it. */
-export function useCategoryOptions(ledger: Ledger, income: boolean): PickOption[] {
+export function useCategoryOptions(
+    ledger: Ledger,
+    income: boolean,
+    iconFor?: (category: Doc<"categories">) => ReactNode
+): PickOption[] {
     const categoryName = useCategoryName();
     const live = ledger.books.categories
         .filter((row) => row.deletedAt === null && row.income === income)
         .toSorted((left, right) => left.sortOrder - right.sortOrder);
     const option = (row: (typeof live)[number]): PickOption => ({
-        icon: <Dot color={row.color} />,
+        icon: iconFor ? (
+            iconFor(row)
+        ) : (
+            <i className="size-2 flex-none rounded-full" style={{ backgroundColor: row.color ?? undefined }} />
+        ),
         label: categoryName({ id: row.localId, name: row.name ?? "" }),
         value: row.localId,
     });
@@ -377,13 +476,14 @@ function EntryFields({
     const { ledger, overview } = useDashboard();
     const numberLocale = useNumberLocale();
     const { form } = useIntlayer("dashboard-transactions");
+    const { filters } = useIntlayer("dashboard");
     const quiet = layout === "drawer";
     const accounts = openAccounts(ledger.books);
     const inUse = useMemo(
         () => [...new Set([ledger.currency, ...overview.balances.accounts.map((row) => row.currency)])],
         [ledger.currency, overview.balances.accounts]
     );
-    const categoryOptions = useCategoryOptions(ledger, values.income);
+    const categoryOptions = useCategoryOptions(ledger, values.income, (row) => <LookTile look={row} size="sm" />);
     const category = ledger.books.categories.find((row) => row.localId === values.categoryId);
     const account = ledger.books.accounts.find((row) => row.localId === values.accountId);
     const flip = (income: boolean) =>
@@ -469,17 +569,19 @@ function EntryFields({
                     </Slot>
                 )}
                 <Slot error={problem === "category" ? form.categoryRequired : null} label={form.category} quiet={quiet}>
-                    <Pick
+                    <SearchPick
+                        invalid={problem === "category"}
                         onPick={(categoryId) => onPick({ categoryId })}
                         options={categoryOptions}
                         placeholder={form.none.value}
                         quiet={quiet}
+                        searchLabel={filters.searchCategories.value}
                         triggerRef={categoryTrigger}
                         value={values.categoryId}
                     />
                 </Slot>
                 <Slot label={form.account} quiet={quiet}>
-                    <Pick
+                    <SearchPick
                         onPick={pickAccount}
                         options={[
                             { label: form.none.value, value: NO_ACCOUNT },
@@ -492,6 +594,7 @@ function EntryFields({
                             ),
                         ]}
                         quiet={quiet}
+                        searchLabel={filters.searchAccounts.value}
                         triggerRef={accountTrigger}
                         value={values.accountId ?? NO_ACCOUNT}
                     />
