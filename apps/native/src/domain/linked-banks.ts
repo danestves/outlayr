@@ -7,6 +7,12 @@ export type LinkedBankAccount = typeof BankAccountView.Type;
 /** The link flow: the banks list and the Accounts add menu both push it. */
 export const BANK_LINK_ROUTE = "/settings/integrations/banks/link";
 
+// Search never filters by country, but every provider today serves only these, so only they are offered a link.
+export function bankLinkRegion(region: string | undefined): boolean {
+    const country = region?.toUpperCase();
+    return country === "US" || country === "CA";
+}
+
 export type BankOverviewResult =
     | { kind: "error" }
     | { kind: "loading" }

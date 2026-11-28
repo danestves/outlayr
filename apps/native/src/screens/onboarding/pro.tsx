@@ -1,5 +1,5 @@
 import * as Cause from "effect/Cause";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useRef } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
@@ -12,9 +12,11 @@ import { useHaptics } from "@/lib/use-haptics";
 import { PaywallRedesign } from "@/screens/paywall/redesign";
 import type { LeaveOutcome } from "@/screens/paywall/use-paywall-flow";
 import { SILENT } from "@/state/atom-command";
-import { finishOnboardingOfferCommand } from "@/state/onboarding-commands";
+import { claimOnboardingAccountsCommand, finishOnboardingOfferCommand } from "@/state/onboarding-commands";
 import { markPaywallSeenCommand } from "@/state/settings-flow-commands";
 import { useAtomAction } from "@/state/use-atom-action";
+
+import { useOnboardingBankDue } from "./bank";
 
 /** The offer closes onboarding only for someone this build can sell to who is not Pro yet. */
 export function useOnboardingOfferDue(): boolean {
@@ -41,11 +43,24 @@ export function OnboardingPro() {
         },
         SILENT
     );
+    const router = useRouter();
+    const bankDue = useOnboardingBankDue();
+    const toBank = useAtomAction(
+        claimOnboardingAccountsCommand,
+        { onSettled: () => router.replace("/onboarding/bank") },
+        SILENT
+    );
     const leave = (outcome: LeaveOutcome) => {
-        if (!finishing.current) {
-            finishing.current = true;
-            finish({ db, purchased: outcome === "pro" || isPro });
+        if (finishing.current) {
+            return;
         }
+        finishing.current = true;
+        // Linking the moment Pro starts gives the bank a trial's whole length to log charges before it ends.
+        if (outcome === "pro" && bankDue) {
+            toBank(db);
+            return;
+        }
+        finish({ db, purchased: outcome === "pro" || isPro });
     };
     useFocusEffect(() => {
         posthog?.capture("paywall_viewed", { trigger: "onboarding", variant: "redesign" });

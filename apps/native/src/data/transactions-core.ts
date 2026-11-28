@@ -140,6 +140,16 @@ export function logWindowRowsQuery(db: SpendDb, nowMs: number, floorMs: number |
         .orderBy(desc(transactions.day), desc(transactions.date), asc(transactions.feeForId));
 }
 
+/** The server stamps a bank's rows with its own clock, so `sinceMs` must come from the server too. */
+export function arrivedSinceQuery(db: SpendDb, sinceMs: number, limit: number) {
+    return db
+        .select(LOG_COLUMNS)
+        .from(transactions)
+        .where(and(isNull(transactions.deletedAt), gte(transactions.updatedAt, new Date(sinceMs))))
+        .orderBy(desc(transactions.date))
+        .limit(limit);
+}
+
 /** A calendar line rather than a count of days, so a write never moves the head/tail split. */
 export const logSplitMs = (nowMs: number): number => addDays(startOfDay(new Date(nowMs)), -LOG_PAGE_DAYS).getTime();
 

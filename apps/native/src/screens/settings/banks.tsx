@@ -167,6 +167,30 @@ function BanksRoute({ mode, query, repair }: { mode: "link" | "list"; query?: st
     );
 }
 
+/** The link step a new Pro reaches from onboarding; a finished link moves on to watch the first charges land. */
+export function OnboardingLinkBank() {
+    const router = useRouter();
+    const overview = useBankOverview();
+    const ready = overview.kind === "ready" ? overview.overview : null;
+    const bankLink = useBankLink(
+        ready?.accounts ?? NO_ACCOUNTS,
+        () => router.back(),
+        (added, institution) => {
+            router.replace({
+                params: { bank: institution.name, ids: added.join(",") },
+                pathname: "/onboarding/bank-linked",
+            });
+        }
+    );
+
+    return (
+        <>
+            <BankEntry bankLink={bankLink} manual={false} repair={null} />
+            {bankLink.sheets}
+        </>
+    );
+}
+
 function Intro({ body, eyebrow, title }: { body: string; eyebrow?: string; title: string }) {
     return (
         <View className="gap-2 pt-6">
@@ -321,11 +345,14 @@ function InstitutionRow({
 function BankEntry({
     bankLink,
     initialQuery,
+    manual = true,
     onLeave,
     repair,
 }: {
     bankLink: BankLink;
     initialQuery?: string;
+    /** Onboarding has no account form to fall back to: its stack ends before the ledger's. */
+    manual?: boolean;
     onLeave?: () => void;
     repair: LinkedBankAccount["id"] | null;
 }) {
@@ -348,7 +375,7 @@ function BankEntry({
     const rows = loaded ?? previous;
     const settled = loaded !== undefined && loaded !== null;
     const noMatch = settled && query.trim() !== "" && !rows.some((row) => !row.catchAll);
-    const offerManual = noMatch || (failed && rows.length === 0);
+    const offerManual = manual && (noMatch || (failed && rows.length === 0));
     const slow = useLongWait(bankLink.busy);
     const busyId = slow ? tapped : null;
     const consent = {
@@ -548,7 +575,7 @@ function BanksList({ accounts }: { accounts: readonly LinkedBankAccount[] }) {
     );
 }
 
-function useRowDetail(account: LinkedBankAccount) {
+export function useBankRowDetail(account: LinkedBankAccount) {
     const t = useTranslation();
     const nowMs = useNow();
     const { language } = useLanguage();
@@ -574,7 +601,7 @@ function BankAccountRow({
     onSignIn: () => void;
 }) {
     const t = useTranslation();
-    const { attention, detail } = useRowDetail(account);
+    const { attention, detail } = useBankRowDetail(account);
     const relink = account.status === "relink";
     const signIn = relink ? (
         <Pressable

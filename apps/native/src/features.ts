@@ -34,6 +34,18 @@ export const features = {
             { see: "What did you last pay for?" },
         ],
     },
+    "onboarding-bank": {
+        link: "/onboarding/bank",
+        proves: "Right after the trial starts, a US or Canadian user is offered a bank link, with the ledger as the way out.",
+        says: ["link a bank during onboarding", "the trial bank step", "connect my bank after the paywall"],
+        steps: [{ see: "Let your bank log your charges" }, { see: "Link a bank" }, { see: "Not now, open my ledger" }],
+    },
+    "onboarding-bank-linked": {
+        link: "/onboarding/bank-linked?bank=Chase",
+        proves: "After a bank link in onboarding, the screen waits for the bank's charges before the ledger opens.",
+        says: ["the first bank sync", "bank linked during onboarding", "charges arriving after linking"],
+        steps: [{ see: "Chase linked" }, { see: "Arriving" }, { see: "Open my ledger" }],
+    },
     "add-expense": {
         link: "/transactions/create",
         proves: "An amount can be entered, filed under Groceries, saved, and the new entry appears in the log.",

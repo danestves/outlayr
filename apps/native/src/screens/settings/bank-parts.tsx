@@ -126,7 +126,12 @@ interface LinkAttempt {
  * Runs the bank's sign-in sheet, then shows the accounts the link added so each can be given a wallet account.
  * A sign-in again adds none, so it ends without a sheet.
  */
-export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?: () => void) {
+export function useBankLink(
+    accounts: readonly LinkedBankAccount[],
+    onFinished?: () => void,
+    /** Takes the new accounts instead of the result sheet. */
+    onAdded?: (added: readonly LinkedBankAccount["id"][], institution: BankInstitution) => void
+) {
     const t = useTranslation();
     const haptics = useHaptics();
     const openPaywall = useOpenPaywall();
@@ -135,6 +140,8 @@ export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?:
     const [failure, setFailure] = useState<LinkFailure | null>(null);
     const resultRef = useRef<BottomSheetModal>(null);
     const failureRef = useRef<BottomSheetModal>(null);
+    // The command's handlers close over the render that started it, before `attempt` held the bank.
+    const linking = useRef<BankInstitution | null>(null);
     const fresh = attempt ? accounts.filter((account) => attempt.added.has(account.id)) : [];
 
     // The new accounts reach the overview query on its own clock, before or after the action returns.
@@ -165,6 +172,11 @@ export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?:
                         onFinished?.();
                         return;
                     }
+                    if (onAdded && linking.current) {
+                        setAttempt(null);
+                        onAdded(outcome.added, linking.current);
+                        return;
+                    }
                     setAttempt((current) => current && { ...current, added: new Set(outcome.added) });
                 } else if (outcome.kind === "plan") {
                     openPaywall("banks");
@@ -182,6 +194,7 @@ export function useBankLink(accounts: readonly LinkedBankAccount[], onFinished?:
             return;
         }
         setAttempt({ added: new Set(), institution, repair });
+        linking.current = institution;
         setBusy(true);
         run({ institution: institution.id, repair });
     };
