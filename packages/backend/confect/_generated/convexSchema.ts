@@ -7,6 +7,8 @@ import appMeta from "./tables/appMeta";
 import bankAccounts from "./tables/bankAccounts";
 import bankEntries from "./tables/bankEntries";
 import bankHolders from "./tables/bankHolders";
+import bankInstitutionSyncs from "./tables/bankInstitutionSyncs";
+import bankInstitutions from "./tables/bankInstitutions";
 import budgetPlans from "./tables/budgetPlans";
 import budgets from "./tables/budgets";
 import captureKeys from "./tables/captureKeys";
@@ -59,6 +61,8 @@ export default $defineSchema({
   bankAccounts: $Table.tableDefinition(bankAccounts),
   bankEntries: $Table.tableDefinition(bankEntries),
   bankHolders: $Table.tableDefinition(bankHolders),
+  bankInstitutionSyncs: $Table.tableDefinition(bankInstitutionSyncs),
+  bankInstitutions: $Table.tableDefinition(bankInstitutions),
   budgetPlans: $Table.tableDefinition(budgetPlans),
   budgets: $Table.tableDefinition(budgets),
   captureKeys: $Table.tableDefinition(captureKeys),

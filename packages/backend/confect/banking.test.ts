@@ -1,19 +1,24 @@
 /// <reference types="vite/client" />
 
-import type { BankAccount } from "@outlayr/banking/provider";
+import type { BankAccount, Institution } from "@outlayr/banking/provider";
+import { BankingError } from "@outlayr/banking/provider";
+import { bankingProviders } from "@outlayr/banking/registry";
 import { PRO_ENTITLEMENT_ID } from "@outlayr/money/contract";
 import { LEDGER_CELLS_VERSION } from "@outlayr/money/ledger-cells";
 import { RevenueCat } from "convex-revenuecat";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import type { WithoutSystemFields } from "convex/server";
+import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api, components, internal } from "../convex/_generated/api";
 import type { Doc } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
 import { toBankEntry } from "./banking";
+import { rankInstitutions } from "./banking.impl";
 import { BANKING_EFFECTIVE_AT_MS } from "./legal";
 import { PURGE_BATCH } from "./lib/account";
 import { incomingWins } from "./lib/syncTables";
@@ -121,6 +126,21 @@ const claimLease = async (t: TestClient, id: Awaited<ReturnType<typeof insertBan
     }
     return lease;
 };
+
+const institutionRow = (
+    overrides: Partial<WithoutSystemFields<Doc<"bankInstitutions">>> = {}
+): WithoutSystemFields<Doc<"bankInstitutions">> => ({
+    catchAll: false,
+    country: "US",
+    externalId: "ins_1",
+    logo: null,
+    name: "Chase",
+    popularity: 0,
+    provider: "stripe",
+    retired: false,
+    seenAt: 1,
+    ...overrides,
+});
 
 const bank = (overrides: Partial<Tx> = {}): Tx => ({
     accountId: "acct_1",
@@ -1547,6 +1567,386 @@ describe("bank access", () => {
         await syncEntitlement(t, identity.userId, new Date(Date.now() + 86_400_000).toISOString());
 
         await expect(t.query(internal.banking.accessFor, { userId: identity.userId })).resolves.toBe("unavailable");
+    });
+});
+
+describe("bank institutions", () => {
+    const failingStripe = () => {
+        const original = bankingProviders.stripe;
+        bankingProviders.stripe = {
+            connect: original.connect.pipe(
+                Config.map((client) =>
+                    client.pipe(
+                        Option.map((value) => ({
+                            ...value,
+                            institutions: () =>
+                                Effect.fail(
+                                    new BankingError({
+                                        operation: "institutions",
+                                        provider: "stripe",
+                                        reason: "transport",
+                                    })
+                                ),
+                        }))
+                    )
+                )
+            ),
+        };
+        return () => {
+            bankingProviders.stripe = original;
+        };
+    };
+
+    const stubInstitutions = (rows: readonly Institution[]) => {
+        const original = bankingProviders.stripe;
+        bankingProviders.stripe = {
+            connect: original.connect.pipe(
+                Config.map((client) =>
+                    client.pipe(Option.map((value) => ({ ...value, institutions: () => Effect.succeed(rows) })))
+                )
+            ),
+        };
+        return () => {
+            bankingProviders.stripe = original;
+        };
+    };
+
+    it("retires nothing when the provider's institution list fails", async () => {
+        configureStripe();
+        const t = setup();
+        const stale = await t.run((ctx) =>
+            ctx.db.insert("bankInstitutions", institutionRow({ externalId: "ins_gone", name: "Gone", popularity: 4 }))
+        );
+        const restore = failingStripe();
+        try {
+            await expect(t.action(internal.banking.syncInstitutions, {})).resolves.toBeNull();
+        } finally {
+            restore();
+        }
+
+        await expect(t.run((ctx) => ctx.db.get(stale))).resolves.toMatchObject({ popularity: 4, retired: false });
+    });
+
+    it("retires missing banks, revives a returning one, and keeps a row's popularity", async () => {
+        configureStripe();
+        const t = setup();
+        const [gone, back, used] = await t.run((ctx) =>
+            Promise.all([
+                ctx.db.insert(
+                    "bankInstitutions",
+                    institutionRow({ externalId: "ins_gone", name: "Gone", popularity: 4 })
+                ),
+                ctx.db.insert(
+                    "bankInstitutions",
+                    institutionRow({
+                        country: "CA",
+                        externalId: "CA",
+                        name: "Canadian banks (old)",
+                        popularity: 7,
+                        retired: true,
+                        seenAt: 1,
+                    })
+                ),
+                ctx.db.insert(
+                    "bankInstitutions",
+                    institutionRow({ country: "US", externalId: "US", name: "US banks", popularity: 9, seenAt: 1 })
+                ),
+            ])
+        );
+
+        await expect(t.action(internal.banking.syncInstitutions, {})).resolves.toBeNull();
+
+        await expect(t.run((ctx) => ctx.db.get(gone))).resolves.toMatchObject({ retired: true });
+        await expect(t.run((ctx) => ctx.db.get(back))).resolves.toMatchObject({
+            name: "Canadian banks",
+            popularity: 7,
+            retired: false,
+        });
+        await expect(t.run((ctx) => ctx.db.get(used))).resolves.toMatchObject({ popularity: 9 });
+        await expect(t.run((ctx) => ctx.db.query("bankInstitutions").collect())).resolves.toHaveLength(3);
+    });
+
+    it("leaves a newer run's row alone when an older run saves and retires after it", async () => {
+        const t = setup();
+        await t.mutation(internal.banking.saveInstitutions, {
+            institutions: [{ catchAll: false, country: "US", id: "ins_1", logo: "new.png", name: "New Name" }],
+            provider: "stripe",
+            seenAt: 200,
+        });
+        await t.mutation(internal.banking.saveInstitutions, {
+            institutions: [{ catchAll: false, country: "US", id: "ins_1", logo: "old.png", name: "Old Name" }],
+            provider: "stripe",
+            seenAt: 100,
+        });
+        await expect(
+            t.mutation(internal.banking.retireInstitutions, { cursor: null, provider: "stripe", seenAt: 100 })
+        ).resolves.toBeNull();
+
+        const rows = await t.run((ctx) => ctx.db.query("bankInstitutions").collect());
+        expect(rows).toHaveLength(1);
+        expect(rows[0]).toMatchObject({ logo: "new.png", name: "New Name", retired: false, seenAt: 200 });
+    });
+
+    it("keeps a row a newer run retired when an older run still lists it", async () => {
+        const t = setup();
+        const gone = { catchAll: false, country: "US", id: "ins_gone", logo: null, name: "Gone Bank" };
+        await t.mutation(internal.banking.beginInstitutionSync, { provider: "stripe", seenAt: 50 });
+        await t.mutation(internal.banking.saveInstitutions, { institutions: [gone], provider: "stripe", seenAt: 50 });
+        await t.mutation(internal.banking.beginInstitutionSync, { provider: "stripe", seenAt: 200 });
+        await t.mutation(internal.banking.retireInstitutions, { cursor: null, provider: "stripe", seenAt: 200 });
+        await expect(
+            t.mutation(internal.banking.saveInstitutions, { institutions: [gone], provider: "stripe", seenAt: 100 })
+        ).resolves.toBeFalsy();
+
+        const rows = await t.run((ctx) => ctx.db.query("bankInstitutions").collect());
+        expect(rows).toMatchObject([{ retired: true }]);
+    });
+
+    it("writes nothing for an older run that saves and retires after a newer run began", async () => {
+        const t = setup();
+        await t.run((ctx) =>
+            ctx.db.insert("bankInstitutions", institutionRow({ externalId: "ins_stale", name: "Stale", seenAt: 50 }))
+        );
+        const newer = { catchAll: false, country: "US", id: "ins_new", logo: null, name: "New Bank" };
+        const older = { catchAll: false, country: "US", id: "ins_old", logo: null, name: "Old Bank" };
+        await t.mutation(internal.banking.beginInstitutionSync, { provider: "stripe", seenAt: 100 });
+        await t.mutation(internal.banking.beginInstitutionSync, { provider: "stripe", seenAt: 200 });
+        await t.mutation(internal.banking.saveInstitutions, { institutions: [newer], provider: "stripe", seenAt: 200 });
+
+        await expect(
+            t.mutation(internal.banking.saveInstitutions, { institutions: [older], provider: "stripe", seenAt: 100 })
+        ).resolves.toBeFalsy();
+        await expect(
+            t.mutation(internal.banking.retireInstitutions, { cursor: null, provider: "stripe", seenAt: 100 })
+        ).resolves.toBeNull();
+
+        const rows = await t.run((ctx) => ctx.db.query("bankInstitutions").collect());
+        expect(rows).toHaveLength(2);
+        expect(rows.find((row) => row.externalId === "ins_old")).toBeUndefined();
+        expect(rows.find((row) => row.externalId === "ins_new")).toMatchObject({ retired: false });
+        expect(rows.find((row) => row.externalId === "ins_stale")).toMatchObject({ retired: false });
+    });
+
+    it("syncs one provider id in two countries into two rows and retires only the dropped country", async () => {
+        configureStripe();
+        const t = setup();
+        vi.useFakeTimers({ now: NOW });
+        try {
+            const restoreBoth = stubInstitutions([
+                { catchAll: false, country: "CA", id: "ins_shared", logo: null, name: "Shared Bank" },
+                { catchAll: false, country: "US", id: "ins_shared", logo: null, name: "Shared Bank" },
+            ]);
+            try {
+                await expect(t.action(internal.banking.syncInstitutions, {})).resolves.toBeNull();
+            } finally {
+                restoreBoth();
+            }
+
+            vi.setSystemTime(NOW + 1000);
+            const restoreUs = stubInstitutions([
+                { catchAll: false, country: "US", id: "ins_shared", logo: null, name: "Shared Bank" },
+            ]);
+            try {
+                await expect(t.action(internal.banking.syncInstitutions, {})).resolves.toBeNull();
+            } finally {
+                restoreUs();
+            }
+        } finally {
+            vi.useRealTimers();
+        }
+
+        const rows = await t.run((ctx) => ctx.db.query("bankInstitutions").collect());
+        expect(rows).toHaveLength(2);
+        expect(rows.find((row) => row.country === "CA")).toMatchObject({ retired: true });
+        expect(rows.find((row) => row.country === "US")).toMatchObject({ retired: false });
+    });
+
+    it("keeps a region's bank that the global search would cut off", async () => {
+        const t = setup();
+        const identity = await seedAuthUser(t);
+        await t.run(async (ctx) => {
+            for (let index = 0; index < 51; index += 1) {
+                await ctx.db.insert(
+                    "bankInstitutions",
+                    institutionRow({ country: "CA", externalId: `ins_ca_${index}`, name: "Zeta" })
+                );
+            }
+            await ctx.db.insert(
+                "bankInstitutions",
+                institutionRow({ country: "US", externalId: "ins_us", name: "Zeta Local" })
+            );
+        });
+
+        const rows = await authenticatedAs(t, identity).query(api.banking.searchInstitutions, {
+            q: "zeta",
+            region: "US",
+        });
+
+        expect(rows).toHaveLength(51);
+        expect(rows[0]).toMatchObject({ country: "US", name: "Zeta Local" });
+    });
+
+    it("refuses to start a link on a retired institution", async () => {
+        vi.useFakeTimers({ now: BANKING_EFFECTIVE_AT_MS + 86_400_000 });
+        try {
+            configureStripe();
+            const t = setup();
+            const identity = await seedProUser(t);
+            const id = await t.run((ctx) => ctx.db.insert("bankInstitutions", institutionRow({ retired: true })));
+
+            await expect(
+                authenticatedAs(t, identity).action(api.banking.startLink, { institution: id, repair: null })
+            ).resolves.toStrictEqual({ kind: "retired" });
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("ranks the region's banks first and leaves the search order otherwise", () => {
+        const rows = [
+            { country: "CA", name: "Zed" },
+            { country: "US", name: "First" },
+            { country: "CA", name: "Apple" },
+            { country: "US", name: "Second" },
+        ];
+
+        expect(rankInstitutions(rows, "US").map(({ name }) => name)).toStrictEqual(["First", "Second", "Zed", "Apple"]);
+        expect(rankInstitutions(rows, null)).toStrictEqual(rows);
+    });
+});
+
+describe("bank link", () => {
+    beforeEach(() => {
+        vi.useFakeTimers({ now: BANKING_EFFECTIVE_AT_MS + 86_400_000 });
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    const stubFinishLink = (accounts: readonly BankAccount[]) => {
+        const original = bankingProviders.stripe;
+        bankingProviders.stripe = {
+            connect: original.connect.pipe(
+                Config.map((client) =>
+                    client.pipe(Option.map((value) => ({ ...value, finishLink: () => Effect.succeed(accounts) })))
+                )
+            ),
+        };
+        return () => {
+            bankingProviders.stripe = original;
+        };
+    };
+
+    it("reports only the accounts a link inserted, so relinking the same one adds none", async () => {
+        configureStripe();
+        const t = setup();
+        const owner = await seedProUser(t);
+        await seedLedger(t, owner.userId);
+        await t.run((ctx) =>
+            ctx.db.insert("bankHolders", { holder: "cus_1", provider: "stripe", userId: owner.userId })
+        );
+        const account: BankAccount = {
+            id: "acct_1",
+            institution: "Chase",
+            kind: "credit",
+            last4: "9999",
+            name: "Sapphire",
+            status: "active",
+        };
+        const restore = stubFinishLink([account]);
+        try {
+            const linked = await authenticatedAs(t, owner).action(api.banking.finishLink, {
+                completion: null,
+                provider: "stripe",
+                repair: null,
+                sessionId: "fcs_1",
+            });
+            const row = await t.run((ctx) =>
+                ctx.db
+                    .query("bankAccounts")
+                    .withIndex("by_provider_and_accountId", (q) => q.eq("provider", "stripe").eq("accountId", "acct_1"))
+                    .unique()
+            );
+            expect(linked).toStrictEqual({ added: [row?._id], kind: "linked", repaired: true });
+
+            const again = await authenticatedAs(t, owner).action(api.banking.finishLink, {
+                completion: null,
+                provider: "stripe",
+                repair: null,
+                sessionId: "fcs_1",
+            });
+            expect(again).toStrictEqual({ added: [], kind: "linked", repaired: true });
+        } finally {
+            restore();
+        }
+    });
+
+    it("reports a repair the link left in relink, so the app does not call it fixed", async () => {
+        configureStripe();
+        const t = setup();
+        const owner = await seedProUser(t);
+        await seedLedger(t, owner.userId);
+        await t.run((ctx) =>
+            ctx.db.insert("bankHolders", { holder: "cus_1", provider: "stripe", userId: owner.userId })
+        );
+        const repair = await insertBank(t, owner.userId, { status: "relink" });
+        const restore = stubFinishLink([
+            { id: "acct_2", institution: "Chase", kind: "cash", last4: "1111", name: "Checking", status: "active" },
+        ]);
+        try {
+            const linked = await authenticatedAs(t, owner).action(api.banking.finishLink, {
+                completion: null,
+                provider: "stripe",
+                repair,
+                sessionId: "fcs_1",
+            });
+            expect(linked).toMatchObject({ kind: "linked", repaired: false });
+        } finally {
+            restore();
+        }
+    });
+
+    it("reports a repair the link reactivated", async () => {
+        configureStripe();
+        const t = setup();
+        const owner = await seedProUser(t);
+        await seedLedger(t, owner.userId);
+        await t.run((ctx) =>
+            ctx.db.insert("bankHolders", { holder: "cus_1", provider: "stripe", userId: owner.userId })
+        );
+        const repair = await insertBank(t, owner.userId, { status: "relink" });
+        const restore = stubFinishLink([
+            { id: "acct_1", institution: "Chase", kind: "credit", last4: "9999", name: "Sapphire", status: "active" },
+        ]);
+        try {
+            const linked = await authenticatedAs(t, owner).action(api.banking.finishLink, {
+                completion: null,
+                provider: "stripe",
+                repair,
+                sessionId: "fcs_1",
+            });
+            expect(linked).toMatchObject({ kind: "linked", repaired: true });
+            await expect(t.run((ctx) => ctx.db.get(repair))).resolves.toMatchObject({ status: "active" });
+        } finally {
+            restore();
+        }
+    });
+
+    it("refuses to repair an account that belongs to another user", async () => {
+        const fetchMock = vi.fn(() => Promise.reject(new Error("unexpected provider call")));
+        vi.stubGlobal("fetch", fetchMock);
+        configureStripe();
+        const t = setup();
+        const owner = await seedProUser(t);
+        const other = await seedAuthUser(t);
+        const institution = await t.run((ctx) => ctx.db.insert("bankInstitutions", institutionRow()));
+        const foreign = await insertBank(t, other.userId);
+
+        await expect(
+            authenticatedAs(t, owner).action(api.banking.startLink, { institution, repair: foreign })
+        ).resolves.toStrictEqual({ kind: "failed" });
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 });
 

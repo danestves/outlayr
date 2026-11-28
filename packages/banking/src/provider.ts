@@ -60,17 +60,30 @@ export class BankingError extends Schema.TaggedError<BankingError>()("BankingErr
     }
 }
 
+export const Institution = Schema.Struct({
+    // A catch-all row opens the provider's own bank picker for `country` instead of one bank.
+    catchAll: Schema.Boolean,
+    // ISO 3166-1 alpha-2. A bank in several countries is one row per country, since each has its own login.
+    country: Schema.String.check(Schema.isPattern(/^[A-Z]{2}$/)),
+    // The provider's own id, stable across syncs.
+    id: Schema.String,
+    logo: Schema.NullOr(Schema.String),
+    name: Schema.String,
+});
+export type Institution = typeof Institution.Type;
+
 export interface LinkRequest {
-    // One of the provider's `countries`; it decides which banks the picker lists.
-    readonly country: string;
     readonly holder: string;
+    readonly institution: Institution;
+    // The provider's id of a linked account whose sign-in expired; a provider with an update flow repairs
+    // that connection instead of starting a new one.
+    readonly repair: string | null;
 }
 
-export interface LinkSession {
-    readonly clientSecret: string;
-    readonly id: string;
-    readonly kind: "sdk";
-}
+export type LinkSession =
+    | { readonly clientSecret: string; readonly id: string; readonly kind: "sdk" }
+    // The bank's own login page; it sends the user back to us with a code that `finishLink` exchanges.
+    | { readonly id: string; readonly kind: "redirect"; readonly url: string };
 
 export interface TransactionPage {
     // Hand back on the next pull to get only what was added or changed since this one.
@@ -85,20 +98,21 @@ export interface BankingClient {
     // Retrying after a timeout must not leave the user with a second holder.
     readonly createHolder: (user: { readonly email: string; readonly id: string }) => Call<string>;
     readonly disconnect: (accountId: string) => Call<void>;
-    // Fails with `rejected` when the session was not started for `holder`.
-    readonly finishLink: (holder: string, sessionId: string) => Call<readonly BankAccount[]>;
+    // Fails with `rejected` when the session was not started for `holder`. `completion` is what the flow handed back
+    // on success (a public token, a redirect's code); Stripe needs none.
+    readonly finishLink: (holder: string, sessionId: string, completion: string | null) => Call<readonly BankAccount[]>;
     readonly readWebhook: (body: string, headers: Headers) => Effect.Effect<Option.Option<BankingEvent>, BankingError>;
     // Disconnects every account of the given holders plus any holder found by search for this user, then deletes
     // those holders. Safe to repeat.
     readonly forgetUser: (userId: string, holders: readonly string[]) => Call<void>;
+    // Every bank the provider can link today; a bank missing from a successful call is retired from search.
+    readonly institutions: () => Call<readonly Institution[]>;
     readonly startLink: (request: LinkRequest) => Call<LinkSession>;
     // An account with no finished refresh yet returns no transactions and keeps the cursor.
     readonly transactions: (accountId: string, cursor: Option.Option<string>) => Call<TransactionPage>;
 }
 
 export interface BankingProvider {
-    // ISO 3166-1 alpha-2 countries whose banks the provider can link.
-    readonly countries: readonly string[];
     readonly connect: Config.Config<Option.Option<BankingClient>>;
 }
 

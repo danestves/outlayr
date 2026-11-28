@@ -7,6 +7,8 @@ export type AppMetaDoc = Document.Document<typeof schemaDefinition, "appMeta">;
 export type BankAccountsDoc = Document.Document<typeof schemaDefinition, "bankAccounts">;
 export type BankEntriesDoc = Document.Document<typeof schemaDefinition, "bankEntries">;
 export type BankHoldersDoc = Document.Document<typeof schemaDefinition, "bankHolders">;
+export type BankInstitutionSyncsDoc = Document.Document<typeof schemaDefinition, "bankInstitutionSyncs">;
+export type BankInstitutionsDoc = Document.Document<typeof schemaDefinition, "bankInstitutions">;
 export type BudgetPlansDoc = Document.Document<typeof schemaDefinition, "budgetPlans">;
 export type BudgetsDoc = Document.Document<typeof schemaDefinition, "budgets">;
 export type CaptureKeysDoc = Document.Document<typeof schemaDefinition, "captureKeys">;
@@ -59,6 +61,8 @@ export interface Docs {
   bankAccounts: BankAccountsDoc;
   bankEntries: BankEntriesDoc;
   bankHolders: BankHoldersDoc;
+  bankInstitutionSyncs: BankInstitutionSyncsDoc;
+  bankInstitutions: BankInstitutionsDoc;
   budgetPlans: BudgetPlansDoc;
   budgets: BudgetsDoc;
   captureKeys: CaptureKeysDoc;

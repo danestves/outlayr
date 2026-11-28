@@ -19,6 +19,7 @@ const AccountRefresh = Schema.Struct({
 });
 
 export const StripeAccount = Schema.Struct({
+    authorization: Schema.optional(Schema.NullOr(Schema.String)),
     category: Schema.Literals(["cash", "credit", "investment", "other"]),
     display_name: Schema.NullOr(Schema.String),
     id: Schema.String,

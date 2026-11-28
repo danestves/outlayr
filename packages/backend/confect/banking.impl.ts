@@ -1,7 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Document, QueryInitializer } from "@confect/server";
-import type { BankAccount, BankingProviderName } from "@outlayr/banking/provider";
-import { bankingProviders } from "@outlayr/banking/registry";
+import type { BankAccount, BankingProviderName, Institution } from "@outlayr/banking/provider";
 import { isPerson } from "@outlayr/money/account-kind";
 import { entryRow } from "@outlayr/money/entry-row";
 import { DAY_MS, fixedOffset, utcOffsetOf, zoneCalendar } from "@outlayr/money/ledger-zone";
@@ -61,6 +60,14 @@ const LINK_AMOUNT_EPSILON = 0.005;
 // A page files 100 entries, so each may read only a few rows' link status before the index-read budget runs out.
 const LINK_READS_PER_ENTRY = 8;
 const SUBSCRIPTION_PRICE_BAND = { max: 2, min: 0.5 } as const;
+const INSTITUTION_PAGE = 200;
+const INSTITUTION_SEARCH_LIMIT = 50;
+const REGION_ROWS = 20;
+const POPULAR_ROWS = 8;
+const CATCH_ALL_LIMIT = 20;
+const SEARCH_MAX_LENGTH = 100;
+const SEARCH_MAX_TERMS = 16;
+const WHITESPACE = /\s+/;
 
 type Configured = Effect.Success<ReturnType<typeof configuredClients>>[number];
 
@@ -70,9 +77,32 @@ const getById = <A>(effect: Effect.Effect<A, Document.DocumentDecodeError | Quer
 const getByIndex = <A>(effect: Effect.Effect<A, Document.DocumentDecodeError | QueryInitializer.GetByIndexFailure>) =>
     effect.pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
 
-const countriesOf = (configured: readonly Configured[]) => [
-    ...new Set(configured.flatMap(({ name }) => bankingProviders[name].countries)),
-];
+// Convex search rejects a query with more than 16 terms.
+const boundSearch = (query: string) =>
+    query.trim().slice(0, SEARCH_MAX_LENGTH).split(WHITESPACE).slice(0, SEARCH_MAX_TERMS).join(" ");
+
+// Region only decides what ranks first: a stable partition keeps the search's own relevance order otherwise.
+export const rankInstitutions = <Row extends { readonly country: string }>(
+    rows: readonly Row[],
+    region: string | null
+): Row[] => {
+    if (region === null) {
+        return [...rows];
+    }
+    const local = rows.filter((row) => row.country === region);
+    return [...local, ...rows.filter((row) => row.country !== region)];
+};
+
+type InstitutionDoc = Document.Document<typeof databaseSchema, "bankInstitutions">;
+
+const institutionView = (row: InstitutionDoc) => ({
+    catchAll: row.catchAll,
+    country: row.country,
+    id: row._id,
+    logo: row.logo,
+    name: row.name,
+    provider: row.provider,
+});
 
 const accessForUser = Effect.fn("Banking.accessForUser")(function* accessForUser(
     ctx: Entitled,
@@ -127,8 +157,66 @@ const overview = FunctionImpl.make(
                     pulledAt: row.pulledAt ?? null,
                     status: row.status,
                 })),
-                countries: countriesOf(configured),
             };
+        },
+        Effect.catchTags({ Unauthenticated: dieAsConvexError }),
+        Effect.orDie
+    )
+);
+
+const searchInstitutions = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "searchInstitutions",
+    Effect.fn("Banking.searchInstitutions")(
+        function* searchInstitutions({ q: query, region }) {
+            const ctx = yield* QueryCtx;
+            yield* requireUserId(ctx);
+            const reader = yield* DatabaseReader;
+            const country = region === null ? null : region.trim().toUpperCase();
+            const catchAllRows = yield* reader
+                .table("bankInstitutions")
+                .index("by_retired_and_catchAll", (range) => range.eq("retired", false).eq("catchAll", true))
+                .take(CATCH_ALL_LIMIT);
+            const text = boundSearch(query);
+            let rows: readonly InstitutionDoc[] = [];
+            if (text !== "") {
+                let local: readonly InstitutionDoc[] = [];
+                if (country !== null) {
+                    local = yield* reader
+                        .table("bankInstitutions")
+                        .search("search_name", (search) =>
+                            search
+                                .search("name", text)
+                                .eq("retired", false)
+                                .eq("catchAll", false)
+                                .eq("country", country)
+                        )
+                        .take(REGION_ROWS);
+                }
+                const global = yield* reader
+                    .table("bankInstitutions")
+                    .search("search_name", (search) =>
+                        search.search("name", text).eq("retired", false).eq("catchAll", false)
+                    )
+                    .take(INSTITUTION_SEARCH_LIMIT);
+                const localIds = new Set(local.map((row) => row._id));
+                rows = [...local, ...global.filter((row) => !localIds.has(row._id))];
+            } else if (country !== null) {
+                const regional = yield* (
+                    reader
+                        .table("bankInstitutions")
+                        .index(
+                            "by_retired_and_country_and_popularity",
+                            (range) => range.eq("retired", false).eq("country", country),
+                            "desc"
+                        )
+                        // Catch-all rows share the country, so leave room for them before the cut.
+                        .take(POPULAR_ROWS + catchAllRows.length)
+                );
+                rows = regional.filter((row) => !row.catchAll).slice(0, POPULAR_ROWS);
+            }
+            return [...rows.map(institutionView), ...rankInstitutions(catchAllRows, country).map(institutionView)];
         },
         Effect.catchTags({ Unauthenticated: dieAsConvexError }),
         Effect.orDie
@@ -140,21 +228,29 @@ const startLink = FunctionImpl.make(
     spec,
     "startLink",
     Effect.fn("Banking.startLink")(
-        function* startLink({ country }) {
+        function* startLink({ institution: institutionId, repair }) {
             const { runMutation } = yield* MutationRunner;
             const { runQuery } = yield* QueryRunner;
             const user = yield* bankingUser();
             if (user === null) {
                 return { kind: "unavailable" as const };
             }
+            const institution = yield* runQuery(refs.internal.banking.institutionFor, { id: institutionId });
+            if (institution === null || institution.retired) {
+                return { kind: "retired" as const };
+            }
+            const repaired = repair === null ? null : yield* runQuery(refs.internal.banking.pullTarget, { id: repair });
+            if (repair !== null && (repaired === null || repaired.userId !== user.id)) {
+                return { kind: "failed" as const };
+            }
             const configured = yield* configuredClients();
+            const match = configured.find(({ name }) => name === institution.provider);
+            if (match === undefined) {
+                return { kind: "unavailable" as const };
+            }
             const access = yield* accessForUser(yield* ActionCtx, user.id, configured);
             if (access !== "allowed") {
                 return { kind: access };
-            }
-            const match = configured.find(({ name }) => bankingProviders[name].countries.includes(country));
-            if (match === undefined) {
-                return { kind: "country" as const };
             }
             const existing = yield* runQuery(refs.internal.banking.holderFor, {
                 provider: match.name,
@@ -185,13 +281,13 @@ const startLink = FunctionImpl.make(
                 }
                 ({ holder } = saved);
             }
-            const session = yield* match.client.startLink({ country, holder });
-            return {
-                clientSecret: session.clientSecret,
-                id: session.id,
-                kind: "sdk" as const,
-                provider: match.name,
-            };
+            const session = yield* match.client.startLink({
+                holder,
+                institution: institution.institution,
+                repair: repaired !== null && repaired.provider === match.name ? repaired.accountId : null,
+            });
+            yield* runMutation(refs.internal.banking.countInstitutionUse, { id: institutionId });
+            return { ...session, provider: match.name };
         },
         Effect.provide(outboundHttp),
         Effect.catchTags({
@@ -207,7 +303,7 @@ const finishLink = FunctionImpl.make(
     spec,
     "finishLink",
     Effect.fn("Banking.finishLink")(
-        function* finishLink({ provider, sessionId }) {
+        function* finishLink({ completion, provider, repair, sessionId }) {
             const { runMutation } = yield* MutationRunner;
             const { runQuery } = yield* QueryRunner;
             const user = yield* bankingUser();
@@ -227,13 +323,21 @@ const finishLink = FunctionImpl.make(
             if (existing.kind !== "holder") {
                 return { kind: "failed" as const };
             }
-            const accounts = yield* match.client.finishLink(existing.holder, sessionId);
-            const linked = yield* runMutation(refs.internal.banking.saveAccounts, {
+            const accounts = yield* match.client.finishLink(existing.holder, sessionId, completion);
+            const added = yield* runMutation(refs.internal.banking.saveAccounts, {
                 accounts,
                 provider,
                 userId: user.id,
             });
-            return { kind: "linked" as const, linked };
+            const target = repair === null ? null : yield* runQuery(refs.internal.banking.pullTarget, { id: repair });
+            // saveAccounts is what reactivates an account, so its status is read after the write.
+            const repaired =
+                repair === null ||
+                (target !== null &&
+                    target.userId === user.id &&
+                    target.provider === provider &&
+                    target.status === "active");
+            return { added, kind: "linked" as const, repaired };
         },
         Effect.provide(outboundHttp),
         Effect.catchTags({
@@ -449,7 +553,7 @@ const saveAccounts = FunctionImpl.make(
     "saveAccounts",
     Effect.fn("Banking.saveAccounts")(function* saveAccounts({ accounts, provider, userId }) {
         if (yield* deletingAccount(userId)) {
-            return 0;
+            return [];
         }
         const reader = yield* DatabaseReader;
         const writer = yield* DatabaseWriter;
@@ -464,7 +568,7 @@ const saveAccounts = FunctionImpl.make(
         const currency = (yield* setting(userId, "currency")) ?? "USD";
         const nextSortOrder = ledgerAccounts.reduce((highest, row) => Math.max(highest, row.sortOrder), -1) + 1;
         let created = 0;
-        let saved = 0;
+        const added: Id<"bankAccounts">[] = [];
         for (const account of accounts) {
             const existing = yield* getByIndex(
                 reader.table("bankAccounts").get("by_provider_and_accountId", provider, account.id)
@@ -490,7 +594,7 @@ const saveAccounts = FunctionImpl.make(
                     created += 1;
                 }
                 filesInto = linkedInto;
-                id = yield* writer.table("bankAccounts").insert({
+                const inserted = yield* writer.table("bankAccounts").insert({
                     accountId: account.id,
                     filesInto,
                     institution: account.institution,
@@ -502,6 +606,8 @@ const saveAccounts = FunctionImpl.make(
                     status: account.status,
                     userId,
                 });
+                id = inserted;
+                added.push(inserted);
             } else {
                 yield* writer.table("bankAccounts").patch(existing._id, {
                     institution: account.institution,
@@ -514,12 +620,11 @@ const saveAccounts = FunctionImpl.make(
             if (id !== undefined && account.status === "active") {
                 yield* scheduler.runAfter(Duration.zero, refs.internal.banking.pull, { id });
             }
-            saved += 1;
         }
         if (created > 0) {
             yield* counter.advanceTo(counter.nextSeq + created);
         }
-        return saved;
+        return added;
     }, Effect.orDie)
 );
 
@@ -1536,6 +1641,191 @@ const sweep = FunctionImpl.make(
     )
 );
 
+const institutionFor = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "institutionFor",
+    Effect.fn("Banking.institutionFor")(function* institutionFor({ id }) {
+        const row = yield* getById((yield* DatabaseReader).table("bankInstitutions").get(id));
+        if (row === null) {
+            return null;
+        }
+        return {
+            institution: {
+                catchAll: row.catchAll,
+                country: row.country,
+                id: row.externalId,
+                logo: row.logo,
+                name: row.name,
+            },
+            provider: row.provider,
+            retired: row.retired,
+        };
+    }, Effect.orDie)
+);
+
+const countInstitutionUse = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "countInstitutionUse",
+    Effect.fn("Banking.countInstitutionUse")(function* countInstitutionUse({ id }) {
+        const row = yield* getById((yield* DatabaseReader).table("bankInstitutions").get(id));
+        if (row !== null) {
+            yield* (yield* DatabaseWriter).table("bankInstitutions").patch(id, { popularity: row.popularity + 1 });
+        }
+        return null;
+    }, Effect.orDie)
+);
+
+const beginInstitutionSync = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "beginInstitutionSync",
+    Effect.fn("Banking.beginInstitutionSync")(function* beginInstitutionSync({ provider, seenAt }) {
+        const reader = yield* DatabaseReader;
+        const existing = yield* getByIndex(reader.table("bankInstitutionSyncs").get("by_provider", provider));
+        if (existing !== null && existing.seenAt >= seenAt) {
+            return false;
+        }
+        const writer = yield* DatabaseWriter;
+        yield* existing === null
+            ? writer.table("bankInstitutionSyncs").insert({ provider, seenAt })
+            : writer.table("bankInstitutionSyncs").patch(existing._id, { seenAt });
+        return true;
+    }, Effect.orDie)
+);
+
+const saveInstitutions = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "saveInstitutions",
+    Effect.fn("Banking.saveInstitutions")(function* saveInstitutions({ institutions, provider, seenAt }) {
+        const reader = yield* DatabaseReader;
+        const generation = yield* getByIndex(reader.table("bankInstitutionSyncs").get("by_provider", provider));
+        if (generation !== null && generation.seenAt > seenAt) {
+            return false;
+        }
+        const writer = yield* DatabaseWriter;
+        for (const institution of institutions) {
+            const existing = yield* getByIndex(
+                reader
+                    .table("bankInstitutions")
+                    .get("by_provider_and_externalId_and_country", provider, institution.id, institution.country)
+            );
+            if (existing === null) {
+                yield* writer.table("bankInstitutions").insert({
+                    catchAll: institution.catchAll,
+                    country: institution.country,
+                    externalId: institution.id,
+                    logo: institution.logo,
+                    name: institution.name,
+                    popularity: 0,
+                    provider,
+                    retired: false,
+                    seenAt,
+                });
+                continue;
+            }
+            // An older run must not overwrite or revive what a newer run already wrote.
+            if (existing.seenAt > seenAt) {
+                continue;
+            }
+            yield* writer.table("bankInstitutions").patch(existing._id, {
+                catchAll: institution.catchAll,
+                country: institution.country,
+                logo: institution.logo,
+                name: institution.name,
+                retired: false,
+                seenAt,
+            });
+        }
+        return true;
+    }, Effect.orDie)
+);
+
+const retireInstitutions = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "retireInstitutions",
+    Effect.fn("Banking.retireInstitutions")(function* retireInstitutions({ cursor, provider, seenAt }) {
+        const reader = yield* DatabaseReader;
+        const generation = yield* getByIndex(reader.table("bankInstitutionSyncs").get("by_provider", provider));
+        if (generation !== null && generation.seenAt > seenAt) {
+            return null;
+        }
+        const writer = yield* DatabaseWriter;
+        const page = yield* reader
+            .table("bankInstitutions")
+            .index("by_provider_and_retired_and_seenAt", (q) =>
+                q.eq("provider", provider).eq("retired", false).lt("seenAt", seenAt)
+            )
+            .paginate({ cursor, numItems: INSTITUTION_PAGE });
+        for (const row of page.page) {
+            yield* writer.table("bankInstitutions").patch(row._id, { retired: true });
+        }
+        return page.isDone ? null : page.continueCursor;
+    }, Effect.orDie)
+);
+
+const syncInstitutions = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "syncInstitutions",
+    Effect.fn("Banking.syncInstitutions")(
+        function* syncInstitutions() {
+            const { runMutation } = yield* MutationRunner;
+            const configured = yield* configuredClients();
+            const seenAt = yield* Clock.currentTimeMillis;
+            for (const { client, name } of configured) {
+                const listed = yield* client.institutions().pipe(
+                    Effect.map((rows) => Option.some(rows)),
+                    Effect.catchTags({
+                        BankingError: (error) =>
+                            Console.warn(`[banking] could not list ${name} institutions`, error).pipe(
+                                Effect.as(Option.none<readonly Institution[]>())
+                            ),
+                    })
+                );
+                // A provider outage must not retire its banks: only a successful list proves what is gone.
+                if (Option.isNone(listed)) {
+                    continue;
+                }
+                if (!(yield* runMutation(refs.internal.banking.beginInstitutionSync, { provider: name, seenAt }))) {
+                    continue;
+                }
+                const byCountryAndId = new Map<string, Institution>();
+                for (const institution of listed.value) {
+                    byCountryAndId.set(`${institution.country}:${institution.id}`, institution);
+                }
+                const unique = [...byCountryAndId.values()];
+                let saved = true;
+                for (let start = 0; start < unique.length && saved; start += INSTITUTION_PAGE) {
+                    saved = yield* runMutation(refs.internal.banking.saveInstitutions, {
+                        institutions: unique.slice(start, start + INSTITUTION_PAGE),
+                        provider: name,
+                        seenAt,
+                    });
+                }
+                // A newer run took over mid-loop, so its own retire decides what is gone.
+                if (!saved) {
+                    continue;
+                }
+                let cursor: string | null = null;
+                do {
+                    cursor = yield* runMutation(refs.internal.banking.retireInstitutions, {
+                        cursor,
+                        provider: name,
+                        seenAt,
+                    });
+                } while (cursor !== null);
+            }
+            return null;
+        },
+        Effect.provide(outboundHttp),
+        Effect.orDie
+    )
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(overview),
     Layer.provide(startLink),
@@ -1555,6 +1845,17 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(pull),
     Layer.provide(refreshAccount),
     Layer.provide(lapsed),
-    Layer.provide(sweep),
+    Layer.provide(
+        Layer.mergeAll(
+            sweep,
+            searchInstitutions,
+            syncInstitutions,
+            institutionFor,
+            countInstitutionUse,
+            beginInstitutionSync,
+            saveInstitutions,
+            retireInstitutions
+        )
+    ),
     GroupImpl.finalize
 );

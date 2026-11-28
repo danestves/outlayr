@@ -5,6 +5,7 @@ import {
     BankAccountStatus,
     BankingProviderName,
     BankTransaction,
+    Institution,
 } from "@outlayr/banking/provider";
 import * as Schema from "effect/Schema";
 
@@ -28,7 +29,15 @@ export const BankAccountView = Schema.Struct({
 export const BankOverview = Schema.Struct({
     access: BankAccess,
     accounts: Schema.Array(BankAccountView),
-    countries: Schema.Array(Schema.String),
+});
+
+export const InstitutionView = Schema.Struct({
+    catchAll: Schema.Boolean,
+    country: Schema.String,
+    id: Id("bankInstitutions"),
+    logo: Schema.NullOr(Schema.String),
+    name: Schema.String,
+    provider: BankingProviderName,
 });
 
 export const StartedLink = Schema.Union([
@@ -38,11 +47,23 @@ export const StartedLink = Schema.Union([
         kind: Schema.Literal("sdk"),
         provider: BankingProviderName,
     }),
-    Schema.Struct({ kind: Schema.Literals(["plan", "unavailable", "country", "failed"]) }),
+    Schema.Struct({
+        id: Schema.String,
+        kind: Schema.Literal("redirect"),
+        provider: BankingProviderName,
+        url: Schema.String,
+    }),
+    Schema.Struct({ kind: Schema.Literals(["plan", "unavailable", "retired", "failed"]) }),
 ]);
 
 export const FinishedLink = Schema.Union([
-    Schema.Struct({ kind: Schema.Literal("linked"), linked: Schema.Number }),
+    // `added` names only the accounts this link inserted. `repaired` is false only when the account a sign in again
+    // set out to fix is still not working.
+    Schema.Struct({
+        added: Schema.Array(Id("bankAccounts")),
+        kind: Schema.Literal("linked"),
+        repaired: Schema.Boolean,
+    }),
     Schema.Struct({ kind: Schema.Literals(["plan", "unavailable", "failed"]) }),
 ]);
 
@@ -77,16 +98,29 @@ export default GroupSpec.make()
     .addFunction(FunctionSpec.publicQuery({ args: () => ({}), name: "overview", returns: () => BankOverview }))
     .addFunction(
         FunctionSpec.publicAction({
-            args: () => ({ country: Schema.String }),
+            args: () => ({ institution: Id("bankInstitutions"), repair: Schema.NullOr(Id("bankAccounts")) }),
             name: "startLink",
             returns: () => StartedLink,
         })
     )
     .addFunction(
         FunctionSpec.publicAction({
-            args: () => ({ provider: BankingProviderName, sessionId: Schema.String }),
+            args: () => ({
+                completion: Schema.NullOr(Schema.String),
+                provider: BankingProviderName,
+                repair: Schema.NullOr(Id("bankAccounts")),
+                sessionId: Schema.String,
+            }),
             name: "finishLink",
             returns: () => FinishedLink,
+        })
+    )
+    .addFunction(
+        FunctionSpec.publicQuery({
+            // `region` only ranks the phone's country first; search never filters by country.
+            args: () => ({ q: Schema.String, region: Schema.NullOr(Schema.String) }),
+            name: "searchInstitutions",
+            returns: () => Schema.Array(InstitutionView),
         })
     )
     .addFunction(FunctionSpec.publicAction({ args: () => AccountRef, name: "unlink", returns: () => Schema.Boolean }))
@@ -136,7 +170,7 @@ export default GroupSpec.make()
         FunctionSpec.internalMutation({
             args: () => ({ accounts: Schema.Array(BankAccount), provider: BankingProviderName, userId: Schema.String }),
             name: "saveAccounts",
-            returns: () => Schema.Number,
+            returns: () => Schema.Array(Id("bankAccounts")),
         })
     )
     .addFunction(
@@ -219,4 +253,53 @@ export default GroupSpec.make()
                 Schema.Struct({ cursor: Schema.NullOr(Schema.String), ids: Schema.Array(Id("bankAccounts")) }),
         })
     )
-    .addFunction(FunctionSpec.internalAction({ args: () => SweepPage, name: "sweep", returns: () => Schema.Null }));
+    .addFunction(FunctionSpec.internalAction({ args: () => SweepPage, name: "sweep", returns: () => Schema.Null }))
+    .addFunction(
+        FunctionSpec.internalQuery({
+            args: () => ({ id: Id("bankInstitutions") }),
+            name: "institutionFor",
+            returns: () =>
+                Schema.NullOr(
+                    Schema.Struct({ institution: Institution, provider: BankingProviderName, retired: Schema.Boolean })
+                ),
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            args: () => ({ id: Id("bankInstitutions") }),
+            name: "countInstitutionUse",
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            args: () => ({ provider: BankingProviderName, seenAt: Schema.Number }),
+            name: "beginInstitutionSync",
+            returns: () => Schema.Boolean,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            args: () => ({
+                institutions: Schema.Array(Institution),
+                provider: BankingProviderName,
+                seenAt: Schema.Number,
+            }),
+            name: "saveInstitutions",
+            returns: () => Schema.Boolean,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            args: () => ({
+                cursor: Schema.NullOr(Schema.String),
+                provider: BankingProviderName,
+                seenAt: Schema.Number,
+            }),
+            name: "retireInstitutions",
+            returns: () => Schema.NullOr(Schema.String),
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalAction({ args: () => ({}), name: "syncInstitutions", returns: () => Schema.Null })
+    );

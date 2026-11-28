@@ -33,3 +33,4 @@ grep -q '^MCP_CONSENT_URL=' "$env_file" || $convex env set MCP_CONSENT_URL "$SIT
 $convex env list | grep -q '^JWKS=' || $convex env set JWKS ''
 
 $convex deploy -y
+$convex run banking:syncInstitutions || echo "Bank list sync failed; the nightly run will retry." >&2

@@ -53,6 +53,7 @@ const refreshed = (status: string) =>
     event("financial_connections.account.refreshed_transactions", { id: "fca_1", transaction_refresh: { status } });
 
 interface Recorded {
+    readonly body: string;
     readonly method: string;
     readonly url: string;
 }
@@ -62,7 +63,7 @@ const stubHttp = (respond: (request: Recorded) => Response) => {
     const http = HttpClient.make((request) =>
         Effect.gen(function* recordRequest() {
             const web = yield* HttpClientRequest.toWeb(request).pipe(Effect.orDie);
-            const recorded = { method: web.method, url: web.url };
+            const recorded = { body: yield* Effect.promise(() => web.text()), method: web.method, url: web.url };
             requests.push(recorded);
             return HttpClientResponse.fromWeb(request, respond(recorded));
         })
@@ -127,7 +128,7 @@ describe("finishLink", () => {
         });
 
         await expect(
-            failureReason(client(ENV).finishLink("cus_1", "fcs_1").pipe(Effect.provide(http.layer)))
+            failureReason(client(ENV).finishLink("cus_1", "fcs_1", null).pipe(Effect.provide(http.layer)))
         ).resolves.toBe("transport");
         expect(http.requests.filter(({ url }) => url.endsWith("/disconnect"))).toHaveLength(2);
     });
@@ -154,7 +155,7 @@ describe("finishLink", () => {
         });
 
         await expect(
-            failureReason(client(ENV).finishLink("cus_1", "fcs_1").pipe(Effect.provide(http.layer)))
+            failureReason(client(ENV).finishLink("cus_1", "fcs_1", null).pipe(Effect.provide(http.layer)))
         ).resolves.toBe("transport");
         expect(
             http.requests
@@ -164,6 +165,86 @@ describe("finishLink", () => {
             "https://api.stripe.com/v1/financial_connections/accounts/fca_2/subscribe",
             "https://api.stripe.com/v1/financial_connections/accounts/fca_2/disconnect",
         ]);
+    });
+});
+
+describe("startLink", () => {
+    it("opens the session filtered to the institution's country", async () => {
+        const http = stubHttp(() =>
+            Response.json({ account_holder: { customer: "cus_1" }, client_secret: "secret", id: "fcs_1" })
+        );
+
+        const session = await Effect.runPromise(
+            client(ENV)
+                .startLink({
+                    holder: "cus_1",
+                    institution: { catchAll: true, country: "CA", id: "CA", logo: null, name: "Canadian banks" },
+                    repair: null,
+                })
+                .pipe(Effect.provide(http.layer))
+        );
+
+        expect(session).toStrictEqual({ clientSecret: "secret", id: "fcs_1", kind: "sdk" });
+        const [request] = http.requests;
+        expect(
+            request === undefined ? [] : new URLSearchParams(request.body).getAll("filters[countries][]")
+        ).toStrictEqual(["CA"]);
+    });
+
+    it("relinks the expired account with its authorization instead of a country filter", async () => {
+        const http = stubHttp(({ url }) => {
+            if (url.endsWith("/financial_connections/accounts/fca_1")) {
+                return Response.json({ ...stripeAccount("fca_1"), authorization: "fcauth_1" });
+            }
+            return Response.json({ account_holder: { customer: "cus_1" }, client_secret: "secret", id: "fcs_1" });
+        });
+
+        const session = await Effect.runPromise(
+            client(ENV)
+                .startLink({
+                    holder: "cus_1",
+                    institution: { catchAll: true, country: "CA", id: "CA", logo: null, name: "Canadian banks" },
+                    repair: "fca_1",
+                })
+                .pipe(Effect.provide(http.layer))
+        );
+
+        expect(session).toStrictEqual({ clientSecret: "secret", id: "fcs_1", kind: "sdk" });
+        const form = new URLSearchParams(http.requests.find(({ method }) => method === "POST")?.body);
+        expect(form.get("relink_options[authorization]")).toBe("fcauth_1");
+        expect(form.getAll("filters[countries][]")).toStrictEqual([]);
+    });
+
+    it("refuses to relink an account with no authorization, before opening any session", async () => {
+        const http = stubHttp(() => Response.json(stripeAccount("fca_1")));
+
+        await expect(
+            failureReason(
+                client(ENV)
+                    .startLink({
+                        holder: "cus_1",
+                        institution: { catchAll: true, country: "CA", id: "CA", logo: null, name: "Canadian banks" },
+                        repair: "fca_1",
+                    })
+                    .pipe(Effect.provide(http.layer))
+            )
+        ).resolves.toBe("rejected");
+        expect(http.requests).toHaveLength(1);
+    });
+
+    it("rejects an institution in a country Stripe cannot link", async () => {
+        const http = stubHttp(() => Response.json({}));
+        await expect(
+            failureReason(
+                client(ENV)
+                    .startLink({
+                        holder: "cus_1",
+                        institution: { catchAll: true, country: "GB", id: "GB", logo: null, name: "UK banks" },
+                        repair: null,
+                    })
+                    .pipe(Effect.provide(http.layer))
+            )
+        ).resolves.toBe("rejected");
     });
 });
 
