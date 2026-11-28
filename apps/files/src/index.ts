@@ -17,7 +17,9 @@ const SERVED_TYPES = new Set(["application/pdf", "image/heic", "image/jpeg", "im
 function bucketStore(bucket: R2Bucket): PhotoStore {
     return {
         read: async (key, request) => {
-            const object = await bucket.get(key, { onlyIf: request.headers });
+            // Only the condition a browser revalidates with, so a body-less answer always means 304.
+            const etag = request.headers.get("if-none-match");
+            const object = await bucket.get(key, etag === null ? {} : { onlyIf: { etagDoesNotMatch: etag } });
             if (object === null) {
                 return null;
             }

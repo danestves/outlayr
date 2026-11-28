@@ -64,6 +64,7 @@ export async function handlePhoto(request: Request, deps: PhotoDeps): Promise<Re
     try {
         return await servePhoto(request, deps, session, key);
     } catch {
-        return onApp ? deps.origin(request) : refused(502);
+        // Not the app route: it would wait on the same Convex call that just failed.
+        return refused(503);
     }
 }

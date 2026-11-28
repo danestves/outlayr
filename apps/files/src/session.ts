@@ -42,7 +42,12 @@ export function sessionToken(request: Request): string | null {
 // cannot see a revoked session, so a signed-out token keeps reading its own photos until it expires.
 export async function verifySession(token: string, keys: JWTVerifyGetKey, issuer: string): Promise<Session | null> {
     try {
-        const { payload } = await jwtVerify(token, keys, { algorithms: ["RS256"], audience: "convex", issuer });
+        const { payload } = await jwtVerify(token, keys, {
+            algorithms: ["RS256"],
+            audience: "convex",
+            issuer,
+            requiredClaims: ["exp"],
+        });
         if (!payload.sub || payload["isAnonymous"] === true) {
             return null;
         }
