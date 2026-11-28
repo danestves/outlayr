@@ -5,9 +5,9 @@ import { getIosPushNotificationServiceEnvironmentAsync } from "expo-application"
 import { Platform } from "react-native";
 
 import { Meta } from "@/data/app-meta-core";
-import { getOrCreateDeviceId } from "@/data/sync-outbox-core";
 import type { Database } from "@/db/client";
 
+import { captureDeviceLabel } from "./capture-lookup";
 import { cloudMutation, cloudQuery, isCloudAccount } from "./convex";
 import { sharedStore } from "./shared-store";
 
@@ -40,7 +40,9 @@ const clearRegistered = Effect.fn("ReviewPush.clearRegistered")(function* clearR
  */
 export const syncReviewPush = Effect.fn("ReviewPush.sync")(
     function* syncReviewPush(db: Database) {
-        if (Platform.OS !== "ios" || sharedStore === null) {
+        // Per install, not the ledger's sync id: a profile switch must not leave a second target behind.
+        const deviceId = Platform.OS === "ios" ? captureDeviceLabel() : undefined;
+        if (sharedStore === null || deviceId === undefined) {
             return;
         }
         const store = sharedStore;
@@ -64,7 +66,6 @@ export const syncReviewPush = Effect.fn("ReviewPush.sync")(
             yield* clearRegistered(store);
             return;
         }
-        const deviceId = yield* getOrCreateDeviceId(db);
         const { data: token } = yield* Effect.tryPromise(() => notifications.getDevicePushTokenAsync()).pipe(
             Effect.timeout(TOKEN_WAIT)
         );
