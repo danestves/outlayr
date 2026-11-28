@@ -10,6 +10,7 @@ import { describe, expect, it, vi } from "vite-plus/test";
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { DELETION_JOBS_PER_USER } from "./accountDeletion";
+import { SYNCED_TABLES } from "./lib/syncTables";
 import { PUSH_BATCH_LIMIT } from "./sync";
 import { authenticatedAs, grantPro, seedAuthUser, seedProUser } from "./test.helpers";
 import type { SeededIdentity } from "./test.helpers";
@@ -1081,6 +1082,88 @@ describe("pullSince", () => {
         expect(page.rows[0].localId).toBe("currencyChosen");
         expect(page.rows[0].deletedAt).toBeNull();
         expect(page.rows[0].fields.value).toBe("1");
+    });
+
+    it("serves the first rows after the cursor across gaps, shared seqs and table scopes", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const tables = ["transactions", "categories", "accounts", "appMeta"] as const;
+        await pushAs(
+            t,
+            owner,
+            DEVICE_A,
+            Array.from({ length: 60 }, (_, i): PushRows[number] => {
+                const table = tables[i % tables.length];
+                if (table === "appMeta") {
+                    return { deletedAt: null, fields: { value: `${i}` }, localId: `k${i}`, table, updatedAt: i };
+                }
+                if (table === "accounts") {
+                    return { deletedAt: null, fields: accountFields(), localId: `a${i}`, table, updatedAt: i };
+                }
+                return table === "categories" ? categoryRow(`c${i}`, i) : transactionRow(`t${i}`, i);
+            })
+        );
+
+        let state = 7;
+        const random = () => {
+            state = (state * 1_103_515_245 + 12_345) % 2_147_483_648;
+            return state / 2_147_483_648;
+        };
+        const stored = await t.run(async (ctx) => {
+            const docs = (await Promise.all(tables.map((table) => ctx.db.query(table).collect()))).flat();
+            let seq = 0;
+            for (const doc of docs.toSorted((a, b) => a.seq - b.seq)) {
+                const roll = random();
+                if (roll < 0.15) {
+                    seq += 10_000;
+                } else if (roll >= 0.3) {
+                    seq += roll < 0.65 ? 1 : Math.ceil(random() * 40);
+                }
+                await ctx.db.patch(doc._id, { seq });
+            }
+            return Promise.all(tables.map((table) => ctx.db.query(table).withIndex("by_user_and_seq").collect()));
+        });
+
+        const seqs = [...new Set(stored.flat().map((doc) => doc.seq))];
+        const cursors = [0, ...seqs.filter((_, i) => i % 3 === 0), ...seqs.slice(-2), Math.max(...seqs) + 1];
+        const scopes = [undefined, ["transactions"], ["categories", "transactions", "appMeta"]] as const;
+        const client = authenticatedAs(t, owner);
+        for (const scope of scopes) {
+            const named =
+                scope ??
+                SYNCED_TABLES.filter((table): table is (typeof tables)[number] =>
+                    tables.some((seeded) => seeded === table)
+                );
+            const log = named
+                .flatMap((table) =>
+                    stored[tables.indexOf(table)].map((doc) => ({
+                        localId: "localId" in doc ? doc.localId : doc.key,
+                        seq: doc.seq,
+                        table,
+                    }))
+                )
+                .toSorted((a, b) => a.seq - b.seq);
+            for (const limit of [1, 2, 5, 13, 1000]) {
+                for (const cursor of cursors) {
+                    const after = log.filter((row) => row.seq > cursor);
+                    const expected = after.slice(0, limit);
+                    const page = await client.query(api.sync.pullSince, {
+                        cursor,
+                        limit,
+                        ...(scope && { tables: [...scope] }),
+                    });
+                    expect({
+                        cursor: page.cursor,
+                        hasMore: page.hasMore,
+                        rows: page.rows.map(({ localId, seq, table }) => ({ localId, seq, table })),
+                    }).toStrictEqual({
+                        cursor: expected.at(-1)?.seq ?? cursor,
+                        hasMore: after.length >= limit,
+                        rows: expected,
+                    });
+                }
+            }
+        }
     });
 
     it("leaves the cursor where it was when nothing is new", async () => {
