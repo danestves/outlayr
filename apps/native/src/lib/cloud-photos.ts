@@ -1,3 +1,4 @@
+import { merchantLogoUrl } from "@outlayr/backend/confect/lib/photoKeys";
 import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
@@ -23,11 +24,15 @@ const isOk = (status: number) => status >= 200 && status < 300;
 const failed = (kind: "download" | "upload", cause: Error) => new CloudError({ cause, kind, path: "photos" });
 
 const FILES_URL = ENV.EXPO_PUBLIC_FILES_URL;
+const TOKEN_TIMEOUT_MS = 20_000;
 
 const sessionToken = Effect.tryPromise({
     catch: (cause) => failed("download", cause instanceof Error ? cause : new Error(String(cause))),
     try: async () => {
-        const reply = await cloudRuntime?.authClient.convex.token({ fetchOptions: { throw: false } });
+        const reply = await cloudRuntime?.authClient.convex.token({
+            // The token fetch retries until aborted, and a sync pass holds its lock while it waits.
+            fetchOptions: { signal: AbortSignal.timeout(TOKEN_TIMEOUT_MS), throw: false },
+        });
         return reply?.data?.token ?? null;
     },
 }).pipe(
@@ -98,7 +103,7 @@ export const photoTransport = Effect.fn("Cloud.photoTransport")(function* photoT
         readUrls: (keys) =>
             FILES_URL === undefined
                 ? cloudMutation("photos:readUrls", { keys: [...keys] })
-                : Effect.succeed(keys.map((key) => ({ key, url: `${FILES_URL}/${key}` }))),
+                : Effect.succeed(keys.map((key) => ({ key, url: merchantLogoUrl(key) ?? `${FILES_URL}/${key}` }))),
         release: (key) =>
             cloudMutation<unknown, unknown>("photos:releaseUnreferenced", {
                 key,
