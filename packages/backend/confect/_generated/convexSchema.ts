@@ -4,6 +4,9 @@ import { Table as $Table } from "@confect/server";
 import accountDeletionJobs from "./tables/accountDeletionJobs";
 import accounts from "./tables/accounts";
 import appMeta from "./tables/appMeta";
+import bankAccounts from "./tables/bankAccounts";
+import bankEntries from "./tables/bankEntries";
+import bankHolders from "./tables/bankHolders";
 import budgetPlans from "./tables/budgetPlans";
 import budgets from "./tables/budgets";
 import captureKeys from "./tables/captureKeys";
@@ -53,6 +56,9 @@ export default $defineSchema({
   accountDeletionJobs: $Table.tableDefinition(accountDeletionJobs),
   accounts: $Table.tableDefinition(accounts),
   appMeta: $Table.tableDefinition(appMeta),
+  bankAccounts: $Table.tableDefinition(bankAccounts),
+  bankEntries: $Table.tableDefinition(bankEntries),
+  bankHolders: $Table.tableDefinition(bankHolders),
   budgetPlans: $Table.tableDefinition(budgetPlans),
   budgets: $Table.tableDefinition(budgets),
   captureKeys: $Table.tableDefinition(captureKeys),

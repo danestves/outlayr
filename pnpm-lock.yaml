@@ -974,6 +974,9 @@ importers:
       '@outlayr/ai':
         specifier: workspace:*
         version: link:../ai
+      '@outlayr/banking':
+        specifier: workspace:*
+        version: link:../banking
       '@outlayr/email':
         specifier: workspace:*
         version: link:../email

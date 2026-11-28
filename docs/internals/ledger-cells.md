@@ -24,7 +24,7 @@ The table (`confect/tables/ledgerCells.ts`) holds one document per user per UTC 
 
 A day's cells are recomputed from that day's live rows. They are never adjusted by the difference a write made. So the upkeep after a write and a full rebuild run the same function over the same rows, in `seq` order, and write the same floats. `ledgerCells.test.ts` holds that through edits, moves, deletes and restores.
 
-Every server-side write to `transactions`, `transfers`, `outsidePayments` or `outsideMoves` must call `scheduleCellRefresh` with the row's date, and with its old date when it moved. Today that is `sync.push` and `mcpEntries`. A writer that skips it leaves a wrong balance on the web that nothing will correct.
+Every server-side write to `transactions`, `transfers`, `outsidePayments` or `outsideMoves` must call `scheduleCellRefresh` with the row's date, and with its old date when it moved. Today that is `sync.push`, `mcpEntries` and `banking`. A writer that skips it leaves a wrong balance on the web that nothing will correct.
 
 The refresh runs in a scheduled mutation after the write, not inside it. The cells are a cache, and no read limit or bug of theirs may fail a push. For a moment after a write the cells lag the rows.
 

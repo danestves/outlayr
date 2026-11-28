@@ -1,0 +1,26 @@
+import registeredFunctions from "../confect/_generated/registeredFunctions/banking";
+
+export const accessFor = registeredFunctions.accessFor;
+export const advanceCursor = registeredFunctions.advanceCursor;
+export const claimPull = registeredFunctions.claimPull;
+export const dropBankEntries = registeredFunctions.dropBankEntries;
+export const dropHolders = registeredFunctions.dropHolders;
+export const fileTransactions = registeredFunctions.fileTransactions;
+export const finishLink = registeredFunctions.finishLink;
+export const holderFor = registeredFunctions.holderFor;
+export const holdersOf = registeredFunctions.holdersOf;
+export const lapsed = registeredFunctions.lapsed;
+export const onEvent = registeredFunctions.onEvent;
+export const overview = registeredFunctions.overview;
+export const pull = registeredFunctions.pull;
+export const pullTarget = registeredFunctions.pullTarget;
+export const refreshAccount = registeredFunctions.refreshAccount;
+export const releasePull = registeredFunctions.releasePull;
+export const removeAccount = registeredFunctions.removeAccount;
+export const saveAccounts = registeredFunctions.saveAccounts;
+export const saveHolder = registeredFunctions.saveHolder;
+export const setFilesInto = registeredFunctions.setFilesInto;
+export const setStatus = registeredFunctions.setStatus;
+export const startLink = registeredFunctions.startLink;
+export const sweep = registeredFunctions.sweep;
+export const unlink = registeredFunctions.unlink;

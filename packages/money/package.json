@@ -43,6 +43,7 @@
         "./ledger-view": "./src/ledger-view.ts",
         "./ledger-zone": "./src/ledger-zone.ts",
         "./limit-projection": "./src/limit-projection.ts",
+        "./match-card-account": "./src/match-card-account.ts",
         "./money-manager/analysis": "./src/money-manager/analysis.ts",
         "./money-manager/archive": "./src/money-manager/archive.ts",
         "./money-manager/defaults": "./src/money-manager/defaults.ts",
