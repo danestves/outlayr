@@ -32,7 +32,7 @@ export function Bank() {
                     </dl>
                     <PoweredBy className="hz-bank-powered hz-r" />
                 </div>
-                <div className="hz-bank-stage" data-reveal="group">
+                <div aria-hidden="true" className="hz-bank-stage" data-reveal="group">
                     <BankFeed />
                     <BankTip />
                 </div>

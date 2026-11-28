@@ -118,13 +118,19 @@ const horizon = {
             }),
             facts: {
                 login: {
-                    label: t({ en: "Login", de: "Anmeldung", es: "Acceso", pt: "Login", fr: "Connexion" }),
+                    label: t({
+                        en: "Bank login",
+                        de: "Bank-Login",
+                        es: "Acceso al banco",
+                        pt: "Login do banco",
+                        fr: "Identifiants bancaires",
+                    }),
                     value: t({
-                        en: "Stays with your bank",
-                        de: "Bleibt bei deiner Bank",
-                        es: "Se queda en tu banco",
-                        pt: "Fica com o seu banco",
-                        fr: "Reste avec votre banque",
+                        en: "Outlayr never sees it",
+                        de: "Outlayr sieht ihn nie",
+                        es: "Outlayr nunca lo ve",
+                        pt: "O Outlayr nunca vê",
+                        fr: "Outlayr ne les voit jamais",
                     }),
                 },
                 plan: {
@@ -174,6 +180,15 @@ const horizon = {
                 fr: "Pizza Hut, une fois validé",
             }),
             today: t({ en: "Today", de: "Heute", es: "Hoy", pt: "Hoje", fr: "Aujourd'hui" }),
+            coffee: t({ en: "Coffee", de: "Kaffee", es: "Café", pt: "Café", fr: "Café" }),
+            groceries: t({ en: "Groceries", de: "Lebensmittel", es: "Supermercado", pt: "Mercado", fr: "Courses" }),
+            subscriptions: t({
+                en: "Subscriptions",
+                de: "Abos",
+                es: "Suscripciones",
+                pt: "Assinaturas",
+                fr: "Abonnements",
+            }),
             yesterday: t({ en: "Yesterday", de: "Gestern", es: "Ayer", pt: "Ontem", fr: "Hier" }),
         },
         close: {

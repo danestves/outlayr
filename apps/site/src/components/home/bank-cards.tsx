@@ -53,13 +53,13 @@ export function BankFeed() {
                 <span>{bank.today}</span>
                 <span className="hz-bank-total">{money(-54.57)}</span>
             </p>
-            <ChargeRow account="9:41 AM" amount={-6.45} i="2" logo="starbucks.com" name="Starbucks" pending />
-            <ChargeRow account="8:20 AM" amount={-48.12} i="3" logo="target.com" name="Target" />
+            <ChargeRow account={bank.coffee.value} amount={-6.45} i="2" logo="starbucks.com" name="Starbucks" pending />
+            <ChargeRow account={bank.groceries.value} amount={-48.12} i="3" logo="target.com" name="Target" />
             <p className="hz-bank-group hz-r" style={{ "--i": "4" }}>
                 <span>{bank.yesterday}</span>
                 <span className="hz-bank-total">{money(-11.99)}</span>
             </p>
-            <ChargeRow account="6:02 AM" amount={-11.99} i="5" logo="spotify.com" name="Spotify" />
+            <ChargeRow account={bank.subscriptions.value} amount={-11.99} i="5" logo="spotify.com" name="Spotify" />
         </div>
     );
 }

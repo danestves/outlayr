@@ -688,9 +688,13 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 }
 
 @media (max-width: 29.99rem) {
-    .hz-announce-powered,
     .hz-announce-divider-lockup {
         display: none;
+    }
+
+    .hz-announce-powered {
+        flex-basis: 100%;
+        justify-content: center;
     }
 }
 
@@ -843,6 +847,8 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 }
 
 .hz-bank-stage {
+    --color-app-income: #00714a;
+
     position: relative;
     display: flex;
     flex-direction: column;
