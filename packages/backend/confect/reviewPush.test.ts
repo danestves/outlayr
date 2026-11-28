@@ -1,9 +1,9 @@
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import { exportPKCS8, generateKeyPair } from "jose";
-import { describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { api } from "../convex/_generated/api";
+import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import {
     needsReview,
@@ -141,4 +141,47 @@ describe("review push target", () => {
         const rows = await t.run((ctx) => ctx.db.query("reviewPushTargets").collect());
         expect(rows).toMatchObject([{ alertedAt, token: TOKEN }]);
     });
+
+    it("drops only the phone APNs reports gone and keeps sending to the rest", async () => {
+        const { keyId, privateKey, teamId } = await credentials();
+        vi.stubEnv("APNS_KEY_ID", keyId);
+        vi.stubEnv("APNS_PRIVATE_KEY", privateKey);
+        vi.stubEnv("APNS_TEAM_ID", teamId);
+        const gone = "b".repeat(64);
+        const sentTo: string[] = [];
+        vi.stubGlobal("fetch", async (input: RequestInfo | URL) => {
+            const url = String(input instanceof Request ? input.url : input);
+            sentTo.push(url);
+            return url.endsWith(gone)
+                ? Response.json({ reason: "Unregistered" }, { status: 410 })
+                : new Response(null, { status: 200 });
+        });
+        const t = convexTest(schema, modules);
+        revenuecatTest.register(t);
+        const ids = await t.run(async (ctx) => [
+            await ctx.db.insert("reviewPushTargets", {
+                deviceId: "old",
+                environment: "production",
+                token: gone,
+                userId: "u1",
+            }),
+            await ctx.db.insert("reviewPushTargets", {
+                deviceId: "new",
+                environment: "production",
+                token: TOKEN,
+                userId: "u1",
+            }),
+        ]);
+
+        await t.action(internal.reviewPush.deliver, { count: 2, ids, language: "en" });
+
+        expect(sentTo).toHaveLength(2);
+        const rows = await t.run((ctx) => ctx.db.query("reviewPushTargets").collect());
+        expect(rows).toMatchObject([{ deviceId: "new", token: TOKEN }]);
+    });
+});
+
+afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
 });

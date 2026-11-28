@@ -1,7 +1,10 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -14,14 +17,13 @@ import { requireBillingId } from "./lib/auth";
 import { DEVICE_TOKEN, isDeadToken, rejectionReason } from "./lib/capturePush";
 import { apnsConfig } from "./lib/config";
 import { dieAsConvexError } from "./lib/convexError";
+import { outboundHttp } from "./lib/http";
 import { needsReviewAlert, reviewPushRequest } from "./lib/reviewPush";
 import { refuseWhileDeleting } from "./lib/syncGuards";
 import spec from "./reviewPush.spec";
 
-// Convex actions have no HttpClient layer, so the runtime's own fetch is the transport.
-const sendPush = (url: string, init: Parameters<typeof fetch>[1]) => fetch(url, init);
 // One stalled APNs call must not use up the action before the remaining phones are tried.
-const APNS_TIMEOUT_MS = 10_000;
+const APNS_TIMEOUT = Duration.seconds(10);
 
 const targetFor = Effect.fn("ReviewPush.targetFor")(function* targetFor(userId: string, deviceId: string) {
     const reader = yield* DatabaseReader;
@@ -137,21 +139,23 @@ const deliver = FunctionImpl.make(
             const nowSeconds = Math.floor((yield* Clock.currentTimeMillis) / 1000);
             const privateKey = Redacted.value(credentials.value.privateKey);
             for (const target of rows) {
-                const sent = yield* Effect.tryPromise(async (signal) => {
-                    const { init, url } = await reviewPushRequest(
-                        { ...credentials.value, privateKey },
-                        target,
-                        count,
-                        language,
-                        nowSeconds
+                const sent = yield* Effect.gen(function* sent() {
+                    const { init, url } = yield* Effect.tryPromise(() =>
+                        reviewPushRequest({ ...credentials.value, privateKey }, target, count, language, nowSeconds)
                     );
-                    const response = await sendPush(url, { ...init, signal });
+                    const response = yield* HttpClient.execute(
+                        HttpClientRequest.post(url).pipe(
+                            HttpClientRequest.setHeaders(init.headers),
+                            HttpClientRequest.bodyText(init.body, "application/json")
+                        )
+                    );
                     return {
-                        reason: response.ok ? undefined : rejectionReason(await response.text()),
+                        reason: response.status === 200 ? undefined : rejectionReason(yield* response.text),
                         status: response.status,
                     };
                 }).pipe(
-                    Effect.timeout(APNS_TIMEOUT_MS),
+                    Effect.timeout(APNS_TIMEOUT),
+                    Effect.provide(outboundHttp),
                     Effect.catchCause((cause) => Console.warn("[review] push not sent", cause).pipe(Effect.as(null)))
                 );
                 if (sent === null) {
