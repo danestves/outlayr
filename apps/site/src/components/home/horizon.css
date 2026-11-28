@@ -688,7 +688,8 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 }
 
 @media (max-width: 29.99rem) {
-    .hz-announce-divider-lockup {
+    .hz-announce-divider-lockup,
+    .hz-announce-arrow {
         display: none;
     }
 
