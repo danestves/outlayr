@@ -17,6 +17,7 @@ import { daysBetween, localDayKey } from "./local-day";
 import { loggedDays } from "./month-days";
 import { previousPeriodWindow } from "./period-window";
 import { reminderFireAt } from "./subscription-reminder";
+import { weekRecap } from "./week-recap";
 
 const [kind = "", ...rest] = process.argv.slice(2);
 const parts = rest.map(Number);
@@ -235,6 +236,25 @@ async function answer(): Promise<string> {
                 localDate(5)
             );
             return JSON.stringify([start, end].map((d) => [d.getMonth(), d.getDate(), d.getHours(), d.getMinutes()]));
+        }
+        case "week-recap": {
+            const recap = weekRecap({
+                categoriesById: new Map(),
+                firstWeekday: 1,
+                now: localDate(0),
+                rows: [localDate(5), localDate(10)].map((date) => ({
+                    amount: 10,
+                    amountUsd: 10,
+                    categoryId: null,
+                    currency: "USD",
+                    date,
+                    income: false,
+                    parentId: null,
+                })),
+                valuation: { displayCurrency: "USD", rates: buildRateTable([]) },
+                week: localDate(15),
+            });
+            return JSON.stringify({ entries: recap.entries, spent: recap.spent });
         }
         default: {
             throw new Error(`unknown probe: ${kind}`);

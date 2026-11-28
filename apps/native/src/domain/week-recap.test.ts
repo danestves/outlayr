@@ -1,5 +1,8 @@
+import { execFileSync } from "node:child_process";
+import { join } from "node:path";
+
 import { buildRateTable } from "@outlayr/money/valuation";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it, test } from "vite-plus/test";
 
 import type { CategoryMeta } from "./insights";
 import type { RecapRow } from "./month-recap";
@@ -132,4 +135,19 @@ describe("recapWeek", () => {
     it("normalizes a weekday mid-week key to its week's start", () => {
         expect(recapWeek("2026-10-28", NOW, 1)).toStrictEqual(DAY(2026, 10, 25));
     });
+});
+
+test("cuts the week at the next local midnight where DST skips 00:00", () => {
+    const inHavana = execFileSync(
+        process.execPath,
+        [
+            "--import",
+            "tsx",
+            join(import.meta.dirname, "dst-probe.ts"),
+            "week-recap",
+            ...[2026, 2, 20, 12, 0, 2026, 2, 14, 23, 30, 2026, 2, 15, 0, 30, 2026, 2, 8, 12, 0].map(String),
+        ],
+        { encoding: "utf-8", env: { ...process.env, TZ: "America/Havana" } }
+    );
+    expect(JSON.parse(inHavana)).toStrictEqual({ entries: 1, spent: 10 });
 });

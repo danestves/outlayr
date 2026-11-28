@@ -9,7 +9,7 @@ import type { DatedReminder } from "@/lib/reminders";
 
 import { formatTime, monthLongTitle } from "./dates";
 import { daysBetween } from "./local-day";
-import { formatAmount } from "./money";
+import { formatAmount, roundToMinorUnits } from "./money";
 import { recapMonthKey } from "./recap-month";
 import { recapWeekKey } from "./recap-week";
 import type { WeekRecap } from "./week-recap";
@@ -254,6 +254,7 @@ export const WEEKLY_RECAP_REMINDER_PREFIX = "outlayr.weekly-recap";
 
 interface WeeklyRecapCopyInput {
     amount: (value: number) => string;
+    change: number;
     hideAmounts: boolean;
     recap: WeekRecap;
     say: (id: string, params?: TranslationParams) => string;
@@ -269,7 +270,7 @@ function weeklyRecapTitle({ amount, hideAmounts, recap, say }: WeeklyRecapCopyIn
     return say("reminder.weekly.title", { amount: amount(recap.spent) });
 }
 
-function weeklyRecapBody({ amount, hideAmounts, recap, say }: WeeklyRecapCopyInput): string {
+function weeklyRecapBody({ amount, change, hideAmounts, recap, say }: WeeklyRecapCopyInput): string {
     if (recap.entries === 0) {
         return hideAmounts || recap.priorSpent <= 0
             ? say("reminder.weekly.quietHidden")
@@ -282,15 +283,14 @@ function weeklyRecapBody({ amount, hideAmounts, recap, say }: WeeklyRecapCopyInp
     const named = hideAmounts
         ? { category: topCategory.name }
         : { category: topCategory.name, top: amount(topCategory.amount) };
-    const compares = recap.priorSpent > 0 && recap.spent !== recap.priorSpent;
-    if (!compares) {
+    if (recap.priorSpent <= 0 || change === 0) {
         return say(hideAmounts ? "reminder.weekly.hiddenFirst" : "reminder.weekly.first", named);
     }
-    const more = recap.spent > recap.priorSpent;
+    const more = change > 0;
     if (hideAmounts) {
         return say(more ? "reminder.weekly.hiddenMore" : "reminder.weekly.hiddenLess", named);
     }
-    const delta = amount(Math.abs(recap.spent - recap.priorSpent));
+    const delta = amount(Math.abs(change));
     return say(more ? "reminder.weekly.more" : "reminder.weekly.less", { ...named, delta });
 }
 
@@ -320,7 +320,9 @@ export function weeklyRecapNotice({
     const say = (id: string, params?: TranslationParams) =>
         translate(id, { catalog: CATALOGS[language], fallback: EN, params });
     const amount = (value: number) => formatAmount(value, currency, true, language);
-    const copy = { amount, hideAmounts, recap, say };
+    // Rounded first: summed floats differ by dust, which would read as "$0.00 more".
+    const change = roundToMinorUnits(recap.spent - recap.priorSpent, currency);
+    const copy = { amount, change, hideAmounts, recap, say };
 
     return {
         body: weeklyRecapBody(copy),

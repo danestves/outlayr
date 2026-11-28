@@ -1,4 +1,4 @@
-import { addDays, startOfWeek } from "@outlayr/money/calendar";
+import { addDays, startOfDay, startOfWeek } from "@outlayr/money/calendar";
 import { valueDatedRowsIn } from "@outlayr/money/valuation";
 import type { RateTable } from "@outlayr/money/valuation";
 
@@ -46,10 +46,11 @@ export function weekRecap({
 }: WeekRecapInput): WeekRecap {
     const { displayCurrency, rates } = valuation;
     const start = startOfWeek(week, firstWeekday);
-    const endMs = addDays(start, WEEK_DAYS).getTime();
+    // Where midnight is skipped for DST the week starts at 01:00; re-cut neighbours at their own midnight.
+    const endMs = startOfDay(addDays(start, WEEK_DAYS)).getTime();
     const startMs = start.getTime();
     const ref = new Date(Math.min(now.getTime(), endMs - 1));
-    const priorStartMs = addDays(start, -WEEK_DAYS).getTime();
+    const priorStartMs = startOfDay(addDays(start, -WEEK_DAYS)).getTime();
 
     const valued = valueDatedRowsIn(rows, displayCurrency, rates);
     const contributions: InsightsContribution[] = rows.map((row, index) => ({

@@ -241,9 +241,10 @@ describe("weekly recap", () => {
         const leader = { amount: 80, name: "Groceries" };
 
         expect(weekly({ entries: 1, spent: 100, topCategory: leader })?.body).toBe("Groceries led at €80.00.");
-        expect(weekly({ entries: 1, priorEntries: 1, priorSpent: 100, spent: 100, topCategory: leader })?.body).toBe(
-            "Groceries led at €80.00."
-        );
+        const dust = { amount: 0.3, name: "Groceries" };
+        expect(
+            weekly({ entries: 2, priorEntries: 1, priorSpent: 0.3, spent: 0.1 + 0.2, topCategory: dust })?.body
+        ).toBe("Groceries led at €0.30.");
     });
 
     it("returns null when neither week has an entry", () => {

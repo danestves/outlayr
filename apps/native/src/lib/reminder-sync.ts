@@ -20,6 +20,7 @@ import {
     WEEKLY_RECAP_REMINDER_PREFIX,
     weeklyRecapNotice,
 } from "@/domain/reminder";
+import type { TimeOfDay } from "@/domain/reminder";
 
 import { posthog } from "./posthog";
 import { Reminders } from "./reminders";
@@ -42,6 +43,34 @@ export const armReminders = Effect.fn("ReminderSync.armReminders")(function* arm
         yield* reminders.schedule(notice);
     }
 });
+
+// Next week is queued too, so someone who stops opening the app still gets the quiet-week recap.
+const weeklyRecapNotices = Effect.fn("ReminderSync.weeklyRecapNotices")(
+    function* weeklyRecapNotices(db: Database, input: { hideAmounts: boolean; now: Date; time: TimeOfDay }) {
+        const { hideAmounts, now, time } = input;
+        const [firstWeekday, currency] = yield* Effect.all([Meta.get(db, "firstWeekday"), Meta.get(db, "currency")], {
+            concurrency: "unbounded",
+        });
+        const currentWeek = startOfWeek(now, firstWeekday);
+        const notices: DatedReminder[] = [];
+        for (const week of [addDays(currentWeek, -7), currentWeek, addDays(currentWeek, 7)]) {
+            // Read through the week's end: the copy is fixed now but read after the week closes.
+            const until = addDays(week, 7);
+            const recap = yield* loadWeekRecap(db, { currency, firstWeekday, now: until, week });
+            const notice = weeklyRecapNotice({ currency, hideAmounts, recap, time, week });
+            if (notice !== null && notice.fireAt.getTime() > now.getTime()) {
+                notices.push(notice);
+            }
+        }
+        return notices;
+    },
+    (effect) =>
+        effect.pipe(
+            Effect.catch((error) =>
+                Effect.logWarning("[outlayr] weekly recap read failed", error).pipe(Effect.as<DatedReminder[]>([]))
+            )
+        )
+);
 
 export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyReminder")(function* reconcileDailyReminder(
     db: Database
@@ -94,16 +123,7 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
         }
     }
     if (time !== null && weeklyActive) {
-        const firstWeekday = yield* Meta.get(db, "firstWeekday");
-        const currency = yield* Meta.get(db, "currency");
-        const currentWeek = startOfWeek(now, firstWeekday);
-        for (const week of [addDays(currentWeek, -7), currentWeek]) {
-            const recap = yield* loadWeekRecap(db, { currency, firstWeekday, now, week });
-            const notice = weeklyRecapNotice({ currency, hideAmounts, recap, time, week });
-            if (notice !== null && notice.fireAt.getTime() > now.getTime()) {
-                notices.push(notice);
-            }
-        }
+        notices.push(...(yield* weeklyRecapNotices(db, { hideAmounts, now, time })));
     }
 
     const keep = new Set(notices.map((notice) => notice.id));
@@ -116,7 +136,9 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
             if (id.startsWith(DAILY_REMINDER_PREFIX) || id.startsWith(RECAP_REMINDER_PREFIX)) {
                 return true;
             }
-            return permission !== "unknown" && id.startsWith(WEEKLY_RECAP_REMINDER_PREFIX);
+            // A failed permission read keeps a queued recap, unless it is opted out or may now show hidden amounts.
+            const keepUnverified = permission === "unknown" && weeklyRecap && !hideAmounts;
+            return !keepUnverified && id.startsWith(WEEKLY_RECAP_REMINDER_PREFIX);
         })
     );
     yield* armReminders(notices);

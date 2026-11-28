@@ -1487,7 +1487,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Sign-ins, deletes and notifications in analytics",
                 },
                 {
-                    detail: "Your phone works out a weekly recap and schedules it as a reminder: what you spent, your top category, and how it compares with the week before. Nothing about it reaches our servers. Turn it off in Settings › Notifications. The policy now also names the monthly recap that comes with the daily reminder.",
+                    detail: "Your phone works out a weekly recap and schedules it as a reminder: what you spent, your top category, and how it compares with the week before. Those figures stay on your phone. With Share analytics on, opening it counts like opening any other reminder. Turn it off in Settings › Notifications. The policy now also names the monthly recap that comes with the daily reminder.",
                     label: "Weekly recap",
                 },
             ],
@@ -1505,7 +1505,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Anmeldungen, Löschungen und Mitteilungen in Analysen",
                 },
                 {
-                    detail: "Dein Handy erstellt einen Wochenrückblick und plant ihn als Erinnerung: was du ausgegeben hast, deine größte Kategorie und der Vergleich zur Woche davor. Nichts davon erreicht unsere Server. Schalte ihn unter Einstellungen › Benachrichtigungen aus. Die Richtlinie nennt jetzt auch den Monatsrückblick, der mit der täglichen Erinnerung kommt.",
+                    detail: "Dein Handy erstellt einen Wochenrückblick und plant ihn als Erinnerung: was du ausgegeben hast, deine größte Kategorie und der Vergleich zur Woche davor. Diese Zahlen bleiben auf deinem Handy. Mit eingeschaltetem „Analysedaten teilen“ zählt das Öffnen wie bei jeder anderen Erinnerung. Schalte ihn unter Einstellungen › Benachrichtigungen aus. Die Richtlinie nennt jetzt auch den Monatsrückblick, der mit der täglichen Erinnerung kommt.",
                     label: "Wochenrückblick",
                 },
             ],
@@ -1523,7 +1523,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Inicios de sesión, borrados y notificaciones en analíticas",
                 },
                 {
-                    detail: "Tu teléfono arma un resumen semanal y lo programa como recordatorio: cuánto gastaste, tu categoría principal y cómo se compara con la semana anterior. Nada de esto llega a nuestros servidores. Desactívalo en Configuración › Notificaciones. La política ahora también nombra el resumen mensual que viene con el recordatorio diario.",
+                    detail: "Tu teléfono arma un resumen semanal y lo programa como recordatorio: cuánto gastaste, tu categoría principal y cómo se compara con la semana anterior. Esas cifras se quedan en tu teléfono. Con Compartir analíticas activado, abrirlo cuenta como abrir cualquier otro recordatorio. Desactívalo en Configuración › Notificaciones. La política ahora también nombra el resumen mensual que viene con el recordatorio diario.",
                     label: "Resumen semanal",
                 },
             ],
@@ -1541,7 +1541,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Connexions, suppressions et notifications dans les analyses",
                 },
                 {
-                    detail: "Votre téléphone prépare un bilan de la semaine et le programme comme rappel : vos dépenses, votre catégorie principale et la comparaison avec la semaine d'avant. Rien de tout cela n'atteint nos serveurs. Désactivez-le dans Réglages › Notifications. La politique nomme aussi désormais le bilan mensuel qui accompagne le rappel quotidien.",
+                    detail: "Votre téléphone prépare un bilan de la semaine et le programme comme rappel : vos dépenses, votre catégorie principale et la comparaison avec la semaine d'avant. Ces chiffres restent sur votre téléphone. Avec Partager les données d'analyse activé, l'ouvrir compte comme l'ouverture de tout autre rappel. Désactivez-le dans Réglages › Notifications. La politique nomme aussi désormais le bilan mensuel qui accompagne le rappel quotidien.",
                     label: "Bilan de la semaine",
                 },
             ],
@@ -1559,7 +1559,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Entradas, exclusões e notificações nas análises",
                 },
                 {
-                    detail: "Seu celular monta um resumo semanal e o programa como lembrete: quanto você gastou, sua categoria principal e a comparação com a semana anterior. Nada disso chega aos nossos servidores. Desative em Ajustes › Notificações. A política agora também nomeia o resumo mensal que vem com o lembrete diário.",
+                    detail: "Seu celular monta um resumo semanal e o programa como lembrete: quanto você gastou, sua categoria principal e a comparação com a semana anterior. Esses valores ficam no seu celular. Com Compartilhar análises ativado, abri-lo conta como abrir qualquer outro lembrete. Desative em Ajustes › Notificações. A política agora também nomeia o resumo mensal que vem com o lembrete diário.",
                     label: "Resumo semanal",
                 },
             ],
