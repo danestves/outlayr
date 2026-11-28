@@ -8,6 +8,8 @@ export type BankOverviewView = typeof BankOverview.Type;
 export type LinkedBankAccount = typeof BankAccountView.Type;
 export type BankInstitution = typeof InstitutionView.Type;
 
+export const BANK_PROVIDER_NAMES = { stripe: "Stripe" } as const satisfies Record<BankInstitution["provider"], string>;
+
 export interface InstitutionGroup {
     accounts: LinkedBankAccount[];
     institution: string;

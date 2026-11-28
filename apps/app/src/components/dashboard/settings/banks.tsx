@@ -34,7 +34,7 @@ import { bankOverviewQuery, bankSearchQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
-import { byInstitution, linkBank, needsSignIn } from "@/lib/linked-banks";
+import { BANK_PROVIDER_NAMES, byInstitution, linkBank, needsSignIn } from "@/lib/linked-banks";
 import type { BankInstitution, BankLinkOutcome, InstitutionGroup, LinkedBankAccount } from "@/lib/linked-banks";
 import { STRIPE_READY } from "@/lib/stripe-link";
 
@@ -282,6 +282,7 @@ function LinkBody({
     const found = useQuery({ ...bankSearchQuery(query.trim(), null), placeholderData: keepPreviousData });
     const rows = found.data ?? [];
     const noMatch = found.data !== undefined && query.trim() !== "" && !rows.some((row) => !row.catchAll);
+    const provider = picked ? BANK_PROVIDER_NAMES[picked.provider] : null;
     return (
         <>
             <Dialog.Header>
@@ -328,7 +329,10 @@ function LinkBody({
                     {noMatch ? <p className="text-muted-foreground text-app-label">{copy.noMatch({ query })}</p> : null}
                 </div>
                 <ul className="text-app-body flex flex-col gap-3">
-                    <Assurance icon={LockIcon} text={copy.consentLogin} />
+                    <Assurance
+                        icon={LockIcon}
+                        text={provider ? copy.consentLoginBy({ provider }) : copy.consentLogin}
+                    />
                     <Assurance icon={BankIcon} text={copy.consentKeep} />
                     <Assurance icon={Invoice01Icon} text={copy.consentEntries} />
                 </ul>
@@ -341,7 +345,7 @@ function LinkBody({
                     {copy.cancel}
                 </Button>
                 <Button className="flex-1" disabled={picked === null} onClick={() => picked && onContinue(picked)}>
-                    {copy.continue}
+                    {provider ? copy.continueTo({ provider }) : copy.continue}
                 </Button>
             </Dialog.Footer>
         </>
