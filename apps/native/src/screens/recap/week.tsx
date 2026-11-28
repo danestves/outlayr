@@ -2,6 +2,7 @@ import { addDays } from "@outlayr/money/calendar";
 import { useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { ScrollView, View } from "react-native";
+import Animated, { useAnimatedStyle, useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HeroNumber } from "@/components/amount-text";
@@ -17,6 +18,7 @@ import { useWeekRecap } from "@/data/use-week-recap";
 import { formatSentenceDate, weekdayInitial } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import { recapWeek } from "@/domain/recap-week";
+import { useChartDraw } from "@/hooks/use-chart-draw";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { InsightsMovers } from "@/screens/insights/components/insights-movers";
 import { entryHref } from "@/state/entry-params";
@@ -31,6 +33,17 @@ function changeTone(change: number | null): string {
     return change > 0 ? "text-danger" : "text-income";
 }
 
+function DayBar({ animated, height, logged }: { animated: boolean; height: number; logged: boolean }) {
+    const drawn = useChartDraw(animated, height);
+    const style = useAnimatedStyle(() => ({ height: drawn.get() }));
+    return (
+        <Animated.View
+            className={cn("w-full rounded-sm", logged ? "bg-foreground" : "border-border border border-dashed")}
+            style={style}
+        />
+    );
+}
+
 function DayBars({
     daily,
     days,
@@ -43,6 +56,8 @@ function DayBars({
     start: Date;
 }) {
     const { language } = useLanguage();
+    const reduceMotion = useReducedMotion();
+    const animated = useSetting("animatedCharts") && !reduceMotion;
     const peak = Math.max(...daily, 0);
     return (
         <View accessibilityLabel={label} accessible className="flex-row gap-2">
@@ -52,13 +67,7 @@ function DayBars({
                 return (
                     <View className="flex-1 items-center gap-1.5" key={index}>
                         <View className="w-full justify-end" style={{ height: BAR_HEIGHT }}>
-                            <View
-                                className={cn(
-                                    "w-full rounded-sm",
-                                    logged ? "bg-foreground" : "border-border border border-dashed"
-                                )}
-                                style={{ height: logged ? height : EMPTY_BAR }}
-                            />
+                            <DayBar animated={animated} height={logged ? height : EMPTY_BAR} logged={logged} />
                         </View>
                         <Text className="text-label text-muted font-mono">
                             {weekdayInitial(addDays(start, index), language)}

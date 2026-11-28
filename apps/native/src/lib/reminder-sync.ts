@@ -85,11 +85,12 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
         ],
         { concurrency: "unbounded" }
     );
+    // A queued recap may predate Hide amounts: drop it before a read below can fail. A good pass re-arms it.
+    if (hideAmounts || (permission === "unknown" && !weeklyRecap)) {
+        const pending = yield* reminders.pendingIds();
+        yield* reminders.cancel(pending.filter((id) => id.startsWith(WEEKLY_RECAP_REMINDER_PREFIX)));
+    }
     if (enabled && permission === "unknown") {
-        if (!weeklyRecap || hideAmounts) {
-            const pending = yield* reminders.pendingIds();
-            yield* reminders.cancel(pending.filter((id) => id.startsWith(WEEKLY_RECAP_REMINDER_PREFIX)));
-        }
         return;
     }
     if (permission === "denied" && weeklyRecap) {
@@ -134,10 +135,6 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
     const pending = yield* reminders.pendingIds();
     yield* reminders.cancel(
         pending.filter((id) => {
-            // With Hide amounts on, a queued recap may predate it; drop it now rather than trust the re-arm to finish.
-            if (hideAmounts && id.startsWith(WEEKLY_RECAP_REMINDER_PREFIX)) {
-                return true;
-            }
             if (keep.has(id)) {
                 return false;
             }
