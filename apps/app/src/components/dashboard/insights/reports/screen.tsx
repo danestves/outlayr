@@ -2,6 +2,7 @@ import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import BookmarkAdd01Icon from "@hugeicons/core-free-icons/BookmarkAdd01Icon";
 import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
 import Link01Icon from "@hugeicons/core-free-icons/Link01Icon";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMatch, useNavigate, useSearch } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { useCallback, useMemo, useState } from "react";
@@ -10,6 +11,7 @@ import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { download } from "@/components/dashboard/settings/data/write";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
+import { sharedLinksQuery } from "@/lib/account-state";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { periodKeyOf } from "@/lib/dashboard-series-period";
 import { useTagBooks } from "@/lib/ledger-db";
@@ -178,6 +180,7 @@ interface SharingInput {
 /** A link's copy is built here, in the browser, from the ledger the owner is looking at. */
 function useSharing({ books, ledger, words }: SharingInput) {
     const { known, links: all } = useSharedLinks();
+    const queryClient = useQueryClient();
     const { notify } = useLedgerCommitter();
     const [forgotten, setForgotten] = useState<ReadonlySet<string>>(new Set());
     const links = all.filter((link) => !forgotten.has(link.reportId));
@@ -214,11 +217,16 @@ function useSharing({ books, ledger, words }: SharingInput) {
         links,
         publish,
         refresh: (target: SavedReport) => {
-            const link = linkOf(target.id);
-            const report = link ? snapshot(target, link.unit === "amount") : null;
-            if (report !== null) {
-                publishLink({ expires: "keep", report, reportId: target.id }).catch(refused);
-            }
+            queryClient
+                .ensureQueryData(sharedLinksQuery)
+                .then(async (current) => {
+                    const link = current.find((each) => each.reportId === target.id && !forgotten.has(each.reportId));
+                    const report = link ? snapshot(target, link.unit === "amount") : null;
+                    if (report !== null) {
+                        await publishLink({ expires: "keep", report, reportId: target.id });
+                    }
+                })
+                .catch(refused);
         },
     };
 }
