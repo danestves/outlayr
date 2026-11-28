@@ -41,8 +41,8 @@ export const features = {
         steps: [{ see: "Let your bank log your charges" }, { see: "Link a bank" }, { see: "Not now, open my ledger" }],
     },
     "onboarding-bank-linked": {
-        link: "/onboarding/bank-linked?bank=Chase&since=0",
-        proves: "After a bank link in onboarding, the bank's charges are listed as they arrive before the ledger opens.",
+        link: "/onboarding/bank-linked?bank=Chase",
+        proves: "After a bank link in onboarding, the screen waits for the bank's charges before the ledger opens.",
         says: ["the first bank sync", "bank linked during onboarding", "charges arriving after linking"],
         steps: [{ see: "Chase linked" }, { see: "Arriving" }, { see: "Open my ledger" }],
     },

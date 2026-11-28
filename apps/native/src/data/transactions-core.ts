@@ -140,7 +140,7 @@ export function logWindowRowsQuery(db: SpendDb, nowMs: number, floorMs: number |
         .orderBy(desc(transactions.day), desc(transactions.date), asc(transactions.feeForId));
 }
 
-/** Right after a bank link nothing else writes, so every row stamped since then is one the bank sent. */
+/** The server stamps a bank's rows with its own clock, so `sinceMs` must come from the server too. */
 export function arrivedSinceQuery(db: SpendDb, sinceMs: number, limit: number) {
     return db
         .select(LOG_COLUMNS)

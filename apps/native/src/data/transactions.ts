@@ -65,8 +65,12 @@ export function useDecoratedRows<Row extends { categoryId: string | null }>(
     return useMemo(() => decorate(rows), [decorate, rows]);
 }
 
-export function useArrivedSince(db: Database, sinceMs: number, limit: number): TransactionWithCategory[] {
-    const rows = useLiveQuery(transactions, () => arrivedSinceQuery(db, sinceMs, limit), [sinceMs, limit]);
+export function useArrivedSince(db: Database, sinceMs: number | null, limit: number): TransactionWithCategory[] {
+    const rows = useLiveQuery(
+        transactions,
+        () => (sinceMs === null ? NO_READ : arrivedSinceQuery(db, sinceMs, limit)),
+        [sinceMs, limit]
+    );
     return useDecoratedRows(db, rows);
 }
 

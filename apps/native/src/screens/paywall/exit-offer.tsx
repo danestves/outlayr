@@ -53,12 +53,12 @@ export function useExitOffer(flow: ExitFlow) {
         }
     };
 
-    // An owning screen (onboarding) never pops: its finish flips a route guard, which removal prevention lets through,
-    // and a replace it starts after a leave passes. A standalone paywall lets removals pass once a leave starts, since
-    // router.back dispatches before a re-render.
-    usePreventRemove(armed || flow.ownsLeave, ({ repeat }) => {
+    // An owning screen (onboarding) never pops: a finish flips a route guard, which removal prevention lets through,
+    // and only its own replace passes after a leave. A standalone paywall lets removals pass once a leave starts,
+    // since router.back dispatches before a re-render.
+    usePreventRemove(armed || flow.ownsLeave, ({ data, repeat }) => {
         if (flow.ownsLeave) {
-            if (flow.left.current) {
+            if (flow.left.current && data.action.type === "REPLACE") {
                 repeat();
             } else if (armed) {
                 show();

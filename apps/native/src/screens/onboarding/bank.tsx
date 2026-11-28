@@ -128,6 +128,9 @@ export function OnboardingBank() {
     });
 
     const link = () => {
+        if (finishing.current) {
+            return;
+        }
         if (accountId === null) {
             setSignInOpen(true);
         } else if (screen.kind === "entry") {

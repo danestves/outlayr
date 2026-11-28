@@ -28,13 +28,15 @@ export function OnboardingBankLinked() {
     const db = useDatabase();
     const t = useTranslation();
     const haptics = useHaptics();
-    const params = useLocalSearchParams<{ bank?: string; ids?: string; since?: string }>();
+    const params = useLocalSearchParams<{ bank?: string; ids?: string }>();
     const bank = params.bank ?? "";
     const ids = new Set(params.ids?.split(","));
     const overview = useBankOverview();
     const accounts =
         overview.kind === "ready" ? overview.overview.accounts.filter((account) => ids.has(account.id)) : [];
-    const arrived = useArrivedSince(db, Number(params.since) || 0, ARRIVALS_SHOWN);
+    // Right after a link nothing else writes, so every row the server stamped since then is one the bank sent.
+    const since = accounts.length === 0 ? null : Math.min(...accounts.map((account) => account.linkedAt));
+    const arrived = useArrivedSince(db, since, ARRIVALS_SHOWN);
     const currency = useGlobalCurrency(db);
     const finish = useAtomAction(
         finishFirstRunCommand,

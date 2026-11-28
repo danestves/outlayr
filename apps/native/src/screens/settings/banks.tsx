@@ -170,8 +170,6 @@ function BanksRoute({ mode, query, repair }: { mode: "link" | "list"; query?: st
 /** The link step a new Pro reaches from onboarding; a finished link moves on to watch the first charges land. */
 export function OnboardingLinkBank() {
     const router = useRouter();
-    // From before the bank's sign-in: its first charges can land on this phone before the link call returns.
-    const [since] = useState(() => Date.now());
     const overview = useBankOverview();
     const ready = overview.kind === "ready" ? overview.overview : null;
     const bankLink = useBankLink(
@@ -179,7 +177,7 @@ export function OnboardingLinkBank() {
         () => router.back(),
         (added, institution) => {
             router.replace({
-                params: { bank: institution.name, ids: added.join(","), since: String(since) },
+                params: { bank: institution.name, ids: added.join(",") },
                 pathname: "/onboarding/bank-linked",
             });
         }
