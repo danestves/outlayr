@@ -1,0 +1,15 @@
+{
+    "name": "outlayr-files",
+    "main": "src/index.ts",
+    "compatibility_date": "2026-10-01",
+    "routes": [
+        { "pattern": "files.tryoutlayr.com", "custom_domain": true },
+        { "pattern": "app.tryoutlayr.com/photos/*", "zone_name": "tryoutlayr.com" },
+    ],
+    "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "outlayr-files" }],
+    "vars": {
+        "APP_HOST": "app.tryoutlayr.com",
+        "CONVEX_SITE_URL": "https://edge.tryoutlayr.com",
+        "CONVEX_URL": "https://api.tryoutlayr.com",
+    },
+}
