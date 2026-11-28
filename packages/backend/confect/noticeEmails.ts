@@ -12,7 +12,7 @@ export const NOTICE_FRAMINGS: ReadonlyMap<string, Record<Language, NoticeFraming
                     intro: "What stays the same:",
                     items: [
                         { label: "Everything between the app and our servers travels encrypted." },
-                        { label: "Only your signed-in session can read or change your data. No other account can." },
+                        { label: "Only you, and people you share a profile with, can read or change your data." },
                         { label: "Sign-in tokens and your Notion key are encrypted before we store them." },
                     ],
                 },
@@ -30,7 +30,7 @@ export const NOTICE_FRAMINGS: ReadonlyMap<string, Record<Language, NoticeFraming
                     items: [
                         { label: "Alles zwischen der App und unseren Servern wird verschlüsselt übertragen." },
                         {
-                            label: "Nur deine angemeldete Sitzung kann deine Daten lesen oder ändern. Kein anderes Konto kann das.",
+                            label: "Nur du und die Personen, mit denen du ein Profil teilst, können deine Daten lesen oder ändern.",
                         },
                         {
                             label: "Anmelde-Tokens und dein Notion-Schlüssel werden verschlüsselt, bevor wir sie speichern.",
@@ -50,7 +50,9 @@ export const NOTICE_FRAMINGS: ReadonlyMap<string, Record<Language, NoticeFraming
                     intro: "Lo que no cambia:",
                     items: [
                         { label: "Todo lo que viaja entre la app y nuestros servidores va cifrado." },
-                        { label: "Solo tu sesión iniciada puede leer o cambiar tus datos. Ninguna otra cuenta puede." },
+                        {
+                            label: "Solo tú y las personas con las que compartes un perfil pueden leer o cambiar tus datos.",
+                        },
                         { label: "Los tokens de inicio de sesión y tu clave de Notion se cifran antes de guardarlos." },
                     ],
                 },
@@ -68,7 +70,7 @@ export const NOTICE_FRAMINGS: ReadonlyMap<string, Record<Language, NoticeFraming
                     items: [
                         { label: "Tout ce qui circule entre l'app et nos serveurs est chiffré." },
                         {
-                            label: "Seule votre session connectée peut lire ou modifier vos données. Aucun autre compte ne le peut.",
+                            label: "Seuls vous et les personnes avec qui vous partagez un profil pouvez lire ou modifier vos données.",
                         },
                         { label: "Les jetons de connexion et votre clé Notion sont chiffrés avant d'être stockés." },
                     ],
@@ -87,7 +89,7 @@ export const NOTICE_FRAMINGS: ReadonlyMap<string, Record<Language, NoticeFraming
                     items: [
                         { label: "Tudo o que trafega entre o app e nossos servidores vai criptografado." },
                         {
-                            label: "Só a sua sessão conectada pode ler ou alterar seus dados. Nenhuma outra conta pode.",
+                            label: "Só você e as pessoas com quem você compartilha um perfil podem ler ou alterar seus dados.",
                         },
                         {
                             label: "Os tokens de login e sua chave do Notion são criptografados antes de serem guardados.",
