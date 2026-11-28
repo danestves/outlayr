@@ -14,7 +14,7 @@ import { requireBillingId } from "./lib/auth";
 import { DEVICE_TOKEN, isDeadToken, rejectionReason } from "./lib/capturePush";
 import { apnsConfig } from "./lib/config";
 import { dieAsConvexError } from "./lib/convexError";
-import { reviewPushRequest } from "./lib/reviewPush";
+import { needsReviewAlert, reviewPushRequest } from "./lib/reviewPush";
 import { refuseWhileDeleting } from "./lib/syncGuards";
 import spec from "./reviewPush.spec";
 
@@ -71,9 +71,14 @@ const clearTarget = FunctionImpl.make(
             const ctx = yield* MutationCtx;
             const userId = yield* requireBillingId(ctx);
             const existing = yield* targetFor(userId, deviceId);
-            if (existing !== null) {
-                yield* (yield* DatabaseWriter).table("reviewPushTargets").delete(existing._id);
+            if (existing === null) {
+                return null;
             }
+            const writer = yield* DatabaseWriter;
+            const { alertedAt, environment } = existing;
+            yield* needsReviewAlert(alertedAt, yield* Clock.currentTimeMillis)
+                ? writer.table("reviewPushTargets").delete(existing._id)
+                : writer.table("reviewPushTargets").replace(existing._id, { alertedAt, deviceId, environment, userId });
             return null;
         },
         Effect.catchTags({ Unauthenticated: dieAsConvexError }),
@@ -96,7 +101,7 @@ const targets = FunctionImpl.make(
             ),
             { concurrency: "unbounded" }
         );
-        return rows.filter((row) => row !== null);
+        return rows.flatMap((row) => (row?.token === undefined ? [] : [{ ...row, token: row.token }]));
     }, Effect.orDie)
 );
 

@@ -1206,7 +1206,7 @@ const alertReviewQueue = Effect.fn("Banking.alertReviewQueue")(function* alertRe
         .table("reviewPushTargets")
         .index("by_user_and_device", (q) => q.eq("userId", userId))
         .take(REVIEW_TARGET_PAGE);
-    const due = targets.filter((target) => needsReviewAlert(target.alertedAt, now));
+    const due = targets.filter((target) => target.token !== undefined && needsReviewAlert(target.alertedAt, now));
     if (due.length === 0) {
         return;
     }

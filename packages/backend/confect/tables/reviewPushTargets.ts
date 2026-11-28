@@ -8,7 +8,8 @@ export default Table.make(() =>
         alertedAt: Schema.optional(Schema.Number),
         deviceId: Schema.String,
         environment: ApnsEnvironment,
-        token: Schema.String,
+        // Missing once alerts are off: the row stays so alertedAt keeps throttling a re-enable.
+        token: Schema.optional(Schema.String),
         userId: Schema.String,
     })
 ).index("by_user_and_device", ["userId", "deviceId"]);

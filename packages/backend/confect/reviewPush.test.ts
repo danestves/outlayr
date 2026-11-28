@@ -117,4 +117,28 @@ describe("review push target", () => {
         ).resolves.toBeFalsy();
         await expect(t.run((ctx) => ctx.db.query("reviewPushTargets").collect())).resolves.toHaveLength(0);
     });
+
+    it("keeps today's alert stamp across turning alerts off and on, so the daily limit holds", async () => {
+        const t = convexTest(schema, modules);
+        revenuecatTest.register(t);
+        const user = await seedAuthUser(t);
+        const phone = authenticatedAs(t, user);
+        const target = { deviceId: "phone", environment: "development", token: TOKEN } as const;
+        await phone.mutation(api.reviewPush.setTarget, target);
+        const alertedAt = Date.now();
+        await t.run(async (ctx) => {
+            for (const row of await ctx.db.query("reviewPushTargets").collect()) {
+                await ctx.db.patch(row._id, { alertedAt });
+            }
+        });
+
+        await phone.mutation(api.reviewPush.clearTarget, { deviceId: "phone" });
+        const [off] = await t.run((ctx) => ctx.db.query("reviewPushTargets").collect());
+        expect(off).toMatchObject({ alertedAt });
+        expect(off?.token).toBeUndefined();
+
+        await phone.mutation(api.reviewPush.setTarget, target);
+        const rows = await t.run((ctx) => ctx.db.query("reviewPushTargets").collect());
+        expect(rows).toMatchObject([{ alertedAt, token: TOKEN }]);
+    });
 });
