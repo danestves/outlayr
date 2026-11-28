@@ -1,3 +1,4 @@
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -43,13 +44,21 @@ export function Review() {
     // A second tap would pop past the tabs once the first back lands.
     const [closing, setClosing] = useState(false);
 
+    const confirm = async (ids: readonly string[]) => {
+        const result = await markReviewed({ db, ids });
+        if (AsyncResult.isSuccess(result) && ids.length === rows.length) {
+            router.back();
+            return;
+        }
+        setClosing(false);
+    };
+
     const confirmAll = () => {
         if (closing) {
             return;
         }
         setClosing(true);
-        markReviewed({ db, ids: rows.map((row) => row.id) });
-        router.back();
+        void confirm(rows.map((row) => row.id));
     };
 
     return (
@@ -75,7 +84,9 @@ export function Review() {
                                         currency={currency}
                                         dated
                                         menuItems={openRowActions(row, false)}
-                                        onConfirm={(id) => markReviewed({ db, ids: [id] })}
+                                        onConfirm={(id) => {
+                                            void confirm([id]);
+                                        }}
                                         onDelete={requestDelete}
                                         onPress={(id) => router.push(`/transactions/${id}`)}
                                         rates={rates}

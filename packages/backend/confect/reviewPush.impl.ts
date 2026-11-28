@@ -20,6 +20,8 @@ import spec from "./reviewPush.spec";
 
 // Convex actions have no HttpClient layer, so the runtime's own fetch is the transport.
 const sendPush = (url: string, init: Parameters<typeof fetch>[1]) => fetch(url, init);
+// One stalled APNs call must not use up the action before the remaining phones are tried.
+const APNS_TIMEOUT_MS = 10_000;
 
 const targetFor = Effect.fn("ReviewPush.targetFor")(function* targetFor(userId: string, deviceId: string) {
     const reader = yield* DatabaseReader;
@@ -130,7 +132,7 @@ const deliver = FunctionImpl.make(
             const nowSeconds = Math.floor((yield* Clock.currentTimeMillis) / 1000);
             const privateKey = Redacted.value(credentials.value.privateKey);
             for (const target of rows) {
-                const sent = yield* Effect.tryPromise(async () => {
+                const sent = yield* Effect.tryPromise(async (signal) => {
                     const { init, url } = await reviewPushRequest(
                         { ...credentials.value, privateKey },
                         target,
@@ -138,12 +140,13 @@ const deliver = FunctionImpl.make(
                         language,
                         nowSeconds
                     );
-                    const response = await sendPush(url, init);
+                    const response = await sendPush(url, { ...init, signal });
                     return {
                         reason: response.ok ? undefined : rejectionReason(await response.text()),
                         status: response.status,
                     };
                 }).pipe(
+                    Effect.timeout(APNS_TIMEOUT_MS),
                     Effect.catchCause((cause) => Console.warn("[review] push not sent", cause).pipe(Effect.as(null)))
                 );
                 if (sent === null) {
