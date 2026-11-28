@@ -98,6 +98,84 @@ const horizon = {
                 fr: "ouvrir l'app.",
             }),
         },
+        bank: {
+            announce: {
+                line: t({
+                    en: "Link your US or Canadian bank",
+                    de: "Verknüpfe deine Bank in den USA oder Kanada",
+                    es: "Vincula tu banco de EE. UU. o Canadá",
+                    pt: "Vincule seu banco dos EUA ou Canadá",
+                    fr: "Liez votre banque aux États-Unis ou au Canada",
+                }),
+                new: t({ en: "New", de: "Neu", es: "Nuevo", pt: "Novo", fr: "Nouveau" }),
+            },
+            body: t({
+                en: "Link a bank and its charges arrive as entries by themselves. Pending ones update when they post. Outlayr never sees your bank login.",
+                de: "Verknüpfe eine Bank, und ihre Abbuchungen kommen von selbst als Einträge an. Vorgemerkte werden beim Buchen aktualisiert. Outlayr sieht deinen Bank-Login nie.",
+                es: "Vincula un banco y sus cobros llegan como registros por sí solos. Los pendientes se actualizan cuando se aplican. Outlayr nunca ve tus datos de acceso al banco.",
+                pt: "Vincule um banco e as cobranças dele chegam como lançamentos sozinhas. As pendentes se atualizam quando são efetivadas. O Outlayr nunca vê o login do seu banco.",
+                fr: "Liez une banque et ses débits arrivent tout seuls comme opérations. Les opérations en attente se mettent à jour une fois validées. Outlayr ne voit jamais vos identifiants bancaires.",
+            }),
+            facts: {
+                login: {
+                    label: t({ en: "Login", de: "Anmeldung", es: "Acceso", pt: "Login", fr: "Connexion" }),
+                    value: t({
+                        en: "Stays with your bank",
+                        de: "Bleibt bei deiner Bank",
+                        es: "Se queda en tu banco",
+                        pt: "Fica com o seu banco",
+                        fr: "Reste avec votre banque",
+                    }),
+                },
+                plan: {
+                    label: t({ en: "Plan", de: "Tarif", es: "Plan", pt: "Plano", fr: "Offre" }),
+                    value: t({ en: "Pro", de: "Pro", es: "Pro", pt: "Pro", fr: "Pro" }),
+                },
+                where: {
+                    label: t({ en: "Where", de: "Wo", es: "Dónde", pt: "Onde", fr: "Où" }),
+                    value: t({
+                        en: "US and Canada",
+                        de: "USA und Kanada",
+                        es: "EE. UU. y Canadá",
+                        pt: "EUA e Canadá",
+                        fr: "États-Unis et Canada",
+                    }),
+                },
+            },
+            lead: t({
+                en: "Or let your bank",
+                de: "Oder lass deine Bank",
+                es: "O deja que tu banco",
+                pt: "Ou deixe seu banco",
+                fr: "Ou laissez votre banque",
+            }),
+            linked: t({ en: "Linked", de: "Verknüpft", es: "Vinculado", pt: "Vinculado", fr: "Lié" }),
+            pending: t({ en: "Pending", de: "Ausstehend", es: "Pendiente", pt: "Pendente", fr: "En attente" }),
+            posted: t({ en: "Posted", de: "Gebucht", es: "Aplicado", pt: "Efetivado", fr: "Validé" }),
+            poweredBy: t({
+                en: "Powered by",
+                de: "Bereitgestellt von",
+                es: "Con tecnología de",
+                pt: "Com tecnologia de",
+                fr: "Propulsé par",
+            }),
+            rest: t({
+                en: "log it for you.",
+                de: "es für dich erfassen.",
+                es: "lo registre por ti.",
+                pt: "registrar por você.",
+                fr: "l'enregistrer pour vous.",
+            }),
+            tipTitle: t({
+                en: "Pizza Hut, when it posts",
+                de: "Pizza Hut, sobald gebucht",
+                es: "Pizza Hut, cuando se registre",
+                pt: "Pizza Hut, quando entrar",
+                fr: "Pizza Hut, une fois validé",
+            }),
+            today: t({ en: "Today", de: "Heute", es: "Hoy", pt: "Hoje", fr: "Aujourd'hui" }),
+            yesterday: t({ en: "Yesterday", de: "Gestern", es: "Ayer", pt: "Ontem", fr: "Hier" }),
+        },
         close: {
             lead: t({
                 en: "Log it with",

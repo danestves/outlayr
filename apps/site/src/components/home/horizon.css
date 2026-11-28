@@ -607,6 +607,93 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
     font-size: 0.8125rem;
 }
 
+.hz-announce {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    max-width: min(100%, 46rem);
+    margin-bottom: calc(20px * var(--s));
+    border-radius: 10px;
+    color: var(--color-foreground);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.hz-announce-new {
+    color: var(--color-tint);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.hz-announce-divider {
+    width: 1px;
+    height: 12px;
+    background: var(--color-border);
+}
+
+.hz-announce-text {
+    font-weight: 520;
+}
+
+.hz-announce:hover .hz-announce-text {
+    text-decoration: underline;
+    text-decoration-color: var(--color-border);
+    text-underline-offset: 3px;
+}
+
+.hz-announce-arrow {
+    color: var(--color-muted);
+    transition:
+        transform 180ms var(--ease-out),
+        color 180ms var(--ease-out);
+}
+
+.hz-announce:hover .hz-announce-arrow {
+    color: var(--color-tint);
+    transform: translateX(3px);
+}
+
+.hz-powered {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.hz-powered-by {
+    color: var(--color-muted);
+    font-size: 0.85em;
+}
+
+.hz-powered-name {
+    font-size: 1em;
+    font-weight: 540;
+}
+
+.hz-stripe-mark {
+    width: auto;
+    height: 1.1em;
+    color: #635bff;
+}
+
+[data-sky="night"] .hz-stripe-mark,
+[data-sky="sunrise"] .hz-stripe-mark {
+    color: var(--hz-white);
+}
+
+@media (max-width: 29.99rem) {
+    .hz-announce-powered,
+    .hz-announce-divider-lockup {
+        display: none;
+    }
+}
+
 .hz-num {
     color: var(--color-foreground);
     font-weight: 560;
@@ -685,6 +772,242 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 
 .hz-layer-widget .hz-tilt {
     transform: rotate(4deg);
+}
+
+.hz-bank-total {
+    font-size: 0.95em;
+    font-weight: 560;
+    font-variant-numeric: tabular-nums;
+}
+
+.hz-bank-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.7em;
+    align-items: center;
+    padding: 0.65em 0;
+}
+
+.hz-bank-logo {
+    width: 2.5em;
+    height: 2.5em;
+    overflow: hidden;
+    border: 1px solid var(--hz-glass-rim);
+    border-radius: 0.65em;
+    background: var(--hz-card);
+}
+
+.hz-bank-logo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hz-bank-who {
+    display: grid;
+    min-width: 0;
+}
+
+.hz-bank-name {
+    overflow: hidden;
+    font-size: 0.98em;
+    font-weight: 540;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hz-bank-meta {
+    color: var(--color-muted);
+    font-size: 0.8em;
+}
+
+.hz-bank-money {
+    display: grid;
+    justify-items: end;
+    text-align: right;
+}
+
+.hz-bank-amount {
+    font-size: 0.95em;
+    font-weight: 560;
+    font-variant-numeric: tabular-nums;
+}
+
+.hz-bank-status {
+    color: var(--color-app-warn);
+    font-family: var(--font-mono);
+    font-size: 0.66em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.hz-bank-stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 44px 40px 56px;
+    border-radius: 32px;
+    background: var(--glow-stage), #e4e2dc;
+}
+
+.hz-bank-feed {
+    position: relative;
+    z-index: 2;
+    width: min(420px, 100%);
+    padding: 20px 22px 10px;
+    border: 1px solid var(--hz-glass-rim);
+    border-radius: 20px;
+    background: var(--hz-card);
+    box-shadow: var(--hz-shadow-widget);
+    font-size: 0.9375rem;
+}
+
+.hz-bank-feed-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.hz-bank-feed-head .hz-bank-name {
+    font-size: 1.05em;
+}
+
+.hz-bank-feed-head .hz-bank-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+}
+
+.hz-bank-linked {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--color-app-income);
+    font-size: 0.82em;
+    font-weight: 540;
+}
+
+.hz-bank-group {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.hz-bank-group .hz-bank-total {
+    color: var(--color-foreground);
+    font-size: 1em;
+    letter-spacing: 0;
+}
+
+.hz-bank-feed .hz-bank-row {
+    padding: 12px 0;
+}
+
+.hz-bank-feed .hz-bank-row + .hz-bank-row {
+    border-top: 1px solid var(--color-border);
+}
+
+.hz-bank-tip {
+    position: relative;
+    z-index: 3;
+    width: min(248px, 78%);
+    margin: -18px 0 0 auto;
+    font-size: 0.875rem;
+}
+
+.hz-bank-tip-card {
+    padding: 14px 16px;
+    border: 1px solid var(--hz-glass-rim);
+    border-radius: 16px;
+    background: var(--hz-card);
+    box-shadow: var(--hz-shadow-widget);
+    transform: rotate(2deg);
+}
+
+.hz-bank-tip-title {
+    font-size: 0.92em;
+    font-weight: 540;
+    line-height: 1.3;
+}
+
+.hz-bank-tip-pair {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.hz-bank-tip-side {
+    display: grid;
+    gap: 3px;
+}
+
+.hz-bank-tip-side[data-tone="posted"] {
+    justify-items: end;
+    text-align: right;
+}
+
+.hz-bank-tip-side[data-tone="posted"] :is(.hz-bank-status, .hz-bank-amount) {
+    color: var(--color-app-income);
+}
+
+.hz-bank-tip-arrow {
+    padding-bottom: 2px;
+    color: var(--color-muted);
+    font-size: 0.9em;
+}
+
+.hz-bank-facts {
+    margin-top: 32px;
+}
+
+.hz-bank-fact {
+    display: grid;
+    grid-template-columns: minmax(84px, 0.3fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: baseline;
+    padding: 14px 0;
+    border-top: 1px solid var(--color-border);
+}
+
+.hz-bank-fact:first-child {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.hz-bank-fact:last-child {
+    padding-bottom: 0;
+}
+
+.hz-bank-fact dt {
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.hz-bank-fact dd {
+    font-size: 1rem;
+    font-weight: 540;
+}
+
+.hz-bank-powered {
+    display: flex;
+    width: fit-content;
+    margin-top: 28px;
 }
 
 .hz-horizon {
@@ -2457,6 +2780,15 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
         border-radius: 24px;
     }
 
+    .hz-bank-stage {
+        padding: 20px 16px 24px;
+        border-radius: 24px;
+    }
+
+    .hz-bank-feed {
+        padding: 16px 16px 8px;
+    }
+
     .hz-piece-month,
     .hz-piece-list {
         display: none;
@@ -2704,6 +3036,10 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 
     .hz-source-line {
         animation: hz-fade-up 1000ms var(--ease-out) 60ms both;
+    }
+
+    .hz-announce {
+        animation: hz-fade-up 1000ms var(--ease-out) 110ms both;
     }
 
     .hz-layer-sun .hz-rise {

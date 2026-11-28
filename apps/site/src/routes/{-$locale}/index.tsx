@@ -6,6 +6,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 
 import { Away } from "@/components/home/away";
+import { Bank } from "@/components/home/bank";
 import { Capture } from "@/components/home/capture";
 import { Dawn } from "@/components/home/dawn";
 import { InstallBar } from "@/components/home/install-bar";
@@ -93,6 +94,7 @@ function HomePage() {
                 <Dawn />
                 <div className="hz-sheet">
                     <Capture />
+                    <Bank />
                     <Away />
                 </div>
                 <Sunset />
