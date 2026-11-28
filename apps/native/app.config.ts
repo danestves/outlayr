@@ -425,6 +425,8 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
                 android: {
                     enableMinifyInReleaseBuilds: true,
                     enableShrinkResourcesInReleaseBuilds: true,
+                    // Stripe compiles against push provisioning without packaging it (see with-android-no-tapandpay).
+                    extraProguardRules: "-dontwarn com.stripe.android.pushProvisioning.**",
                 },
                 ios: {
                     deploymentTarget: IOS_DEPLOYMENT_TARGET,
