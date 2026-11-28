@@ -13,8 +13,8 @@ vp run --filter app-store-screenshots dev        # http://127.0.0.1:3000
 
 It is excluded from the lint gate (`projectIgnores` in the root `vite.config.ts`),
 all but `scripts/`, because it is scaffolded rather than authored here, and its Tailwind v3 classes
-would all be reported unknown against the native app's v4 entry point. `check-types`
-keeps it in the pre-push gate; run `next build` too before trusting a change.
+would all be reported unknown against the native app's v4 entry point. CI's `check-types`
+still covers it; run `next build` too before trusting a change.
 
 ## What's inside
 

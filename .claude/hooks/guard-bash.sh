@@ -9,7 +9,7 @@ block() {
 if grep -qE '(^|[;&|(]\s*)(npx\s+)?pnpm(\s|$)' <<<"$command"; then
     block "Use vp, not pnpm: vp install, vp run <task>, vp exec, vp check."
 fi
-if grep -qE 'git\s+(commit|push|merge|rebase)[^;&|]*--no-verify' <<<"$command"; then
+if grep -qE 'git\s+(commit|merge|rebase)[^;&|]*--no-verify' <<<"$command"; then
     block "Hooks stay on: drop --no-verify and fix what the hook reports."
 fi
 if grep -qE '(cat|less|more|head|tail|bat|sed|awk)\s[^|;&]*\.env(\.[A-Za-z]+)*["'\'']?(\s|$|[;&|)])' <<<"$command"; then

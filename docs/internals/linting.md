@@ -9,7 +9,7 @@ vp check --fix   # format + autofix
 vp check         # report only
 ```
 
-Pre-commit runs `vp staged`, which applies `vp check --fix` to staged files and re-stages what it rewrites, so a lint error blocks the commit rather than half-applying it; the Claude Code hook runs `vp check --fix`. Pre-push (`.vite-hooks/pre-push`) runs `vp run -r --cache check-types` and then only the tests related to files changed since `origin/main`. It never runs `vp check`. The CI workflow (`.github/workflows/ci.yml`) runs `vp check` on every pull request, plus `check-types` and the tests of each package the diff touches and of the packages that depend on it. Changes outside `apps/` and `packages/` other than docs run every package, and so do pushes to `main`. Its `Check` job fails when any other job fails.
+Pre-commit runs `vp staged`, which applies `vp check --fix` to staged files and re-stages what it rewrites, so a lint error blocks the commit rather than half-applying it; the Claude Code hook runs `vp check --fix`. There is no pre-push hook: types and tests run in CI. The CI workflow (`.github/workflows/ci.yml`) runs `vp check` on every pull request, plus `check-types` and the tests of each package the diff touches and of the packages that depend on it. A change outside `apps/`, `packages/`, `docs/`, `.agents/`, `.claude/`, root `*.md` files and `LICENSE` runs every package, and so does a push to `main`; a change only to those other paths runs none. Its `Check` job fails when any other job fails.
 
 The gate is green: **no errors and no warnings**. The React Compiler rules are errors; see "React Compiler" below.
 
