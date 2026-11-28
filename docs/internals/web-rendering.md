@@ -59,7 +59,7 @@ A profile is a whole ledger. The web app opens one profile per page load, never 
 
 The plan, usage limits, the profile, sessions, sign-in methods, connections, referrals, shared links and push settings are account state. They are TanStack Query answers, not collections.
 
-- Define the query once in `lib/account-state.ts`, add it to `warmAccountState`, and, when a screen paints it, to `serverAccountState` in `lib/ledger-server.ts`, which the settings loader awaits on the server. A screen reads that same options object.
+- Define the query once in `lib/account-state.ts`. A settings-only query goes in `warmSettingsState`, which the Settings loader starts on the client, on hover too when intent preload runs, and in `serverAccountState` when a settings screen paints it. Nothing is prefetched on the `_app` mount: every convexQuery in the cache is a live subscription for the session. A query that only reads deployment config is a one-shot `queryOptions` with `staleTime: Infinity`, not a `convexQuery`. A screen reads that same options object.
 - Unknown is not a value. Until an answer exists, render the same card inside `<Skeleton loading>`, with one sample row where a count decides the height. Never render a default that reads as an answer: Free, 0, a switch that is off, "not shared", a nav item that is missing.
 - Every answer the server fetched lands in the HTML. Send no secret: the session list keeps `id`, `updatedAt` and `userAgent` and drops the token (`sessionRows`); the profile is six fields mirrored from the better-auth session store, not the session.
 - The better-auth endpoints are read with the visitor's cookies forwarded (`authGet`). Convex answers their dates as epoch milliseconds, so the schemas take a number or a string.

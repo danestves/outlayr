@@ -23,10 +23,22 @@ export const referralsQuery = { ...convexQuery(api.referrals.overview, {}), ...k
 export const connectionsQuery = { ...convexQuery(api.mcp.listConnections, {}), ...kept };
 export const bankOverviewQuery = { ...convexQuery(api.banking.overview, {}), ...kept };
 export const sharedLinksQuery = { ...convexQuery(api.sharedReports.mine, {}), ...kept };
-export const pushConfigQuery = { ...convexQuery(api.webPush.config, {}), ...kept };
 export const webhooksQuery = { ...convexQuery(api.webhooks.status, {}), ...kept };
 export const joinedProfilesQuery = { ...convexQuery(api.profileSharing.joined, {}), ...kept };
-export const profileSharingEnabledQuery = { ...convexQuery(api.profileSharing.enabled, {}), ...kept };
+
+export const pushConfigQuery = queryOptions({
+    ...kept,
+    queryFn: () => convexClient().query(api.webPush.config, {}),
+    queryKey: ["web-push", "config"],
+    staleTime: FOR_THE_SESSION,
+});
+
+export const profileSharingEnabledQuery = queryOptions({
+    ...kept,
+    queryFn: () => convexClient().query(api.profileSharing.enabled, {}),
+    queryKey: ["profile-sharing", "enabled"],
+    staleTime: FOR_THE_SESSION,
+});
 
 export const profileMembersQuery = (profileId: string | null) => ({
     ...convexQuery(api.profileSharing.members, profileId === null ? "skip" : { profileId }),
@@ -153,13 +165,13 @@ export const offerProfile = (client: QueryClient, profile: Profile | undefined) 
 
 const unlessKnown = { staleTime: Number.POSITIVE_INFINITY } as const;
 
-export function warmAccountState(client: QueryClient) {
+// Settings-only queries start from the Settings loader, since every cached convexQuery is a live subscription.
+export function warmSettingsState(client: QueryClient) {
     void client.prefetchQuery({ ...limitsQuery, ...unlessKnown });
     void client.prefetchQuery({ ...notionQuery, ...unlessKnown });
     void client.prefetchQuery({ ...referralsQuery, ...unlessKnown });
     void client.prefetchQuery({ ...connectionsQuery, ...unlessKnown });
     void client.prefetchQuery({ ...bankOverviewQuery, ...unlessKnown });
-    void client.prefetchQuery({ ...sharedLinksQuery, ...unlessKnown });
     void client.prefetchQuery({ ...pushConfigQuery, ...unlessKnown });
     if (webhooksOpen(Date.now())) {
         void client.prefetchQuery({ ...webhooksQuery, ...unlessKnown });

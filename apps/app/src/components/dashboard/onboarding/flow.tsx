@@ -1,4 +1,3 @@
-import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { useQuery } from "@tanstack/react-query";
 import { useLoaderData, useNavigate } from "@tanstack/react-router";
@@ -10,6 +9,7 @@ import { useDateFormat } from "@/components/dashboard/home/format";
 import { usePresetLabel } from "@/components/dashboard/settings/categories/preset-label";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
+import { pushConfigQuery } from "@/lib/account-state";
 import { categoryPush, seededCategories } from "@/lib/category-writes";
 import { convexClient } from "@/lib/convex";
 import { wallText } from "@/lib/entry-writes";
@@ -47,7 +47,7 @@ export function Onboarding({ step }: { step: string | undefined }) {
     const date = useDateFormat();
     const { clockTime } = useDisplayFormat();
     const { locale } = useLocale();
-    const { data: push } = useQuery(convexQuery(api.webPush.config, {}));
+    const { data: push } = useQuery(pushConfigQuery);
     const stored = useSyncExternalStore(subscribeProgress, () => readProgress(userId), noProgress);
     const [begunAt] = useState(() => Date.now());
     const [picked, setPicked] = useState<string | null>(null);
