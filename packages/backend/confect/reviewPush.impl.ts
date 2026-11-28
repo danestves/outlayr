@@ -15,6 +15,7 @@ import { DEVICE_TOKEN, isDeadToken, rejectionReason } from "./lib/capturePush";
 import { apnsConfig } from "./lib/config";
 import { dieAsConvexError } from "./lib/convexError";
 import { reviewPushRequest } from "./lib/reviewPush";
+import { refuseWhileDeleting } from "./lib/syncGuards";
 import spec from "./reviewPush.spec";
 
 // Convex actions have no HttpClient layer, so the runtime's own fetch is the transport.
@@ -37,6 +38,14 @@ const setTarget = FunctionImpl.make(
             const ctx = yield* MutationCtx;
             const userId = yield* requireBillingId(ctx);
             if (!DEVICE_TOKEN.test(target.token) || deviceId.length > MAX_ID_LENGTH) {
+                return false;
+            }
+            // The purge already ran, so a target set now would outlive the account.
+            const deleting = yield* refuseWhileDeleting(userId).pipe(
+                Effect.as(false),
+                Effect.catchTags({ AccountDeleting: () => Effect.succeed(true) })
+            );
+            if (deleting) {
                 return false;
             }
             const existing = yield* targetFor(userId, deviceId);

@@ -1,6 +1,10 @@
+import revenuecatTest from "convex-revenuecat/test";
+import { convexTest } from "convex-test";
 import { exportPKCS8, generateKeyPair } from "jose";
 import { describe, expect, it } from "vite-plus/test";
 
+import { api } from "../convex/_generated/api";
+import schema from "../convex/schema";
 import {
     needsReview,
     needsReviewAlert,
@@ -9,6 +13,9 @@ import {
     reviewAlertBody,
     reviewPushRequest,
 } from "./lib/reviewPush";
+import { authenticatedAs, seedAuthUser } from "./test.helpers";
+
+const modules = import.meta.glob("../convex/**/*.ts");
 
 const NOW = Date.parse("2027-01-05T15:00:00Z");
 const TOKEN = "a".repeat(64);
@@ -28,7 +35,7 @@ describe("review window", () => {
 });
 
 describe("review throttle", () => {
-    it("alerts again only once twenty hours have passed", () => {
+    it("alerts again only once a full day has passed", () => {
         expect(needsReviewAlert(undefined, NOW)).toBeTruthy();
         expect(needsReviewAlert(null, NOW)).toBeTruthy();
         expect(needsReviewAlert(NOW - REVIEW_PUSH_INTERVAL_MS, NOW)).toBeTruthy();
@@ -80,5 +87,34 @@ describe("review push request", () => {
     it("pluralizes by count and falls back to English for an unknown language", () => {
         expect(reviewAlertBody(1, "de")).toBe("1 neue Bankbuchung zum Prüfen");
         expect(reviewAlertBody(4, "it")).toBe("4 new bank entries to review");
+    });
+});
+
+describe("review push target", () => {
+    it("is refused while the account is being deleted, so nothing outlives the purge", async () => {
+        const t = convexTest(schema, modules);
+        revenuecatTest.register(t);
+        const user = await seedAuthUser(t);
+        await t.run((ctx) =>
+            ctx.db.insert("accountDeletionJobs", {
+                errorCode: null,
+                expiresAt: Date.now() + 60_000,
+                googleReceiptChallengeHash: null,
+                googleReceiptDigest: null,
+                phase: "providersRevoked",
+                provider: "credentialOnly",
+                secretHash: "hash",
+                userId: user.userId,
+            })
+        );
+
+        await expect(
+            authenticatedAs(t, user).mutation(api.reviewPush.setTarget, {
+                deviceId: "phone",
+                environment: "development",
+                token: TOKEN,
+            })
+        ).resolves.toBeFalsy();
+        await expect(t.run((ctx) => ctx.db.query("reviewPushTargets").collect())).resolves.toHaveLength(0);
     });
 });

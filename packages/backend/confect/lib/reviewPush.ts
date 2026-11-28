@@ -3,7 +3,7 @@ import { APNS_HOSTS, APNS_TOPIC, providerToken } from "./apns";
 import type { ApnsCredentials } from "./apns";
 
 export const REVIEW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-export const REVIEW_PUSH_INTERVAL_MS = 20 * 60 * 60 * 1000;
+export const REVIEW_PUSH_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const PUSH_EXPIRY_SECONDS = 12 * 60 * 60;
 const REVIEW_PUSH_THREAD = "review";
 

@@ -1195,7 +1195,7 @@ const rewriteEntry = Effect.fn("Banking.rewriteEntry")(function* rewriteEntry(
     });
 });
 
-// The 20h stamp is the throttle and the race guard: a concurrent chunk sees it and schedules nothing.
+// The alertedAt stamp is the throttle and the race guard: a concurrent chunk sees it and schedules nothing.
 const alertReviewQueue = Effect.fn("Banking.alertReviewQueue")(function* alertReviewQueue(
     userId: string,
     count: number,
