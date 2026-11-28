@@ -55,12 +55,14 @@ export function OnboardingBankLinked() {
             eyebrow={t("onboarding.bankLinked.eyebrow")}
             title={t("settings.banks.result.title", { bank })}
         >
-            <View className="border-fr-rule border-t">
-                {accounts.map((account) => (
-                    <LinkedAccountRow account={account} key={account.id} />
-                ))}
-            </View>
-            <View className="mt-8">
+            {accounts.length === 0 ? null : (
+                <View className="border-fr-rule mb-8 border-t">
+                    {accounts.map((account) => (
+                        <LinkedAccountRow account={account} key={account.id} />
+                    ))}
+                </View>
+            )}
+            <View>
                 <ProofHeader label={t("onboarding.bankLinked.arriving")} />
                 {arrived.length === 0 ? (
                     <Text accessibilityLiveRegion="polite" className="text-fr-muted text-subtitle py-3 leading-snug">
