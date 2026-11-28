@@ -1,7 +1,7 @@
 import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
 import { BottomSheet } from "panelui-native/components/bottom-sheet";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Platform, Pressable, View } from "react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
@@ -28,6 +28,7 @@ import { activeProfileId } from "@/lib/active-profile";
 import { authClient } from "@/lib/auth-client";
 import { useAuthSession } from "@/lib/auth-session";
 import { isGoogleSignInAvailable } from "@/lib/google-sign-in";
+import { useLedgerAdoption } from "@/lib/ledger-adoption";
 import { useWhen } from "@/lib/lifecycle";
 import { STRIPE_READY } from "@/lib/stripe-link";
 import { useHaptics } from "@/lib/use-haptics";
@@ -103,12 +104,15 @@ export function OnboardingBank() {
     const [signInOpen, setSignInOpen] = useState(false);
     // Sync turns on only once the new account adopts this ledger, a beat after sign-in lands.
     const [waiting, setWaiting] = useState(() => linkAfterSignIn);
+    const adoption = useLedgerAdoption().status;
+    const finishing = useRef(false);
     const finish = useAtomAction(
         finishFirstRunCommand,
         {
             onFailure: (cause) => {
                 console.error("Finishing onboarding failed", Cause.squash(cause));
                 haptics("error");
+                finishing.current = false;
             },
         },
         SILENT
@@ -133,10 +137,19 @@ export function OnboardingBank() {
         }
     };
     const leave = () => {
+        if (finishing.current) {
+            return;
+        }
+        finishing.current = true;
         linkAfterSignIn = false;
+        setWaiting(false);
         setSignInOpen(false);
         finish(db);
     };
+    // Two ledgers with entries need the person to choose, and that screen only mounts once onboarding ends.
+    useWhen(waiting && adoption === "ask", () => {
+        leave();
+    });
 
     return (
         <>

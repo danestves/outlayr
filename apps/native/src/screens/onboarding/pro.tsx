@@ -55,7 +55,7 @@ export function OnboardingPro() {
             return;
         }
         finishing.current = true;
-        // Linking right after the trial starts gives the bank the whole trial to log charges before it ends.
+        // Linking the moment Pro starts gives the bank a trial's whole length to log charges before it ends.
         if (outcome === "pro" && bankDue) {
             toBank(db);
             return;
