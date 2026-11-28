@@ -1,10 +1,11 @@
 import { REMINDER_ANALYTICS_AT_MS } from "@outlayr/backend/confect/legal";
-import { addMonths, firstOfMonth } from "@outlayr/money/calendar";
+import { addDays, addMonths, firstOfMonth, startOfWeek } from "@outlayr/money/calendar";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
 import { Meta } from "@/data/app-meta-core";
 import { hasEntriesBetween, lastLoggedEntry, liveEntryCount } from "@/data/transactions-core";
+import { loadWeekRecap } from "@/data/week-recap-core";
 import type { Database } from "@/db/client";
 import { previousMonth } from "@/domain/recap-month";
 import {
@@ -16,6 +17,8 @@ import {
     secondEntryNudge,
     reminderReconcile,
     reminderTime,
+    WEEKLY_RECAP_REMINDER_PREFIX,
+    weeklyRecapNotice,
 } from "@/domain/reminder";
 
 import { posthog } from "./posthog";
@@ -44,16 +47,25 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
     db: Database
 ) {
     const reminders = yield* Reminders;
-    const [enabled, permission, hideAmounts] = yield* Effect.all(
-        [Meta.get(db, "showNotifications"), reminders.permission(), Meta.get(db, "hideAmounts")],
+    const [enabled, permission, hideAmounts, weeklyRecap] = yield* Effect.all(
+        [
+            Meta.get(db, "showNotifications"),
+            reminders.permission(),
+            Meta.get(db, "hideAmounts"),
+            Meta.get(db, "weeklyRecap"),
+        ],
         { concurrency: "unbounded" }
     );
     if (enabled && permission === "unknown") {
         return;
     }
+    if (permission === "denied" && weeklyRecap) {
+        yield* Meta.set(db, "weeklyRecap", false);
+    }
     const decision = reminderReconcile(enabled, permission);
     const now = yield* DateTime.nowAsDate;
-    const time = decision === "schedule" ? yield* readReminderTime(db) : null;
+    const weeklyActive = weeklyRecap && permission === "granted";
+    const time = decision === "schedule" || weeklyActive ? yield* readReminderTime(db) : null;
     const notices: DatedReminder[] = [];
     const [savedAt, armedAt] = yield* Effect.all(
         [Meta.get(db, "secondEntryNudgeSavedAt"), Meta.get(db, "secondEntryNudgeArmedAt")],
@@ -64,7 +76,7 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
     if (savedAt > 0 && secondEntryAfter === null) {
         yield* Meta.set(db, "secondEntryNudgeSavedAt", 0);
     }
-    if (time !== null) {
+    if (time !== null && decision === "schedule") {
         notices.push(
             ...dailyReminderNotices({
                 hideAmounts,
@@ -81,13 +93,31 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
             }
         }
     }
+    if (time !== null && weeklyActive) {
+        const firstWeekday = yield* Meta.get(db, "firstWeekday");
+        const currency = yield* Meta.get(db, "currency");
+        const currentWeek = startOfWeek(now, firstWeekday);
+        for (const week of [addDays(currentWeek, -7), currentWeek]) {
+            const recap = yield* loadWeekRecap(db, { currency, firstWeekday, now, week });
+            const notice = weeklyRecapNotice({ currency, hideAmounts, recap, time, week });
+            if (notice !== null && notice.fireAt.getTime() > now.getTime()) {
+                notices.push(notice);
+            }
+        }
+    }
 
     const keep = new Set(notices.map((notice) => notice.id));
     const pending = yield* reminders.pendingIds();
     yield* reminders.cancel(
-        pending.filter(
-            (id) => (id.startsWith(DAILY_REMINDER_PREFIX) || id.startsWith(RECAP_REMINDER_PREFIX)) && !keep.has(id)
-        )
+        pending.filter((id) => {
+            if (keep.has(id)) {
+                return false;
+            }
+            if (id.startsWith(DAILY_REMINDER_PREFIX) || id.startsWith(RECAP_REMINDER_PREFIX)) {
+                return true;
+            }
+            return permission !== "unknown" && id.startsWith(WEEKLY_RECAP_REMINDER_PREFIX);
+        })
     );
     yield* armReminders(notices);
 

@@ -1486,6 +1486,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "With Share analytics on: when you sign in and whether you used email, Google, or Apple, when you delete an entry, transfer, account, category, budget, savings goal, or installment purchase, or stop a recurring entry, and whether you allow notifications when the app asks. Never what you deleted.",
                     label: "Sign-ins, deletes and notifications in analytics",
                 },
+                {
+                    detail: "Your phone works out a weekly recap and schedules it as a reminder: what you spent, your top category, and how it compares with the week before. Nothing about it reaches our servers. Turn it off in Settings › Notifications. The policy now also names the monthly recap that comes with the daily reminder.",
+                    label: "Weekly recap",
+                },
             ],
             de: [
                 {
@@ -1499,6 +1503,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Mit eingeschaltetem „Analysedaten teilen“: wann du dich anmeldest und ob per E-Mail, Google oder Apple, wann du einen Eintrag, eine Umbuchung, ein Konto, eine Kategorie, ein Budget, ein Sparziel oder einen Ratenkauf löschst oder einen wiederkehrenden Eintrag beendest, und ob du Mitteilungen erlaubst, wenn die App danach fragt. Nie, was du gelöscht hast.",
                     label: "Anmeldungen, Löschungen und Mitteilungen in Analysen",
+                },
+                {
+                    detail: "Dein Handy erstellt einen Wochenrückblick und plant ihn als Erinnerung: was du ausgegeben hast, deine größte Kategorie und der Vergleich zur Woche davor. Nichts davon erreicht unsere Server. Schalte ihn unter Einstellungen › Benachrichtigungen aus. Die Richtlinie nennt jetzt auch den Monatsrückblick, der mit der täglichen Erinnerung kommt.",
+                    label: "Wochenrückblick",
                 },
             ],
             es: [
@@ -1514,6 +1522,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Con Compartir analíticas activado: cuándo inicias sesión y si usaste correo, Google o Apple, cuándo borras una entrada, transferencia, cuenta, categoría, presupuesto, meta de ahorro o compra en cuotas, o detienes una entrada recurrente, y si permites las notificaciones cuando la app te lo pide. Nunca lo que borraste.",
                     label: "Inicios de sesión, borrados y notificaciones en analíticas",
                 },
+                {
+                    detail: "Tu teléfono arma un resumen semanal y lo programa como recordatorio: cuánto gastaste, tu categoría principal y cómo se compara con la semana anterior. Nada de esto llega a nuestros servidores. Desactívalo en Configuración › Notificaciones. La política ahora también nombra el resumen mensual que viene con el recordatorio diario.",
+                    label: "Resumen semanal",
+                },
             ],
             fr: [
                 {
@@ -1528,6 +1540,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Avec Partager les données d'analyse activé : quand vous vous connectez et si vous avez utilisé l'e-mail, Google ou Apple, quand vous supprimez une opération, un virement, un compte, une catégorie, un budget, un objectif d'épargne ou un achat en plusieurs fois, ou arrêtez une opération récurrente, et si vous autorisez les notifications quand l'app le demande. Jamais ce que vous avez supprimé.",
                     label: "Connexions, suppressions et notifications dans les analyses",
                 },
+                {
+                    detail: "Votre téléphone prépare un bilan de la semaine et le programme comme rappel : vos dépenses, votre catégorie principale et la comparaison avec la semaine d'avant. Rien de tout cela n'atteint nos serveurs. Désactivez-le dans Réglages › Notifications. La politique nomme aussi désormais le bilan mensuel qui accompagne le rappel quotidien.",
+                    label: "Bilan de la semaine",
+                },
             ],
             pt: [
                 {
@@ -1541,6 +1557,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Com Compartilhar análises ativado: quando você entra e se usou e-mail, Google ou Apple, quando você apaga um lançamento, transferência, conta, categoria, orçamento, meta de economia ou compra parcelada, ou encerra um lançamento recorrente, e se você permite notificações quando o app pede. Nunca o que você apagou.",
                     label: "Entradas, exclusões e notificações nas análises",
+                },
+                {
+                    detail: "Seu celular monta um resumo semanal e o programa como lembrete: quanto você gastou, sua categoria principal e a comparação com a semana anterior. Nada disso chega aos nossos servidores. Desative em Ajustes › Notificações. A política agora também nomeia o resumo mensal que vem com o lembrete diário.",
+                    label: "Resumo semanal",
                 },
             ],
         },

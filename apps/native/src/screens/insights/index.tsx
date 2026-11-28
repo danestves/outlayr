@@ -39,6 +39,7 @@ import { InsightsWindow } from "./components/insights-window";
 import { RecapRow } from "./components/recap-row";
 import { useMoney } from "./components/use-money";
 import type { Money } from "./components/use-money";
+import { WeekRecapRow } from "./components/week-recap-row";
 import { periodOf } from "./periods";
 
 const ignoreMeasure = () => undefined;
@@ -280,6 +281,7 @@ export function Insights() {
                 showsVerticalScrollIndicator={false}
             >
                 <View className="px-5">
+                    <WeekRecapRow nowMs={nowMs} />
                     {recapRowVisible(new Date(nowMs)) ? <RecapRow nowMs={nowMs} /> : null}
                     <View className="flex-row flex-wrap gap-2">
                         <InsightsWindow

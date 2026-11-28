@@ -19,7 +19,7 @@ const AFTER_SHEET = Duration.millis(600);
 /** Resolves false when turning on ended without a grant, so nothing was written. */
 export const setDueReminders = Effect.fn("DueReminders.set")(function* setDueReminders(
     db: Database,
-    key: "installmentReminders" | "subscriptionReminders",
+    key: "installmentReminders" | "subscriptionReminders" | "weeklyRecap",
     next: boolean
 ) {
     if (next) {

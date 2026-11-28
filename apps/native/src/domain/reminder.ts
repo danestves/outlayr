@@ -11,6 +11,8 @@ import { formatTime, monthLongTitle } from "./dates";
 import { daysBetween } from "./local-day";
 import { formatAmount } from "./money";
 import { recapMonthKey } from "./recap-month";
+import { recapWeekKey } from "./recap-week";
+import type { WeekRecap } from "./week-recap";
 
 export const REMINDER_MORNING = 1;
 export const REMINDER_EVENING = 2;
@@ -245,5 +247,86 @@ export function monthlyRecapNotice(
         fireAt,
         id: `${RECAP_REMINDER_PREFIX}.${key}`,
         title: say("reminder.recap.title", { month: monthLongTitle(month, language) }),
+    };
+}
+
+export const WEEKLY_RECAP_REMINDER_PREFIX = "outlayr.weekly-recap";
+
+interface WeeklyRecapCopyInput {
+    amount: (value: number) => string;
+    hideAmounts: boolean;
+    recap: WeekRecap;
+    say: (id: string, params?: TranslationParams) => string;
+}
+
+function weeklyRecapTitle({ amount, hideAmounts, recap, say }: WeeklyRecapCopyInput): string {
+    if (recap.entries === 0) {
+        return say("reminder.weekly.quietTitle");
+    }
+    if (hideAmounts) {
+        return say("reminder.weekly.ready");
+    }
+    return say("reminder.weekly.title", { amount: amount(recap.spent) });
+}
+
+function weeklyRecapBody({ amount, hideAmounts, recap, say }: WeeklyRecapCopyInput): string {
+    if (recap.entries === 0) {
+        return hideAmounts || recap.priorSpent <= 0
+            ? say("reminder.weekly.quietHidden")
+            : say("reminder.weekly.quietBody", { amount: amount(recap.priorSpent) });
+    }
+    const { topCategory } = recap;
+    if (topCategory === null) {
+        return say("reminder.recap.body");
+    }
+    const named = hideAmounts
+        ? { category: topCategory.name }
+        : { category: topCategory.name, top: amount(topCategory.amount) };
+    const compares = recap.priorSpent > 0 && recap.spent !== recap.priorSpent;
+    if (!compares) {
+        return say(hideAmounts ? "reminder.weekly.hiddenFirst" : "reminder.weekly.first", named);
+    }
+    const more = recap.spent > recap.priorSpent;
+    if (hideAmounts) {
+        return say(more ? "reminder.weekly.hiddenMore" : "reminder.weekly.hiddenLess", named);
+    }
+    const delta = amount(Math.abs(recap.spent - recap.priorSpent));
+    return say(more ? "reminder.weekly.more" : "reminder.weekly.less", { ...named, delta });
+}
+
+export interface WeeklyRecapNoticeInput {
+    currency: string;
+    hideAmounts: boolean;
+    language?: Language;
+    recap: WeekRecap;
+    time: TimeOfDay;
+    week: Date;
+}
+
+export function weeklyRecapNotice({
+    currency,
+    hideAmounts,
+    language = runtimeLanguage(),
+    recap,
+    time,
+    week,
+}: WeeklyRecapNoticeInput): DatedReminder | null {
+    if (recap.entries === 0 && recap.priorEntries === 0) {
+        return null;
+    }
+    const fireAt = addDays(week, 7);
+    fireAt.setHours(time.hour, time.minute, 0, 0);
+    const key = recapWeekKey(week);
+    const say = (id: string, params?: TranslationParams) =>
+        translate(id, { catalog: CATALOGS[language], fallback: EN, params });
+    const amount = (value: number) => formatAmount(value, currency, true, language);
+    const copy = { amount, hideAmounts, recap, say };
+
+    return {
+        body: weeklyRecapBody(copy),
+        data: { kind: "weekly_recap", open: "week_recap", week: key },
+        fireAt,
+        id: `${WEEKLY_RECAP_REMINDER_PREFIX}.${key}`,
+        title: weeklyRecapTitle(copy),
     };
 }

@@ -31,6 +31,11 @@ const ReminderTap = Schema.Union([
     Schema.Struct({ open: Schema.Literal("installment"), plan: Schema.String }),
     Schema.Struct({ account: Schema.String, open: Schema.Literal("account") }),
     Schema.Struct({ month: Schema.String, open: Schema.Literal("recap") }),
+    Schema.Struct({
+        kind: Schema.optional(Schema.Literal("weekly_recap")),
+        open: Schema.Literal("week_recap"),
+        week: Schema.String,
+    }),
 ]);
 const WalletPushTap = Schema.Struct({
     card: Schema.optional(Schema.String),
@@ -92,6 +97,8 @@ export const resolveReminderTap = Effect.fn("NotificationTaps.resolveReminder")(
         target = `/accounts/${tap.account}`;
     } else if (tap.open === "recap") {
         target = { params: { month: tap.month }, pathname: "/recap" };
+    } else if (tap.open === "week_recap") {
+        target = { params: { week: tap.week }, pathname: "/recap/week" };
     } else if (tap.open === "create") {
         target = yield* createTarget(db, tap);
     }

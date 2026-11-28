@@ -205,6 +205,7 @@ const STORED_TODAY = {
     ],
     walletLastRunAt: ["1762650000000", "1762650000.123"],
     walletShortcutAdded: ["1"],
+    weeklyRecap: BOOL,
     yearSheetSeen: ["2026"],
 } satisfies Record<MetaName, readonly string[]>;
 

@@ -105,6 +105,7 @@ const SETTINGS = defineMeta({
     termsNoticeSeen: { default: 0, schema: NumberText, scope: "device" },
     use24HourClock: { default: false, schema: BoolText, scope: "synced" },
     walletCards: { elements: WalletCard, scope: "device" },
+    weeklyRecap: { default: true, schema: BoolText, scope: "device" },
     yearSheetSeen: { default: 0, schema: NumberText, scope: "device" },
 });
 
