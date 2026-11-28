@@ -11,7 +11,9 @@ import {
     reminderReconcile,
     reminderTime,
     secondEntryNudge,
+    weeklyRecapNotice,
 } from "./reminder";
+import type { WeekRecap } from "./week-recap";
 
 describe("reminder time", () => {
     it("pins the two fixed options to the hours Swift offered", () => {
@@ -177,6 +179,110 @@ describe("daily reminder", () => {
             title: "Nothing logged since Tuesday",
         });
         expect(notices.filter(({ data }) => data.kind === "second_entry")).toHaveLength(1);
+    });
+});
+
+describe("weekly recap", () => {
+    const weekStart = new Date(2026, 9, 12);
+    const base: WeekRecap = {
+        daily: [0, 0, 0, 0, 0, 0, 0],
+        days: [false, false, false, false, false, false, false],
+        daysLogged: 0,
+        entries: 0,
+        movers: [],
+        priorEntries: 0,
+        priorSpent: 0,
+        spent: 0,
+        spentChange: null,
+        start: weekStart,
+        topCategory: null,
+    };
+    const weekly = (overrides: Partial<WeekRecap> = {}, hideAmounts = false) =>
+        weeklyRecapNotice({
+            currency: "EUR",
+            hideAmounts,
+            language: "en",
+            recap: { ...base, ...overrides },
+            time: { hour: 20, minute: 0 },
+            week: weekStart,
+        });
+
+    it("closes the week with its total, its leader and the comparison", () => {
+        expect(
+            weekly({
+                entries: 3,
+                priorEntries: 2,
+                priorSpent: 120,
+                spent: 100,
+                topCategory: { amount: 80, name: "Groceries" },
+            })
+        ).toStrictEqual({
+            body: "Groceries led at €80.00. €20.00 less than the week before.",
+            data: { kind: "weekly_recap", open: "week_recap", week: "2026-10-12" },
+            fireAt: new Date(2026, 9, 19, 20, 0),
+            id: "outlayr.weekly-recap.2026-10-12",
+            title: "Your week: €100.00",
+        });
+    });
+
+    it("says more when the week spent more than the one before", () => {
+        expect(
+            weekly({
+                entries: 1,
+                priorEntries: 1,
+                priorSpent: 100,
+                spent: 123.45,
+                topCategory: { amount: 80, name: "Groceries" },
+            })?.body
+        ).toBe("Groceries led at €80.00. €23.45 more than the week before.");
+    });
+
+    it("skips the comparison on a first week or an unchanged total", () => {
+        const leader = { amount: 80, name: "Groceries" };
+
+        expect(weekly({ entries: 1, spent: 100, topCategory: leader })?.body).toBe("Groceries led at €80.00.");
+        const dust = { amount: 0.3, name: "Groceries" };
+        expect(
+            weekly({ entries: 2, priorEntries: 1, priorSpent: 0.3, spent: 0.1 + 0.2, topCategory: dust })?.body
+        ).toBe("Groceries led at €0.30.");
+    });
+
+    it("returns null when neither week has an entry", () => {
+        expect(weekly({ entries: 0, priorEntries: 0 })).toBeNull();
+    });
+
+    it("asks to fill an empty week, naming what the week before held", () => {
+        expect(weekly({ entries: 0, priorEntries: 2, priorSpent: 40 })).toMatchObject({
+            body: "The week before, you logged €40.00. Add what you remember.",
+            title: "Nothing logged last week",
+        });
+    });
+
+    it("keeps every amount out of a hidden week", () => {
+        const notice = weekly(
+            {
+                entries: 3,
+                priorEntries: 2,
+                priorSpent: 100,
+                spent: 123.45,
+                topCategory: { amount: 80, name: "Groceries" },
+            },
+            true
+        );
+
+        expect(notice).toMatchObject({
+            body: "Groceries led, and you spent more than the week before.",
+            title: "Your week is ready",
+        });
+        expect(`${notice?.title} ${notice?.body}`).not.toMatch(/€/u);
+    });
+
+    it("falls back to the plain recap body without a leading category", () => {
+        expect(weekly({ entries: 1, spent: 30 })?.body).toBe("See how it went and what moved.");
+        expect(weekly({ entries: 1, spent: 30 }, true)).toMatchObject({
+            body: "See how it went and what moved.",
+            title: "Your week is ready",
+        });
     });
 });
 

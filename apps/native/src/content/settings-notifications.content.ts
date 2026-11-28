@@ -182,6 +182,29 @@ const settingsNotifications = {
             pt: "Me lembre de registrar",
             "pt-PT": "Lembre-me de registar",
         }),
+        "settings.notifications.weeklyFooter": t({
+            en: "Arrives as a new week starts, at your reminder time: what you spent, the top category and how it compares.",
+            de: "Kommt zu Beginn jeder Woche zu deiner Erinnerungszeit: was du ausgegeben hast, die größte Kategorie und der Vergleich zur Vorwoche.",
+            es: "Llega al empezar cada semana, a tu hora de recordatorio: cuánto gastaste, la categoría principal y cómo se compara.",
+            fr: "Arrive au début de chaque semaine, à l'heure de votre rappel : vos dépenses, la catégorie principale et la comparaison.",
+            pt: "Chega no início de cada semana, no horário do seu lembrete: quanto você gastou, a categoria principal e a comparação.",
+            "pt-PT":
+                "Chega no início de cada semana, à hora do seu lembrete: quanto gastou, a categoria principal e a comparação.",
+        }),
+        "settings.notifications.weeklySection": t({
+            en: "Weekly recap",
+            de: "Wochenrückblick",
+            es: "Resumen semanal",
+            fr: "Bilan de la semaine",
+            pt: "Resumo semanal",
+        }),
+        "settings.notifications.weeklyToggle": t({
+            en: "Weekly recap",
+            de: "Wochenrückblick",
+            es: "Resumen semanal",
+            fr: "Bilan de la semaine",
+            pt: "Resumo semanal",
+        }),
         "settings.notifications.whenSection": t({
             en: "When",
             de: "Wann",

@@ -74,6 +74,7 @@ export function Notifications() {
     const enabled = settings.get("showNotifications");
     const subscriptionsEnabled = settings.get("subscriptionReminders");
     const installmentsEnabled = settings.get("installmentReminders");
+    const weeklyEnabled = settings.get("weeklyRecap");
     const option = settings.get("notificationOption");
     const custom = clampTimeOfDay(settings.get("notificationHour"), settings.get("notificationMinute"));
     const scheduled = reminderTime(option, custom);
@@ -122,6 +123,20 @@ export function Notifications() {
                     {option === REMINDER_CUSTOM ? <ReminderTimeRow onChange={chooseTime} value={custom} /> : null}
                 </SettingsSection>
             ) : null}
+
+            <SettingsSection
+                footer={t("settings.notifications.weeklyFooter")}
+                title={t("settings.notifications.weeklySection")}
+            >
+                <ToggleRow
+                    icon="Calendar03"
+                    onValueChange={(next) => {
+                        setDueReminders({ db, key: "weeklyRecap", next });
+                    }}
+                    title={t("settings.notifications.weeklyToggle")}
+                    value={weeklyEnabled}
+                />
+            </SettingsSection>
 
             <SettingsSection
                 footer={t("settings.notifications.subscriptionFooter")}

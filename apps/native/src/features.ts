@@ -107,6 +107,12 @@ export const features = {
         says: ["insights", "my spending charts", "how much I spent this month"],
         steps: [{ see: "Insights" }],
     },
+    "week-recap": {
+        link: "/recap/week",
+        proves: "The weekly recap opens on last week, with its day bars and a way to add what is missing.",
+        says: ["my weekly recap", "last week's spending", "the weekly notification"],
+        steps: [{ see: "Week of" }],
+    },
     "budget-plan": {
         link: "/insights/plan",
         proves: "The year plan opens and lays out what is left for each month.",
@@ -192,9 +198,9 @@ export const features = {
     },
     "settings-notifications": {
         link: "/settings/notifications",
-        proves: "Notification settings open on the daily reminder.",
-        says: ["turn on reminders", "notification settings", "remind me to log"],
-        steps: [{ see: "Daily reminder" }],
+        proves: "Notification settings open on the daily reminder and offer the weekly recap.",
+        says: ["turn on reminders", "notification settings", "remind me to log", "turn off the weekly recap"],
+        steps: [{ see: "Daily reminder" }, { see: "Weekly recap" }],
     },
     export: {
         link: "/settings/export",

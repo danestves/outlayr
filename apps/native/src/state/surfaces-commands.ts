@@ -27,7 +27,7 @@ const surfacesCommand = <A, E, W = void>(label: string, execute: (input: W) => E
 
 export const setDueRemindersCommand = surfacesCommand(
     "set-due-reminders",
-    (input: { db: Database; key: "installmentReminders" | "subscriptionReminders"; next: boolean }) =>
+    (input: { db: Database; key: "installmentReminders" | "subscriptionReminders" | "weeklyRecap"; next: boolean }) =>
         setDueReminders(input.db, input.key, input.next)
 );
 

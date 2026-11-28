@@ -20,6 +20,8 @@ const DAILY_REMINDER_SETTINGS = [
     "notificationHour",
     "notificationMinute",
     "currency",
+    "weeklyRecap",
+    "firstWeekday",
 ] as const;
 
 const RESYNC_DEBOUNCE = Duration.millis(PUBLISH_DEBOUNCE_MS);

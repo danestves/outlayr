@@ -49,8 +49,17 @@ export function useSubscriptionReminderTaps(db: Database, ready: boolean): void 
                         }
                         router.navigate(target);
                         const reported = Date.now() >= REMINDER_ANALYTICS_AT_MS;
-                        if (reported && "open" in decoded && decoded.open === "create" && decoded.kind !== undefined) {
-                            posthog?.capture("notification_opened", { kind: decoded.kind });
+                        let kind: string | undefined;
+                        if ("open" in decoded) {
+                            if (decoded.open === "week_recap") {
+                                kind = "weekly_recap";
+                            } else if (decoded.open === "create") {
+                                const { kind: createKind } = decoded;
+                                kind = createKind;
+                            }
+                        }
+                        if (reported && kind !== undefined) {
+                            posthog?.capture("notification_opened", { kind });
                         }
                         handled = tap;
                         clearLastNotificationResponse();
