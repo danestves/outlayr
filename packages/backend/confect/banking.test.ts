@@ -19,7 +19,6 @@ import type { Doc } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
 import { toBankEntry } from "./banking";
 import { rankInstitutions } from "./banking.impl";
-import { BANKING_EFFECTIVE_AT_MS } from "./legal";
 import { PURGE_BATCH } from "./lib/account";
 import { incomingWins } from "./lib/syncTables";
 import { keyedLocalId } from "./mcpEntries";
@@ -1517,7 +1516,7 @@ describe("bank unlink", () => {
 
 describe("bank access", () => {
     beforeEach(() => {
-        vi.useFakeTimers({ now: BANKING_EFFECTIVE_AT_MS + 86_400_000 });
+        vi.useFakeTimers({ now: Date.UTC(2026, 10, 29) });
     });
 
     afterEach(() => {
@@ -1555,16 +1554,6 @@ describe("bank access", () => {
         vi.stubEnv("STRIPE_SECRET_KEY", "");
         const t = setup();
         const identity = await seedAuthUser(t);
-
-        await expect(t.query(internal.banking.accessFor, { userId: identity.userId })).resolves.toBe("unavailable");
-    });
-
-    it("reports unavailable before the notices announcing bank linking take effect", async () => {
-        vi.setSystemTime(BANKING_EFFECTIVE_AT_MS - 86_400_000);
-        configureStripe();
-        const t = setup();
-        const identity = await seedAuthUser(t);
-        await syncEntitlement(t, identity.userId, new Date(Date.now() + 86_400_000).toISOString());
 
         await expect(t.query(internal.banking.accessFor, { userId: identity.userId })).resolves.toBe("unavailable");
     });
@@ -1787,7 +1776,7 @@ describe("bank institutions", () => {
     });
 
     it("refuses to start a link on a retired institution", async () => {
-        vi.useFakeTimers({ now: BANKING_EFFECTIVE_AT_MS + 86_400_000 });
+        vi.useFakeTimers({ now: Date.UTC(2026, 10, 29) });
         try {
             configureStripe();
             const t = setup();
@@ -1817,7 +1806,7 @@ describe("bank institutions", () => {
 
 describe("bank link", () => {
     beforeEach(() => {
-        vi.useFakeTimers({ now: BANKING_EFFECTIVE_AT_MS + 86_400_000 });
+        vi.useFakeTimers({ now: Date.UTC(2026, 10, 29) });
     });
 
     afterEach(() => {

@@ -67,6 +67,7 @@ jobs:
                       org.opencontainers.image.revision=${{ github.sha }}
                   build-args: |
                       VITE_PUBLIC_POSTHOG_PROJECT_TOKEN=${{ vars.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN }}
+                      VITE_STRIPE_PUBLISHABLE_KEY=${{ vars.STRIPE_PUBLISHABLE_KEY }}
 
             - name: Deploy on Coolify
               env:
