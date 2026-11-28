@@ -73,9 +73,12 @@ const notifyPolicy = FunctionImpl.make(
     spec,
     "notifyPolicy",
     Effect.fn("Mail.notifyPolicy")(
-        function* notifyPolicy({ cursor }) {
-            const latestMs = Math.max(...POLICY_NOTICES.map((notice) => notice.effectiveAtMs));
-            const batch = POLICY_NOTICES.filter((notice) => notice.effectiveAtMs === latestMs);
+        function* notifyPolicy({ cursor, effectiveAtMs }) {
+            const batchMs = effectiveAtMs ?? Math.max(...POLICY_NOTICES.map((notice) => notice.effectiveAtMs));
+            const batch = POLICY_NOTICES.filter((notice) => notice.effectiveAtMs === batchMs);
+            if (batch.length === 0) {
+                return yield* Effect.die(new Error(`No policy notice takes effect at ${batchMs}`));
+            }
             const setup = yield* emailSetup;
             if (setup.provider === "log" || setup.provider === "unconfigured") {
                 const provider = setup.provider === "log" ? setup.provider : setup.requested;
@@ -104,7 +107,7 @@ const notifyPolicy = FunctionImpl.make(
                                 changes: changes[language],
                                 document,
                             })),
-                            effectiveAtMs: latestMs,
+                            effectiveAtMs: batchMs,
                             email,
                             framing: framing?.[language],
                             language,
@@ -127,6 +130,7 @@ const notifyPolicy = FunctionImpl.make(
                 const scheduler = yield* Scheduler;
                 yield* scheduler.runAfter(Duration.zero, refs.internal.mailDelivery.notifyPolicy, {
                     cursor: page.continueCursor,
+                    effectiveAtMs,
                 });
             }
             return {

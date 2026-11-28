@@ -22,7 +22,7 @@ export default GroupSpec.makeNode()
     .addFunction(
         FunctionSpec.internalNodeAction({
             name: "notifyPolicy",
-            args: () => ({ cursor: Schema.optional(Schema.String) }),
+            args: () => ({ cursor: Schema.optional(Schema.String), effectiveAtMs: Schema.optional(Schema.Number) }),
             returns: () => Schema.Struct({ failed: Schema.Number, sent: Schema.Number }),
         })
     )

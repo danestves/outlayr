@@ -25,3 +25,5 @@ sheet show nothing until they update.
    first page, not delivered. A failed send gives its notice back once its four tries end, and a rerun
    queues only what an account has not been given, so it retries the failures. Wait until the last run's final `notifyPolicy` page has finished in the Convex logs before you rerun; the rerun also refuses to start while that run's emails are still sending, so run it again once it stops refusing. Follow the rest in the Convex logs
    (`[mail] not sent`).
+
+   To resend an older batch once a newer one is on `main`, pass its date: `'{"effectiveAtMs": 1795824000000}'`. A `cloudflare refused the email with 400` usually means the address is on the Email Sending suppression list (Cloudflare dashboard, or `GET /accounts/<id>/email/sending/suppressions`). A soft bounce expires after 24 hours, and a hard bounce after 7 days or never.
