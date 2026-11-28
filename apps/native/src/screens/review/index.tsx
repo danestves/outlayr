@@ -1,5 +1,5 @@
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,6 +19,7 @@ import { useValuation } from "@/data/use-valuation";
 import { groupByAccount, lastSyncInto, syncedWhen } from "@/domain/review-queue";
 import { useBankOverview } from "@/hooks/use-bank-overview";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { useWhen } from "@/lib/lifecycle";
 import { STRIPE_READY } from "@/lib/stripe-link";
 import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
 import { SwipeableTransactionRow } from "@/screens/log/components/swipeable-transaction-row";
@@ -44,17 +45,23 @@ export function Review() {
     // A second tap would pop past the tabs once the first back lands.
     const [closing, setClosing] = useState(false);
 
+    // Closing on the emptied queue, not per call, covers swipes that overlap before the list re-renders.
+    // Waiting for focus keeps back from popping an editor opened over the sheet instead.
+    const [confirmed, setConfirmed] = useState(false);
+    const focused = useIsFocused();
+    useWhen(confirmed && focused && rows.length === 0, () => {
+        router.back();
+    });
+
     const confirm = async (ids: readonly string[]) => {
         const result = await markReviewed({ db, ids });
-        if (AsyncResult.isSuccess(result) && ids.length === rows.length) {
-            router.back();
+        if (AsyncResult.isSuccess(result)) {
+            setConfirmed(true);
             return;
         }
         setClosing(false);
-        if (!AsyncResult.isSuccess(result)) {
-            // A toast would sit under this modal sheet.
-            Alert.alert(t("log.review.confirmFailed"));
-        }
+        // A toast would sit under this modal sheet.
+        Alert.alert(t("log.review.confirmFailed"));
     };
 
     const confirmAll = () => {

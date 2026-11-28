@@ -104,7 +104,13 @@ export function SwipeableTransactionRow({
                             dated={dated}
                             menuItems={menuItems}
                             onDelete={onDelete}
-                            onPress={onPress}
+                            onPress={(rowId) => {
+                                // A swipe must not also open the row: in the modal Review sheet
+                                // the press outlived the pan.
+                                if (swipedId === null) {
+                                    onPress(rowId);
+                                }
+                            }}
                             rates={rates}
                             transaction={transaction}
                         />
