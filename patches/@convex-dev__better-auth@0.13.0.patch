@@ -1,0 +1,28 @@
+diff --git a/dist/component/schema.js b/dist/component/schema.js
+index bd18600..706968c 100644
+--- a/dist/component/schema.js
++++ b/dist/component/schema.js
+@@ -43,7 +43,8 @@ export const tables = {
+         .index("expiresAt", ["expiresAt"])
+         .index("expiresAt_userId", ["expiresAt", "userId"])
+         .index("token", ["token"])
+-        .index("userId", ["userId"]),
++        .index("userId", ["userId"])
++        .index("userId_expiresAt", ["userId", "expiresAt"]),
+     account: defineTable({
+         accountId: v.string(),
+         providerId: v.string(),
+diff --git a/src/component/schema.ts b/src/component/schema.ts
+index d856b9d..c772c6d 100644
+--- a/src/component/schema.ts
++++ b/src/component/schema.ts
+@@ -45,7 +45,8 @@ export const tables = {
+     .index("expiresAt", ["expiresAt"])
+     .index("expiresAt_userId", ["expiresAt","userId"])
+     .index("token", ["token"])
+-    .index("userId", ["userId"]),
++    .index("userId", ["userId"])
++    .index("userId_expiresAt", ["userId", "expiresAt"]),
+   account: defineTable({
+     accountId: v.string(),
+     providerId: v.string(),
