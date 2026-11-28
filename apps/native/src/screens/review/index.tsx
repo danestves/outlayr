@@ -54,7 +54,6 @@ export function Review() {
 
     const confirm = async (ids: readonly string[]) => {
         const result = await markReviewed({ db, ids });
-        setClosing(false);
         if (AsyncResult.isSuccess(result)) {
             setConfirmed(true);
             return;
@@ -68,7 +67,10 @@ export function Review() {
             return;
         }
         setClosing(true);
-        void confirm(rows.map((row) => row.id));
+        // Only this write clears the busy state: a swipe confirm settling first must not free a second tap.
+        void confirm(rows.map((row) => row.id)).finally(() => {
+            setClosing(false);
+        });
     };
 
     return (

@@ -1,6 +1,7 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Semaphore from "effect/Semaphore";
 import { getIosPushNotificationServiceEnvironmentAsync } from "expo-application";
 import { Platform } from "react-native";
 
@@ -52,6 +53,9 @@ const clearRegistered = Effect.fn("ReviewPush.clearRegistered")(function* clearR
     store.remove(REVIEW_PUSH_KEY);
     store.remove(REVIEW_PUSH_DEVICE_KEY);
 });
+
+// One pass at a time: an older pass's undo clear would otherwise land after a newer pass's set for this install.
+const syncs = Semaphore.makeUnsafe(1);
 
 /**
  * Registers this phone for "entries to review" after a bank sync: signed in, alerts on, notifications granted and a
@@ -105,7 +109,8 @@ export const syncReviewPush = Effect.fn("ReviewPush.sync")(
             store.set(REVIEW_PUSH_DEVICE_KEY, deviceId);
         }
     },
-    Effect.catchCause((cause) => Effect.logWarning("[outlayr] review push not synced", cause))
+    Effect.catchCause((cause) => Effect.logWarning("[outlayr] review push not synced", cause)),
+    syncs.withPermits(1)
 );
 
 /** Before sign-out, while the session can still clear the target server side. */
