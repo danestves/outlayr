@@ -68,6 +68,7 @@ minimumReleaseAgeExclude:
 
 patchedDependencies:
     convex@1.50.0: patches/convex@1.50.0.patch
+    "@convex-dev/better-auth@0.13.0": patches/@convex-dev__better-auth@0.13.0.patch
     "@expo/ui@58.0.28": patches/@expo__ui@58.0.28.patch
     "@hugeicons/react-native@1.0.16": patches/@hugeicons__react-native@1.0.16.patch
     "@intlayer/engine@9.7.0": patches/@intlayer__engine@9.7.0.patch
