@@ -34,7 +34,6 @@ import {
 import { BANK_DEVICE_ID, configuredClients, toBankEntry } from "./banking";
 import type { BankEntry } from "./banking";
 import spec from "./banking.spec";
-import { BANKING_EFFECTIVE_AT_MS } from "./legal";
 import { PURGE_BATCH } from "./lib/account";
 import { requireUserId } from "./lib/auth";
 import { authComponent } from "./lib/betterAuth";
@@ -109,7 +108,7 @@ const accessForUser = Effect.fn("Banking.accessForUser")(function* accessForUser
     userId: string,
     configured: readonly Configured[]
 ) {
-    if (configured.length === 0 || (yield* Clock.currentTimeMillis) < BANKING_EFFECTIVE_AT_MS) {
+    if (configured.length === 0) {
         return "unavailable" as const;
     }
     return (yield* isPro(ctx, userId)) ? ("allowed" as const) : ("plan" as const);
