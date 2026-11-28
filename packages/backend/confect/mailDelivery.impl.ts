@@ -18,6 +18,7 @@ import { EmailError, NoticesStillSending } from "./lib/email";
 import { emailSetup } from "./lib/emailSetup";
 import { sendEmail } from "./lib/sendEmail";
 import spec from "./mailDelivery.spec";
+import { NOTICE_FRAMINGS } from "./noticeEmails";
 
 const NOTICE_CONCURRENCY = 5;
 const POLICY_REPLY_TO = "support@tryoutlayr.com";
@@ -93,14 +94,19 @@ const notifyPolicy = FunctionImpl.make(
             });
 
             const outcomes = yield* Effect.all(
-                page.recipients.map(({ email, language, pending, userId }) =>
-                    Effect.promise(() =>
+                page.recipients.map(({ email, language, pending, userId }) => {
+                    const notices = batch.filter((notice) => pending.includes(noticeKey(notice)));
+                    const [only] = notices;
+                    const framing = notices.length === 1 && only ? NOTICE_FRAMINGS.get(noticeKey(only)) : undefined;
+                    return Effect.promise(() =>
                         policyChangeEmail({
-                            documents: batch
-                                .filter((notice) => pending.includes(noticeKey(notice)))
-                                .map(({ changes, document }) => ({ changes: changes[language], document })),
+                            documents: notices.map(({ changes, document }) => ({
+                                changes: changes[language],
+                                document,
+                            })),
                             effectiveAtMs: latestMs,
                             email,
+                            framing: framing?.[language],
                             language,
                         })
                     ).pipe(
@@ -113,8 +119,8 @@ const notifyPolicy = FunctionImpl.make(
                         ),
                         Effect.map((queued) => (queued ? "sent" : "skipped")),
                         Effect.catchTags({ EmailError: (error) => unsent(error).pipe(Effect.as("failed" as const)) })
-                    )
-                ),
+                    );
+                }),
                 { concurrency: NOTICE_CONCURRENCY }
             );
             if (!page.isDone) {

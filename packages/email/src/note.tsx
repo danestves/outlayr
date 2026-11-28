@@ -50,7 +50,7 @@ export interface NoteProps {
     facts: readonly (readonly [string, string])[];
     footer: string;
     language: Language;
-    lead: string;
+    lead: string | readonly string[];
     preview: string;
     sections: readonly NoteSection[];
 }
@@ -94,7 +94,9 @@ export function Note({ after, facts, footer, language, lead, preview, sections }
                                     width={28}
                                 />
                                 <Text>{GREETING[language]}</Text>
-                                <Text>{lead}</Text>
+                                {[lead].flat().map((line) => (
+                                    <Text key={line}>{line}</Text>
+                                ))}
                                 {facts.length > 0 ? (
                                     <table
                                         {...presentation}

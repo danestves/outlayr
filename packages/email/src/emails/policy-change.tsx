@@ -1,16 +1,24 @@
 import { formatDate } from "../language";
 import type { Language } from "../language";
 import { Note, renderEmail } from "../note";
-import type { NoteItem } from "../note";
+import type { NoteItem, NoteSection } from "../note";
 
 export type { NoteItem } from "../note";
 
 export type LegalDocument = "privacy" | "terms";
 
+export interface NoticeFraming {
+    aside?: Omit<NoteSection, "link">;
+    lead: readonly string[];
+    preview: string;
+    subject: string;
+}
+
 interface PolicyChangeEmailProps {
     documents: readonly { changes: readonly NoteItem[]; document: LegalDocument }[];
     effectiveAtMs: number;
     email: string;
+    framing?: NoticeFraming;
     language: Language;
     timeZone?: string;
 }
@@ -182,6 +190,7 @@ export default function PolicyChangeEmail({
     documents,
     effectiveAtMs,
     email,
+    framing,
     language,
     timeZone,
 }: PolicyChangeEmailProps) {
@@ -193,13 +202,16 @@ export default function PolicyChangeEmail({
             facts={[[copy.takesEffect, date]]}
             footer={copy.footer(email)}
             language={language}
-            lead={announcement(copy, documents).lead(date)}
-            preview={copy.preview}
-            sections={documents.map(({ changes, document }) => ({
-                intro: copy.documents[document].intro,
-                items: changes,
-                link: { href: documentUrl(document, language), label: copy.link },
-            }))}
+            lead={framing?.lead ?? announcement(copy, documents).lead(date)}
+            preview={framing?.preview ?? copy.preview}
+            sections={[
+                ...(framing?.aside ? [framing.aside] : []),
+                ...documents.map(({ changes, document }) => ({
+                    intro: copy.documents[document].intro,
+                    items: changes,
+                    link: { href: documentUrl(document, language), label: copy.link },
+                })),
+            ]}
         />
     );
 }
@@ -224,4 +236,7 @@ PolicyChangeEmail.PreviewProps = {
 } satisfies PolicyChangeEmailProps;
 
 export const policyChangeEmail = (props: PolicyChangeEmailProps) =>
-    renderEmail(announcement(COPY[props.language], props.documents).subject, <PolicyChangeEmail {...props} />);
+    renderEmail(
+        props.framing?.subject ?? announcement(COPY[props.language], props.documents).subject,
+        <PolicyChangeEmail {...props} />
+    );

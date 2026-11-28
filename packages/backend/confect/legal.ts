@@ -19,7 +19,7 @@ export const CAPTURE_PUSH_EFFECTIVE_AT_MS = NOVEMBER_NOTICE_AT_MS;
 
 export const LATE_NOVEMBER_NOTICE_AT_MS = Date.UTC(2026, 10, 27);
 
-const US_HOSTING_AT_MS = Date.UTC(2026, 10, 28);
+export const US_HOSTING_AT_MS = Date.UTC(2026, 10, 28);
 
 // Nothing is received or sent for a user webhook before the privacy notice that announces them takes effect.
 export const WEBHOOKS_EFFECTIVE_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
@@ -1414,11 +1414,19 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Our servers now run in the United States, hosted by OVHcloud, instead of Hetzner in Helsinki, Finland. They hold your account and synced data.",
                     label: "Where your data is stored",
                 },
+                {
+                    detail: "The policy now names its safeguards: the EU-US Data Privacy Framework where a provider is certified, otherwise the European Commission's Standard Contractual Clauses.",
+                    label: "Data from Europe and the UK",
+                },
             ],
             de: [
                 {
                     detail: "Unsere Server laufen jetzt in den Vereinigten Staaten bei OVHcloud statt bei Hetzner in Helsinki, Finnland. Dort liegen dein Konto und deine synchronisierten Daten.",
                     label: "Wo deine Daten gespeichert sind",
+                },
+                {
+                    detail: "Die Erklärung nennt jetzt die Garantien: das EU-US Data Privacy Framework, wenn ein Anbieter zertifiziert ist, sonst die Standardvertragsklauseln der Europäischen Kommission.",
+                    label: "Daten aus Europa und dem Vereinigten Königreich",
                 },
             ],
             es: [
@@ -1426,17 +1434,29 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Nuestros servidores ahora están en Estados Unidos, alojados por OVHcloud, en lugar de Hetzner en Helsinki, Finlandia. Ahí se guardan tu cuenta y tus datos sincronizados.",
                     label: "Dónde se guardan tus datos",
                 },
+                {
+                    detail: "La política ahora nombra sus garantías: el Marco de Privacidad de Datos UE-EE. UU. si un proveedor está certificado y, si no, las Cláusulas Contractuales Tipo de la Comisión Europea.",
+                    label: "Datos de Europa y el Reino Unido",
+                },
             ],
             fr: [
                 {
                     detail: "Nos serveurs fonctionnent désormais aux États-Unis, hébergés par OVHcloud, au lieu de Hetzner à Helsinki, en Finlande. Ils contiennent votre compte et vos données synchronisées.",
                     label: "Où vos données sont stockées",
                 },
+                {
+                    detail: "La politique nomme désormais ses garanties : le cadre de protection des données UE-États-Unis si un prestataire est certifié, sinon les clauses contractuelles types de la Commission européenne.",
+                    label: "Données d'Europe et du Royaume-Uni",
+                },
             ],
             pt: [
                 {
                     detail: "Nossos servidores agora ficam nos Estados Unidos, hospedados pela OVHcloud, em vez da Hetzner em Helsinque, Finlândia. Eles guardam sua conta e seus dados sincronizados.",
                     label: "Onde seus dados ficam guardados",
+                },
+                {
+                    detail: "A política agora nomeia as salvaguardas: o EU-US Data Privacy Framework quando um provedor é certificado e, caso contrário, as Cláusulas Contratuais Padrão da Comissão Europeia.",
+                    label: "Dados da Europa e do Reino Unido",
                 },
             ],
         },
@@ -1446,4 +1466,5 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
     },
 ];
 
-export const noticeKey = ({ document, effectiveAtMs }: typeof PolicyNotice.Type) => `${document}:${effectiveAtMs}`;
+export const noticeKey = ({ document, effectiveAtMs }: Pick<PolicyNotice, "document" | "effectiveAtMs">) =>
+    `${document}:${effectiveAtMs}`;
