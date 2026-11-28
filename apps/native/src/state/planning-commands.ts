@@ -27,6 +27,7 @@ import type { DebtRate } from "@/domain/debt-rate";
 import type { DebtVerb } from "@/domain/debts";
 import { posthog } from "@/lib/posthog";
 import { appRuntime } from "@/lib/runtime";
+import { trackUsage } from "@/lib/usage-events";
 import { warnAndContinue } from "@/lib/warn-and-continue";
 
 import { createRuntimeCommand } from "./atom-command";
@@ -129,7 +130,9 @@ export const updateSavingsGoalCommand = planningCommand(
 );
 
 export const removeSavingsGoalCommand = planningCommand("remove-goal", (input: { db: Database; id: string }) =>
-    savingsGoalsRepo.remove(input.db, input.id)
+    savingsGoalsRepo
+        .remove(input.db, input.id)
+        .pipe(Effect.tap(() => Effect.sync(() => trackUsage("item_deleted", { kind: "goal" }))))
 );
 
 export const createMainBudgetCommand = planningCommand(
@@ -204,5 +207,14 @@ export const deleteInstallmentCommand = planningCommand("delete-installment", (i
 
 export const deleteInstallmentPlanCommand = planningCommand(
     "delete-installment-plan",
-    (input: { db: Database; planId: string }) => installmentsRepo.deletePlan(input.db, input.planId)
+    (input: { db: Database; planId: string }) =>
+        installmentsRepo.deletePlan(input.db, input.planId).pipe(
+            Effect.tap((deleted) =>
+                Effect.sync(() => {
+                    if (deleted) {
+                        trackUsage("item_deleted", { kind: "purchase" });
+                    }
+                })
+            )
+        )
 );
