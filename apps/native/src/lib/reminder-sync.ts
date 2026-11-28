@@ -86,6 +86,10 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
         { concurrency: "unbounded" }
     );
     if (enabled && permission === "unknown") {
+        if (!weeklyRecap || hideAmounts) {
+            const pending = yield* reminders.pendingIds();
+            yield* reminders.cancel(pending.filter((id) => id.startsWith(WEEKLY_RECAP_REMINDER_PREFIX)));
+        }
         return;
     }
     if (permission === "denied" && weeklyRecap) {

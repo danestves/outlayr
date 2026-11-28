@@ -25,7 +25,6 @@ export function recapWeek(key: string | undefined, now: Date, firstWeekday: numb
         parsed.getFullYear() !== year ||
         parsed.getMonth() !== month ||
         parsed.getDate() !== day;
-    return invalid || parsed.getTime() >= currentStart.getTime()
-        ? previousWeek(now, firstWeekday)
-        : startOfWeek(parsed, firstWeekday);
+    // A key is the exact start it was made with, so a later first-weekday change cannot shift a delivered recap.
+    return invalid || parsed.getTime() >= currentStart.getTime() ? previousWeek(now, firstWeekday) : parsed;
 }

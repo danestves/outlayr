@@ -254,7 +254,8 @@ async function answer(): Promise<string> {
                 valuation: { displayCurrency: "USD", rates: buildRateTable([]) },
                 week: localDate(15),
             });
-            return JSON.stringify({ entries: recap.entries, spent: recap.spent });
+            const { entries, priorEntries, priorSpent, spent } = recap;
+            return JSON.stringify({ entries, priorEntries, priorSpent, spent });
         }
         default: {
             throw new Error(`unknown probe: ${kind}`);

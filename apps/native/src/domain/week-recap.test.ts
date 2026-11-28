@@ -132,22 +132,33 @@ describe("recapWeek", () => {
         expect(recapWeek("2026-02-30", NOW, 1)).toStrictEqual(DAY(2026, 10, 25));
     });
 
-    it("normalizes a weekday mid-week key to its week's start", () => {
-        expect(recapWeek("2026-10-28", NOW, 1)).toStrictEqual(DAY(2026, 10, 25));
+    it("keeps a Monday-start key after the first weekday moves to Sunday", () => {
+        expect(recapWeek("2026-10-26", NOW, 1)).toStrictEqual(DAY(2026, 10, 26));
     });
 });
 
-test("cuts the week at the next local midnight where DST skips 00:00", () => {
-    const inHavana = execFileSync(
-        process.execPath,
-        [
-            "--import",
-            "tsx",
-            join(import.meta.dirname, "dst-probe.ts"),
-            "week-recap",
-            ...[2026, 2, 20, 12, 0, 2026, 2, 14, 23, 30, 2026, 2, 15, 0, 30, 2026, 2, 8, 12, 0].map(String),
-        ],
-        { encoding: "utf-8", env: { ...process.env, TZ: "America/Havana" } }
+const inHavana = (...args: number[]): unknown =>
+    JSON.parse(
+        execFileSync(
+            process.execPath,
+            ["--import", "tsx", join(import.meta.dirname, "dst-probe.ts"), "week-recap", ...args.map(String)],
+            { encoding: "utf-8", env: { ...process.env, TZ: "America/Havana" } }
+        )
     );
-    expect(JSON.parse(inHavana)).toStrictEqual({ entries: 1, spent: 10 });
+
+// Cuba skips 00:00 on 2026-03-08, so that Sunday-start week begins at 01:00. Rows: Mar 14 23:30 and Mar 15 00:30.
+test("cuts weeks at local midnight where DST skips 00:00", () => {
+    const rows = [2026, 2, 14, 23, 30, 2026, 2, 15, 0, 30];
+    expect(inHavana(2026, 2, 20, 12, 0, ...rows, 2026, 2, 8, 12, 0)).toStrictEqual({
+        entries: 1,
+        priorEntries: 0,
+        priorSpent: 0,
+        spent: 10,
+    });
+    expect(inHavana(2026, 2, 27, 12, 0, ...rows, 2026, 2, 15, 12, 0)).toStrictEqual({
+        entries: 1,
+        priorEntries: 1,
+        priorSpent: 10,
+        spent: 10,
+    });
 });

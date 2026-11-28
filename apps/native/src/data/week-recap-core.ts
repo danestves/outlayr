@@ -1,4 +1,4 @@
-import { addDays, startOfWeek } from "@outlayr/money/calendar";
+import { addDays, startOfDay, startOfWeek } from "@outlayr/money/calendar";
 import { and, gte, isNull, lte } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -37,7 +37,7 @@ export const loadWeekRecap = Effect.fn("WeekRecapCore.loadWeekRecap")(function* 
     db: Database,
     { currency, firstWeekday, language, now, week }: WeekRecapReadInput
 ) {
-    const queryStart = addDays(startOfWeek(week, firstWeekday), -7);
+    const queryStart = startOfDay(addDays(startOfWeek(week, firstWeekday), -7));
 
     const [txData, catData, valuation] = yield* Effect.all(
         [

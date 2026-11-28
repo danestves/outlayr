@@ -19,6 +19,7 @@ import { formatAmount } from "@/domain/money";
 import { recapWeek } from "@/domain/recap-week";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { InsightsMovers } from "@/screens/insights/components/insights-movers";
+import { entryHref } from "@/state/entry-params";
 
 const BAR_HEIGHT = 88;
 const EMPTY_BAR = 4;
@@ -84,6 +85,10 @@ export function WeekRecap({ week: weekKey }: { week: string | undefined }) {
     const quiet = recap.entries === 0;
     const priorLabel = t("insights.weekRecap.priorLabel");
     const change = recap.spentChange;
+    // Seeds the latest empty day of this week; a default of today would land outside the week being filled in.
+    const gap = recap.days.lastIndexOf(false);
+    const seedDate = addDays(week, gap === -1 ? recap.days.length - 1 : gap);
+    seedDate.setHours(12, 0, 0, 0);
     const changeLabel =
         change === null ? t("insights.movers.new") : `${change > 0 ? "+" : ""}${Math.round(change * 100)}%`;
 
@@ -170,7 +175,7 @@ export function WeekRecap({ week: weekKey }: { week: string | undefined }) {
                     <Button
                         className="rounded-full"
                         fullWidth
-                        onPress={() => router.push("/transactions/create")}
+                        onPress={() => router.push(entryHref({ date: seedDate }))}
                         size="md"
                         variant="primary"
                     >
