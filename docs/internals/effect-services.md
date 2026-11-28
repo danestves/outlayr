@@ -74,7 +74,7 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 - **Effects run only at edges**: an atom (`appRuntime.atom`), a command (below), a Convex handler, a test. Never `Effect.runPromise` inside a service or inside another effect.
 - **Retryable work does not run while a layer builds.** The registry keeps a failed layer build, so refreshing an atom would not rebuild it. `LocalDatabase` opens the file in `open()`, which the atom calls, so a refresh re-runs every step on a fresh connection.
 - **Fast Refresh.** `_layout.tsx` imports the runtime and registry modules and is not a refresh boundary (it exports `unstable_settings`), so an edit to either, or to a service they import, makes Metro reload the bundle instead of running them a second time. Keep them imported from `_layout.tsx`.
-- The `@effect/language-service` plugin in each tsconfig reports in the editor only; `tsc` is not patched, so `check-types` does not run its diagnostics.
+- The `@effect/language-service` plugin in each tsconfig reports in the editor; local `tsc` is not patched, so only CI's `check-types` runs its diagnostics ([Linting](./linting.md#effect-diagnostics)).
 
 ## Atoms are the React bridge
 

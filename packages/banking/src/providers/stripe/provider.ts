@@ -95,7 +95,7 @@ const makeClient = (key: Redacted.Redacted, webhookSecret: string): BankingClien
                             form: [],
                         }).pipe(Effect.catchCause(() => Effect.void));
                     }
-                    yield* Effect.failCause(cause);
+                    return yield* Effect.failCause(cause);
                 })
             )
         );
