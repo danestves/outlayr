@@ -6,6 +6,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { Icon } from "@/components/icon";
 import { LocalizedLink } from "@/components/localized-link";
 import { StoreBadges } from "@/components/store-badges";
+import { PoweredBy } from "@/components/stripe-wordmark";
 import { LICENSE, SOURCE_URL } from "@/lib/site";
 import { sway } from "@/lib/sway";
 
@@ -119,7 +120,7 @@ function Layer({ children, depth, name }: { children: ReactNode; depth: number; 
 }
 
 export function Dawn() {
-    const { hero: copy } = useIntlayer("horizon");
+    const { bank, hero: copy } = useIntlayer("horizon");
     return (
         <div className="hz-dawn">
             <section aria-labelledby="hero-title" className="hz-hero" id="top">
@@ -128,6 +129,16 @@ export function Dawn() {
                         <Icon name="github-logo" />
                         <span>{copy.source}</span>
                         <span className="hz-source-license">{LICENSE}</span>
+                    </a>
+                    <a className="hz-announce" href="#bank">
+                        <span className="hz-announce-new">{bank.announce.new}</span>
+                        <span aria-hidden="true" className="hz-announce-divider" />
+                        <span className="hz-announce-text">{bank.announce.line}</span>
+                        <span aria-hidden="true" className="hz-announce-divider hz-announce-divider-lockup" />
+                        <PoweredBy className="hz-announce-powered" />
+                        <span aria-hidden="true" className="hz-announce-arrow">
+                            →
+                        </span>
                     </a>
                     <Headline />
                     <p className="hz-lead">{copy.lead}</p>
