@@ -12,6 +12,7 @@ import { getTransactionById, transactionsRepo } from "@/data/transactions-core";
 import { cardAccount, cardStillAsks, fileWaitingPurchases } from "@/data/wallet-state-core";
 import type { Database } from "@/db/client";
 import type { NotificationDebt } from "@/domain/meta-values";
+import { trackUsage } from "@/lib/usage-events";
 
 import type { ChargeAction } from "./charge-actions";
 import { warnAndContinue } from "./warn-and-continue";
@@ -143,7 +144,9 @@ export const settleWalletPushAction = Effect.fn("NotificationTaps.settleWalletPu
         yield* dropNotificationDebt(db, walletWrite);
         if (txId !== null) {
             yield* filedThisSession(walletWrite)
-                ? transactionsRepo.remove(db, txId)
+                ? transactionsRepo
+                      .remove(db, txId)
+                      .pipe(Effect.tap(() => Effect.sync(() => trackUsage("item_deleted", { kind: "entry" }))))
                 : Effect.logWarning("[outlayr] a deleted charge landed before its dismissal");
         }
     }

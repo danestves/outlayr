@@ -472,18 +472,18 @@ export const installmentsRepo = {
         planId: string,
         now: Date = new Date()
     ) {
-        yield* transaction(
+        return yield* transaction(
             db,
             Effect.gen(function* write() {
                 const entry = (yield* read("delete-plan", () => readPlans(db, now))).find(
                     ({ plan }) => plan.id === planId
                 );
                 if (!entry) {
-                    return;
+                    return false;
                 }
                 if (entry.standing.paid === 0) {
                     yield* tombstone(db, "plan", planId, now);
-                    return;
+                    return true;
                 }
                 yield* Effect.all(
                     entry.standing.rows.map(({ covered, row, status }) =>
@@ -511,6 +511,7 @@ export const installmentsRepo = {
                     ),
                     { concurrency: "unbounded", discard: true }
                 );
+                return false;
             }),
             (cause) => new InstallmentsError({ cause, operation: "delete-plan" })
         );

@@ -9,6 +9,8 @@ import type { DeferredDeleteController } from "@/domain/deferred-delete";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { translateNow } from "@/i18n/runtime";
 import { dismissNotice, notifyFailure, notifyUndoable } from "@/lib/notify";
+import type { DeletedItemKind } from "@/lib/usage-events";
+import { trackUsage } from "@/lib/usage-events";
 
 import { accountsRepo } from "./accounts-core";
 import { budgetsRepo } from "./budgets-core";
@@ -39,7 +41,7 @@ const commitWith = <A>(kind: DeferredDeleteKind, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: (cause) => new DeferredDeleteError({ cause, kind }), try: run });
 
 interface KindSpec {
-    commit: (db: Database, id: string) => Effect.Effect<void, unknown>;
+    commit: (db: Database, id: string) => Effect.Effect<DeletedItemKind, unknown>;
     failedBody: TranslatableKey;
     failedTitle: TranslatableKey;
     undoTitle: TranslatableKey;
@@ -50,12 +52,13 @@ interface KindSpec {
 const commitRow = Effect.fn("DeferredDelete.commitRow")(function* commitRow(db: Database, id: string) {
     if (yield* transfersRepo.getById(db, id)) {
         yield* transfersRepo.softDelete(db, id);
-        return;
+        return "transfer" as const;
     }
     const [move] = yield* commitWith("row", () =>
         db.select({ id: outsideMoves.id }).from(outsideMoves).where(eq(outsideMoves.id, id))
     );
     yield* move ? deleteOutsideMove(db, id) : transactionsRepo.remove(db, id);
+    return "entry" as const;
 });
 
 const commitBudget = Effect.fn("DeferredDelete.commitBudget")(function* commitBudget(db: Database, id: string) {
@@ -63,11 +66,12 @@ const commitBudget = Effect.fn("DeferredDelete.commitBudget")(function* commitBu
         db.select({ id: mainBudget.id }).from(mainBudget).where(eq(mainBudget.id, id))
     );
     yield* overall ? budgetsRepo.deleteMainBudget(db, id) : budgetsRepo.deleteBudget(db, id);
+    return "budget" as const;
 });
 
 const SPECS = {
     account: {
-        commit: (db, id) => accountsRepo.softDelete(db, id),
+        commit: (db, id) => accountsRepo.softDelete(db, id).pipe(Effect.as("account")),
         failedBody: "accounts.error.generic",
         failedTitle: "accounts.error.deleteTitle",
         undoTitle: "accounts.undo.deleted",
@@ -79,25 +83,25 @@ const SPECS = {
         undoTitle: "budgets.undo.deleted",
     },
     category: {
-        commit: (db, id) => categoriesRepo.remove(db, id),
+        commit: (db, id) => categoriesRepo.remove(db, id).pipe(Effect.as("category")),
         failedBody: "categories.error.generic",
         failedTitle: "categories.error.deleteTitle",
         undoTitle: "categories.undo.deleted",
     },
     goal: {
-        commit: (db, id) => savingsGoalsRepo.remove(db, id),
+        commit: (db, id) => savingsGoalsRepo.remove(db, id).pipe(Effect.as("goal")),
         failedBody: "goals.failedBody",
         failedTitle: "goals.failedTitle",
         undoTitle: "goals.undo.deleted",
     },
     purchase: {
-        commit: (db, id) => installmentsRepo.deletePurchase(db, id),
+        commit: (db, id) => installmentsRepo.deletePurchase(db, id).pipe(Effect.as("purchase")),
         failedBody: "installments.failedBody",
         failedTitle: "installments.failedTitle",
         undoTitle: "installments.undo.deleted",
     },
     recurring: {
-        commit: (db, id) => transactionsRepo.stopRecurring(db, id),
+        commit: (db, id) => transactionsRepo.stopRecurring(db, id).pipe(Effect.as("recurring")),
         failedBody: "transaction.stopRecurring.failedBody",
         failedTitle: "transaction.stopRecurring.failedTitle",
         undoTitle: "transaction.stopRecurring.stopped",
@@ -115,7 +119,8 @@ export const commitDeferredDelete = Effect.fn("DeferredDelete.commit")(function*
     db: Database,
     id: string
 ) {
-    yield* SPECS[kind].commit(db, id);
+    const deleted = yield* SPECS[kind].commit(db, id);
+    yield* Effect.sync(() => trackUsage("item_deleted", { kind: deleted }));
 });
 
 export interface DeferredDeleteRegistry {

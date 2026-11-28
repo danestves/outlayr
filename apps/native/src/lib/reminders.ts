@@ -13,7 +13,7 @@ import { Linking } from "react-native";
 import type { ReminderPermission } from "@/domain/reminder";
 import { expectHandoff } from "@/lib/app-handoff";
 
-import { attemptReminders, toPermission } from "./reminders-core";
+import { attemptReminders, toPermission, trackPermissionRequest } from "./reminders-core";
 import type { DatedReminder, RemindersError } from "./reminders-core";
 
 export type { DatedReminder } from "./reminders-core";
@@ -31,7 +31,7 @@ const permission = Effect.fn("Reminders.permission")(function* permission() {
 });
 
 const request = Effect.fn("Reminders.request")(function* request() {
-    return yield* attemptReminders("request", () =>
+    const outcome = yield* attemptReminders("request", () =>
         requestPermissionsAsync({
             ios: { allowAlert: true, allowBadge: true, allowSound: true },
         })
@@ -44,6 +44,8 @@ const request = Effect.fn("Reminders.request")(function* request() {
                 ),
         })
     );
+    yield* trackPermissionRequest(outcome);
+    return outcome;
 });
 
 const pendingIds = Effect.fn("Reminders.pendingIds")(function* pendingIds() {

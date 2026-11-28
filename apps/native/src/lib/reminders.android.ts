@@ -20,7 +20,7 @@ import type {
     Reminders as IosReminders,
 } from "@/lib/reminders";
 
-import { attemptReminders, toPermission } from "./reminders-core";
+import { attemptReminders, toPermission, trackPermissionRequest } from "./reminders-core";
 import type { DatedReminder } from "./reminders-core";
 
 export type { DatedReminder } from "./reminders-core";
@@ -55,7 +55,7 @@ const permission = Effect.fn("Reminders.permission")(function* permission() {
 });
 
 const request = Effect.fn("Reminders.request")(function* request() {
-    return yield* ensureReminderChannel("request").pipe(
+    const outcome = yield* ensureReminderChannel("request").pipe(
         // The system prompt is an activity of its own.
         Effect.andThen(duringHandoff(attemptReminders("request", requestPermissionsAsync))),
         Effect.map(toPermission),
@@ -66,6 +66,8 @@ const request = Effect.fn("Reminders.request")(function* request() {
                 ),
         })
     );
+    yield* trackPermissionRequest(outcome);
+    return outcome;
 });
 
 const pendingIds = Effect.fn("Reminders.pendingIds")(function* pendingIds() {
