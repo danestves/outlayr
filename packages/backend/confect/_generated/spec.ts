@@ -35,6 +35,7 @@ import profileSharing from "../profileSharing.spec";
 import receiptScan from "../receiptScan.spec";
 import referrals from "../referrals.spec";
 import revenuecat from "../revenuecat.spec";
+import reviewPush from "../reviewPush.spec";
 import sharedReports from "../sharedReports.spec";
 import sync from "../sync.spec";
 import voiceEntry from "../voiceEntry.spec";
@@ -78,6 +79,7 @@ const spec: Spec.Spec<{
   readonly receiptScan: GroupSpec.NamedAt<typeof receiptScan, "receiptScan">;
   readonly referrals: GroupSpec.NamedAt<typeof referrals, "referrals">;
   readonly revenuecat: GroupSpec.NamedAt<typeof revenuecat, "revenuecat">;
+  readonly reviewPush: GroupSpec.NamedAt<typeof reviewPush, "reviewPush">;
   readonly sharedReports: GroupSpec.NamedAt<typeof sharedReports, "sharedReports">;
   readonly sync: GroupSpec.NamedAt<typeof sync, "sync">;
   readonly voiceEntry: GroupSpec.NamedAt<typeof voiceEntry, "voiceEntry">;
@@ -120,6 +122,7 @@ const spec: Spec.Spec<{
   ["receiptScan"]: receiptScan,
   ["referrals"]: referrals,
   ["revenuecat"]: revenuecat,
+  ["reviewPush"]: reviewPush,
   ["sharedReports"]: sharedReports,
   ["sync"]: sync,
   ["voiceEntry"]: voiceEntry,

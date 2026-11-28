@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { formatDayHeader, formatDayTitle } from "@/domain/dates";
@@ -18,21 +18,11 @@ interface DaySectionHeaderProps {
     label?: string;
     /** The Log's sentence-case day name over a hairline, in place of the mono label. */
     plain?: boolean;
-    onConfirmNew?: () => void;
-    newCount?: number;
     onShare?: () => void;
     section: DaySection<unknown>;
 }
 
-export function DaySectionHeader({
-    section,
-    first = false,
-    label,
-    newCount = 0,
-    onConfirmNew,
-    onShare,
-    plain = false,
-}: DaySectionHeaderProps) {
+export function DaySectionHeader({ section, first = false, label, onShare, plain = false }: DaySectionHeaderProps) {
     const { showCents } = useDisplaySettings().state;
     // Consuming the language re-renders this on a change; `formatDayHeader`'s default is invisible to React.
     const { language } = useLanguage();
@@ -51,16 +41,6 @@ export function DaySectionHeader({
                 )}
                 <DayTotal showCents={showCents} totals={section.totals} />
             </View>
-            {newCount > 0 && onConfirmNew ? (
-                <View className="flex-row items-baseline justify-between gap-2">
-                    <MonoLabel className="text-tint">{t("log.autolog.new", { count: newCount })}</MonoLabel>
-                    <Pressable accessibilityRole="button" className="active:opacity-60" onPress={onConfirmNew}>
-                        <Text className="text-tint text-subtitle font-sans-semibold">
-                            {t("log.autolog.confirmAll")}
-                        </Text>
-                    </Pressable>
-                </View>
-            ) : null}
             {plain ? (
                 <View className="bg-border h-px" />
             ) : (

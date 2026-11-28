@@ -95,6 +95,7 @@ export const ROOT_STACK: readonly { group: RootStackGroup; screens: readonly Roo
         screens: [
             { chrome: "headless", name: "(tabs)" },
             { chrome: "search", name: "search", titleKey: "nav.search" },
+            { chrome: "modal", name: "review", titleKey: "log.review.sheetTitle" },
             { chrome: "paywall", name: "paywall" },
             // Outside `(tabs)` so pushing one drops the tab bar, and on the root stack so they keep a back button.
             { chrome: "titled", name: "accounts/index", titleKey: "accounts.title" },

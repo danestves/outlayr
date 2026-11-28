@@ -25,6 +25,7 @@ import type { DeviceResetMarkerError } from "@/lib/device-data-reset";
 import type { ProviderRevocationError } from "@/lib/provider-revocation";
 import { providerBindingFor } from "@/lib/provider-revocation";
 import { signInWithProvider } from "@/lib/provider-sign-in";
+import { forgetReviewPush } from "@/lib/review-push";
 import { appRuntime } from "@/lib/runtime";
 import type { SecureStorageError } from "@/lib/secure-storage";
 import { SecureStorage } from "@/lib/secure-storage";
@@ -62,6 +63,7 @@ export const signOutCommand = createRuntimeCommand(appRuntime, {
                     signOut: () =>
                         signOutToPersonal(
                             forgetCaptureLookup().pipe(
+                                Effect.andThen(forgetReviewPush()),
                                 Effect.andThen(Effect.tryPromise(() => input.client.signOut())),
                                 Effect.asVoid
                             )

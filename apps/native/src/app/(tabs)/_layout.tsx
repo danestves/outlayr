@@ -2,6 +2,7 @@ import { NativeTabs } from "expo-router/native-tabs";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useOverBudgetCount } from "@/data/budgets";
+import { useReviewCount } from "@/data/review-queue";
 import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
 import { useResumedImport } from "@/screens/import/use-resumed-import";
@@ -20,6 +21,7 @@ export default function TabLayout() {
     const db = useDatabase();
     const nowMs = useNow();
     const overBudget = useOverBudgetCount(db, nowMs);
+    const toReview = useReviewCount(db);
 
     return (
         <TourProvider>
@@ -27,6 +29,7 @@ export default function TabLayout() {
                 <NativeTabs.Trigger name="(transactions)">
                     <NativeTabs.Trigger.Icon xcasset={{ default: "nano.log", selected: "nano.log-selected" }} />
                     <NativeTabs.Trigger.Label>{t("nav.tab.log")}</NativeTabs.Trigger.Label>
+                    {toReview > 0 ? <NativeTabs.Trigger.Badge>{String(toReview)}</NativeTabs.Trigger.Badge> : null}
                 </NativeTabs.Trigger>
                 <NativeTabs.Trigger name="insights">
                     <NativeTabs.Trigger.Icon

@@ -167,6 +167,20 @@ export function logTailRowsQuery(db: SpendDb, floorMs: number | null, splitMs: n
         .orderBy(desc(transactions.day), desc(transactions.date), asc(transactions.feeForId));
 }
 
+const waitingReview = () => and(eq(transactions.unreviewed, true), isNull(transactions.deletedAt));
+
+export function reviewQueueQuery(db: SpendDb) {
+    return db
+        .select({ ...LOG_COLUMNS, accountId: transactions.accountId })
+        .from(transactions)
+        .where(waitingReview())
+        .orderBy(desc(transactions.date));
+}
+
+export function reviewCountQuery(db: SpendDb) {
+    return db.select({ waiting: count() }).from(transactions).where(waitingReview());
+}
+
 export type Transaction = typeof transactions.$inferSelect;
 
 export interface TransactionInput extends EntryInput {

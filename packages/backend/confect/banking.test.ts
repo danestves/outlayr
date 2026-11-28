@@ -402,6 +402,29 @@ describe("bank filing", () => {
         await expect(t.run((ctx) => ctx.db.query("bankEntries").collect())).resolves.toHaveLength(1);
     });
 
+    it("flags a fresh entry for review, leaves history alone, and keeps the flag through a bank patch", async () => {
+        const t = setup();
+        await seedLedger(t, "user-1");
+        const id = await insertBank(t, "user-1");
+        const lease = await claimLease(t, id);
+
+        await file(t, id, lease, [
+            bank({ amountMinor: -1234, id: "tx_recent", transactedAt: at("2027-01-03T15:00:00Z") }),
+            bank({ amountMinor: -2000, id: "tx_old", transactedAt: at("2026-12-20T15:00:00Z") }),
+        ]);
+        const recentId = await localIdOf("user-1", "bank:stripe:tx_recent");
+        const oldId = await localIdOf("user-1", "bank:stripe:tx_old");
+        await expect(storedEntry(t, "user-1", recentId)).resolves.toMatchObject({ unreviewed: true });
+        await expect(storedEntry(t, "user-1", oldId)).resolves.toMatchObject({ unreviewed: false });
+
+        await file(t, id, lease, [
+            bank({ amountMinor: -1300, id: "tx_recent", transactedAt: at("2027-01-04T15:00:00Z") }),
+        ]);
+
+        await expect(storedEntry(t, "user-1", recentId)).resolves.toMatchObject({ amount: 13, unreviewed: true });
+        await expect(storedEntry(t, "user-1", oldId)).resolves.toMatchObject({ unreviewed: false });
+    });
+
     it("moves a posted update over the fields the user has not edited and stamps the row past itself", async () => {
         const t = setup();
         await seedLedger(t, "user-1", {

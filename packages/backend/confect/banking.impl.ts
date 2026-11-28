@@ -40,6 +40,8 @@ import { authComponent } from "./lib/betterAuth";
 import { dieAsConvexError } from "./lib/convexError";
 import { outboundHttp } from "./lib/http";
 import { scheduleCellRefresh } from "./lib/ledgerCells";
+import { stateOf } from "./lib/mailState";
+import { needsReview, needsReviewAlert } from "./lib/reviewPush";
 import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
 import { emitEntriesFiled } from "./lib/webhookEvents";
 import type { FiledEntry } from "./lib/webhookEvents";
@@ -53,6 +55,7 @@ const WRITE_CHUNK = 100;
 const LAPSED_SCAN = 25;
 // Matches the action time limit, so a crashed pull blocks its account for one run at most.
 const PULL_LEASE_MS = 10 * 60 * 1000;
+const REVIEW_TARGET_PAGE = 20;
 const LINK_SPAN_MS = 4 * DAY_MS;
 const EXACT_SPAN_MS = 3 * DAY_MS;
 const LINK_AMOUNT_EPSILON = 0.005;
@@ -739,6 +742,7 @@ const categoryMemory = (
 
 interface FilingCount {
     entries: FiledEntry[];
+    flagged: number;
     instants: number[];
     // Rows the server wrote, not just new ones: a patch or a tombstone needs a fresh seq to reach the other devices.
     written: number;
@@ -1102,6 +1106,7 @@ const fileNewEntry = Effect.fn("Banking.fileNewEntry")(function* fileNewEntry(
             now: DateTime.toDate(DateTime.makeUnsafe(filing.now)),
         }
     );
+    const unreviewed = needsReview(entry.date, filing.now);
     yield* (yield* DatabaseWriter).table("transactions").insert({
         accountId: written.accountId,
         amount: written.amount,
@@ -1137,11 +1142,14 @@ const fileNewEntry = Effect.fn("Banking.fileNewEntry")(function* fileNewEntry(
         recurringType: written.recurringType,
         seq: filing.seq + filing.filed.written,
         transferId: null,
-        unreviewed: false,
+        unreviewed,
         updatedAt: filing.now,
         userId: filing.userId,
     });
     filing.filed.written += 1;
+    if (unreviewed) {
+        filing.filed.flagged += 1;
+    }
     filing.filed.instants.push(entry.date);
     filing.filed.entries.push({
         accountId: written.accountId,
@@ -1184,6 +1192,33 @@ const rewriteEntry = Effect.fn("Banking.rewriteEntry")(function* rewriteEntry(
         amount: amountOwned ? record.written.amount : amount,
         date: dateOwned ? record.written.date : date,
         note: noteOwned ? record.written.note : rowNote,
+    });
+});
+
+// The 20h stamp is the throttle and the race guard: a concurrent chunk sees it and schedules nothing.
+const alertReviewQueue = Effect.fn("Banking.alertReviewQueue")(function* alertReviewQueue(
+    userId: string,
+    count: number,
+    now: number
+) {
+    const reader = yield* DatabaseReader;
+    const targets = yield* reader
+        .table("reviewPushTargets")
+        .index("by_user_and_device", (q) => q.eq("userId", userId))
+        .take(REVIEW_TARGET_PAGE);
+    const due = targets.filter((target) => needsReviewAlert(target.alertedAt, now));
+    if (due.length === 0) {
+        return;
+    }
+    const writer = yield* DatabaseWriter;
+    for (const target of due) {
+        yield* writer.table("reviewPushTargets").patch(target._id, { alertedAt: now });
+    }
+    const language = (yield* stateOf(userId))?.language ?? "en";
+    yield* (yield* Scheduler).runAfter(Duration.zero, refs.internal.reviewPush.deliver, {
+        count,
+        ids: due.map((target) => target._id),
+        language,
     });
 });
 
@@ -1239,7 +1274,7 @@ const fileTransactions = FunctionImpl.make(
         const filing: Filing = {
             bankAccountId: id,
             categories,
-            filed: { entries: [], instants: [], written: 0 },
+            filed: { entries: [], flagged: 0, instants: [], written: 0 },
             filesInto: into?.localId ?? null,
             ledgerCurrency: (yield* setting(row.userId, "currency")) ?? "USD",
             linkedIds: new Map<string, boolean>(),
@@ -1311,6 +1346,9 @@ const fileTransactions = FunctionImpl.make(
             yield* counter.advanceTo(counter.nextSeq + filing.filed.written);
             yield* scheduleCellRefresh(row.userId, counter.cells, filing.filed.instants);
             yield* emitEntriesFiled(row.userId, filing.filed.entries, filing.now);
+        }
+        if (filing.filed.flagged > 0) {
+            yield* alertReviewQueue(row.userId, filing.filed.flagged, filing.now);
         }
         return true;
     }, Effect.orDie)

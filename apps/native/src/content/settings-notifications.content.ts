@@ -134,6 +134,26 @@ const settingsNotifications = {
             pt: "Abrir Ajustes",
             "pt-PT": "Abrir Definições",
         }),
+        "settings.notifications.reviewFooter": t({
+            en: "A notification when a bank sync adds entries to review. It shows how many, not what they are.",
+            de: "Eine Mitteilung, wenn eine Banksynchronisierung Einträge zum Prüfen hinzufügt. Sie zeigt, wie viele, nicht welche.",
+            es: "Una notificación cuando la sincronización del banco agrega movimientos por revisar. Dice cuántos, no cuáles.",
+            "es-ES":
+                "Una notificación cuando la sincronización del banco agrega movimientos por revisar. Dice cuántos, no cuáles.",
+            fr: "Une notification quand une synchronisation bancaire ajoute des opérations à vérifier. Elle indique combien, pas lesquelles.",
+            pt: "Uma notificação quando a sincronização do banco adiciona lançamentos para revisar. Mostra quantos, não quais.",
+            "pt-PT":
+                "Uma notificação quando a sincronização do banco adiciona lançamentos para revisar. Mostra quantos, não quais.",
+        }),
+        "settings.notifications.reviewToggle": t({
+            en: "Bank entries to review",
+            de: "Bankbuchungen zum Prüfen",
+            es: "Movimientos del banco por revisar",
+            "es-ES": "Movimientos del banco por revisar",
+            fr: "Opérations bancaires à vérifier",
+            pt: "Lançamentos do banco para revisar",
+            "pt-PT": "Lançamentos do banco para revisar",
+        }),
         "settings.notifications.section": t({
             en: "Daily reminder",
             de: "Tägliche Erinnerung",

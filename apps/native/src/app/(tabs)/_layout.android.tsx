@@ -2,6 +2,7 @@ import { NativeTabs } from "expo-router/native-tabs";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useOverBudgetCount } from "@/data/budgets";
+import { useReviewCount } from "@/data/review-queue";
 import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
 import { NAV_LABEL_FONT, NAV_LABEL_SIZE } from "@/navigation/material-chrome";
@@ -19,6 +20,7 @@ export default function TabLayout() {
     const db = useDatabase();
     const nowMs = useNow();
     const overBudget = useOverBudgetCount(db, nowMs);
+    const toReview = useReviewCount(db);
 
     // The family carries the weight: Android can't pick one out of a named face.
     const labelStyle = {
@@ -43,6 +45,7 @@ export default function TabLayout() {
                 <NativeTabs.Trigger name="(transactions)">
                     <NativeTabs.Trigger.Icon drawable={{ default: "nano_log", selected: "nano_log_selected" }} />
                     <NativeTabs.Trigger.Label>{t("nav.tab.log")}</NativeTabs.Trigger.Label>
+                    {toReview > 0 ? <NativeTabs.Trigger.Badge>{String(toReview)}</NativeTabs.Trigger.Badge> : null}
                 </NativeTabs.Trigger>
                 <NativeTabs.Trigger name="insights">
                     <NativeTabs.Trigger.Icon

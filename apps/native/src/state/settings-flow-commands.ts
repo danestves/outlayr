@@ -143,6 +143,29 @@ export const setRemindersCommand = createRuntimeCommand(appRuntime, {
     label: "settings:set-reminders",
 });
 
+export const setReviewAlertsCommand = createRuntimeCommand(appRuntime, {
+    execute: Effect.fn("Settings.setReviewAlerts")(function* setReviewAlerts(input: {
+        db: Database;
+        next: boolean;
+        onDenied: () => void;
+    }) {
+        if (input.next) {
+            const reminders = yield* Reminders;
+            const existing = yield* reminders.permission();
+            if (enableReminderStep(existing) === "open-settings") {
+                input.onDenied();
+                return;
+            }
+            const granted = existing === "granted" ? existing : yield* reminders.request();
+            if (granted !== "granted") {
+                return;
+            }
+        }
+        yield* Meta.set(input.db, "reviewAlerts", input.next);
+    }),
+    label: "settings:set-review-alerts",
+});
+
 const revenueCatFlow = <W, A, E>(
     label: string,
     execute: (revenueCat: RevenueCat["Service"], input: W) => Effect.Effect<A, E>

@@ -1,7 +1,7 @@
 import type { RateTable } from "@outlayr/money/valuation";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { Pressable, View } from "react-native";
-import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import ReanimatedSwipeable, { SwipeDirection } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated from "react-native-reanimated";
 
@@ -19,6 +19,8 @@ interface SwipeableTransactionRowProps {
     currency: string;
     dated?: boolean;
     menuItems: readonly ActionMenuItem[];
+    /** Set where a swipe right should confirm an unreviewed row. */
+    onConfirm?: (id: string) => void;
     onDelete: (id: string) => void;
     onPress: (id: string) => void;
     rates?: RateTable;
@@ -33,6 +35,7 @@ export function SwipeableTransactionRow({
     rates,
     onPress,
     menuItems,
+    onConfirm,
     onDelete,
 }: SwipeableTransactionRowProps) {
     const swipeRef = useRef<SwipeableMethods>(null);
@@ -62,6 +65,13 @@ export function SwipeableTransactionRow({
         </Pressable>
     );
 
+    const confirm = transaction.unreviewed ? onConfirm : undefined;
+    const renderLeftActions = () => (
+        <View className="bg-income my-1 mr-3 items-center justify-center rounded-xl px-6">
+            <Text className="font-sans-semibold text-subtitle text-background">{t("log.row.confirm")}</Text>
+        </View>
+    );
+
     return (
         <View>
             <ReanimatedSwipeable
@@ -70,11 +80,19 @@ export function SwipeableTransactionRow({
                 onSwipeableClose={() => {
                     setSwipedId(null);
                 }}
+                onSwipeableOpen={(direction) => {
+                    if (confirm && direction === SwipeDirection.RIGHT) {
+                        swipeRef.current?.close();
+                        confirm(id);
+                    }
+                }}
                 onSwipeableOpenStartDrag={() => {
                     setSwipedId(id);
                 }}
                 overshootRight={false}
                 ref={swipeRef}
+                overshootLeft={false}
+                renderLeftActions={confirm ? renderLeftActions : undefined}
                 renderRightActions={renderRightActions}
                 rightThreshold={40}
             >
