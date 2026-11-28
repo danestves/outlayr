@@ -1,9 +1,0 @@
-# Sequential, not parallel. Both tasks start with `intlayer build`, and two
-# concurrent runs write the same generated dictionaries — that race failed the
-# native suite at push time even when it passed standalone. Run in order and
-# Vite Task's content-addressed cache makes the second `intlayer build` a hit on
-# the first rather than a competing writer.
-#
-# The dispatcher runs this under `sh -e`, so the first failure stops the push.
-vp run -r --cache check-types
-vp run --filter '@outlayr/*' --cache test --changed=origin/main --maxWorkers=25%
