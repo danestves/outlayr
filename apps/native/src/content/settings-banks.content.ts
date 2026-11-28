@@ -315,12 +315,12 @@ const settingsBanks = {
             "pt-PT": "O início de sessão no banco fechou antes de terminar. Nada foi guardado.",
         }),
         "settings.banks.failure.failed": t({
-            en: "The bank sign-in couldn't finish. Nothing was saved.",
-            de: "Die Bank-Anmeldung konnte nicht abgeschlossen werden. Nichts wurde gespeichert.",
-            es: "El inicio de sesión del banco no pudo terminar. No se guardó nada.",
-            fr: "La connexion à la banque n'a pas pu aboutir. Rien n'a été enregistré.",
-            pt: "O login no banco não pôde ser concluído. Nada foi salvo.",
-            "pt-PT": "O início de sessão no banco não pôde ser concluído. Nada foi guardado.",
+            en: "Couldn't finish linking the bank. Nothing was saved.",
+            de: "Die Verknüpfung mit der Bank konnte nicht abgeschlossen werden. Nichts wurde gespeichert.",
+            es: "No se pudo terminar de vincular el banco. No se guardó nada.",
+            fr: "Impossible de lier la banque. Rien n'a été enregistré.",
+            pt: "Não foi possível concluir o vínculo do banco. Nada foi salvo.",
+            "pt-PT": "Não foi possível concluir a ligação do banco. Nada foi guardado.",
         }),
         "settings.banks.failure.retired": t({
             en: "This bank can't be linked anymore. Search for it again or add it manually.",
@@ -434,6 +434,7 @@ const settingsBanks = {
             es: "No se pudo vincular el banco",
             fr: "Impossible de lier la banque",
             pt: "Não foi possível vincular o banco",
+            "pt-PT": "Não foi possível ligar o banco",
         }),
         "log.banks.relinkTitle": t({
             en: "{bank} needs you to sign in",
