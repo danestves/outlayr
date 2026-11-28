@@ -177,7 +177,7 @@ interface SharingInput {
 
 /** A link's copy is built here, in the browser, from the ledger the owner is looking at. */
 function useSharing({ books, ledger, words }: SharingInput) {
-    const all = useSharedLinks();
+    const { known, links: all } = useSharedLinks();
     const { notify } = useLedgerCommitter();
     const [forgotten, setForgotten] = useState<ReadonlySet<string>>(new Set());
     const links = all.filter((link) => !forgotten.has(link.reportId));
@@ -209,6 +209,7 @@ function useSharing({ books, ledger, words }: SharingInput) {
                 .catch(refused)
                 .finally(remember);
         },
+        known,
         linkOf,
         links,
         publish,
@@ -242,7 +243,8 @@ function ShareModal({ hideable, now, onClose, sharing, target, words }: ShareMod
             onClose={onClose}
             onPublish={(options) => (target ? sharing.publish(target, options) : Promise.resolve())}
             onRemove={() => target && sharing.forget([target.id])}
-            open={target !== undefined}
+            // Until the links arrive an existing link reads as off, and publishing would replace it.
+            open={target !== undefined && sharing.known}
             words={words}
         />
     );
@@ -535,9 +537,8 @@ export function ReportsScreen() {
                 onDelete={() => {
                     if (modalReport) {
                         store.remove(modalReport.id);
-                        if (sharing.linkOf(modalReport.id)) {
-                            sharing.forget([modalReport.id]);
-                        }
+                        // The link list may still be loading, and removing a link that does not exist is a no-op.
+                        sharing.forget([modalReport.id]);
                         if (modalReport.id === search.report) {
                             patch({ report: undefined });
                         }

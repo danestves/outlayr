@@ -20,9 +20,9 @@ const NONE: readonly SharedLink[] = [];
 const WEEK_MS = 7 * 86_400_000;
 
 /** The links that are on for this account, kept live so another tab's change shows here. */
-export function useSharedLinks(): readonly SharedLink[] {
+export function useSharedLinks() {
     const { data } = useQuery(sharedLinksQuery);
-    return data ?? NONE;
+    return { known: data !== undefined, links: data ?? NONE };
 }
 
 /** The server keeps only the moment a link ends, so the choice shown is the nearest one still ahead. */
