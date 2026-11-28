@@ -16,6 +16,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Stream from "effect/Stream";
 
 import type { AccountsDoc, BankEntriesDoc, TransactionsDoc } from "./_generated/docs";
 import type { Id } from "./_generated/id";
@@ -1203,18 +1204,25 @@ const alertReviewQueue = Effect.fn("Banking.alertReviewQueue")(function* alertRe
     now: number
 ) {
     const reader = yield* DatabaseReader;
-    const targets = yield* reader
-        .table("reviewPushTargets")
-        .index("by_user_and_device", (q) => q.eq("userId", userId))
-        .take(REVIEW_TARGET_PAGE);
+    // A Convex query reads once, so each pass opens its own.
+    const targets = () =>
+        reader
+            .table("reviewPushTargets")
+            .index("by_user_and_device", (q) => q.eq("userId", userId))
+            .stream();
     const writer = yield* DatabaseWriter;
-    // A switched-off row only holds the throttle, so once its day is up it goes and stops filling the page.
-    for (const target of targets) {
-        if (target.token === undefined && needsReviewAlert(target.alertedAt, now)) {
-            yield* writer.table("reviewPushTargets").delete(target._id);
-        }
-    }
-    const due = targets.filter((target) => target.token !== undefined && needsReviewAlert(target.alertedAt, now));
+    // A switched-off row only holds the throttle, so once its day is up it goes.
+    yield* targets().pipe(
+        Stream.filter((target) => target.token === undefined && needsReviewAlert(target.alertedAt, now)),
+        Stream.take(REVIEW_TARGET_PAGE),
+        Stream.runForEach((target) => writer.table("reviewPushTargets").delete(target._id))
+    );
+    // Filtered while reading so switched-off rows still inside their day can't crowd a live phone off the page.
+    const due = yield* targets().pipe(
+        Stream.filter((target) => target.token !== undefined && needsReviewAlert(target.alertedAt, now)),
+        Stream.take(REVIEW_TARGET_PAGE),
+        Stream.runCollect
+    );
     if (due.length === 0) {
         return;
     }

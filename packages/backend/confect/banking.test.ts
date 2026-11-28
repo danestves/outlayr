@@ -961,7 +961,7 @@ describe("bank transaction linking", () => {
         });
     });
 
-    it("alerts the phones still switched on and clears switched-off rows whose day is up", async () => {
+    it("alerts a live phone on the first filing however many switched-off rows sit before it", async () => {
         const t = setup();
         const owner = await seedProUser(t);
         await seedLedger(t, owner.userId);
@@ -971,6 +971,12 @@ describe("bank transaction linking", () => {
                 await ctx.db.insert("reviewPushTargets", {
                     alertedAt: NOW - 2 * day,
                     deviceId: `old-${index}`,
+                    environment: "production",
+                    userId: owner.userId,
+                });
+                await ctx.db.insert("reviewPushTargets", {
+                    alertedAt: NOW - 1000,
+                    deviceId: `fresh-${index}`,
                     environment: "production",
                     userId: owner.userId,
                 });
@@ -986,13 +992,11 @@ describe("bank transaction linking", () => {
         const lease = await claimLease(t, id);
 
         await file(t, id, lease, [bank({ id: "tx_a" })]);
-        await expect(t.run((ctx) => ctx.db.query("reviewPushTargets").collect())).resolves.toMatchObject([
-            { deviceId: "phone" },
-        ]);
-        await file(t, id, lease, [bank({ id: "tx_b" })]);
 
-        const [phone] = await t.run((ctx) => ctx.db.query("reviewPushTargets").collect());
-        expect(phone?.alertedAt).toBeGreaterThanOrEqual(NOW);
+        const rows = await t.run((ctx) => ctx.db.query("reviewPushTargets").collect());
+        expect(rows.filter((row) => row.deviceId.startsWith("old-"))).toHaveLength(0);
+        expect(rows.filter((row) => row.deviceId.startsWith("fresh-"))).toHaveLength(20);
+        expect(rows.find((row) => row.deviceId === "phone")?.alertedAt).toBeGreaterThanOrEqual(NOW);
     });
 
     it("keeps the bank's account link when a phone confirms the auto-logged row it never refreshed", async () => {
