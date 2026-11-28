@@ -23,7 +23,7 @@ import {
     seedProfile,
     sessionRows,
     sessionsQuery,
-    sharedLinksQuery,
+    warmSettingsState,
     webhooksQuery,
 } from "./account-state";
 import type { Profile } from "./account-state";
@@ -389,6 +389,14 @@ export const serverAccountState = createIsomorphicFn()
                   }),
               ]
             : [];
+        const pushConfig = convex
+            ? [
+                  client.prefetchQuery({
+                      ...pushConfigQuery,
+                      queryFn: () => convex.query(api.webPush.config, {}),
+                  }),
+              ]
+            : [];
         await timed("account", () =>
             Promise.all([
                 client.prefetchQuery(limitsQuery),
@@ -396,8 +404,7 @@ export const serverAccountState = createIsomorphicFn()
                 client.prefetchQuery(referralsQuery),
                 client.prefetchQuery(connectionsQuery),
                 client.prefetchQuery(bankOverviewQuery),
-                client.prefetchQuery(sharedLinksQuery),
-                client.prefetchQuery(pushConfigQuery),
+                ...pushConfig,
                 ...(webhooks ? [client.prefetchQuery(webhooksQuery)] : []),
                 ...plan,
                 ...members,
@@ -421,4 +428,7 @@ export const serverAccountState = createIsomorphicFn()
             ])
         );
     })
-    .client(() => Promise.resolve());
+    .client((client: QueryClient) => {
+        warmSettingsState(client);
+        return Promise.resolve();
+    });

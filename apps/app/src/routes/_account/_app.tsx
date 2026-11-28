@@ -30,7 +30,7 @@ import type { FilterPatch } from "@/components/dashboard/shell/filters";
 import { NoticesProvider } from "@/components/dashboard/shell/notifications";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
 import { SessionExpired, SyncCard, leaveSession } from "@/components/dashboard/shell/status";
-import { offerProfile, joinedProfilesQuery, profileMembersQuery, warmAccountState } from "@/lib/account-state";
+import { offerProfile, joinedProfilesQuery, profileMembersQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { watchKeyboardInset } from "@/lib/keyboard-inset";
@@ -252,12 +252,11 @@ function useTurnover(nextChangeAt: number, advance: (asOf: number) => void) {
 }
 
 function useLiveLedger(userId: string | undefined, onLanded: (outcome: "landed" | Error) => void) {
-    const { dbClient, queryClient } = Route.useRouteContext();
+    const { dbClient } = Route.useRouteContext();
     const router = useRouter();
-    useMirror([dbClient, onLanded, queryClient, router, userId], () => {
+    useMirror([dbClient, onLanded, router, userId], () => {
         dropOldCopy();
         ledgerCommitter(dbClient, userId).resume();
-        warmAccountState(queryClient);
         const landing = preloadLedger(dbClient).then(async () => {
             await ledgerSync(dbClient).landed();
             markLanded(dbClient);
