@@ -14,6 +14,7 @@ intro: "Diese Erklärung beschreibt, was Outlayr erhebt, wohin es gelangt, wie l
 - Die App sendet Nutzungsanalysen und Absturzberichte an PostHog: welche Bildschirme du öffnest, welche Funktionen du nutzt und Fehler. Niemals Beträge, Händler, Notizen oder Namen. Sie ist ausgeschaltet, wenn die Region deines Geräts im EWR oder im Vereinigten Königreich liegt, und überall sonst eingeschaltet. Ändere das unter **Einstellungen › Analysedaten teilen**. Unser Server teilt PostHog außerdem Größe, Kosten und Geschwindigkeit jeder Anfrage an Anthropic mit, nie deren Inhalt, und verknüpft sie nur dann mit deinem Konto, wenn „Analysedaten teilen“ eingeschaltet ist.
 - Auch diese Website nutzt PostHog, mit einem Cookie. Wenn du dich im EWR oder im Vereinigten Königreich befindest, fragt sie vorher. Ändere deine Antwort in der Fußzeile unter **Cookies**.
 - Mit Outlayr Pro kannst du Notion verbinden, um Ausgaben aus deinen Notion-Datenbanken zu importieren. Wir speichern den Zugriffsschlüssel von Notion verschlüsselt auf unseren Servern, damit du erneut importieren kannst, bis du Notion trennst oder dein Konto löschst. Was wir aus Notion lesen, läuft über unseren Server auf dein Gerät und wird nicht gespeichert.
+- Mit Outlayr Pro kannst du Konten bei Banken in den USA und Kanada über Stripe verknüpfen. Du meldest dich auf dem Bildschirm von Stripe bei deiner Bank an, und wir sehen deine Bank-Zugangsdaten nie. Unser Server legt ihre Umsätze als Einträge in deinem synchronisierten Haushaltsbuch ab.
 - Du kannst einen KI-Assistenten wie Claude mit deinem Konto verbinden. Sobald du ihn freigibst, kann er lesen, was deine Geräte synchronisiert haben, und mit Outlayr Pro Einträge hinzufügen. Was er liest, unterliegt der Datenschutzerklärung dieses Assistenten. Unser Server teilt PostHog mit, welches Werkzeug er genutzt hat und wie lange es dauerte, nie was er gelesen hat.
 - Wenn du Freunde einlädst, sieht jeder deinen Vornamen in deiner Einladung, und du siehst ihren Vornamen, ob sie Pro gekauft haben und wann. Nie, was sie erfasst oder bezahlt haben.
 - Mit Outlayr Pro kannst du ein Profil mit bis zu 5 Personen teilen. Alle darin sehen und ändern das Haushaltsbuch und die Fotos dieses Profils und sehen die Vornamen der Personen darin, auch bei den Einträgen, die diese erfasst haben.
@@ -51,6 +52,10 @@ Jede Art von Daten, die Outlayr verarbeitet, an einer Stelle. Die folgenden Absc
 | Ein von dir gewählter PDF-Kontoauszug und sein Text | Import von PDF-Kontoauszügen | Unsere Server, Anthropic (Pro) | Nach dem Lesen gelöscht, höchstens etwa 75 Minuten, falls der Import nie abgeschlossen wird |
 | Notion-Zugriffsschlüssel (verschlüsselt), Notion-Nutzer-ID | Notion verbinden (Pro) | Unsere Server | Bis du Notion trennst oder dein Konto löschst |
 | Namen, Spalten und Zeilen der von dir gewählten Notion-Datenbanken | Notion-Import (Pro) | Notion, unsere Server, dein Gerät | Nicht auf unseren Servern gespeichert |
+| Name der Bank, Name des Kontos, letzte 4 Ziffern, Kontoart, Status der Verknüpfung, wann sie erstellt und zuletzt aktualisiert wurde, Kunden- und Konto-IDs von Stripe | Bank verknüpfen (Pro) | Unsere Server, Stripe | Bis du die Verknüpfung aufhebst oder dein Konto löschst. Stripe: seine Richtlinie |
+| Bankumsätze: Betrag, Währung, Beschreibung, Datum, Status | Bank verknüpfen (Pro) | Stripe, unsere Server, deine Geräte | Auf unseren Servern, als Einträge in deinem synchronisierten Haushaltsbuch, bis du sie oder dein Konto löschst. Stripe: seine Richtlinie |
+| Deine Bank-Zugangsdaten | Bank verknüpfen (Pro) | Stripe und deine Bank | Erreichen uns nie |
+| Was du für die Banksuche eintippst, und die Region deines Handys | Bank verknüpfen (Pro) | Unsere Server | Nicht gespeichert |
 | Händlername, eine von dir hinzugefügte Webadresse, eine allgemeine Kategorie | Website hinzufügen | Unsere Server, mit allen geteilt | Nach 90 Tagen aktualisiert. Nicht mit dir verknüpft |
 | Webadresse, IP-Adresse | Logos | Unsere Server (Cloudflare) | Webadresse wird mit dem Logo gespeichert; IP-Adresse nicht gespeichert |
 | Bildlink, das Bild | Symbolauswahl | Unsere Server (Cloudflare), mit allen geteilt | Mit dem Bild gespeichert, bis es entfernt wird; IP-Adresse nicht gespeichert. Nicht mit dir verknüpft |
@@ -174,6 +179,20 @@ Wenn du importierst, nutzt unser Server den Schlüssel, um die von dir gewählte
 - Wenn du dein Konto löschst, wird der Schlüssel widerrufen und gelöscht.
 
 Notion Labs, Inc. verarbeitet deinen Workspace nach [seiner eigenen Datenschutzerklärung](https://www.notion.com/trust/privacy-policy). Das Unternehmen erfährt, dass dein Workspace mit Outlayr verbunden ist, und wann unser Server daraus liest.
+
+## Bank verknüpfen
+
+Mit Outlayr Pro kannst du Konten bei Banken in den USA und Kanada verknüpfen. Im kostenlosen Plan ist das nicht enthalten, und die Synchronisierung muss an sein. Nichts wird verknüpft, bevor du es in der App startest.
+
+Die Verknüpfung läuft über Stripe Financial Connections. Du findest deine Bank über die Suche in der App: Was du eintippst und die Region deines Handys gehen an unseren Server, damit er passende Banken findet, und wir speichern sie nicht. Dann meldest du dich auf dem Bildschirm von Stripe bei deiner Bank an, also gehen deine Bank-Zugangsdaten an deine Bank und an Stripe, nie an uns. Stripe zeigt dort seine eigenen Bedingungen und verarbeitet deine Bankverbindung und was es von deiner Bank liest nach [seiner Datenschutzerklärung](https://stripe.com/privacy).
+
+Für jedes verknüpfte Konto speichert unser Server den Namen der Bank, den Namen des Kontos, seine letzten 4 Ziffern, seine Art (Giro- oder Sparkonto, Kredit, Anlage oder Sonstiges), ob die Verknüpfung funktioniert, wann du sie erstellt hast und wann sie zuletzt aktualisiert wurde, sowie die IDs, die Stripe dem Konto und dir als Kunde gibt. Für jeden Umsatz speichern wir außerdem, was die Bank zuletzt gesendet hat und in welchen Eintrag er abgelegt wurde, damit eine spätere Aktualisierung den richtigen Eintrag ändert.
+
+Wenn Stripe neue Umsätze hat, liest unser Server von jedem Betrag, Währung, Beschreibung, Datum und ob er vorgemerkt, gebucht oder storniert ist, und legt ihn als Eintrag in deinem Profil „Privat“ ab, der wie jeder andere mit deinen Geräten synchronisiert wird. Eine vorgemerkte Zahlung wird aktualisiert, wenn sie gebucht wird. Wird sie storniert, wird der Eintrag entfernt, den die Bank hinzugefügt hat, und einer, den du selbst erfasst hast, bleibt. Hast du den Betrag, das Datum oder die Notiz eines Eintrags geändert, bleibt deine Änderung bestehen. Hast du dieselbe Zahlung schon selbst erfasst, von Hand, aus Wallet oder aus einer Benachrichtigung, mit demselben Betrag innerhalb weniger Tage, wird der Bankumsatz diesem Eintrag zugeordnet, statt einen zweiten anzulegen, und ein Abo, das du verfolgst, wird zum Preis der Bank als abgebucht markiert. Jedes verknüpfte Konto legt seine Umsätze in einem Konto in deinem Haushaltsbuch ab: in einem mit passendem Namen oder in einem neuen, das nach dem Bankkonto benannt ist und das du ändern kannst.
+
+- **Verknüpfung aufheben** kannst du für jedes Konto in der App. Unser Server trennt es bei Stripe und löscht seinen Datensatz. Bereits erfasste Einträge bleiben.
+- Wenn dein Pro endet, trennen wir deine Konten bei Stripe, und es kommt nichts Neues mehr an.
+- Wenn du dein Konto löschst, werden alle Konten bei Stripe getrennt und dein Stripe-Kunde gelöscht.
 
 ## Vorschläge, Sprache und Belege
 
@@ -325,7 +344,7 @@ Diese Unternehmen helfen beim Betrieb von Outlayr. Jedes erhält nur, was seine 
 - **[RevenueCat](https://www.revenuecat.com/privacy)** verfolgt den Abostatus. Es erhält eine anonyme ID oder, sobald du dich anmeldest, deine Konto-ID, deinen Namen und deine E-Mail-Adresse sowie deine Kaufdatensätze.
 - **[Apple](https://www.apple.com/legal/privacy/)** stellt „Mit Apple anmelden“, Zahlungen im App Store und iOS-Funktionen wie Siri und Kurzbefehle bereit, nach seiner eigenen Richtlinie. Sein Push-Dienst liefert die oben beschriebenen Apple-Pay-Vorschläge aus und erhält die Push-Adresse deines iPhones und eine verschlüsselte Nachricht, die er nicht lesen kann.
 - **[Google](https://policies.google.com/privacy)** stellt „Mit Google anmelden“ und Zahlungen über Google Play bereit, nach seiner eigenen Richtlinie.
-- **[Stripe](https://stripe.com/privacy)** verarbeitet Käufe im Web, und sein Dienst Link verkauft sie. Es erhält deinen Namen, deine E-Mail-Adresse, deine Konto-ID, den gewählten Tarif sowie die Zahlungsdaten und die Rechnungsadresse, die du beim Bezahlen eingibst.
+- **[Stripe](https://stripe.com/privacy)** verarbeitet Käufe im Web, und sein Dienst Link verkauft sie. Es erhält deinen Namen, deine E-Mail-Adresse, deine Konto-ID, den gewählten Tarif sowie die Zahlungsdaten und die Rechnungsadresse, die du beim Bezahlen eingibst. Wenn du eine Bank verknüpfst, verbindet sich Stripe Financial Connections mit ihr: Es erhält deine Bank-Zugangsdaten und die Daten, die deine Bank teilt, und sendet uns die Kontodaten und Umsätze, die unter [Bank verknüpfen](#bank-verknüpfen) beschrieben sind.
 - **[Expo](https://expo.dev/privacy)** liefert App-Updates aus. Es erhält eine zufällige Installations-ID, die App-Version, deine IP-Adresse und Fehlermeldungen zu Updates.
 - **Der Push-Dienst deines Browsers**, betrieben vom Hersteller deines Browsers, etwa Google, Apple, Mozilla oder Microsoft, liefert die tägliche Web-Erinnerung aus, wenn du sie einschaltest. Er erhält die Push-Adresse deines Browsers und eine verschlüsselte Nachricht, die er nicht lesen kann.
 - **[PostHog](https://posthog.com/privacy)** stellt Nutzungsanalysen und Absturzberichte bereit, von Servern in den Vereinigten Staaten. Es erhält die Ereignisse, die unter [Was die App auch ohne Konto sendet](#was-die-app-auch-ohne-konto-sendet) beschrieben sind, eine zufällige Installations-ID und, sobald du dich anmeldest, deine Konto-ID, dazu die [Protokolle von KI-Anfragen](#protokolle-von-ki-anfragen) und die [Werkzeugaufrufe von KI-Assistenten](#ki-assistenten), die unser Server sendet. Es erhält außerdem die Analysen dieser Website, die unter [Diese Website](#diese-website) beschrieben sind.
@@ -362,7 +381,7 @@ Wenn du dich im Europäischen Wirtschaftsraum oder im Vereinigten Königreich be
 
 | Zweck | Rechtsgrundlage |
 | --- | --- |
-| Dein Konto, die Synchronisierung, die Fotospeicherung, die Spracheingabe, Belegscans, der Import von Ratenplänen, der CSV-Import, der Import von PDF-Kontoauszügen, die Notion-Verbindung, die tägliche Web-Erinnerung, Pro, Einladungen, geteilte Profile, Verbindungen von KI-Assistenten und Webhooks | Vertrag: Wir brauchen diese Daten, um bereitzustellen, worum du bittest. |
+| Dein Konto, die Synchronisierung, die Fotospeicherung, die Spracheingabe, Belegscans, der Import von Ratenplänen, der CSV-Import, der Import von PDF-Kontoauszügen, verknüpfte Banken, die Notion-Verbindung, die tägliche Web-Erinnerung, Pro, Einladungen, geteilte Profile, Verbindungen von KI-Assistenten und Webhooks | Vertrag: Wir brauchen diese Daten, um bereitzustellen, worum du bittest. |
 | Die Willkommens- und Pro-Nachrichten und Mitteilungen über Änderungen dieser Erklärung oder unserer Nutzungsbedingungen | Vertrag: Sie gehören zu dem Konto und dem Abo, um die du gebeten hast. |
 | Das Senden von Spracheingaben, Belegfotos, Screenshots von Ratenplänen, CSV-Beschreibungen, PDF-Kontoauszügen, Benachrichtigungstext und Händlernamen an Anthropic und ElevenLabs | Deine Einwilligung, erteilt mit „Erlauben“, wenn die App fragt, und widerrufen unter **Einstellungen › Daten an KI-Anbieter senden**. |
 | Händlervorschläge, das Lesen von Benachrichtigungen, Websuchen, die gemeinsame Händlerliste und Logos | Berechtigte Interessen: Einträge schneller und genauer zuordnen. Vorschläge, das Lesen von Benachrichtigungen und Websuchen erreichen Anthropic erst, wenn du es erlaubst, und das Ausschalten von „Intelligentes Ausfüllen“ ist die Art, wie du widersprichst. |
@@ -383,6 +402,7 @@ Die [Tabelle oben](#daten-auf-einen-blick) nennt, wie lange jede Art von Daten a
 - Aufnahmen laufen über unseren Server zu ElevenLabs, und Belegfotos, Screenshots von Ratenplänen und Benachrichtigungstext zu Anthropic. Wir speichern keines davon.
 - Der Notion-Zugriffsschlüssel und deine Notion-Nutzer-ID werden aufbewahrt, bis du Notion trennst oder dein Konto löschst. Aus Notion gelesene Zeilen werden nicht auf unseren Servern aufbewahrt.
 - Verbindungen von KI-Assistenten (Name und Adresse des Assistenten, deine Freigabe und seine Zugriffsschlüssel) werden aufbewahrt, bis du dein Konto löschst. Zugriffsschlüssel funktionieren nach einer Stunde nicht mehr, oder nach 30 Tagen ohne Erneuerung.
+- Der Datensatz eines verknüpften Bankkontos wird aufbewahrt, bis du die Verknüpfung aufhebst oder dein Konto löschst, und deine Stripe-Kunden-ID, bis du dein Konto löschst. Bankumsätze werden zu Einträgen in deinem synchronisierten Haushaltsbuch und aufbewahrt, bis du sie oder dein Konto löschst; was die Bank zuletzt für jeden gesendet hat, wird aufbewahrt, bis du die Verknüpfung des Kontos aufhebst oder dein Konto löschst.
 - Webhook-Tokens und -Adressen werden aufbewahrt, bis du sie entfernst oder dein Konto löschst. Ein empfangener Eintrag wartet, bis eines deiner Geräte ihn abholt, und ein zu sendender Eintrag, bis er zugestellt ist oder etwa 9 Stunden Wiederholungen vorbei sind.
 - Anfragen für Händlervorschläge werden nach der Antwort nicht aufbewahrt. Im Hintergrund eingereihte warten auf unserem Server, bis dein Gerät die Antwort abholt.
 - Deine App-Sprache und der Nachweis, welche Willkommens-, Pro- und Änderungsmitteilungen du erhalten hast, werden mit deinem Konto gelöscht.
@@ -394,7 +414,7 @@ Die [Tabelle oben](#daten-auf-einen-blick) nennt, wie lange jede Art von Daten a
 - Mit deinem Konto verknüpfte Analyseereignisse werden mit ihm gelöscht. PostHog löscht sie in einem späteren Durchlauf, sodass sie noch eine Weile bestehen können, nachdem die App die abgeschlossene Löschung meldet. Ereignisse einer Installation, die sich nie angemeldet hat, enthalten nur eine zufällige Installations-ID und werden nach der Aufbewahrungsrichtlinie von PostHog aufbewahrt. Protokolle von KI-Anfragen, die gesendet wurden, als „Analysedaten teilen“ ausgeschaltet war, enthalten statt deiner Konto-ID eine zufällige ID, für die Spracheingabe zusätzlich die Gesprächs-ID, und werden auf dieselbe Weise aufbewahrt, ebenso Werkzeugaufrufe von KI-Assistenten, die stattdessen eine Verbindungs-ID enthalten.
 - Website-Ereignisse enthalten eine zufällige Browser-ID, oder einen Code, der sich täglich ändert, wenn du Cookies abgelehnt hast, und werden nach der Aufbewahrungsrichtlinie von PostHog aufbewahrt.
 - Die Kopie eines Berichts, den du teilst, wird gelöscht, wenn du seinen Link ausschaltest, innerhalb eines Tages nach Ablauf des Links, wenn du den Bericht auf dieser Seite löschst oder wenn du dein Konto löschst.
-- Unsere Anbieter, darunter Anthropic, ElevenLabs, Apple, Google und Expo, und Notion, wenn du es verbindest, bewahren die Daten, die sie erhalten, nach ihren eigenen Aufbewahrungsrichtlinien auf.
+- Unsere Anbieter, darunter Anthropic, ElevenLabs, Apple, Google und Expo, und Notion oder Stripe, wenn du sie verbindest, bewahren die Daten, die sie erhalten, nach ihren eigenen Aufbewahrungsrichtlinien auf.
 
 ## Löschen und Exportieren
 
@@ -404,6 +424,7 @@ Die [Tabelle oben](#daten-auf-einen-blick) nennt, wie lange jede Art von Daten a
 
 - Der Zugriff von Outlayr auf deine Anmeldung mit Apple oder Google wird widerrufen. Bei Apple bittet unser Server Apple, ihn zu widerrufen. Bei Google tut es die App.
 - Wenn du Notion verbunden hast, bittet unser Server Notion, den Zugriffsschlüssel von Outlayr zu widerrufen.
+- Wenn du Banken verknüpft hast, trennt unser Server jedes Konto bei Stripe und löscht deinen Stripe-Kunden, danach unsere Datensätze dazu, einschließlich dessen, was die Bank zuletzt für jeden Umsatz gesendet hat.
 - Dein Webhook-Token, deine Adressen und Einträge, die auf Empfang oder Versand warten, werden gelöscht, damit nichts Neues gesendet wird. Eine bereits laufende Zustellung kann noch abgeschlossen werden.
 - Dein synchronisiertes Haushaltsbuch, Löschvermerke, gesicherte Fotos und ausstehende Vorschlagsanfragen werden von unseren Servern gelöscht. Dazu gehören das Haushaltsbuch von Profilen, die du teilst, und Fotos, die du zu Profilen anderer hinzugefügt hast. Einträge, die du zum Profil eines anderen hinzugefügt hast, bleiben dort ohne deinen Namen. Kopien auf den Geräten anderer Mitglieder und Exporte, die sie erstellt haben, können bestehen bleiben.
 - Deine Kundendatensätze bei RevenueCat und Stripe und unsere Kopie deines Abostatus werden gelöscht.
@@ -451,11 +472,12 @@ Wenn du in Kalifornien oder einem anderen US-Bundesstaat mit einem Datenschutzge
 | --- | --- |
 | **Identifikatoren:** Name, E-Mail, Konto-ID, Installations-ID, IP-Adresse | OVHcloud, Hetzner, RevenueCat, Stripe, Expo, PostHog, Google, Cloudflare (E-Mail, Logos), Anthropic (was ein von dir importierter Kontoauszug zeigt) |
 | **Kommerzielle Informationen:** Abo- und Kaufdatensätze | Apple, Google, Stripe, RevenueCat, OVHcloud, Hetzner |
+| **Finanzinformationen:** Namen und letzte 4 Ziffern verknüpfter Bankkonten, Bankumsätze | Stripe, OVHcloud |
 | **Audio- und visuelle Informationen:** Sprachclips, Belegscans, Screenshots von Ratenplänen, angehängte Fotos | ElevenLabs (Clips), Anthropic (Scans), Cloudflare (Fotos, Clips bei der Übertragung) |
 | **Internet- oder Netzwerkaktivität:** IP-Adresse, User-Agent, Anfrageprotokolle, App- und Website-Nutzung, Absturzberichte | OVHcloud, Hetzner, Expo, PostHog |
 | **Von dir erstellte Datensätze:** synchronisierte Einträge, Beträge, Händler, Notizen, Budgets | OVHcloud, Hetzner; Händler-, Kategorien- und Kontonamen an Anthropic; Kategorien- und Kontonamen an ElevenLabs |
 
-Sie stammen von dir, deinem Gerät, Apple und Google, und wir nutzen sie für die in dieser Erklärung beschriebenen Zwecke. Wir bewahren sie für die unter [Daten auf einen Blick](#daten-auf-einen-blick) genannten Zeiträume auf.
+Sie stammen von dir, deinem Gerät, Apple, Google und, für verknüpfte Banken, Stripe, und wir nutzen sie für die in dieser Erklärung beschriebenen Zwecke. Wir bewahren sie für die unter [Daten auf einen Blick](#daten-auf-einen-blick) genannten Zeiträume auf.
 
 Wir verkaufen personenbezogene Daten nicht und geben sie nicht für kontextübergreifende verhaltensbasierte Werbung weiter, und wir haben das in den letzten 12 Monaten nicht getan. Wir nutzen sensible personenbezogene Daten nicht, um etwas über dich abzuleiten.
 
@@ -468,6 +490,7 @@ Weil wir nicht verkaufen oder weitergeben, gibt es nichts, wovon ein Global-Priv
 - Der Datenverkehr zwischen der App, unseren Servern und unseren Anbietern läuft über verschlüsselte HTTPS-Verbindungen.
 - Jede Anfrage nach deinen Daten ist an deine angemeldete Sitzung gebunden, und unser Server entscheidet, auf wessen Daten sich eine Anfrage beziehen darf. Ein Konto kann das Haushaltsbuch oder die Fotos eines anderen weder lesen noch schreiben.
 - Refresh-Tokens der Anmeldung und der Notion-Zugriffsschlüssel werden verschlüsselt, bevor wir sie speichern.
+- Deine Bank-Zugangsdaten erhalten wir nie. Eine Bank verknüpfst du auf dem Bildschirm von Stripe.
 - Anfragen an Anthropic und ElevenLabs enthalten weder Namen noch E-Mail-Adresse oder Konto-ID, abgesehen von dem, was ein von dir importierter Kontoauszug zeigt.
 - Du kannst Outlayr hinter die biometrische Sperre deines Geräts stellen (Face ID oder Touch ID auf dem iPhone).
 

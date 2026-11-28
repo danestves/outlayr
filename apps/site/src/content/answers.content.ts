@@ -890,10 +890,13 @@ const BEST_OF = {
     conversion: t({ en: "Conversion", es: "Conversión" }),
     monthly: t({ en: "Monthly", es: "Al mes" }),
     outlayr: t({
-        en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-        es: "Outlayr es la app de gastos que nunca se conecta a tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+        en: "Outlayr is the expense tracker that doesn't need your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
+        es: "Outlayr es la app de gastos que no necesita tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
     }),
-    outlayrBank: t({ en: "No, it never links one", es: "No, nunca se conecta a uno" }),
+    outlayrBank: t({
+        en: "Optional, with Pro, in the US and Canada",
+        es: "Opcional, con Pro, en EE. UU. y Canadá",
+    }),
     yearly: t({ en: "Yearly", es: "Al año" }),
 };
 
@@ -4428,9 +4431,9 @@ const answers = {
                             {
                                 label: LABELS.canada,
                                 text: t({
-                                    en: "Set CAD as your main currency. Entries are typed, said, scanned, or imported from your bank's CSV, with no bank login",
-                                    es: "Pon CAD como moneda principal. Los registros se escriben, se dictan, se escanean o se importan del CSV de tu banco, sin iniciar sesión en el banco",
-                                    fr: "Choisissez le CAD comme devise principale. Les opérations se saisissent au clavier, à la voix, par scan ou par import du CSV de votre banque, sans connexion bancaire",
+                                    en: "Set CAD as your main currency. Entries are typed, said, scanned, imported from your bank's CSV, or, with Pro, pulled from a bank you link through Stripe",
+                                    es: "Pon CAD como moneda principal. Los registros se escriben, se dictan, se escanean, se importan del CSV de tu banco o, con Pro, llegan de un banco que vinculas a través de Stripe",
+                                    fr: "Choisissez le CAD comme devise principale. Les opérations se saisissent au clavier, à la voix, par scan, par import du CSV de votre banque ou, avec Pro, depuis une banque liée via Stripe",
                                 }),
                             },
                             { label: LABELS.watch, text: OUTLAYR_WATCH },
@@ -4867,8 +4870,8 @@ const answers = {
                                 label: LABELS.watch,
                                 source: "https://github.com/danestves/outlayr/blob/main/packages/backend/confect/lib/captures.ts",
                                 text: t({
-                                    en: "It does not connect to your bank. Voice entry and receipt scans need an account or Pro, and a connection, with 30 captures every 30 days on the free plan",
-                                    es: "No se conecta con tu banco. Dictar y escanear recibos requiere una cuenta o Pro, y conexión, con 30 capturas cada 30 días en el plan gratis",
+                                    en: "Bank linking needs Pro and a bank in the US or Canada. Voice entry and receipt scans need an account or Pro, and a connection, with 30 captures every 30 days on the free plan",
+                                    es: "Vincular un banco requiere Pro y un banco de EE. UU. o Canadá. Dictar y escanear recibos requiere una cuenta o Pro, y conexión, con 30 capturas cada 30 días en el plan gratis",
                                 }),
                             },
                         ],
@@ -5112,8 +5115,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Outlayr has no bank connection. It logs what you type, say, or scan, your CSV files, and on iPhone and Android the purchase notifications you turn on. If you want your bank's transactions pulled in for you, Spendee and Wallet by BudgetBakers do it in Premium, and YNAB imports from select US, Canadian, UK, and EU banks.",
-                            es: "No. Outlayr no tiene conexión con bancos. Registra lo que escribes, dices o escaneas, tus archivos CSV y, en iPhone y Android, las notificaciones de compra que actives. Si quieres que los movimientos de tu banco entren solos, Spendee y Wallet by BudgetBakers lo hacen en Premium, y YNAB importa desde algunos bancos de EE. UU., Canadá, Reino Unido y la UE.",
+                            en: "Only if you choose to: with Pro, Outlayr links banks in the US and Canada through Stripe. Otherwise it logs what you type, say, or scan, your CSV files, and on iPhone and Android the purchase notifications you turn on. Spendee and Wallet by BudgetBakers also pull in bank transactions in Premium, and YNAB imports from select US, Canadian, UK, and EU banks.",
+                            es: "Solo si tú quieres: con Pro, Outlayr vincula bancos de EE. UU. y Canadá a través de Stripe. Si no, registra lo que escribes, dices o escaneas, tus archivos CSV y, en iPhone y Android, las notificaciones de compra que actives. Spendee y Wallet by BudgetBakers también traen los movimientos del banco en Premium, y YNAB importa desde algunos bancos de EE. UU., Canadá, Reino Unido y la UE.",
                         }),
                         question: t({
                             en: "Does Outlayr connect to my bank?",
@@ -6128,9 +6131,9 @@ const answers = {
                             {
                                 label: BRAZIL.bank,
                                 text: t({
-                                    en: "None. It does not connect to your bank. On Android it can log purchases from the notifications of apps you turn on, such as your bank's, up to 30 a month on the free plan",
-                                    es: "No tiene. No se conecta a tu banco. En Android puede registrar compras desde las notificaciones de las apps que actives, como la de tu banco, hasta 30 al mes en el plan gratis",
-                                    pt: "Não tem. Ele não se conecta ao seu banco. No Android, pode lançar compras a partir das notificações dos apps que você ativar, como o do seu banco, até 30 por mês no plano grátis",
+                                    en: "None. It does not connect to Brazilian banks. On Android it can log purchases from the notifications of apps you turn on, such as your bank's, up to 30 a month on the free plan",
+                                    es: "No tiene. No se conecta a bancos brasileños. En Android puede registrar compras desde las notificaciones de las apps que actives, como la de tu banco, hasta 30 al mes en el plan gratis",
+                                    pt: "Não tem. Ele não se conecta a bancos brasileiros. No Android, pode lançar compras a partir das notificações dos apps que você ativar, como o do seu banco, até 30 por mês no plano grátis",
                                 }),
                             },
                             {
@@ -6179,9 +6182,9 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "No bank sync, so every entry starts with you. Voice entry and receipt scans need an account or Pro, and a connection, with 30 captures every 30 days on the free plan. The web app needs Pro",
-                                    es: "No sincroniza con el banco, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta o Pro, y conexión, con 30 capturas cada 30 días en el plan gratis. La app web requiere Pro",
-                                    pt: "Não sincroniza com o banco, então cada lançamento começa por você. Lançar por voz e escanear recibos exige uma conta ou o Pro, e conexão, com 30 capturas a cada 30 dias no plano grátis. Não tem versão web",
+                                    en: "No sync with Brazilian banks, so every entry starts with you. Voice entry and receipt scans need an account or Pro, and a connection, with 30 captures every 30 days on the free plan. The web app needs Pro",
+                                    es: "No sincroniza con bancos brasileños, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta o Pro, y conexión, con 30 capturas cada 30 días en el plan gratis. La app web requiere Pro",
+                                    pt: "Não sincroniza com bancos brasileiros, então cada lançamento começa por você. Lançar por voz e escanear recibos exige uma conta ou o Pro, e conexão, com 30 capturas a cada 30 dias no plano grátis. Não tem versão web",
                                 }),
                             },
                         ],
@@ -6324,9 +6327,9 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It depends on how you want entries to get in. Organizze, Minhas Economias, Meu Dinheiro, and Mobills connect to Brazilian banks through Open Finance or their own integrations, Organizze and Mobills only on a paid plan. Monefy and Outlayr do not connect to a bank: Monefy logs a purchase in two taps, and Outlayr logs it by sentence, voice, or receipt. Wallet by BudgetBakers has a free tier by hand and bank sync in Premium. All of them are in Portuguese.",
-                            es: "Depende de cómo quieras que entren los registros. Organizze, Minhas Economias, Meu Dinheiro y Mobills se conectan a bancos de Brasil por Open Finance o integraciones propias, Organizze y Mobills solo en un plan de pago. Monefy y Outlayr no se conectan a un banco: Monefy registra una compra en dos toques, y Outlayr con una frase, tu voz o un recibo. Wallet by BudgetBakers tiene un plan gratis a mano y sincronización bancaria en Premium. Todas están en portugués.",
-                            pt: "Depende de como você quer que os lançamentos entrem. Organizze, Minhas Economias, Meu Dinheiro e Mobills se conectam a bancos brasileiros pelo Open Finance ou por integrações próprias, Organizze e Mobills só em um plano pago. Monefy e Outlayr não se conectam ao banco: o Monefy registra uma compra em dois toques, e o Outlayr com uma frase, a voz ou um recibo. O Wallet by BudgetBakers tem um plano grátis à mão e sincronização bancária no Premium. Todos estão em português.",
+                            en: "It depends on how you want entries to get in. Organizze, Minhas Economias, Meu Dinheiro, and Mobills connect to Brazilian banks through Open Finance or their own integrations, Organizze and Mobills only on a paid plan. Monefy and Outlayr do not connect to Brazilian banks: Monefy logs a purchase in two taps, and Outlayr logs it by sentence, voice, or receipt. Wallet by BudgetBakers has a free tier by hand and bank sync in Premium. All of them are in Portuguese.",
+                            es: "Depende de cómo quieras que entren los registros. Organizze, Minhas Economias, Meu Dinheiro y Mobills se conectan a bancos de Brasil por Open Finance o integraciones propias, Organizze y Mobills solo en un plan de pago. Monefy y Outlayr no se conectan a bancos brasileños: Monefy registra una compra en dos toques, y Outlayr con una frase, tu voz o un recibo. Wallet by BudgetBakers tiene un plan gratis a mano y sincronización bancaria en Premium. Todas están en portugués.",
+                            pt: "Depende de como você quer que os lançamentos entrem. Organizze, Minhas Economias, Meu Dinheiro e Mobills se conectam a bancos brasileiros pelo Open Finance ou por integrações próprias, Organizze e Mobills só em um plano pago. Monefy e Outlayr não se conectam a bancos brasileiros: o Monefy registra uma compra em dois toques, e o Outlayr com uma frase, a voz ou um recibo. O Wallet by BudgetBakers tem um plano grátis à mão e sincronização bancária no Premium. Todos estão em português.",
                         }),
                         question: t({
                             en: "What is the best financial control app in Brazil?",
@@ -6336,9 +6339,9 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Organizze connects through Open Finance from its Conectado plan, R$ 49 a month, with up to 3 accounts or cards. Minhas Economias and Meu Dinheiro also sync through Open Finance. Mobills has automatic integrations with the main banks in Premium. Wallet by BudgetBakers syncs in Premium, but its listing does not say which Brazilian banks. Monefy and Outlayr do not connect to banks.",
-                            es: "Organizze se conecta por Open Finance desde su plan Conectado, R$ 49 al mes, con hasta 3 cuentas o tarjetas. Minhas Economias y Meu Dinheiro también sincronizan por Open Finance. Mobills tiene integraciones automáticas con los principales bancos en Premium. Wallet by BudgetBakers sincroniza en Premium, pero su ficha no dice qué bancos de Brasil. Monefy y Outlayr no se conectan a bancos.",
-                            pt: "O Organizze conecta pelo Open Finance a partir do plano Conectado, R$ 49 por mês, com até 3 contas ou cartões. Minhas Economias e Meu Dinheiro também sincronizam pelo Open Finance. O Mobills tem integrações automáticas com os principais bancos no Premium. O Wallet by BudgetBakers sincroniza no Premium, mas a página da loja não diz quais bancos brasileiros. Monefy e Outlayr não se conectam a bancos.",
+                            en: "Organizze connects through Open Finance from its Conectado plan, R$ 49 a month, with up to 3 accounts or cards. Minhas Economias and Meu Dinheiro also sync through Open Finance. Mobills has automatic integrations with the main banks in Premium. Wallet by BudgetBakers syncs in Premium, but its listing does not say which Brazilian banks. Monefy and Outlayr do not connect to Brazilian banks.",
+                            es: "Organizze se conecta por Open Finance desde su plan Conectado, R$ 49 al mes, con hasta 3 cuentas o tarjetas. Minhas Economias y Meu Dinheiro también sincronizan por Open Finance. Mobills tiene integraciones automáticas con los principales bancos en Premium. Wallet by BudgetBakers sincroniza en Premium, pero su ficha no dice qué bancos de Brasil. Monefy y Outlayr no se conectan a bancos brasileños.",
+                            pt: "O Organizze conecta pelo Open Finance a partir do plano Conectado, R$ 49 por mês, com até 3 contas ou cartões. Minhas Economias e Meu Dinheiro também sincronizam pelo Open Finance. O Mobills tem integrações automáticas com os principais bancos no Premium. O Wallet by BudgetBakers sincroniza no Premium, mas a página da loja não diz quais bancos brasileiros. Monefy e Outlayr não se conectam a bancos brasileiros.",
                         }),
                         question: t({
                             en: "Which app connects to my bank through Open Finance?",
@@ -6749,9 +6752,9 @@ const answers = {
                             {
                                 label: FRANCE.bank,
                                 text: t({
-                                    en: "None. It does not connect to your bank. On Android it can log purchases from the notifications of apps you turn on, such as your bank's, up to 30 a month on the free plan",
-                                    es: "No tiene. No se conecta a tu banco. En Android puede registrar compras desde las notificaciones de las apps que actives, como la de tu banco, hasta 30 al mes en el plan gratis",
-                                    fr: "Aucune. Outlayr ne se connecte pas à votre banque. Sur Android, il peut enregistrer les achats à partir des notifications des apps que vous activez, comme celle de votre banque, jusqu'à 30 par mois en formule gratuite",
+                                    en: "None in France or Belgium. With Pro, it links Canadian banks through Stripe. On Android it can log purchases from the notifications of apps you turn on, such as your bank's, up to 30 a month on the free plan",
+                                    es: "Ninguna en Francia ni Bélgica. Con Pro, vincula bancos canadienses a través de Stripe. En Android puede registrar compras desde las notificaciones de las apps que actives, como la de tu banco, hasta 30 al mes en el plan gratis",
+                                    fr: "Aucune en France ni en Belgique. Avec Pro, Outlayr lie les banques canadiennes via Stripe. Sur Android, il peut enregistrer les achats à partir des notifications des apps que vous activez, comme celle de votre banque, jusqu'à 30 par mois en formule gratuite",
                                 }),
                             },
                             {
@@ -6767,9 +6770,9 @@ const answers = {
                             {
                                 label: FRANCE.quebec,
                                 text: t({
-                                    en: "Works the same: there is no bank to connect, and it is offered in 175 countries and regions, Canada included",
-                                    es: "Funciona igual: no hay banco que conectar, y se ofrece en 175 países y regiones, Canadá incluido",
-                                    fr: "Fonctionne de la même façon : pas de banque à connecter, et l'app est proposée dans 175 pays et régions, dont le Canada",
+                                    en: "Works the same, with Canadian banks linkable with Pro, and it is offered in 175 countries and regions, Canada included",
+                                    es: "Funciona igual, con bancos canadienses que se pueden vincular con Pro, y se ofrece en 175 países y regiones, Canadá incluido",
+                                    fr: "Fonctionne de la même façon, avec les banques canadiennes à lier avec Pro, et l'app est proposée dans 175 pays et régions, dont le Canada",
                                 }),
                             },
                             {
@@ -6803,9 +6806,9 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "No bank sync, so every entry starts with you. Voice entry and receipt scans need an account or Pro, and a connection, with 30 captures every 30 days on the free plan. The web app needs Pro",
-                                    es: "No sincroniza con el banco, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta o Pro, y conexión, con 30 capturas cada 30 días en el plan gratis. La app web requiere Pro",
-                                    fr: "Pas de synchronisation bancaire, donc chaque opération part de vous. La saisie vocale et le scan de tickets demandent un compte ou Pro, et une connexion, avec 30 captures tous les 30 jours en formule gratuite. La version Web demande Pro",
+                                    en: "No sync with French or Belgian banks, so every entry starts with you. Voice entry and receipt scans need an account or Pro, and a connection, with 30 captures every 30 days on the free plan. The web app needs Pro",
+                                    es: "No sincroniza con bancos franceses ni belgas, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta o Pro, y conexión, con 30 capturas cada 30 días en el plan gratis. La app web requiere Pro",
+                                    fr: "Pas de synchronisation avec les banques françaises ou belges, donc chaque opération part de vous. La saisie vocale et le scan de tickets demandent un compte ou Pro, et une connexion, avec 30 captures tous les 30 jours en formule gratuite. La version Web demande Pro",
                                 }),
                             },
                         ],
@@ -7022,9 +7025,9 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It depends on where your bank is and how you want entries to get in. In France, Bankin' and Linxo sync your bank accounts and sort the spending, both free with paid options. Finary suits net worth more than budgets. Monefy and Outlayr do not connect to a bank: Monefy logs a purchase in two taps, and Outlayr logs it by sentence, voice, or receipt. Wallet by BudgetBakers has a free tier by hand. YNAB is a paid method in English.",
-                            es: "Depende de dónde esté tu banco y de cómo quieras que entren los registros. En Francia, Bankin' y Linxo sincronizan tus cuentas y clasifican el gasto, las dos gratis con opciones de pago. Finary sirve más para el patrimonio que para el presupuesto. Monefy y Outlayr no se conectan a un banco: Monefy registra una compra en dos toques, y Outlayr con una frase, tu voz o un recibo. Wallet by BudgetBakers tiene un plan gratis a mano. YNAB es un método de pago en inglés.",
-                            fr: "Tout dépend de l'endroit où se trouve votre banque et de la façon dont vous voulez saisir. En France, Bankin' et Linxo synchronisent vos comptes et classent vos dépenses, tous deux gratuits avec des options payantes. Finary convient mieux au patrimoine qu'au budget. Monefy et Outlayr ne se connectent pas à une banque : Monefy enregistre un achat en deux touches, Outlayr par une phrase, à la voix ou avec un ticket. Wallet by BudgetBakers a une offre gratuite à la main. YNAB est une méthode payante en anglais.",
+                            en: "It depends on where your bank is and how you want entries to get in. In France, Bankin' and Linxo sync your bank accounts and sort the spending, both free with paid options. Finary suits net worth more than budgets. Monefy and Outlayr do not connect to French banks: Monefy logs a purchase in two taps, and Outlayr logs it by sentence, voice, or receipt. Wallet by BudgetBakers has a free tier by hand. YNAB is a paid method in English.",
+                            es: "Depende de dónde esté tu banco y de cómo quieras que entren los registros. En Francia, Bankin' y Linxo sincronizan tus cuentas y clasifican el gasto, las dos gratis con opciones de pago. Finary sirve más para el patrimonio que para el presupuesto. Monefy y Outlayr no se conectan a bancos franceses: Monefy registra una compra en dos toques, y Outlayr con una frase, tu voz o un recibo. Wallet by BudgetBakers tiene un plan gratis a mano. YNAB es un método de pago en inglés.",
+                            fr: "Tout dépend de l'endroit où se trouve votre banque et de la façon dont vous voulez saisir. En France, Bankin' et Linxo synchronisent vos comptes et classent vos dépenses, tous deux gratuits avec des options payantes. Finary convient mieux au patrimoine qu'au budget. Monefy et Outlayr ne se connectent pas aux banques françaises : Monefy enregistre un achat en deux touches, Outlayr par une phrase, à la voix ou avec un ticket. Wallet by BudgetBakers a une offre gratuite à la main. YNAB est une méthode payante en anglais.",
                         }),
                         question: t({
                             en: "What is the best budget app?",
@@ -7058,9 +7061,9 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Bankin' lists 350+ banks in France, the UK, Spain, and Germany; Belgium is not among its 4 countries. Linxo lists close to 320 banks and account types. Finary syncs 2 accounts free and unlimited on paid plans. Wallet by BudgetBakers syncs in Premium. YNAB imports directly from select EU banks. Outlayr does not connect to a bank; on Android it can log purchases from your bank app's notifications.",
-                            es: "Bankin' anuncia más de 350 bancos en Francia, Reino Unido, España y Alemania; Bélgica no está entre sus 4 países. Linxo anuncia cerca de 320 bancos y tipos de cuenta. Finary sincroniza 2 cuentas gratis e ilimitadas en sus planes de pago. Wallet by BudgetBakers sincroniza en Premium. YNAB importa directamente desde algunos bancos de la UE. Outlayr no se conecta a un banco; en Android puede registrar compras desde las notificaciones de la app de tu banco.",
-                            fr: "Bankin' annonce plus de 350 banques en France, au Royaume-Uni, en Espagne et en Allemagne ; la Belgique ne fait pas partie de ses 4 pays. Linxo annonce près de 320 banques et types de comptes. Finary synchronise 2 comptes gratuitement et sans limite dans ses offres payantes. Wallet by BudgetBakers synchronise en Premium. YNAB importe directement depuis certaines banques de l'UE. Outlayr ne se connecte pas à une banque ; sur Android, il peut enregistrer les achats à partir des notifications de l'app de votre banque.",
+                            en: "Bankin' lists 350+ banks in France, the UK, Spain, and Germany; Belgium is not among its 4 countries. Linxo lists close to 320 banks and account types. Finary syncs 2 accounts free and unlimited on paid plans. Wallet by BudgetBakers syncs in Premium. YNAB imports directly from select EU banks. Outlayr links only US and Canadian banks, with Pro; on Android it can log purchases from your bank app's notifications.",
+                            es: "Bankin' anuncia más de 350 bancos en Francia, Reino Unido, España y Alemania; Bélgica no está entre sus 4 países. Linxo anuncia cerca de 320 bancos y tipos de cuenta. Finary sincroniza 2 cuentas gratis e ilimitadas en sus planes de pago. Wallet by BudgetBakers sincroniza en Premium. YNAB importa directamente desde algunos bancos de la UE. Outlayr solo vincula bancos de EE. UU. y Canadá, con Pro; en Android puede registrar compras desde las notificaciones de la app de tu banco.",
+                            fr: "Bankin' annonce plus de 350 banques en France, au Royaume-Uni, en Espagne et en Allemagne ; la Belgique ne fait pas partie de ses 4 pays. Linxo annonce près de 320 banques et types de comptes. Finary synchronise 2 comptes gratuitement et sans limite dans ses offres payantes. Wallet by BudgetBakers synchronise en Premium. YNAB importe directement depuis certaines banques de l'UE. Outlayr ne lie que des banques américaines et canadiennes, avec Pro ; sur Android, il peut enregistrer les achats à partir des notifications de l'app de votre banque.",
                         }),
                         question: t({
                             en: "Which budget app connects to my bank?",
@@ -7098,9 +7101,9 @@ const answers = {
                     },
                 ],
                 lead: t({
-                    en: "Seven budget apps for France, Quebec, and Belgium, each best for a different need: Bankin', Finary, Linxo, Monefy, Outlayr, Wallet by BudgetBakers, and YNAB. Bankin' and Linxo sync French bank accounts; Monefy and Outlayr connect to none, so they work the same anywhere. Outlayr is ours; the other six are not.",
-                    es: "Siete apps de presupuesto para Francia, Quebec y Bélgica, cada una mejor para algo distinto: Bankin', Finary, Linxo, Monefy, Outlayr, Wallet by BudgetBakers y YNAB. Bankin' y Linxo sincronizan cuentas de bancos franceses; Monefy y Outlayr no se conectan a ninguno, así que funcionan igual en cualquier lugar. Outlayr es nuestra; las otras seis no.",
-                    fr: "Sept applications de budget pour la France, le Québec et la Belgique, chacune meilleure pour un besoin : Bankin', Finary, Linxo, Monefy, Outlayr, Wallet by BudgetBakers et YNAB. Bankin' et Linxo synchronisent les comptes des banques françaises ; Monefy et Outlayr ne se connectent à aucune et fonctionnent donc partout. Outlayr est la nôtre ; les six autres non.",
+                    en: "Seven budget apps for France, Quebec, and Belgium, each best for a different need: Bankin', Finary, Linxo, Monefy, Outlayr, Wallet by BudgetBakers, and YNAB. Bankin' and Linxo sync French bank accounts; Monefy and Outlayr don't connect to French banks, so they work the same anywhere. Outlayr is ours; the other six are not.",
+                    es: "Siete apps de presupuesto para Francia, Quebec y Bélgica, cada una mejor para algo distinto: Bankin', Finary, Linxo, Monefy, Outlayr, Wallet by BudgetBakers y YNAB. Bankin' y Linxo sincronizan cuentas de bancos franceses; Monefy y Outlayr no se conectan a bancos franceses, así que funcionan igual en cualquier lugar. Outlayr es nuestra; las otras seis no.",
+                    fr: "Sept applications de budget pour la France, le Québec et la Belgique, chacune meilleure pour un besoin : Bankin', Finary, Linxo, Monefy, Outlayr, Wallet by BudgetBakers et YNAB. Bankin' et Linxo synchronisent les comptes des banques françaises ; Monefy et Outlayr ne se connectent pas aux banques françaises et fonctionnent donc partout. Outlayr est la nôtre ; les six autres non.",
                 }),
                 meta: {
                     description: t({
@@ -7153,9 +7156,9 @@ const answers = {
                         fr: "Linxo et Bankin' sont gratuits, avec Premium à 5,99 € par mois chez Linxo et Plus à 4,99 € par mois chez Bankin'.",
                     }),
                     t({
-                        en: "Pick by where your bank is: Bankin' or Linxo for French banks, Finary for net worth, Monefy for two taps, and Outlayr, which connects to no bank, for a sentence, your voice, or a receipt.",
-                        es: "Elige según dónde está tu banco: Bankin' o Linxo para bancos franceses, Finary para tu patrimonio, Monefy para dos toques y Outlayr, que no se conecta a ningún banco, para una frase, tu voz o un recibo.",
-                        fr: "Choisissez selon votre banque : Bankin' ou Linxo pour les banques françaises, Finary pour le patrimoine, Monefy pour deux touches, et Outlayr, qui ne se connecte à aucune banque, pour une phrase, la voix ou un reçu.",
+                        en: "Pick by where your bank is: Bankin' or Linxo for French banks, Finary for net worth, Monefy for two taps, and Outlayr, which doesn't connect to French banks, for a sentence, your voice, or a receipt.",
+                        es: "Elige según dónde está tu banco: Bankin' o Linxo para bancos franceses, Finary para tu patrimonio, Monefy para dos toques y Outlayr, que no se conecta a bancos franceses, para una frase, tu voz o un recibo.",
+                        fr: "Choisissez selon votre banque : Bankin' ou Linxo pour les banques françaises, Finary pour le patrimoine, Monefy pour deux touches, et Outlayr, qui ne se connecte pas aux banques françaises, pour une phrase, la voix ou un reçu.",
                     }),
                 ],
                 title: t({
@@ -7699,8 +7702,8 @@ const answers = {
                             {
                                 label: t({ en: "Privacy", es: "Privacidad" }),
                                 text: t({
-                                    en: "No bank or inbox link. Your ledger stays on the phone unless you turn on sync or use a server feature such as voice or receipt capture",
-                                    es: "No se conecta al banco ni al correo. Tu registro se queda en el teléfono, salvo que actives la sincronización o uses una función del servidor, como registrar por voz o con un recibo",
+                                    en: "Bank linking only with Pro, in the US and Canada, and no inbox link. Your ledger stays on the phone unless you turn on sync, link a bank, or use a server feature such as voice or receipt capture",
+                                    es: "Vincula bancos solo con Pro, en EE. UU. y Canadá, y no se conecta al correo. Tu registro se queda en el teléfono, salvo que actives la sincronización, vincules un banco o uses una función del servidor, como registrar por voz o con un recibo",
                                 }),
                             },
                             {
@@ -8175,8 +8178,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Rocket Money is available in the United States only, and Monarch in the United States and Canada. PocketGuard links accounts in the US, Canada, and the UK. If your bank is elsewhere, use an app that doesn't link one: Bobby, Subcut, or Outlayr, which comes in English, Spanish, Portuguese, French, and German. Check your app store to confirm it's offered in your country.",
-                            es: "Rocket Money solo está disponible en Estados Unidos, y Monarch en Estados Unidos y Canadá. PocketGuard vincula cuentas de EE. UU., Canadá y Reino Unido. Si tu banco está en otro país, usa una app que no lo vincule: Bobby, Subcut u Outlayr, que está en inglés, español, portugués, francés y alemán. Revisa tu tienda de apps para confirmar que se ofrece en tu país.",
+                            en: "Rocket Money is available in the United States only, and Monarch in the United States and Canada. PocketGuard links accounts in the US, Canada, and the UK. If your bank is elsewhere, use an app that doesn't need a link: Bobby, Subcut, or Outlayr, which comes in English, Spanish, Portuguese, French, and German. Check your app store to confirm it's offered in your country.",
+                            es: "Rocket Money solo está disponible en Estados Unidos, y Monarch en Estados Unidos y Canadá. PocketGuard vincula cuentas de EE. UU., Canadá y Reino Unido. Si tu banco está en otro país, usa una app que no necesite vincularlo: Bobby, Subcut u Outlayr, que está en inglés, español, portugués, francés y alemán. Revisa tu tienda de apps para confirmar que se ofrece en tu país.",
                         }),
                         question: t({
                             en: "Which subscription trackers work outside the United States?",
@@ -8714,8 +8717,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Outlayr and Monefy never link a bank. In Lunch Money, PocketSmith, Spendee, Toshl Finance, and Wallet the bank link is optional, and in most of them it comes with a paid plan.",
-                            es: "No. Outlayr y Monefy nunca se vinculan a un banco. En Lunch Money, PocketSmith, Spendee, Toshl Finance y Wallet la conexión al banco es opcional, y en la mayoría viene con un plan de pago.",
+                            en: "No. Monefy never links a bank, and in Outlayr it's optional, with Pro for US and Canadian banks. In Lunch Money, PocketSmith, Spendee, Toshl Finance, and Wallet the bank link is optional, and in most of them it comes with a paid plan.",
+                            es: "No. Monefy nunca se vincula a un banco, y en Outlayr es opcional, con Pro para bancos de EE. UU. y Canadá. En Lunch Money, PocketSmith, Spendee, Toshl Finance y Wallet la conexión al banco es opcional, y en la mayoría viene con un plan de pago.",
                         }),
                         question: t({
                             en: "Do I have to link my bank to budget in several currencies?",
@@ -8734,8 +8737,8 @@ const answers = {
                     },
                 ],
                 lead: t({
-                    en: "The best multi-currency budget app depends on who does the converting. Lunch Money, PocketSmith, Toshl Finance, Spendee, and Wallet convert for you and can link a bank. Monefy has you type each rate. Outlayr logs each purchase in any of 165 currencies at the rate from the day you paid, and never links your bank. Outlayr is ours.",
-                    es: "La mejor app de presupuesto para varias monedas depende de quién hace la conversión. Lunch Money, PocketSmith, Toshl Finance, Spendee y Wallet convierten por ti y pueden vincular un banco. En Monefy escribes tú cada tasa. Outlayr registra cada compra en cualquiera de 165 monedas con la tasa del día en que pagaste, y nunca se conecta a tu banco. Outlayr es nuestra.",
+                    en: "The best multi-currency budget app depends on who does the converting. Lunch Money, PocketSmith, Toshl Finance, Spendee, and Wallet convert for you and can link a bank. Monefy has you type each rate. Outlayr logs each purchase in any of 165 currencies at the rate from the day you paid, and linking a bank is optional. Outlayr is ours.",
+                    es: "La mejor app de presupuesto para varias monedas depende de quién hace la conversión. Lunch Money, PocketSmith, Toshl Finance, Spendee y Wallet convierten por ti y pueden vincular un banco. En Monefy escribes tú cada tasa. Outlayr registra cada compra en cualquiera de 165 monedas con la tasa del día en que pagaste, y vincular un banco es opcional. Outlayr es nuestra.",
                 }),
                 meta: {
                     description: t({
@@ -8755,8 +8758,8 @@ const answers = {
                                 es: "Revisa tres cosas. Primero, la tasa: una app que convierte con la tasa del día en que pagaste mantiene firmes los registros viejos, mientras que una que convierte con la tasa de hoy mueve tus totales pasados. Segundo, si puedes escribir la tasa que te dieron, algo importante cuando una tarjeta o una casa de cambio cobra una tasa distinta a la del mercado. Tercero, si cada cuenta tiene su propia moneda, para que una tarjeta en dólares y el efectivo en euros no se mezclen.",
                             }),
                             t({
-                                en: "Then decide on the bank link. If your bank is supported and you want transactions imported, Lunch Money, PocketSmith, Wallet, Spendee, and Toshl Finance offer it, mostly on paid plans. If your banks aren't supported, or you'd rather not share access, an app that never links one, like Outlayr or Monefy, works the same in any country.",
-                                es: "Después decide lo de la conexión al banco. Si tu banco está soportado y quieres que los movimientos lleguen solos, Lunch Money, PocketSmith, Wallet, Spendee y Toshl Finance lo ofrecen, casi siempre en planes de pago. Si tus bancos no están soportados, o prefieres no compartir el acceso, una app que nunca se conecta a uno, como Outlayr o Monefy, funciona igual en cualquier país.",
+                                en: "Then decide on the bank link. If your bank is supported and you want transactions imported, Lunch Money, PocketSmith, Wallet, Spendee, and Toshl Finance offer it, mostly on paid plans. If your banks aren't supported, or you'd rather not share access, an app that doesn't need one, like Outlayr or Monefy, works the same in any country.",
+                                es: "Después decide lo de la conexión al banco. Si tu banco está soportado y quieres que los movimientos lleguen solos, Lunch Money, PocketSmith, Wallet, Spendee y Toshl Finance lo ofrecen, casi siempre en planes de pago. Si tus bancos no están soportados, o prefieres no compartir el acceso, una app que no lo necesita, como Outlayr o Monefy, funciona igual en cualquier país.",
                             }),
                         ],
                         id: t({ en: "how-to-choose", es: "como-elegir" }),
@@ -9319,8 +9322,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Rocket Money's free plan links U.S. banks to find subscriptions. EveryDollar, Goodbudget, and Spendee keep bank connection for their paid plans, and Monarch, Copilot Money, YNAB, PocketGuard, and Lunch Money have no free plan. Outlayr never links a bank on any plan.",
-                            es: "El plan gratis de Rocket Money vincula bancos de EE. UU. para encontrar suscripciones. EveryDollar, Goodbudget y Spendee dejan la conexión al banco para sus planes de pago, y Monarch, Copilot Money, YNAB, PocketGuard y Lunch Money no tienen plan gratis. Outlayr nunca se conecta a un banco, en ningún plan.",
+                            en: "Rocket Money's free plan links U.S. banks to find subscriptions. EveryDollar, Goodbudget, and Spendee keep bank connection for their paid plans, and Monarch, Copilot Money, YNAB, PocketGuard, and Lunch Money have no free plan. Outlayr links US and Canadian banks only with Pro.",
+                            es: "El plan gratis de Rocket Money vincula bancos de EE. UU. para encontrar suscripciones. EveryDollar, Goodbudget y Spendee dejan la conexión al banco para sus planes de pago, y Monarch, Copilot Money, YNAB, PocketGuard y Lunch Money no tienen plan gratis. Outlayr vincula bancos de EE. UU. y Canadá solo con Pro.",
                         }),
                         question: t({
                             en: "Which free budget apps link a bank?",
@@ -9330,8 +9333,8 @@ const answers = {
                     COST_FAQ,
                 ],
                 lead: t({
-                    en: "In the US, the cheapest yearly plan of each budget app here costs $27.99 to $109, and 5 of the 10 also have a free plan. Outlayr is ours: free, or $59.99 a year for Pro, and it never links your bank.",
-                    es: "En EE. UU., el plan anual más barato de cada app de presupuesto de esta lista cuesta de US$27.99 a US$109, y 5 de las 10 también tienen un plan gratis. Outlayr es nuestra: gratis, o US$59.99 al año por Pro, y nunca se conecta a tu banco.",
+                    en: "In the US, the cheapest yearly plan of each budget app here costs $27.99 to $109, and 5 of the 10 also have a free plan. Outlayr is ours: free, or $59.99 a year for Pro, and linking a bank is optional.",
+                    es: "En EE. UU., el plan anual más barato de cada app de presupuesto de esta lista cuesta de US$27.99 a US$109, y 5 de las 10 también tienen un plan gratis. Outlayr es nuestra: gratis, o US$59.99 al año por Pro, y vincular un banco es opcional.",
                 }),
                 meta: {
                     description: t({
@@ -9945,8 +9948,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-                                es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+                                en: "Outlayr is the expense tracker that doesn't need your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
+                                es: "Outlayr es la app para controlar tus gastos que no necesita tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
                             }),
                             t({
                                 en: "1. Open Settings, then Categories. The ten above are already there. Tap one of the 13 under Suggested to add it, or add your own with a name and an icon or emoji.",
@@ -10251,8 +10254,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-                                es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+                                en: "Outlayr is the expense tracker that doesn't need your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
+                                es: "Outlayr es la app para controlar tus gastos que no necesita tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
                             }),
                             t({
                                 en: "1. Work out your three amounts with the 50/30/20 calculator.",
@@ -10511,12 +10514,12 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-                                es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+                                en: "Outlayr is the expense tracker that doesn't need your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
+                                es: "Outlayr es la app para controlar tus gastos que no necesita tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
                             }),
                             t({
-                                en: "Rocket Money does the work for you if you are in the United States and willing to link your banks: entries arrive on their own, and its team cancels and negotiates. Outlayr never links a bank: it logs Apple Pay taps on iPhone and purchase notifications on Android on its own, 30 a month on the free plan and unlimited with Pro, and you log the rest, in any country and any currency. The full comparison, with how to move your data, is on the Rocket Money alternative page.",
-                                es: "Rocket Money hace el trabajo por ti si estás en Estados Unidos y estás dispuesto a conectar tus bancos: los movimientos llegan solos, y su equipo cancela y negocia. Outlayr nunca se conecta a un banco: registra por su cuenta los pagos con Apple Pay en iPhone y las notificaciones de compra en Android, 30 al mes en el plan gratis y sin límite con Pro, y el resto lo registras tú, en cualquier país y cualquier moneda. La comparación completa, con cómo pasar tus datos, está en la página de alternativa a Rocket Money.",
+                                en: "Rocket Money does the work for you if you are in the United States and willing to link your banks: entries arrive on their own, and its team cancels and negotiates. Outlayr links a bank only if you choose to: it logs Apple Pay taps on iPhone and purchase notifications on Android on its own, 30 a month on the free plan and unlimited with Pro, and you log the rest, in any country and any currency. The full comparison, with how to move your data, is on the Rocket Money alternative page.",
+                                es: "Rocket Money hace el trabajo por ti si estás en Estados Unidos y estás dispuesto a conectar tus bancos: los movimientos llegan solos, y su equipo cancela y negocia. Outlayr se conecta a un banco solo si tú quieres: registra por su cuenta los pagos con Apple Pay en iPhone y las notificaciones de compra en Android, 30 al mes en el plan gratis y sin límite con Pro, y el resto lo registras tú, en cualquier país y cualquier moneda. La comparación completa, con cómo pasar tus datos, está en la página de alternativa a Rocket Money.",
                             }),
                         ],
                         id: "outlayr",
@@ -10561,7 +10564,10 @@ const answers = {
                                     en: "Links US bank accounts through Plaid",
                                     es: "Conecta cuentas bancarias de Estados Unidos a través de Plaid",
                                 }),
-                                t({ en: "Never links a bank", es: "Nunca se conecta a un banco" }),
+                                t({
+                                    en: "Optional, with Pro, for US and Canadian banks through Stripe",
+                                    es: "Opcional, con Pro, para bancos de EE. UU. y Canadá a través de Stripe",
+                                }),
                             ],
                             label: t({ en: "Bank linking", es: "Conexión al banco" }),
                         },
@@ -10652,8 +10658,8 @@ const answers = {
                     {
                         label: t({ en: "Bank link", es: "Conexión al banco" }),
                         text: t({
-                            en: "None. Outlayr never links bank accounts",
-                            es: "Ninguna. Outlayr nunca conecta cuentas bancarias",
+                            en: "Optional, with Pro, for banks in the US and Canada through Stripe",
+                            es: "Opcional, con Pro, para bancos de EE. UU. y Canadá a través de Stripe",
                         }),
                     },
                     {
@@ -10705,8 +10711,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Outlayr never links bank accounts. You keep your accounts, cards, and cash as accounts you name yourself, and you fill them in.",
-                            es: "No. Outlayr nunca conecta cuentas bancarias. Tus cuentas, tarjetas y efectivo son cuentas con el nombre que tú les pongas, y las llenas tú.",
+                            en: "Only if you choose to, with Pro and a bank in the US or Canada. Otherwise you keep your accounts, cards, and cash as accounts you name yourself, and you fill them in.",
+                            es: "Solo si tú quieres, con Pro y un banco de EE. UU. o Canadá. Si no, tus cuentas, tarjetas y efectivo son cuentas con el nombre que tú les pongas, y las llenas tú.",
                         }),
                         question: t({
                             en: "Does Outlayr connect to my bank?",
@@ -10765,8 +10771,8 @@ const answers = {
                     },
                 ],
                 lead: t({
-                    en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies. You can budget without linking your bank: set a limit per category or per month, and see where your pace ends. Your ledger stays on your phone.",
-                    es: "Outlayr es la app de gastos que nunca conecta tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas. Puedes llevar un presupuesto sin vincular tu banco: pon un límite por categoría o por mes, y mira a dónde te lleva el ritmo. Tu registro se queda en tu celular.",
+                    en: "Outlayr is the expense tracker that doesn't need your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies. You can budget without linking your bank: set a limit per category or per month, and see where your pace ends. Your ledger stays on your phone.",
+                    es: "Outlayr es la app de gastos que no necesita tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas. Puedes llevar un presupuesto sin vincular tu banco: pon un límite por categoría o por mes, y mira a dónde te lleva el ritmo. Tu registro se queda en tu celular.",
                 }),
                 meta: {
                     description: t({
@@ -10873,8 +10879,8 @@ const answers = {
                 ],
                 takeaways: [
                     t({
-                        en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay on iPhone, in any of 165 currencies.",
-                        es: "Outlayr es la app para controlar gastos que nunca se conecta a tu banco: registra con una frase, tu voz, un recibo o Apple Pay en iPhone, en cualquiera de 165 monedas.",
+                        en: "Outlayr is the expense tracker that doesn't need your bank: log by sentence, voice, receipt or Apple Pay on iPhone, in any of 165 currencies.",
+                        es: "Outlayr es la app para controlar gastos que no necesita tu banco: registra con una frase, tu voz, un recibo o Apple Pay en iPhone, en cualquiera de 165 monedas.",
                     }),
                     t({
                         en: "Without an account or Pro, your entries, amounts, and notes never leave your phone.",
@@ -10920,8 +10926,8 @@ const answers = {
                     {
                         label: t({ en: "Bank link", es: "Conexión al banco" }),
                         text: t({
-                            en: "None. You log each purchase yourself",
-                            es: "Ninguna. Registras tú cada compra",
+                            en: "None with Venezuelan banks. You log each purchase yourself",
+                            es: "Ninguna con bancos venezolanos. Registras tú cada compra",
                         }),
                     },
                     {
@@ -10982,8 +10988,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Outlayr never links bank accounts, and it works without an account. Voice entry, receipt scans, and merchant suggestions need one or Pro, and sync across devices needs both.",
-                            es: "No. Outlayr nunca conecta cuentas bancarias, y funciona sin cuenta. Dictar registros, escanear recibos y las sugerencias de comercios necesitan una cuenta o Pro, y sincronizar entre dispositivos necesita las dos cosas.",
+                            en: "No. Outlayr doesn't connect to Venezuelan banks, and it works without an account. Voice entry, receipt scans, and merchant suggestions need one or Pro, and sync across devices needs both.",
+                            es: "No. Outlayr no se conecta a bancos venezolanos, y funciona sin cuenta. Dictar registros, escanear recibos y las sugerencias de comercios necesitan una cuenta o Pro, y sincronizar entre dispositivos necesita las dos cosas.",
                         }),
                         question: t({
                             en: "Do I need to link my bank or sign up?",
@@ -11074,8 +11080,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Outlayr does not link your bank, so nothing is pulled from your account. Your ledger is stored on your phone, and without an account or Pro your entries, amounts, and notes never leave it.",
-                                es: "Outlayr no conecta tu banco, así que no se trae nada de tu cuenta. Tu registro se guarda en tu celular, y sin una cuenta ni Pro tus registros, montos y notas nunca salen de él.",
+                                en: "Outlayr doesn't connect to Venezuelan banks, so nothing is pulled from your account. Your ledger is stored on your phone, and without an account or Pro your entries, amounts, and notes never leave it.",
+                                es: "Outlayr no se conecta a bancos venezolanos, así que no se trae nada de tu cuenta. Tu registro se guarda en tu celular, y sin una cuenta ni Pro tus registros, montos y notas nunca salen de él.",
                             }),
                         ],
                         id: "privacy",
@@ -11127,8 +11133,8 @@ const answers = {
                         es: "El plan gratis permite cuentas en 2 monedas y 2 apps de cuotas como Cashea, con un aviso el día antes de cada pago.",
                     }),
                     t({
-                        en: "It never links your bank and needs no account to log and budget. Typing works with no signal.",
-                        es: "Nunca se conecta a tu banco y no necesita cuenta para registrar y presupuestar. Escribir funciona sin señal.",
+                        en: "It doesn't connect to Venezuelan banks and needs no account to log and budget. Typing works with no signal.",
+                        es: "No se conecta a bancos venezolanos y no necesita cuenta para registrar y presupuestar. Escribir funciona sin señal.",
                     }),
                 ],
                 title: t({

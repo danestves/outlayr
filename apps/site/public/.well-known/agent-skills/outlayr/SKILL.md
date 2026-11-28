@@ -5,7 +5,7 @@ description: Prepare a CSV of transactions that Outlayr, the expense tracker for
 
 # Outlayr
 
-Outlayr is an expense tracker, budget app, and subscription tracker, on the App Store for iPhone, on Google Play for Android, and on the web at https://app.tryoutlayr.com with Pro. Entries live on your device. There is no bank linking. History comes in by CSV import, with Pro by a bank statement PDF, and from a Notion export.
+Outlayr is an expense tracker, budget app, and subscription tracker, on the App Store for iPhone, on Google Play for Android, and on the web at https://app.tryoutlayr.com with Pro. Entries live on your device. Bank linking is optional, with Pro, for banks in the US and Canada. History comes in by CSV import, with Pro by a bank statement PDF, and from a Notion export.
 
 ## Facts about Outlayr
 

@@ -82,11 +82,11 @@ const home = {
         faq: [
             {
                 answer: t({
-                    en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies. It is an open source budget app and subscription tracker for iPhone and Android, made by danestves LLC. Budgets, savings goals, subscriptions, and insights update as you log, in English, Spanish, Portuguese, French, or German.",
-                    de: "Outlayr ist der Ausgaben-Tracker, der nie dein Bankkonto verknüpft: Erfasse per Satz, Sprache, Beleg oder Apple Pay, in jeder von 165 Währungen. Outlayr ist eine Open-Source-Budget-App und ein Abo-Tracker für iPhone und Android, gemacht von danestves LLC. Budgets, Sparziele, Abos und Auswertungen aktualisieren sich beim Erfassen, auf Englisch, Spanisch, Portugiesisch, Französisch oder Deutsch.",
-                    es: "Outlayr es la app de gastos que nunca conecta tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas. Es una app de código abierto para tu presupuesto y tus suscripciones, para iPhone y Android, hecha por danestves LLC. Los presupuestos, las metas de ahorro, las suscripciones y las estadísticas se actualizan a medida que registras, en inglés, español, portugués, francés o alemán.",
-                    pt: "O Outlayr é o app de controle de gastos que nunca conecta seu banco: registre por frase, voz, recibo ou Apple Pay, em qualquer uma de 165 moedas. É um app de código aberto para seu orçamento e suas assinaturas, para iPhone e Android, feito pela danestves LLC. Orçamentos, metas de economia, assinaturas e estatísticas se atualizam conforme você registra, em inglês, espanhol, português, francês ou alemão.",
-                    fr: "Outlayr est l'app de suivi des dépenses qui ne connecte jamais votre banque : saisissez par une phrase, la voix, un ticket ou Apple Pay, dans l'une des 165 devises. C'est une app open source pour votre budget et vos abonnements, sur iPhone et Android, créée par danestves LLC. Les budgets, les objectifs d'épargne, les abonnements et les statistiques se mettent à jour au fil de vos saisies, en anglais, espagnol, portugais, français ou allemand.",
+                    en: "Outlayr is the expense tracker that doesn't need your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies. It is an open source budget app and subscription tracker for iPhone and Android, made by danestves LLC. Budgets, savings goals, subscriptions, and insights update as you log, in English, Spanish, Portuguese, French, or German.",
+                    de: "Outlayr ist der Ausgaben-Tracker, der dein Bankkonto nicht braucht: Erfasse per Satz, Sprache, Beleg oder Apple Pay, in jeder von 165 Währungen. Outlayr ist eine Open-Source-Budget-App und ein Abo-Tracker für iPhone und Android, gemacht von danestves LLC. Budgets, Sparziele, Abos und Auswertungen aktualisieren sich beim Erfassen, auf Englisch, Spanisch, Portugiesisch, Französisch oder Deutsch.",
+                    es: "Outlayr es la app de gastos que no necesita tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas. Es una app de código abierto para tu presupuesto y tus suscripciones, para iPhone y Android, hecha por danestves LLC. Los presupuestos, las metas de ahorro, las suscripciones y las estadísticas se actualizan a medida que registras, en inglés, español, portugués, francés o alemán.",
+                    pt: "O Outlayr é o app de controle de gastos que não precisa do seu banco: registre por frase, voz, recibo ou Apple Pay, em qualquer uma de 165 moedas. É um app de código aberto para seu orçamento e suas assinaturas, para iPhone e Android, feito pela danestves LLC. Orçamentos, metas de economia, assinaturas e estatísticas se atualizam conforme você registra, em inglês, espanhol, português, francês ou alemão.",
+                    fr: "Outlayr est l'app de suivi des dépenses qui n'a pas besoin de votre banque : saisissez par une phrase, la voix, un ticket ou Apple Pay, dans l'une des 165 devises. C'est une app open source pour votre budget et vos abonnements, sur iPhone et Android, créée par danestves LLC. Les budgets, les objectifs d'épargne, les abonnements et les statistiques se mettent à jour au fil de vos saisies, en anglais, espagnol, portugais, français ou allemand.",
                 }),
                 question: t({
                     en: "What is Outlayr?",
@@ -98,11 +98,11 @@ const home = {
             },
             {
                 answer: t({
-                    en: "No. Outlayr never links your bank or asks for a bank login. You log by sentence, voice, receipt or Apple Pay, or import a CSV.",
-                    de: "Nein. Outlayr verknüpft nie dein Bankkonto und fragt nie nach deinem Bank-Login. Du erfasst per Satz, Sprache, Beleg oder Apple Pay oder importierst eine CSV-Datei.",
-                    es: "No. Outlayr nunca conecta tu banco ni te pide tu usuario del banco. Registras con una frase, tu voz, un recibo o Apple Pay, o importas un CSV.",
-                    pt: "Não. O Outlayr nunca conecta seu banco nem pede o login do banco. Você registra por frase, voz, recibo ou Apple Pay, ou importa um CSV.",
-                    fr: "Non. Outlayr ne connecte jamais votre banque et ne demande jamais vos identifiants bancaires. Vous saisissez par une phrase, la voix, un ticket ou Apple Pay, ou vous importez un CSV.",
+                    en: "No. Linking a bank is optional, and Outlayr never sees your bank login. You log by sentence, voice, receipt or Apple Pay, or import a CSV.",
+                    de: "Nein. Eine Bank zu verknüpfen ist optional, und Outlayr sieht deinen Bank-Login nie. Du erfasst per Satz, Sprache, Beleg oder Apple Pay oder importierst eine CSV-Datei.",
+                    es: "No. Vincular un banco es opcional, y Outlayr nunca ve tus datos de acceso al banco. Registras con una frase, tu voz, un recibo o Apple Pay, o importas un CSV.",
+                    pt: "Não. Vincular um banco é opcional, e o Outlayr nunca vê o login do seu banco. Você registra por frase, voz, recibo ou Apple Pay, ou importa um CSV.",
+                    fr: "Non. Lier une banque est facultatif, et Outlayr ne voit jamais vos identifiants bancaires. Vous saisissez par une phrase, la voix, un ticket ou Apple Pay, ou vous importez un CSV.",
                 }),
                 question: t({
                     en: "Does Outlayr need my bank login?",
@@ -336,11 +336,11 @@ const home = {
         },
         plansCopy: {
             footnote: t({
-                en: "A capture is one voice clip, one receipt photo, or one installment plan import of up to 5 screenshots, and needs an account or Pro. Pro is billed monthly or yearly, or bought once, at the price your app store shows in your country.",
-                de: "Eine Erfassung ist ein Sprachclip, ein Belegfoto oder ein Import von Ratenplänen mit bis zu 5 Screenshots und setzt ein Konto oder Pro voraus. Pro wird monatlich oder jährlich abgerechnet oder einmalig gekauft, zum Preis, den dein App Store in deinem Land zeigt.",
-                es: "Una captura es un clip de voz, una foto de un recibo o una importación de planes de cuotas de hasta 5 capturas de pantalla, y requiere una cuenta o Pro. Pro se cobra al mes o al año, o se compra una sola vez, al precio que muestra tu tienda de apps en tu país.",
-                pt: "Uma captura é um áudio de voz, uma foto de recibo ou uma importação de parcelamentos de até 5 capturas de tela, e exige uma conta ou o Pro. O Pro é cobrado por mês ou por ano, ou comprado uma vez só, pelo preço que sua loja de apps mostra no seu país.",
-                fr: "Une capture correspond à un extrait vocal, une photo de ticket ou un import d’échéanciers d’au plus 5 captures d’écran, et nécessite un compte ou Pro. Pro est facturé au mois ou à l'année, ou acheté en une fois, au prix affiché par votre boutique d'apps dans votre pays.",
+                en: "A capture is one voice clip, one receipt photo, or one installment plan import of up to 5 screenshots, and needs an account or Pro. Pro is billed monthly or yearly, or bought once, at the price your app store shows in your country. Bank linking comes with Pro.",
+                de: "Eine Erfassung ist ein Sprachclip, ein Belegfoto oder ein Import von Ratenplänen mit bis zu 5 Screenshots und setzt ein Konto oder Pro voraus. Pro wird monatlich oder jährlich abgerechnet oder einmalig gekauft, zum Preis, den dein App Store in deinem Land zeigt. Banken verknüpfen gehört zu Pro.",
+                es: "Una captura es un clip de voz, una foto de un recibo o una importación de planes de cuotas de hasta 5 capturas de pantalla, y requiere una cuenta o Pro. Pro se cobra al mes o al año, o se compra una sola vez, al precio que muestra tu tienda de apps en tu país. Vincular bancos viene con Pro.",
+                pt: "Uma captura é um áudio de voz, uma foto de recibo ou uma importação de parcelamentos de até 5 capturas de tela, e exige uma conta ou o Pro. O Pro é cobrado por mês ou por ano, ou comprado uma vez só, pelo preço que sua loja de apps mostra no seu país. Vincular bancos vem com o Pro.",
+                fr: "Une capture correspond à un extrait vocal, une photo de ticket ou un import d’échéanciers d’au plus 5 captures d’écran, et nécessite un compte ou Pro. Pro est facturé au mois ou à l'année, ou acheté en une fois, au prix affiché par votre boutique d'apps dans votre pays. La liaison bancaire est incluse dans Pro.",
             }),
             lead: t({
                 en: "The tracker is free. Pro lifts the limits and adds sync.",
@@ -385,6 +385,13 @@ const home = {
                 es: "Búsqueda web de comercios",
                 pt: "Busca de estabelecimentos na web",
                 fr: "Recherche web des commerçants",
+            }),
+            t({
+                en: "Bank linking in the US and Canada",
+                de: "Banken in den USA und Kanada verknüpfen",
+                es: "Vincular bancos de EE. UU. y Canadá",
+                pt: "Vincular bancos dos EUA e do Canadá",
+                fr: "Liaison bancaire aux États-Unis et au Canada",
             }),
         ],
     },
