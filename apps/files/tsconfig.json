@@ -1,0 +1,9 @@
+{
+    "extends": "@outlayr/config/tsconfig.base.json",
+    "include": ["src/**/*.ts"],
+    "compilerOptions": {
+        "lib": ["ESNext"],
+        "noEmit": true,
+        "types": ["@cloudflare/workers-types"]
+    }
+}
