@@ -556,6 +556,13 @@ const log = {
             fr: "Tout est vérifié · {bank} synchronisé {when}",
             pt: "Tudo revisado · {bank} sincronizado {when}",
         }),
+        "log.review.confirmFailed": t({
+            en: "Couldn't confirm. Try again.",
+            de: "Bestätigen fehlgeschlagen. Versuch es noch einmal.",
+            es: "No se pudo confirmar. Intenta de nuevo.",
+            fr: "Confirmation impossible. Réessaie.",
+            pt: "Não foi possível confirmar. Tente de novo.",
+        }),
         "log.review.confirmAll_one": t({
             en: "Confirm 1",
             de: "1 bestätigen",

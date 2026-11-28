@@ -1,7 +1,7 @@
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AmountsHiddenContext } from "@/components/amount-text";
@@ -51,6 +51,10 @@ export function Review() {
             return;
         }
         setClosing(false);
+        if (!AsyncResult.isSuccess(result)) {
+            // A toast would sit under this modal sheet.
+            Alert.alert(t("log.review.confirmFailed"));
+        }
     };
 
     const confirmAll = () => {
