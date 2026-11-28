@@ -223,7 +223,7 @@ Product code never calls an effect hook; [React effects](./react-effects.md) has
 
 ## Effect diagnostics
 
-`@effect/language-service` is a TypeScript plugin in `packages/config/tsconfig.base.json`, which reaches `apps/app`, `apps/site`, `packages/ai`, `packages/model-router`, `packages/money` and `packages/shared`. `apps/native/tsconfig.json` starts from Expo's base and `packages/backend/convex/tsconfig.json` from Convex's, while `packages/backend/tsconfig.json` extends the convex config, so each repeats the same plugin block. `tsc` ignores plugins, so these diagnostics show in the editor and from the CLI, not in `check-types`:
+`@effect/language-service` is a TypeScript plugin in `packages/config/tsconfig.base.json`, which reaches `apps/app`, `apps/site`, `packages/ai`, `packages/model-router`, `packages/money` and `packages/shared`. `apps/native/tsconfig.json` starts from Expo's base and `packages/backend/convex/tsconfig.json` from Convex's, while `packages/backend/tsconfig.json` extends the convex config, so each repeats the same plugin block. Plain `tsc` ignores plugins, so locally these diagnostics show in the editor and from the CLI, not in `check-types`:
 
 ```bash
 vp exec effect-language-service diagnostics --project packages/money/tsconfig.json --strict
@@ -231,7 +231,7 @@ vp exec effect-language-service diagnostics --project packages/money/tsconfig.js
 
 On top of the defaults (which already make `floatingEffect`, `missingEffectContext`, `missingEffectError` and `missingReturnYieldStar` errors), `diagnosticSeverity` raises the checks that catch a wrong program inside an Effect: `any` or `unknown` in the error channel, a global `Error` failure or catch, leaked requirements, a missing service dependency, `Schema.*Sync` and `JSON` where a schema belongs, and `Date`, `console`, `Math.random`, timers, `fetch` and `crypto.randomUUID` used inside an Effect instead of its services. `nodeBuiltinImport` stays off (scripts and the web build read `node:fs` legitimately), and so does `instanceOfSchema`: `instanceof` on a `Schema.TaggedError` class is how plain `catch` blocks narrow.
 
-CI runs them: the `Effect diagnostics` job takes the nine projects as a matrix and fails on any finding. Patching `tsc` (`effect-language-service patch`) would fold them into `check-types`, but it rewrites `typescript` inside the pnpm store, which every worktree on a machine shares.
+CI runs them inside `check-types`: the `Types` job patches `tsc` (`effect-language-service patch`), so an error or warning fails the typecheck (suggestions only print). On `apps/native` the patched `tsc` took 44 s against 387 s for the CLI, which as a nine-project matrix had been the slowest job in CI. The patch writes in place, so the job first copies `typescript.js` and `_tsc.js` to break pnpm's hardlinks into the cached store. Local `tsc` stays unpatched for the same reason: the write would change `typescript` in the store every worktree on a machine shares.
 
 ## Tailwind
 

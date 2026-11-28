@@ -76,15 +76,14 @@ jobs:
             - name: Docs index
               run: node scripts/docs-index.mjs
 
-    test:
-        name: types · tests
+    types:
+        name: Types
         needs: changes
-        if: needs.changes.outputs.typecheck != '' || needs.changes.outputs.test != ''
+        if: needs.changes.outputs.typecheck != ''
         runs-on: ubuntu-26.04
         timeout-minutes: 15
         env:
             TYPECHECK: ${{ needs.changes.outputs.typecheck }}
-            TEST: ${{ needs.changes.outputs.test }}
         steps:
             - uses: actions/checkout@v7
 
@@ -98,8 +97,18 @@ jobs:
               working-directory: apps/native
               run: npx uniwind generate-artifacts --css ./global.css --dts ./uniwind-types.d.ts
 
+            # Patched tsc reports the Effect plugin's diagnostics; the standalone CLI took 9x as long on native.
+            # The patch writes in place and pnpm hardlinks these files from the cached store, so copy them first.
+            - name: Patch tsc with Effect diagnostics
+              run: |
+                  lib="$(dirname "$(node -p "require.resolve('typescript/package.json')")")/lib"
+                  for file in "$lib/typescript.js" "$lib/_tsc.js"; do
+                      cp "$file" "$file.tmp"
+                      mv "$file.tmp" "$file"
+                  done
+                  vp exec effect-language-service patch
+
             - name: Typecheck
-              if: env.TYPECHECK != ''
               run: vp run $TYPECHECK check-types
 
             - name: Confect codegen is committed
@@ -114,29 +123,14 @@ jobs:
               if: needs.changes.outputs.native == 'true'
               run: vp run --filter @outlayr/native i18n:test
 
-            - name: Tests
-              if: env.TEST != ''
-              run: vp run $TEST test
-
-    effect:
-        name: Effect diagnostics
+    tests:
+        name: Tests
         needs: changes
-        if: needs.changes.outputs.typecheck != ''
+        if: needs.changes.outputs.test != ''
         runs-on: ubuntu-26.04
-        timeout-minutes: 20
-        strategy:
-            fail-fast: false
-            matrix:
-                project:
-                    - packages/money/tsconfig.json
-                    - apps/site/tsconfig.json
-                    - apps/native/tsconfig.json
-                    - packages/backend/tsconfig.json
-                    - apps/app/tsconfig.json
-                    - packages/ai/tsconfig.json
-                    - packages/shared/tsconfig.json
-                    - packages/model-router/tsconfig.json
-                    - packages/backend/convex/tsconfig.json
+        timeout-minutes: 15
+        env:
+            TEST: ${{ needs.changes.outputs.test }}
         steps:
             - uses: actions/checkout@v7
 
@@ -145,8 +139,8 @@ jobs:
                   hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
                   minimum-release-age: ${{ vars.PNPM_MINIMUM_RELEASE_AGE }}
 
-            - name: Diagnostics
-              run: vp exec effect-language-service diagnostics --project ${{ matrix.project }} --strict
+            - name: Tests
+              run: vp run $TEST test
 
     bundle:
         name: expo export (ios)
@@ -173,7 +167,7 @@ jobs:
     check:
         name: Check
         if: always()
-        needs: [changes, lint, test, effect, bundle]
+        needs: [changes, lint, types, tests, bundle]
         runs-on: ubuntu-26.04
         timeout-minutes: 5
         steps:
@@ -183,5 +177,5 @@ jobs:
               run: |
                   jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<<"$RESULTS"
                   jq -e '.changes.outputs as $o
-                    | {test: (($o.typecheck // "") == "" and ($o.test // "") == ""), effect: (($o.typecheck // "") == ""), bundle: ($o.native != "true")} as $skippable
+                    | {types: (($o.typecheck // "") == ""), tests: (($o.test // "") == ""), bundle: ($o.native != "true")} as $skippable
                     | all(to_entries[]; .value.result == "success" or (.value.result == "skipped" and $skippable[.key]))' <<<"$RESULTS" > /dev/null
