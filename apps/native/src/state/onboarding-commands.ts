@@ -128,16 +128,28 @@ export const setMoneyGoalCommand = createRuntimeCommand(appRuntime, {
     label: "onboarding:set-money-goal",
 });
 
+// Pro is already bought: a failed account write must not keep them in onboarding. The list clears first so a
+// claim that runs again (the bank step, then a finish) never creates the same accounts twice.
+const claimWaitingAccounts = Effect.fn("Onboarding.claimWaitingAccounts")(function* claimWaitingAccounts(db: Database) {
+    yield* Meta.get(db, "onboardingWaitingAccounts").pipe(
+        Effect.tap(() => Meta.set(db, "onboardingWaitingAccounts", [])),
+        Effect.flatMap((waiting) => createPicks(db, waiting)),
+        Effect.catchCause((cause) => Effect.logError("Creating the waiting accounts failed", cause))
+    );
+});
+
 export const finishOnboardingOfferCommand = createRuntimeCommand(appRuntime, {
     execute: Effect.fn("Onboarding.finishOffer")(function* finishOffer(input: { db: Database; purchased: boolean }) {
         if (input.purchased) {
-            // Pro is already bought: a failed account write must not keep them in onboarding.
-            yield* Meta.get(input.db, "onboardingWaitingAccounts").pipe(
-                Effect.flatMap((waiting) => createPicks(input.db, waiting)),
-                Effect.catchCause((cause) => Effect.logError("Creating the waiting accounts failed", cause))
-            );
+            yield* claimWaitingAccounts(input.db);
         }
         yield* finishFirstRun(input.db);
     }),
     label: "onboarding:finish-offer",
+});
+
+/** The bank step's "Files into" picker needs the accounts picked earlier to exist before onboarding ends. */
+export const claimOnboardingAccountsCommand = createRuntimeCommand(appRuntime, {
+    execute: (db: Database) => claimWaitingAccounts(db),
+    label: "onboarding:claim-accounts",
 });

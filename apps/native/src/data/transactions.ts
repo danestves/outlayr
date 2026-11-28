@@ -8,6 +8,7 @@ import { useCategoryMeta } from "./categories";
 import { NO_READ, NO_ROWS, useLiveQuery, useLiveRead, useLiveValue } from "./live-query";
 import { sameRows } from "./same-rows";
 import {
+    arrivedSinceQuery,
     ledgerSizeQuery,
     logSplitMs,
     logTailRowsQuery,
@@ -62,6 +63,11 @@ export function useDecoratedRows<Row extends { categoryId: string | null }>(
         [meta]
     );
     return useMemo(() => decorate(rows), [decorate, rows]);
+}
+
+export function useArrivedSince(db: Database, sinceMs: number, limit: number): TransactionWithCategory[] {
+    const rows = useLiveQuery(transactions, () => arrivedSinceQuery(db, sinceMs, limit), [sinceMs, limit]);
+    return useDecoratedRows(db, rows);
 }
 
 export interface LoggedTransactions {
