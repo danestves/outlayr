@@ -1,7 +1,9 @@
 import type { BankAccountView, BankOverview, InstitutionView } from "@outlayr/backend/confect/banking.spec";
+import { BANK_ANALYTICS_AT_MS } from "@outlayr/backend/confect/legal";
 import { api } from "@outlayr/backend/convex/_generated/api";
 
 import { convexClient } from "./convex";
+import { track } from "./launch-analytics";
 import { collectBankAccounts } from "./stripe-link";
 
 export type BankOverviewView = typeof BankOverview.Type;
@@ -43,6 +45,24 @@ export type BankLinkOutcome =
     | { kind: "retired" };
 
 export async function linkBank(
+    institution: BankInstitution["id"],
+    repair: LinkedBankAccount["id"] | null
+): Promise<BankLinkOutcome> {
+    const outcome = await attemptLink(institution, repair);
+    if (Date.now() >= BANK_ANALYTICS_AT_MS) {
+        track({
+            event: "bank_link_finished",
+            properties: {
+                accounts: outcome.kind === "linked" ? outcome.added.length : 0,
+                outcome: outcome.kind,
+                relink: repair !== null,
+            },
+        });
+    }
+    return outcome;
+}
+
+async function attemptLink(
     institution: BankInstitution["id"],
     repair: LinkedBankAccount["id"] | null
 ): Promise<BankLinkOutcome> {
