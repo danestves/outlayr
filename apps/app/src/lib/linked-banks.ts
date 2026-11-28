@@ -1,7 +1,9 @@
 import type { BankAccountView, BankOverview, InstitutionView } from "@outlayr/backend/confect/banking.spec";
+import { BANK_ANALYTICS_AT_MS } from "@outlayr/backend/confect/legal";
 import { api } from "@outlayr/backend/convex/_generated/api";
 
 import { convexClient } from "./convex";
+import { track } from "./launch-analytics";
 import { collectBankAccounts } from "./stripe-link";
 
 export type BankOverviewView = typeof BankOverview.Type;
@@ -43,6 +45,45 @@ export type BankLinkOutcome =
     | { kind: "retired" };
 
 export async function linkBank(
+    institution: BankInstitution["id"],
+    repair: LinkedBankAccount["id"] | null
+): Promise<BankLinkOutcome> {
+    const outcome = await attemptLink(institution, repair);
+    const result = linkResult(outcome);
+    if (result !== null && Date.now() >= BANK_ANALYTICS_AT_MS) {
+        track({ event: "bank_link_finished", properties: { ...result, relink: repair !== null } });
+    }
+    return outcome;
+}
+
+export interface LinkResult {
+    accounts: number;
+    outcome: "linked" | "canceled" | "failed";
+}
+
+// A relink that leaves the account expired shows as a failure, so it counts as one. The plan and unavailable gates
+// stop before any attempt.
+function linkResult(outcome: BankLinkOutcome): LinkResult | null {
+    switch (outcome.kind) {
+        case "linked": {
+            return outcome.repaired || outcome.added.length > 0
+                ? { accounts: outcome.added.length, outcome: "linked" }
+                : { accounts: 0, outcome: "failed" };
+        }
+        case "canceled": {
+            return { accounts: 0, outcome: "canceled" };
+        }
+        case "plan":
+        case "unavailable": {
+            return null;
+        }
+        default: {
+            return { accounts: 0, outcome: "failed" };
+        }
+    }
+}
+
+async function attemptLink(
     institution: BankInstitution["id"],
     repair: LinkedBankAccount["id"] | null
 ): Promise<BankLinkOutcome> {

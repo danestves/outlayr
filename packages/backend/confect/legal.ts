@@ -39,6 +39,8 @@ export const ONBOARDING_ANALYTICS_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
 export const WEB_ANALYTICS_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
+export const BANK_ANALYTICS_AT_MS = DECEMBER_NOTICE_AT_MS;
+
 const GUEST_PURCHASE_AT_MS = Date.UTC(2026, 10, 21);
 const PROFILES_AT_MS = LATE_NOVEMBER_NOTICE_AT_MS;
 
@@ -1474,11 +1476,19 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "With Pro, link accounts at banks in the US and Canada through Stripe. You sign in on Stripe's screen, and we never see your bank login. What you type to find your bank and your phone's region go to our server and aren't kept. We keep each account's bank, name, and last 4 digits until you unlink it, and file its transactions into your synced ledger as entries, until you delete them or your account.",
                     label: "Linking a bank",
                 },
+                {
+                    detail: "With Share analytics on: when you try to link a bank, whether it worked, you canceled, or it failed, whether you were signing in to a bank again, and how many accounts it added. Never which bank or anything about its accounts.",
+                    label: "Bank linking in analytics",
+                },
             ],
             de: [
                 {
                     detail: "Mit Pro verknüpfst du Konten bei Banken in den USA und Kanada über Stripe. Du meldest dich auf dem Bildschirm von Stripe an, und wir sehen deine Bank-Zugangsdaten nie. Was du zur Banksuche eintippst und die Region deines Handys gehen an unseren Server und werden nicht gespeichert. Bank, Name und letzte 4 Ziffern jedes Kontos speichern wir, bis du die Verknüpfung aufhebst, und legen seine Umsätze als Einträge in deinem synchronisierten Haushaltsbuch ab, bis du sie oder dein Konto löschst.",
                     label: "Bank verknüpfen",
+                },
+                {
+                    detail: "Mit eingeschaltetem „Analysedaten teilen“: wann du versuchst, eine Bank zu verknüpfen, ob es geklappt hat, ob du abgebrochen hast oder ob es fehlgeschlagen ist, ob du versucht hast, dich erneut bei einer Bank anzumelden, und wie viele Konten dazugekommen sind. Nie welche Bank oder etwas über ihre Konten.",
+                    label: "Bankverknüpfung in Analysen",
                 },
             ],
             es: [
@@ -1486,17 +1496,29 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Con Pro, vincula cuentas de bancos de Estados Unidos y Canadá a través de Stripe. Inicias sesión en la pantalla de Stripe, y nunca vemos tus datos de acceso al banco. Lo que escribes para buscar tu banco y la región de tu teléfono van a nuestro servidor y no se guardan. Guardamos el banco, el nombre y los últimos 4 dígitos de cada cuenta hasta que la desvincules, y registramos sus movimientos como entradas en tu registro sincronizado, hasta que las borres o borres tu cuenta.",
                     label: "Vincular un banco",
                 },
+                {
+                    detail: "Con Compartir analíticas activado: cuándo intentas vincular un banco, si funcionó, si lo cancelaste o si falló, si estabas volviendo a iniciar sesión en un banco y cuántas cuentas agregó. Nunca qué banco ni nada sobre sus cuentas.",
+                    label: "Vincular bancos en analíticas",
+                },
             ],
             fr: [
                 {
                     detail: "Avec Pro, liez des comptes de banques aux États-Unis et au Canada via Stripe. Vous vous connectez sur l'écran de Stripe, et nous ne voyons jamais vos identifiants bancaires. Ce que vous tapez pour trouver votre banque et la région de votre téléphone vont à notre serveur et ne sont pas conservés. Nous gardons la banque, le nom et les 4 derniers chiffres de chaque compte jusqu'à ce que vous retiriez le lien, et enregistrons ses transactions comme opérations dans votre registre synchronisé, jusqu'à ce que vous les supprimiez ou supprimiez votre compte.",
                     label: "Lier une banque",
                 },
+                {
+                    detail: "Avec Partager les données d'analyse activé : quand vous essayez de lier une banque, si cela a fonctionné, si vous avez annulé ou si cela a échoué, si vous vous reconnectiez à une banque et combien de comptes ont été ajoutés. Jamais quelle banque ni rien sur ses comptes.",
+                    label: "Liaison bancaire dans les analyses",
+                },
             ],
             pt: [
                 {
                     detail: "Com o Pro, vincule contas de bancos dos EUA e do Canadá pela Stripe. Você entra na tela da Stripe, e nunca vemos seus dados de acesso ao banco. O que você digita para procurar seu banco e a região do seu celular vão para o nosso servidor e não são guardados. Guardamos o banco, o nome e os últimos 4 dígitos de cada conta até você desvinculá-la, e registramos as transações como lançamentos no seu registro sincronizado, até você apagá-las ou apagar sua conta.",
                     label: "Vincular um banco",
+                },
+                {
+                    detail: "Com Compartilhar análises ativado: quando você tenta vincular um banco, se deu certo, se você cancelou ou se falhou, se você estava entrando de novo em um banco e quantas contas foram adicionadas. Nunca qual banco nem nada sobre as contas dele.",
+                    label: "Vínculo de bancos nas análises",
                 },
             ],
         },
