@@ -47,6 +47,7 @@ import { track } from "@/lib/launch-analytics";
 import { money } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { newLink } from "@/lib/rule-writes";
+import { newTransferValues, transferAccounts } from "@/lib/transfer-create";
 
 import { useCategoryName } from "../home/format";
 import { useIncomingRules } from "../rules/incoming";
@@ -311,6 +312,41 @@ function EntryTile({ imageUrl, name, onEdit }: { imageUrl?: string; name: string
     );
 }
 
+const KINDS = ["expense", "income", "transfer"] as const;
+type EntryKind = (typeof KINDS)[number];
+
+/** Expense or income, plus Transfer where picking it can swap in the transfer form. */
+export function KindTabs({
+    onPick,
+    transfer,
+    value,
+    wide,
+}: {
+    onPick: (kind: EntryKind) => void;
+    transfer: boolean;
+    value: EntryKind;
+    wide: boolean;
+}) {
+    const { kind } = useIntlayer("dashboard-transactions");
+    return (
+        <Tabs
+            onValueChange={(next) => {
+                const picked = KINDS.find((each) => each === next);
+                if (picked) {
+                    onPick(picked);
+                }
+            }}
+            value={value}
+        >
+            <Tabs.List className={wide ? "w-full [&>*]:flex-1" : undefined}>
+                <Tabs.Trigger value="expense">{kind.expense}</Tabs.Trigger>
+                <Tabs.Trigger value="income">{kind.income}</Tabs.Trigger>
+                {transfer ? <Tabs.Trigger value="transfer">{kind.transfer}</Tabs.Trigger> : null}
+            </Tabs.List>
+        </Tabs>
+    );
+}
+
 function EntryFields({
     accountTrigger,
     amountKey,
@@ -321,6 +357,7 @@ function EntryFields({
     onCreateAccount,
     onEditMerchant,
     onPick,
+    onTransfer,
     problem,
     values,
 }: {
@@ -333,12 +370,13 @@ function EntryFields({
     onCreateAccount?: () => void;
     onEditMerchant?: () => void;
     onPick: (patch: Partial<EntryValues>) => void;
+    onTransfer?: () => void;
     problem: EntryProblem | null;
     values: EntryValues;
 }) {
     const { ledger, overview } = useDashboard();
     const numberLocale = useNumberLocale();
-    const { form, kind } = useIntlayer("dashboard-transactions");
+    const { form } = useIntlayer("dashboard-transactions");
     const quiet = layout === "drawer";
     const accounts = openAccounts(ledger.books);
     const inUse = useMemo(
@@ -368,12 +406,12 @@ function EntryFields({
     const rateTypes: EntryRateType[] =
         values.currency === "VES" ? ["official", "eur_reference", "custom"] : ["official", "custom"];
     const kinds = (
-        <Tabs onValueChange={(next) => flip(next === "income")} value={values.income ? "income" : "expense"}>
-            <Tabs.List className={quiet ? undefined : "w-full [&>*]:flex-1"}>
-                <Tabs.Trigger value="expense">{kind.expense}</Tabs.Trigger>
-                <Tabs.Trigger value="income">{kind.income}</Tabs.Trigger>
-            </Tabs.List>
-        </Tabs>
+        <KindTabs
+            onPick={(next) => (next === "transfer" ? onTransfer?.() : flip(next === "income"))}
+            transfer={onTransfer !== undefined}
+            value={values.income ? "income" : "expense"}
+            wide={!quiet}
+        />
     );
     const pickCurrency = (currency: string) => {
         if (currency !== values.currency) {
@@ -628,7 +666,11 @@ export function EntryDialog({
         const source = ledger.books.transactions.find((row) => row.localId === flow.from);
         return source
             ? logAgainValues(ledger, source, Date.now())
-            : { ...blankValues(ledger, flow.accountId ?? null, Date.now()), note: flow.note ?? "" };
+            : {
+                  ...blankValues(ledger, flow.accountId ?? null, Date.now()),
+                  income: flow.income ?? false,
+                  note: flow.note ?? "",
+              };
     });
     const [scan, setScan] = useState(flow.scanned ?? null);
     const [problem, setProblem] = useState<EntryProblem | null>(null);
@@ -673,6 +715,16 @@ export function EntryDialog({
                         onChange={change}
                         onCreateAccount={() => onSwitch({ kind: "create", type: "bank" })}
                         onPick={change}
+                        onTransfer={() => {
+                            const from = values.accountId ?? transferAccounts(ledger.books)[0]?.localId;
+                            onSwitch({
+                                kind: "transfer",
+                                kinds: true,
+                                // A plain transfer from the picked account, even a card, not the Pay card defaults.
+                                seed:
+                                    from === undefined ? undefined : newTransferValues(ledger, from, null, Date.now()),
+                            });
+                        }}
                         problem={problem}
                         values={filled}
                     />

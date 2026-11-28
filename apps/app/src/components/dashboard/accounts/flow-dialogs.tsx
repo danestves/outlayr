@@ -31,10 +31,26 @@ export default function FlowDialogs({
     if (flow.kind === "transfer") {
         const choices = new Set(transferAccounts(ledger.books).map((row) => row.localId));
         const from = flow.seed?.fromId ?? flow.accountId ?? [...choices][0];
+        const onKind = flow.kinds
+            ? (income: boolean) => onSwitch({ accountId: from, income, kind: "entry" })
+            : undefined;
         if (from === undefined || new Set([...choices, from]).size < 2) {
-            return <TransferNoAccounts onClose={onClose} onCreate={() => onSwitch({ kind: "create", type: "bank" })} />;
+            return (
+                <TransferNoAccounts
+                    onClose={onClose}
+                    onCreate={() => onSwitch({ kind: "create", type: "bank" })}
+                    onKind={onKind}
+                />
+            );
         }
-        return <TransferDialog accountId={from} onClose={onClose} seed={flow.seed && { ...flow.seed, fromId: from }} />;
+        return (
+            <TransferDialog
+                accountId={from}
+                onClose={onClose}
+                onKind={onKind}
+                seed={flow.seed && { ...flow.seed, fromId: from }}
+            />
+        );
     }
     if (flow.kind === "create") {
         return <AccountForm account={null} draft={flow.draft} onClose={onClose} onSwitch={onSwitch} type={flow.type} />;

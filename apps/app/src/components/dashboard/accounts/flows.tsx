@@ -28,8 +28,16 @@ export type AccountFlow =
     | { accountId?: string; draft?: PurchaseValues; kind: "purchase"; seed?: PurchaseSeed }
     | { accountId?: string; kind: "scan" }
     | { accountId?: string; file?: File; kind: "receipt" }
-    | { accountId?: string; kind: "transfer"; seed?: NewTransferValues }
-    | { accountId?: string; from?: string; kind: "entry"; note?: string; scanned?: ScannedEntry; seed?: EntryValues };
+    | { accountId?: string; kind: "transfer"; kinds?: boolean; seed?: NewTransferValues }
+    | {
+          accountId?: string;
+          from?: string;
+          income?: boolean;
+          kind: "entry";
+          note?: string;
+          scanned?: ScannedEntry;
+          seed?: EntryValues;
+      };
 
 interface AccountFlows {
     open: (flow: AccountFlow) => void;
@@ -173,7 +181,14 @@ export function AccountFlowsProvider({ children }: { children: ReactNode }) {
             <Dialog onOpenChange={(next) => next || setFlow(null)} open={open && !targetGone}>
                 <DialogContent
                     className="transition-none"
-                    size={flow?.kind === "entry" || flow?.kind === "purchase" || flow?.kind === "receipt" ? "lg" : "md"}
+                    size={
+                        flow?.kind === "entry" ||
+                        flow?.kind === "purchase" ||
+                        flow?.kind === "receipt" ||
+                        (flow?.kind === "transfer" && flow.kinds)
+                            ? "lg"
+                            : "md"
+                    }
                 >
                     <Suspense fallback={null}>
                         {flow ? <FlowDialogs flow={flow} onClose={() => setFlow(null)} onSwitch={setFlow} /> : null}
