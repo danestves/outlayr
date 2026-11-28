@@ -7,9 +7,15 @@ import { moneyManagerSession } from "@/lib/money-manager-session";
 import { holdInviteLink } from "@/lib/pending-invite-link";
 import { posthog } from "@/lib/posthog";
 import { prefetchProfileInvite } from "@/lib/profile-sharing";
+import { handOverStripeReturn, stripeReturnUrl } from "@/lib/stripe-link";
 
 // Every link from outside the bundle (widgets, App Intents, Siri, quick actions, opened files) passes through here.
 export function redirectSystemPath(event: { path: string | null; initial: boolean }) {
+    const stripeReturn = event.path === null ? null : stripeReturnUrl(event.path);
+    if (stripeReturn !== null) {
+        handOverStripeReturn(stripeReturn);
+        return null;
+    }
     const handover = event.path === null ? null : backupHandover(event.path);
     if (handover !== null) {
         posthog?.capture("app_link_opened", { cold_start: event.initial, target: "backup_file" });

@@ -485,6 +485,7 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
         "expo-apple-authentication",
         "expo-secure-store",
         "expo-web-browser",
+        ["@stripe/stripe-react-native", { disableSPM: true }],
         [
             "react-native-nitro-google-signin",
             {

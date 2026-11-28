@@ -38,6 +38,13 @@ const accounts = {
             fr: "Un compte",
             pt: "Uma conta",
         }),
+        "accounts.add.connectBank": t({
+            en: "Link a bank",
+            de: "Bank verknüpfen",
+            es: "Vincular un banco",
+            fr: "Lier une banque",
+            pt: "Vincular um banco",
+        }),
         "accounts.add.installments": t({
             en: "Buy in installments",
             de: "Auf Raten kaufen",
@@ -46,6 +53,13 @@ const accounts = {
             fr: "Payer en plusieurs fois",
             pt: "Comprar parcelado",
             "pt-PT": "Comprar a prestações",
+        }),
+        "accounts.add.manual": t({
+            en: "Add manually",
+            de: "Manuell hinzufügen",
+            es: "Agregar a mano",
+            fr: "Ajouter à la main",
+            pt: "Adicionar à mão",
         }),
         "accounts.add.prompt": t({
             en: "Add an account, card or person",

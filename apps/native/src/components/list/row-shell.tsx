@@ -15,6 +15,8 @@ const GLYPH = 20;
 const TITLE_INSET = "pl-8";
 
 export interface RowShellProps {
+    /** Paints `detail` as a problem to fix. */
+    attention?: boolean;
     below?: ReactNode;
     children?: ReactNode;
     destructive?: boolean;
@@ -30,6 +32,7 @@ export interface RowShellProps {
 }
 
 export function RowShell({
+    attention = false,
     icon,
     leading,
     title,
@@ -69,7 +72,13 @@ export function RowShell({
             </View>
             {below ? <View className={cn(hasLeading && !flush && TITLE_INSET, "items-start")}>{below}</View> : null}
             {detail ? (
-                <Text className={cn(hasLeading && !flush && TITLE_INSET, "text-muted text-subtitle mt-2 leading-snug")}>
+                <Text
+                    className={cn(
+                        hasLeading && !flush && TITLE_INSET,
+                        attention ? "text-danger" : "text-muted",
+                        "text-subtitle mt-2 leading-snug"
+                    )}
+                >
                     {detail}
                 </Text>
             ) : null}
