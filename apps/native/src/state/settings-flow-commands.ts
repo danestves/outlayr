@@ -25,6 +25,7 @@ import { posthog } from "@/lib/posthog";
 import { Reminders } from "@/lib/reminders";
 import { proTerm } from "@/lib/revenuecat";
 import { RevenueCat } from "@/lib/revenuecat-service";
+import { reviewRemovals, setReviewAlerts, syncReviewPush } from "@/lib/review-push";
 import { appRuntime } from "@/lib/runtime";
 import { openWalletShortcut } from "@/lib/wallet-shortcut";
 
@@ -141,6 +142,32 @@ export const setRemindersCommand = createRuntimeCommand(appRuntime, {
         yield* Meta.set(input.db, "showNotifications", true);
     }),
     label: "settings:set-reminders",
+});
+
+export const setReviewAlertsCommand = createRuntimeCommand(appRuntime, {
+    execute: Effect.fn("Settings.setReviewAlerts")(function* saveReviewAlerts(input: {
+        db: Database;
+        next: boolean;
+        onDenied: () => void;
+    }) {
+        const started = reviewRemovals();
+        if (input.next) {
+            const reminders = yield* Reminders;
+            const existing = yield* reminders.permission();
+            if (enableReminderStep(existing) === "open-settings") {
+                input.onDenied();
+                return;
+            }
+            const granted = existing === "granted" ? existing : yield* reminders.request();
+            // An opt-out or sign-out while the permission prompt was up outranks this enable.
+            if (granted !== "granted" || reviewRemovals() !== started) {
+                return;
+            }
+        }
+        setReviewAlerts(input.next);
+        yield* syncReviewPush();
+    }),
+    label: "settings:set-review-alerts",
 });
 
 const revenueCatFlow = <W, A, E>(

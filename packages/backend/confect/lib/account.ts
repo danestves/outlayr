@@ -226,6 +226,17 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
         { concurrency: "unbounded", discard: true }
     );
 
+    const reviewTargets = yield* Effect.promise(() =>
+        ctx.db
+            .query("reviewPushTargets")
+            .withIndex("by_user_and_device", (q) => q.eq("userId", userId))
+            .collect()
+    );
+    yield* Effect.all(
+        reviewTargets.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
+        { concurrency: "unbounded", discard: true }
+    );
+
     const pushRows = yield* Effect.promise(() =>
         ctx.db
             .query("webPushSubscriptions")

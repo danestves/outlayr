@@ -43,6 +43,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Anonymous account ID, sessions, IP address, device type, purchase records | Buying or restoring Pro without an account | Our servers, RevenueCat | Until you sign in, or ask us to delete it |
 | Merchant and category names | Smart fill | Our servers, Anthropic | Until answered |
 | iPhone push address, an encryption key | Smart fill with the Apple Pay automation | Our servers, Apple’s push service | Until you turn Smart fill off, sign out, or delete your account |
+| iPhone push address | Notifications about bank entries to review | Our servers, Apple’s push service | Until you turn these notifications off, sign out, or delete your account |
 | Title and text of a notification that shows an amount | Logging from notifications, with Smart fill | Our servers, Anthropic | Not kept |
 | Voice recording | Voice entry | Our servers (Cloudflare), ElevenLabs | Not kept |
 | Transcript and draft | Voice entry | Our servers, ElevenLabs, Anthropic | Until closed, or 1 hour idle |
@@ -89,7 +90,7 @@ You don’t need an account to use Outlayr. Without one, none of your ledger is 
 
 - **Widgets** show totals, balances, budgets, and recent entries on your Home Screen, and on iPhone your Lock Screen too. They read from storage shared only between Outlayr and its own widgets.
 - **Search**: on iPhone, Outlayr adds your 500 most recent entries and your budgets to the on-device Spotlight index so you can find them from Search. To stop this, turn off Show Content in Search for Outlayr in the iOS Settings app.
-- **Reminders** (a daily nudge, a weekly and a monthly recap of what you spent, and upcoming subscription charges) are scheduled on your device. The app gets one kind of notification from a server: a merchant suggestion for an Apple Pay purchase that took a few seconds, described under [Apple Pay and Shortcuts](#apple-pay-and-shortcuts). If you turn on the daily reminder in a web browser, our servers check whether you logged anything that day and, if not, send it through that browser’s push service. It says only that nothing is logged, with no amounts or entries.
+- **Reminders** (a daily nudge, a weekly and a monthly recap of what you spent, and upcoming subscription charges) are scheduled on your device. The app gets two kinds of notification from a server: a merchant suggestion for an Apple Pay purchase that took a few seconds, described under [Apple Pay and Shortcuts](#apple-pay-and-shortcuts), and how many new bank entries wait for review, described under [Linking a bank](#linking-a-bank). If you turn on the daily reminder in a web browser, our servers check whether you logged anything that day and, if not, send it through that browser’s push service. It says only that nothing is logged, with no amounts or entries.
 - **Siri and Shortcuts actions** on iPhone (log a transaction, check a budget, get a spending summary) run on the device. Apple handles Siri requests under its own privacy policy. Logging from a notification can also send its text to be [read by Anthropic](#reading-bank-notifications).
 - **App lock** (Settings › Biometric lock) puts Outlayr behind your device’s biometric lock (Face ID or Touch ID on iPhone). The system checks your face or fingerprint, and Outlayr only learns whether the check passed.
 
@@ -189,6 +190,8 @@ Linking runs through Stripe Financial Connections. You find your bank by searchi
 For each account you link, our server keeps the bank’s name, the account’s name, its last 4 digits, its type (checking or savings, credit, investment, or other), whether the link works, when you linked it and when it was last refreshed, and the IDs Stripe gives the account and you as its customer. We also keep, for each transaction, what the bank last sent and which entry it filed into, so a later update changes the right entry.
 
 When Stripe has new transactions, our server reads each one’s amount, currency, description, date, and whether it’s pending, posted, or voided, and files it into your Personal ledger as an entry, which syncs to your devices like any other. A pending charge is updated when it posts. If it’s voided, an entry the bank added is removed, and an entry you logged yourself stays. If you changed an entry’s amount, date, or note, your change stays. If you already logged the same charge, by hand, from Wallet, or from a notification, with the same amount within a few days, the bank transaction is attached to that entry instead of adding a second one, and a subscription you track is marked as charged at the price the bank shows. Each linked account files into an account in your ledger: one whose name matches, or a new one named after the bank account, which you can change.
+
+On an iPhone, the app also gives our server its push address so we can tell you when new bank entries wait for review. The notification says only how many there are, never a merchant or an amount, goes through Apple’s push service, and comes at most once a day. Turn it off in **Settings › Notifications**, which deletes the push address from our server.
 
 - **Unlink** any account in the app. Our server disconnects it at Stripe and deletes its record. Entries already filed stay.
 - If your Pro ends, we disconnect your accounts at Stripe, and nothing new arrives.
@@ -328,7 +331,7 @@ The app asks for each permission the first time a feature needs it. You can chan
 - **Photos:** choosing a receipt to scan, a screenshot of an installment plan to import, or a custom image for a transaction or account.
 - **Microphone:** recording an entry you speak, only while you speak.
 - **Face ID:** unlocking Outlayr when the lock is on.
-- **Notifications:** the reminders you turn on, and the confirmation when Outlayr logs a purchase for you.
+- **Notifications:** the reminders you turn on, and the confirmation when Outlayr logs a purchase for you, and how many new bank entries wait for review.
 - **Notification access** (Android): reading notifications to log purchases, as described in [Notification access on Android](#notification-access-on-android).
 
 Outlayr doesn’t ask for your location or contacts, or for permission to track you.
@@ -342,7 +345,7 @@ These companies help run Outlayr. Each receives only what its job needs.
 - **[Anthropic](https://www.anthropic.com/legal/privacy)** provides the Claude AI models behind suggestions, notification reading, voice entry, receipt scans, installment plan imports, CSV import, bank statement PDF import, and web lookups. It receives the content described in [Suggestions, voice, and receipts](#suggestions-voice-and-receipts).
 - **[ElevenLabs](https://elevenlabs.io/privacy-policy)** turns voice recordings into text. It receives the recording, your language, and your account and category names.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** tracks subscription status. It receives an anonymous ID, or your account ID, name, and email once you sign in, and your purchase records.
-- **[Apple](https://www.apple.com/legal/privacy/)** provides Sign in with Apple, App Store payments, and iOS features such as Siri and Shortcuts, under its own policy. Its push service delivers the Apple Pay suggestions above and receives your iPhone’s push address and an encrypted message it can’t read.
+- **[Apple](https://www.apple.com/legal/privacy/)** provides Sign in with Apple, App Store payments, and iOS features such as Siri and Shortcuts, under its own policy. Its push service delivers the Apple Pay suggestions above, receiving your iPhone’s push address and an encrypted message it can’t read, and the count of bank entries to review, which it can read.
 - **[Google](https://policies.google.com/privacy)** provides Sign in with Google and Google Play payments, under its own policy.
 - **[Stripe](https://stripe.com/privacy)** processes purchases on the web, and its Link service sells them. It receives your name, email, account ID, the plan you chose, and the payment details and billing address you enter at checkout. If you link a bank, Stripe Financial Connections connects to it: it receives your bank login and the data your bank shares, and sends us the account details and transactions described in [Linking a bank](#linking-a-bank).
 - **[Expo](https://expo.dev/privacy)** delivers app updates. It receives a random install ID, the app version, your IP address, and update error messages.

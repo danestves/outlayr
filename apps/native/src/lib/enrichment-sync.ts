@@ -19,6 +19,7 @@ import { subscribeCloudAuthenticated } from "./convex";
 import { sendEnrichmentQueue } from "./enrichment-queue";
 import { discardLogo } from "./logo-backfill";
 import { fetchMerchantImage } from "./logo-fetch";
+import { syncReviewPush } from "./review-push";
 
 const EnrichmentStep = Schema.Literals(["apply", "settle"]);
 
@@ -116,7 +117,9 @@ export const make = Effect.gen(function* make() {
                         ),
                     ],
                     { concurrency: "unbounded" }
-                ).pipe(Stream.runForEach(() => syncCaptureLookup(db))),
+                ).pipe(
+                    Stream.runForEach(() => Effect.all([syncCaptureLookup(db), syncReviewPush()], { discard: true }))
+                ),
             ],
             { concurrency: "unbounded", discard: true }
         );

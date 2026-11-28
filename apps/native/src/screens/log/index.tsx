@@ -29,6 +29,7 @@ import {
     useSparklineRows,
 } from "@/data/log-totals";
 import type { LogPeriod } from "@/data/log-totals";
+import { useReviewQueue } from "@/data/review-queue";
 import { useLoggedTransactions } from "@/data/transactions";
 import type { TransactionWithCategory } from "@/data/transactions";
 import { LOG_PAGE_DAYS } from "@/data/transactions-core";
@@ -72,6 +73,7 @@ import { LogFilterChip } from "./components/log-filter-chip";
 import type { SparklineData } from "./components/log-insights";
 import { LogInsights } from "./components/log-insights";
 import { LogNoResults } from "./components/log-no-results";
+import { LogReview } from "./components/log-review";
 import { LogShelf } from "./components/log-shelf";
 import { LogToolbar } from "./components/log-toolbar";
 import { UpcomingList } from "./components/log-upcoming";
@@ -290,7 +292,9 @@ export function Log() {
         (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
     );
     const visibleTail = keptTail.length === tailRows.length ? tailRows : keptTail;
+    const reviewRows = useReviewQueue(db).filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas));
     const { authorKey, authorOf } = useEntryAuthors([
+        ...reviewRows,
         ...head,
         ...tail,
         ...filteredRows,
@@ -450,6 +454,20 @@ export function Log() {
                             />
                         )}
                         {listFilter === "all" ? (
+                            <LogReview
+                                authorOf={authorOf}
+                                currency={currency}
+                                menuItems={(transaction) => rowMenu(transaction, false)}
+                                nowMs={nowMs}
+                                onConfirm={(ids) => markReviewed({ db, ids })}
+                                onDelete={requestDelete}
+                                onOpenAll={() => router.push("/review")}
+                                onPress={openRow}
+                                rates={rates}
+                                rows={reviewRows}
+                            />
+                        ) : null}
+                        {listFilter === "all" ? (
                             <LogShelf
                                 upcoming={upcomingRows}
                                 accounts={accountRows}
@@ -481,20 +499,15 @@ export function Log() {
                         {emptyResult ? <LogNoResults /> : null}
                     </>
                 }
-                renderSectionHeader={({ section }) => {
-                    const newIds = section.data.flatMap((row) => (row.unreviewed ? [row.id] : []));
-                    return (
-                        <DaySectionHeader
-                            section={section}
-                            first={section.first}
-                            plain
-                            label={monthly ? formatMonthTitle(section.day, language) : undefined}
-                            newCount={newIds.length}
-                            onConfirmNew={() => markReviewed({ db, ids: newIds })}
-                            onShare={monthly ? undefined : () => shareDay(section)}
-                        />
-                    );
-                }}
+                renderSectionHeader={({ section }) => (
+                    <DaySectionHeader
+                        section={section}
+                        first={section.first}
+                        plain
+                        label={monthly ? formatMonthTitle(section.day, language) : undefined}
+                        onShare={monthly ? undefined : () => shareDay(section)}
+                    />
+                )}
                 renderItem={({ item }) => (
                     <SwipeableTransactionRow
                         author={authorOf(item.createdBy, item.unsent)}

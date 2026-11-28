@@ -402,6 +402,29 @@ describe("bank filing", () => {
         await expect(t.run((ctx) => ctx.db.query("bankEntries").collect())).resolves.toHaveLength(1);
     });
 
+    it("flags a fresh entry for review, leaves history alone, and keeps the flag through a bank patch", async () => {
+        const t = setup();
+        await seedLedger(t, "user-1");
+        const id = await insertBank(t, "user-1");
+        const lease = await claimLease(t, id);
+
+        await file(t, id, lease, [
+            bank({ amountMinor: -1234, id: "tx_recent", transactedAt: at("2027-01-03T15:00:00Z") }),
+            bank({ amountMinor: -2000, id: "tx_old", transactedAt: at("2026-12-20T15:00:00Z") }),
+        ]);
+        const recentId = await localIdOf("user-1", "bank:stripe:tx_recent");
+        const oldId = await localIdOf("user-1", "bank:stripe:tx_old");
+        await expect(storedEntry(t, "user-1", recentId)).resolves.toMatchObject({ unreviewed: true });
+        await expect(storedEntry(t, "user-1", oldId)).resolves.toMatchObject({ unreviewed: false });
+
+        await file(t, id, lease, [
+            bank({ amountMinor: -1300, id: "tx_recent", transactedAt: at("2027-01-04T15:00:00Z") }),
+        ]);
+
+        await expect(storedEntry(t, "user-1", recentId)).resolves.toMatchObject({ amount: 13, unreviewed: true });
+        await expect(storedEntry(t, "user-1", oldId)).resolves.toMatchObject({ unreviewed: false });
+    });
+
     it("moves a posted update over the fields the user has not edited and stamps the row past itself", async () => {
         const t = setup();
         await seedLedger(t, "user-1", {
@@ -454,7 +477,7 @@ describe("bank filing", () => {
             day: at("2027-01-04T00:00:00Z"),
             month: at("2027-01-01T00:00:00Z"),
             seq: 1001,
-            updatedAt: 501,
+            updatedAt: 502,
         });
         expect((await nextSeqOf(t, "user-1"))?.nextSeq).toBe(1002);
     });
@@ -477,7 +500,7 @@ describe("bank filing", () => {
             amount: 10,
             amountUsd: 10,
             date: at("2027-01-04T15:00:00Z"),
-            updatedAt: 601,
+            updatedAt: 602,
         });
     });
 
@@ -546,7 +569,7 @@ describe("bank filing", () => {
             exchangeRate: 10,
             exchangeRateType: "custom",
             note: "Coffee Shop",
-            updatedAt: 401,
+            updatedAt: 402,
         });
     });
 
@@ -703,6 +726,60 @@ describe("bank filing", () => {
         });
 
         await expect(storedEntry(t, owner.userId, localId)).resolves.toMatchObject({ amount: 99, deviceId: "phone" });
+    });
+
+    it("keeps the posted amount when a phone confirms the pending row it never refreshed", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        await seedLedger(t, owner.userId);
+        const id = await insertBank(t, owner.userId);
+        const lease = await claimLease(t, id);
+        await file(t, id, lease, [bank({ amountMinor: -1000, status: "pending" })]);
+        const localId = await localIdOf(owner.userId, "bank:stripe:tx_1");
+        const first = await storedEntry(t, owner.userId, localId);
+        if (!first) {
+            throw new Error("expected the bank entry");
+        }
+        await file(t, id, lease, [bank({ amountMinor: -1200 })]);
+
+        await authenticatedAs(t, owner).mutation(api.sync.push, {
+            deviceId: "phone",
+            rows: [
+                {
+                    deletedAt: null,
+                    fields: {
+                        accountId: first.accountId ?? null,
+                        amount: first.amount,
+                        amountUsd: first.amountUsd,
+                        categoryId: first.categoryId,
+                        currency: "USD",
+                        customColor: null,
+                        date: first.date,
+                        day: first.day,
+                        details: null,
+                        emoji: null,
+                        exchangeRate: 1,
+                        exchangeRateType: null,
+                        icon: null,
+                        imageColor: null,
+                        imageKey: null,
+                        income: false,
+                        month: first.month,
+                        note: "Coffee",
+                        onceRecurring: false,
+                        recurringCoefficient: 1,
+                        recurringEndDate: null,
+                        recurringType: 0,
+                        unreviewed: false,
+                    },
+                    localId,
+                    table: "transactions",
+                    updatedAt: first.updatedAt + 1,
+                },
+            ],
+        });
+
+        await expect(storedEntry(t, owner.userId, localId)).resolves.toMatchObject({ amount: 12, deviceId: "bank" });
     });
 });
 
@@ -875,13 +952,112 @@ describe("bank transaction linking", () => {
             amount: 12.34,
             date: at("2027-01-02T15:00:00Z"),
             seq: 1000,
-            updatedAt: 6,
+            updatedAt: 7,
         });
         expect((await nextSeqOf(t, "user-1"))?.nextSeq).toBe(1001);
         await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
             localId: "apple-pay",
             origin: "linked",
         });
+    });
+
+    it("alerts a live phone on the first filing however many switched-off rows sit before it", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        await seedLedger(t, owner.userId);
+        const day = 24 * 60 * 60 * 1000;
+        await t.run(async (ctx) => {
+            for (let index = 0; index < 20; index += 1) {
+                await ctx.db.insert("reviewPushTargets", {
+                    alertedAt: NOW - 2 * day,
+                    deviceId: `old-${index}`,
+                    environment: "production",
+                    userId: owner.userId,
+                });
+                await ctx.db.insert("reviewPushTargets", {
+                    alertedAt: NOW - 1000,
+                    deviceId: `fresh-${index}`,
+                    environment: "production",
+                    userId: owner.userId,
+                });
+            }
+            await ctx.db.insert("reviewPushTargets", {
+                deviceId: "phone",
+                environment: "production",
+                token: "a".repeat(64),
+                userId: owner.userId,
+            });
+        });
+        const id = await insertBank(t, owner.userId);
+        const lease = await claimLease(t, id);
+
+        await file(t, id, lease, [bank({ id: "tx_a" })]);
+
+        const rows = await t.run((ctx) => ctx.db.query("reviewPushTargets").collect());
+        expect(rows.filter((row) => row.deviceId.startsWith("old-"))).toHaveLength(0);
+        expect(rows.filter((row) => row.deviceId.startsWith("fresh-"))).toHaveLength(20);
+        expect(rows.find((row) => row.deviceId === "phone")?.alertedAt).toBeGreaterThanOrEqual(NOW);
+    });
+
+    it("keeps the bank's account link when a phone confirms the auto-logged row it never refreshed", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        await seedLedger(t, owner.userId);
+        await insertEntry(
+            t,
+            transactionRow(owner.userId, "apple-pay", {
+                accountId: null,
+                date: at("2027-01-02T15:00:00Z"),
+                day: at("2027-01-02T00:00:00Z"),
+                unreviewed: true,
+                updatedAt: 5,
+            })
+        );
+        const before = await storedEntry(t, owner.userId, "apple-pay");
+        if (!before) {
+            throw new Error("expected the logged entry");
+        }
+        const id = await insertBank(t, owner.userId);
+        await file(t, id, await claimLease(t, id), [bank()]);
+
+        await authenticatedAs(t, owner).mutation(api.sync.push, {
+            deviceId: "tablet",
+            rows: [
+                {
+                    deletedAt: null,
+                    fields: {
+                        accountId: null,
+                        amount: before.amount,
+                        amountUsd: before.amountUsd,
+                        categoryId: before.categoryId,
+                        currency: before.currency,
+                        customColor: null,
+                        date: before.date,
+                        day: before.day,
+                        details: null,
+                        emoji: null,
+                        exchangeRate: before.exchangeRate,
+                        exchangeRateType: null,
+                        icon: null,
+                        imageColor: null,
+                        imageKey: null,
+                        income: before.income,
+                        month: before.month,
+                        note: before.note,
+                        onceRecurring: false,
+                        recurringCoefficient: 1,
+                        recurringEndDate: null,
+                        recurringType: 0,
+                        unreviewed: false,
+                    },
+                    localId: "apple-pay",
+                    table: "transactions",
+                    updatedAt: before.updatedAt + 1,
+                },
+            ],
+        });
+
+        await expect(storedEntry(t, owner.userId, "apple-pay")).resolves.toMatchObject({ accountId: "checking" });
     });
 
     it("settles a repriced subscription occurrence instead of filing a second charge", async () => {
@@ -914,7 +1090,7 @@ describe("bank transaction linking", () => {
             month: at("2027-01-01T00:00:00Z"),
             note: "Streaming",
             seq: 1000,
-            updatedAt: 8,
+            updatedAt: 9,
         });
         await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
             amount: 12.99,
@@ -1071,7 +1247,7 @@ describe("bank transaction linking", () => {
             date: at("2027-01-02T15:00:00Z"),
             day: at("2027-01-02T00:00:00Z"),
             seq: 1000,
-            updatedAt: 2,
+            updatedAt: 3,
         });
         await expect(bankRecord(t, "user-1", "bank:stripe:tx_1")).resolves.toMatchObject({
             amount: 15,

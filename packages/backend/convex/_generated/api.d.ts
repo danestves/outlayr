@@ -46,6 +46,7 @@ import type * as profileSharing from "../profileSharing.js";
 import type * as receiptScan from "../receiptScan.js";
 import type * as referrals from "../referrals.js";
 import type * as revenuecat from "../revenuecat.js";
+import type * as reviewPush from "../reviewPush.js";
 import type * as sharedReports from "../sharedReports.js";
 import type * as sync from "../sync.js";
 import type * as voiceEntry from "../voiceEntry.js";
@@ -97,6 +98,7 @@ declare const fullApi: ApiFromModules<{
   receiptScan: typeof receiptScan;
   referrals: typeof referrals;
   revenuecat: typeof revenuecat;
+  reviewPush: typeof reviewPush;
   sharedReports: typeof sharedReports;
   sync: typeof sync;
   voiceEntry: typeof voiceEntry;

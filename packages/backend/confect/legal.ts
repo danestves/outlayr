@@ -1490,6 +1490,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Your phone works out a weekly recap and schedules it as a reminder: what you spent, your top category, and how it compares with the week before. Those figures stay on your phone. With Share analytics on, opening it counts like opening any other reminder. Turn it off in Settings › Notifications. The policy now also names the monthly recap that comes with the daily reminder.",
                     label: "Weekly recap",
                 },
+                {
+                    detail: "On an iPhone, a notification when new bank entries wait for review, at most once a day. It says only how many, never a merchant or amount. Our server keeps your iPhone's push address for it until you turn it off in Settings › Notifications, sign out, or delete your account.",
+                    label: "Bank entries to review",
+                },
             ],
             de: [
                 {
@@ -1507,6 +1511,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Dein Handy erstellt einen Wochenrückblick und plant ihn als Erinnerung: was du ausgegeben hast, deine größte Kategorie und der Vergleich zur Woche davor. Diese Zahlen bleiben auf deinem Handy. Mit eingeschaltetem „Analysedaten teilen“ zählt das Öffnen wie bei jeder anderen Erinnerung. Schalte ihn unter Einstellungen › Benachrichtigungen aus. Die Richtlinie nennt jetzt auch den Monatsrückblick, der mit der täglichen Erinnerung kommt.",
                     label: "Wochenrückblick",
+                },
+                {
+                    detail: "Auf einem iPhone eine Mitteilung, wenn neue Bankeinträge auf deine Prüfung warten, höchstens einmal am Tag. Sie nennt nur, wie viele, nie einen Händler oder Betrag. Unser Server speichert dafür die Push-Adresse deines iPhones, bis du sie unter Einstellungen › Benachrichtigungen ausschaltest, dich abmeldest oder dein Konto löschst.",
+                    label: "Zu prüfende Bankeinträge",
                 },
             ],
             es: [
@@ -1526,6 +1534,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Tu teléfono arma un resumen semanal y lo programa como recordatorio: cuánto gastaste, tu categoría principal y cómo se compara con la semana anterior. Esas cifras se quedan en tu teléfono. Con Compartir analíticas activado, abrirlo cuenta como abrir cualquier otro recordatorio. Desactívalo en Configuración › Notificaciones. La política ahora también nombra el resumen mensual que viene con el recordatorio diario.",
                     label: "Resumen semanal",
                 },
+                {
+                    detail: "En un iPhone, un aviso cuando hay entradas nuevas del banco por revisar, como máximo una vez al día. Solo dice cuántas, nunca un comercio ni un monto. Nuestro servidor guarda la dirección push de tu iPhone para esto hasta que lo desactives en Configuración › Notificaciones, cierres sesión o elimines tu cuenta.",
+                    label: "Entradas del banco por revisar",
+                },
             ],
             fr: [
                 {
@@ -1544,6 +1556,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Votre téléphone prépare un bilan de la semaine et le programme comme rappel : vos dépenses, votre catégorie principale et la comparaison avec la semaine d'avant. Ces chiffres restent sur votre téléphone. Avec Partager les données d'analyse activé, l'ouvrir compte comme l'ouverture de tout autre rappel. Désactivez-le dans Réglages › Notifications. La politique nomme aussi désormais le bilan mensuel qui accompagne le rappel quotidien.",
                     label: "Bilan de la semaine",
                 },
+                {
+                    detail: "Sur un iPhone, une notification quand de nouvelles opérations bancaires attendent d'être vérifiées, au plus une fois par jour. Elle indique seulement leur nombre, jamais un commerçant ni un montant. Notre serveur garde pour cela l'adresse push de votre iPhone jusqu'à ce que vous la désactiviez dans Réglages › Notifications, vous déconnectiez ou supprimiez votre compte.",
+                    label: "Opérations bancaires à vérifier",
+                },
             ],
             pt: [
                 {
@@ -1561,6 +1577,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Seu celular monta um resumo semanal e o programa como lembrete: quanto você gastou, sua categoria principal e a comparação com a semana anterior. Esses valores ficam no seu celular. Com Compartilhar análises ativado, abri-lo conta como abrir qualquer outro lembrete. Desative em Ajustes › Notificações. A política agora também nomeia o resumo mensal que vem com o lembrete diário.",
                     label: "Resumo semanal",
+                },
+                {
+                    detail: "Num iPhone, um aviso quando houver lançamentos novos do banco para revisar, no máximo uma vez por dia. Diz só quantos, nunca um estabelecimento ou valor. Nosso servidor guarda o endereço push do seu iPhone para isso até você desativar em Ajustes › Notificações, sair da conta ou excluir sua conta.",
+                    label: "Lançamentos do banco para revisar",
                 },
             ],
         },

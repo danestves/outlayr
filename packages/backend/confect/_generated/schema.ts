@@ -34,6 +34,7 @@ import profiles from "./tables/profiles";
 import referralCodes from "./tables/referralCodes";
 import referralRewards from "./tables/referralRewards";
 import referrals from "./tables/referrals";
+import reviewPushTargets from "./tables/reviewPushTargets";
 import savingsGoals from "./tables/savingsGoals";
 import sharedReports from "./tables/sharedReports";
 import syncState from "./tables/syncState";
@@ -88,6 +89,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly referralCodes: typeof referralCodes;
   readonly referralRewards: typeof referralRewards;
   readonly referrals: typeof referrals;
+  readonly reviewPushTargets: typeof reviewPushTargets;
   readonly savingsGoals: typeof savingsGoals;
   readonly sharedReports: typeof sharedReports;
   readonly syncState: typeof syncState;
@@ -141,6 +143,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   referralCodes,
   referralRewards,
   referrals,
+  reviewPushTargets,
   savingsGoals,
   sharedReports,
   syncState,

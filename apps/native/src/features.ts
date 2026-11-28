@@ -95,6 +95,18 @@ export const features = {
         says: ["the log", "my transactions list", "the home screen"],
         steps: [{ see: "Log" }],
     },
+    "review-inbox": {
+        link: "/",
+        proves: "Unconfirmed bank and auto-log entries sit on top of the Log, open in their own sheet, and confirm in one tap.",
+        says: ["review inbox", "entries to review", "confirm bank transactions"],
+        steps: [
+            { see: "To review · 4" },
+            { press: 'label="See all 4"' },
+            { see: "Confirm all 4" },
+            { press: 'label="Confirm all 4"' },
+            { see: "Log" },
+        ],
+    },
     "search-ledger": {
         link: "/search",
         proves: "Search opens from the ledger and waits for a note, category, or amount.",

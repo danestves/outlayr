@@ -35,6 +35,7 @@ import profiles from "./tables/profiles";
 import referralCodes from "./tables/referralCodes";
 import referralRewards from "./tables/referralRewards";
 import referrals from "./tables/referrals";
+import reviewPushTargets from "./tables/reviewPushTargets";
 import savingsGoals from "./tables/savingsGoals";
 import sharedReports from "./tables/sharedReports";
 import syncState from "./tables/syncState";
@@ -89,6 +90,7 @@ export default $defineSchema({
   referralCodes: $Table.tableDefinition(referralCodes),
   referralRewards: $Table.tableDefinition(referralRewards),
   referrals: $Table.tableDefinition(referrals),
+  reviewPushTargets: $Table.tableDefinition(reviewPushTargets),
   savingsGoals: $Table.tableDefinition(savingsGoals),
   sharedReports: $Table.tableDefinition(sharedReports),
   syncState: $Table.tableDefinition(syncState),

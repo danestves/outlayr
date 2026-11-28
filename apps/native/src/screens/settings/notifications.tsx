@@ -1,5 +1,6 @@
 import * as Cause from "effect/Cause";
-import { Alert } from "react-native";
+import { useState } from "react";
+import { Alert, Platform } from "react-native";
 
 import { ChoiceRow, SettingsSection, ToggleRow } from "@/components/list/list-row";
 import { ReminderTimeRow } from "@/components/settings/reminder-time-row";
@@ -15,13 +16,15 @@ import {
     reminderTime,
 } from "@/domain/reminder";
 import type { TimeOfDay } from "@/domain/reminder";
+import { useBankEntry } from "@/hooks/use-bank-overview";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { translateNow } from "@/i18n/runtime";
 import { openNotificationSettings } from "@/lib/reminders";
+import { reviewAlertsOn } from "@/lib/review-push";
 import { SILENT } from "@/state/atom-command";
 import { setNumberSettingCommand } from "@/state/settings-commands";
-import { setReminderTimeCommand, setRemindersCommand } from "@/state/settings-flow-commands";
+import { setReminderTimeCommand, setRemindersCommand, setReviewAlertsCommand } from "@/state/settings-flow-commands";
 import { setDueRemindersCommand } from "@/state/surfaces-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 
@@ -62,15 +65,26 @@ function showDeniedAlert(): void {
 
 export function Notifications() {
     const db = useDatabase();
+    const [reviewAlerts, setReviewAlertsValue] = useState(reviewAlertsOn);
     const setReminders = useAtomAction(setRemindersCommand, { onFailure: reportReminderFailure }, SILENT);
     const setNumber = useAtomAction(setNumberSettingCommand, { onFailure: reportReminderFailure }, SILENT);
     const setTime = useAtomAction(setReminderTimeCommand, { onFailure: reportReminderFailure }, SILENT);
     const setDueReminders = useAtomAction(setDueRemindersCommand, { onFailure: reportReminderFailure }, SILENT);
+    // Settled, the install preference is the truth: a refused permission leaves it where it was.
+    const setReviewAlerts = useAtomAction(
+        setReviewAlertsCommand,
+        {
+            onFailure: reportReminderFailure,
+            onSuccess: () => setReviewAlertsValue(reviewAlertsOn()),
+        },
+        SILENT
+    );
 
     const t = useTranslation();
     const { language } = useLanguage();
     const { use24Hour } = useDisplaySettings().state;
     const { state: settings } = useAppSettings();
+    const bank = useBankEntry();
     const enabled = settings.get("showNotifications");
     const subscriptionsEnabled = settings.get("subscriptionReminders");
     const installmentsEnabled = settings.get("installmentReminders");
@@ -78,6 +92,7 @@ export function Notifications() {
     const option = settings.get("notificationOption");
     const custom = clampTimeOfDay(settings.get("notificationHour"), settings.get("notificationMinute"));
     const scheduled = reminderTime(option, custom);
+    const showReviewAlerts = Platform.OS === "ios" && bank.shown && bank.accounts > 0;
 
     const chooseOption = (next: number) => setNumber({ db, key: "notificationOption", value: next });
 
@@ -165,6 +180,20 @@ export function Notifications() {
                     value={installmentsEnabled}
                 />
             </SettingsSection>
+
+            {showReviewAlerts ? (
+                <SettingsSection footer={t("settings.notifications.reviewFooter")}>
+                    <ToggleRow
+                        icon="Bank"
+                        onValueChange={(next) => {
+                            setReviewAlertsValue(next);
+                            setReviewAlerts({ db, next, onDenied: showDeniedAlert });
+                        }}
+                        title={t("settings.notifications.reviewToggle")}
+                        value={reviewAlerts}
+                    />
+                </SettingsSection>
+            ) : null}
         </SettingsScreen>
     );
 }

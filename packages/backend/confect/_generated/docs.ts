@@ -35,6 +35,7 @@ export type ProfilesDoc = Document.Document<typeof schemaDefinition, "profiles">
 export type ReferralCodesDoc = Document.Document<typeof schemaDefinition, "referralCodes">;
 export type ReferralRewardsDoc = Document.Document<typeof schemaDefinition, "referralRewards">;
 export type ReferralsDoc = Document.Document<typeof schemaDefinition, "referrals">;
+export type ReviewPushTargetsDoc = Document.Document<typeof schemaDefinition, "reviewPushTargets">;
 export type SavingsGoalsDoc = Document.Document<typeof schemaDefinition, "savingsGoals">;
 export type SharedReportsDoc = Document.Document<typeof schemaDefinition, "sharedReports">;
 export type SyncStateDoc = Document.Document<typeof schemaDefinition, "syncState">;
@@ -89,6 +90,7 @@ export interface Docs {
   referralCodes: ReferralCodesDoc;
   referralRewards: ReferralRewardsDoc;
   referrals: ReferralsDoc;
+  reviewPushTargets: ReviewPushTargetsDoc;
   savingsGoals: SavingsGoalsDoc;
   sharedReports: SharedReportsDoc;
   syncState: SyncStateDoc;
