@@ -20,7 +20,7 @@ export interface PhotoTransport {
     /** Null for a missing object: a 404 is a delete racing this fetch, not a failure. */
     get: (url: string) => Effect.Effect<Uint8Array | null, CloudError>;
     put: (url: string, bytes: Uint8Array, method: PhotoUploadMethod) => Effect.Effect<string | null, CloudError>;
-    /** A key the account does not own is not returned. */
+    /** A key the account cannot read is left out, or its url answers `get` with null. */
     readUrls: (keys: readonly string[]) => Effect.Effect<{ key: string; url: string }[], CloudError>;
     release: (key: string) => Effect.Effect<void, CloudError>;
     requestUpload: (

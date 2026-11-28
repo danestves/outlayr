@@ -17,7 +17,7 @@ Responses carry `Cache-Control: private`, so only the visitor's browser keeps a 
 vp run --filter @outlayr/files deploy
 ```
 
-To take the Worker out of the path, delete the `app.tryoutlayr.com/photos/*` route in the Cloudflare dashboard; the app route answers again at once.
+To take the Worker out of the path, delete the `app.tryoutlayr.com/photos/*` route in the Cloudflare dashboard; the app route answers again at once. Native reads from the Worker only when its build sets `EXPO_PUBLIC_FILES_URL=https://files.tryoutlayr.com`; without it, it keeps calling `photos:readUrls`, so keep that function until every installed version sets it.
 
 ## Limits
 

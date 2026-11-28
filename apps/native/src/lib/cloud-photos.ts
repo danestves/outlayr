@@ -1,3 +1,4 @@
+import { merchantLogoUrl } from "@outlayr/backend/confect/lib/photoKeys";
 import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
@@ -6,9 +7,11 @@ import * as Schema from "effect/Schema";
 
 import type { PhotoTransport, PhotoUploadMethod } from "@/data/photo-sync-core";
 import { profileArgs } from "@/domain/profiles";
+import { ENV } from "@/env";
 
 import { activeProfileId } from "./active-profile";
 import { CloudError } from "./cloud-error";
+import { cloudRuntime } from "./cloud-runtime";
 import { cloudAction, cloudMutation } from "./convex";
 
 const UploadReceipt = Schema.Struct({ storageId: Schema.optional(Schema.String) });
@@ -20,12 +23,39 @@ const isOk = (status: number) => status >= 200 && status < 300;
 
 const failed = (kind: "download" | "upload", cause: Error) => new CloudError({ cause, kind, path: "photos" });
 
+const FILES_URL = ENV.EXPO_PUBLIC_FILES_URL;
+const TOKEN_TIMEOUT_MS = 20_000;
+
+const sessionToken = Effect.tryPromise({
+    catch: (cause) => failed("download", cause instanceof Error ? cause : new Error(String(cause))),
+    try: async () => {
+        const reply = await cloudRuntime?.authClient.convex.token({
+            // The token fetch retries until aborted, and a sync pass holds its lock while it waits.
+            fetchOptions: { signal: AbortSignal.timeout(TOKEN_TIMEOUT_MS), throw: false },
+        });
+        return reply?.data?.token ?? null;
+    },
+}).pipe(
+    Effect.flatMap((token) =>
+        token === null
+            ? Effect.fail(failed("download", new Error("No session token for photo files")))
+            : Effect.succeed(token)
+    )
+);
+
 export const photoTransport = Effect.fn("Cloud.photoTransport")(function* photoTransport() {
     const client = yield* HttpClient.HttpClient;
+    // One token per sync pass; a signed bucket url must never carry it.
+    const filesToken = yield* Effect.cached(sessionToken);
 
     const get = Effect.fn("Cloud.photoGet")(function* get(url: string) {
+        const request = HttpClientRequest.get(url);
+        const authorized =
+            FILES_URL !== undefined && url.startsWith(`${FILES_URL}/`)
+                ? HttpClientRequest.bearerToken(request, yield* filesToken)
+                : request;
         const response = yield* client
-            .execute(HttpClientRequest.get(url))
+            .execute(authorized)
             .pipe(Effect.catchTags({ HttpClientError: (cause) => Effect.fail(failed("download", cause)) }));
         if (response.status === 404 || response.status === 403) {
             return null;
@@ -70,7 +100,10 @@ export const photoTransport = Effect.fn("Cloud.photoTransport")(function* photoT
             ),
         get,
         put,
-        readUrls: (keys) => cloudMutation("photos:readUrls", { keys: [...keys] }),
+        readUrls: (keys) =>
+            FILES_URL === undefined
+                ? cloudMutation("photos:readUrls", { keys: [...keys] })
+                : Effect.succeed(keys.map((key) => ({ key, url: merchantLogoUrl(key) ?? `${FILES_URL}/${key}` }))),
         release: (key) =>
             cloudMutation<unknown, unknown>("photos:releaseUnreferenced", {
                 key,
