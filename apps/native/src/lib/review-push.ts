@@ -22,6 +22,9 @@ const clearTarget = (deviceId: string) => cloudMutation(api.reviewPush.clearTarg
 
 type Store = NonNullable<typeof sharedStore>;
 
+// Opt-out and sign-out bump it, so a registration still waiting on APNs can't land after them.
+let removals = 0;
+
 export const reviewAlertsOn = (): boolean => sharedStore === null || sharedStore.get(REVIEW_ALERTS_OFF_KEY) === null;
 
 export const setReviewAlerts = (on: boolean): void => {
@@ -32,6 +35,7 @@ export const setReviewAlerts = (on: boolean): void => {
         sharedStore.remove(REVIEW_ALERTS_OFF_KEY);
         return;
     }
+    removals += 1;
     sharedStore.set(REVIEW_ALERTS_OFF_KEY, "1");
 };
 
@@ -53,6 +57,7 @@ const clearRegistered = Effect.fn("ReviewPush.clearRegistered")(function* clearR
  */
 export const syncReviewPush = Effect.fn("ReviewPush.sync")(
     function* syncReviewPush() {
+        const started = removals;
         // Per install, not the ledger's sync id: a profile switch must not leave a second target behind.
         const deviceId = Platform.OS === "ios" ? captureDeviceLabel() : undefined;
         if (sharedStore === null || deviceId === undefined) {
@@ -85,10 +90,15 @@ export const syncReviewPush = Effect.fn("ReviewPush.sync")(
             (yield* Effect.tryPromise(() => getIosPushNotificationServiceEnvironmentAsync())) ??
             (__DEV__ ? "development" : "production");
         const address = `${environment}:${token}`;
-        if (!registeredElsewhere(store, address, deviceId)) {
+        if (!registeredElsewhere(store, address, deviceId) || removals !== started) {
             return;
         }
         if (yield* cloudMutation(api.reviewPush.setTarget, { deviceId, environment, token })) {
+            // One client's mutations run in order, so this clear lands after the set it undoes.
+            if (removals !== started) {
+                yield* clearTarget(deviceId);
+                return;
+            }
             store.set(REVIEW_PUSH_KEY, address);
             store.set(REVIEW_PUSH_DEVICE_KEY, deviceId);
         }
@@ -99,6 +109,7 @@ export const syncReviewPush = Effect.fn("ReviewPush.sync")(
 /** Before sign-out, while the session can still clear the target server side. */
 export const forgetReviewPush = Effect.fn("ReviewPush.forget")(
     function* forgetReviewPush() {
+        removals += 1;
         const store = sharedStore;
         if (store === null) {
             return;
