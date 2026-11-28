@@ -328,8 +328,27 @@ const push = FunctionImpl.make(
     )
 );
 
-// Taking `limit` per table before the merge keeps truncation safe. Pages are in seq order, not foreign-key order,
-// so the applier runs with foreign keys off. A `tables` walk's cursor cannot vouch for the tables it omits.
+// How many seq ranges a page reads before one unbounded read finishes it.
+const PULL_SEQ_SPANS = 6;
+
+const readSeqRange = Effect.fn("Sync.readSeqRange")(function* readSeqRange(
+    table: SyncedTable,
+    userId: string,
+    range: { after: number; through: number | null; take: number }
+) {
+    const docs = yield* (yield* DatabaseReader)
+        .table(table)
+        .index("by_user_and_seq", (q) => {
+            const from = q.eq("userId", userId).gt("seq", range.after);
+            return range.through === null ? from : from.lte("seq", range.through);
+        })
+        .take(range.take);
+    return docs.map((doc) => toWire(table, doc));
+});
+
+// One counter stamps every table, so a range `need` wide costs about `need` reads; capping each table at `need` keeps
+// truncation safe. Pages are in seq order, not foreign-key order, so the applier runs with foreign keys off. A
+// `tables` walk's cursor cannot vouch for the tables it omits.
 const pullSince = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -337,35 +356,37 @@ const pullSince = FunctionImpl.make(
     Effect.fn("Sync.pullSince")(
         function* pullSince(args) {
             const ctx = yield* QueryCtx;
-            const reader = yield* DatabaseReader;
             const accountId = yield* requireUserId(ctx);
             const ledger = yield* resolveLedger(accountId, args.profileId);
             yield* requirePro(ctx, ledger.ownerId);
             const userId = ledger.key;
             const limit = Math.min(Math.max(Math.trunc(args.limit ?? PULL_PAGE_LIMIT), 1), PULL_PAGE_MAX);
-
             const tables: readonly SyncedTable[] = args.tables ?? SYNCED_TABLES;
-            const pages = yield* Effect.all(
-                tables.map((table) =>
-                    reader
-                        .table(table)
-                        .index("by_user_and_seq", (q) => q.eq("userId", userId).gt("seq", args.cursor))
-                        .take(limit)
-                        .pipe(Effect.map((docs) => docs.map((doc) => toWire(table, doc))))
-                ),
-                { concurrency: "unbounded" }
-            );
 
-            const merged = pages.flat().sort((a, b) => a.seq - b.seq);
-
-            const rows = merged.slice(0, limit);
-            const last = rows[rows.length - 1];
-
-            return {
-                cursor: last ? last.seq : args.cursor,
-                hasMore: merged.length >= limit,
-                rows,
-            };
+            const rows: ReturnType<typeof toWire>[] = [];
+            let after = args.cursor;
+            let span = limit;
+            let bounded = tables.length > 1;
+            for (let step = 0; ; step += 1) {
+                const need = limit - rows.length;
+                const through = bounded && step < PULL_SEQ_SPANS ? after + span : null;
+                const range = { after, take: need, through };
+                const pages = yield* Effect.all(
+                    tables.map((table) => readSeqRange(table, userId, range)),
+                    { concurrency: "unbounded" }
+                );
+                const merged = pages.flat().sort((a, b) => a.seq - b.seq);
+                rows.push(...merged.slice(0, need));
+                if (through === null || merged.length >= need) {
+                    const last = rows.at(-1);
+                    return { cursor: last ? last.seq : args.cursor, hasMore: merged.length >= need, rows };
+                }
+                // An empty range is the head of the log or a wide gap; the unbounded read answers either.
+                bounded = merged.length > 0;
+                after = through;
+                // Sized by the density seen so far, the next range holds about the rows still missing.
+                span = Math.ceil(((limit - rows.length) * (after - args.cursor)) / Math.max(rows.length, 1));
+            }
         },
         Effect.catchTags({
             NotProfileMember: dieNotProfileMember,
