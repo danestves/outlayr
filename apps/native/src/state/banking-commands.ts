@@ -1,5 +1,6 @@
 import { BANK_ANALYTICS_AT_MS } from "@outlayr/backend/confect/legal";
 import { api } from "@outlayr/backend/convex/_generated/api";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 
 import type { BankInstitution, LinkedBankAccount } from "@/domain/linked-banks";
@@ -34,12 +35,41 @@ const linkBank = Effect.fn("Banking.linkBank")(function* linkBank(
 
 export type BankLinkOutcome = Effect.Success<ReturnType<typeof linkBank>>;
 
-const trackLink = (outcome: BankLinkOutcome["kind"], accounts: number, repair: LinkedBankAccount["id"] | null) =>
-    Effect.sync(() => {
-        if (Date.now() >= BANK_ANALYTICS_AT_MS) {
-            posthog?.capture("bank_link_finished", { accounts, outcome, relink: repair !== null });
+interface LinkResult {
+    accounts: number;
+    outcome: "linked" | "canceled" | "failed";
+}
+
+// A relink that leaves the account expired shows as a failure, so it counts as one. The plan and unavailable gates
+// stop before any attempt.
+function linkResult(outcome: BankLinkOutcome): LinkResult | null {
+    switch (outcome.kind) {
+        case "linked": {
+            return outcome.repaired || outcome.added.length > 0
+                ? { accounts: outcome.added.length, outcome: "linked" }
+                : { accounts: 0, outcome: "failed" };
         }
-    });
+        case "canceled": {
+            return { accounts: 0, outcome: "canceled" };
+        }
+        case "plan":
+        case "unavailable": {
+            return null;
+        }
+        default: {
+            return { accounts: 0, outcome: "failed" };
+        }
+    }
+}
+
+const trackLink = Effect.fn("Banking.trackLink")(function* trackLink(
+    result: LinkResult | null,
+    repair: LinkedBankAccount["id"] | null
+) {
+    if (result !== null && (yield* Clock.currentTimeMillis) >= BANK_ANALYTICS_AT_MS) {
+        posthog?.capture("bank_link_finished", { ...result, relink: repair !== null });
+    }
+});
 
 export const linkBankCommand = createCommand({
     execute: ({
@@ -50,10 +80,8 @@ export const linkBankCommand = createCommand({
         repair: LinkedBankAccount["id"] | null;
     }) =>
         linkBank(institution, repair).pipe(
-            Effect.tap((outcome) =>
-                trackLink(outcome.kind, outcome.kind === "linked" ? outcome.added.length : 0, repair)
-            ),
-            Effect.tapError(() => trackLink("failed", 0, repair))
+            Effect.tap((outcome) => trackLink(linkResult(outcome), repair)),
+            Effect.tapError(() => trackLink({ accounts: 0, outcome: "failed" }, repair))
         ),
     label: "banking:link",
 });

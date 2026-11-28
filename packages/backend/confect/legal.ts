@@ -1477,7 +1477,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Linking a bank",
                 },
                 {
-                    detail: "With Share analytics on: when you try to link a bank, whether it worked, and how many accounts it added. Never which bank or anything about its accounts.",
+                    detail: "With Share analytics on: when you try to link a bank, whether it worked, you canceled, or it failed, whether you were signing in to a bank again, and how many accounts it added. Never which bank or anything about its accounts.",
                     label: "Bank linking in analytics",
                 },
             ],
@@ -1487,7 +1487,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Bank verknüpfen",
                 },
                 {
-                    detail: "Mit eingeschaltetem „Analysedaten teilen“: wann du versuchst, eine Bank zu verknüpfen, ob es geklappt hat und wie viele Konten dazugekommen sind. Nie welche Bank oder etwas über ihre Konten.",
+                    detail: "Mit eingeschaltetem „Analysedaten teilen“: wann du versuchst, eine Bank zu verknüpfen, ob es geklappt hat, ob du abgebrochen hast oder ob es fehlgeschlagen ist, ob du versucht hast, dich erneut bei einer Bank anzumelden, und wie viele Konten dazugekommen sind. Nie welche Bank oder etwas über ihre Konten.",
                     label: "Bankverknüpfung in Analysen",
                 },
             ],
@@ -1497,7 +1497,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Vincular un banco",
                 },
                 {
-                    detail: "Con Compartir analíticas activado: cuándo intentas vincular un banco, si funcionó y cuántas cuentas agregó. Nunca qué banco ni nada sobre sus cuentas.",
+                    detail: "Con Compartir analíticas activado: cuándo intentas vincular un banco, si funcionó, si lo cancelaste o si falló, si estabas volviendo a iniciar sesión en un banco y cuántas cuentas agregó. Nunca qué banco ni nada sobre sus cuentas.",
                     label: "Vincular bancos en analíticas",
                 },
             ],
@@ -1507,7 +1507,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Lier une banque",
                 },
                 {
-                    detail: "Avec Partager les données d'analyse activé : quand vous essayez de lier une banque, si cela a fonctionné et combien de comptes ont été ajoutés. Jamais quelle banque ni rien sur ses comptes.",
+                    detail: "Avec Partager les données d'analyse activé : quand vous essayez de lier une banque, si cela a fonctionné, si vous avez annulé ou si cela a échoué, si vous vous reconnectiez à une banque et combien de comptes ont été ajoutés. Jamais quelle banque ni rien sur ses comptes.",
                     label: "Liaison bancaire dans les analyses",
                 },
             ],
@@ -1517,7 +1517,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Vincular um banco",
                 },
                 {
-                    detail: "Com Compartilhar análises ativado: quando você tenta vincular um banco, se deu certo e quantas contas foram adicionadas. Nunca qual banco nem nada sobre as contas dele.",
+                    detail: "Com Compartilhar análises ativado: quando você tenta vincular um banco, se deu certo, se você cancelou ou se falhou, se você estava entrando de novo em um banco e quantas contas foram adicionadas. Nunca qual banco nem nada sobre as contas dele.",
                     label: "Vínculo de bancos nas análises",
                 },
             ],

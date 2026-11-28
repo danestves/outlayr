@@ -1,14 +1,14 @@
 import { WEB_ANALYTICS_AT_MS } from "@outlayr/backend/confect/legal";
 import { analyticsStarted, captureConsented, identify, resetIdentity } from "@outlayr/shared/analytics";
 
-import type { BankLinkOutcome } from "./linked-banks";
+import type { LinkResult } from "./linked-banks";
 
 export type SignInMethod = "apple" | "email" | "google";
 
 type LaunchEvent =
     | {
           event: "bank_link_finished";
-          properties: { accounts: number; outcome: BankLinkOutcome["kind"]; relink: boolean };
+          properties: LinkResult & { relink: boolean };
       }
     | { event: "paywall_viewed" }
     | { event: "purchase_started"; properties: { plan: string } }
