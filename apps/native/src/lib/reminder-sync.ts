@@ -134,14 +134,18 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
     const pending = yield* reminders.pendingIds();
     yield* reminders.cancel(
         pending.filter((id) => {
+            // With Hide amounts on, a queued recap may predate it; drop it now rather than trust the re-arm to finish.
+            if (hideAmounts && id.startsWith(WEEKLY_RECAP_REMINDER_PREFIX)) {
+                return true;
+            }
             if (keep.has(id)) {
                 return false;
             }
             if (id.startsWith(DAILY_REMINDER_PREFIX) || id.startsWith(RECAP_REMINDER_PREFIX)) {
                 return true;
             }
-            // A failed permission read keeps a queued recap, unless it is opted out or may now show hidden amounts.
-            const keepUnverified = permission === "unknown" && weeklyRecap && !hideAmounts;
+            // A failed permission read keeps a queued recap unless it was opted out.
+            const keepUnverified = permission === "unknown" && weeklyRecap;
             return !keepUnverified && id.startsWith(WEEKLY_RECAP_REMINDER_PREFIX);
         })
     );

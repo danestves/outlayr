@@ -3,7 +3,6 @@ import {
     addMonths,
     DEFAULT_CALENDAR,
     monthPeriodStart,
-    startOfDay,
     startOfWeek,
     startOfYear,
 } from "@outlayr/money/calendar";
@@ -70,8 +69,7 @@ export function windowStart(
     calendar: InsightsCalendar = DEFAULT_INSIGHTS_CALENDAR
 ): Date {
     if (period === "week") {
-        // Re-cut at midnight: where DST skips 00:00 a week starts at 01:00, and adding days would carry that hour.
-        return startOfDay(addDays(startOfWeek(now, calendar.firstWeekday), offset * 7));
+        return addDays(startOfWeek(now, calendar.firstWeekday), offset * 7);
     }
     if (period === "month") {
         return addMonths(monthPeriodStart(now, calendar.firstDayOfMonth), offset);
@@ -115,9 +113,9 @@ export function bucketRanges(
     const end = windowEnd(period, now, offset, calendar);
     const slots = period === "week" ? 7 : Math.round((end.getTime() - start.getTime()) / DAY_MS);
     for (let i = 0; i < slots; i += 1) {
-        const slot = startOfDay(addDays(start, i));
+        const slot = addDays(start, i);
         ranges.push({
-            end: startOfDay(addDays(slot, 1)),
+            end: addDays(slot, 1),
             label: period === "week" ? weekdayInitial(slot, language) : String(slot.getDate()),
             start: slot,
         });
